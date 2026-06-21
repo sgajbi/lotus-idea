@@ -100,6 +100,7 @@ source-authority contracts only, not runtime certification.
 ```powershell
 make install
 make lint
+make ci-contract-gate
 make typecheck
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -115,6 +116,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe -m pip install -e '.[dev]'
 .venv\Scripts\python.exe -m ruff check .
 .venv\Scripts\python.exe -m ruff format --check .
+.venv\Scripts\python.exe scripts/ci_contract_gate.py
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py
 .venv\Scripts\python.exe -m pytest tests/unit tests/integration tests/e2e
