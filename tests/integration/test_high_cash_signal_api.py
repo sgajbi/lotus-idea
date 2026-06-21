@@ -5,7 +5,12 @@ from typing import Any
 from fastapi.testclient import TestClient
 
 from app.api.repository_state import reset_idea_repository_for_tests
+from app.domain import InMemoryIdeaRepository
 from app.main import app
+
+
+class DurableInMemoryIdeaRepository(InMemoryIdeaRepository):
+    durable_storage_backed = True
 
 
 def source_ref(product_id: str, freshness: str = "current") -> dict[str, str]:
@@ -183,6 +188,20 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
     assert payload["persistence"]["auditEventType"] == "idea.candidate.persisted"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+
+
+def test_high_cash_persist_api_reports_durable_storage_when_repository_is_durable() -> None:
+    reset_idea_repository_for_tests(DurableInMemoryIdeaRepository())
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("persist-high-cash-api-durable-001"),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["durableStorageBacked"] is True
 
 
 def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:

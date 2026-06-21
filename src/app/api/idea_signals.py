@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashSignalCommand,
@@ -341,7 +341,10 @@ class EvaluateAndPersistHighCashSignalResponse(CamelModel):
     durable_storage_backed: bool = Field(
         False,
         alias="durableStorageBacked",
-        description="False until database-backed persistence, migrations, and recovery evidence exist.",
+        description=(
+            "True only when the active repository provider is durable. Default local "
+            "runtime remains process-local unless LOTUS_IDEA_DATABASE_URL is configured."
+        ),
     )
     supported_feature_promoted: bool = Field(
         False,
@@ -427,13 +430,15 @@ async def evaluate_and_persist_high_cash_signal(
             detail="Idempotency-Key is required.",
         )
 
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
     result = evaluate_and_persist_high_cash_signal_command(
         EvaluateAndPersistHighCashSignalCommand(
             evaluation=request.to_command(),
             idempotency_key=idempotency_key,
             actor_subject=caller.subject,
         ),
-        repository=get_idea_repository(),
+        repository=repository,
     )
     if (
         result.persistence is not None
@@ -443,6 +448,7 @@ async def evaluate_and_persist_high_cash_signal(
             IdeaOperation.CANDIDATE_PERSISTENCE,
             OperationOutcome.CONFLICT,
             source_authority="lotus-core",
+            durable_storage_backed=durable_storage_backed,
             error_code="idempotency_conflict",
         )
         return problem_response(
@@ -461,6 +467,7 @@ async def evaluate_and_persist_high_cash_signal(
             evaluation=result.evaluation,
         ),
         source_authority="lotus-core",
+        durable_storage_backed=durable_storage_backed,
     )
     return EvaluateAndPersistHighCashSignalResponse(
         evaluation=EvaluateHighCashSignalResponse.from_domain(result.evaluation),
@@ -472,7 +479,7 @@ async def evaluate_and_persist_high_cash_signal(
             if result.persistence is not None
             else None
         ),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -603,8 +610,9 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
         "Evaluates caller-supplied, source-owned Core evidence for the first high-cash "
         "opportunity family, then persists created candidates through the internal "
         "idempotency/audit repository foundation. The endpoint is an internal certified "
-        "API foundation; persistence is not durable database-backed and no supported "
-        "business feature is promoted."
+        "API foundation; persistence is process-local by default and PostgreSQL-backed "
+        "only when LOTUS_IDEA_DATABASE_URL is configured. No supported business feature "
+        "is promoted."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": EvaluateAndPersistHighCashSignalResponse,

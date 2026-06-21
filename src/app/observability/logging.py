@@ -161,6 +161,7 @@ def emit_foundation_operation_event(
     outcome: OperationOutcome,
     *,
     source_authority: str = SERVICE_NAME,
+    durable_storage_backed: bool = False,
     error_code: str | None = None,
 ) -> None:
     emit_operation_event(
@@ -169,7 +170,7 @@ def emit_foundation_operation_event(
             outcome=outcome,
             source_authority=source_authority,
             error_code=error_code,
-            durable_storage_backed=False,
+            durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
         )
     )
