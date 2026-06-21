@@ -20,6 +20,13 @@ and discoverable.
 6. Audit all Lotus repositories touched by the RFC for leftover local or remote
    `feature/*` branches and delete branches that are merged, obsolete, or
    superseded.
+7. Confirm final documentation is detailed, implementation-backed, and aligned
+   to actual `lotus-idea` design, behavior, APIs, constraints, supported
+   capabilities, unsupported states, and proof artifacts.
+8. Review skills, guidance, documentation, and agent context for reusable
+   improvements; update them or record an explicit no-change decision.
+9. Record whether Slice 21 produced, deferred, or deliberately skipped a
+   post-completion communication draft.
 
 ## Acceptance Gate
 
@@ -31,3 +38,8 @@ and discoverable.
    gated scope, and validation status.
 5. Branch hygiene evidence states that completed feature branches were deleted
    locally and remotely after merge.
+6. Final docs and supported-features entries do not contain aspirational claims
+   that are not backed by implementation proof.
+7. Skills/guidance/agent-context review has a recorded outcome.
+8. Post-completion communication status is recorded and cannot be represented
+   as product proof.
