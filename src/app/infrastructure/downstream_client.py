@@ -57,10 +57,47 @@ class DownstreamJsonClient:
         correlation_id: str | None = None,
         trace_id: str | None = None,
     ) -> dict[str, Any]:
+        return self._request_json(
+            "GET",
+            path,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+    def post_json(
+        self,
+        path: str,
+        *,
+        json_payload: dict[str, Any],
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> dict[str, Any]:
+        return self._request_json(
+            "POST",
+            path,
+            json_payload=json_payload,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+    def _request_json(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_payload: dict[str, Any] | None = None,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+    ) -> dict[str, Any]:
         try:
-            response = self._client.get(
+            response = self._client.request(
+                method,
                 path,
-                headers=build_trace_headers(correlation_id=correlation_id, trace_id=trace_id),
+                json=json_payload,
+                headers=build_trace_headers(
+                    correlation_id=correlation_id,
+                    trace_id=trace_id,
+                ),
             )
         except httpx.TimeoutException as exc:
             raise DownstreamServiceError(code="upstream_timeout") from exc

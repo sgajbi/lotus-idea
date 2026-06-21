@@ -10,6 +10,8 @@ Service profile: `domain-service`
 
 Current status: scaffolded foundation, governance RFCs, the first pure domain
 model/lifecycle foundation, an internal high-cash deterministic signal policy,
+the first Core source-port and conservative HTTP adapter foundation for
+high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
 deterministic scoring/review-queue projection foundation, and an internal
 advisor review/feedback governance foundation, and an internal AI governance
@@ -87,14 +89,18 @@ source-authority contracts only, not runtime certification.
 ## Repository Map
 
 - `src/app/api/`: HTTP route modules and API DTO mapping.
-- `src/app/application/`: use-case orchestration. The current first use case is
-  high-cash signal evaluation over caller-supplied, source-owned Core evidence.
+- `src/app/application/`: use-case orchestration. The current first use cases
+  evaluate high-cash signals over caller-supplied Core evidence and over a
+  Core source port that fetches governed Core evidence.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,
   idempotency, and audit primitives.
-- `src/app/ports/`: source-owned service interfaces consumed by application logic.
-- `src/app/infrastructure/`: adapters and clients behind ports.
+- `src/app/ports/`: source-owned service interfaces consumed by application
+  logic, including the first Core high-cash evidence port.
+- `src/app/infrastructure/`: adapters and clients behind ports, including a
+  conservative Core high-cash source adapter that does not infer cash weight
+  when Core omits a source-reported value.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing.
 - `src/app/security/`: caller context and authorization policy.
 - `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.

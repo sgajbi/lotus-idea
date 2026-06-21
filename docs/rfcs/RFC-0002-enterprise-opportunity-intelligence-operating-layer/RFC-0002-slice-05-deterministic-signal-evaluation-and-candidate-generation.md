@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy only
+Status: Partially implemented - high-cash domain policy plus Core source-port foundation
 
 ## Outcome
 
@@ -45,15 +45,35 @@ Implemented first-wave scope:
 6. Reason-code vocabulary now includes `cash_source_ready` and
    `below_materiality`.
 
+Additional implemented source-adapter foundation:
+
+1. `src/app/ports/core_sources.py` defines the `CoreOpportunitySourcePort`,
+   `CoreHighCashEvidenceRequest`, and `CoreHighCashEvidence` boundary for
+   high-cash evidence sourced from `lotus-core`.
+2. `src/app/application/high_cash_signal.py` now includes
+   `evaluate_high_cash_signal_from_core`, which fetches Core evidence through
+   the port and maps Core entitlement denial or source unavailability into
+   blocked domain posture.
+3. `src/app/infrastructure/lotus_core_sources.py` adds a conservative HTTP
+   adapter over Core's declared `PortfolioStateSnapshot:v1`, `HoldingsAsOf:v1`,
+   `PortfolioCashMovementSummary:v1`, and `PortfolioCashflowProjection:v1`
+   routes. It preserves source refs, propagates correlation/trace headers, and
+   consumes a source-reported cash-weight field only when Core provides it.
+4. The adapter deliberately does not derive cash weight from cash totals,
+   invested market value, portfolio totals, or any other Core-owned portfolio
+   facts. When Core omits a source-reported cash-weight field, evaluation stays
+   blocked with missing-source posture.
+5. The upstream Core contract gap for explicit source-reported cash weight is
+   tracked in `sgajbi/lotus-core#430`.
+
 Not implemented yet:
 
-1. source adapters,
-2. application orchestration,
-3. persistence/replay,
-4. API routes,
-5. integration tests against live Core,
-6. supported-feature promotion,
-7. data-product certification.
+1. live Core integration proof against a running Core service,
+2. database persistence/replay,
+3. new API routes beyond the existing caller-supplied foundation endpoint,
+4. Gateway/Workbench proof,
+5. supported-feature promotion,
+6. data-product certification.
 
 ## Golden Scenarios
 
@@ -79,4 +99,18 @@ Targeted validation:
    passed.
 3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
 
-Full repository validation must pass before committing and PR closure.
+Current source-port validation:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_high_cash_application.py tests\unit\test_lotus_core_sources.py tests\unit\test_downstream_client.py -q`
+   passed with `33 passed`.
+2. `.venv\Scripts\python.exe -m ruff check src\app\application\high_cash_signal.py src\app\ports\core_sources.py src\app\infrastructure\lotus_core_sources.py src\app\infrastructure\downstream_client.py tests\unit\test_high_cash_application.py tests\unit\test_lotus_core_sources.py tests\unit\test_downstream_client.py`
+   passed.
+3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
+4. `make check` passed with lint, CI contract, monetary/no-sensitive guards,
+   data-mesh contract gate, supported-features gate, endpoint-certification
+   gate, typecheck, architecture boundary, OpenAPI, and `160` unit tests.
+5. `make ci` passed with integration tests, e2e tests, coverage gate at
+   `99.41%`, and dependency audit reporting no known vulnerabilities.
+
+GitHub PR validation and post-merge main releasability remain required before
+mainline closure.

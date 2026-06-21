@@ -57,6 +57,22 @@ the RFC-0002 first-wave map:
 `lotus-idea` planned producer products remain proposed until implementation and
 platform certification.
 
+## Current Source Adapter Posture
+
+RFC-0002 Slice 05 now defines the first Core source-port foundation for
+high-cash / idle-liquidity evidence. The application can orchestrate through a
+`CoreOpportunitySourcePort`, and the HTTP adapter can call Core's declared
+`PortfolioStateSnapshot:v1`, `HoldingsAsOf:v1`,
+`PortfolioCashMovementSummary:v1`, and `PortfolioCashflowProjection:v1` routes.
+
+The adapter is intentionally conservative. It consumes a Core source-reported
+cash-weight value when present, but it does not reconstruct that value from
+cash totals, invested market value, or portfolio totals. Until Core publishes
+that field and live proof is captured, source-backed high-cash evaluation can
+only return blocked or caller-supplied foundation posture.
+The upstream Core source-contract dependency is tracked in
+`sgajbi/lotus-core#430`.
+
 ## Conversion Boundaries
 
 RFC-0002 Slice 12 now has an internal governed conversion foundation. It maps

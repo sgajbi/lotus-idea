@@ -14,7 +14,8 @@ Current state:
    baseline contracts plus a repo-native data-mesh contract gate while keeping
    mesh certification planned,
 7. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
-   policy,
+   policy plus the first Core source-port and conservative HTTP adapter
+   foundation,
 8. RFC-0002 Slice 06 partially implements internal persistence, replay,
    idempotency, lifecycle audit history, and recovery primitives,
 9. RFC-0002 Slice 07 partially implements internal deterministic scoring,
@@ -41,7 +42,9 @@ First implementation program:
    exposes repeatable gaps,
 2. normalize structure before adding product scope,
 3. add source contracts and data-mesh baseline,
-4. add source adapters and application orchestration for high-cash / idle-liquidity evidence,
+4. extend the current Core source-port foundation into live high-cash /
+   idle-liquidity source proof after Core exposes explicit source-reported cash
+   weight,
 5. add database-backed persistence, source ingestion orchestration, persisted
    queue state, review, and feedback,
 6. extend certified APIs into Gateway/Workbench product surfaces after live

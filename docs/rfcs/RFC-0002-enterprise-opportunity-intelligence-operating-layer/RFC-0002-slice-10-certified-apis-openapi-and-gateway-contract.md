@@ -63,8 +63,10 @@ not implemented yet.
 
 1. Add database-backed application state and idempotent API persistence once the
    persistence slice moves from internal records to durable storage.
-2. Add source adapters and source contract tests for live `lotus-core` evidence
-   retrieval; keep all official cash/holding calculations in `lotus-core`.
+2. Extend the current Core high-cash source-port and conservative HTTP adapter
+   into live source contract proof once Core publishes an explicit
+   source-reported cash-weight field; keep all official cash/holding
+   calculations in `lotus-core`.
 3. Add Gateway contracts and tests that prove Gateway preserves `lotus-idea`
    source authority and does not rank or generate ideas.
 4. Add Workbench review-surface proof before any UI or demo claim.

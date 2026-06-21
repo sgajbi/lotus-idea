@@ -88,14 +88,24 @@ manifest evidence is used to catch source-product drift or premature mesh
 inclusion.
 
 RFC-0002 Slice 05 is partially implemented for the high-cash / idle-liquidity
-domain policy. `src/app/domain/signal_evaluation.py` consumes source-reported
-cash-weight evidence and Core source refs, creates deterministic
-`OpportunitySignal`, `IdeaEvidencePacket`, and `IdeaCandidate` domain objects
-for positive cases, and returns blocked/suppressed/not-eligible outcomes for
-missing source, stale source, missing cash weight, entitlement denial,
-duplicate, and below-threshold cases. This remains internal domain behavior:
-there are no source adapters, APIs, persistence, integration proof,
-data-product certification, or supported-feature promotion yet.
+domain policy and the first Core source-port foundation.
+`src/app/domain/signal_evaluation.py` consumes source-reported cash-weight
+evidence and Core source refs, creates deterministic `OpportunitySignal`,
+`IdeaEvidencePacket`, and `IdeaCandidate` domain objects for positive cases,
+and returns blocked/suppressed/not-eligible outcomes for missing source, stale
+source, missing cash weight, entitlement denial, duplicate, and below-threshold
+cases. `src/app/ports/core_sources.py`,
+`src/app/application/high_cash_signal.py`, and
+`src/app/infrastructure/lotus_core_sources.py` now define a Core high-cash
+evidence port, source-backed application orchestration, and a conservative HTTP
+adapter over the declared Core source products. The adapter preserves source
+refs and fails closed when Core omits a source-reported cash-weight field; it
+does not calculate cash weight from cash totals or market values. This remains
+internal source-adapter foundation behavior: there is no live Core integration
+proof, database persistence, Gateway route, Workbench proof, data-product
+certification, or supported-feature promotion yet.
+The upstream Core cash-weight contract dependency is tracked in
+`sgajbi/lotus-core#430`.
 
 RFC-0002 Slice 06 is partially implemented as an internal persistence
 foundation in `src/app/domain/persistence.py`. The repository now has immutable
@@ -199,7 +209,11 @@ logs; fix or document the owned warning source instead.
    primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
-6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports.
+   The current implemented port is `core_sources.py` for high-cash Core
+   evidence.
+6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
+   current Core adapter preserves source-data product refs and requires Core to
+   report cash weight explicitly rather than deriving it locally.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, and audit
    event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement
