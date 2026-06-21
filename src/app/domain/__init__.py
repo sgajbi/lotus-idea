@@ -25,6 +25,13 @@ from app.domain.ideas import (
     UnsupportedEvidenceReason,
     transition_candidate,
 )
+from app.domain.signal_evaluation import (
+    HighCashSignalInput,
+    HighCashSignalPolicy,
+    SignalEvaluationOutcome,
+    SignalEvaluationResult,
+    evaluate_high_cash_signal,
+)
 
 __all__ = [
     "ALLOWED_LIFECYCLE_TRANSITIONS",
@@ -52,4 +59,9 @@ __all__ = [
     "SuppressionReason",
     "UnsupportedEvidenceReason",
     "transition_candidate",
+    "HighCashSignalInput",
+    "HighCashSignalPolicy",
+    "SignalEvaluationOutcome",
+    "SignalEvaluationResult",
+    "evaluate_high_cash_signal",
 ]

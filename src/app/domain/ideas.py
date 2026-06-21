@@ -56,6 +56,7 @@ class UnsupportedEvidenceReason(StrEnum):
 
 class ReasonCode(StrEnum):
     HIGH_CASH_RATIO = "high_cash_ratio"
+    CASH_SOURCE_READY = "cash_source_ready"
     CONCENTRATION_ATTENTION = "concentration_attention"
     UNDERPERFORMANCE_ATTENTION = "underperformance_attention"
     ALLOCATION_DRIFT_ATTENTION = "allocation_drift_attention"
@@ -67,6 +68,7 @@ class ReasonCode(StrEnum):
     SOURCE_STALE = "source_stale"
     SOURCE_PARTIAL = "source_partial"
     DUPLICATE_SUPPRESSED = "duplicate_suppressed"
+    BELOW_MATERIALITY = "below_materiality"
     REVIEW_REQUIRED = "review_required"
 
 
