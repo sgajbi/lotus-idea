@@ -22,6 +22,7 @@ from app.domain import (
     ReasonCode,
 )
 from app.errors import ProblemDetails, problem_response
+from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 
@@ -154,8 +155,16 @@ async def record_candidate_lifecycle_transition(
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
+        _emit_lifecycle_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied("The caller is not permitted to transition idea candidates.")
     except InvalidLifecycleTransition:
+        _emit_lifecycle_operation_event(
+            OperationOutcome.INVALID_STATE,
+            "lifecycle_transition_conflict",
+        )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
             code="lifecycle_transition_conflict",
@@ -163,6 +172,10 @@ async def record_candidate_lifecycle_transition(
             detail="The lifecycle transition is not valid for the current idea candidate state.",
         )
     except ValueError:
+        _emit_lifecycle_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -172,7 +185,12 @@ async def record_candidate_lifecycle_transition(
 
     problem = _problem_for_lifecycle_persistence(result)
     if problem is not None:
+        _emit_lifecycle_operation_event(
+            _operation_outcome_from_lifecycle_decision(result.decision),
+            _error_code_from_lifecycle_decision(result.decision),
+        )
         return problem
+    _emit_lifecycle_operation_event(_operation_outcome_from_lifecycle_decision(result.decision))
     return CandidateLifecycleTransitionResponse(
         transition=(
             CandidateLifecycleTransitionSummaryResponse(
@@ -229,6 +247,40 @@ def _permission_denied(detail: str) -> JSONResponse:
         title="Permission denied",
         detail=detail,
     )
+
+
+def _emit_lifecycle_operation_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+) -> None:
+    emit_foundation_operation_event(
+        IdeaOperation.LIFECYCLE_TRANSITION,
+        outcome,
+        source_authority="lotus-idea",
+        error_code=error_code,
+    )
+
+
+def _operation_outcome_from_lifecycle_decision(
+    decision: LifecyclePersistenceDecision,
+) -> OperationOutcome:
+    if decision is LifecyclePersistenceDecision.ACCEPTED:
+        return OperationOutcome.ACCEPTED
+    if decision is LifecyclePersistenceDecision.REPLAYED:
+        return OperationOutcome.REPLAYED
+    if decision is LifecyclePersistenceDecision.NOT_FOUND:
+        return OperationOutcome.NOT_FOUND
+    return OperationOutcome.CONFLICT
+
+
+def _error_code_from_lifecycle_decision(
+    decision: LifecyclePersistenceDecision,
+) -> str | None:
+    if decision is LifecyclePersistenceDecision.NOT_FOUND:
+        return "candidate_not_found"
+    if decision is LifecyclePersistenceDecision.CONFLICT:
+        return "idempotency_conflict"
+    return None
 
 
 CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {

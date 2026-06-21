@@ -34,6 +34,7 @@ from app.domain import (
     SuppressionReason,
 )
 from app.errors import ProblemDetails, problem_response
+from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 
@@ -321,10 +322,25 @@ async def record_review_action(
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
+        _emit_review_operation_event(
+            IdeaOperation.REVIEW_ACTION,
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied("The caller is not permitted to record idea reviews.")
     except ReviewEntitlementDenied:
+        _emit_review_operation_event(
+            IdeaOperation.REVIEW_ACTION,
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied("The caller is not permitted to review this idea candidate.")
     except InvalidReviewAction:
+        _emit_review_operation_event(
+            IdeaOperation.REVIEW_ACTION,
+            OperationOutcome.INVALID_STATE,
+            "review_action_conflict",
+        )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
             code="review_action_conflict",
@@ -332,6 +348,11 @@ async def record_review_action(
             detail="The review action is not valid for the current idea candidate state.",
         )
     except ValueError:
+        _emit_review_operation_event(
+            IdeaOperation.REVIEW_ACTION,
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -341,7 +362,16 @@ async def record_review_action(
 
     problem = _problem_for_review_persistence(result.persistence)
     if problem is not None:
+        _emit_review_operation_event(
+            IdeaOperation.REVIEW_ACTION,
+            _operation_outcome_from_review_decision(result.persistence.decision),
+            _error_code_from_review_decision(result.persistence.decision),
+        )
         return problem
+    _emit_review_operation_event(
+        IdeaOperation.REVIEW_ACTION,
+        _operation_outcome_from_review_decision(result.persistence.decision),
+    )
     return ReviewActionResponse(
         reviewDecision=(
             ReviewDecisionResponse.from_domain(result.review_result.decision)
@@ -383,12 +413,27 @@ async def record_feedback(
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
+        _emit_review_operation_event(
+            IdeaOperation.FEEDBACK_RECORD,
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied("The caller is not permitted to record idea feedback.")
     except ReviewEntitlementDenied:
+        _emit_review_operation_event(
+            IdeaOperation.FEEDBACK_RECORD,
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied(
             "The caller is not permitted to record feedback for this idea candidate."
         )
     except ValueError:
+        _emit_review_operation_event(
+            IdeaOperation.FEEDBACK_RECORD,
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -398,7 +443,16 @@ async def record_feedback(
 
     problem = _problem_for_review_persistence(result.persistence)
     if problem is not None:
+        _emit_review_operation_event(
+            IdeaOperation.FEEDBACK_RECORD,
+            _operation_outcome_from_review_decision(result.persistence.decision),
+            _error_code_from_review_decision(result.persistence.decision),
+        )
         return problem
+    _emit_review_operation_event(
+        IdeaOperation.FEEDBACK_RECORD,
+        _operation_outcome_from_review_decision(result.persistence.decision),
+    )
     return FeedbackResponse(
         feedbackEvent=(
             FeedbackEventResponse.from_domain(result.feedback_result.feedback_event)
@@ -456,6 +510,41 @@ def _permission_denied(detail: str) -> JSONResponse:
         title="Permission denied",
         detail=detail,
     )
+
+
+def _emit_review_operation_event(
+    operation: IdeaOperation,
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+) -> None:
+    emit_foundation_operation_event(
+        operation,
+        outcome,
+        source_authority="lotus-idea",
+        error_code=error_code,
+    )
+
+
+def _operation_outcome_from_review_decision(
+    decision: ReviewPersistenceDecision,
+) -> OperationOutcome:
+    if decision is ReviewPersistenceDecision.ACCEPTED:
+        return OperationOutcome.ACCEPTED
+    if decision is ReviewPersistenceDecision.REPLAYED:
+        return OperationOutcome.REPLAYED
+    if decision is ReviewPersistenceDecision.NOT_FOUND:
+        return OperationOutcome.NOT_FOUND
+    return OperationOutcome.CONFLICT
+
+
+def _error_code_from_review_decision(
+    decision: ReviewPersistenceDecision,
+) -> str | None:
+    if decision is ReviewPersistenceDecision.NOT_FOUND:
+        return "candidate_not_found"
+    if decision is ReviewPersistenceDecision.CONFLICT:
+        return "idempotency_conflict"
+    return None
 
 
 REVIEW_ACTION_ROUTE: RouteMetadata = {

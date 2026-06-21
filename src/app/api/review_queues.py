@@ -16,6 +16,7 @@ from app.application.review_queue import (
 )
 from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
 from app.errors import ProblemDetails, problem_response
+from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
@@ -141,6 +142,10 @@ async def get_advisor_review_queue(
     try:
         require_capability(caller, _READ_ADVISOR_QUEUE_POLICY)
     except PermissionDeniedError:
+        _emit_review_queue_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return problem_response(
             status_code=status.HTTP_403_FORBIDDEN,
             code="permission_denied",
@@ -148,6 +153,10 @@ async def get_advisor_review_queue(
             detail="The caller is not permitted to read advisor idea review queues.",
         )
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+        _emit_review_queue_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -159,7 +168,20 @@ async def get_advisor_review_queue(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
         repository=get_idea_repository(),
     )
+    _emit_review_queue_operation_event(OperationOutcome.ACCEPTED)
     return AdvisorReviewQueueResponse.from_domain(queue)
+
+
+def _emit_review_queue_operation_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+) -> None:
+    emit_foundation_operation_event(
+        IdeaOperation.REVIEW_QUEUE_READ,
+        outcome,
+        source_authority="lotus-idea",
+        error_code=error_code,
+    )
 
 
 ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
