@@ -91,6 +91,18 @@ def conversion_outcome_headers(
     }
 
 
+def report_evidence_pack_headers(
+    idempotency_key: str,
+    capabilities: str = "idea.report-evidence-pack.request",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-report-evidence-pack-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
 def lifecycle_headers(
     idempotency_key: str,
     capabilities: str = "idea.candidate.lifecycle.transition",
@@ -184,6 +196,21 @@ def conversion_outcome_payload(
         "sourceSystem": source_system,
         "downstreamReference": downstream_reference,
         "recordedAtUtc": "2026-06-21T10:20:00Z",
+    }
+
+
+def report_evidence_pack_payload(
+    *,
+    report_evidence_pack_id: str = "report-evidence-pack-001",
+    client_ready_publication_requested: bool = False,
+) -> dict[str, Any]:
+    return {
+        "reportEvidencePackId": report_evidence_pack_id,
+        "purpose": "client_review_report_section",
+        "reasonCodes": ["review_approved_for_conversion"],
+        "requestedAtUtc": "2026-06-21T10:25:00Z",
+        "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
+        "clientReadyPublicationRequested": client_ready_publication_requested,
     }
 
 
@@ -928,5 +955,150 @@ def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_re
     assert missing.status_code == 404
     assert blank_outcome.status_code == 400
     assert blank_reference.status_code == 400
+    assert naive_time.status_code == 400
+    assert blank_idempotency.status_code == 400
+
+
+def test_report_evidence_pack_api_records_request_without_render_or_archive_authority() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-report-pack-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-report-pack-001"),
+        headers=conversion_intent_headers("conversion-intent-api-report-pack-001"),
+    )
+    assert intent.status_code == 200
+
+    response = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-001/report-evidence-packs",
+        json=report_evidence_pack_payload(),
+        headers=report_evidence_pack_headers("report-evidence-pack-api-001"),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-report-evidence-pack-api"
+    payload = response.json()
+    evidence_pack = payload["reportEvidencePack"]
+    assert evidence_pack["reportEvidencePackId"] == "report-evidence-pack-001"
+    assert evidence_pack["conversionIntentId"] == "conversion-report-pack-001"
+    assert evidence_pack["candidateId"] == candidate_id
+    assert evidence_pack["reportSourceAuthority"] == "lotus-report"
+    assert evidence_pack["renderSourceAuthority"] == "lotus-render"
+    assert evidence_pack["archiveSourceAuthority"] == "lotus-archive"
+    assert evidence_pack["boundary"] == "request_only"
+    assert evidence_pack["grantsClientPublicationAuthority"] is False
+    assert evidence_pack["createsRenderedOutput"] is False
+    assert evidence_pack["createsArchiveRecord"] is False
+    assert evidence_pack["sourceSummaries"]
+    assert "route" not in evidence_pack["sourceSummaries"][0]
+    assert payload["persistence"]["decision"] == "accepted"
+    assert payload["persistence"]["lifecycleStatus"] == "converted_to_report"
+    assert payload["persistence"]["auditEventType"] == "idea.report_evidence_pack.requested"
+    assert payload["durableStorageBacked"] is False
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-report-pack-invalid-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-report-pack-invalid-001"),
+        headers=conversion_intent_headers("conversion-intent-api-report-pack-invalid-001"),
+    )
+    assert intent.status_code == 200
+    headers = report_evidence_pack_headers("report-evidence-pack-api-replay-001")
+
+    first = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-replay-001"),
+        headers=headers,
+    )
+    replayed = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-replay-001"),
+        headers=headers,
+    )
+    conflict = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-replay-002"),
+        headers=headers,
+    )
+    client_ready = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(
+            report_evidence_pack_id="report-pack-client-ready-001",
+            client_ready_publication_requested=True,
+        ),
+        headers=report_evidence_pack_headers("report-evidence-pack-api-client-ready-001"),
+    )
+    denied = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-denied-001"),
+        headers=report_evidence_pack_headers(
+            "report-evidence-pack-api-denied-001",
+            capabilities="idea.review.record",
+        ),
+    )
+    missing = client.post(
+        "/api/v1/conversion-intents/missing-intent/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-missing-001"),
+        headers=report_evidence_pack_headers("report-evidence-pack-api-missing-001"),
+    )
+    blank_pack_id = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id=" "),
+        headers=report_evidence_pack_headers("report-evidence-pack-api-blank-001"),
+    )
+    no_reasons_payload = report_evidence_pack_payload(
+        report_evidence_pack_id="report-pack-no-reasons-001"
+    )
+    no_reasons_payload["reasonCodes"] = []
+    no_reasons = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=no_reasons_payload,
+        headers=report_evidence_pack_headers("report-evidence-pack-api-no-reasons-001"),
+    )
+    blank_retention_payload = report_evidence_pack_payload(
+        report_evidence_pack_id="report-pack-blank-retention-001"
+    )
+    blank_retention_payload["retentionPolicyRef"] = " "
+    blank_retention = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=blank_retention_payload,
+        headers=report_evidence_pack_headers("report-evidence-pack-api-blank-retention-001"),
+    )
+    naive_time_payload = report_evidence_pack_payload(
+        report_evidence_pack_id="report-pack-naive-time-001"
+    )
+    naive_time_payload["requestedAtUtc"] = "2026-06-21T10:25:00"
+    naive_time = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=naive_time_payload,
+        headers=report_evidence_pack_headers("report-evidence-pack-api-naive-time-001"),
+    )
+    blank_idempotency = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=report_evidence_pack_payload(report_evidence_pack_id="report-pack-blank-key-001"),
+        headers=report_evidence_pack_headers(" "),
+    )
+
+    assert first.status_code == 200
+    assert replayed.status_code == 200
+    assert replayed.json()["reportEvidencePack"] is None
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+    assert client_ready.status_code == 409
+    assert client_ready.json()["code"] == "report_evidence_pack_conflict"
+    assert denied.status_code == 403
+    assert missing.status_code == 404
+    assert blank_pack_id.status_code == 400
+    assert no_reasons.status_code == 400
+    assert blank_retention.status_code == 400
     assert naive_time.status_code == 400
     assert blank_idempotency.status_code == 400

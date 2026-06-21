@@ -4,6 +4,7 @@ from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.candidate_lifecycle import register_candidate_lifecycle_routes
 from app.api.conversion_governance import register_conversion_governance_routes
 from app.api.idea_signals import register_idea_signal_routes
+from app.api.report_evidence import register_report_evidence_routes
 from app.api.review_queues import register_review_queue_routes
 from app.api.review_workflow import register_review_workflow_routes
 from app.errors import problem_response
@@ -21,6 +22,7 @@ register_candidate_lifecycle_routes(app)
 register_review_queue_routes(app)
 register_review_workflow_routes(app)
 register_conversion_governance_routes(app)
+register_report_evidence_routes(app)
 Instrumentator().instrument(app).expose(app, include_in_schema=False)
 configure_logging()
 

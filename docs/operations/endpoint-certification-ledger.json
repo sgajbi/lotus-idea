@@ -199,6 +199,35 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Record an internal governed report evidence-pack request against a report-evidence conversion intent without creating Report, Render, or Archive records.",
+      "when_to_use": "Use as the RFC-0002 Slice 13 API foundation when an internal caller has a report-evidence conversion intent, idea.report-evidence-pack.request capability, an Idempotency-Key, and needs a source-provenanced request package for downstream report/render/archive materialization.",
+      "when_not_to_use": "Do not use as durable database persistence proof, lotus-report package intake proof, lotus-render output proof, lotus-archive record proof, client-ready publication authorization, Gateway contract, Workbench product proof, data-product certification proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"reportEvidencePackId\":\"report-evidence-pack-001\",\"purpose\":\"client_review_report_section\",\"reasonCodes\":[\"review_approved_for_conversion\"],\"requestedAtUtc\":\"2026-06-21T10:25:00Z\",\"retentionPolicyRef\":\"lotus-report:idea-evidence-retention:v1\",\"clientReadyPublicationRequested\":false}"
+      ],
+      "response_examples": [
+        "{\"reportEvidencePack\":{\"reportEvidencePackId\":\"report-evidence-pack-001\",\"conversionIntentId\":\"conversion-report-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"purpose\":\"client_review_report_section\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"evidenceContentHash\":\"sha256:evidence-lineage\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"sourceSummaries\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-state\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}],\"reasonCodes\":[\"review_approved_for_conversion\"],\"reportSourceAuthority\":\"lotus-report\",\"renderSourceAuthority\":\"lotus-render\",\"archiveSourceAuthority\":\"lotus-archive\",\"boundary\":\"request_only\",\"retentionPolicyRef\":\"lotus-report:idea-evidence-retention:v1\",\"requestedAtUtc\":\"2026-06-21T10:25:00Z\",\"grantsClientPublicationAuthority\":false,\"createsRenderedOutput\":false,\"createsArchiveRecord\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.report_evidence_pack.requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"reportEvidencePack\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.report_evidence_pack.requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.report-evidence-pack.request capability.",
+        "404 returns product-safe Problem Details when the conversion intent or related candidate is not found.",
+        "409 returns product-safe Problem Details for idempotency conflict, non-report conversion intent, unready conversion state, or attempted client-ready publication.",
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_workflow_api.py::test_report_evidence_pack_api_records_request_without_render_or_archive_authority",
+        "tests/integration/test_review_workflow_api.py::test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication",
+        "tests/unit/test_report_evidence.py::test_report_evidence_pack_requires_report_conversion_intent_and_preserves_authorities",
+        "tests/unit/test_idea_persistence.py::test_report_evidence_pack_persistence_records_idempotent_request"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/review-queues/advisor",
       "certification_status": "certified",

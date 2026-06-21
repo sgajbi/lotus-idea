@@ -53,6 +53,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
     assert operations == {
         ("GET", "/api/v1/review-queues/advisor"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/outcomes"),
+        ("POST", "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/conversion-intents"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/feedback"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions"),
