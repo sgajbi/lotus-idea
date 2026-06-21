@@ -52,6 +52,7 @@ def test_endpoint_certification_ledger_starts_with_scaffold_operations() -> None
     operations = {(endpoint["method"], endpoint["path"]) for endpoint in payload["endpoints"]}
     assert operations == {
         ("POST", "/api/v1/idea-signals/high-cash/evaluate"),
+        ("POST", "/api/v1/idea-signals/high-cash/evaluate-and-persist"),
         ("GET", "/health"),
         ("GET", "/health/live"),
         ("GET", "/health/ready"),

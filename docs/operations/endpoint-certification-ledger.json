@@ -29,6 +29,35 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Core evidence for the first high-cash opportunity signal family and persist created candidates through the internal idempotency and audit repository foundation.",
+      "when_to_use": "Use as the RFC-0002 Slice 06 and Slice 10 API foundation when an internal caller already has source-authorized evidence references, source-reported cash weight, an Idempotency-Key, and candidate persistence capability.",
+      "when_not_to_use": "Do not use as durable database persistence proof, live source-ingestion proof, data-product certification proof, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedCashWeight\":\"0.18\",\"sourceEvidence\":{\"portfolioStateRef\":{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/integration/portfolios/{portfolioRef}/core-snapshot\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-state-snapshot-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"holdingsRef\":{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/{portfolioRef}/cash-balances\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:holdings-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"cashMovementRef\":{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/{portfolioRef}/cash-movement-summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:cash-movement-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"cashflowProjectionRef\":{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/{portfolioRef}/cashflow-projection\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:cashflow-projection-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}},\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"evaluation\":{\"outcome\":\"candidate_created\",\"family\":\"high_cash\",\"reasonCodes\":[\"high_cash_ratio\",\"cash_source_ready\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"evidenceHash\":\"sha256:evidence-hash\",\"persistedAtUtc\":\"2026-06-21T10:00:00Z\",\"auditEventType\":\"idea.candidate.persisted\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"evaluation\":{\"outcome\":\"blocked\",\"family\":\"high_cash\",\"reasonCodes\":[\"review_required\"],\"unsupportedReasons\":[\"missing_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false},\"persistence\":null,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.candidate.persist capability.",
+        "409 returns product-safe Problem Details when the idempotency key was already used with a different request payload.",
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+      ],
+      "test_evidence": [
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_persists_created_candidate_with_audit_posture",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_replays_same_idempotency_payload",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_rejects_blank_idempotency_key_safely",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_requires_candidate_persistence_capability"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "GET",
       "path": "/health",
       "certification_status": "baseline_certified",

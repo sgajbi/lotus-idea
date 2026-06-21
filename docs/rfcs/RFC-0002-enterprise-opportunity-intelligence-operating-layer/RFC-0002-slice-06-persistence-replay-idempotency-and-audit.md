@@ -52,13 +52,17 @@ Implemented first-wave internal scope:
 7. The same orchestration shape exists for the Core source-port flow, but it
    still does not promote live source support while Core cash-weight authority
    remains governed by `sgajbi/lotus-core#430`.
+8. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
+   caller-supplied high-cash evaluate-and-persist path as a certified internal
+   API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
+   conflict errors, and explicit `durableStorageBacked=false` posture.
 
 Not implemented yet:
 
 1. database-backed durable persistence,
 2. migrations and rollback automation,
 3. database-backed source-ingestion workers,
-4. stateful API routes and OpenAPI certification,
+4. durable database-backed stateful API routes,
 5. integration or e2e persistence proof over durable storage,
 6. data-product certification,
 7. supported-feature promotion.
@@ -91,6 +95,9 @@ Targeted validation:
 6. `make ci` passed with `13` integration tests, `2` e2e tests, `174` unit
    tests under coverage, coverage gate at `99.37%`, and dependency audit
    reporting no known vulnerabilities.
+7. Later endpoint foundation validation covered the certified
+   evaluate-and-persist API with OpenAPI and endpoint-certification gates, but
+   database-backed persistence remains planned.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.

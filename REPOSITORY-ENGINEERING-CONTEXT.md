@@ -119,8 +119,8 @@ evaluate-and-persist orchestration in
 created candidates, replays matching idempotency keys, conflicts on changed
 payloads, and leaves blocked/not-eligible/suppressed evaluations non-mutating.
 This is not yet database-backed durable persistence: no migration, rollback,
-stateful API surface, integration proof, data-product certification, or
-supported-feature promotion exists.
+durable stateful API surface, integration proof over database storage,
+data-product certification, or supported-feature promotion exists.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection foundation in `src/app/domain/scoring.py`. The
@@ -163,15 +163,20 @@ prompt/RAG/provider integration, durable AI lineage store, API/OpenAPI surface,
 Gateway/Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
 
-RFC-0002 Slice 10 is partially implemented as the first certified internal API
+RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation. `POST /api/v1/idea-signals/high-cash/evaluate` accepts
 caller-supplied, source-owned Core evidence references and source-reported cash
-weight, enforces `idea.signal.evaluate` capability or advisor role, returns
-deterministic candidate, blocked, suppressed, or not-eligible posture, and is
-covered by OpenAPI and endpoint certification evidence. This is not yet a
-supported product capability: there are no live source adapters, Gateway routes,
-Workbench surfaces, database-backed API state, data-product certification,
-runtime trust telemetry, or supported-feature promotion.
+weight, enforces `idea.signal.evaluate` capability or advisor role, and returns
+deterministic candidate, blocked, suppressed, or not-eligible posture.
+`POST /api/v1/idea-signals/high-cash/evaluate-and-persist` uses the same source
+evidence contract, requires `idea.candidate.persist` plus `Idempotency-Key`,
+and persists created candidates through the internal in-memory
+idempotency/audit repository foundation with accepted, replayed, duplicate, or
+conflict posture. Both routes are covered by OpenAPI and endpoint certification
+evidence. This is not yet a supported product capability: there are no live
+source adapters, Gateway routes, Workbench surfaces, database-backed API state,
+data-product certification, runtime trust telemetry, or supported-feature
+promotion.
 
 RFC-0002 Slice 12 is partially implemented as an internal conversion governance
 foundation in `src/app/domain/conversion_governance.py`. The repository now has
@@ -211,7 +216,7 @@ logs; fix or document the owned warning source instead.
    endpoint certification and metrics instrumentation remain compatible.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows. Current use cases map the certified high-cash API
-   request into framework-free domain signal evaluation, fetch Core high-cash
+   requests into framework-free domain signal evaluation, fetch Core high-cash
    evidence through a source port, and internally persist created high-cash
    candidates through the Slice 06 idempotency/audit repository contract.
    Review-queue orchestration reads candidate repository snapshots and delegates

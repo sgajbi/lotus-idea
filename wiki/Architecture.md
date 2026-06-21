@@ -58,11 +58,15 @@ integration proof exists.
 
 ## Certified API Foundation
 
-`POST /api/v1/idea-signals/high-cash/evaluate` is the first certified internal
-API foundation. It evaluates caller-supplied, source-owned Core evidence and
-source-reported cash weight, then returns deterministic high-cash signal
-posture. It does not retrieve live source data, certify a data product, expose a
-Gateway route, or promote a supported business feature.
+`POST /api/v1/idea-signals/high-cash/evaluate` and
+`POST /api/v1/idea-signals/high-cash/evaluate-and-persist` are the first
+certified internal API foundations. They evaluate caller-supplied, source-owned
+Core evidence and source-reported cash weight, then return deterministic
+high-cash signal posture. The persist variant requires `Idempotency-Key` and
+`idea.candidate.persist`, writes only to the internal in-memory repository, and
+returns `durableStorageBacked=false`. These endpoints do not retrieve live
+source data, certify a data product, expose a Gateway route, or promote a
+supported business feature.
 
 ## Persistence Orchestration Foundation
 
@@ -70,8 +74,9 @@ The internal application layer can now evaluate high-cash evidence and persist
 created candidates through the Slice 06 idempotency/audit repository contract.
 Repeated requests with the same idempotency payload replay, changed payloads
 conflict, and blocked, suppressed, or not-eligible evaluations do not mutate
-state. This is still an internal in-memory foundation, not durable database
-support or a supported product workflow.
+state. The evaluate-and-persist API exposes this as an internal certified
+foundation while still reporting `durableStorageBacked=false`; it is not durable
+database support or a supported product workflow.
 
 ## Review Queue Projection Foundation
 
