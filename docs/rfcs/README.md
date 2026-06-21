@@ -35,6 +35,7 @@ tests, docs, wiki, and supported-feature promotion.
 | 18 | [Documentation, Wiki, Support, And Agent Context](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-18-documentation-wiki-support-and-agent-context.md) | Planned |
 | 19 | [Second-Last Hardening And Review](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-19-second-last-hardening-and-review.md) | Planned |
 | 20 | [Final Closure And Branch Hygiene](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-20-final-closure-and-branch-hygiene.md) | Planned |
+| 21 | [Post-Completion Communication And LinkedIn Draft](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-21-post-completion-communication-and-linkedin-draft.md) | Planned |
 
 ## RFC Rules
 
@@ -51,4 +52,6 @@ Every implementation RFC must include:
 9. cleanup/refactor slice,
 10. implementation proof slice,
 11. second-last hardening and review slice,
-12. final closure slice.
+12. final closure slice,
+13. post-completion communication decision when public or thought-leadership
+    material may be created from implementation outcomes.

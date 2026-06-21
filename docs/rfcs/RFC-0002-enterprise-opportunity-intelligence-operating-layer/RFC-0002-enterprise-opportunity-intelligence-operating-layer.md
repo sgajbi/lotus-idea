@@ -12,7 +12,7 @@
 | **Day-One Engineering Contract** | `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md` |
 | **Cross-Repository Scope** | `lotus-idea` owns the opportunity product; source services own source facts; `lotus-ai` owns workflow-pack execution; `lotus-gateway` composes; `lotus-workbench` renders; `lotus-advise` and `lotus-manage` realize conversions; `lotus-report`, `lotus-render`, and `lotus-archive` materialize evidence; `lotus-platform` owns reusable governance and mesh automation |
 | **Compatibility Posture** | strategic reset allowed. Backward compatibility is not required when a cleaner enterprise contract is the right design. Any breaking route, schema, data-product, or consumer change must update every affected Lotus consumer inside this RFC before capability promotion. |
-| **No Second-Wave Rule** | no follow-up RFC, WTBD ledger, or second implementation wave may contain work required for RFC-0002's bank-buyable product claim. Required upstream, downstream, platform, AI, report, archive, Manage, Advise, Workbench, Gateway, docs, CI, security, and data-mesh work belongs in this RFC or the supported claim must be narrowed. |
+| **No Second-Wave Rule** | no follow-up RFC, WTBD ledger, or second implementation wave may contain work required for RFC-0002's bank-buyable product claim. Required upstream, downstream, platform, AI, report, archive, Manage, Advise, Workbench, Gateway, docs, CI, security, and data-mesh work belongs in this RFC or the supported claim must be narrowed. Public or thought-leadership communication is not implementation proof and must only describe supported, implementation-backed outcomes. |
 | **Implementation Branching Rule** | use one coherent RFC-0002 feature branch or one remote branch per slice; every branch, PR, commit, check, evidence directory, wiki publication commit, and closure state must be recorded in slice evidence |
 | **Doc Location** | `docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md` |
 
@@ -467,6 +467,21 @@ Every family must have:
 
 ## 9. Data Products And Mesh Posture
 
+`lotus-idea` must be a first-class Lotus data product producer, not an API-only
+workflow service with decorative metadata. Every promoted producer product must
+have an implemented owner contract, source authority, schema validation, runtime
+trust telemetry, freshness and completeness posture, access policy, SLO,
+consumer contract, lineage, certification evidence, support runbook, and
+supported-feature entry before it can be called active.
+
+Data mesh promotion is blocked unless the product is discoverable through the
+platform catalog, consumable through certified APIs, observable in runtime
+telemetry, and proven by at least one real consumer or an explicit no-consumer
+decision. If a producer or consumer contract changes, all affected downstream
+Lotus services must be updated inside RFC-0002 before the capability is
+promoted. Backward compatibility is not a constraint when a cleaner enterprise
+contract is the right design; complete consumer alignment is the constraint.
+
 ### 9.1 Consumer Products
 
 `lotus-idea` consumes:
@@ -712,6 +727,7 @@ assertions.
 | 18 | Documentation, wiki, support, and agent context | Planned | README/wiki/context/runbook updates and wiki check-only result |
 | 19 | Second-last hardening and review | Planned | code/API/security/data-mesh/docs review and fixes |
 | 20 | Final closure and branch hygiene | Planned | mainline truth, CI proof, wiki publish, branch cleanup, no stranded truth |
+| 21 | Post-completion communication and LinkedIn draft | Planned | implementation-backed post-completion communication draft or explicit no-post decision |
 
 Every completed slice must receive a review pass before the next slice begins.
 
@@ -762,13 +778,17 @@ Create or update:
 Documentation quality bar:
 
 1. final docs must describe actual implemented behavior, constraints, endpoints,
-   payload fields, proof artifacts, and unsupported states;
+   payload fields, proof artifacts, and unsupported states, not generic RFC
+   intent;
 2. every endpoint page must cover request, response, examples, errors,
-   degraded behavior, entitlement, idempotency, supportability, and consumers;
+   degraded behavior, entitlement, idempotency, supportability, and consumers,
+   with examples verified against implemented API behavior;
 3. wiki pages must summarize and route to source docs rather than duplicating
    long technical content;
 4. commercial/demo language must trace to supported features and live evidence;
-5. no final docs may rely on aspirational RFC text as proof.
+5. no final docs may rely on aspirational RFC text as proof;
+6. supported-features entries must be implementation-backed product material
+   with explicit unsupported and gated scope.
 
 ---
 
@@ -845,7 +865,10 @@ RFC-0002 is implemented only when:
 15. no required follow-up RFC, WTBD dependency, side ledger, or unmerged branch
     contains unique durable truth needed for the supported product claim;
 16. skills, guidance, documentation, and agent context have been consciously
-    reviewed and either updated or recorded as no-change.
+    reviewed and either updated or recorded as no-change;
+17. post-completion communication has either been drafted from supported,
+    implementation-backed outcomes through the Lotus thought-leadership process
+    or explicitly deferred/skipped with rationale.
 
 ---
 
