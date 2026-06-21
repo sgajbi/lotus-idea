@@ -79,6 +79,14 @@ lifecycle routes must use that provider until the RFC-0002 persistence slice
 introduces a database-backed repository adapter, so API modules do not create
 duplicate candidate stores.
 
+Application use cases depend on repository workflow protocols from
+`src/app/ports/idea_repository.py`. Candidate snapshots, candidate persistence,
+lifecycle mutation, review and feedback mutation, conversion mutation, report
+evidence-pack requests, and AI explanation reads must use those central ports
+instead of declaring local repository protocols. This keeps the future durable
+storage adapter behind one governed contract surface while the current
+`durableStorageBacked=false` posture remains truthful.
+
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
 review workflow API foundations. They require mutating capabilities, caller

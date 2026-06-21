@@ -2,20 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
 
 from app.domain import (
     DEFAULT_SCORING_POLICY,
-    IdeaRepositorySnapshot,
     IdeaScoringPolicy,
     QueueSnooze,
     ReviewQueueProjection,
     build_review_queue,
 )
-
-
-class CandidateSnapshotRepository(Protocol):
-    def snapshot(self) -> IdeaRepositorySnapshot: ...
+from app.ports.idea_repository import CandidateSnapshotRepository
 
 
 @dataclass(frozen=True)

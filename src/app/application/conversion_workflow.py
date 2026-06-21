@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any
 
 from app.domain import (
     ConversionIntentCommand,
@@ -10,43 +10,10 @@ from app.domain import (
     ConversionOutcomeResult,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
-    GovernedConversionIntent,
-    IdeaRepositorySnapshot,
     record_conversion_outcome,
     request_conversion_intent,
 )
-
-
-class ConversionWorkflowRepository(Protocol):
-    def snapshot(self) -> IdeaRepositorySnapshot: ...
-
-    def precheck_conversion_mutation(
-        self,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> ConversionPersistenceResult | None: ...
-
-    def record_conversion_intent(
-        self,
-        result: ConversionIntentResult,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> ConversionPersistenceResult: ...
-
-    def conversion_intent_by_id(
-        self,
-        conversion_intent_id: str,
-    ) -> GovernedConversionIntent | None: ...
-
-    def record_conversion_outcome(
-        self,
-        result: ConversionOutcomeResult,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> ConversionPersistenceResult: ...
+from app.ports.idea_repository import ConversionWorkflowRepository
 
 
 @dataclass(frozen=True)

@@ -2,27 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any
 
 from app.domain import (
     IdeaLifecycleStatus,
     LifecyclePersistenceResult,
 )
-
-
-class CandidateLifecycleRepository(Protocol):
-    def record_lifecycle_transition(
-        self,
-        candidate_id: str,
-        target_status: IdeaLifecycleStatus,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-        actor_subject: str,
-        occurred_at_utc: datetime | None = None,
-        transition_id: str | None = None,
-        reason_codes: tuple[str, ...] = (),
-    ) -> LifecyclePersistenceResult: ...
+from app.ports.idea_repository import CandidateLifecycleRepository
 
 
 @dataclass(frozen=True)

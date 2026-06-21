@@ -143,6 +143,12 @@ non-mutating. The lifecycle API records governed transitions through the
 canonical domain transition graph with accepted, replayed, not-found, conflict,
 and invalid-transition posture while still reporting
 `durableStorageBacked=false`.
+`src/app/ports/idea_repository.py` now centralizes the repository workflow
+protocols for candidate snapshots, persistence, lifecycle, review and feedback,
+conversion, report evidence-pack requests, and AI explanation reads. Application
+use cases must depend on that port instead of defining local repository
+protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
+so the future durable adapter has one governed contract surface.
 This is not yet database-backed durable persistence: no migration, rollback,
 database-backed stateful API surface, integration proof over database storage,
 data-product certification, or supported-feature promotion exists.
@@ -364,8 +370,9 @@ logs; fix or document the owned warning source instead.
    replay posture, idempotency, and audit primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
-   The current implemented port is `core_sources.py` for high-cash Core
-   evidence.
+   `idea_repository.py` owns the central repository workflow protocols used by
+   application orchestration, and `core_sources.py` owns the high-cash Core
+   evidence port.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
    current Core adapter preserves source-data product refs and requires Core to
    report cash weight explicitly rather than deriving it locally.
