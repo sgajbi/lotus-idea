@@ -71,6 +71,14 @@ boundaries, conversion gating, immutable models, and bounded scoring. It does
 not add API, persistence, source adapters, data-product certification, or
 supported-feature promotion.
 
+RFC-0002 Slice 02 is partially implemented as cleanup and current-surface
+normalization. API process-local repository state is now isolated in
+`src/app/api/repository_state.py` instead of being owned by the high-cash signal
+route module. The high-cash evaluate-and-persist API, and future review,
+feedback, queue, and lifecycle API modules, share the same in-memory repository
+provider until database-backed persistence replaces it. This is structural
+cleanup only and does not promote a supported business feature.
+
 RFC-0002 Slice 04 data-mesh baseline now declares the current source-authority
 consumer set from the Slice 00 map, including Core portfolio state,
 holdings/cash balance, cash movement, cashflow projection, and benchmark
@@ -210,10 +218,13 @@ logs; fix or document the owned warning source instead.
 
 1. `src/app/main.py`: application entrypoint, health, readiness, metadata, and
    OpenAPI surface.
-2. `src/app/api/`: route modules and DTO mapping. Routes must expose explicit
-   idea contracts and must not embed domain logic. Current business routes are
-   registered directly on the FastAPI app before Prometheus instrumentation so
-   endpoint certification and metrics instrumentation remain compatible.
+2. `src/app/api/`: route modules, DTO mapping, and API-facing process state
+   providers. Routes must expose explicit idea contracts and must not embed
+   domain logic. Current business routes are registered directly on the FastAPI
+   app before Prometheus instrumentation so endpoint certification and metrics
+   instrumentation remain compatible. `repository_state.py` owns the temporary
+   process-local in-memory idea repository provider used by API modules until a
+   database-backed repository replaces it.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows. Current use cases map the certified high-cash API
    requests into framework-free domain signal evaluation, fetch Core high-cash

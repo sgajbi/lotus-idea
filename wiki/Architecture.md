@@ -68,6 +68,12 @@ returns `durableStorageBacked=false`. These endpoints do not retrieve live
 source data, certify a data product, expose a Gateway route, or promote a
 supported business feature.
 
+API modules share the temporary process-local repository through
+`src/app/api/repository_state.py`. Signal, review, feedback, queue, and
+lifecycle routes must use that provider until the RFC-0002 persistence slice
+introduces a database-backed repository adapter, so API modules do not create
+duplicate candidate stores.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist
