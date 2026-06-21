@@ -109,6 +109,14 @@ docker compose up --build
 
 ## Governance
 
+Day-one governing standard:
+
+- `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
+
+`lotus-idea` must treat this as an active delivery contract from the first
+commit: supported claims require code, tests, CI, endpoint certification,
+security/dependency posture, documentation, wiki source, and operating evidence.
+
 - Bank-buyable contract:
   `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
 - Backend refactoring and delivery playbook:
