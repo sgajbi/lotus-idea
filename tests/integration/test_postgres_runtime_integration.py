@@ -78,6 +78,135 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
 
 
+def test_postgres_runtime_provider_persists_review_conversion_and_report_workflow(
+    postgres_database_url: str,
+) -> None:
+    client = TestClient(app)
+    persist_headers = _persistence_headers("postgres-runtime-proof-workflow-persist-001")
+    high_cash_payload = _high_cash_payload()
+
+    persisted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload,
+        headers=persist_headers,
+    )
+    assert persisted.status_code == 200
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    queue = client.get(
+        "/api/v1/review-queues/advisor",
+        params={"evaluatedAtUtc": "2026-06-21T10:10:00Z"},
+        headers=_review_queue_headers(),
+    )
+    assert queue.status_code == 200
+    queue_payload = queue.json()
+    assert queue_payload["durableStorageBacked"] is True
+    assert queue_payload["items"][0]["candidate"]["candidateId"] == candidate_id
+
+    _transition_candidate_to_review_ready(client, candidate_id)
+    review_headers = _review_headers("postgres-runtime-proof-review-approve-001")
+    review_payload = _approve_review_payload()
+    review = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=review_payload,
+        headers=review_headers,
+    )
+    assert review.status_code == 200
+    review_payload_response = review.json()
+    assert review_payload_response["durableStorageBacked"] is True
+    assert review_payload_response["persistence"]["decision"] == "accepted"
+    assert review_payload_response["persistence"]["lifecycleStatus"] == "approved"
+    assert review_payload_response["persistence"]["reviewPosture"] == "approved_for_conversion"
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed_review = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=review_payload,
+        headers=review_headers,
+    )
+    assert replayed_review.status_code == 200
+    assert replayed_review.json()["durableStorageBacked"] is True
+    assert replayed_review.json()["persistence"]["decision"] == "replayed"
+
+    feedback = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/feedback",
+        json=_feedback_payload(),
+        headers=_feedback_headers("postgres-runtime-proof-feedback-001"),
+    )
+    assert feedback.status_code == 200
+    assert feedback.json()["durableStorageBacked"] is True
+    assert feedback.json()["persistence"]["decision"] == "accepted"
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    conversion_headers = _conversion_intent_headers("postgres-runtime-proof-conversion-intent-001")
+    conversion_payload = _conversion_intent_payload()
+    conversion = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_payload,
+        headers=conversion_headers,
+    )
+    assert conversion.status_code == 200
+    conversion_response = conversion.json()
+    assert conversion_response["durableStorageBacked"] is True
+    assert conversion_response["persistence"]["decision"] == "accepted"
+    assert conversion_response["persistence"]["lifecycleStatus"] == "converted_to_report"
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed_conversion = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_payload,
+        headers=conversion_headers,
+    )
+    assert replayed_conversion.status_code == 200
+    assert replayed_conversion.json()["durableStorageBacked"] is True
+    assert replayed_conversion.json()["persistence"]["decision"] == "replayed"
+
+    outcome = client.post(
+        "/api/v1/conversion-intents/conversion-report-001/outcomes",
+        json=_conversion_outcome_payload(),
+        headers=_conversion_outcome_headers("postgres-runtime-proof-conversion-outcome-001"),
+    )
+    assert outcome.status_code == 200
+    assert outcome.json()["durableStorageBacked"] is True
+    assert outcome.json()["persistence"]["decision"] == "accepted"
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    report_headers = _report_evidence_pack_headers(
+        "postgres-runtime-proof-report-evidence-pack-001"
+    )
+    report_payload = _report_evidence_pack_payload()
+    report_pack = client.post(
+        "/api/v1/conversion-intents/conversion-report-001/report-evidence-packs",
+        json=report_payload,
+        headers=report_headers,
+    )
+    assert report_pack.status_code == 200
+    report_response = report_pack.json()
+    assert report_response["durableStorageBacked"] is True
+    assert report_response["persistence"]["decision"] == "accepted"
+    assert report_response["reportEvidencePack"]["candidateId"] == candidate_id
+    assert report_response["reportEvidencePack"]["createsRenderedOutput"] is False
+    assert report_response["reportEvidencePack"]["createsArchiveRecord"] is False
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed_report_pack = client.post(
+        "/api/v1/conversion-intents/conversion-report-001/report-evidence-packs",
+        json=report_payload,
+        headers=report_headers,
+    )
+    assert replayed_report_pack.status_code == 200
+    assert replayed_report_pack.json()["durableStorageBacked"] is True
+    assert replayed_report_pack.json()["persistence"]["decision"] == "replayed"
+
+    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
+    assert _table_count(postgres_database_url, "idea_review_decision") == 1
+    assert _table_count(postgres_database_url, "idea_feedback_event") == 1
+    assert _table_count(postgres_database_url, "idea_conversion_intent") == 1
+    assert _table_count(postgres_database_url, "idea_conversion_outcome") == 1
+    assert _table_count(postgres_database_url, "idea_report_evidence_pack_request") == 1
+
+
 def _execute_migrations(database_url: str, direction: MigrationDirection) -> None:
     plan = build_migration_plan(MIGRATIONS_DIR, direction)
     with psycopg.connect(database_url) as connection:
@@ -85,7 +214,15 @@ def _execute_migrations(database_url: str, direction: MigrationDirection) -> Non
 
 
 def _table_count(database_url: str, table_name: str) -> int:
-    allowed_tables = {"idea_candidate_record", "idea_idempotency_record"}
+    allowed_tables = {
+        "idea_candidate_record",
+        "idea_idempotency_record",
+        "idea_review_decision",
+        "idea_feedback_event",
+        "idea_conversion_intent",
+        "idea_conversion_outcome",
+        "idea_report_evidence_pack_request",
+    }
     if table_name not in allowed_tables:
         raise ValueError(f"Unsupported test table: {table_name}")
     with psycopg.connect(database_url) as connection:
@@ -133,3 +270,174 @@ def _persistence_headers(idempotency_key: str) -> dict[str, str]:
         "X-Correlation-Id": "corr-postgres-runtime-proof",
         "Idempotency-Key": idempotency_key,
     }
+
+
+def _review_queue_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.review.queue.read",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-queue",
+    }
+
+
+def _lifecycle_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "idea-lifecycle-worker",
+        "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-lifecycle",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def _review_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.review.record",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-review",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def _feedback_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.feedback.record",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-feedback",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def _conversion_intent_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Capabilities": "idea.conversion.intent.record",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-intent",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def _conversion_outcome_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "lotus-report-worker",
+        "X-Caller-Capabilities": "idea.conversion.outcome.record",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-outcome",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def _report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Capabilities": "idea.report-evidence-pack.request",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-report-pack",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def _access_scope() -> dict[str, str]:
+    return {
+        "tenantId": "tenant-private-bank-sg",
+        "bookId": "book-advisor-001",
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "clientId": "client-001",
+    }
+
+
+def _authorized_scope() -> dict[str, list[str]]:
+    return {
+        "tenantIds": ["tenant-private-bank-sg"],
+        "bookIds": ["book-advisor-001"],
+        "portfolioIds": ["PB_SG_GLOBAL_BAL_001"],
+        "clientIds": ["client-001"],
+    }
+
+
+def _lifecycle_payload(
+    *,
+    transition_id: str,
+    target_status: str,
+    changed_at_utc: str,
+) -> dict[str, Any]:
+    return {
+        "transitionId": transition_id,
+        "targetLifecycleStatus": target_status,
+        "changedAtUtc": changed_at_utc,
+        "reasonCodes": ["review_required"],
+    }
+
+
+def _approve_review_payload() -> dict[str, Any]:
+    return {
+        "reviewId": "review-approve-001",
+        "action": "approve_for_conversion",
+        "accessScope": _access_scope(),
+        "authorizedScope": _authorized_scope(),
+        "reasonCodes": ["review_required"],
+        "decidedAtUtc": "2026-06-21T10:05:00Z",
+    }
+
+
+def _feedback_payload() -> dict[str, Any]:
+    return {
+        "feedbackId": "feedback-useful-001",
+        "accessScope": _access_scope(),
+        "authorizedScope": _authorized_scope(),
+        "outcome": "useful",
+        "reasonCodes": ["review_required"],
+        "recordedAtUtc": "2026-06-21T10:06:00Z",
+    }
+
+
+def _conversion_intent_payload() -> dict[str, Any]:
+    return {
+        "conversionIntentId": "conversion-report-001",
+        "target": "report_evidence",
+        "reasonCodes": ["review_approved_for_conversion"],
+        "requestedAtUtc": "2026-06-21T10:15:00Z",
+    }
+
+
+def _conversion_outcome_payload() -> dict[str, Any]:
+    return {
+        "conversionOutcomeId": "conversion-report-outcome-001",
+        "status": "accepted",
+        "sourceSystem": "lotus-report",
+        "downstreamReference": "report-evidence-pack-001",
+        "recordedAtUtc": "2026-06-21T10:20:00Z",
+    }
+
+
+def _report_evidence_pack_payload() -> dict[str, Any]:
+    return {
+        "reportEvidencePackId": "report-evidence-pack-001",
+        "purpose": "client_review_report_section",
+        "reasonCodes": ["review_approved_for_conversion"],
+        "requestedAtUtc": "2026-06-21T10:25:00Z",
+        "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
+        "clientReadyPublicationRequested": False,
+    }
+
+
+def _transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+    for index, target_status in enumerate(
+        ("enriched", "scored", "governance_checked", "ready_for_review"),
+        start=1,
+    ):
+        response = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+            json=_lifecycle_payload(
+                transition_id=f"lifecycle-{target_status}-001",
+                target_status=target_status,
+                changed_at_utc=f"2026-06-21T10:{index:02d}:00Z",
+            ),
+            headers=_lifecycle_headers(f"postgres-runtime-proof-lifecycle-{target_status}-001"),
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["durableStorageBacked"] is True
+        assert payload["persistence"]["decision"] == "accepted"
+        assert payload["persistence"]["lifecycleStatus"] == target_status
+        reset_idea_repository_for_tests(reload_from_environment=True)
