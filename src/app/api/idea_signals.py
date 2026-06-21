@@ -10,12 +10,17 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.application.high_cash_signal import (
+    EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashSignalCommand,
+    evaluate_and_persist_high_cash_signal as evaluate_and_persist_high_cash_signal_command,
     evaluate_high_cash_signal_command,
 )
 from app.domain import (
+    CandidatePersistenceDecision,
+    CandidatePersistenceRecord,
     EvidenceFreshness,
     IdeaCandidate,
+    InMemoryIdeaRepository,
     SignalEvaluationResult,
     SourceRef,
     SourceSystem,
@@ -44,6 +49,10 @@ _EVALUATE_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.signal.evaluate",
     allowed_roles=("advisor",),
 )
+_PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
+    required_capability="idea.candidate.persist",
+)
+_IDEA_REPOSITORY = InMemoryIdeaRepository()
 
 
 class CamelModel(BaseModel):
@@ -300,6 +309,47 @@ class EvaluateHighCashSignalResponse(CamelModel):
         )
 
 
+class CandidatePersistenceSummaryResponse(CamelModel):
+    decision: CandidatePersistenceDecision
+    candidate_id: str | None = Field(default=None, alias="candidateId")
+    evidence_hash: str | None = Field(default=None, alias="evidenceHash")
+    persisted_at_utc: datetime | None = Field(default=None, alias="persistedAtUtc")
+    audit_event_type: str | None = Field(default=None, alias="auditEventType")
+
+    @classmethod
+    def from_record(
+        cls,
+        *,
+        decision: CandidatePersistenceDecision,
+        record: CandidatePersistenceRecord | None,
+    ) -> "CandidatePersistenceSummaryResponse":
+        audit_event = (
+            record.audit_events[-1] if record is not None and record.audit_events else None
+        )
+        return cls(
+            decision=decision,
+            candidateId=record.candidate.candidate_id if record is not None else None,
+            evidenceHash=record.evidence_hash if record is not None else None,
+            persistedAtUtc=record.persisted_at_utc if record is not None else None,
+            auditEventType=audit_event.event_type if audit_event is not None else None,
+        )
+
+
+class EvaluateAndPersistHighCashSignalResponse(CamelModel):
+    evaluation: EvaluateHighCashSignalResponse
+    persistence: CandidatePersistenceSummaryResponse | None
+    durable_storage_backed: bool = Field(
+        False,
+        alias="durableStorageBacked",
+        description="False until database-backed persistence, migrations, and recovery evidence exist.",
+    )
+    supported_feature_promoted: bool = Field(
+        False,
+        alias="supportedFeaturePromoted",
+        description="False until live source adapters, Gateway/Workbench proof, and supported-feature registration exist.",
+    )
+
+
 def _caller_from_headers(
     *,
     subject: str | None,
@@ -336,6 +386,69 @@ async def evaluate_high_cash_signal(
 
     result = evaluate_high_cash_signal_command(request.to_command())
     return EvaluateHighCashSignalResponse.from_domain(result)
+
+
+async def evaluate_and_persist_high_cash_signal(
+    request: EvaluateHighCashSignalRequest,
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> EvaluateAndPersistHighCashSignalResponse | JSONResponse:
+    caller = _caller_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        require_capability(caller, _PERSIST_HIGH_CASH_POLICY)
+    except PermissionDeniedError:
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to persist idea candidates.",
+        )
+    if not idempotency_key.strip():
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="Idempotency-Key is required.",
+        )
+
+    result = evaluate_and_persist_high_cash_signal_command(
+        EvaluateAndPersistHighCashSignalCommand(
+            evaluation=request.to_command(),
+            idempotency_key=idempotency_key,
+            actor_subject=caller.subject,
+        ),
+        repository=_IDEA_REPOSITORY,
+    )
+    if (
+        result.persistence is not None
+        and result.persistence.decision is CandidatePersistenceDecision.CONFLICT
+    ):
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="idempotency_conflict",
+            title="Idempotency conflict",
+            detail="The idempotency key was already used with a different request payload.",
+        )
+
+    return EvaluateAndPersistHighCashSignalResponse(
+        evaluation=EvaluateHighCashSignalResponse.from_domain(result.evaluation),
+        persistence=(
+            CandidatePersistenceSummaryResponse.from_record(
+                decision=result.persistence.decision,
+                record=result.persistence.record,
+            )
+            if result.persistence is not None
+            else None
+        ),
+        durableStorageBacked=False,
+        supportedFeaturePromoted=False,
+    )
 
 
 HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
@@ -427,6 +540,122 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
 }
 
 
+HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
+    "path": "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+    "operation_id": "evaluateAndPersistHighCashIdeaSignal",
+    "summary": "Evaluate and persist a high-cash idea signal",
+    "description": (
+        "Evaluates caller-supplied, source-owned Core evidence for the first high-cash "
+        "opportunity family, then persists created candidates through the internal "
+        "idempotency/audit repository foundation. The endpoint is an internal certified "
+        "API foundation; persistence is not durable database-backed and no supported "
+        "business feature is promoted."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": EvaluateAndPersistHighCashSignalResponse,
+    "tags": ["Idea Signals"],
+    "responses": {
+        200: {
+            "description": "High-cash signal evaluation completed and candidate persistence accepted, replayed, duplicated, or skipped for non-created candidates.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "evaluation": {
+                            "outcome": "candidate_created",
+                            "family": "high_cash",
+                            "reasonCodes": [
+                                "high_cash_ratio",
+                                "cash_source_ready",
+                                "review_required",
+                            ],
+                            "unsupportedReasons": [],
+                            "candidate": {
+                                "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                                "family": "high_cash",
+                                "lifecycleStatus": "generated",
+                                "reviewPosture": "advisor_review_required",
+                                "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
+                                "supportability": "ready",
+                                "score": "82",
+                                "scorePolicyVersion": "idle-liquidity-v1",
+                                "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
+                                "sourceRefs": [
+                                    {
+                                        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+                                        "sourceSystem": "lotus-core",
+                                        "productVersion": "v1",
+                                        "asOfDate": "2026-06-21",
+                                        "generatedAtUtc": "2026-06-21T10:00:00Z",
+                                        "dataQualityStatus": "complete",
+                                        "freshness": "current",
+                                    }
+                                ],
+                            },
+                            "sourceAuthority": "lotus-core",
+                            "supportedFeaturePromoted": False,
+                        },
+                        "persistence": {
+                            "decision": "accepted",
+                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                            "evidenceHash": "sha256:evidence-hash",
+                            "persistedAtUtc": "2026-06-21T10:00:00Z",
+                            "auditEventType": "idea.candidate.persisted",
+                        },
+                        "durableStorageBacked": False,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        400: {
+            "model": ProblemDetails,
+            "description": "Request validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "type": "about:blank",
+                        "status": 400,
+                        "code": "invalid_request",
+                        "title": "Invalid request",
+                        "detail": "Request validation failed. Correct the request fields and retry.",
+                    }
+                }
+            },
+        },
+        403: {
+            "model": ProblemDetails,
+            "description": "Caller lacks the required candidate-persistence capability.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "type": "about:blank",
+                        "status": 403,
+                        "code": "permission_denied",
+                        "title": "Permission denied",
+                        "detail": "The caller is not permitted to persist idea candidates.",
+                    }
+                }
+            },
+        },
+        409: {
+            "model": ProblemDetails,
+            "description": "The idempotency key was already used with a different request payload.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "type": "about:blank",
+                        "status": 409,
+                        "code": "idempotency_conflict",
+                        "title": "Idempotency conflict",
+                        "detail": "The idempotency key was already used with a different request payload.",
+                    }
+                }
+            },
+        },
+    },
+}
+
+
 def register_idea_signal_routes(app: FastAPI) -> None:
     app.post(
         path=HIGH_CASH_EVALUATE_ROUTE["path"],
@@ -438,3 +667,18 @@ def register_idea_signal_routes(app: FastAPI) -> None:
         tags=HIGH_CASH_EVALUATE_ROUTE["tags"],
         responses=HIGH_CASH_EVALUATE_ROUTE["responses"],
     )(evaluate_high_cash_signal)
+    app.post(
+        path=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["path"],
+        operation_id=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["operation_id"],
+        summary=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["summary"],
+        description=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["description"],
+        status_code=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["status_code"],
+        response_model=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["response_model"],
+        tags=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["tags"],
+        responses=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["responses"],
+    )(evaluate_and_persist_high_cash_signal)
+
+
+def reset_idea_signal_repository_for_tests() -> None:
+    global _IDEA_REPOSITORY
+    _IDEA_REPOSITORY = InMemoryIdeaRepository()

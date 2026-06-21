@@ -23,9 +23,17 @@ foundation for RFC-0002 Slice 10. It evaluates caller-supplied, source-owned
 Core evidence and source-reported cash weight for deterministic high-cash signal
 posture.
 
-Use it only when the caller already has source-authorized Core evidence
-references. Do not use it as live source ingestion proof, Gateway proof,
-Workbench proof, data-product certification, or supported-feature promotion.
+`POST /api/v1/idea-signals/high-cash/evaluate-and-persist` is the certified
+internal API foundation that adds candidate persistence through the Slice 06
+in-memory idempotency/audit repository contract. It requires
+`idea.candidate.persist` and an `Idempotency-Key`, returns replay/conflict
+posture for idempotency behavior, and exposes `durableStorageBacked=false`
+until database-backed persistence, migrations, and recovery proof exist.
+
+Use these endpoints only when the caller already has source-authorized Core
+evidence references. Do not use them as live source ingestion proof, Gateway
+proof, Workbench proof, data-product certification, or supported-feature
+promotion.
 Those remain blocked until later RFC slices add runtime adapters, downstream
 contracts, trust telemetry, and supported-feature registration.
 

@@ -18,12 +18,12 @@ deterministic scoring/review-queue projection and repository-snapshot queue
 orchestration foundation, an internal advisor review/feedback governance and
 workflow persistence foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
-first certified internal high-cash signal evaluation API foundation for
-caller-supplied, source-owned Core evidence, and contains an internal
-conversion-governance foundation for review-gated downstream intent/outcome
-tracking. No business feature is supported until the relevant RFC slice has full
-runtime evidence, endpoint certification, tests, data-mesh posture, downstream
-proof, and supported-feature registration.
+first certified internal high-cash signal evaluation and evaluate-and-persist
+API foundations for caller-supplied, source-owned Core evidence, and contains
+an internal conversion-governance foundation for review-gated downstream
+intent/outcome tracking. No business feature is supported until the relevant
+RFC slice has full runtime evidence, endpoint certification, tests, data-mesh
+posture, downstream proof, and supported-feature registration.
 
 ## Product Boundary
 

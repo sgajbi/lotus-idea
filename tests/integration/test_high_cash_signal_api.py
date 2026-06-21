@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from app.api.idea_signals import reset_idea_signal_repository_for_tests
 from app.main import app
 
 
@@ -49,6 +50,15 @@ def authorized_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
         "X-Correlation-Id": "corr-high-cash-api",
+    }
+
+
+def persistence_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "signal-ingestion-worker",
+        "X-Caller-Capabilities": "idea.candidate.persist",
+        "X-Correlation-Id": "corr-high-cash-persist-api",
+        "Idempotency-Key": idempotency_key,
     }
 
 
@@ -149,3 +159,142 @@ def test_high_cash_api_validation_error_is_product_safe() -> None:
     assert "invalid_request" in body
     assert "1.1" not in body
     assert "source/" not in body
+
+
+def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -> None:
+    reset_idea_signal_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persistence_headers("persist-high-cash-api-accepted-001"),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-high-cash-persist-api"
+    payload = response.json()
+    assert payload["evaluation"]["outcome"] == "candidate_created"
+    assert payload["evaluation"]["supportedFeaturePromoted"] is False
+    assert payload["persistence"]["decision"] == "accepted"
+    assert (
+        payload["persistence"]["candidateId"] == payload["evaluation"]["candidate"]["candidateId"]
+    )
+    assert payload["persistence"]["auditEventType"] == "idea.candidate.persisted"
+    assert payload["durableStorageBacked"] is False
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
+    reset_idea_signal_repository_for_tests()
+    client = TestClient(app)
+    headers = persistence_headers("persist-high-cash-api-replay-001")
+    first = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=headers,
+    )
+
+    replayed = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert replayed.status_code == 200
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    assert (
+        replayed.json()["persistence"]["candidateId"] == first.json()["persistence"]["candidateId"]
+    )
+
+
+def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload() -> None:
+    reset_idea_signal_repository_for_tests()
+    client = TestClient(app)
+    headers = persistence_headers("persist-high-cash-api-conflict-001")
+    client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(cash_weight="0.18"),
+        headers=headers,
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(cash_weight="0.20"),
+        headers=headers,
+    )
+
+    assert response.status_code == 409
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 409,
+        "code": "idempotency_conflict",
+        "title": "Idempotency conflict",
+        "detail": "The idempotency key was already used with a different request payload.",
+    }
+
+
+def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
+    reset_idea_signal_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(cash_weight=None),
+        headers=persistence_headers("persist-high-cash-api-blocked-001"),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["evaluation"]["outcome"] == "blocked"
+    assert payload["persistence"] is None
+    assert payload["durableStorageBacked"] is False
+
+
+def test_high_cash_persist_api_requires_candidate_persistence_capability() -> None:
+    reset_idea_signal_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers={
+            "X-Caller-Subject": "advisor-001",
+            "X-Caller-Roles": "advisor",
+            "Idempotency-Key": "persist-high-cash-api-denied-001",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to persist idea candidates.",
+    }
+
+
+def test_high_cash_persist_api_rejects_blank_idempotency_key_safely() -> None:
+    reset_idea_signal_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers={
+            "X-Caller-Subject": "signal-ingestion-worker",
+            "X-Caller-Capabilities": "idea.candidate.persist",
+            "Idempotency-Key": " ",
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Idempotency-Key is required.",
+    }

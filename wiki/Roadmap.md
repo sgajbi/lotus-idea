@@ -31,8 +31,9 @@ Current state:
     evidence envelopes, verifier/fallback controls, safe audit events, and no
     AI downstream authority,
 12. RFC-0002 Slice 10 partially implements the certified internal
-    `POST /api/v1/idea-signals/high-cash/evaluate` API foundation over
-    caller-supplied, source-owned Core evidence,
+    `POST /api/v1/idea-signals/high-cash/evaluate` and
+    `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
+    over caller-supplied, source-owned Core evidence,
 13. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, and no-authority conversion boundaries,
