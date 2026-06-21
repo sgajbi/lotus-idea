@@ -30,7 +30,8 @@ Baseline required checks include lint, format check, typecheck, architecture bou
 OpenAPI quality, supported-feature gate, endpoint-certification gate, unit tests, integration
 tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
-security audit, Docker build validation, and workflow lint.
+security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
+jobs, and workflow lint.
 
 Persistence adapter validation:
 
@@ -66,7 +67,8 @@ approved action-runtime majors, 99% combined coverage in merge/releasability lan
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, migration contract validation, migration execution dry-run
 validation, PostgreSQL runtime proof, workflow-dispatch access, non-suppressed auto-merge token
-usage, merged-PR main-releasability dispatch, and source-safe local quality gates.
+usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
+in critical lanes, and source-safe local quality gates.
 
 Data-mesh foundation checks:
 

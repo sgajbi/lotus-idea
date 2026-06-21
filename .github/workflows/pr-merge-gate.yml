@@ -24,6 +24,7 @@ jobs:
   workflow-lint:
     name: PR Merge Gate / Workflow Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: reviewdog/action-actionlint@v1
@@ -31,6 +32,7 @@ jobs:
   lint-typecheck-security:
     name: PR Merge Gate / Lint Typecheck Security
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
@@ -56,6 +58,7 @@ jobs:
     name: PR Merge Gate / Tests (${{ matrix.suite }})
     needs: [lint-typecheck-security]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
@@ -90,6 +93,7 @@ jobs:
     name: PR Merge Gate / Coverage Gate (Combined)
     needs: [test-suites]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     env:
       NODE_OPTIONS: --no-deprecation
     steps:
@@ -115,6 +119,7 @@ jobs:
     name: PR Merge Gate / PostgreSQL Runtime Proof
     needs: [lint-typecheck-security]
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:18-alpine
@@ -147,6 +152,7 @@ jobs:
     name: PR Merge Gate / Validate Docker Build
     needs: [coverage-gate, postgres-runtime-proof]
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     env:
       DOCKER_BUILDKIT: "1"
       COMPOSE_DOCKER_CLI_BUILD: "1"

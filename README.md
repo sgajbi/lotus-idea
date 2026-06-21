@@ -262,7 +262,10 @@ commit: supported claims require code, tests, CI, endpoint certification,
 security/dependency posture, documentation, wiki source, and operating evidence.
 Rebase auto-merge is allowed only with `LOTUS_AUTOMERGE_TOKEN` plus merged-PR
 Main Releasability dispatch so post-merge release evidence is produced on
-`main` by a non-suppressed merge actor.
+`main` by a non-suppressed merge actor. GitHub workflow jobs must declare
+bounded `timeout-minutes` values, and critical lanes must not use
+`continue-on-error: true`; `make ci-contract-gate` blocks drift in those
+controls.
 
 - Bank-buyable contract:
   `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
