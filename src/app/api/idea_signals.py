@@ -20,11 +20,11 @@ from app.domain import (
     CandidatePersistenceRecord,
     EvidenceFreshness,
     IdeaCandidate,
-    InMemoryIdeaRepository,
     SignalEvaluationResult,
     SourceRef,
     SourceSystem,
 )
+from app.api.repository_state import get_idea_repository
 from app.errors import ProblemDetails, problem_response
 from app.security.caller_context import (
     CallerContext,
@@ -52,7 +52,6 @@ _EVALUATE_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )
-_IDEA_REPOSITORY = InMemoryIdeaRepository()
 
 
 class CamelModel(BaseModel):
@@ -423,7 +422,7 @@ async def evaluate_and_persist_high_cash_signal(
             idempotency_key=idempotency_key,
             actor_subject=caller.subject,
         ),
-        repository=_IDEA_REPOSITORY,
+        repository=get_idea_repository(),
     )
     if (
         result.persistence is not None
@@ -677,8 +676,3 @@ def register_idea_signal_routes(app: FastAPI) -> None:
         tags=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["tags"],
         responses=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["responses"],
     )(evaluate_and_persist_high_cash_signal)
-
-
-def reset_idea_signal_repository_for_tests() -> None:
-    global _IDEA_REPOSITORY
-    _IDEA_REPOSITORY = InMemoryIdeaRepository()

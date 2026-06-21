@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.api.idea_signals import reset_idea_signal_repository_for_tests
+from app.api.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
 
@@ -162,7 +162,7 @@ def test_high_cash_api_validation_error_is_product_safe() -> None:
 
 
 def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -> None:
-    reset_idea_signal_repository_for_tests()
+    reset_idea_repository_for_tests()
     client = TestClient(app)
 
     response = client.post(
@@ -186,7 +186,7 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
 
 
 def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
-    reset_idea_signal_repository_for_tests()
+    reset_idea_repository_for_tests()
     client = TestClient(app)
     headers = persistence_headers("persist-high-cash-api-replay-001")
     first = client.post(
@@ -210,7 +210,7 @@ def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:
 
 
 def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload() -> None:
-    reset_idea_signal_repository_for_tests()
+    reset_idea_repository_for_tests()
     client = TestClient(app)
     headers = persistence_headers("persist-high-cash-api-conflict-001")
     client.post(
@@ -236,7 +236,7 @@ def test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload(
 
 
 def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
-    reset_idea_signal_repository_for_tests()
+    reset_idea_repository_for_tests()
     client = TestClient(app)
 
     response = client.post(
@@ -253,7 +253,7 @@ def test_high_cash_persist_api_does_not_persist_blocked_evaluation() -> None:
 
 
 def test_high_cash_persist_api_requires_candidate_persistence_capability() -> None:
-    reset_idea_signal_repository_for_tests()
+    reset_idea_repository_for_tests()
     client = TestClient(app)
 
     response = client.post(
@@ -277,7 +277,7 @@ def test_high_cash_persist_api_requires_candidate_persistence_capability() -> No
 
 
 def test_high_cash_persist_api_rejects_blank_idempotency_key_safely() -> None:
-    reset_idea_signal_repository_for_tests()
+    reset_idea_repository_for_tests()
     client = TestClient(app)
 
     response = client.post(
