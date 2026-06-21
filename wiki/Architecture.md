@@ -73,6 +73,15 @@ conflict, and blocked, suppressed, or not-eligible evaluations do not mutate
 state. This is still an internal in-memory foundation, not durable database
 support or a supported product workflow.
 
+## Review Queue Projection Foundation
+
+The internal application layer can project persisted candidate snapshots into
+deterministic advisor review queues by delegating to the Slice 07 scoring and
+queue policy. The projection preserves score-versioned ordering, suppression,
+expiry, snooze, unsupported-evidence, and duplicate exclusions without adding a
+second queue implementation. It is not yet a public API, Workbench surface,
+database-backed queue product, or certified data product.
+
 ## Architecture Decisions
 
 ADRs live in `docs/architecture/adr/`:

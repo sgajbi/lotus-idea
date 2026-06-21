@@ -14,7 +14,8 @@ the first Core source-port and conservative HTTP adapter foundation for
 high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
 high-cash evaluate-and-persist orchestration foundation,
-deterministic scoring/review-queue projection foundation, and an internal
+deterministic scoring/review-queue projection and repository-snapshot queue
+orchestration foundation, and an internal
 advisor review/feedback governance foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
 first certified internal high-cash signal evaluation API foundation for
@@ -94,6 +95,8 @@ source-authority contracts only, not runtime certification.
   evaluate high-cash signals over caller-supplied Core evidence and over a
   Core source port that fetches governed Core evidence, and internally persist
   created candidates through the Slice 06 idempotency/audit repository contract.
+  Internal review-queue orchestration projects persisted candidate snapshots
+  through the Slice 07 deterministic queue policy.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,
