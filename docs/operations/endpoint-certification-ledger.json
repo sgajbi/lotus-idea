@@ -1,0 +1,62 @@
+{
+  "repository": "lotus-idea",
+  "policy": "Every public OpenAPI operation requires certification evidence before promotion.",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "certification_status": "baseline_certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Report lightweight service health for diagnostics and platform smoke checks.",
+      "when_to_use": "Use for simple service health probes and local diagnostics.",
+      "when_not_to_use": "Do not use as a readiness or dependency-quality signal.",
+      "request_examples": ["No request body."],
+      "response_examples": ["{\"status\":\"ok\",\"service\":\"lotus-idea\"}"],
+      "error_examples": ["Unhandled service errors return product-safe Problem Details."],
+      "test_evidence": ["tests/integration/test_health.py::test_health_endpoints"],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
+      "path": "/health/live",
+      "certification_status": "baseline_certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Report whether the service process is live.",
+      "when_to_use": "Use for liveness probes that should only prove the process is running.",
+      "when_not_to_use": "Do not use to decide whether the service is ready for traffic.",
+      "request_examples": ["No request body."],
+      "response_examples": ["{\"status\":\"live\"}"],
+      "error_examples": ["Unhandled service errors return product-safe Problem Details."],
+      "test_evidence": ["tests/integration/test_health.py::test_health_endpoints"],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
+      "path": "/health/ready",
+      "certification_status": "baseline_certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Report whether the service is ready to receive traffic.",
+      "when_to_use": "Use for readiness probes and deployment routing decisions.",
+      "when_not_to_use": "Do not use as a business capability or upstream data-quality signal.",
+      "request_examples": ["No request body."],
+      "response_examples": ["{\"status\":\"ready\"}", "{\"status\":\"draining\"}"],
+      "error_examples": ["503 readiness response returns {\"status\":\"draining\"} during intentional drain."],
+      "test_evidence": ["tests/integration/test_health.py::test_health_endpoints", "tests/integration/test_health.py::test_readiness_reports_draining_state"],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
+      "path": "/metadata",
+      "certification_status": "baseline_certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Report service identity and policy-version metadata for operators and validators.",
+      "when_to_use": "Use for operator diagnostics, inventory, and validation metadata checks.",
+      "when_not_to_use": "Do not use as a business data or supportability endpoint.",
+      "request_examples": ["No request body."],
+      "response_examples": ["{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\"}"],
+      "error_examples": ["Unhandled service errors return product-safe Problem Details."],
+      "test_evidence": ["tests/e2e/test_smoke.py::test_metadata_endpoint"],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    }
+  ]
+}

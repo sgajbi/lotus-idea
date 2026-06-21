@@ -1,0 +1,7 @@
+{
+  "repository": "lotus-idea",
+  "status": "Planned",
+  "certification_status": "not_certified",
+  "access_policies": [],
+  "policy": "Replace placeholders with governed access policy before any mesh claim."
+}

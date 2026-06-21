@@ -1,0 +1,12 @@
+services:
+  lotus-idea:
+    build: .
+    ports:
+      - \"8330:8330\"
+    env_file:
+      - .env
+    healthcheck:
+      test: [\"CMD\", \"python\", \"-c\", \"import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')\"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
