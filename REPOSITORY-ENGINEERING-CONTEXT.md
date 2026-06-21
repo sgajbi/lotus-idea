@@ -129,9 +129,10 @@ evidence quality, freshness, relevance, downstream fit, and conflict flags;
 policy-versioned score breakdowns with typed reason codes; immutable candidate
 score attachment; priority buckets; stable review queue ordering; snooze,
 suppression, unsupported-evidence, expired, unscored, non-reviewable, and
-duplicate exclusion rules; and golden unit coverage for expected ordering and
-edge cases. This is not yet a supported queue product: no database-backed queue
-state, application orchestration, API/OpenAPI surface, Gateway/Workbench proof,
+duplicate exclusion rules; repository-snapshot application orchestration in
+`src/app/application/review_queue.py`; and golden unit coverage for expected
+ordering and edge cases. This is not yet a supported queue product: no
+database-backed queue state, API/OpenAPI surface, Gateway/Workbench proof,
 data-product certification, trust telemetry, or supported-feature promotion
 exists.
 
@@ -208,6 +209,8 @@ logs; fix or document the owned warning source instead.
    request into framework-free domain signal evaluation, fetch Core high-cash
    evidence through a source port, and internally persist created high-cash
    candidates through the Slice 06 idempotency/audit repository contract.
+   Review-queue orchestration reads candidate repository snapshots and delegates
+   ordering/exclusion behavior to the Slice 07 domain policy.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, evidence policy, deterministic governance checks,

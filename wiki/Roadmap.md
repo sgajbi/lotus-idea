@@ -21,8 +21,8 @@ Current state:
    evaluate-and-persist orchestration,
 9. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
-   deduplication, expiry, unsupported-evidence, and unscored-candidate
-   exclusions,
+   deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
+   and repository-snapshot queue orchestration,
 10. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, and queue projection interaction,
@@ -46,7 +46,7 @@ First implementation program:
 4. extend the current Core source-port foundation into live high-cash /
    idle-liquidity source proof after Core exposes explicit source-reported cash
    weight,
-5. add database-backed persistence, source ingestion workers, persisted queue
+5. add database-backed persistence, source ingestion workers, durable queue
    state, review, and feedback,
 6. extend certified APIs into Gateway/Workbench product surfaces after live
    source adapters and durable state exist,

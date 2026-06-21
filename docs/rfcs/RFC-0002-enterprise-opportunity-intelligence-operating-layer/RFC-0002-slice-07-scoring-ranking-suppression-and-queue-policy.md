@@ -1,7 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Partially implemented - internal deterministic scoring and queue
-projection foundation only
+Status: Partially implemented - internal deterministic scoring plus repository-snapshot queue projection only
 
 ## Outcome
 
@@ -44,6 +43,14 @@ Implemented on the Slice 07 foundation branch:
    deterministic scoring, conflict penalty behavior, score attachment, stable
    ranking, priority buckets, suppression, snooze, expiry, unsupported evidence,
    unscored candidates, and deduplication.
+7. `src/app/application/review_queue.py` now adds a thin application
+   projection over candidate repository snapshots. It reads persisted candidate
+   records from the Slice 06 repository contract, delegates ranking and
+   exclusions to `build_review_queue`, and applies snooze state without adding a
+   parallel queue implementation.
+8. `tests/unit/test_review_queue_application.py` proves snapshot-backed queue
+   projection, expired-record exclusion, snooze exclusion, and timezone-aware
+   evaluation validation.
 
 ## Remaining Gaps
 
@@ -51,10 +58,27 @@ This slice is not complete as a supported product capability. The following
 work remains planned:
 
 1. persisted queue state and database-backed ranking projections,
-2. application orchestration over repository snapshots and source-adapter
-   inputs,
+2. source-adapter input orchestration that creates and updates persisted
+   candidates before queue projection,
 3. API DTOs, OpenAPI examples, endpoint certification, and Gateway contract,
 4. Workbench review queue UI proof and entitlement-backed access control,
 5. data-product certification and trust telemetry for queue products,
 6. supportability metrics and runtime diagnostics for queue health,
 7. supported-feature promotion after live proof.
+
+## Validation
+
+Targeted validation:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_review_queue_application.py tests\unit\test_scoring_queue_policy.py tests\unit\test_high_cash_application.py -q`
+   passed with `29 passed`.
+2. `.venv\Scripts\python.exe -m ruff check src\app\application\review_queue.py tests\unit\test_review_queue_application.py`
+   passed.
+3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
+4. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+   guards, data-mesh contract gate, supported-feature gate,
+   endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
+   `178` unit tests.
+5. `make ci` passed with `13` integration tests, `2` e2e tests, `178` unit
+   tests under coverage, coverage gate at `99.38%`, and dependency audit
+   reporting no known vulnerabilities.
