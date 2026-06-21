@@ -17,6 +17,9 @@ and discoverable.
 4. Verify Main Releasability Gate and wiki publication when wiki source changed.
 5. Delete completed feature branches and record no remaining unique durable
    truth outside `main`.
+6. Audit all Lotus repositories touched by the RFC for leftover local or remote
+   `feature/*` branches and delete branches that are merged, obsolete, or
+   superseded.
 
 ## Acceptance Gate
 
@@ -26,3 +29,5 @@ and discoverable.
    supported claim.
 4. Final communication to the user names supported scope, evidence, residual
    gated scope, and validation status.
+5. Branch hygiene evidence states that completed feature branches were deleted
+   locally and remotely after merge.

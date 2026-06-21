@@ -20,6 +20,21 @@ enterprise opportunity-intelligence service. Fix reusable gaps in
 4. Record explicit no-change decisions when the platform scaffold is already
    sufficient.
 
+## Current Scaffold Finding
+
+Initial `lotus-idea` review found that the generated backend scaffold created a
+strong CI/API/quality baseline but did not seed the full Lotus wiki page set.
+The missing authored pages were:
+
+1. `Getting-Started.md`,
+2. `Development-Workflow.md`,
+3. `Validation-And-CI.md`,
+4. `Roadmap.md`.
+
+This is a platform-scaffold issue, not just a `lotus-idea` local documentation
+issue. Future Lotus apps should start with onboarding, workflow, validation,
+branch-hygiene, roadmap, and supported-feature wiki structure already present.
+
 ## Acceptance Gate
 
 1. A scaffold gap ledger exists in this slice evidence.
@@ -27,3 +42,5 @@ enterprise opportunity-intelligence service. Fix reusable gaps in
    narrowing decision.
 3. `lotus-idea` remains generated from standard patterns and avoids local-only
    governance shortcuts.
+4. Platform scaffold automation and tests include the standard wiki page set,
+   or this slice records a deliberate no-change decision with evidence.

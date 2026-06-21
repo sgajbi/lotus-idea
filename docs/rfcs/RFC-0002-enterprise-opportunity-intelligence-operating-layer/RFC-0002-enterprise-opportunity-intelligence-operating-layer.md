@@ -109,6 +109,22 @@ External market references used for context:
 4. 2026 OCC/Federal Reserve/FDIC revised model-risk guidance, relevant for
    models supporting significant banking business lines:
    `https://www.occ.gov/news-issuances/bulletins/2026/bulletin-2026-13.html`.
+5. DBS public AI/ML wealth material describing hyper-personalized nudges and
+   connecting research/investment ideas into actionable app flows:
+   `https://www.dbs.com/artificial-intelligence-machine-learning/index.html`.
+6. Morgan Stanley public AI Debrief material describing advisor-reviewed meeting
+   summaries, action items, email drafts, and CRM notes:
+   `https://www.morganstanley.com/press-releases/ai-at-morgan-stanley-debrief-launch`.
+7. Charles Schwab public Portfolio Insights disclosure describing an AI feature
+   that summarizes portfolio day-change drivers, related market news, and
+   expert commentary:
+   `https://www.schwab.com/legal/portfolio-insights-disclosure`.
+8. NIST AI Risk Management Framework material for trustworthy AI risk
+   management:
+   `https://www.nist.gov/itl/ai-risk-management-framework`.
+9. MAS FEAT principles for fairness, ethics, accountability, and transparency in
+   financial-sector AI/data analytics:
+   `https://www.mas.gov.sg/~/media/MAS/News%20and%20Publications/Monographs%20and%20Information%20Papers/FEAT%20Principles%20Final.pdf`.
 
 These references shape product expectations only. Lotus implementation truth is
 the code, contracts, tests, RFCs, platform standards, data-product evidence, and
