@@ -9,7 +9,7 @@ This repository starts from the Lotus platform observability scaffold.
 - correlation and trace response headers
 - structured JSON application events
 - product-safe error responses
-- bounded idea operation events for conversion/report-evidence foundations
+- bounded idea operation events for certified internal API foundations
 
 ## Sensitive-Content Rule
 
@@ -27,6 +27,12 @@ Current instrumented operations:
 
 | Operation | Current Scope | Source Authority Label | Current Supportability |
 | --- | --- | --- | --- |
+| `signal_evaluation` | Internal high-cash signal evaluation | `lotus-core` | `foundation_only` |
+| `candidate_persistence` | Internal high-cash candidate persistence and replay | `lotus-core` | `foundation_only` |
+| `lifecycle_transition` | Internal candidate lifecycle transition recording | `lotus-idea` | `foundation_only` |
+| `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
+| `review_action` | Internal human review decision recording | `lotus-idea` | `foundation_only` |
+| `feedback_record` | Internal advisor feedback recording | `lotus-idea` | `foundation_only` |
 | `conversion_intent` | Internal review-gated conversion intent recording | `lotus-idea` | `foundation_only` |
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
@@ -52,8 +58,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
 3. `conflict` means the idempotency key was reused with a different payload.
 4. `not_found` means the referenced candidate, conversion intent, or related foundation record was
    not present.
-5. `permission_denied` means fail-closed capability policy blocked the caller.
-6. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
+5. `duplicate`, `suppressed`, and `not_eligible` describe deterministic signal or persistence
+   outcomes that did not create a new candidate.
+6. `permission_denied` means fail-closed capability policy blocked the caller.
+7. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
 
 These signals are operational support evidence only. They do not certify a data product, durable

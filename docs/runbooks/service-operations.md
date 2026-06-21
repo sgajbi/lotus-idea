@@ -25,9 +25,15 @@
 RFC-0002 Slice 15 adds bounded operation-event logs and the
 `lotus_idea_operation_events_total` metric for these internal foundations:
 
-1. conversion intent recording,
-2. conversion outcome recording,
-3. report evidence-pack request recording.
+1. high-cash signal evaluation,
+2. high-cash candidate persistence,
+3. candidate lifecycle transition recording,
+4. advisor review queue reads,
+5. human review decision recording,
+6. advisor feedback recording,
+7. conversion intent recording,
+8. conversion outcome recording,
+9. report evidence-pack request recording.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
@@ -35,9 +41,11 @@ Use the operation `outcome` before inspecting payload-level evidence:
 2. `replayed`: duplicate submission with the same idempotency key and payload.
 3. `conflict`: idempotency key reused with a different payload.
 4. `not_found`: candidate, conversion intent, or related foundation record is absent.
-5. `permission_denied`: caller capability failed closed.
-6. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
-7. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
+5. `duplicate`, `suppressed`, and `not_eligible`: deterministic signal or persistence outcomes
+   that did not create a new candidate.
+6. `permission_denied`: caller capability failed closed.
+7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
+8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 
 Operation metrics are diagnostic support evidence only. They do not prove durable database state,
 data-product certification, downstream Report/Render/Archive realization, Gateway/Workbench proof,

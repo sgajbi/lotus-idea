@@ -32,9 +32,11 @@ Mesh certification rule:
 
 Operation-event governance:
 
-1. conversion and report evidence-pack foundation APIs emit bounded operation
-   events for accepted, replayed, conflict, not-found, permission-denied,
-   invalid-request, and invalid-state outcomes,
+1. high-cash, candidate persistence, lifecycle, advisor queue, review,
+   feedback, conversion, and report evidence-pack foundation APIs emit bounded
+   operation events for accepted, replayed, duplicate, suppressed,
+   not-eligible, conflict, not-found, permission-denied, invalid-request, and
+   invalid-state outcomes,
 2. operation metrics use only bounded labels and keep identifiers, payloads,
    trace ids, and correlation ids out of metric labels,
 3. operation events retain `foundation_only` supportability until durable

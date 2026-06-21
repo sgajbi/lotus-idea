@@ -3,10 +3,10 @@
 Current posture: scaffold operations plus internal domain, persistence/replay,
 lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
 advisor queue, review-action, and feedback API foundations, and conversion
-governance plus certified internal conversion intent/outcome API foundations.
-Conversion remains internal foundation only: there is no database-backed
-conversion persistence, migration, downstream adapter, runtime recovery command,
-Gateway/Workbench proof, or supported conversion business API yet.
+governance plus certified internal conversion intent/outcome and report
+evidence-pack API foundations. The service remains internal foundation only:
+there is no database-backed business persistence, migration, downstream adapter,
+runtime recovery command, Gateway/Workbench proof, or supported business API yet.
 
 Initial commands:
 
@@ -35,8 +35,10 @@ RFC-0002 will add support runbooks for:
 ## Current Operation Event Diagnostics
 
 RFC-0002 Slice 15 now emits bounded operation-event logs and the
-`lotus_idea_operation_events_total` metric for conversion intent recording,
-conversion outcome recording, and report evidence-pack request recording.
+`lotus_idea_operation_events_total` metric for high-cash signal evaluation,
+candidate persistence, lifecycle transitions, advisor queue reads, review
+actions, feedback records, conversion intent recording, conversion outcome
+recording, and report evidence-pack request recording.
 
 Current outcomes:
 
@@ -44,9 +46,11 @@ Current outcomes:
 2. `replayed`: duplicate submission with the same idempotency key and payload.
 3. `conflict`: idempotency key reused with a different payload.
 4. `not_found`: candidate, conversion intent, or related foundation record is absent.
-5. `permission_denied`: caller capability failed closed.
-6. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
-7. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
+5. `duplicate`, `suppressed`, and `not_eligible`: deterministic signal or
+   persistence outcomes that did not create a new candidate.
+6. `permission_denied`: caller capability failed closed.
+7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
+8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
