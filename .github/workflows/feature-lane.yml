@@ -46,6 +46,8 @@ jobs:
         run: make lint
       - name: Typecheck
         run: make typecheck
+      - name: Architecture Boundary Gate
+        run: make architecture-boundary-gate
       - name: OpenAPI Gate
         run: make openapi-gate
       - name: Security Audit

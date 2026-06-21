@@ -138,8 +138,9 @@ owned by upstream services.
 7. repo-native CI parity: `make check`
 8. full CI parity: `make ci`
 9. OpenAPI gate: `make openapi-gate`
-10. architecture report: `make architecture-boundary-report`
-11. quality scorecard refresh: `make quality-baseline`
+10. architecture boundary gate: `make architecture-boundary-gate`
+11. architecture report: `make architecture-boundary-report`
+12. quality scorecard refresh: `make quality-baseline`
 
 ## Validation And CI Expectations
 
@@ -149,9 +150,10 @@ owned by upstream services.
 2. PR merge gate for required merge readiness,
 3. main releasability for post-merge truth.
 
-Required baseline checks include lint, format check, typecheck, OpenAPI quality,
-supported-feature gate, endpoint-certification gate, unit tests, integration
-tests, e2e tests, coverage gate, security audit, and Docker build validation.
+Required baseline checks include lint, format check, typecheck, architecture
+boundary enforcement, OpenAPI quality, supported-feature gate,
+endpoint-certification gate, unit tests, integration tests, e2e tests, coverage
+gate, security audit, and Docker build validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

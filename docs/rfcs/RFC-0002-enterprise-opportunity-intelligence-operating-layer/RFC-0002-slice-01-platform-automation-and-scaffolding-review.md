@@ -44,3 +44,6 @@ branch-hygiene, roadmap, and supported-feature wiki structure already present.
    governance shortcuts.
 4. Platform scaffold automation and tests include the standard wiki page set,
    or this slice records a deliberate no-change decision with evidence.
+5. Architecture-boundary enforcement is blocking in repo-native local commands
+   and GitHub lanes before feature implementation starts, while broad quality
+   baseline metrics remain report-only until stable thresholds are justified.

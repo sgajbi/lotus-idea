@@ -11,5 +11,6 @@ Use the Lotus layered backend default:
 7. `src/app/observability` owns structured logging, correlation, tracing, and metrics helpers,
 8. generated or scaffold placeholders must be replaced with implementation truth before promotion.
 
-Run `make architecture-boundary-report` for report-only evidence. Promote it to blocking only after
-the signal is stable, deterministic, low-noise, and exception policy is clear.
+Run `make architecture-boundary-gate` for blocking CI enforcement. Run
+`make architecture-boundary-report` when a report artifact is needed for scorecard or review
+evidence.
