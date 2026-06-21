@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence plus high-cash orchestration foundation only
+Status: Partially implemented - internal persistence plus idempotent lifecycle and high-cash orchestration foundations only
 
 ## Outcome
 
@@ -56,13 +56,22 @@ Implemented first-wave internal scope:
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
    conflict errors, and explicit `durableStorageBacked=false` posture.
+9. `src/app/application/candidate_lifecycle.py` and
+   `src/app/api/candidate_lifecycle.py` now expose certified internal candidate
+   lifecycle transition orchestration over the same repository contract.
+   `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` requires
+   `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
+   canonical domain lifecycle transition graph, writes lifecycle history and
+   audit evidence, returns accepted/replayed/not-found/conflict/invalid-state
+   posture, and keeps `durableStorageBacked=false` and
+   `supportedFeaturePromoted=false`.
 
 Not implemented yet:
 
 1. database-backed durable persistence,
 2. migrations and rollback automation,
 3. database-backed source-ingestion workers,
-4. durable database-backed stateful API routes,
+4. database-backed stateful API routes,
 5. integration or e2e persistence proof over durable storage,
 6. data-product certification,
 7. supported-feature promotion.
@@ -98,6 +107,20 @@ Targeted validation:
 7. Later endpoint foundation validation covered the certified
    evaluate-and-persist API with OpenAPI and endpoint-certification gates, but
    database-backed persistence remains planned.
+8. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_service_contract.py tests\integration\test_review_workflow_api.py -q`
+   passed with `29 passed` after adding idempotent lifecycle transition
+   repository and API coverage.
+9. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` and
+   `.venv\Scripts\python.exe scripts\openapi_quality_gate.py` passed after
+   adding lifecycle route certification evidence.
+10. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+    guards, data-mesh contract gate, supported-feature gate,
+    endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
+    `189` unit tests.
+11. `make ci` passed with `39` integration tests, `2` e2e tests, `189` unit
+    tests under coverage, coverage gate at `99.14%`, and dependency audit
+    reporting no known vulnerabilities.
+12. `make docker-build` passed for `backend-service:ci-test`.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.

@@ -83,6 +83,14 @@ in-memory repository foundation and return product-safe conflict, not-found, and
 permission posture without granting downstream suitability, compliance, mandate,
 execution, or client-communication authority.
 
+`POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` is the
+certified internal lifecycle transition API foundation. It requires
+`idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
+canonical domain lifecycle graph, records lifecycle history and audit evidence,
+and returns replay/conflict/not-found/invalid-transition posture without
+granting downstream proposal, manage-review, report, execution, or
+client-communication authority.
+
 `GET /api/v1/review-queues/advisor` is the certified internal advisor queue API
 foundation. It projects persisted candidate snapshots through the deterministic
 Slice 07 queue policy and returns ranked items plus exclusions without a durable
@@ -97,6 +105,11 @@ conflict, and blocked, suppressed, or not-eligible evaluations do not mutate
 state. The evaluate-and-persist API exposes this as an internal certified
 foundation while still reporting `durableStorageBacked=false`; it is not durable
 database support or a supported product workflow.
+
+The internal application layer can now also record idempotent lifecycle
+transitions for persisted candidates. This closes the foundation gap between
+generated high-cash candidates and review-ready candidates without weakening the
+domain transition graph or review approval rules.
 
 ## Review Queue Projection Foundation
 

@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from decimal import Decimal
 
+import pytest
+
 from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
@@ -12,6 +14,8 @@ from app.domain import (
     IdeaCandidate,
     IdeaLifecycleStatus,
     InMemoryIdeaRepository,
+    InvalidLifecycleTransition,
+    LifecyclePersistenceDecision,
     SourceRef,
     SourceSystem,
     evaluate_high_cash_signal,
@@ -225,6 +229,98 @@ def test_expired_candidate_replay_returns_expired_posture_with_audit_history() -
     assert replay.status is EvidenceReplayStatus.EXPIRED
     assert expired.lifecycle_history[-1].target_status is IdeaLifecycleStatus.EXPIRED
     assert expired.audit_events[-1].event_type == "idea.lifecycle.transitioned"
+
+
+def test_lifecycle_transition_records_idempotent_audit_history() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+
+    first = repository.record_lifecycle_transition(
+        persisted.record.candidate.candidate_id,
+        IdeaLifecycleStatus.ENRICHED,
+        idempotency_key="lifecycle:enriched:001",
+        payload={"target_status": "enriched", "transition_id": "transition-enriched-001"},
+        actor_subject="idea-lifecycle-worker",
+        occurred_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        transition_id="transition-enriched-001",
+        reason_codes=("review_required",),
+    )
+    replayed = repository.record_lifecycle_transition(
+        persisted.record.candidate.candidate_id,
+        IdeaLifecycleStatus.ENRICHED,
+        idempotency_key="lifecycle:enriched:001",
+        payload={"target_status": "enriched", "transition_id": "transition-enriched-001"},
+        actor_subject="idea-lifecycle-worker",
+        occurred_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        transition_id="transition-enriched-001",
+        reason_codes=("review_required",),
+    )
+    conflict = repository.record_lifecycle_transition(
+        persisted.record.candidate.candidate_id,
+        IdeaLifecycleStatus.SCORED,
+        idempotency_key="lifecycle:enriched:001",
+        payload={"target_status": "scored", "transition_id": "transition-scored-001"},
+        actor_subject="idea-lifecycle-worker",
+        occurred_at_utc=datetime(2026, 6, 21, 10, 2, tzinfo=UTC),
+        transition_id="transition-scored-001",
+        reason_codes=("review_required",),
+    )
+
+    assert first.decision is LifecyclePersistenceDecision.ACCEPTED
+    assert replayed.decision is LifecyclePersistenceDecision.REPLAYED
+    assert conflict.decision is LifecyclePersistenceDecision.CONFLICT
+    assert first.record is not None
+    assert first.record.candidate.lifecycle_status is IdeaLifecycleStatus.ENRICHED
+    assert first.record.lifecycle_history[-1].actor_subject == "idea-lifecycle-worker"
+    assert first.record.audit_events[-1].attributes["transition_id"] == "transition-enriched-001"
+
+
+def test_lifecycle_transition_returns_not_found_and_blocks_invalid_transition() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+
+    not_found = repository.record_lifecycle_transition(
+        "missing-candidate",
+        IdeaLifecycleStatus.ENRICHED,
+        idempotency_key="lifecycle:missing:001",
+        payload={"target_status": "enriched", "transition_id": "transition-missing-001"},
+        actor_subject="idea-lifecycle-worker",
+        occurred_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        transition_id="transition-missing-001",
+        reason_codes=("review_required",),
+    )
+
+    assert not_found.decision is LifecyclePersistenceDecision.NOT_FOUND
+    with pytest.raises(InvalidLifecycleTransition):
+        repository.record_lifecycle_transition(
+            persisted.record.candidate.candidate_id,
+            IdeaLifecycleStatus.READY_FOR_REVIEW,
+            idempotency_key="lifecycle:invalid:001",
+            payload={
+                "target_status": "ready_for_review",
+                "transition_id": "transition-invalid-001",
+            },
+            actor_subject="idea-lifecycle-worker",
+            occurred_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+            transition_id="transition-invalid-001",
+            reason_codes=("review_required",),
+        )
 
 
 def test_repository_snapshot_recovers_candidate_idempotency_and_replay_state() -> None:

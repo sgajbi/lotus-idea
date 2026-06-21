@@ -59,6 +59,35 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Record an internal governed lifecycle transition for a persisted idea candidate through the lifecycle history, idempotency, and audit foundation.",
+      "when_to_use": "Use as the RFC-0002 Slice 06 and Slice 10 API foundation when an internal caller has a persisted candidate, the idea.candidate.lifecycle.transition capability, an Idempotency-Key, and needs to move the candidate through the canonical lifecycle graph before review or conversion workflows.",
+      "when_not_to_use": "Do not use as durable database persistence proof, downstream proposal authority, manage-review authority, report authority, suitability approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"transitionId\":\"lifecycle-ready-for-review-001\",\"targetLifecycleStatus\":\"ready_for_review\",\"changedAtUtc\":\"2026-06-21T10:04:00Z\",\"reasonCodes\":[\"review_required\"]}"
+      ],
+      "response_examples": [
+        "{\"transition\":{\"transitionId\":\"lifecycle-ready-for-review-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"changedAtUtc\":\"2026-06-21T10:04:00Z\",\"reasonCodes\":[\"review_required\"],\"grantsDownstreamAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"auditEventType\":\"idea.lifecycle.transitioned\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"transition\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"ready_for_review\",\"auditEventType\":\"idea.lifecycle.transitioned\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.candidate.lifecycle.transition capability.",
+        "404 returns product-safe Problem Details when the candidate is not found.",
+        "409 returns product-safe Problem Details for idempotency conflict or invalid lifecycle transition.",
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_records_idempotent_transition",
+        "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_returns_safe_conflicts_and_not_found",
+        "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_requires_permission_and_valid_request",
+        "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_enables_review_approval_without_bypassing_state"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

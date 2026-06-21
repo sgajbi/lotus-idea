@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified high-cash, advisor queue, review-action, and feedback API foundations only
+Status: Partially implemented - certified high-cash, lifecycle, advisor queue, review-action, and feedback API foundations only
 
 ## Outcome
 
@@ -12,6 +12,7 @@ The first certified API foundations are:
 
 - `POST /api/v1/idea-signals/high-cash/evaluate`
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
+- `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`
 - `GET /api/v1/review-queues/advisor`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
 - `POST /api/v1/idea-candidates/{candidateId}/feedback`
@@ -26,6 +27,13 @@ in-memory repository foundation. It requires `Idempotency-Key` and
 `idea.candidate.persist`, returns replay/conflict posture for idempotency
 behavior, and keeps `durableStorageBacked=false` until database-backed
 persistence, migrations, and recovery evidence exist.
+
+The lifecycle transition endpoint exposes the Slice 06 internal lifecycle
+history, idempotency, and audit foundation over persisted candidates. It
+requires `Idempotency-Key` and `idea.candidate.lifecycle.transition`, applies
+the canonical domain lifecycle transition graph, returns replay/conflict,
+not-found, and invalid-transition posture, and keeps
+`durableStorageBacked=false` and `supportedFeaturePromoted=false`.
 
 The review-action and feedback endpoints expose the Slice 08 internal workflow
 foundation over persisted candidates. They require `Idempotency-Key`, a
@@ -52,7 +60,7 @@ Implementation files:
 3. `src/app/domain/signal_evaluation.py`: existing deterministic high-cash
    domain policy reused by the endpoint.
 4. `src/app/domain/persistence.py`: internal idempotency/audit repository used
-   by the evaluate-and-persist API foundation.
+   by the evaluate-and-persist and lifecycle transition API foundations.
 5. `src/app/errors.py`: RFC-7807-shaped problem detail body with stable
    `type`, `status`, `code`, `title`, and `detail` fields.
 6. `docs/operations/endpoint-certification-ledger.json`: machine-readable
@@ -64,9 +72,14 @@ Implementation files:
    product-safe errors, OpenAPI examples, and route registration.
 9. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
    signal and review routes.
-10. `tests/integration/test_review_workflow_api.py`: certified API behavior
-   evidence for review action and feedback foundations.
-11. `tests/integration/test_review_queue_api.py`: certified API behavior
+10. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
+    authorization mapping, product-safe errors, idempotency-conflict handling,
+    OpenAPI examples, and route registration.
+11. `src/app/application/candidate_lifecycle.py`: application command and
+    idempotency payload construction for lifecycle transitions.
+12. `tests/integration/test_review_workflow_api.py`: certified API behavior
+   evidence for lifecycle transition, review action, and feedback foundations.
+13. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
 
 ## Current Contract
@@ -99,6 +112,12 @@ The advisor review queue endpoint is permissioned by
 timezone-aware `evaluatedAtUtc` query parameter and returns product-safe Problem
 Details for permission or validation failures.
 
+The lifecycle transition endpoint is permissioned by
+`idea.candidate.lifecycle.transition` and requires `Idempotency-Key`. It accepts
+only target statuses allowed by the domain lifecycle graph and returns
+product-safe Problem Details for validation, permission, missing candidate,
+idempotency conflict, or invalid lifecycle transition failures.
+
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
 `durableStorageBacked` is always `false` for mutating foundation endpoints. The
 endpoints are certified as API foundations but are not supported business
@@ -128,9 +147,9 @@ supported-feature registration are not implemented yet.
 4. Add Workbench review-surface proof before any UI or demo claim.
 5. Add data-product trust telemetry, platform mesh certification, and
    supported-feature promotion only after runtime proof exists.
-6. Add additional route families for candidate lifecycle, evidence packs,
-   conversion intent, and supportability after their storage and orchestration
-   slices are implementation-backed.
+6. Add additional route families for evidence packs, conversion intent, and
+   supportability after their storage and orchestration slices are
+   implementation-backed.
 
 ## Platform Follow-Up
 
@@ -162,6 +181,20 @@ Focused validation passed for the current foundation:
     passed with `4 passed` after adding advisor review queue API certification.
 12. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` passed
     after adding advisor review queue route ledger evidence.
+13. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_service_contract.py tests\integration\test_review_workflow_api.py -q`
+    passed with `29 passed` after adding lifecycle transition API
+    certification.
+14. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` and
+    `.venv\Scripts\python.exe scripts\openapi_quality_gate.py` passed after
+    adding lifecycle transition route ledger evidence.
+15. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+    guards, data-mesh contract gate, supported-feature gate,
+    endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
+    `189` unit tests.
+16. `make ci` passed with `39` integration tests, `2` e2e tests, `189` unit
+    tests under coverage, coverage gate at `99.14%`, and dependency audit
+    reporting no known vulnerabilities.
+17. `make docker-build` passed for `backend-service:ci-test`.
 
 PR merge-gate evidence remains required before merge.
 

@@ -67,6 +67,18 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
+def lifecycle_headers(
+    idempotency_key: str,
+    capabilities: str = "idea.candidate.lifecycle.transition",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "idea-lifecycle-worker",
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-lifecycle-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
 def access_scope() -> dict[str, str]:
     return {
         "tenantId": "tenant-private-bank-sg",
@@ -123,6 +135,20 @@ def feedback_payload() -> dict[str, Any]:
     }
 
 
+def lifecycle_payload(
+    *,
+    transition_id: str = "lifecycle-enriched-001",
+    target_status: str = "enriched",
+    changed_at_utc: str = "2026-06-21T10:01:00Z",
+) -> dict[str, Any]:
+    return {
+        "transitionId": transition_id,
+        "targetLifecycleStatus": target_status,
+        "changedAtUtc": changed_at_utc,
+        "reasonCodes": ["review_required"],
+    }
+
+
 def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -133,6 +159,180 @@ def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
     payload = response.json()
     assert payload["persistence"]["decision"] == "accepted"
     return str(payload["persistence"]["candidateId"])
+
+
+def transition_candidate(
+    client: TestClient,
+    candidate_id: str,
+    *,
+    target_status: str,
+    idempotency_key: str,
+    transition_id: str,
+    minute: int,
+) -> None:
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(
+            transition_id=transition_id,
+            target_status=target_status,
+            changed_at_utc=f"2026-06-21T10:{minute:02d}:00Z",
+        ),
+        headers=lifecycle_headers(idempotency_key),
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["persistence"]["decision"] == "accepted"
+    assert payload["persistence"]["lifecycleStatus"] == target_status
+
+
+def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+    for index, target_status in enumerate(
+        ("enriched", "scored", "governance_checked", "ready_for_review"),
+        start=1,
+    ):
+        transition_candidate(
+            client,
+            candidate_id,
+            target_status=target_status,
+            idempotency_key=f"lifecycle-api-{target_status}-001",
+            transition_id=f"lifecycle-{target_status}-001",
+            minute=index,
+        )
+
+
+def test_lifecycle_transition_api_records_idempotent_transition() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-api-001")
+    headers = lifecycle_headers("lifecycle-api-replay-001")
+    request = lifecycle_payload()
+
+    first = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=request,
+        headers=headers,
+    )
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=request,
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert first.headers["X-Correlation-Id"] == "corr-lifecycle-api"
+    payload = first.json()
+    assert payload["transition"]["transitionId"] == "lifecycle-enriched-001"
+    assert payload["transition"]["grantsDownstreamAuthority"] is False
+    assert payload["persistence"]["decision"] == "accepted"
+    assert payload["persistence"]["candidateId"] == candidate_id
+    assert payload["persistence"]["lifecycleStatus"] == "enriched"
+    assert payload["persistence"]["auditEventType"] == "idea.lifecycle.transitioned"
+    assert payload["durableStorageBacked"] is False
+    assert payload["supportedFeaturePromoted"] is False
+    assert replayed.status_code == 200
+    assert replayed.json()["transition"] is None
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+
+
+def test_lifecycle_transition_api_returns_safe_conflicts_and_not_found() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-conflict-001")
+    headers = lifecycle_headers("lifecycle-api-conflict-001")
+    client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(transition_id="lifecycle-enriched-001", target_status="enriched"),
+        headers=headers,
+    )
+
+    idempotency_conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(transition_id="lifecycle-scored-001", target_status="scored"),
+        headers=headers,
+    )
+    invalid_transition = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(
+            transition_id="lifecycle-ready-invalid-001",
+            target_status="ready_for_review",
+        ),
+        headers=lifecycle_headers("lifecycle-api-invalid-transition-001"),
+    )
+    not_found = client.post(
+        "/api/v1/idea-candidates/missing-candidate/lifecycle-transitions",
+        json=lifecycle_payload(transition_id="lifecycle-missing-001"),
+        headers=lifecycle_headers("lifecycle-api-missing-001"),
+    )
+
+    assert idempotency_conflict.status_code == 409
+    assert idempotency_conflict.json()["code"] == "idempotency_conflict"
+    assert invalid_transition.status_code == 409
+    assert invalid_transition.json()["code"] == "lifecycle_transition_conflict"
+    assert not_found.status_code == 404
+    assert not_found.json()["code"] == "candidate_not_found"
+
+
+def test_lifecycle_transition_api_requires_permission_and_valid_request() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-invalid-001")
+    blank_transition = lifecycle_payload(transition_id=" ")
+    naive_time = lifecycle_payload(changed_at_utc="2026-06-21T10:01:00")
+    no_reasons = lifecycle_payload()
+    no_reasons["reasonCodes"] = []
+
+    denied_by_capability = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(),
+        headers=lifecycle_headers("lifecycle-api-denied-001", capabilities="idea.signal.evaluate"),
+    )
+    blank_transition_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=blank_transition,
+        headers=lifecycle_headers("lifecycle-api-blank-transition-001"),
+    )
+    naive_time_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=naive_time,
+        headers=lifecycle_headers("lifecycle-api-naive-time-001"),
+    )
+    no_reasons_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=no_reasons,
+        headers=lifecycle_headers("lifecycle-api-no-reasons-001"),
+    )
+    blank_idempotency_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(),
+        headers=lifecycle_headers(" "),
+    )
+
+    assert denied_by_capability.status_code == 403
+    assert blank_transition_response.status_code == 400
+    assert naive_time_response.status_code == 400
+    assert no_reasons_response.status_code == 400
+    assert blank_idempotency_response.status_code == 400
+
+
+def test_lifecycle_transition_api_enables_review_approval_without_bypassing_state() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-lifecycle-approval-001")
+    transition_candidate_to_review_ready(client, candidate_id)
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=approve_review_payload(),
+        headers=review_headers("review-action-api-approved-001"),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["reviewDecision"]["action"] == "approve_for_conversion"
+    assert payload["reviewDecision"]["grantsDownstreamAuthority"] is False
+    assert payload["persistence"]["decision"] == "accepted"
+    assert payload["persistence"]["lifecycleStatus"] == "approved"
+    assert payload["persistence"]["reviewPosture"] == "approved_for_conversion"
 
 
 def test_review_action_api_persists_suppression_with_audit_posture() -> None:
