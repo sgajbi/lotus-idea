@@ -26,6 +26,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.errors import ProblemDetails, problem_response
+from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 
@@ -251,10 +252,18 @@ async def record_report_evidence_pack(
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
+        _emit_report_evidence_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied(
             "The caller is not permitted to request idea report evidence packs."
         )
     except InvalidReportEvidencePack:
+        _emit_report_evidence_operation_event(
+            OperationOutcome.INVALID_STATE,
+            "report_evidence_pack_conflict",
+        )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
             code="report_evidence_pack_conflict",
@@ -262,6 +271,10 @@ async def record_report_evidence_pack(
             detail="The report evidence pack request is not valid for the current conversion state.",
         )
     except ValueError:
+        _emit_report_evidence_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -271,7 +284,14 @@ async def record_report_evidence_pack(
 
     problem = _problem_for_evidence_pack_persistence(result.persistence)
     if problem is not None:
+        _emit_report_evidence_operation_event(
+            _operation_outcome_from_evidence_pack_decision(result.persistence.decision),
+            _error_code_from_evidence_pack_decision(result.persistence.decision),
+        )
         return problem
+    _emit_report_evidence_operation_event(
+        _operation_outcome_from_evidence_pack_decision(result.persistence.decision)
+    )
     return ReportEvidencePackApiResponse(
         reportEvidencePack=(
             ReportEvidencePackResponse.from_domain(result.evidence_pack_result.evidence_pack)
@@ -321,6 +341,44 @@ def _permission_denied(detail: str) -> JSONResponse:
         title="Permission denied",
         detail=detail,
     )
+
+
+def _emit_report_evidence_operation_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+) -> None:
+    emit_operation_event(
+        OperationEvent(
+            operation=IdeaOperation.REPORT_EVIDENCE_PACK,
+            outcome=outcome,
+            source_authority="lotus-report",
+            error_code=error_code,
+            durable_storage_backed=False,
+            supported_feature_promoted=False,
+        )
+    )
+
+
+def _operation_outcome_from_evidence_pack_decision(
+    decision: EvidencePackPersistenceDecision,
+) -> OperationOutcome:
+    if decision is EvidencePackPersistenceDecision.ACCEPTED:
+        return OperationOutcome.ACCEPTED
+    if decision is EvidencePackPersistenceDecision.REPLAYED:
+        return OperationOutcome.REPLAYED
+    if decision is EvidencePackPersistenceDecision.NOT_FOUND:
+        return OperationOutcome.NOT_FOUND
+    return OperationOutcome.CONFLICT
+
+
+def _error_code_from_evidence_pack_decision(
+    decision: EvidencePackPersistenceDecision,
+) -> str | None:
+    if decision is EvidencePackPersistenceDecision.NOT_FOUND:
+        return "report_evidence_pack_resource_not_found"
+    if decision is EvidencePackPersistenceDecision.CONFLICT:
+        return "idempotency_conflict"
+    return None
 
 
 REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {

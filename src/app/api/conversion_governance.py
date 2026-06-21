@@ -31,6 +31,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.errors import ProblemDetails, problem_response
+from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 
@@ -287,8 +288,18 @@ async def record_conversion_intent(
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_INTENT,
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied("The caller is not permitted to record idea conversion intents.")
     except InvalidConversionIntent:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_INTENT,
+            OperationOutcome.INVALID_STATE,
+            "conversion_intent_conflict",
+        )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
             code="conversion_intent_conflict",
@@ -296,6 +307,11 @@ async def record_conversion_intent(
             detail="The conversion intent is not valid for the current idea candidate state.",
         )
     except ValueError:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_INTENT,
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -305,7 +321,16 @@ async def record_conversion_intent(
 
     problem = _problem_for_conversion_persistence(result.persistence)
     if problem is not None:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_INTENT,
+            _operation_outcome_from_conversion_decision(result.persistence.decision),
+            _error_code_from_conversion_decision(result.persistence.decision),
+        )
         return problem
+    _emit_conversion_operation_event(
+        IdeaOperation.CONVERSION_INTENT,
+        _operation_outcome_from_conversion_decision(result.persistence.decision),
+    )
     return ConversionIntentApiResponse(
         conversionIntent=(
             ConversionIntentResponse.from_domain(result.conversion_result.conversion_intent)
@@ -343,8 +368,18 @@ async def record_conversion_outcome(
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_OUTCOME,
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
         return _permission_denied("The caller is not permitted to record idea conversion outcomes.")
     except InvalidConversionOutcome:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_OUTCOME,
+            OperationOutcome.INVALID_STATE,
+            "conversion_outcome_conflict",
+        )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
             code="conversion_outcome_conflict",
@@ -352,6 +387,11 @@ async def record_conversion_outcome(
             detail="The conversion outcome is not valid for the recorded conversion intent.",
         )
     except ValueError:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_OUTCOME,
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -361,7 +401,16 @@ async def record_conversion_outcome(
 
     problem = _problem_for_conversion_persistence(result.persistence)
     if problem is not None:
+        _emit_conversion_operation_event(
+            IdeaOperation.CONVERSION_OUTCOME,
+            _operation_outcome_from_conversion_decision(result.persistence.decision),
+            _error_code_from_conversion_decision(result.persistence.decision),
+        )
         return problem
+    _emit_conversion_operation_event(
+        IdeaOperation.CONVERSION_OUTCOME,
+        _operation_outcome_from_conversion_decision(result.persistence.decision),
+    )
     return ConversionOutcomeApiResponse(
         conversionOutcome=(
             ConversionOutcomeResponse.from_domain(result.outcome_result.conversion_outcome)
@@ -411,6 +460,45 @@ def _permission_denied(detail: str) -> JSONResponse:
         title="Permission denied",
         detail=detail,
     )
+
+
+def _emit_conversion_operation_event(
+    operation: IdeaOperation,
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+) -> None:
+    emit_operation_event(
+        OperationEvent(
+            operation=operation,
+            outcome=outcome,
+            source_authority="lotus-idea",
+            error_code=error_code,
+            durable_storage_backed=False,
+            supported_feature_promoted=False,
+        )
+    )
+
+
+def _operation_outcome_from_conversion_decision(
+    decision: ConversionPersistenceDecision,
+) -> OperationOutcome:
+    if decision is ConversionPersistenceDecision.ACCEPTED:
+        return OperationOutcome.ACCEPTED
+    if decision is ConversionPersistenceDecision.REPLAYED:
+        return OperationOutcome.REPLAYED
+    if decision is ConversionPersistenceDecision.NOT_FOUND:
+        return OperationOutcome.NOT_FOUND
+    return OperationOutcome.CONFLICT
+
+
+def _error_code_from_conversion_decision(
+    decision: ConversionPersistenceDecision,
+) -> str | None:
+    if decision is ConversionPersistenceDecision.NOT_FOUND:
+        return "conversion_resource_not_found"
+    if decision is ConversionPersistenceDecision.CONFLICT:
+        return "idempotency_conflict"
+    return None
 
 
 CONVERSION_INTENT_ROUTE: RouteMetadata = {
