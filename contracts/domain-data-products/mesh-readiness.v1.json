@@ -1,0 +1,29 @@
+{
+  "contract_id": "lotus-idea-data-mesh-readiness",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "governed_by_rfcs": [
+    "RFC-0002",
+    "RFC-0084",
+    "RFC-0087",
+    "RFC-0091"
+  ],
+  "lifecycle_status": "planned",
+  "certification_status": "not_certified",
+  "mesh_role": "planned_producer_and_consumer",
+  "source_of_truth": {
+    "producer_declaration": "contracts/domain-data-products/lotus-idea-products.v1.json",
+    "consumer_declaration": "contracts/domain-data-products/lotus-idea-consumers.v1.json",
+    "trust_telemetry": "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
+    "slo_policy": "contracts/mesh-slo/lotus-idea-idea-candidate.slo.v1.json",
+    "access_policy": "contracts/mesh-access/lotus-idea-idea-candidate.access.v1.json",
+    "evidence_policy": "contracts/mesh-evidence/lotus-idea-idea-candidate.evidence-pack-policy.v1.json"
+  },
+  "certification_gates_before_promotion": [
+    "business capability implemented with source-owned evidence and endpoint certification",
+    "producer and consumer declarations included in the platform domain-product source manifest",
+    "runtime trust telemetry emitted from live service behavior instead of static fallback only",
+    "mesh SLO, access, lifecycle, evidence, catalog, gateway, and Workbench discovery gates pass",
+    "supported-features registry and wiki source describe only implementation-backed behavior"
+  ]
+}

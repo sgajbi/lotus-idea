@@ -1,0 +1,40 @@
+{
+  "contract_id": "lotus-domain-product-trust-telemetry-snapshot",
+  "contract_version": "1.0.0",
+  "governed_by_rfcs": [
+    "RFC-0087",
+    "RFC-0091"
+  ],
+  "emitted_at_utc": "2026-06-21T00:00:00Z",
+  "product_id": "lotus-idea:IdeaCandidate:v1",
+  "producer_repository": "lotus-idea",
+  "product_name": "IdeaCandidate",
+  "product_version": "v1",
+  "source_repository": "lotus-idea",
+  "freshness": {
+    "freshness_class": "daily",
+    "freshness_state": "unknown",
+    "evaluated_at_utc": "2026-06-21T00:00:00Z"
+  },
+  "completeness_status": "unknown",
+  "reconciliation_status": "unknown",
+  "data_quality_status": "quality_unknown",
+  "lineage": {
+    "lineage_materialized": false,
+    "evidence_access_class": "operator_only"
+  },
+  "blocking": {
+    "blocked": true,
+    "blocked_reason": "IdeaCandidate:v1 is declared as a proposed product only; implementation, source manifest inclusion, runtime telemetry, and platform certification are pending."
+  },
+  "observed_trust_metadata": {},
+  "evidence": {
+    "correlation_id": "lotus-idea-data-mesh-foundation",
+    "validation_lanes": [
+      "feature",
+      "pr-merge",
+      "main-releasability"
+    ],
+    "source_artifact_uri": "lotus-idea://contracts/trust-telemetry/idea-candidate.telemetry.v1.json"
+  }
+}

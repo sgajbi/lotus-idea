@@ -53,6 +53,20 @@ Primary downstream consumers:
 - `lotus-manage`: conversion into portfolio action, rebalance, and review flows.
 - `lotus-report`: inclusion of reviewed idea evidence in report packs.
 
+## Data Mesh Posture
+
+`lotus-idea` is a planned data-mesh producer and consumer from day one.
+Repo-owned source truth starts in:
+
+- `contracts/domain-data-products/lotus-idea-products.v1.json`
+- `contracts/domain-data-products/lotus-idea-consumers.v1.json`
+- `contracts/domain-data-products/mesh-readiness.v1.json`
+- `docs/operations/mesh-readiness.md`
+
+All `lotus-idea` products remain proposed and not certified until runtime
+implementation, live trust telemetry, platform source-manifest inclusion,
+Gateway/Workbench discovery, and platform mesh certification pass.
+
 ## Repository Map
 
 - `src/app/api/`: HTTP route modules and API DTO mapping.
@@ -64,7 +78,8 @@ Primary downstream consumers:
 - `src/app/observability/`: structured logging, correlation, metrics, tracing.
 - `src/app/security/`: caller context and authorization policy.
 - `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.
-- `contracts/`: data-product and integration contract placeholders.
+- `contracts/`: proposed data-product declarations, consumer dependencies,
+  trust telemetry, access, SLO, and evidence-policy contracts.
 - `docs/architecture/adr/`: durable architecture decisions.
 - `docs/rfcs/`: governed implementation roadmap.
 - `supported-features/`: implementation-backed feature registry.
@@ -126,5 +141,6 @@ security/dependency posture, documentation, wiki source, and operating evidence.
 - Demo claim ledger: `docs/demo/demo-claims.md`
 - API certification guide: `docs/operations/api-certification.md`
 - Observability guide: `docs/operations/observability.md`
+- Data mesh readiness guide: `docs/operations/mesh-readiness.md`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`

@@ -61,9 +61,10 @@ This RFC depends on:
 
 ## Data Contracts
 
-No business data products are introduced by this RFC. Scaffold placeholders must
-remain placeholders until RFC-0003 turns them into explicit producer/consumer
-contracts.
+No implementation-backed business data products are introduced by this RFC.
+Repo-owned data-mesh declarations may exist as proposed contracts only; they
+must remain `not_certified` until a later implementation slice provides runtime
+behavior, source-manifest inclusion, live telemetry, and platform certification.
 
 ## API Impact
 

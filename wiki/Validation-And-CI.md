@@ -21,6 +21,14 @@ Baseline required checks include lint, format check, typecheck, architecture bou
 OpenAPI quality, supported-feature gate, endpoint-certification gate, unit tests, integration
 tests, e2e tests, coverage gate, security audit, Docker build validation, and workflow lint.
 
+Data-mesh foundation checks:
+
+1. repo-owned proposed producer and consumer declarations must exist,
+2. mesh placeholder files must not exist in contract or operations paths,
+3. planned trust telemetry must remain blocked and `not_certified`,
+4. SLO, access, and evidence policies must be present before promotion work,
+5. platform mesh certification is required before any supported mesh claim.
+
 CI warning policy:
 
 1. use current approved action versions,

@@ -1,0 +1,32 @@
+{
+  "contract_id": "lotus-mesh-evidence-pack-policy",
+  "contract_version": "1.0.0",
+  "governed_by_rfcs": [
+    "RFC-0091"
+  ],
+  "product_id": "lotus-idea:IdeaCandidate:v1",
+  "producer_repository": "lotus-idea",
+  "field_access_classes": {
+    "product_identity": "public_customer",
+    "certification_state": "public_customer",
+    "source_declaration": "restricted_customer",
+    "runtime_telemetry": "restricted_customer",
+    "slo_posture": "restricted_customer",
+    "access_posture": "restricted_customer",
+    "dependency_graph": "restricted_customer",
+    "validation_lanes": "restricted_customer",
+    "source_artifacts": "operator_only",
+    "operator_remediation": "operator_only",
+    "internal_debug": "internal_only"
+  },
+  "required_manifest_sections": [
+    "product_identity",
+    "certification_state",
+    "source_declaration",
+    "runtime_telemetry",
+    "slo_posture",
+    "access_posture",
+    "dependency_graph",
+    "validation_lanes"
+  ]
+}
