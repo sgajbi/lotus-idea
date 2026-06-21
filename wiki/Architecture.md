@@ -90,8 +90,10 @@ storage adapter behind one governed contract surface while the current
 `migrations/001_idea_repository_foundation.sql` and its rollback file define the
 first governed schema contract for future durable candidate, idempotency,
 lifecycle, audit, review, feedback, conversion, and report evidence-pack state.
-The migration contract is CI-blocking, but it is not runtime database
-persistence until an adapter and execution path are implemented and proven.
+The migration contract and execution dry-run are CI-blocking, and real execution
+uses `make migrate` / `make migrate-rollback` with `LOTUS_IDEA_DATABASE_URL`.
+This is not runtime API database persistence until an adapter is implemented and
+proven.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -140,8 +142,9 @@ generated high-cash candidates and review-ready candidates without weakening the
 domain transition graph or review approval rules.
 
 The repository now has a versioned schema and rollback contract for the future
-durable repository. API state remains process-local until a later slice wires
-database execution and adapter proof behind the central repository ports.
+durable repository plus a PostgreSQL migration execution CLI. API state remains
+process-local until a later slice wires adapter proof behind the central
+repository ports.
 
 ## Review Queue Projection Foundation
 

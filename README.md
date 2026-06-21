@@ -29,9 +29,10 @@ internal report evidence-pack request foundation plus a certified internal API
 for reviewed report conversion intents, and the first bounded operation-event
 observability foundation across certified internal signal, persistence,
 lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
-data-mesh-readiness APIs. The first versioned persistence schema and rollback
-contract now exists behind a blocking migration contract gate, but runtime API
-state is still not database-backed. No business feature is supported until the relevant
+data-mesh-readiness APIs. The first versioned persistence schema, rollback
+contract, and PostgreSQL migration execution CLI now exist behind blocking
+contract and dry-run gates, but runtime API state is still not database-backed.
+No business feature is supported until the relevant
 RFC slice has full runtime evidence, tests, data-mesh posture, downstream
 proof, Gateway/Workbench proof, and supported-feature registration.
 
@@ -147,8 +148,10 @@ source-authority contracts only, not runtime certification.
   conservative Core high-cash source adapter that does not infer cash weight
   when Core omits a source-reported value.
 - `migrations/`: versioned SQL migration and rollback contracts. The first
-  contract defines the future durable idea repository schema; it is not runtime
-  database wiring by itself.
+  contract defines the future durable idea repository schema; it can be applied
+  or rolled back with `make migrate` / `make migrate-rollback` when
+  `LOTUS_IDEA_DATABASE_URL` is set. This is not runtime API database wiring by
+  itself.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, lifecycle, AI explanation, advisor queue, review, feedback,
@@ -173,6 +176,7 @@ make lint
 make ci-contract-gate
 make data-mesh-contract-gate
 make migration-contract-gate
+make migration-execution-gate
 make typecheck
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -191,6 +195,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
+.venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py
 .venv\Scripts\python.exe -m pytest tests/unit tests/integration tests/e2e
@@ -237,6 +242,7 @@ Main Releasability dispatch so post-merge release evidence is produced on
 - Persistence and migration guide: `docs/operations/persistence.md`
 - Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
 - Migration contract gate: `scripts/migration_contract_gate.py`
+- Migration execution CLI: `scripts/run_migrations.py`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`
 

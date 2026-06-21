@@ -27,11 +27,17 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) data-mesh-contract-gate" in makefile
     assert "migration-contract-gate:" in makefile
     assert "$(MAKE) migration-contract-gate" in makefile
+    assert "migration-execution-gate:" in makefile
+    assert "$(MAKE) migration-execution-gate" in makefile
+    assert "scripts/run_migrations.py --direction apply --dry-run" in makefile
+    assert "scripts/run_migrations.py --direction rollback --dry-run" in makefile
     assert (
-        "check: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate"
+        "check: lint typecheck architecture-boundary-gate openapi-gate "
+        "migration-contract-gate migration-execution-gate"
     ) in makefile
     assert (
-        "ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate"
+        "ci: lint typecheck architecture-boundary-gate openapi-gate "
+        "migration-contract-gate migration-execution-gate"
     ) in makefile
 
 
