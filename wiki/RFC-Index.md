@@ -30,9 +30,9 @@ Current RFC-0002 implementation-start baseline:
    domain policy without source adapters, API, or supported-feature promotion.
 6. Slice 06 partially implements internal candidate persistence records,
    evidence replay posture, idempotency conflict handling, idempotent lifecycle
-   transition recording, lifecycle audit history, and snapshot recovery without
-   database migrations, database-backed API state, or supported-feature
-   promotion.
+   transition recording, lifecycle audit history, snapshot recovery, and a
+   central repository workflow port boundary without database migrations,
+   database-backed API state, or supported-feature promotion.
 7. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate

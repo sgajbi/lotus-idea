@@ -65,6 +65,14 @@ Implemented first-wave internal scope:
    audit evidence, returns accepted/replayed/not-found/conflict/invalid-state
    posture, and keeps `durableStorageBacked=false` and
    `supportedFeaturePromoted=false`.
+10. `src/app/ports/idea_repository.py` now centralizes the repository workflow
+    protocols used by application orchestration. Candidate persistence,
+    candidate snapshots, lifecycle mutation, review and feedback mutation,
+    conversion mutation, report evidence-pack requests, and AI explanation
+    reads depend on the ports layer instead of declaring local per-use-case
+    repository protocols. `tests/unit/test_repository_port_boundary.py`
+    prevents future application modules from reintroducing scattered
+    repository protocol declarations before the durable adapter lands.
 
 Not implemented yet:
 
@@ -121,6 +129,12 @@ Targeted validation:
     tests under coverage, coverage gate at `99.14%`, and dependency audit
     reporting no known vulnerabilities.
 12. `make docker-build` passed for `backend-service:ci-test`.
+13. `.venv\Scripts\python.exe -m ruff check src\app\application src\app\ports\idea_repository.py tests\unit\test_repository_port_boundary.py`
+    passed after centralizing repository workflow protocols.
+14. `.venv\Scripts\python.exe -m pytest tests\unit\test_repository_port_boundary.py tests\unit\test_high_cash_application.py tests\unit\test_review_queue_application.py tests\unit\test_review_workflow_application.py tests\unit\test_idea_persistence.py -q`
+    passed with `43 passed`.
+15. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\application src\app\ports\idea_repository.py`
+    passed.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.

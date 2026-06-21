@@ -3,13 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Any, Protocol
+from typing import Any
 
 from app.domain import (
     CandidatePersistenceResult,
     HighCashSignalInput,
     HighCashSignalPolicy,
-    IdeaCandidate,
     OpportunityFamily,
     ReasonCode,
     SignalEvaluationResult,
@@ -24,6 +23,7 @@ from app.ports.core_sources import (
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
+from app.ports.idea_repository import CandidatePersistenceRepository
 
 
 @dataclass(frozen=True)
@@ -67,18 +67,6 @@ class EvaluateAndPersistHighCashFromCoreCommand:
 class HighCashSignalPersistenceResult:
     evaluation: SignalEvaluationResult
     persistence: CandidatePersistenceResult | None
-
-
-class CandidatePersistenceRepository(Protocol):
-    def persist_candidate(
-        self,
-        candidate: IdeaCandidate,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-        actor_subject: str,
-        occurred_at_utc: datetime | None = None,
-    ) -> CandidatePersistenceResult: ...
 
 
 DEFAULT_HIGH_CASH_POLICY = HighCashSignalPolicy(

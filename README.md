@@ -137,7 +137,10 @@ source-authority contracts only, not runtime certification.
   conversion governance, report evidence-pack request governance, internal
   persistence records, replay posture, idempotency, and audit primitives.
 - `src/app/ports/`: source-owned service interfaces consumed by application
-  logic, including the first Core high-cash evidence port.
+  logic. `idea_repository.py` centralizes the repository workflow protocols for
+  candidate snapshots, persistence, lifecycle, review, conversion, report
+  evidence, and AI explanation reads; `core_sources.py` defines the first Core
+  high-cash evidence port.
 - `src/app/infrastructure/`: adapters and clients behind ports, including a
   conservative Core high-cash source adapter that does not infer cash weight
   when Core omits a source-reported value.

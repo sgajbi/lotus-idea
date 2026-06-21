@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any
 
 from app.domain import (
     DEFAULT_REVIEW_ACTION_POLICY,
     FeedbackCommand,
     FeedbackResult,
-    IdeaRepositorySnapshot,
     ReviewActionPolicy,
     ReviewActionResult,
     ReviewDecisionCommand,
@@ -16,33 +15,7 @@ from app.domain import (
     apply_review_action,
     record_feedback,
 )
-
-
-class ReviewWorkflowRepository(Protocol):
-    def snapshot(self) -> IdeaRepositorySnapshot: ...
-
-    def precheck_review_mutation(
-        self,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> ReviewPersistenceResult | None: ...
-
-    def record_review_action(
-        self,
-        result: ReviewActionResult,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> ReviewPersistenceResult: ...
-
-    def record_feedback_event(
-        self,
-        result: FeedbackResult,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> ReviewPersistenceResult: ...
+from app.ports.idea_repository import ReviewWorkflowRepository
 
 
 @dataclass(frozen=True)

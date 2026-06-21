@@ -1,44 +1,16 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any
 
 from app.domain import (
-    CandidatePersistenceRecord,
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
-    GovernedConversionIntent,
     ReportEvidencePackCommand,
     ReportEvidencePackResult,
     request_report_evidence_pack,
 )
-
-
-class ReportEvidenceWorkflowRepository(Protocol):
-    def precheck_evidence_pack_mutation(
-        self,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> EvidencePackPersistenceResult | None: ...
-
-    def conversion_intent_by_id(
-        self,
-        conversion_intent_id: str,
-    ) -> GovernedConversionIntent | None: ...
-
-    def candidate_record_for_conversion_intent(
-        self,
-        conversion_intent_id: str,
-    ) -> CandidatePersistenceRecord | None: ...
-
-    def record_report_evidence_pack(
-        self,
-        result: ReportEvidencePackResult,
-        *,
-        idempotency_key: str,
-        payload: dict[str, Any],
-    ) -> EvidencePackPersistenceResult: ...
+from app.ports.idea_repository import ReportEvidenceWorkflowRepository
 
 
 @dataclass(frozen=True)

@@ -1,0 +1,139 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Protocol
+
+from app.domain import (
+    CandidatePersistenceRecord,
+    CandidatePersistenceResult,
+    ConversionIntentResult,
+    ConversionOutcomeResult,
+    ConversionPersistenceResult,
+    EvidencePackPersistenceResult,
+    GovernedConversionIntent,
+    IdeaCandidate,
+    IdeaLifecycleStatus,
+    IdeaRepositorySnapshot,
+    LifecyclePersistenceResult,
+    ReportEvidencePackResult,
+    ReviewActionResult,
+    ReviewPersistenceResult,
+    FeedbackResult,
+)
+
+
+class CandidateSnapshotRepository(Protocol):
+    def snapshot(self) -> IdeaRepositorySnapshot: ...
+
+
+class CandidatePersistenceRepository(Protocol):
+    def persist_candidate(
+        self,
+        candidate: IdeaCandidate,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        actor_subject: str,
+        occurred_at_utc: datetime | None = None,
+    ) -> CandidatePersistenceResult: ...
+
+
+class CandidateLifecycleRepository(Protocol):
+    def record_lifecycle_transition(
+        self,
+        candidate_id: str,
+        target_status: IdeaLifecycleStatus,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        actor_subject: str,
+        occurred_at_utc: datetime | None = None,
+        transition_id: str | None = None,
+        reason_codes: tuple[str, ...] = (),
+    ) -> LifecyclePersistenceResult: ...
+
+
+class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
+    def precheck_review_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ReviewPersistenceResult | None: ...
+
+    def record_review_action(
+        self,
+        result: ReviewActionResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ReviewPersistenceResult: ...
+
+    def record_feedback_event(
+        self,
+        result: FeedbackResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ReviewPersistenceResult: ...
+
+
+class ConversionWorkflowRepository(CandidateSnapshotRepository, Protocol):
+    def precheck_conversion_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ConversionPersistenceResult | None: ...
+
+    def record_conversion_intent(
+        self,
+        result: ConversionIntentResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ConversionPersistenceResult: ...
+
+    def conversion_intent_by_id(
+        self,
+        conversion_intent_id: str,
+    ) -> GovernedConversionIntent | None: ...
+
+    def record_conversion_outcome(
+        self,
+        result: ConversionOutcomeResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> ConversionPersistenceResult: ...
+
+
+class ReportEvidenceWorkflowRepository(Protocol):
+    def precheck_evidence_pack_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> EvidencePackPersistenceResult | None: ...
+
+    def conversion_intent_by_id(
+        self,
+        conversion_intent_id: str,
+    ) -> GovernedConversionIntent | None: ...
+
+    def candidate_record_for_conversion_intent(
+        self,
+        conversion_intent_id: str,
+    ) -> CandidatePersistenceRecord | None: ...
+
+    def record_report_evidence_pack(
+        self,
+        result: ReportEvidencePackResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> EvidencePackPersistenceResult: ...
+
+
+class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
+    pass

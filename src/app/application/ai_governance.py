@@ -2,27 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
 
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
     AIExplanationResult,
     AIWorkflowOutput,
-    IdeaRepositorySnapshot,
     build_ai_explanation_request,
     deterministic_ai_fallback,
     evaluate_ai_workflow_output,
 )
+from app.ports.idea_repository import AIExplanationRepository
 
 
 class AIExplanationEvaluationDecision(StrEnum):
     ACCEPTED = "accepted"
     NOT_FOUND = "not_found"
-
-
-class AIExplanationRepository(Protocol):
-    def snapshot(self) -> IdeaRepositorySnapshot: ...
 
 
 @dataclass(frozen=True)
