@@ -23,6 +23,10 @@ from app.domain.conversion_governance import (
     GovernedConversionIntent,
     GovernedConversionOutcome,
 )
+from app.domain.report_evidence import (
+    GovernedReportEvidencePack,
+    ReportEvidencePackResult,
+)
 from app.domain.review_governance import (
     FeedbackResult,
     GovernedFeedbackEvent,
@@ -67,6 +71,13 @@ class ConversionPersistenceDecision(StrEnum):
     NOT_FOUND = "not_found"
 
 
+class EvidencePackPersistenceDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REPLAYED = "replayed"
+    CONFLICT = "conflict"
+    NOT_FOUND = "not_found"
+
+
 @dataclass(frozen=True)
 class LifecycleHistoryEntry:
     candidate_id: str
@@ -92,6 +103,7 @@ class CandidatePersistenceRecord:
     feedback_events: tuple[GovernedFeedbackEvent, ...] = ()
     conversion_intents: tuple[GovernedConversionIntent, ...] = ()
     conversion_outcomes: tuple[GovernedConversionOutcome, ...] = ()
+    report_evidence_packs: tuple[GovernedReportEvidencePack, ...] = ()
 
     def __post_init__(self) -> None:
         _require_text(self.evidence_hash, "evidence_hash")
@@ -102,6 +114,7 @@ class CandidatePersistenceRecord:
         object.__setattr__(self, "feedback_events", tuple(self.feedback_events))
         object.__setattr__(self, "conversion_intents", tuple(self.conversion_intents))
         object.__setattr__(self, "conversion_outcomes", tuple(self.conversion_outcomes))
+        object.__setattr__(self, "report_evidence_packs", tuple(self.report_evidence_packs))
 
     def is_expired_at(self, evaluated_at_utc: datetime) -> bool:
         _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
@@ -144,11 +157,19 @@ class ConversionPersistenceResult:
 
 
 @dataclass(frozen=True)
+class EvidencePackPersistenceResult:
+    decision: EvidencePackPersistenceDecision
+    record: CandidatePersistenceRecord | None
+    audit_event: AuditEvent | None = None
+
+
+@dataclass(frozen=True)
 class IdeaRepositorySnapshot:
     candidate_records: Mapping[str, CandidatePersistenceRecord]
     idempotency_records: Mapping[str, IdempotencyRecord]
     idempotency_candidates: Mapping[str, str]
     conversion_intent_candidates: Mapping[str, str] = field(default_factory=dict)
+    report_evidence_pack_candidates: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -169,6 +190,11 @@ class IdeaRepositorySnapshot:
             "conversion_intent_candidates",
             MappingProxyType(dict(self.conversion_intent_candidates)),
         )
+        object.__setattr__(
+            self,
+            "report_evidence_pack_candidates",
+            MappingProxyType(dict(self.report_evidence_pack_candidates)),
+        )
 
 
 class InMemoryIdeaRepository:
@@ -179,11 +205,13 @@ class InMemoryIdeaRepository:
         self._idempotency_records: dict[str, IdempotencyRecord] = {}
         self._idempotency_candidates: dict[str, str] = {}
         self._conversion_intent_candidates: dict[str, str] = {}
+        self._report_evidence_pack_candidates: dict[str, str] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
             self._idempotency_records.update(snapshot.idempotency_records)
             self._idempotency_candidates.update(snapshot.idempotency_candidates)
             self._conversion_intent_candidates.update(snapshot.conversion_intent_candidates)
+            self._report_evidence_pack_candidates.update(snapshot.report_evidence_pack_candidates)
 
     def persist_candidate(
         self,
@@ -665,12 +693,99 @@ class InMemoryIdeaRepository:
             audit_event=result.audit_event,
         )
 
+    def precheck_evidence_pack_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> EvidencePackPersistenceResult | None:
+        _require_text(idempotency_key, "idempotency_key")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        if existing_idempotency is None:
+            return None
+        idempotency_decision, _ = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return EvidencePackPersistenceResult(
+                decision=EvidencePackPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        return EvidencePackPersistenceResult(
+            decision=EvidencePackPersistenceDecision.REPLAYED,
+            record=self._record_for_idempotency_key(idempotency_key),
+        )
+
+    def candidate_record_for_conversion_intent(
+        self,
+        conversion_intent_id: str,
+    ) -> CandidatePersistenceRecord | None:
+        _require_text(conversion_intent_id, "conversion_intent_id")
+        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
+        if candidate_id is None:
+            return None
+        return self._candidate_records.get(candidate_id)
+
+    def record_report_evidence_pack(
+        self,
+        result: ReportEvidencePackResult,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> EvidencePackPersistenceResult:
+        _require_text(idempotency_key, "idempotency_key")
+        candidate_id = result.evidence_pack.candidate_id
+        _require_text(candidate_id, "candidate_id")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return EvidencePackPersistenceResult(
+                decision=EvidencePackPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return EvidencePackPersistenceResult(
+                decision=EvidencePackPersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return EvidencePackPersistenceResult(
+                decision=EvidencePackPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+
+        updated = replace(
+            record,
+            audit_events=(*record.audit_events, result.audit_event),
+            report_evidence_packs=(*record.report_evidence_packs, result.evidence_pack),
+        )
+        self._candidate_records[candidate_id] = updated
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._report_evidence_pack_candidates[result.evidence_pack.report_evidence_pack_id] = (
+            candidate_id
+        )
+        return EvidencePackPersistenceResult(
+            decision=EvidencePackPersistenceDecision.ACCEPTED,
+            record=updated,
+            audit_event=result.audit_event,
+        )
+
     def snapshot(self) -> IdeaRepositorySnapshot:
         return IdeaRepositorySnapshot(
             candidate_records=self._candidate_records,
             idempotency_records=self._idempotency_records,
             idempotency_candidates=self._idempotency_candidates,
             conversion_intent_candidates=self._conversion_intent_candidates,
+            report_evidence_pack_candidates=self._report_evidence_pack_candidates,
         )
 
     def _record_for_idempotency_key(

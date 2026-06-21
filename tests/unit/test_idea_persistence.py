@@ -13,6 +13,7 @@ from app.domain import (
     ConversionOutcomeStatus,
     ConversionPersistenceDecision,
     ConversionTarget,
+    EvidencePackPersistenceDecision,
     EvidenceFreshness,
     EvidenceReplayStatus,
     HighCashSignalInput,
@@ -24,12 +25,15 @@ from app.domain import (
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
     ReasonCode,
+    ReportEvidencePackCommand,
+    ReportEvidencePackPurpose,
     ReviewPosture,
     SourceRef,
     SourceSystem,
     evaluate_high_cash_signal,
     record_conversion_outcome,
     request_conversion_intent,
+    request_report_evidence_pack,
 )
 
 
@@ -124,6 +128,18 @@ def conversion_intent_command(
         idempotency_key=f"conversion-{target.value}-key-001",
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
+    )
+
+
+def report_evidence_pack_command() -> ReportEvidencePackCommand:
+    return ReportEvidencePackCommand(
+        report_evidence_pack_id="report-evidence-pack-001",
+        purpose=ReportEvidencePackPurpose.CLIENT_REVIEW_REPORT_SECTION,
+        actor_subject="advisor-001",
+        idempotency_key="report-evidence-pack-key-001",
+        reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
+        requested_at_utc=datetime(2026, 6, 21, 10, 25, tzinfo=UTC),
+        retention_policy_ref="lotus-report:idea-evidence-retention:v1",
     )
 
 
@@ -612,3 +628,88 @@ def test_conversion_outcome_persistence_handles_conflict_and_missing_intent_mapp
     assert conflict.decision is ConversionPersistenceDecision.CONFLICT
     assert no_mapping.decision is ConversionPersistenceDecision.NOT_FOUND
     assert stale_mapping.decision is ConversionPersistenceDecision.NOT_FOUND
+
+
+def test_report_evidence_pack_persistence_records_idempotent_request() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:report-evidence-pack:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    conversion_command = conversion_intent_command()
+    conversion_result = request_conversion_intent(candidate, conversion_command)
+    repository.record_conversion_intent(
+        conversion_result,
+        idempotency_key=conversion_command.idempotency_key,
+        payload={"candidate_id": candidate.candidate_id, "target": conversion_command.target.value},
+    )
+    recovered = InMemoryIdeaRepository(repository.snapshot())
+    conversion_intent = recovered.conversion_intent_by_id(conversion_command.conversion_intent_id)
+    record = recovered.candidate_record_for_conversion_intent(
+        conversion_command.conversion_intent_id
+    )
+    assert conversion_intent is not None
+    assert record is not None
+    pack_command = report_evidence_pack_command()
+    pack_result = request_report_evidence_pack(
+        record.candidate,
+        conversion_intent,
+        pack_command,
+    )
+    payload = {
+        "conversion_intent_id": conversion_command.conversion_intent_id,
+        "report_evidence_pack_id": pack_command.report_evidence_pack_id,
+    }
+
+    first = recovered.record_report_evidence_pack(
+        pack_result,
+        idempotency_key=pack_command.idempotency_key,
+        payload=payload,
+    )
+    replayed = recovered.record_report_evidence_pack(
+        pack_result,
+        idempotency_key=pack_command.idempotency_key,
+        payload=payload,
+    )
+    conflict = recovered.record_report_evidence_pack(
+        pack_result,
+        idempotency_key=pack_command.idempotency_key,
+        payload={
+            "conversion_intent_id": conversion_command.conversion_intent_id,
+            "report_evidence_pack_id": "changed-report-evidence-pack",
+        },
+    )
+
+    assert first.decision is EvidencePackPersistenceDecision.ACCEPTED
+    assert replayed.decision is EvidencePackPersistenceDecision.REPLAYED
+    assert conflict.decision is EvidencePackPersistenceDecision.CONFLICT
+    assert first.record is not None
+    assert first.record.report_evidence_packs[-1].report_evidence_pack_id == (
+        "report-evidence-pack-001"
+    )
+    assert first.record.audit_events[-1].event_type == "idea.report_evidence_pack.requested"
+
+
+def test_report_evidence_pack_persistence_handles_missing_candidate_record() -> None:
+    candidate, _ = approved_high_cash_candidate()
+    pack_command = report_evidence_pack_command()
+    conversion_command = conversion_intent_command()
+    conversion_result = request_conversion_intent(candidate, conversion_command)
+    pack_result = request_report_evidence_pack(
+        conversion_result.candidate,
+        conversion_result.conversion_intent,
+        pack_command,
+    )
+
+    missing = InMemoryIdeaRepository().record_report_evidence_pack(
+        pack_result,
+        idempotency_key=pack_command.idempotency_key,
+        payload={"report_evidence_pack_id": pack_command.report_evidence_pack_id},
+    )
+
+    assert missing.decision is EvidencePackPersistenceDecision.NOT_FOUND
+    assert missing.record is None

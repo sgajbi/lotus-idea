@@ -25,6 +25,8 @@ class SourceSystem(StrEnum):
     LOTUS_ADVISE = "lotus-advise"
     LOTUS_MANAGE = "lotus-manage"
     LOTUS_REPORT = "lotus-report"
+    LOTUS_RENDER = "lotus-render"
+    LOTUS_ARCHIVE = "lotus-archive"
     LOTUS_AI = "lotus-ai"
 
 
