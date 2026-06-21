@@ -252,6 +252,20 @@ access-audit record, no client-ready publication authority, no Gateway/Workbench
 proof, no database-backed persistence, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.
 
+RFC-0002 Slice 15 is partially implemented as a bounded operation observability
+foundation. `src/app/observability/logging.py` now defines the
+`lotus_idea_operation_events_total` metric, bounded operation/outcome/
+supportability vocabulary, product-safe structured operation logs, and
+sensitive operation-attribute rejection. Conversion intent, conversion outcome,
+and report evidence-pack request APIs emit accepted, replayed, conflict,
+not-found, permission-denied, invalid-request, and invalid-state operation
+events without portfolio/client/account/holding/transaction identifiers,
+request/response bodies, trace ids, or correlation ids as metric labels. This
+is not yet full production observability: high-cash, lifecycle, review, feedback,
+queue, AI, live source readiness, dashboard/alert, Gateway entitlement, durable
+persistence, data-product certification, and supported-feature promotion remain
+planned.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -311,8 +325,8 @@ logs; fix or document the owned warning source instead.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
    current Core adapter preserves source-data product refs and requires Core to
    report cash weight explicitly rather than deriving it locally.
-7. `src/app/observability/`: correlation, logging, tracing, metrics, and audit
-   event helpers.
+7. `src/app/observability/`: correlation, logging, tracing, metrics, bounded
+   idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement
    policy, and sensitive-output controls.
 9. `src/app/resilience/`: timeout, retry, backoff, and circuit-breaker policies.
