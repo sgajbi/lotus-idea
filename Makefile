@@ -1,4 +1,4 @@
-.PHONY: install lint monetary-float-guard no-sensitive-content-guard supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -16,10 +16,14 @@ install:
 lint:
 	$(VENV_PYTHON) -m ruff check .
 	$(VENV_PYTHON) -m ruff format --check .
+	$(MAKE) ci-contract-gate
 	$(MAKE) monetary-float-guard
 	$(MAKE) no-sensitive-content-guard
 	$(MAKE) supported-features-gate
 	$(MAKE) endpoint-certification-gate
+
+ci-contract-gate:
+	$(VENV_PYTHON) scripts/ci_contract_gate.py
 
 monetary-float-guard:
 	$(VENV_PYTHON) scripts/check_monetary_float_usage.py
@@ -81,5 +85,4 @@ docker-build:
 
 clean:
 	python -c "import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in ['.pytest_cache', '.ruff_cache', '.mypy_cache']]; [pathlib.Path(p).unlink(missing_ok=True) for p in ['.coverage', '.coverage.unit', '.coverage.integration', '.coverage.e2e']]"
-
 

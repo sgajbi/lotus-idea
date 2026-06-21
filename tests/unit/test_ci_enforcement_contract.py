@@ -21,6 +21,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "scripts/architecture_boundary_gate.py --mode blocking" in makefile
     assert "check: lint typecheck architecture-boundary-gate" in makefile
     assert "ci: lint typecheck architecture-boundary-gate" in makefile
+    assert "ci-contract-gate:" in makefile
+    assert "$(MAKE) ci-contract-gate" in makefile
 
 
 def test_architecture_boundary_gate_runs_in_github_lanes() -> None:
@@ -32,6 +34,52 @@ def test_architecture_boundary_gate_runs_in_github_lanes() -> None:
         content = _read(workflow)
         assert "Architecture Boundary Gate" in content
         assert "make architecture-boundary-gate" in content
+
+
+def _load_ci_contract_gate() -> ModuleType:
+    script_path = ROOT / "scripts" / "ci_contract_gate.py"
+    spec = importlib.util.spec_from_file_location("ci_contract_gate", script_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_ci_contract_gate_passes_current_repository_contract() -> None:
+    module = _load_ci_contract_gate()
+
+    assert module.validate_ci_contract() == []
+
+
+def test_ci_contract_gate_blocks_missing_merge_grade_checks() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("security-audit", "security-report")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile missing required target `security-audit`" in errors
+    assert "Makefile ci target missing `security-audit`" in errors
+
+
+def test_ci_contract_gate_blocks_write_permissions_in_read_only_lanes(tmp_path: Path) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    for workflow_name in module.WORKFLOW_EXPECTATIONS:
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflow_dir / workflow_name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    feature_lane = workflow_dir / "feature-lane.yml"
+    feature_lane.write_text(
+        feature_lane.read_text(encoding="utf-8").replace("contents: read", "contents: write"),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "feature-lane.yml must not contain `contents: write`" in errors
 
 
 def test_generated_quality_reports_do_not_dirty_worktree() -> None:
