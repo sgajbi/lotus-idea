@@ -57,6 +57,10 @@ the build order for a bank-buyable `lotus-idea` service.
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
 RFC, workflow, scaffold, or implementation commits; keep small commits linear
 and let branch protection require the PR merge gate before `main` updates.
+After every merge, delete the remote feature branch and the matching local
+feature branch, then re-run branch hygiene before final closure. Durable
+RFC/docs/wiki/context/contract truth is complete only when it is present on
+`main`, published where required, and not stranded on a side branch.
 
 Coverage aggregation jobs use the current approved `actions/download-artifact`
 major and suppress its upstream Node deprecation noise with
@@ -88,6 +92,10 @@ logs; fix or document the owned warning source instead.
 12. `docs/architecture/adr/`: architecture decisions that shape implementation.
 13. `docs/rfcs/`: governed implementation slices and evidence requirements.
 14. `tests/unit`, `tests/integration`, `tests/e2e`: test pyramid baseline.
+15. `wiki/`: repo-authored GitHub wiki source with the standard Lotus operator
+    pages for getting started, development workflow, validation/CI, roadmap,
+    supported features, operations, security, integrations, architecture, and
+    RFC navigation.
 
 ## Runtime And Integration Boundaries
 
