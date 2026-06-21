@@ -10,9 +10,10 @@ Service profile: `domain-service`
 
 Current status: scaffolded foundation, governance RFCs, the first pure domain
 model/lifecycle foundation, an internal high-cash deterministic signal policy,
-an internal persistence/replay/idempotency/audit foundation, and an internal
-deterministic scoring/review-queue projection foundation. No business feature
-is supported until the relevant RFC slice has implementation evidence, endpoint
+an internal persistence/replay/idempotency/audit foundation, an internal
+deterministic scoring/review-queue projection foundation, and an internal
+advisor review/feedback governance foundation. No business feature is supported
+until the relevant RFC slice has implementation evidence, endpoint
 certification, tests, and supported-feature registration.
 
 ## Product Boundary
@@ -83,8 +84,8 @@ source-authority contracts only, not runtime certification.
 - `src/app/api/`: HTTP route modules and API DTO mapping.
 - `src/app/application/`: use-case orchestration.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
-  lifecycle rules, review-queue projection, internal persistence records,
-  replay posture, idempotency, and audit primitives.
+  lifecycle rules, review-queue projection, review governance, internal
+  persistence records, replay posture, idempotency, and audit primitives.
 - `src/app/ports/`: source-owned service interfaces consumed by application logic.
 - `src/app/infrastructure/`: adapters and clients behind ports.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing.

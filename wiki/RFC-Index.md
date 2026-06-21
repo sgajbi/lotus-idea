@@ -29,10 +29,15 @@ Current RFC-0002 implementation-start baseline:
    deduplication, expiry, unsupported-evidence, and unscored-candidate
    exclusions without persisted queue state, API, Gateway, Workbench, or
    supported-feature promotion.
-6. The first opportunity journey is high cash / idle liquidity for
+6. Slice 08 partially implements internal advisor review and feedback
+   governance with fail-closed scope checks, review actions, safe audit events,
+   source provenance, and queue projection interaction without database-backed
+   review persistence, API, Gateway, Workbench, PM/compliance/operator queue
+   surfaces, or supported-feature promotion.
+7. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
-7. The first review audience is advisor only.
-8. The first downstream conversion posture is report-only evidence after
+8. The first review audience is advisor only.
+9. The first downstream conversion posture is report-only evidence after
    advisor review.
-9. Business features remain unsupported until later slices implement runtime
+10. Business features remain unsupported until later slices implement runtime
    behavior, certification, and supported-feature promotion.

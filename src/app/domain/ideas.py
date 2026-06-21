@@ -80,6 +80,14 @@ class ReasonCode(StrEnum):
     CONFLICT_PENALTY = "conflict_penalty"
     QUEUE_PRIORITY = "queue_priority"
     QUEUE_EXCLUDED = "queue_excluded"
+    REVIEW_APPROVED_FOR_CONVERSION = "review_approved_for_conversion"
+    REVIEW_REJECTED = "review_rejected"
+    REVIEW_NO_ACTION = "review_no_action"
+    REVIEW_SUPPRESSED = "review_suppressed"
+    REVIEW_SNOOZED = "review_snoozed"
+    REVIEW_ESCALATED = "review_escalated"
+    FEEDBACK_RECORDED = "feedback_recorded"
+    ENTITLEMENT_DENIED = "entitlement_denied"
 
 
 class IdeaLifecycleStatus(StrEnum):
