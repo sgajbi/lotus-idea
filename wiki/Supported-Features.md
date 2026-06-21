@@ -16,9 +16,9 @@ Report/Render/Archive authority refs, idempotency, audit, and a certified
 internal API foundation. Real PostgreSQL runtime proof exists for high-cash
 persistence/replay plus the first internal advisor queue, lifecycle, review,
 feedback, conversion, and report evidence-pack request workflow path. These are
-not externally supported features until live source adapters, deploy/recovery
-evidence, Gateway/Workbench proof, downstream acceptance, data-product
-certification, and supported-feature evidence are present.
+not externally supported features until live source adapters, deploy/source-ingestion
+recovery evidence, Gateway/Workbench proof, downstream acceptance,
+data-product certification, and supported-feature evidence are present.
 
 Planned capabilities:
 

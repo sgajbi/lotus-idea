@@ -22,7 +22,8 @@
 3. Run local parity check (`make ci`) before hotfix PR.
 4. For persistence or repository-provider changes, run
    `make postgres-integration-gate` with `LOTUS_IDEA_POSTGRES_INTEGRATION_URL`
-   pointed at a disposable PostgreSQL database.
+   pointed at a disposable PostgreSQL database. The gate proves the current
+   API workflow persistence path and schema rollback/reapply recovery posture.
 
 ## Current Operation Event Diagnostics
 
@@ -53,5 +54,5 @@ Use the operation `outcome` before inspecting payload-level evidence:
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,
-data-product certification, downstream Report/Render/Archive realization, Gateway/Workbench proof,
-or supported-feature promotion.
+source-ingestion recovery, data-product certification, downstream Report/Render/Archive
+realization, Gateway/Workbench proof, or supported-feature promotion.

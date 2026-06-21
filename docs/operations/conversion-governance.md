@@ -57,7 +57,7 @@ Implementation source:
 
 Promotion requirements:
 
-1. deploy and recovery evidence for the PostgreSQL-backed workflow,
+1. deploy and source-ingestion recovery evidence for the PostgreSQL-backed workflow,
 2. Gateway/Workbench proof,
 3. downstream acceptance tests in `lotus-advise`, `lotus-manage`, and
    `lotus-report` where each service remains source authority for its workflow,

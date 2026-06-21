@@ -54,10 +54,11 @@ Persistence adapter validation:
    `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured. The proof covers
    high-cash persistence/replay plus the first advisor queue, lifecycle,
    review, feedback, conversion intent/outcome, and report evidence-pack
-   request workflow path against real PostgreSQL state.
+   request workflow path against real PostgreSQL state, plus schema
+   rollback/reapply recovery.
 5. Runtime API database wiring is opt-in and still requires deploy migration
-   evidence, rollback/recovery proof, and mesh/support promotion evidence before
-   any supported durable product claim.
+   evidence, source-ingestion recovery proof, and mesh/support promotion evidence
+   before any supported durable product claim.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,

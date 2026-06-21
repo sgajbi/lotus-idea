@@ -103,8 +103,8 @@ now proves high-cash API persistence/replay and the first internal review,
 feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service, including schema apply, provider reload,
 idempotency replay from database state, backing table validation, and schema
-rollback. Production storage readiness still requires deploy migration
-evidence and broader rollback/recovery evidence.
+rollback/reapply recovery. Production storage readiness still requires deploy
+migration evidence and source-ingestion recovery evidence.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
