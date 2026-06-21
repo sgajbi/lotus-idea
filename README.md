@@ -68,6 +68,14 @@ All `lotus-idea` products remain proposed and not certified until runtime
 implementation, live trust telemetry, platform source-manifest inclusion,
 Gateway/Workbench discovery, and platform mesh certification pass.
 
+The first consumer dependency set is aligned to the RFC-0002 source map:
+`lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
+projection, and benchmark assignment; `lotus-performance` returns and mandate
+performance health; `lotus-risk` risk metrics and mandate/scenario context;
+`lotus-advise` proposal, policy, and copilot evidence; `lotus-manage` action
+register; and `lotus-report` client report evidence. These declarations are
+source-authority contracts only, not runtime certification.
+
 ## Repository Map
 
 - `src/app/api/`: HTTP route modules and API DTO mapping.

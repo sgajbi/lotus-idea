@@ -36,3 +36,18 @@ Every `lotus-idea` product remains `proposed` until:
 
 The static telemetry snapshot is deliberately blocked so operators and future
 agents cannot treat the day-one contract baseline as runtime certification.
+
+## Current Consumer Source Map
+
+The repo-local consumer declaration names the source-authority products needed
+by the RFC-0002 first-wave map. The first high-cash / idle-liquidity journey
+uses Core-owned portfolio state, holdings/cash balance, cash movement, and
+cashflow projection evidence. Later first-wave families reference
+Performance-owned returns and mandate performance health, Risk-owned risk
+metrics and scenario/mandate risk posture, Advise-owned proposal/policy/copilot
+records, Manage-owned action register posture, and Report-owned client report
+evidence.
+
+These dependencies are not runtime certification. They are the source-owner
+contract skeleton that later implementation slices must consume through ports,
+supportability handling, tests, and certification evidence.
