@@ -149,7 +149,7 @@ use cases must depend on that port instead of defining local repository
 protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
 so the future durable adapter has one governed contract surface.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
-the first versioned schema contract for future database-backed candidate,
+the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, review, feedback, conversion, and report
 evidence-pack state. `make migration-contract-gate` blocks missing schema
 objects, missing indexes, missing rollback posture, or placeholder SQL.
@@ -168,11 +168,14 @@ process-local state as the default. Repository-backed routes derive
 `durableStorageBacked` responses and operation-event labels from the active
 repository. `make postgres-integration-gate` now exercises the real FastAPI
 runtime provider against a PostgreSQL 18 service by applying migrations,
-persisting a high-cash candidate through the API, reloading the provider, and
-proving idempotency replay from database state. This is still not production
-storage certification: deploy migration evidence, broader rollback/recovery
-proof, data-product certification, downstream workflow proof, and
-supported-feature promotion remain planned.
+persisting a high-cash candidate through the API, reloading the provider,
+proving idempotency replay from database state, projecting the advisor queue,
+transitioning lifecycle state, recording review approval, recording feedback,
+recording report conversion intent/outcome state, recording a report
+evidence-pack request, and validating the backing workflow tables. This is
+still not production storage certification: deploy migration evidence, broader
+rollback/recovery proof, data-product certification, downstream workflow proof,
+and supported-feature promotion remain planned.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -209,10 +212,11 @@ foundation:
 mutating capabilities, caller role, upstream-authorized scope, and
 `Idempotency-Key`, and they return product-safe permission, not-found,
 idempotency-conflict, and invalid-state errors. This is not yet a supported
-review product: no durable database-backed review store, Gateway/Workbench
-proof, platform-scoped runtime entitlement contract, PM/compliance/operator
-queue surface, data-product certification, trust telemetry, or supported-feature
-promotion exists.
+review product: PostgreSQL-backed review and feedback recording proof exists
+only inside the opt-in runtime proof; there is no Gateway/Workbench proof,
+platform-scoped runtime entitlement contract, PM/compliance/operator queue
+surface, data-product certification, trust telemetry, or supported-feature
+promotion.
 
 RFC-0002 Slice 09 is partially implemented as an internal AI governance
 foundation in `src/app/domain/ai_governance.py`,
@@ -270,12 +274,13 @@ requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
 runtime workflows, persist durable AI lineage, or grant downstream authority.
 All ten business routes plus the data-mesh-readiness operator diagnostic are
-covered by OpenAPI and endpoint certification evidence.
+covered by OpenAPI and endpoint certification evidence. The PostgreSQL runtime
+proof now covers the high-cash persist, advisor queue, lifecycle, review,
+feedback, conversion intent/outcome, and report evidence-pack request path.
 This is not yet a supported product capability: there are no live source
 adapters, Gateway routes, Workbench surfaces, supported database-backed API
-state beyond the current high-cash PostgreSQL persistence/replay proof,
-data-product certification, runtime trust telemetry, or supported-feature
-promotion.
+state beyond the current opt-in PostgreSQL workflow proof, data-product
+certification, runtime trust telemetry, or supported-feature promotion.
 
 RFC-0002 Slice 12 is partially implemented as an internal conversion governance
 foundation in `src/app/domain/conversion_governance.py`. The repository now has
@@ -286,10 +291,11 @@ events; idempotency-key validation at the domain command boundary; repository
 idempotency and snapshot lookup for conversion intents/outcomes; certified
 internal conversion intent/outcome APIs; and explicit no-authority semantics
 for execution, suitability, client communication, and downstream realization.
-This is not yet a supported conversion product: there are no downstream
-adapters, Gateway/Workbench proof, Advise/Manage/Report acceptance tests,
-database-backed persistence, data-product certification, runtime trust
-telemetry, or supported-feature promotion.
+This is not yet a supported conversion product: PostgreSQL-backed internal
+conversion intent/outcome recording proof exists only inside the opt-in runtime
+proof; there are no downstream adapters, Gateway/Workbench proof,
+Advise/Manage/Report acceptance tests, data-product certification, runtime
+trust telemetry, or supported-feature promotion.
 
 RFC-0002 Slice 13 is partially implemented as an internal report evidence-pack
 request foundation in `src/app/domain/report_evidence.py`. The repository now
@@ -297,10 +303,11 @@ has report conversion-intent gating, evidence-hash reconciliation, safe source
 summary projection, Report/Render/Archive source-authority refs, retention
 policy references, idempotent repository persistence, safe audit events, and a
 certified internal API for report evidence-pack requests. This is not yet a
-supported report evidence product: there is no `lotus-report` package intake
-adapter, no `lotus-render` deterministic output, no `lotus-archive` metadata or
-access-audit record, no client-ready publication authority, no Gateway/Workbench
-proof, no database-backed persistence, no data-product certification, no runtime
+supported report evidence product: PostgreSQL-backed internal request recording
+proof exists only inside the opt-in runtime proof; there is no `lotus-report`
+package intake adapter, no `lotus-render` deterministic output, no
+`lotus-archive` metadata or access-audit record, no client-ready publication
+authority, no Gateway/Workbench proof, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.
 
 RFC-0002 Slice 14 is partially implemented as an internal data-mesh-readiness

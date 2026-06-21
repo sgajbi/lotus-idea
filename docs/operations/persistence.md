@@ -3,14 +3,15 @@
 Current posture: `lotus-idea` has internal in-memory repository behavior, a
 versioned SQL schema, rollback contract, PostgreSQL migration execution CLI, a
 tested PostgreSQL repository adapter foundation, and opt-in API repository
-wiring through `LOTUS_IDEA_DATABASE_URL`. It also has a real PostgreSQL runtime
-proof for the first high-cash API persistence/replay path. Runtime API state
-remains process-local by default and reports `durableStorageBacked=false`
-unless the database URL is configured. When configured, repository-backed API
-responses and operation events report `durableStorageBacked=true`, but this is
-still not production storage certification, data-product certification, live
-source integration proof, downstream realization proof, or supported-feature
-promotion.
+wiring through `LOTUS_IDEA_DATABASE_URL`. It also has real PostgreSQL runtime
+proof for high-cash API persistence/replay and the first internal review,
+feedback, conversion, report evidence-pack, and advisor queue workflow path.
+Runtime API state remains process-local by default and reports
+`durableStorageBacked=false` unless the database URL is configured. When
+configured, repository-backed API responses and operation events report
+`durableStorageBacked=true`, but this is still not production storage
+certification, data-product certification, live source integration proof,
+downstream realization proof, or supported-feature promotion.
 
 ## Current Contract
 
@@ -41,8 +42,11 @@ promotion.
 8. `tests/integration/test_postgres_runtime_integration.py` applies the schema
    to a real PostgreSQL service, persists through the FastAPI
    evaluate-and-persist endpoint, reloads the repository provider, proves
-   idempotency replay from database state, and rolls back the schema. GitHub PR
-   Merge Gate and Main Releasability run this proof against `postgres:18-alpine`.
+   idempotency replay from database state, projects the advisor queue, records
+   lifecycle transitions, review approval, feedback, conversion intent,
+   conversion outcome, and report evidence-pack request state, validates the
+   backing tables, and rolls back the schema. GitHub PR Merge Gate and Main
+   Releasability run this proof against `postgres:18-alpine`.
 
 ## Validation
 
@@ -94,8 +98,7 @@ supported business workflows until later slices add:
 
 1. deploy-pipeline migration evidence,
 2. broader rollback/recovery evidence against the real service,
-3. real PostgreSQL proof for review, conversion, report-evidence, and queue
-   workflows beyond the current high-cash persistence/replay path,
+3. source-ingestion worker proof and live source adapter proof,
 4. data-product telemetry and platform mesh certification,
 5. Gateway/Workbench/downstream proof for supported workflows,
 6. updated endpoint certification, supported-feature, docs, wiki, and mesh

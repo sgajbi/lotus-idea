@@ -58,22 +58,25 @@ Implemented in this slice:
     `tests/integration/test_review_workflow_api.py` cover repository
     idempotency, audit posture, API permission, invalid state, missing
     resources, wrong source authority, replay, and conflict behavior.
+14. `tests/integration/test_postgres_runtime_integration.py` now proves the
+    first PostgreSQL-backed internal report conversion path by creating a
+    review-approved candidate, recording the report conversion intent, replaying
+    the intent from database idempotency state, recording a source-authorized
+    conversion outcome, and validating the conversion intent/outcome tables.
 
 ## Remaining Work
 
 This slice is not yet a supported conversion product. Remaining work includes:
 
-1. database-backed persistence and idempotency storage for conversion intents
-   and outcomes,
-2. Gateway/Workbench proof,
-3. `lotus-advise` acceptance contract for proposal/suitability workflow intake,
-4. `lotus-manage` acceptance contract for DPM review/action candidate intake,
-5. `lotus-report` report-evidence package intake proof for the first
+1. Gateway/Workbench proof,
+2. `lotus-advise` acceptance contract for proposal/suitability workflow intake,
+3. `lotus-manage` acceptance contract for DPM review/action candidate intake,
+4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-6. downstream failure/rejection/completion integration tests across owning
+5. downstream failure/rejection/completion integration tests across owning
    services,
-7. data-product trust telemetry and mesh certification,
-8. supported-feature promotion after runtime and downstream proof.
+6. data-product trust telemetry and mesh certification,
+7. supported-feature promotion after runtime and downstream proof.
 
 ## Required Work
 

@@ -13,10 +13,12 @@ conversion tracking, source-authority mapping, and no-authority conversion
 boundaries. Internal report evidence-pack request governance also exists for
 reviewed report conversion intents, with safe source summaries, retention refs,
 Report/Render/Archive authority refs, idempotency, audit, and a certified
-internal API foundation. These are not externally supported features until live
-source adapters, broader durable runtime workflow proof, Gateway/Workbench
-proof, downstream acceptance, data-product certification, and supported-feature
-evidence are present.
+internal API foundation. Real PostgreSQL runtime proof exists for high-cash
+persistence/replay plus the first internal advisor queue, lifecycle, review,
+feedback, conversion, and report evidence-pack request workflow path. These are
+not externally supported features until live source adapters, deploy/recovery
+evidence, Gateway/Workbench proof, downstream acceptance, data-product
+certification, and supported-feature evidence are present.
 
 Planned capabilities:
 

@@ -51,10 +51,13 @@ Persistence adapter validation:
    PostgreSQL runtime proof. GitHub PR Merge Gate and Main Releasability run it
    against `postgres:18-alpine` with
    `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`; local runs skip unless
-   `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured.
+   `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured. The proof covers
+   high-cash persistence/replay plus the first advisor queue, lifecycle,
+   review, feedback, conversion intent/outcome, and report evidence-pack
+   request workflow path against real PostgreSQL state.
 5. Runtime API database wiring is opt-in and still requires deploy migration
-   evidence, broader workflow proof, rollback/recovery proof, and mesh/support
-   promotion evidence before any supported durable product claim.
+   evidence, rollback/recovery proof, and mesh/support promotion evidence before
+   any supported durable product claim.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,

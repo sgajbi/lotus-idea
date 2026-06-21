@@ -43,9 +43,9 @@ foundation:
     active.
 
 This foundation remains internal and `foundation_only`. It does not prove
-durable database-backed persistence, data-product certification, downstream
-Report/Render/Archive realization, Gateway/Workbench proof, dashboard/alert
-certification, or supported-feature promotion.
+production durable-storage certification, data-product certification,
+downstream Report/Render/Archive realization, Gateway/Workbench proof,
+dashboard/alert certification, or supported-feature promotion.
 
 ## Required Work
 

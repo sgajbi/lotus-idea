@@ -92,6 +92,10 @@ certified internal API foundations:
 1. `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
 2. `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
 
+The opt-in PostgreSQL runtime proof now covers the first internal report
+conversion intent/outcome path. It proves `lotus-idea` workflow-state
+persistence only; it does not prove downstream service intake.
+
 The report conversion path also has an internal evidence-pack request foundation:
 
 1. `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`.
