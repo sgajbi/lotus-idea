@@ -3,10 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Any, Protocol
 
 from app.domain import (
+    CandidatePersistenceResult,
     HighCashSignalInput,
     HighCashSignalPolicy,
+    IdeaCandidate,
     OpportunityFamily,
     ReasonCode,
     SignalEvaluationResult,
@@ -44,6 +47,38 @@ class EvaluateHighCashFromCoreCommand:
     duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
+
+
+@dataclass(frozen=True)
+class EvaluateAndPersistHighCashSignalCommand:
+    evaluation: EvaluateHighCashSignalCommand
+    idempotency_key: str
+    actor_subject: str
+
+
+@dataclass(frozen=True)
+class EvaluateAndPersistHighCashFromCoreCommand:
+    evaluation: EvaluateHighCashFromCoreCommand
+    idempotency_key: str
+    actor_subject: str
+
+
+@dataclass(frozen=True)
+class HighCashSignalPersistenceResult:
+    evaluation: SignalEvaluationResult
+    persistence: CandidatePersistenceResult | None
+
+
+class CandidatePersistenceRepository(Protocol):
+    def persist_candidate(
+        self,
+        candidate: IdeaCandidate,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+        actor_subject: str,
+        occurred_at_utc: datetime | None = None,
+    ) -> CandidatePersistenceResult: ...
 
 
 DEFAULT_HIGH_CASH_POLICY = HighCashSignalPolicy(
@@ -125,3 +160,119 @@ def evaluate_high_cash_signal_from_core(
         ),
         policy=policy,
     )
+
+
+def evaluate_and_persist_high_cash_signal(
+    command: EvaluateAndPersistHighCashSignalCommand,
+    *,
+    repository: CandidatePersistenceRepository,
+    policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
+) -> HighCashSignalPersistenceResult:
+    _require_text(command.idempotency_key, "idempotency_key")
+    _require_text(command.actor_subject, "actor_subject")
+    evaluation = evaluate_high_cash_signal_command(command.evaluation, policy=policy)
+    if evaluation.candidate is None:
+        return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=None)
+
+    persistence = repository.persist_candidate(
+        evaluation.candidate,
+        idempotency_key=command.idempotency_key,
+        payload=_idempotency_payload_for_high_cash(command.evaluation, policy=policy),
+        actor_subject=command.actor_subject,
+        occurred_at_utc=command.evaluation.evaluated_at_utc,
+    )
+    return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=persistence)
+
+
+def evaluate_and_persist_high_cash_signal_from_core(
+    command: EvaluateAndPersistHighCashFromCoreCommand,
+    *,
+    core_source: CoreOpportunitySourcePort,
+    repository: CandidatePersistenceRepository,
+    policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
+) -> HighCashSignalPersistenceResult:
+    _require_text(command.idempotency_key, "idempotency_key")
+    _require_text(command.actor_subject, "actor_subject")
+    evaluation = evaluate_high_cash_signal_from_core(
+        command.evaluation,
+        core_source=core_source,
+        policy=policy,
+    )
+    if evaluation.candidate is None:
+        return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=None)
+
+    persistence = repository.persist_candidate(
+        evaluation.candidate,
+        idempotency_key=command.idempotency_key,
+        payload=_idempotency_payload_for_core_high_cash(command.evaluation, evaluation, policy),
+        actor_subject=command.actor_subject,
+        occurred_at_utc=command.evaluation.evaluated_at_utc,
+    )
+    return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=persistence)
+
+
+def _idempotency_payload_for_core_high_cash(
+    command: EvaluateHighCashFromCoreCommand,
+    evaluation: SignalEvaluationResult,
+    policy: HighCashSignalPolicy,
+) -> dict[str, Any]:
+    source_refs = (
+        evaluation.candidate.evidence_packet.source_refs if evaluation.candidate is not None else ()
+    )
+    return {
+        "as_of_date": command.as_of_date.isoformat(),
+        "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
+        "family": OpportunityFamily.HIGH_CASH.value,
+        "portfolio_id": command.portfolio_id,
+        "policy_version": policy.policy_version,
+        "source_refs": [_source_ref_payload(source_ref) for source_ref in source_refs],
+    }
+
+
+def _idempotency_payload_for_high_cash(
+    command: EvaluateHighCashSignalCommand,
+    *,
+    policy: HighCashSignalPolicy,
+) -> dict[str, Any]:
+    return {
+        "as_of_date": command.as_of_date.isoformat(),
+        "duplicate_of_candidate_id": command.duplicate_of_candidate_id,
+        "entitlement_allowed": command.entitlement_allowed,
+        "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
+        "family": OpportunityFamily.HIGH_CASH.value,
+        "policy_version": policy.policy_version,
+        "source_reported_cash_weight": (
+            str(command.source_reported_cash_weight)
+            if command.source_reported_cash_weight is not None
+            else None
+        ),
+        "source_refs": [
+            _source_ref_payload(source_ref)
+            for source_ref in (
+                command.portfolio_state_ref,
+                command.holdings_ref,
+                command.cash_movement_ref,
+                command.cashflow_projection_ref,
+            )
+            if source_ref is not None
+        ],
+    }
+
+
+def _source_ref_payload(source_ref: SourceRef) -> dict[str, str]:
+    return {
+        "as_of_date": source_ref.as_of_date.isoformat(),
+        "content_hash": source_ref.content_hash,
+        "data_quality_status": source_ref.data_quality_status,
+        "freshness": source_ref.freshness.value,
+        "generated_at_utc": source_ref.generated_at_utc.isoformat(),
+        "product_id": source_ref.product_id,
+        "product_version": source_ref.product_version,
+        "route": source_ref.route,
+        "source_system": source_ref.source_system.value,
+    }
+
+
+def _require_text(value: str, field_name: str) -> None:
+    if not value.strip():
+        raise ValueError(f"{field_name} is required")

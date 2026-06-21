@@ -17,7 +17,8 @@ Current state:
    policy plus the first Core source-port and conservative HTTP adapter
    foundation,
 8. RFC-0002 Slice 06 partially implements internal persistence, replay,
-   idempotency, lifecycle audit history, and recovery primitives,
+   idempotency, lifecycle audit history, recovery primitives, and high-cash
+   evaluate-and-persist orchestration,
 9. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
@@ -45,8 +46,8 @@ First implementation program:
 4. extend the current Core source-port foundation into live high-cash /
    idle-liquidity source proof after Core exposes explicit source-reported cash
    weight,
-5. add database-backed persistence, source ingestion orchestration, persisted
-   queue state, review, and feedback,
+5. add database-backed persistence, source ingestion workers, persisted queue
+   state, review, and feedback,
 6. extend certified APIs into Gateway/Workbench product surfaces after live
    source adapters and durable state exist,
 7. persist conversion intents/outcomes and add downstream adapter contracts only

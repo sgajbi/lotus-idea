@@ -113,10 +113,14 @@ candidate persistence records, deterministic source-ref evidence hashes,
 idempotent candidate persistence decisions, duplicate candidate suppression,
 evidence replay posture for matched, stale, mismatched, expired, and missing
 records, lifecycle-transition history, safe audit events for mutating actions,
-and snapshot recovery for internal replay tests. This is not yet database-backed
-durable persistence: no migration, rollback, API surface, source adapter,
-integration proof, data-product certification, or supported-feature promotion
-exists.
+snapshot recovery for internal replay tests, and application-level high-cash
+evaluate-and-persist orchestration in
+`src/app/application/high_cash_signal.py`. The orchestration persists only
+created candidates, replays matching idempotency keys, conflicts on changed
+payloads, and leaves blocked/not-eligible/suppressed evaluations non-mutating.
+This is not yet database-backed durable persistence: no migration, rollback,
+stateful API surface, integration proof, data-product certification, or
+supported-feature promotion exists.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection foundation in `src/app/domain/scoring.py`. The
@@ -200,8 +204,10 @@ logs; fix or document the owned warning source instead.
    registered directly on the FastAPI app before Prometheus instrumentation so
    endpoint certification and metrics instrumentation remain compatible.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
-   conversion workflows. The current first use case maps the certified
-   high-cash API request into framework-free domain signal evaluation.
+   conversion workflows. Current use cases map the certified high-cash API
+   request into framework-free domain signal evaluation, fetch Core high-cash
+   evidence through a source port, and internally persist created high-cash
+   candidates through the Slice 06 idempotency/audit repository contract.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, evidence policy, deterministic governance checks,

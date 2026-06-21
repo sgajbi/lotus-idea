@@ -5,13 +5,19 @@ from decimal import Decimal
 from dataclasses import dataclass
 
 from app.application.high_cash_signal import (
+    EvaluateAndPersistHighCashFromCoreCommand,
+    EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashFromCoreCommand,
     EvaluateHighCashSignalCommand,
+    evaluate_and_persist_high_cash_signal,
+    evaluate_and_persist_high_cash_signal_from_core,
     evaluate_high_cash_signal_from_core,
     evaluate_high_cash_signal_command,
 )
 from app.domain import (
+    CandidatePersistenceDecision,
     EvidenceFreshness,
+    InMemoryIdeaRepository,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -166,3 +172,114 @@ def test_application_does_not_infer_cash_weight_when_core_omits_source_reported_
     assert result.outcome is SignalEvaluationOutcome.BLOCKED
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
     assert result.candidate is None
+
+
+def persist_command(
+    *,
+    evaluation: EvaluateHighCashSignalCommand | None = None,
+    idempotency_key: str = "signal-ingestion:high-cash:pb-001:2026-06-21",
+) -> EvaluateAndPersistHighCashSignalCommand:
+    return EvaluateAndPersistHighCashSignalCommand(
+        evaluation=evaluation or command(),
+        idempotency_key=idempotency_key,
+        actor_subject="signal-ingestion-worker",
+    )
+
+
+def test_application_persists_created_high_cash_candidate_with_audit_event() -> None:
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert result.persistence is not None
+    assert result.persistence.decision is CandidatePersistenceDecision.ACCEPTED
+    assert result.persistence.record is not None
+    assert result.persistence.record.audit_events[0].event_type == "idea.candidate.persisted"
+
+
+def test_application_replays_same_high_cash_idempotency_payload() -> None:
+    repository = InMemoryIdeaRepository()
+    first = evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+
+    replayed = evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+
+    assert first.persistence is not None
+    assert replayed.persistence is not None
+    assert replayed.persistence.decision is CandidatePersistenceDecision.REPLAYED
+    assert replayed.persistence.record == first.persistence.record
+
+
+def test_application_detects_high_cash_idempotency_payload_conflict() -> None:
+    repository = InMemoryIdeaRepository()
+    evaluate_and_persist_high_cash_signal(
+        persist_command(),
+        repository=repository,
+    )
+
+    conflict = evaluate_and_persist_high_cash_signal(
+        persist_command(evaluation=command(cash_weight=Decimal("0.20"))),
+        repository=repository,
+    )
+
+    assert conflict.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert conflict.persistence is not None
+    assert conflict.persistence.decision is CandidatePersistenceDecision.CONFLICT
+    assert conflict.persistence.audit_event is None
+
+
+def test_application_does_not_persist_blocked_high_cash_evaluation() -> None:
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_high_cash_signal(
+        persist_command(evaluation=command(cash_weight=None)),
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.persistence is None
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_application_persists_core_backed_high_cash_candidate() -> None:
+    source = RecordingCoreSource(evidence=current_core_evidence())
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_high_cash_signal_from_core(
+        EvaluateAndPersistHighCashFromCoreCommand(
+            evaluation=from_core_command(),
+            idempotency_key="signal-ingestion:high-cash:core:pb-001:2026-06-21",
+            actor_subject="signal-ingestion-worker",
+        ),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert result.persistence is not None
+    assert result.persistence.decision is CandidatePersistenceDecision.ACCEPTED
+    assert source.seen_request is not None
+    assert source.seen_request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+
+
+def test_application_validates_persistence_command_identity() -> None:
+    repository = InMemoryIdeaRepository()
+
+    try:
+        evaluate_and_persist_high_cash_signal(
+            persist_command(idempotency_key=" "),
+            repository=repository,
+        )
+    except ValueError as exc:
+        assert str(exc) == "idempotency_key is required"
+    else:
+        raise AssertionError("expected blank idempotency key to fail")

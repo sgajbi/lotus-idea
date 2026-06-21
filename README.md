@@ -13,6 +13,7 @@ model/lifecycle foundation, an internal high-cash deterministic signal policy,
 the first Core source-port and conservative HTTP adapter foundation for
 high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
+high-cash evaluate-and-persist orchestration foundation,
 deterministic scoring/review-queue projection foundation, and an internal
 advisor review/feedback governance foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
@@ -91,7 +92,8 @@ source-authority contracts only, not runtime certification.
 - `src/app/api/`: HTTP route modules and API DTO mapping.
 - `src/app/application/`: use-case orchestration. The current first use cases
   evaluate high-cash signals over caller-supplied Core evidence and over a
-  Core source port that fetches governed Core evidence.
+  Core source port that fetches governed Core evidence, and internally persist
+  created candidates through the Slice 06 idempotency/audit repository contract.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,
