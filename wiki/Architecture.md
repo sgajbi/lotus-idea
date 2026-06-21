@@ -82,6 +82,15 @@ expiry, snooze, unsupported-evidence, and duplicate exclusions without adding a
 second queue implementation. It is not yet a public API, Workbench surface,
 database-backed queue product, or certified data product.
 
+## Review Workflow Persistence Foundation
+
+The internal application layer can apply governed advisor review actions and
+feedback to repository snapshots, then persist accepted decisions, feedback
+events, safe audit evidence, lifecycle history, and idempotency replay/conflict
+posture through the Slice 06 repository contract. This is still an internal
+in-memory foundation, not durable database support, a public API,
+Gateway/Workbench functionality, or a supported review product.
+
 ## Architecture Decisions
 
 ADRs live in `docs/architecture/adr/`:

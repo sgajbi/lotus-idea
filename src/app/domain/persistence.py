@@ -17,6 +17,12 @@ from app.domain.ideas import (
     SourceRef,
     transition_candidate,
 )
+from app.domain.review_governance import (
+    FeedbackResult,
+    GovernedFeedbackEvent,
+    GovernedReviewDecision,
+    ReviewActionResult,
+)
 
 
 class CandidatePersistenceDecision(StrEnum):
@@ -31,6 +37,13 @@ class EvidenceReplayStatus(StrEnum):
     STALE_SOURCE = "stale_source"
     HASH_MISMATCH = "hash_mismatch"
     EXPIRED = "expired"
+    NOT_FOUND = "not_found"
+
+
+class ReviewPersistenceDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REPLAYED = "replayed"
+    CONFLICT = "conflict"
     NOT_FOUND = "not_found"
 
 
@@ -55,12 +68,16 @@ class CandidatePersistenceRecord:
     persisted_at_utc: datetime
     lifecycle_history: tuple[LifecycleHistoryEntry, ...] = ()
     audit_events: tuple[AuditEvent, ...] = ()
+    review_decisions: tuple[GovernedReviewDecision, ...] = ()
+    feedback_events: tuple[GovernedFeedbackEvent, ...] = ()
 
     def __post_init__(self) -> None:
         _require_text(self.evidence_hash, "evidence_hash")
         _require_aware_utc(self.persisted_at_utc, "persisted_at_utc")
         object.__setattr__(self, "lifecycle_history", tuple(self.lifecycle_history))
         object.__setattr__(self, "audit_events", tuple(self.audit_events))
+        object.__setattr__(self, "review_decisions", tuple(self.review_decisions))
+        object.__setattr__(self, "feedback_events", tuple(self.feedback_events))
 
     def is_expired_at(self, evaluated_at_utc: datetime) -> bool:
         _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
@@ -79,6 +96,13 @@ class EvidenceReplayResult:
     status: EvidenceReplayStatus
     record: CandidatePersistenceRecord | None
     current_evidence_hash: str | None = None
+
+
+@dataclass(frozen=True)
+class ReviewPersistenceResult:
+    decision: ReviewPersistenceDecision
+    record: CandidatePersistenceRecord | None
+    audit_event: AuditEvent | None = None
 
 
 @dataclass(frozen=True)
@@ -255,6 +279,141 @@ class InMemoryIdeaRepository:
             status=EvidenceReplayStatus.HASH_MISMATCH,
             record=record,
             current_evidence_hash=current_hash,
+        )
+
+    def record_review_action(
+        self,
+        result: ReviewActionResult,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> ReviewPersistenceResult:
+        _require_text(idempotency_key, "idempotency_key")
+        candidate_id = result.decision.candidate_id
+        _require_text(candidate_id, "candidate_id")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+
+        history = record.lifecycle_history
+        if record.candidate.lifecycle_status is not result.candidate.lifecycle_status:
+            history = (
+                *history,
+                LifecycleHistoryEntry(
+                    candidate_id=candidate_id,
+                    source_status=record.candidate.lifecycle_status,
+                    target_status=result.candidate.lifecycle_status,
+                    actor_subject=result.decision.actor_subject,
+                    changed_at_utc=result.decision.decided_at_utc,
+                ),
+            )
+        updated = replace(
+            record,
+            candidate=result.candidate,
+            lifecycle_history=history,
+            audit_events=(*record.audit_events, result.audit_event),
+            review_decisions=(*record.review_decisions, result.decision),
+        )
+        self._candidate_records[candidate_id] = updated
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        return ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.ACCEPTED,
+            record=updated,
+            audit_event=result.audit_event,
+        )
+
+    def precheck_review_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> ReviewPersistenceResult | None:
+        _require_text(idempotency_key, "idempotency_key")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        if existing_idempotency is None:
+            return None
+        idempotency_decision, _ = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        return ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.REPLAYED,
+            record=self._record_for_idempotency_key(idempotency_key),
+        )
+
+    def record_feedback_event(
+        self,
+        result: FeedbackResult,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> ReviewPersistenceResult:
+        _require_text(idempotency_key, "idempotency_key")
+        candidate_id = result.feedback_event.candidate_id
+        _require_text(candidate_id, "candidate_id")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+
+        updated = replace(
+            record,
+            audit_events=(*record.audit_events, result.audit_event),
+            feedback_events=(*record.feedback_events, result.feedback_event),
+        )
+        self._candidate_records[candidate_id] = updated
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        return ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.ACCEPTED,
+            record=updated,
+            audit_event=result.audit_event,
         )
 
     def snapshot(self) -> IdeaRepositorySnapshot:
