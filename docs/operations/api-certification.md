@@ -18,30 +18,40 @@ Run make endpoint-certification-gate before promoting any endpoint as supported.
 
 ## Certified Foundation Endpoints
 
-`POST /api/v1/idea-signals/high-cash/evaluate` is the first certified API
-foundation for RFC-0002 Slice 10. It evaluates caller-supplied, source-owned
-Core evidence and source-reported cash weight for deterministic high-cash signal
-posture.
+The current certified foundation inventory is:
 
-`POST /api/v1/idea-signals/high-cash/evaluate-and-persist` is the certified
-internal API foundation that adds candidate persistence through the Slice 06
-in-memory idempotency/audit repository contract. It requires
-`idea.candidate.persist` and an `Idempotency-Key`, returns replay/conflict
-posture for idempotency behavior, and exposes `durableStorageBacked=false`
-until database-backed persistence, migrations, and recovery proof exist.
+| Endpoint | Foundation Scope | Required Capability | Current Boundary |
+| --- | --- | --- | --- |
+| `POST /api/v1/idea-signals/high-cash/evaluate` | High-cash deterministic evaluation over caller-supplied, source-owned Core evidence. | `idea.signal.evaluate` or advisor role | No live source ingestion, durable state, Gateway, Workbench, mesh certification, or supported-feature promotion. |
+| `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` | High-cash evaluation plus internal process-local candidate persistence, idempotency, replay, and audit posture. | `idea.candidate.persist` plus `Idempotency-Key` | `durableStorageBacked=false`; database-backed persistence, migrations, and recovery proof remain planned. |
+| `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` | Internal governed lifecycle transition recording over persisted candidate snapshots. | `idea.candidate.lifecycle.transition` plus `Idempotency-Key` | No downstream authority, suitability, execution, Gateway, Workbench, or supported-feature promotion. |
+| `GET /api/v1/review-queues/advisor` | Internal deterministic advisor queue projection over persisted candidate snapshots. | `idea.review.queue.read` or advisor role | No durable queue store, Gateway/Workbench surface, PM/compliance/operator queue surface, or supported-feature promotion. |
+| `POST /api/v1/idea-candidates/{candidateId}/review-actions` | Internal advisor review decision recording with fail-closed scope checks. | `idea.review.record`, advisor role, authorized scope, and `Idempotency-Key` | No suitability, compliance, mandate, execution, client-communication, Gateway, Workbench, or supported-feature promotion. |
+| `POST /api/v1/idea-candidates/{candidateId}/feedback` | Internal source-provenanced advisor feedback recording. | `idea.feedback.record`, advisor role, authorized scope, and `Idempotency-Key` | No model-training automation, Gateway, Workbench, data-product certification, or supported-feature promotion. |
+| `POST /api/v1/idea-candidates/{candidateId}/conversion-intents` | Internal review-gated conversion intent recording for Advise, Manage, or Report targets. | `idea.conversion.intent.record` plus `Idempotency-Key` | Intent only; no downstream proposal, manage-review, report authority, suitability, execution, client communication, or supported-feature promotion. |
+| `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes` | Internal source-authorized downstream conversion outcome recording. | `idea.conversion.outcome.record` plus `Idempotency-Key` | Outcome tracking only; no downstream workflow execution proof or supported-feature promotion. |
+| `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs` | Internal report evidence-pack request recording for reviewed report conversion intents. | `idea.report-evidence-pack.request` plus `Idempotency-Key` | Request only; no `lotus-report` package intake, `lotus-render` output, `lotus-archive` record, client-ready publication, or supported-feature promotion. |
+| `GET /api/v1/data-mesh/readiness` | Internal operator diagnostic for repo-authored planned/not-certified data-mesh posture. | `idea.mesh.readiness.read` plus operator role | Diagnostic only; no data-product certification, platform source-manifest inclusion, runtime lineage proof, Gateway/Workbench discovery, or supported-feature promotion. |
 
-`GET /api/v1/data-mesh/readiness` is a certified internal operator diagnostic
-for RFC-0002 Slice 14. It requires `idea.mesh.readiness.read` plus the
-`operator` role and reports the current repo-authored `planned` /
-`not_certified` data-mesh posture, blockers, source-of-truth contract paths,
-and `supportedFeaturePromoted=false`.
+Baseline health and metadata endpoints are also tracked in the ledger with
+`baseline_certified` posture:
 
-Use these endpoints only when the caller already has source-authorized Core
-evidence references or internal operator authority for mesh diagnostics. Do not
-use them as live source ingestion proof, Gateway proof, Workbench proof,
-data-product certification, or supported-feature promotion.
-Those remain blocked until later RFC slices add runtime adapters, downstream
-contracts, trust telemetry, and supported-feature registration.
+1. `GET /health`,
+2. `GET /health/live`,
+3. `GET /health/ready`,
+4. `GET /metadata`.
+
+Use these endpoints only for their current internal foundation or operator
+diagnostic purpose. Do not use them as live source ingestion proof, Gateway
+proof, Workbench proof, data-product certification, durable database evidence,
+downstream realization proof, or supported-feature promotion. Those remain
+blocked until later RFC slices add runtime adapters, downstream contracts,
+trust telemetry, UI proof, and supported-feature registration.
+
+Every row above is backed by
+`docs/operations/endpoint-certification-ledger.json`; keep this narrative guide
+and the ledger synchronized when a certified endpoint is added, removed, or
+materially changes boundary.
 
 ## Source-Degraded And Reconciliation Endpoints
 

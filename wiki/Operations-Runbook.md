@@ -67,3 +67,15 @@ trace id, or correlation id values.
 These signals are operator diagnostics only. They do not certify durable
 database state, data-product promotion, downstream Report/Render/Archive
 realization, Gateway/Workbench proof, or supported business capability.
+
+## API Certification Reference
+
+The current certified foundation endpoint inventory is summarized in
+`docs/operations/api-certification.md` and backed by
+`docs/operations/endpoint-certification-ledger.json`.
+
+The inventory covers high-cash evaluation, high-cash persistence, lifecycle
+transition, advisor queue, review action, feedback, conversion intent,
+conversion outcome, report evidence-pack request, and data-mesh-readiness
+diagnostic endpoints. These endpoints are certified as internal foundations or
+operator diagnostics only; they are not supported business features.

@@ -724,7 +724,7 @@ assertions.
 | 15 | Observability, security, entitlements, and operations | Partially implemented - bounded certified internal API operation-event foundation only | operation-event metric/log vocabulary, no-sensitive-label proof, endpoint instrumentation; broader runbooks and production telemetry remain planned |
 | 16 | Demo readiness, archetype scenarios, and commercial proof | Planned | canonical scenarios, claim ledger, RFP-safe wording, demo guide |
 | 17 | Implementation proof and live validation | Planned | full proof index, live canonical evidence, critical result review |
-| 18 | Documentation, wiki, support, and agent context | Planned | README/wiki/context/runbook updates and wiki check-only result |
+| 18 | Documentation, wiki, support, and agent context | Partially implemented - API certification documentation synchronized | README/wiki/context/runbook updates and wiki check-only result |
 | 19 | Second-last hardening and review | Planned | code/API/security/data-mesh/docs review and fixes |
 | 20 | Final closure and branch hygiene | Planned | mainline truth, CI proof, wiki publish, branch cleanup, no stranded truth |
 | 21 | Post-completion communication and LinkedIn draft | Planned | implementation-backed post-completion communication draft or explicit no-post decision |
