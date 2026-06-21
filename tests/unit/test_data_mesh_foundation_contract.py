@@ -149,3 +149,20 @@ def test_docs_and_wiki_route_agents_to_mesh_readiness_truth() -> None:
 
     assert "not certified" in _read("docs/operations/mesh-readiness.md")
     assert "blocked" in _read("wiki/Security-And-Governance.md")
+
+
+def test_rfc_index_and_main_rfc_match_data_mesh_foundation_truth() -> None:
+    rfc_index = _read("docs/rfcs/README.md")
+    main_rfc = _read(
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+        "RFC-0002-enterprise-opportunity-intelligence-operating-layer.md"
+    )
+
+    assert (
+        "source-authority-signal-contracts-and-data-mesh-baseline.md) | Partially implemented |"
+    ) in rfc_index
+    assert "OpportunitySignalCandidate:v1" in main_rfc
+    assert "IdeaCandidate:v1" in main_rfc
+    assert "IdeaReviewDecision:v1" in main_rfc
+    assert "WealthOpportunityCandidate" not in main_rfc
+    assert "IdeaSuppressionEvent" not in main_rfc
