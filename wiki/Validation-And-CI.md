@@ -18,6 +18,7 @@ make ci
 make ci-contract-gate
 make data-mesh-contract-gate
 make migration-contract-gate
+make migration-execution-gate
 make openapi-gate
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -27,15 +28,16 @@ make quality-baseline
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 OpenAPI quality, supported-feature gate, endpoint-certification gate, unit tests, integration
 tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
-security audit, Docker build validation, and workflow lint.
+safe migration execution dry-run validation, security audit, Docker build validation, and workflow
+lint.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 approved action-runtime majors, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
-data-mesh contract validation, migration contract validation, workflow-dispatch access,
-non-suppressed auto-merge token usage, merged-PR main-releasability dispatch, and source-safe
-local quality gates.
+data-mesh contract validation, migration contract validation, migration execution dry-run
+validation, workflow-dispatch access, non-suppressed auto-merge token usage, merged-PR
+main-releasability dispatch, and source-safe local quality gates.
 
 Data-mesh foundation checks:
 

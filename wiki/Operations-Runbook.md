@@ -5,10 +5,13 @@ lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
 AI explanation, advisor queue, review-action, and feedback API foundations, and
 conversion governance plus certified internal conversion intent/outcome and
 report evidence-pack API foundations. The service remains internal foundation only:
-there is no database-backed business persistence, runtime migration execution,
-downstream adapter, runtime recovery command, Gateway/Workbench proof, or
-supported business API yet. A versioned migration/rollback schema contract exists
-for the future durable repository and is enforced by `make migration-contract-gate`.
+there is no database-backed business persistence, downstream adapter, runtime
+recovery command, Gateway/Workbench proof, or supported business API yet. A
+versioned migration/rollback schema contract exists for the future durable
+repository and is enforced by `make migration-contract-gate`.
+`make migration-execution-gate` dry-runs apply and rollback execution plans, and
+`make migrate` / `make migrate-rollback` execute against PostgreSQL when
+`LOTUS_IDEA_DATABASE_URL` is configured.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.

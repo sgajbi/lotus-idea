@@ -5,6 +5,7 @@ ENV PIP_ROOT_USER_ACTION=ignore
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY contracts ./contracts
+COPY migrations ./migrations
 COPY src ./src
 COPY scripts ./scripts
 RUN pip install --no-cache-dir --upgrade pip && pip install --no-cache-dir -e ".[dev]"

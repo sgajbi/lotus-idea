@@ -11,6 +11,7 @@ make install
 make check
 make ci
 make migration-contract-gate
+make migration-execution-gate
 uvicorn app.main:app --reload --port 8330
 ```
 

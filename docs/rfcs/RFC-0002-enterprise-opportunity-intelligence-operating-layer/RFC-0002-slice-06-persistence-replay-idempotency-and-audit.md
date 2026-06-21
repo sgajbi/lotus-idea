@@ -81,11 +81,18 @@ Implemented first-wave internal scope:
     validates required tables, indexes, JSONB payload columns, UTC timestamp
     columns, source relationships, and rollback statements so future agents
     cannot add persistence-shaped work without governed reversibility evidence.
+12. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
+    provide a PostgreSQL migration execution path. `make migration-execution-gate`
+    dry-runs apply and rollback plans in CI without needing a database, while
+    `make migrate` and `make migrate-rollback` execute the same plans when
+    `LOTUS_IDEA_DATABASE_URL` points to a PostgreSQL database. The Docker image
+    now includes `migrations/` so runtime migration commands have the same SQL
+    contract as local development.
 
 Not implemented yet:
 
 1. runtime database-backed repository adapter,
-2. migration execution automation in local/deploy runtime,
+2. deploy-pipeline migration execution proof against a real PostgreSQL service,
 3. database-backed source-ingestion workers,
 4. database-backed stateful API routes,
 5. integration or e2e persistence proof over durable storage,
@@ -94,15 +101,16 @@ Not implemented yet:
 
 ## Migration And Rollback Posture
 
-The slice now introduces the first explicit schema and rollback contract but
-does not execute migrations or wire runtime API state to a database. The
-contract is intentionally ahead of the durable adapter so schema, rollback,
-indexing, and relationship posture become CI-blocking before any database-backed
-claim is made. The next durable persistence slice must execute this migration
-against a real database, add a repository adapter behind
+The slice now introduces the first explicit schema, rollback contract, and
+executable migration path. CI dry-runs the apply and rollback plans; real
+execution requires `LOTUS_IDEA_DATABASE_URL`. This is intentionally ahead of the
+durable adapter so schema, rollback, indexing, relationship posture, and
+execution command shape become CI-blocking before any database-backed API claim
+is made. The next durable persistence slice must execute this migration against
+a real database in integration proof, add a repository adapter behind
 `src/app/ports/idea_repository.py`, prove rollback/recovery behavior, and keep
-API responses truthful until `durableStorageBacked=true` is backed by
-integration and e2e evidence.
+API responses truthful until `durableStorageBacked=true` is backed by integration
+and e2e evidence.
 
 ## Validation
 
@@ -158,6 +166,26 @@ Targeted validation:
 19. `make ci` passed with `59` integration tests, `2` e2e tests, `223` unit
     tests under coverage, coverage gate at `99.17%`, and dependency audit
     reporting no known vulnerabilities.
+20. `.venv\Scripts\python.exe scripts\run_migrations.py --direction apply --dry-run`
+    and `.venv\Scripts\python.exe scripts\run_migrations.py --direction rollback --dry-run`
+    passed with `20` planned statements each.
+21. `.venv\Scripts\python.exe -m pytest tests\unit\test_migration_execution.py tests\unit\test_migration_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
+    passed with `19 passed`.
+22. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\infrastructure\migrations.py scripts\run_migrations.py`
+    passed.
+23. `.venv\Scripts\python.exe -m pip_audit -r requirements\shared-runtime.lock.txt -r requirements\ci-tooling.lock.txt`
+    passed with no known vulnerabilities after adding
+    `psycopg[binary]==3.3.4`.
+24. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+    guards, data-mesh contract gate, migration contract gate,
+    migration execution dry-run gate, supported-feature gate,
+    endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
+    `228` unit tests.
+25. `make ci` passed with `59` integration tests, `2` e2e tests, `228` unit
+    tests under coverage, coverage gate at `99.08%`, and dependency audit
+    reporting no known vulnerabilities.
+26. `make docker-build` passed for `backend-service:ci-test` after adding
+    `migrations/` to the Docker image.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.
