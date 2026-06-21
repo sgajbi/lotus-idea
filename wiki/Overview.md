@@ -19,6 +19,10 @@ Current support:
 2. service boundary ADRs,
 3. full RFC-0002 implementation program,
 4. source wiki,
-5. planned supported-feature registry.
+5. planned supported-feature registry,
+6. certified internal high-cash signal evaluation API foundation over
+   caller-supplied, source-owned Core evidence.
 
-No business idea endpoint is supported yet.
+No external business feature is supported yet. The high-cash API foundation is
+certified for internal contract evolution, not for live Gateway/Workbench or
+client-demo feature claims.

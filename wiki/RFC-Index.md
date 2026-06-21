@@ -39,10 +39,15 @@ Current RFC-0002 implementation-start baseline:
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,
    and no AI downstream authority without `lotus-ai` runtime execution, API,
    Gateway, Workbench, or supported-feature promotion.
-8. The first opportunity journey is high cash / idle liquidity for
+8. Slice 10 partially implements the first certified internal API foundation:
+   `POST /api/v1/idea-signals/high-cash/evaluate` for caller-supplied,
+   source-owned Core high-cash evidence. Gateway, Workbench, live source
+   adapters, data-product certification, and supported-feature promotion remain
+   planned.
+9. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
-9. The first review audience is advisor only.
-10. The first downstream conversion posture is report-only evidence after
+10. The first review audience is advisor only.
+11. The first downstream conversion posture is report-only evidence after
    advisor review.
-11. Business features remain unsupported until later slices implement runtime
+12. Business features remain unsupported until later slices implement runtime
    behavior, certification, and supported-feature promotion.

@@ -24,7 +24,10 @@ Current state:
 10. RFC-0002 Slice 09 partially implements internal AI governance with redacted
     evidence envelopes, verifier/fallback controls, safe audit events, and no
     AI downstream authority,
-11. business features remain Planned.
+11. RFC-0002 Slice 10 partially implements the certified internal
+    `POST /api/v1/idea-signals/high-cash/evaluate` API foundation over
+    caller-supplied, source-owned Core evidence,
+12. business features remain Planned.
 
 First implementation program:
 
@@ -35,7 +38,8 @@ First implementation program:
 4. add source adapters and application orchestration for high-cash / idle-liquidity evidence,
 5. add database-backed persistence, source ingestion orchestration, persisted
    queue state, review, and feedback,
-6. expose certified APIs and Gateway/Workbench product surfaces,
+6. extend certified APIs into Gateway/Workbench product surfaces after live
+   source adapters and durable state exist,
 7. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
 8. prove canonical demo scenarios and publish implementation-backed documentation.
 

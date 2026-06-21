@@ -44,6 +44,14 @@ high-cash / idle-liquidity path around Core-owned cash and holdings products,
 and records later first-wave Performance, Risk, Advise, Manage, Report, and AI
 dependencies without certifying runtime behavior.
 
+## Certified API Foundation
+
+`POST /api/v1/idea-signals/high-cash/evaluate` is the first certified internal
+API foundation. It evaluates caller-supplied, source-owned Core evidence and
+source-reported cash weight, then returns deterministic high-cash signal
+posture. It does not retrieve live source data, certify a data product, expose a
+Gateway route, or promote a supported business feature.
+
 ## Architecture Decisions
 
 ADRs live in `docs/architecture/adr/`:
