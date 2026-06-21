@@ -51,6 +51,7 @@ def test_endpoint_certification_ledger_starts_with_scaffold_operations() -> None
     payload = json.loads(Path("docs/operations/endpoint-certification-ledger.json").read_text())
     operations = {(endpoint["method"], endpoint["path"]) for endpoint in payload["endpoints"]}
     assert operations == {
+        ("GET", "/api/v1/review-queues/advisor"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/feedback"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/review-actions"),
         ("POST", "/api/v1/idea-signals/high-cash/evaluate"),

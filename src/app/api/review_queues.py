@@ -1,0 +1,231 @@
+from __future__ import annotations
+
+from datetime import datetime
+from enum import Enum
+from typing import Any, TypedDict
+
+from fastapi import FastAPI, Header, Query, status
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.api.caller_headers import caller_context_from_headers
+from app.api.repository_state import get_idea_repository
+from app.application.review_queue import (
+    BuildReviewQueueFromRepositoryCommand,
+    build_review_queue_from_repository,
+)
+from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
+from app.errors import ProblemDetails, problem_response
+from app.security.caller_context import (
+    CapabilityPolicy,
+    PermissionDeniedError,
+    require_capability,
+)
+
+
+class RouteMetadata(TypedDict):
+    path: str
+    operation_id: str
+    summary: str
+    description: str
+    status_code: int
+    response_model: type[BaseModel]
+    tags: list[str | Enum]
+    responses: dict[int | str, dict[str, Any]]
+
+
+_READ_ADVISOR_QUEUE_POLICY = CapabilityPolicy.for_roles(
+    required_capability="idea.review.queue.read",
+    allowed_roles=("advisor",),
+)
+
+
+class CamelModel(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ReviewQueueCandidateResponse(CamelModel):
+    candidate_id: str = Field(..., alias="candidateId")
+    family: str
+    lifecycle_status: str = Field(..., alias="lifecycleStatus")
+    review_posture: str = Field(..., alias="reviewPosture")
+    evidence_packet_id: str = Field(..., alias="evidencePacketId")
+    score: str
+    score_policy_version: str = Field(..., alias="scorePolicyVersion")
+    source_signal_ids: tuple[str, ...] = Field(..., alias="sourceSignalIds")
+
+    @classmethod
+    def from_item(cls, item: ReviewQueueItem) -> "ReviewQueueCandidateResponse":
+        candidate = item.candidate
+        assert candidate.score is not None
+        return cls(
+            candidateId=candidate.candidate_id,
+            family=candidate.family.value,
+            lifecycleStatus=candidate.lifecycle_status.value,
+            reviewPosture=candidate.review_posture.value,
+            evidencePacketId=candidate.evidence_packet.evidence_packet_id,
+            score=str(candidate.score.score),
+            scorePolicyVersion=candidate.score.policy_version,
+            sourceSignalIds=candidate.source_signal_ids,
+        )
+
+
+class ReviewQueueItemResponse(CamelModel):
+    rank: int
+    candidate: ReviewQueueCandidateResponse
+    score: str
+    priority_bucket: str = Field(..., alias="priorityBucket")
+    policy_version: str = Field(..., alias="policyVersion")
+    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
+
+    @classmethod
+    def from_domain(cls, item: ReviewQueueItem) -> "ReviewQueueItemResponse":
+        return cls(
+            rank=item.rank,
+            candidate=ReviewQueueCandidateResponse.from_item(item),
+            score=str(item.score),
+            priorityBucket=item.priority_bucket.value,
+            policyVersion=item.policy_version,
+            reasonCodes=tuple(reason.value for reason in item.reason_codes),
+        )
+
+
+class ReviewQueueExclusionResponse(CamelModel):
+    candidate_id: str = Field(..., alias="candidateId")
+    reason: str
+    detail: str
+
+    @classmethod
+    def from_domain(cls, exclusion: QueueExclusion) -> "ReviewQueueExclusionResponse":
+        return cls(
+            candidateId=exclusion.candidate_id,
+            reason=exclusion.reason.value,
+            detail=exclusion.detail,
+        )
+
+
+class AdvisorReviewQueueResponse(CamelModel):
+    policy_version: str = Field(..., alias="policyVersion")
+    evaluated_at_utc: datetime = Field(..., alias="evaluatedAtUtc")
+    items: tuple[ReviewQueueItemResponse, ...]
+    exclusions: tuple[ReviewQueueExclusionResponse, ...]
+    durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
+    supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
+
+    @classmethod
+    def from_domain(cls, queue: ReviewQueueProjection) -> "AdvisorReviewQueueResponse":
+        return cls(
+            policyVersion=queue.policy_version,
+            evaluatedAtUtc=queue.evaluated_at_utc,
+            items=tuple(ReviewQueueItemResponse.from_domain(item) for item in queue.items),
+            exclusions=tuple(
+                ReviewQueueExclusionResponse.from_domain(exclusion)
+                for exclusion in queue.exclusions
+            ),
+            durableStorageBacked=False,
+            supportedFeaturePromoted=False,
+        )
+
+
+async def get_advisor_review_queue(
+    evaluated_at_utc: datetime = Query(..., alias="evaluatedAtUtc"),
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> AdvisorReviewQueueResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        require_capability(caller, _READ_ADVISOR_QUEUE_POLICY)
+    except PermissionDeniedError:
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to read advisor idea review queues.",
+        )
+    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="evaluatedAtUtc must be timezone-aware.",
+        )
+
+    queue = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
+        repository=get_idea_repository(),
+    )
+    return AdvisorReviewQueueResponse.from_domain(queue)
+
+
+ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/review-queues/advisor",
+    "operation_id": "getAdvisorIdeaReviewQueue",
+    "summary": "Get the advisor idea review queue",
+    "description": (
+        "Returns the deterministic advisor review queue projection over persisted idea "
+        "candidate snapshots. This is a certified internal API foundation for RFC-0002 "
+        "Slice 07 and Slice 10; it does not expose a Workbench product surface, durable "
+        "queue store, Gateway route, data-product certification, or supported feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": AdvisorReviewQueueResponse,
+    "tags": ["Idea Review"],
+    "responses": {
+        200: {
+            "description": "Advisor review queue projection returned.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "policyVersion": "idea-deterministic-ranking-v1",
+                        "evaluatedAtUtc": "2026-06-21T10:10:00Z",
+                        "items": [
+                            {
+                                "rank": 1,
+                                "candidate": {
+                                    "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                                    "family": "high_cash",
+                                    "lifecycleStatus": "generated",
+                                    "reviewPosture": "advisor_review_required",
+                                    "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
+                                    "score": "82",
+                                    "scorePolicyVersion": "idle-liquidity-v1",
+                                    "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
+                                },
+                                "score": "82",
+                                "priorityBucket": "high",
+                                "policyVersion": "idle-liquidity-v1",
+                                "reasonCodes": ["high_cash_ratio", "review_required"],
+                            }
+                        ],
+                        "exclusions": [],
+                        "durableStorageBacked": False,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        400: {"model": ProblemDetails, "description": "Request validation failed."},
+        403: {
+            "model": ProblemDetails,
+            "description": "Caller lacks advisor queue read permission.",
+        },
+    },
+}
+
+
+def register_review_queue_routes(app: FastAPI) -> None:
+    app.get(
+        path=ADVISOR_REVIEW_QUEUE_ROUTE["path"],
+        operation_id=ADVISOR_REVIEW_QUEUE_ROUTE["operation_id"],
+        summary=ADVISOR_REVIEW_QUEUE_ROUTE["summary"],
+        description=ADVISOR_REVIEW_QUEUE_ROUTE["description"],
+        status_code=ADVISOR_REVIEW_QUEUE_ROUTE["status_code"],
+        response_model=ADVISOR_REVIEW_QUEUE_ROUTE["response_model"],
+        tags=ADVISOR_REVIEW_QUEUE_ROUTE["tags"],
+        responses=ADVISOR_REVIEW_QUEUE_ROUTE["responses"],
+    )(get_advisor_review_queue)

@@ -20,11 +20,12 @@ workflow persistence foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
 first certified internal high-cash signal evaluation and evaluate-and-persist
 API foundations for caller-supplied, source-owned Core evidence, certified
-internal review-action and feedback API foundations over persisted candidates,
-and an internal conversion-governance foundation for review-gated downstream
-intent/outcome tracking. No business feature is supported until the relevant RFC
-slice has full runtime evidence, endpoint certification, tests, data-mesh
-posture, downstream proof, and supported-feature registration.
+internal advisor queue, review-action, and feedback API foundations over
+persisted candidates, and an internal conversion-governance foundation for
+review-gated downstream intent/outcome tracking. No business feature is
+supported until the relevant RFC slice has full runtime evidence, endpoint
+certification, tests, data-mesh posture, downstream proof, and supported-feature
+registration.
 
 ## Product Boundary
 
@@ -99,10 +100,10 @@ source-authority contracts only, not runtime certification.
   Core source port that fetches governed Core evidence, and internally persist
   created candidates through the Slice 06 idempotency/audit repository contract.
   Internal review-queue orchestration projects persisted candidate snapshots
-  through the Slice 07 deterministic queue policy. Internal review/feedback
-  workflow orchestration records governed decisions and feedback through the
-  repository idempotency/audit contract and certified internal review/feedback
-  API foundations.
+  through the Slice 07 deterministic queue policy and certified internal advisor
+  queue API foundation. Internal review/feedback workflow orchestration records
+  governed decisions and feedback through the repository idempotency/audit
+  contract and certified internal review/feedback API foundations.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,

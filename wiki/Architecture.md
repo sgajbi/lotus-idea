@@ -83,6 +83,11 @@ in-memory repository foundation and return product-safe conflict, not-found, and
 permission posture without granting downstream suitability, compliance, mandate,
 execution, or client-communication authority.
 
+`GET /api/v1/review-queues/advisor` is the certified internal advisor queue API
+foundation. It projects persisted candidate snapshots through the deterministic
+Slice 07 queue policy and returns ranked items plus exclusions without a durable
+queue store, Gateway route, Workbench surface, or supported-feature promotion.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist

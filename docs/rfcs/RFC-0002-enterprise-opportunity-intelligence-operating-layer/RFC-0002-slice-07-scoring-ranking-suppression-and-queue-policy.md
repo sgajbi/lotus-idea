@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Partially implemented - internal deterministic scoring plus repository-snapshot queue projection only
+Status: Partially implemented - deterministic scoring plus certified advisor queue API foundation only
 
 ## Outcome
 
@@ -51,6 +51,16 @@ Implemented on the Slice 07 foundation branch:
 8. `tests/unit/test_review_queue_application.py` proves snapshot-backed queue
    projection, expired-record exclusion, snooze exclusion, and timezone-aware
    evaluation validation.
+9. `src/app/api/review_queues.py` exposes the certified internal
+   `GET /api/v1/review-queues/advisor` API foundation over persisted candidate
+   snapshots.
+10. The advisor queue API requires `idea.review.queue.read` capability or
+    advisor role, requires timezone-aware `evaluatedAtUtc`, returns ranked queue
+    items plus exclusions, and explicitly reports `durableStorageBacked=false`
+    and `supportedFeaturePromoted=false`.
+11. `tests/integration/test_review_queue_api.py` covers persisted-candidate
+    queue projection, empty queues, permission denial, and product-safe
+    timezone validation.
 
 ## Remaining Gaps
 
@@ -60,8 +70,8 @@ work remains planned:
 1. persisted queue state and database-backed ranking projections,
 2. source-adapter input orchestration that creates and updates persisted
    candidates before queue projection,
-3. API DTOs, OpenAPI examples, endpoint certification, and Gateway contract,
-4. Workbench review queue UI proof and entitlement-backed access control,
+3. Gateway contract,
+4. Workbench review queue UI proof and entitlement-backed scope filtering,
 5. data-product certification and trust telemetry for queue products,
 6. supportability metrics and runtime diagnostics for queue health,
 7. supported-feature promotion after live proof.
@@ -82,3 +92,7 @@ Targeted validation:
 5. `make ci` passed with `13` integration tests, `2` e2e tests, `178` unit
    tests under coverage, coverage gate at `99.38%`, and dependency audit
    reporting no known vulnerabilities.
+6. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_queue_api.py -q`
+   passed with `4 passed` after adding the advisor review queue API foundation.
+7. `.venv\Scripts\python.exe scripts\openapi_quality_gate.py` passed after
+   adding the advisor review queue route.
