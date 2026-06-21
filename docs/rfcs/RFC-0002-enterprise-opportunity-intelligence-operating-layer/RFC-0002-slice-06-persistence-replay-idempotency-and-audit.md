@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence foundation only
+Status: Partially implemented - internal persistence plus high-cash orchestration foundation only
 
 ## Outcome
 
@@ -44,14 +44,22 @@ Implemented first-wave internal scope:
    validate event identity, actor, outcome, and timezone-aware event time.
 5. Repository snapshots allow internal recovery of candidate records,
    idempotency records, and idempotency-to-candidate mappings for replay tests.
+6. `src/app/application/high_cash_signal.py` now adds internal high-cash
+   evaluate-and-persist orchestration over the Slice 06 repository contract.
+   Created high-cash candidates are persisted with deterministic idempotency
+   payloads, matching requests replay, changed payloads conflict, and blocked,
+   suppressed, or not-eligible evaluations remain non-mutating.
+7. The same orchestration shape exists for the Core source-port flow, but it
+   still does not promote live source support while Core cash-weight authority
+   remains governed by `sgajbi/lotus-core#430`.
 
 Not implemented yet:
 
 1. database-backed durable persistence,
 2. migrations and rollback automation,
-3. source adapters or ingestion orchestration,
-4. API routes and OpenAPI certification,
-5. integration or e2e persistence proof,
+3. database-backed source-ingestion workers,
+4. stateful API routes and OpenAPI certification,
+5. integration or e2e persistence proof over durable storage,
 6. data-product certification,
 7. supported-feature promotion.
 
@@ -67,16 +75,22 @@ data-product claim is promoted.
 
 Targeted validation:
 
-1. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py -q`
-   passed with `11 passed`.
-2. `.venv\Scripts\python.exe -m ruff check src\app\domain\persistence.py src\app\domain\audit.py src\app\domain\__init__.py tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py`
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_high_cash_application.py tests\unit\test_idea_persistence.py -q`
+   passed with `19 passed` for the new orchestration and persistence replay
+   coverage.
+2. `.venv\Scripts\python.exe -m ruff check src\app\application\high_cash_signal.py tests\unit\test_high_cash_application.py`
    passed.
 3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
-4. `make check` passed with lint, format, CI contract, monetary/no-sensitive
-   guards, supported-feature gate, endpoint-certification gate, typecheck,
-   architecture boundary, OpenAPI, and `88` unit tests.
-5. `make ci` passed with integration tests, e2e tests, coverage gate at
-   `99.47%`, and dependency audit reporting no known vulnerabilities.
+4. Prior Slice 06 validation also covered
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py -q`
+   with `11 passed`.
+5. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+   guards, data-mesh contract gate, supported-feature gate,
+   endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
+   `174` unit tests.
+6. `make ci` passed with `13` integration tests, `2` e2e tests, `174` unit
+   tests under coverage, coverage gate at `99.37%`, and dependency audit
+   reporting no known vulnerabilities.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.
