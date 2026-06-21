@@ -30,6 +30,12 @@ Mesh certification rule:
 4. platform source-manifest inclusion and certification gates are required
    before Gateway or Workbench expose the product as supported.
 
+`GET /api/v1/data-mesh/readiness` is the current internal operator diagnostic
+for this posture. It requires the `operator` role and
+`idea.mesh.readiness.read`, reports `not_certified` with explicit blockers, and
+returns `supportedFeaturePromoted=false`. It is not data-product certification
+or product discovery.
+
 Operation-event governance:
 
 1. high-cash, candidate persistence, lifecycle, advisor queue, review,

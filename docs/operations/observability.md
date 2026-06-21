@@ -36,6 +36,7 @@ Current instrumented operations:
 | `conversion_intent` | Internal review-gated conversion intent recording | `lotus-idea` | `foundation_only` |
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
+| `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 
 Metric labels are limited to:
 
@@ -63,6 +64,8 @@ fields. Do not add identifiers or payload fragments to operation labels.
 6. `permission_denied` means fail-closed capability policy blocked the caller.
 7. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
+8. `blocked` on `mesh_readiness_read` is the expected current diagnostic posture until runtime
+   trust telemetry and platform mesh certification exist.
 
 These signals are operational support evidence only. They do not certify a data product, durable
 database state, Gateway/Workbench route, downstream Report/Render/Archive realization, or supported

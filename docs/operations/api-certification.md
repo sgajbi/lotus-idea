@@ -30,10 +30,16 @@ in-memory idempotency/audit repository contract. It requires
 posture for idempotency behavior, and exposes `durableStorageBacked=false`
 until database-backed persistence, migrations, and recovery proof exist.
 
+`GET /api/v1/data-mesh/readiness` is a certified internal operator diagnostic
+for RFC-0002 Slice 14. It requires `idea.mesh.readiness.read` plus the
+`operator` role and reports the current repo-authored `planned` /
+`not_certified` data-mesh posture, blockers, source-of-truth contract paths,
+and `supportedFeaturePromoted=false`.
+
 Use these endpoints only when the caller already has source-authorized Core
-evidence references. Do not use them as live source ingestion proof, Gateway
-proof, Workbench proof, data-product certification, or supported-feature
-promotion.
+evidence references or internal operator authority for mesh diagnostics. Do not
+use them as live source ingestion proof, Gateway proof, Workbench proof,
+data-product certification, or supported-feature promotion.
 Those remain blocked until later RFC slices add runtime adapters, downstream
 contracts, trust telemetry, and supported-feature registration.
 
