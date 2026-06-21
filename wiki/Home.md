@@ -11,12 +11,16 @@ data-product promotion, supported-feature registration, and validation exist.
 
 1. [Overview](Overview.md)
 2. [Architecture](Architecture.md)
-3. [RFC Index](RFC-Index.md)
-4. [Integrations](Integrations.md)
-5. [Supported Features](Supported-Features.md)
-6. [Operations Runbook](Operations-Runbook.md)
-7. [Security And Governance](Security-And-Governance.md)
-8. [Demo Readiness](Demo-Readiness.md)
+3. [Getting Started](Getting-Started.md)
+4. [Development Workflow](Development-Workflow.md)
+5. [Validation And CI](Validation-And-CI.md)
+6. [RFC Index](RFC-Index.md)
+7. [Integrations](Integrations.md)
+8. [Supported Features](Supported-Features.md)
+9. [Operations Runbook](Operations-Runbook.md)
+10. [Security And Governance](Security-And-Governance.md)
+11. [Demo Readiness](Demo-Readiness.md)
+12. [Roadmap](Roadmap.md)
 
 ## Boundary
 
