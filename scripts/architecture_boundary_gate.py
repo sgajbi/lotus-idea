@@ -93,15 +93,20 @@ def main() -> int:
         "violations": violations,
         "rules": LAYER_RULES,
     }
-    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_PATH.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    if args.mode == "report-only":
+        REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+        REPORT_PATH.write_text(
+            json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
     if violations:
-        print(f"Architecture boundary report found {len(violations)} violation(s).")
+        label = "report" if args.mode == "report-only" else "gate"
+        print(f"Architecture boundary {label} found {len(violations)} violation(s).")
         if args.mode == "blocking":
             print(json.dumps(violations, indent=2, sort_keys=True))
             return 1
         return 0
-    print("Architecture boundary report passed")
+    label = "report" if args.mode == "report-only" else "gate"
+    print(f"Architecture boundary {label} passed")
     return 0
 
 
