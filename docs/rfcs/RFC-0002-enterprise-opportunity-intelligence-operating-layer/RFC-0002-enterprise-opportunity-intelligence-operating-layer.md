@@ -489,11 +489,12 @@ Candidate producer products:
 
 | Product | Purpose | Initial support posture |
 | --- | --- | --- |
-| `WealthOpportunityCandidate:v1` | governed candidate idea with lifecycle and source refs | Proposed |
+| `OpportunitySignalCandidate:v1` | source-authority clean signal candidate before portfolio/advisor review workflow creation | Proposed |
+| `IdeaCandidate:v1` | governed candidate idea with lifecycle, source refs, score policy, suppression posture, and review state | Proposed |
 | `IdeaEvidencePacket:v1` | source-backed evidence, reason codes, freshness, score, review posture, and lineage | Proposed |
 | `AdvisorOpportunityQueue:v1` | prioritized review queue projection | Proposed |
-| `IdeaFeedbackEvent:v1` | advisor/PM/compliance feedback and review outcomes | Proposed |
-| `IdeaSuppressionEvent:v1` | duplicate, snooze, suppress, expiry, and no-action evidence | Proposed |
+| `IdeaReviewDecision:v1` | human review approval, rejection, snooze, suppression, expiry, and no-action lifecycle evidence | Proposed |
+| `IdeaFeedbackEvent:v1` | advisor/PM/compliance feedback, signal-quality annotation, and learning-control evidence | Proposed |
 | `IdeaConversionIntent:v1` | reviewed downstream handoff request | Proposed |
 | `IdeaConversionOutcome:v1` | downstream acceptance, rejection, completion, or failure status | Proposed |
 | `IdeaTrustTelemetry:v1` | supportability, freshness, quality, and certification posture | Proposed |
@@ -817,8 +818,9 @@ wave, or unmerged branch.
 
 RFC-0002 is implemented only when:
 
-1. `WealthOpportunityCandidate:v1` and `IdeaEvidencePacket:v1` are implemented,
-   tested, certified, and governed or explicitly narrowed;
+1. `OpportunitySignalCandidate:v1`, `IdeaCandidate:v1`, and
+   `IdeaEvidencePacket:v1` are implemented, tested, certified, and governed or
+   explicitly narrowed;
 2. first-wave opportunity families are source-backed and source-authority clean;
 3. candidate lifecycle, persistence, replay, idempotency, scoring, ranking,
    review, feedback, suppression, and audit are implemented;

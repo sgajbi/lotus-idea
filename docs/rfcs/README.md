@@ -18,7 +18,7 @@ tests, docs, wiki, and supported-feature promotion.
 | 1 | [Platform Automation And Scaffolding Review](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-01-platform-automation-and-scaffolding-review.md) | Planned |
 | 2 | [Cleanup, Structure, And Current Surface Normalization](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-02-cleanup-structure-and-current-surface-normalization.md) | Planned |
 | 3 | [Opportunity Domain Model, Vocabulary, And Lifecycle](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-03-opportunity-domain-model-vocabulary-and-lifecycle.md) | Planned |
-| 4 | [Source Authority, Signal Contracts, And Data Mesh Baseline](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-04-source-authority-signal-contracts-and-data-mesh-baseline.md) | Planned |
+| 4 | [Source Authority, Signal Contracts, And Data Mesh Baseline](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-04-source-authority-signal-contracts-and-data-mesh-baseline.md) | Partially implemented |
 | 5 | [Deterministic Signal Evaluation And Candidate Generation](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-05-deterministic-signal-evaluation-and-candidate-generation.md) | Planned |
 | 6 | [Persistence, Replay, Idempotency, And Audit](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md) | Planned |
 | 7 | [Scoring, Ranking, Suppression, And Queue Policy](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-07-scoring-ranking-suppression-and-queue-policy.md) | Planned |
