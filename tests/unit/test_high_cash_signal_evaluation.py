@@ -171,6 +171,21 @@ def test_high_cash_entitlement_denial_blocks_positive_claim() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.ENTITLEMENT_DENIED,)
 
 
+def test_high_cash_requires_timezone_aware_evaluation_time() -> None:
+    invalid_input = HighCashSignalInput(
+        as_of_date=AS_OF_DATE,
+        source_reported_cash_weight=Decimal("0.18"),
+        portfolio_state_ref=source_ref("lotus-core:PortfolioStateSnapshot:v1"),
+        holdings_ref=source_ref("lotus-core:HoldingsAsOf:v1"),
+        cash_movement_ref=source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
+        cashflow_projection_ref=source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+    )
+
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        evaluate_high_cash_signal(invalid_input, policy())
+
+
 def test_high_cash_rejects_invalid_source_reported_weight() -> None:
     with pytest.raises(ValueError, match="source_reported_cash_weight"):
         evaluate_high_cash_signal(
@@ -186,4 +201,23 @@ def test_high_cash_policy_rejects_invalid_threshold(threshold: Decimal) -> None:
             policy_version="idle-liquidity-v1",
             cash_weight_threshold=threshold,
             candidate_score=Decimal("82"),
+        )
+
+
+def test_high_cash_policy_requires_version() -> None:
+    with pytest.raises(ValueError, match="policy_version is required"):
+        HighCashSignalPolicy(
+            policy_version=" ",
+            cash_weight_threshold=Decimal("0.12"),
+            candidate_score=Decimal("82"),
+        )
+
+
+@pytest.mark.parametrize("score", [Decimal("-1"), Decimal("101")])
+def test_high_cash_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
+    with pytest.raises(ValueError, match="candidate_score must be between 0 and 100"):
+        HighCashSignalPolicy(
+            policy_version="idle-liquidity-v1",
+            cash_weight_threshold=Decimal("0.12"),
+            candidate_score=score,
         )

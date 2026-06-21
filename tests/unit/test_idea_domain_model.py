@@ -7,12 +7,16 @@ from decimal import Decimal
 import pytest
 
 from app.domain import (
+    ConversionOutcomeStatus,
     ConversionTarget,
     EvidenceFreshness,
     EvidenceSupportability,
+    FeedbackOutcome,
     IdeaCandidate,
     IdeaConversionIntent,
+    IdeaConversionOutcome,
     IdeaEvidencePacket,
+    IdeaFeedback,
     IdeaLifecycleStatus,
     IdeaScore,
     InvalidLifecycleTransition,
@@ -112,6 +116,30 @@ def test_source_ref_rejects_missing_contract_identity() -> None:
         )
 
 
+def test_source_ref_requires_timezone_aware_generated_at() -> None:
+    with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
+        SourceRef(
+            product_id="lotus-core:PortfolioStateSnapshot:v1",
+            source_system=SourceSystem.LOTUS_CORE,
+            product_version="v1",
+            route="/integration/portfolios/{portfolio_id}/core-snapshot",
+            as_of_date=date(2026, 6, 21),
+            generated_at_utc=datetime(2026, 6, 21, 9, 0),
+            content_hash="sha256:portfolio-state",
+            data_quality_status="complete",
+            freshness=EvidenceFreshness.CURRENT,
+        )
+
+
+def test_lineage_ref_requires_source_refs() -> None:
+    with pytest.raises(ValueError, match="source_refs is required"):
+        LineageRef(
+            lineage_id="lineage:idea:empty",
+            source_refs=(),
+            content_hash="sha256:lineage",
+        )
+
+
 def test_blocked_evidence_requires_typed_unsupported_reason() -> None:
     packet = evidence_packet(
         supportability=EvidenceSupportability.BLOCKED,
@@ -134,6 +162,35 @@ def test_ready_evidence_cannot_carry_unsupported_reason() -> None:
         )
 
 
+def test_evidence_packet_requires_source_refs_and_reason_codes() -> None:
+    source = source_ref()
+    lineage = LineageRef(
+        lineage_id="lineage:idea:high-cash:pb-sg-global-bal-001",
+        source_refs=(source,),
+        content_hash="sha256:lineage",
+    )
+
+    with pytest.raises(ValueError, match="source_refs is required"):
+        IdeaEvidencePacket(
+            evidence_packet_id="iep_high_cash_001",
+            supportability=EvidenceSupportability.READY,
+            source_refs=(),
+            lineage_ref=lineage,
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            created_at_utc=datetime(2026, 6, 21, 9, 1, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        IdeaEvidencePacket(
+            evidence_packet_id="iep_high_cash_001",
+            supportability=EvidenceSupportability.READY,
+            source_refs=(source,),
+            lineage_ref=lineage,
+            reason_codes=(),
+            created_at_utc=datetime(2026, 6, 21, 9, 1, tzinfo=UTC),
+        )
+
+
 def test_opportunity_signal_requires_source_refs_and_reason_codes() -> None:
     signal = OpportunitySignal(
         signal_id="signal_high_cash_001",
@@ -145,6 +202,36 @@ def test_opportunity_signal_requires_source_refs_and_reason_codes() -> None:
 
     assert signal.family is OpportunityFamily.HIGH_CASH
     assert signal.reason_codes == (ReasonCode.HIGH_CASH_RATIO,)
+
+
+def test_opportunity_signal_validates_expiry_and_required_collections() -> None:
+    with pytest.raises(ValueError, match="expires_at_utc must be timezone-aware"):
+        OpportunitySignal(
+            signal_id="signal_high_cash_001",
+            family=OpportunityFamily.HIGH_CASH,
+            source_refs=(source_ref(),),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            detected_at_utc=datetime(2026, 6, 21, 9, 3, tzinfo=UTC),
+            expires_at_utc=datetime(2026, 6, 22, 9, 3),
+        )
+
+    with pytest.raises(ValueError, match="source_refs is required"):
+        OpportunitySignal(
+            signal_id="signal_high_cash_001",
+            family=OpportunityFamily.HIGH_CASH,
+            source_refs=(),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            detected_at_utc=datetime(2026, 6, 21, 9, 3, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        OpportunitySignal(
+            signal_id="signal_high_cash_001",
+            family=OpportunityFamily.HIGH_CASH,
+            source_refs=(source_ref(),),
+            reason_codes=(),
+            detected_at_utc=datetime(2026, 6, 21, 9, 3, tzinfo=UTC),
+        )
 
 
 def test_valid_lifecycle_path_reaches_approved_conversion_ready_state() -> None:
@@ -215,6 +302,48 @@ def test_review_decision_does_not_grant_downstream_authority() -> None:
     assert forbidden_review_values.isdisjoint({posture.value for posture in ReviewPosture})
 
 
+def test_review_decision_requires_reason_codes() -> None:
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        ReviewDecision(
+            review_id="review_001",
+            posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+            reviewer_role="advisor",
+            reason_codes=(),
+            decided_at_utc=datetime(2026, 6, 21, 9, 4, tzinfo=UTC),
+        )
+
+
+def test_feedback_records_are_typed_and_time_aware() -> None:
+    feedback = IdeaFeedback(
+        feedback_id="feedback_001",
+        outcome=FeedbackOutcome.USEFUL,
+        actor_role="advisor",
+        reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+        recorded_at_utc=datetime(2026, 6, 21, 9, 4, tzinfo=UTC),
+    )
+
+    assert feedback.outcome is FeedbackOutcome.USEFUL
+    assert feedback.reason_codes == (ReasonCode.HIGH_CASH_RATIO,)
+
+    with pytest.raises(ValueError, match="actor_role is required"):
+        IdeaFeedback(
+            feedback_id="feedback_001",
+            outcome=FeedbackOutcome.USEFUL,
+            actor_role=" ",
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            recorded_at_utc=datetime(2026, 6, 21, 9, 4, tzinfo=UTC),
+        )
+
+    with pytest.raises(ValueError, match="recorded_at_utc must be timezone-aware"):
+        IdeaFeedback(
+            feedback_id="feedback_001",
+            outcome=FeedbackOutcome.USEFUL,
+            actor_role="advisor",
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            recorded_at_utc=datetime(2026, 6, 21, 9, 4),
+        )
+
+
 def test_conversion_intent_requires_approved_candidate_status() -> None:
     with pytest.raises(ValueError, match="requires approved source_status"):
         IdeaConversionIntent(
@@ -238,6 +367,41 @@ def test_conversion_intent_allows_only_review_approved_source_status() -> None:
     assert intent.target is ConversionTarget.REPORT_EVIDENCE
 
 
+def test_candidate_requires_source_signal_ids() -> None:
+    with pytest.raises(ValueError, match="source_signal_ids is required"):
+        IdeaCandidate(
+            candidate_id="idea_high_cash_001",
+            family=OpportunityFamily.HIGH_CASH,
+            lifecycle_status=IdeaLifecycleStatus.GENERATED,
+            review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            evidence_packet=evidence_packet(),
+            source_signal_ids=(),
+            created_at_utc=datetime(2026, 6, 21, 9, 2, tzinfo=UTC),
+            updated_at_utc=datetime(2026, 6, 21, 9, 2, tzinfo=UTC),
+        )
+
+
+def test_conversion_outcome_validates_optional_downstream_reference() -> None:
+    outcome = IdeaConversionOutcome(
+        conversion_outcome_id="outcome_001",
+        conversion_intent_id="intent_001",
+        status=ConversionOutcomeStatus.ACCEPTED,
+        downstream_reference="report-job-001",
+        recorded_at_utc=datetime(2026, 6, 21, 9, 6, tzinfo=UTC),
+    )
+
+    assert outcome.downstream_reference == "report-job-001"
+
+    with pytest.raises(ValueError, match="downstream_reference is required"):
+        IdeaConversionOutcome(
+            conversion_outcome_id="outcome_001",
+            conversion_intent_id="intent_001",
+            status=ConversionOutcomeStatus.ACCEPTED,
+            downstream_reference=" ",
+            recorded_at_utc=datetime(2026, 6, 21, 9, 6, tzinfo=UTC),
+        )
+
+
 def test_domain_models_are_immutable() -> None:
     source = source_ref()
 
@@ -253,6 +417,15 @@ def test_score_policy_is_bounded_and_versioned() -> None:
     )
 
     assert score.policy_version == "idle-liquidity-v1"
+
+
+def test_score_policy_requires_reason_codes() -> None:
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        IdeaScore(
+            policy_version="idle-liquidity-v1",
+            score=Decimal("75"),
+            reason_codes=(),
+        )
 
 
 @pytest.mark.parametrize("score", [Decimal("-1"), Decimal("101")])
