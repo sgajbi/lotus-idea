@@ -54,6 +54,14 @@ limited to repository foundation, architecture decisions, data-mesh contract
 posture, and RFCs that define the build order for a bank-buyable `lotus-idea`
 service.
 
+RFC-0002 Slice 00 now records the implementation-start baseline: high cash /
+idle liquidity is the first opportunity family, `PB_SG_GLOBAL_BAL_001` is the
+canonical first proof portfolio, advisor-only review is the first audience,
+report-only evidence is the first downstream conversion path, and missing
+evidence / unsupported-claim verification is the first AI posture. The baseline
+keeps all source calculations in their owning services and does not promote any
+business capability beyond the current foundation-only supported-feature state.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash

@@ -14,7 +14,7 @@ tests, docs, wiki, and supported-feature promotion.
 
 | Slice | Evidence file | Status |
 | --- | --- | --- |
-| 0 | [Critical Review, Source Map, And Product Gap Allocation](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md) | Planned |
+| 0 | [Critical Review, Source Map, And Product Gap Allocation](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md) | Completed - implementation baseline recorded |
 | 1 | [Platform Automation And Scaffolding Review](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-01-platform-automation-and-scaffolding-review.md) | Planned |
 | 2 | [Cleanup, Structure, And Current Surface Normalization](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-02-cleanup-structure-and-current-surface-normalization.md) | Planned |
 | 3 | [Opportunity Domain Model, Vocabulary, And Lifecycle](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-03-opportunity-domain-model-vocabulary-and-lifecycle.md) | Planned |

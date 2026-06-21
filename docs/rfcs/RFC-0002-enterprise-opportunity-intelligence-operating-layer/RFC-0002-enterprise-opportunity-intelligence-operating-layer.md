@@ -706,7 +706,7 @@ assertions.
 
 | Slice | Name | Status | Evidence expectation |
 | --- | --- | --- | --- |
-| 0 | Critical review, source map, and product gap allocation | Planned | source map, overlap decisions, open questions, branch/state baseline |
+| 0 | Critical review, source map, and product gap allocation | Completed - implementation baseline recorded | source map, overlap decisions, open questions, branch/state baseline |
 | 1 | Platform automation and scaffolding review | Planned | scaffold gap ledger, platform PRs or explicit no-change evidence |
 | 2 | Cleanup, structure, and current surface normalization | Planned | dead-code/doc-sprawl cleanup, module boundaries, vocabulary baseline |
 | 3 | Opportunity domain model, vocabulary, and lifecycle | Planned | pure domain model, lifecycle tests, unsupported transition behavior |
@@ -792,22 +792,33 @@ Documentation quality bar:
 
 ---
 
-## 18. Open Questions For Slice 0
+## 18. Slice 0 Decisions
 
-1. Which exact repo-native product names already exist for each upstream source?
-2. Which first opportunity family should be implemented first for fastest
-   enterprise demo proof: high cash, concentration, underperformance, or drift?
-3. Should first persistence be synchronous database-backed, event-backed, or both?
-4. What is the first supported review audience: advisor only, advisor plus PM,
-   or advisor plus compliance?
-5. What rank policy should be used before feedback learning exists?
-6. Which ideas expire automatically and which require manual closure?
-7. Which conversion path is first: `lotus-advise`, `lotus-manage`, or
-   report-only evidence?
-8. What canonical demo portfolio should be used for initial proof?
-9. Which AI workflow pack should be first: rationale draft, missing evidence
-   checker, or unsupported-claim verifier?
-10. Which platform scaffold gaps should be fixed before implementation starts?
+Slice 0 resolves the implementation-start questions in
+`RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md`.
+The decisions are:
+
+1. exact repo-native product names and contract paths are recorded in the Slice
+   0 source-authority map and governed by the platform domain-product catalog;
+2. first opportunity family is high cash / idle liquidity;
+3. implementation starts with pure domain models, then synchronous database
+   persistence in Slice 6; event publication follows durable replay and
+   idempotency proof;
+4. first supported review audience is advisor only;
+5. initial rank policy is deterministic and policy-versioned, based on source
+   supportability, materiality, freshness, review urgency,
+   duplication/suppression posture, and evidence completeness;
+6. automatic expiry applies to stale, superseded, unsupported, duplicate, and
+   time-window-sensitive evidence; advisor rejection, no-action, suppression,
+   and abandoned conversion require manual closure or explicit workflow action;
+7. first downstream conversion path is report-only evidence after advisor
+   review; Advise and Manage conversion remain planned until later acceptance
+   contracts are implemented;
+8. canonical demo portfolio is `PB_SG_GLOBAL_BAL_001`;
+9. first AI posture is missing-evidence checking and unsupported-claim
+   verification before rationale drafting;
+10. no platform scaffold gap blocks Slice 3, but later slices must update
+    `lotus-platform` automation when implementation exposes reusable gaps.
 
 No open question may remain at final closure.
 

@@ -11,3 +11,15 @@ contracts, signal generation, persistence, scoring, review, AI explanation,
 certified APIs, Gateway, Workbench, Advise/Manage conversion,
 Report/Render/Archive materialization, data products, operations, demo
 readiness, live proof, documentation, hardening, and closure.
+
+Current RFC-0002 implementation-start baseline:
+
+1. Slice 00 is recorded as complete for source mapping and product-gap
+   allocation.
+2. The first opportunity journey is high cash / idle liquidity for
+   `PB_SG_GLOBAL_BAL_001`.
+3. The first review audience is advisor only.
+4. The first downstream conversion posture is report-only evidence after
+   advisor review.
+5. Business features remain unsupported until later slices implement runtime
+   behavior, certification, and supported-feature promotion.
