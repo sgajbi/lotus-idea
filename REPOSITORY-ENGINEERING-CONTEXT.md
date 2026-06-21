@@ -52,6 +52,17 @@ Business functionality is intentionally not implemented yet. Initial work is
 limited to repository foundation, architecture decisions, and RFCs that define
 the build order for a bank-buyable `lotus-idea` service.
 
+## CI And Merge Governance
+
+`lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
+RFC, workflow, scaffold, or implementation commits; keep small commits linear
+and let branch protection require the PR merge gate before `main` updates.
+
+Coverage aggregation jobs use the current approved `actions/download-artifact`
+major and suppress its upstream Node deprecation noise with
+`NODE_OPTIONS=--no-deprecation`. Do not downgrade action majors to quiet runner
+logs; fix or document the owned warning source instead.
+
 ## Architecture And Module Map
 
 1. `src/app/main.py`: application entrypoint, health, readiness, metadata, and
