@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from prometheus_fastapi_instrumentator import Instrumentator
+from app.api.ai_governance import register_ai_governance_routes
 from app.api.candidate_lifecycle import register_candidate_lifecycle_routes
 from app.api.conversion_governance import register_conversion_governance_routes
 from app.api.data_mesh_readiness import register_data_mesh_readiness_routes
@@ -20,6 +21,7 @@ app = FastAPI(title=SERVICE_NAME, version=SERVICE_VERSION)
 app.add_middleware(CorrelationIdMiddleware, service_name=SERVICE_NAME)
 register_idea_signal_routes(app)
 register_candidate_lifecycle_routes(app)
+register_ai_governance_routes(app)
 register_review_queue_routes(app)
 register_review_workflow_routes(app)
 register_conversion_governance_routes(app)

@@ -38,11 +38,11 @@ or product discovery.
 
 Operation-event governance:
 
-1. high-cash, candidate persistence, lifecycle, advisor queue, review,
-   feedback, conversion, and report evidence-pack foundation APIs emit bounded
+1. high-cash, candidate persistence, lifecycle, AI explanation, advisor queue,
+   review, feedback, conversion, and report evidence-pack foundation APIs emit bounded
    operation events for accepted, replayed, duplicate, suppressed,
-   not-eligible, conflict, not-found, permission-denied, invalid-request, and
-   invalid-state outcomes,
+   not-eligible, fallback, blocked, conflict, not-found, permission-denied,
+   invalid-request, and invalid-state outcomes,
 2. operation metrics use only bounded labels and keep identifiers, payloads,
    trace ids, and correlation ids out of metric labels,
 3. operation events retain `foundation_only` supportability until durable

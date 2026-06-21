@@ -1,6 +1,6 @@
 # RFC-0002 Slice 09: Governed AI Explanation And Model-Risk Controls
 
-Status: Partially implemented - internal AI governance foundation only
+Status: Partially implemented - internal AI governance and certified API foundation only
 
 ## Outcome
 
@@ -40,12 +40,33 @@ Implemented in this slice:
    checks, deterministic fallback, supported-output verification, unsupported
    claim blocking, forbidden-action blocking, request/workflow identity
    validation, and no candidate-state mutation.
+9. `src/app/application/ai_governance.py` orchestrates persisted candidate
+   snapshot lookup, governed request construction, deterministic fallback, and
+   verifier evaluation without provider execution or durable persistence
+   claims.
+10. `src/app/api/ai_governance.py` exposes the certified internal endpoint
+    `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`.
+    It requires `idea.ai-explanation.evaluate`, returns redacted evidence only,
+    blocks unsupported claims and forbidden actions, emits bounded
+    `ai_explanation` operation events, and keeps `durableStorageBacked=false`,
+    `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
+11. `tests/integration/test_ai_governance_api.py` covers deterministic
+    fallback, verified-output acceptance, unsupported-claim blocking,
+    forbidden-action blocking, permission denial, missing candidate handling,
+    invalid candidate state, and forbidden metadata.
+12. `tests/integration/test_api_operation_events.py` proves the API emits the
+    bounded `ai_explanation` operation event.
 
 Validation evidence from the implementation slice:
 
 1. `.venv\Scripts\python.exe -m ruff check src\app\domain\ai_governance.py src\app\domain\ideas.py src\app\domain\__init__.py tests\unit\test_ai_governance.py`
 2. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini`
 3. `.venv\Scripts\python.exe -m pytest tests/unit/test_ai_governance.py`
+4. `python -m pytest tests/integration/test_ai_governance_api.py tests/integration/test_api_operation_events.py` passed with `8 passed` after adding the AI explanation API foundation.
+5. `python -m ruff check src/app/application/ai_governance.py src/app/api/ai_governance.py tests/integration/test_ai_governance_api.py tests/integration/test_api_operation_events.py` passed after adding the API route and event coverage.
+6. `make ci` passed after the API foundation with `59` integration tests, `2`
+   e2e tests, `218` unit tests, coverage gate at `99.17%`, and dependency
+   audit reporting no known vulnerabilities.
 
 ## Current Governance References
 
@@ -71,10 +92,9 @@ includes:
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
 3. durable persistence for AI request/result lineage,
-4. application orchestration and API/OpenAPI contracts,
-5. endpoint certification and Gateway/Workbench proof,
-6. model-risk operations dashboards, trust telemetry, and support runbooks,
-7. supported-feature promotion after runtime proof.
+4. Gateway/Workbench proof,
+5. model-risk operations dashboards, trust telemetry, and support runbooks,
+6. supported-feature promotion after runtime proof.
 
 ## Required Work
 
@@ -95,5 +115,5 @@ includes:
    conversion state.
 
 Runtime `lotus-ai` workflow execution remains planned until a later slice adds
-ports/adapters, persistence, API contracts, endpoint certification, and
+ports/adapters, durable persistence, Gateway/Workbench contracts, and
 cross-repository proof.

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified high-cash, lifecycle, advisor queue, review-action, feedback, and conversion API foundations only
+Status: Partially implemented - certified internal API foundations including AI explanation evaluator only
 
 ## Outcome
 
@@ -13,11 +13,13 @@ The first certified API foundations are:
 - `POST /api/v1/idea-signals/high-cash/evaluate`
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
 - `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`
+- `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`
 - `GET /api/v1/review-queues/advisor`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
 - `POST /api/v1/idea-candidates/{candidateId}/feedback`
 - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`
 - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`
+- `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`
 
 These endpoints evaluate caller-supplied, source-owned `lotus-core` evidence
 for the high-cash / idle-liquidity signal family. They consume source-reported
@@ -60,6 +62,14 @@ projection over persisted candidate snapshots. It requires
 exclusions, and keeps `durableStorageBacked=false` and
 `supportedFeaturePromoted=false`.
 
+The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
+foundation over persisted candidate evidence. It requires
+`idea.ai-explanation.evaluate`, returns redacted evidence only, blocks
+unsupported claims and forbidden actions, never calls providers or executes
+`lotus-ai` runtime workflows, never persists durable AI lineage, never grants
+downstream authority, and keeps `durableStorageBacked=false`,
+`lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
+
 Implementation files:
 
 1. `src/app/api/idea_signals.py`: FastAPI DTOs, authorization mapping,
@@ -88,17 +98,26 @@ Implementation files:
     OpenAPI examples, and route registration.
 11. `src/app/application/candidate_lifecycle.py`: application command and
     idempotency payload construction for lifecycle transitions.
-12. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
+12. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
+    mapping, redacted response projection, product-safe errors, OpenAPI
+    examples, and route registration.
+13. `src/app/application/ai_governance.py`: persisted candidate snapshot
+    lookup plus deterministic fallback/verifier orchestration without provider
+    execution or durable persistence claims.
+14. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-13. `src/app/application/conversion_workflow.py`: application commands,
+15. `src/app/application/conversion_workflow.py`: application commands,
     idempotency payload construction, repository precheck, and domain
     invocation for conversion intent/outcome workflow.
-14. `tests/integration/test_review_workflow_api.py`: certified API behavior
+16. `tests/integration/test_review_workflow_api.py`: certified API behavior
    evidence for lifecycle transition, review action, feedback, and conversion
    foundations.
-15. `tests/integration/test_review_queue_api.py`: certified API behavior
+17. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
+18. `tests/integration/test_ai_governance_api.py`: certified API behavior
+    evidence for AI fallback, verifier acceptance, blocked output, permission,
+    missing candidate, invalid state, and forbidden metadata.
 
 ## Current Contract
 
@@ -129,6 +148,16 @@ The advisor review queue endpoint is permissioned by
 `idea.review.queue.read` capability or advisor role. It requires a
 timezone-aware `evaluatedAtUtc` query parameter and returns product-safe Problem
 Details for permission or validation failures.
+
+The AI explanation endpoint is permissioned by
+`idea.ai-explanation.evaluate`. It accepts a governed workflow-pack reference,
+approved metadata, optional workflow output, and a requested timestamp. If no
+workflow output is supplied, it returns deterministic fallback. If workflow
+output is supplied, it verifies source-product claim support and forbidden
+action policy, returning a blocked posture for unsupported claims or prohibited
+actions. Missing candidates, permission failure, invalid request shape,
+forbidden metadata, and invalid candidate lifecycle posture return product-safe
+Problem Details.
 
 The lifecycle transition endpoint is permissioned by
 `idea.candidate.lifecycle.transition` and requires `Idempotency-Key`. It accepts
@@ -229,6 +258,14 @@ Focused validation passed for the current foundation:
     passed with `42 passed` after adding conversion intent/outcome API
     foundations, repository idempotency persistence, and outcome source
     authority enforcement.
+19. `python -m pytest tests/integration/test_ai_governance_api.py tests/integration/test_api_operation_events.py`
+    passed with `8 passed` after adding the AI explanation evaluator API
+    foundation and operation-event coverage.
+20. `python -m ruff check src/app/application/ai_governance.py src/app/api/ai_governance.py tests/integration/test_ai_governance_api.py tests/integration/test_api_operation_events.py`
+    passed after adding the AI API route, DTOs, and tests.
+21. `make ci` passed after adding the AI explanation API foundation with `59`
+    integration tests, `2` e2e tests, `218` unit tests, coverage gate at
+    `99.17%`, and dependency audit reporting no known vulnerabilities.
 
 PR merge-gate evidence remains required before merge.
 

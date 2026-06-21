@@ -28,14 +28,16 @@ foundation:
    evidence-pack request accepted, replayed, conflict, not-found,
    permission-denied, invalid-request, and invalid-state outcomes.
 7. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
-   `src/app/api/review_queues.py`, and `src/app/api/review_workflow.py` emit
-   bounded operation events for high-cash evaluation, candidate persistence,
-   lifecycle transitions, advisor queue reads, review actions, and feedback.
+   `src/app/api/ai_governance.py`, `src/app/api/review_queues.py`, and
+   `src/app/api/review_workflow.py` emit bounded operation events for
+   high-cash evaluation, candidate persistence, lifecycle transitions,
+   AI explanation fallback/verifier evaluation, advisor queue reads, review
+   actions, and feedback.
 8. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
    attribute and metric-label contract.
 9. `tests/integration/test_api_operation_events.py` proves the operation-event
    coverage for the certified internal high-cash, candidate persistence,
-   lifecycle, queue, review, and feedback API foundations.
+   lifecycle, AI explanation, queue, review, and feedback API foundations.
 10. `tests/integration/test_review_workflow_api.py` continues to prove the
     conversion and report evidence-pack API behavior while the event layer is
     active.
@@ -57,18 +59,15 @@ certification, or supported-feature promotion.
 
 ## Remaining Gap
 
-1. Extend operation-event coverage to AI governance paths when an API/runtime
-   surface exists; the current AI foundation remains framework-free domain
-   governance without a route-level operation boundary.
-2. Add dashboard and alert references only after metric families are stable and
+1. Add dashboard and alert references only after metric families are stable and
    implemented.
-3. Add supportability endpoints or diagnostics for runtime source readiness
+2. Add supportability endpoints or diagnostics for runtime source readiness
    once live source adapters and durable persistence exist.
-4. Add Gateway path entitlement proof when Gateway routes are implemented.
-5. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
+3. Add Gateway path entitlement proof when Gateway routes are implemented.
+4. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
    and container reviews for the full supported service surface before any
    supported-feature promotion.
-6. Expand runbooks for source failures, stale evidence, duplicate bursts,
+5. Expand runbooks for source failures, stale evidence, duplicate bursts,
    AI-unavailable fallback, conversion failure, entitlement denial, and replay
    mismatch after those flows have implementation-backed runtime behavior.
 

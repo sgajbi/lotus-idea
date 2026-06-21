@@ -41,6 +41,7 @@ OPERATION_METRIC_LABELS = (
 
 
 class IdeaOperation(StrEnum):
+    AI_EXPLANATION = "ai_explanation"
     SIGNAL_EVALUATION = "signal_evaluation"
     CANDIDATE_PERSISTENCE = "candidate_persistence"
     LIFECYCLE_TRANSITION = "lifecycle_transition"
@@ -55,6 +56,7 @@ class IdeaOperation(StrEnum):
 
 class OperationOutcome(StrEnum):
     ACCEPTED = "accepted"
+    FALLBACK = "fallback"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
     DUPLICATE = "duplicate"

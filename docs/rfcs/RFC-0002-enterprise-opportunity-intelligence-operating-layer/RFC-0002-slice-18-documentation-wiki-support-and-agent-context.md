@@ -13,9 +13,10 @@ This slice is partially implemented for API certification documentation truth:
 1. `docs/operations/api-certification.md` now lists the full certified internal
    foundation endpoint inventory from
    `docs/operations/endpoint-certification-ledger.json`, including high-cash
-   evaluation, high-cash persistence, lifecycle transition, advisor queue,
-   review action, feedback, conversion intent, conversion outcome, report
-   evidence-pack request, and data-mesh-readiness diagnostic endpoints.
+   evaluation, high-cash persistence, lifecycle transition, AI explanation
+   evaluation, advisor queue, review action, feedback, conversion intent,
+   conversion outcome, report evidence-pack request, and data-mesh-readiness
+   diagnostic endpoints.
 2. The certification guide records each endpoint's current foundation scope,
    required capability, and unsupported boundary so future agents do not
    promote internal API foundations as business-supported product features.
@@ -23,6 +24,10 @@ This slice is partially implemented for API certification documentation truth:
    `baseline_certified` posture.
 4. README, repository context, RFC index, and wiki source are updated in the
    same slice when documentation truth changes.
+5. `docs/operations/ai-governance.md` now describes the certified internal AI
+   evaluator API while preserving the unsupported boundary around provider
+   execution, durable AI lineage, Gateway/Workbench proof, and supported
+   feature promotion.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,
