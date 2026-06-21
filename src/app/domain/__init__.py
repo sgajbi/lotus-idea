@@ -25,6 +25,18 @@ from app.domain.ideas import (
     UnsupportedEvidenceReason,
     transition_candidate,
 )
+from app.domain.persistence import (
+    CandidatePersistenceDecision,
+    CandidatePersistenceRecord,
+    CandidatePersistenceResult,
+    EvidenceReplayResult,
+    EvidenceReplayStatus,
+    IdeaRepositorySnapshot,
+    InMemoryIdeaRepository,
+    LifecycleHistoryEntry,
+    evidence_hash_for_candidate,
+    evidence_hash_for_source_refs,
+)
 from app.domain.signal_evaluation import (
     HighCashSignalInput,
     HighCashSignalPolicy,
@@ -61,7 +73,17 @@ __all__ = [
     "transition_candidate",
     "HighCashSignalInput",
     "HighCashSignalPolicy",
+    "CandidatePersistenceDecision",
+    "CandidatePersistenceRecord",
+    "CandidatePersistenceResult",
+    "EvidenceReplayResult",
+    "EvidenceReplayStatus",
+    "IdeaRepositorySnapshot",
+    "InMemoryIdeaRepository",
+    "LifecycleHistoryEntry",
     "SignalEvaluationOutcome",
     "SignalEvaluationResult",
+    "evidence_hash_for_candidate",
+    "evidence_hash_for_source_refs",
     "evaluate_high_cash_signal",
 ]

@@ -90,6 +90,17 @@ duplicate, and below-threshold cases. This remains internal domain behavior:
 there are no source adapters, APIs, persistence, integration proof,
 data-product certification, or supported-feature promotion yet.
 
+RFC-0002 Slice 06 is partially implemented as an internal persistence
+foundation in `src/app/domain/persistence.py`. The repository now has immutable
+candidate persistence records, deterministic source-ref evidence hashes,
+idempotent candidate persistence decisions, duplicate candidate suppression,
+evidence replay posture for matched, stale, mismatched, expired, and missing
+records, lifecycle-transition history, safe audit events for mutating actions,
+and snapshot recovery for internal replay tests. This is not yet database-backed
+durable persistence: no migration, rollback, API surface, source adapter,
+integration proof, data-product certification, or supported-feature promotion
+exists.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -114,7 +125,8 @@ logs; fix or document the owned warning source instead.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
-   policies, evidence policy, and deterministic governance checks.
+   policies, evidence policy, deterministic governance checks, internal
+   persistence records, replay posture, idempotency, and audit primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports.

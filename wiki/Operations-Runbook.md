@@ -1,6 +1,8 @@
 # Operations Runbook
 
-Current posture: scaffold operations only.
+Current posture: scaffold operations plus internal domain persistence/replay
+tests only. There is no database-backed persistence, migration, runtime
+recovery command, or supported business API yet.
 
 Initial commands:
 

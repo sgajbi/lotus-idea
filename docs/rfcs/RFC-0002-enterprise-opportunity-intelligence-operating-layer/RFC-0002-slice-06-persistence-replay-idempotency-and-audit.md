@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Planned
+Status: Partially implemented - internal persistence foundation only
 
 ## Outcome
 
@@ -22,3 +22,61 @@ behavior.
 2. Replay returns matching evidence hash or a clear stale-source posture.
 3. Every mutating action writes an audit event.
 4. Persistence tests cover conflict, replay, expiry, and recovery cases.
+
+## Implementation Evidence
+
+Implemented first-wave internal scope:
+
+1. `src/app/domain/persistence.py` defines immutable candidate persistence
+   records, lifecycle history entries, idempotent candidate persistence
+   decisions, replay status vocabulary, evidence hash helpers, repository
+   snapshots, and an `InMemoryIdeaRepository` internal adapter.
+2. Candidate persistence now evaluates idempotency keys and payload hashes
+   before writing. Matching keys and matching payloads replay the existing
+   candidate record; matching keys with different payloads return conflict; a
+   duplicate candidate identity under a different key returns
+   `duplicate_candidate` instead of creating another record.
+3. Evidence replay compares current source refs with the persisted source-ref
+   hash and returns explicit matched, stale-source, hash-mismatch, expired, and
+   not-found posture.
+4. Candidate persistence and lifecycle transitions write safe bounded
+   `AuditEvent` records. Audit events reject sensitive attribute keys and now
+   validate event identity, actor, outcome, and timezone-aware event time.
+5. Repository snapshots allow internal recovery of candidate records,
+   idempotency records, and idempotency-to-candidate mappings for replay tests.
+
+Not implemented yet:
+
+1. database-backed durable persistence,
+2. migrations and rollback automation,
+3. source adapters or ingestion orchestration,
+4. API routes and OpenAPI certification,
+5. integration or e2e persistence proof,
+6. data-product certification,
+7. supported-feature promotion.
+
+## Migration And Rollback Posture
+
+This slice intentionally does not introduce a database schema. No migration is
+required for the current internal in-memory persistence foundation. The first
+database-backed persistence slice must add explicit migrations, rollback
+posture, integration tests, and recovery evidence before any API or
+data-product claim is promoted.
+
+## Validation
+
+Targeted validation:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py -q`
+   passed with `11 passed`.
+2. `.venv\Scripts\python.exe -m ruff check src\app\domain\persistence.py src\app\domain\audit.py src\app\domain\__init__.py tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py`
+   passed.
+3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
+4. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+   guards, supported-feature gate, endpoint-certification gate, typecheck,
+   architecture boundary, OpenAPI, and `88` unit tests.
+5. `make ci` passed with integration tests, e2e tests, coverage gate at
+   `99.47%`, and dependency audit reporting no known vulnerabilities.
+
+GitHub PR validation and wiki publication remain required before mainline
+closure.
