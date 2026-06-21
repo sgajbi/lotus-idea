@@ -18,7 +18,10 @@ Current state:
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
    exclusions,
-9. business features remain Planned.
+9. RFC-0002 Slice 08 partially implements internal advisor review and feedback
+   governance with fail-closed scope checks, review actions, safe audit events,
+   source provenance, and queue projection interaction,
+10. business features remain Planned.
 
 First implementation program:
 

@@ -714,7 +714,7 @@ assertions.
 | 5 | Deterministic signal evaluation and candidate generation | Partially implemented - high-cash domain policy only | first signal families, candidate generation, golden scenario tests |
 | 6 | Persistence, replay, idempotency, and audit | Partially implemented - internal foundation only | internal records, hashes, replay posture, audit events, idempotency tests; database persistence remains planned |
 | 7 | Scoring, ranking, suppression, and queue policy | Partially implemented - internal foundation only | deterministic score inputs/policy, reason codes, stable queue projection, snooze/suppression/dedupe tests; persisted queue/API proof remains planned |
-| 8 | Review queues, feedback, and human governance | Planned | review APIs, feedback model, entitlement tests, audit proof |
+| 8 | Review queues, feedback, and human governance | Partially implemented - internal advisor governance foundation only | advisor review actions, feedback model, entitlement tests, audit proof; APIs, persistence, PM/compliance/operator surfaces remain planned |
 | 9 | Governed AI explanation and model-risk controls | Planned | `lotus-ai` workflow pack, redaction, verifier/fallback, review posture |
 | 10 | Certified APIs, OpenAPI, and Gateway contract | Planned | certified endpoints, OpenAPI examples, Gateway route contract |
 | 11 | Workbench product realization | Planned | review queue UI, evidence drawer, browser/accessibility proof |

@@ -114,6 +114,17 @@ state, application orchestration, API/OpenAPI surface, Gateway/Workbench proof,
 data-product certification, trust telemetry, or supported-feature promotion
 exists.
 
+RFC-0002 Slice 08 is partially implemented as an internal advisor review and
+feedback governance foundation in `src/app/domain/review_governance.py`. The
+repository now has advisor-only first-wave review action policy, fail-closed
+tenant/book/portfolio/client scope checks, approve-for-conversion, reject,
+no-action, suppress, snooze, and escalation outcomes, governed feedback events,
+safe audit events, source/evidence provenance, and queue projection interaction
+tests. This is not yet a supported review product: no durable database-backed
+review store, application orchestration, API/OpenAPI surface,
+Gateway/Workbench proof, PM/compliance/operator queue surface, data-product
+certification, trust telemetry, or supported-feature promotion exists.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -138,9 +149,9 @@ logs; fix or document the owned warning source instead.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
-   policies, review-queue projection, evidence policy, deterministic
-   governance checks, internal persistence records, replay posture, idempotency,
-   and audit primitives.
+   policies, review-queue projection, review governance, evidence policy,
+   deterministic governance checks, internal persistence records, replay
+   posture, idempotency, and audit primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports.
