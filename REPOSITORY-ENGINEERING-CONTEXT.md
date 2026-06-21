@@ -183,6 +183,7 @@ owned by upstream services.
 10. architecture boundary gate: `make architecture-boundary-gate`
 11. architecture report: `make architecture-boundary-report`
 12. quality scorecard refresh: `make quality-baseline`
+13. CI contract gate: `make ci-contract-gate`
 
 ## Validation And CI Expectations
 
@@ -196,6 +197,12 @@ Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, OpenAPI quality, supported-feature gate,
 endpoint-certification gate, unit tests, integration tests, e2e tests, coverage
 gate, security audit, and Docker build validation.
+
+`make ci-contract-gate` is blocking through `make lint`. It protects the
+bank-buyable lane contract itself so future agentic changes cannot silently
+remove architecture, OpenAPI, endpoint-certification, supported-feature,
+coverage, security, Docker, release-evidence, action-version, or
+least-privilege workflow controls from local or GitHub validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression
