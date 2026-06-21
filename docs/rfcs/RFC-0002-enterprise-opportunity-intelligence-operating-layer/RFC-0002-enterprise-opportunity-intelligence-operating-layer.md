@@ -720,8 +720,8 @@ assertions.
 | 11 | Workbench product realization | Planned | review queue UI, evidence drawer, browser/accessibility proof |
 | 12 | Advise and Manage conversion realization | Partially implemented - internal conversion governance and certified API foundation only | review-gated conversion intents/outcomes, source-authority mapping, certified internal conversion API proof, no downstream authority proof; downstream adapters and contracts remain planned |
 | 13 | Report, Render, Archive, and evidence-pack materialization | Partially implemented - internal report evidence-pack request foundation only | certified internal request API, source summaries, retention refs, idempotency/audit proof; Report/Render/Archive downstream materialization remains planned |
-| 14 | Data-product promotion, trust telemetry, and platform hardening | Planned | repo-native declarations, trust telemetry, SLO/access/evidence policies |
-| 15 | Observability, security, entitlements, and operations | Planned | runbooks, metrics/log review, vulnerability treatment, fail-closed proof |
+| 14 | Data-product promotion, trust telemetry, and platform hardening | Partially implemented - internal not-certified mesh readiness diagnostic only | repo-native declarations, readiness diagnostic, blocked trust telemetry, SLO/access/evidence policies; product promotion remains planned |
+| 15 | Observability, security, entitlements, and operations | Partially implemented - bounded certified internal API operation-event foundation only | operation-event metric/log vocabulary, no-sensitive-label proof, endpoint instrumentation; broader runbooks and production telemetry remain planned |
 | 16 | Demo readiness, archetype scenarios, and commercial proof | Planned | canonical scenarios, claim ledger, RFP-safe wording, demo guide |
 | 17 | Implementation proof and live validation | Planned | full proof index, live canonical evidence, critical result review |
 | 18 | Documentation, wiki, support, and agent context | Planned | README/wiki/context/runbook updates and wiki check-only result |

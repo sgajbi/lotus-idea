@@ -7,6 +7,9 @@ governance plus certified internal conversion intent/outcome and report
 evidence-pack API foundations. The service remains internal foundation only:
 there is no database-backed business persistence, migration, downstream adapter,
 runtime recovery command, Gateway/Workbench proof, or supported business API yet.
+The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
+operators to inspect the repo-authored `not_certified` data-mesh posture and
+blockers; it does not certify or promote a data product.
 
 Initial commands:
 
@@ -38,7 +41,8 @@ RFC-0002 Slice 15 now emits bounded operation-event logs and the
 `lotus_idea_operation_events_total` metric for high-cash signal evaluation,
 candidate persistence, lifecycle transitions, advisor queue reads, review
 actions, feedback records, conversion intent recording, conversion outcome
-recording, and report evidence-pack request recording.
+recording, report evidence-pack request recording, and data-mesh-readiness
+diagnostic reads.
 
 Current outcomes:
 
@@ -51,6 +55,8 @@ Current outcomes:
 6. `permission_denied`: caller capability failed closed.
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
+9. `blocked`: expected current data-mesh-readiness posture while runtime trust
+   telemetry and platform certification remain absent.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and

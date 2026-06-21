@@ -39,6 +39,11 @@ Certification is not claimed. Products stay `proposed` and the current static
 telemetry is blocked until runtime implementation and platform mesh validation
 exist.
 
+The internal `GET /api/v1/data-mesh/readiness` endpoint reads the repo-owned
+mesh contracts and returns operator-facing `not_certified` posture with
+blockers. It is an API-certified diagnostic, not data-product certification,
+Gateway discovery, Workbench discovery, or supported-feature promotion.
+
 The first consumer contract expansion is source-authority only. It prepares the
 high-cash / idle-liquidity path around Core-owned cash and holdings products,
 and records later first-wave Performance, Risk, Advise, Manage, Report, and AI

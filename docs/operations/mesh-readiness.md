@@ -1,6 +1,6 @@
 # Data Mesh Readiness
 
-Status: Planned.
+Status: Planned data-mesh posture with an internal readiness diagnostic.
 
 Certification status: not certified.
 
@@ -36,6 +36,31 @@ Every `lotus-idea` product remains `proposed` until:
 
 The static telemetry snapshot is deliberately blocked so operators and future
 agents cannot treat the day-one contract baseline as runtime certification.
+
+## Runtime Diagnostic
+
+`GET /api/v1/data-mesh/readiness` returns the current repo-authored readiness
+posture for internal operators. It requires:
+
+1. `X-Caller-Roles: operator`
+2. `X-Caller-Capabilities: idea.mesh.readiness.read`
+
+The response includes:
+
+1. `certificationStatus: not_certified`,
+2. `runtimeTelemetryBacked: false`,
+3. `platformCertified: false`,
+4. `supportedFeaturePromoted: false`,
+5. source-of-truth paths for the producer, consumer, telemetry, SLO, access,
+   and evidence-policy contracts,
+6. explicit blockers for certification and promotion.
+
+This endpoint is endpoint-certified as an operator diagnostic. It is not data
+product certification, platform source-manifest inclusion, Gateway discovery,
+Workbench discovery, runtime lineage proof, or a supported-feature claim.
+
+The Docker image copies `contracts/` into `/app/contracts` so containerized
+diagnostics read the same contract truth as local validation.
 
 ## Repo-Native Gate
 

@@ -27,10 +27,10 @@ for review-gated downstream intent/outcome tracking. It now also has an
 internal report evidence-pack request foundation plus a certified internal API
 for reviewed report conversion intents, and the first bounded operation-event
 observability foundation across certified internal signal, persistence,
-lifecycle, queue, review, feedback, conversion, and report evidence APIs. No
-business feature is supported until the relevant RFC slice has full runtime
-evidence, tests, data-mesh posture, downstream proof, Gateway/Workbench proof,
-and supported-feature registration.
+lifecycle, queue, review, feedback, conversion, report evidence, and
+data-mesh-readiness APIs. No business feature is supported until the relevant
+RFC slice has full runtime evidence, tests, data-mesh posture, downstream
+proof, Gateway/Workbench proof, and supported-feature registration.
 
 ## Product Boundary
 
@@ -87,6 +87,13 @@ All `lotus-idea` products remain proposed and not certified until runtime
 implementation, live trust telemetry, platform source-manifest inclusion,
 Gateway/Workbench discovery, and platform mesh certification pass.
 
+`GET /api/v1/data-mesh/readiness` is a certified internal operator diagnostic
+for that posture. It requires `idea.mesh.readiness.read` plus the `operator`
+role, reads the repo-owned contract files above, and returns the current
+`not_certified` status, explicit blockers, source-of-truth paths, proposed
+products, and `supportedFeaturePromoted=false`. It is not data-product
+certification and must not be exposed as Gateway/Workbench product discovery.
+
 The first consumer dependency set is aligned to the RFC-0002 source map:
 `lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
 projection, and benchmark assignment; `lotus-performance` returns and mandate
@@ -117,7 +124,9 @@ source-authority contracts only, not runtime certification.
   idempotency/audit contract and certified internal conversion API foundations.
   Internal report evidence-pack orchestration records source-provenanced request
   packages for reviewed report conversion intents without creating Report,
-  Render, or Archive records.
+  Render, or Archive records. Internal data-mesh-readiness orchestration reads
+  repo-owned contract truth and returns operator-facing planned/not-certified
+  posture without promoting products.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, report evidence-pack request governance, internal
@@ -130,9 +139,9 @@ source-authority contracts only, not runtime certification.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, lifecycle, advisor queue, review, feedback, conversion, and
-  report evidence-pack foundation APIs emit product-safe operation logs and the
-  `lotus_idea_operation_events_total` metric without sensitive labels or
-  supported-feature promotion.
+  report evidence-pack foundation APIs plus the data-mesh-readiness diagnostic
+  emit product-safe operation logs and the `lotus_idea_operation_events_total`
+  metric without sensitive labels or supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.
 - `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.
 - `contracts/`: proposed data-product declarations, consumer dependencies,

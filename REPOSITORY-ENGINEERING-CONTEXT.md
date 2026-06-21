@@ -252,14 +252,26 @@ access-audit record, no client-ready publication authority, no Gateway/Workbench
 proof, no database-backed persistence, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.
 
+RFC-0002 Slice 14 is partially implemented as an internal data-mesh-readiness
+diagnostic foundation. `src/app/application/data_mesh_readiness.py` reads
+repo-owned producer, mesh-readiness, and trust-telemetry contracts, and
+`GET /api/v1/data-mesh/readiness` exposes the current operator-facing
+`planned` / `not_certified` posture with explicit blockers. The endpoint
+requires `idea.mesh.readiness.read` plus the `operator` role, emits a bounded
+`mesh_readiness_read` operation event with `not_certified` supportability, and
+returns `supportedFeaturePromoted=false`. This is endpoint-certified diagnostic
+evidence only; it is not data-product certification, platform source-manifest
+inclusion, Gateway/Workbench discovery, runtime lineage proof, or supported
+mesh promotion.
+
 RFC-0002 Slice 15 is partially implemented as a bounded operation observability
 foundation. `src/app/observability/logging.py` now defines the
 `lotus_idea_operation_events_total` metric, bounded operation/outcome/
 supportability vocabulary, product-safe structured operation logs, and
 sensitive operation-attribute rejection. High-cash evaluation, candidate
 persistence, lifecycle transition, advisor review queue, review action,
-feedback, conversion intent, conversion outcome, and report evidence-pack
-request APIs emit bounded operation events without
+feedback, conversion intent, conversion outcome, report evidence-pack request,
+and data-mesh-readiness diagnostic APIs emit bounded operation events without
 portfolio/client/account/holding/transaction identifiers, request/response
 bodies, trace ids, or correlation ids as metric labels. This is not yet full
 production observability: AI governance runtime/API events, live source

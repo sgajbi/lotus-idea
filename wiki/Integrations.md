@@ -33,6 +33,10 @@ Mesh integration truth starts in
 `make data-mesh-contract-gate` keeps this declaration aligned with the current
 source-authority posture and optionally reconciles it with the sibling
 `lotus-platform` generated product catalog when that checkout is present.
+Internal operators can call `GET /api/v1/data-mesh/readiness` with the
+`operator` role and `idea.mesh.readiness.read` capability to inspect the same
+repo-authored readiness truth at runtime. The route reports blockers only; it
+does not expose a consumer-facing product contract.
 
 The current planned consumer declaration names source-authority products for
 the RFC-0002 first-wave map:

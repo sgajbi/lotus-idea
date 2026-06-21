@@ -45,6 +45,11 @@ Data-mesh foundation checks:
    source-product drift or premature `lotus-idea` source-manifest inclusion,
 6. platform mesh certification is required before any supported mesh claim.
 
+The internal data-mesh-readiness endpoint is covered by OpenAPI, endpoint
+certification, unit tests, and integration tests. Its passing checks certify the
+diagnostic route only; they do not certify the data products it reports as
+blocked.
+
 CI warning policy:
 
 1. use current approved action versions,
