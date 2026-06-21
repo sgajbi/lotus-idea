@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard data-mesh-contract-gate supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard data-mesh-contract-gate migration-contract-gate supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -20,6 +20,7 @@ lint:
 	$(MAKE) monetary-float-guard
 	$(MAKE) no-sensitive-content-guard
 	$(MAKE) data-mesh-contract-gate
+	$(MAKE) migration-contract-gate
 	$(MAKE) supported-features-gate
 	$(MAKE) endpoint-certification-gate
 
@@ -34,6 +35,9 @@ no-sensitive-content-guard:
 
 data-mesh-contract-gate:
 	$(VENV_PYTHON) scripts/data_mesh_contract_gate.py
+
+migration-contract-gate:
+	$(VENV_PYTHON) scripts/migration_contract_gate.py
 
 supported-features-gate:
 	$(VENV_PYTHON) scripts/supported_features_gate.py
@@ -80,9 +84,9 @@ coverage-gate:
 security-audit:
 	$(VENV_PYTHON) -m pip_audit -r requirements/shared-runtime.lock.txt -r requirements/ci-tooling.lock.txt
 
-check: lint typecheck architecture-boundary-gate openapi-gate supported-features-gate endpoint-certification-gate test
+check: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate supported-features-gate endpoint-certification-gate test
 
-ci: lint typecheck architecture-boundary-gate openapi-gate supported-features-gate endpoint-certification-gate test-integration test-e2e test-coverage security-audit
+ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate supported-features-gate endpoint-certification-gate test-integration test-e2e test-coverage security-audit
 
 docker-build:
 	docker build -t backend-service:ci-test .

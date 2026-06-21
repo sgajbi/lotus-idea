@@ -87,6 +87,12 @@ instead of declaring local repository protocols. This keeps the future durable
 storage adapter behind one governed contract surface while the current
 `durableStorageBacked=false` posture remains truthful.
 
+`migrations/001_idea_repository_foundation.sql` and its rollback file define the
+first governed schema contract for future durable candidate, idempotency,
+lifecycle, audit, review, feedback, conversion, and report evidence-pack state.
+The migration contract is CI-blocking, but it is not runtime database
+persistence until an adapter and execution path are implemented and proven.
+
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
 review workflow API foundations. They require mutating capabilities, caller
@@ -132,6 +138,10 @@ The internal application layer can now also record idempotent lifecycle
 transitions for persisted candidates. This closes the foundation gap between
 generated high-cash candidates and review-ready candidates without weakening the
 domain transition graph or review approval rules.
+
+The repository now has a versioned schema and rollback contract for the future
+durable repository. API state remains process-local until a later slice wires
+database execution and adapter proof behind the central repository ports.
 
 ## Review Queue Projection Foundation
 

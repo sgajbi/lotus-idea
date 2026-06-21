@@ -149,9 +149,15 @@ conversion, report evidence-pack requests, and AI explanation reads. Application
 use cases must depend on that port instead of defining local repository
 protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
 so the future durable adapter has one governed contract surface.
-This is not yet database-backed durable persistence: no migration, rollback,
-database-backed stateful API surface, integration proof over database storage,
-data-product certification, or supported-feature promotion exists.
+`migrations/001_idea_repository_foundation.sql` and its rollback file now define
+the first versioned schema contract for future database-backed candidate,
+idempotency, lifecycle, audit, review, feedback, conversion, and report
+evidence-pack state. `make migration-contract-gate` blocks missing schema
+objects, missing indexes, missing rollback posture, or placeholder SQL.
+This is not yet database-backed durable persistence: there is no runtime
+database adapter, migration execution path, database-backed stateful API
+surface, integration proof over database storage, data-product certification,
+or supported-feature promotion.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -443,6 +449,7 @@ owned by upstream services.
 12. quality scorecard refresh: `make quality-baseline`
 13. CI contract gate: `make ci-contract-gate`
 14. data-mesh contract gate: `make data-mesh-contract-gate`
+15. migration contract gate: `make migration-contract-gate`
 
 ## Validation And CI Expectations
 
@@ -456,16 +463,17 @@ owned by upstream services.
 
 Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, OpenAPI quality, supported-feature gate,
-endpoint-certification gate, data-mesh contract gate, unit tests, integration
-tests, e2e tests, coverage gate, security audit, and Docker build validation.
+endpoint-certification gate, data-mesh contract gate, migration contract gate,
+unit tests, integration tests, e2e tests, coverage gate, security audit, and
+Docker build validation.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, OpenAPI, endpoint-certification, supported-feature,
-data-mesh contract validation, coverage, security, Docker, release-evidence,
-action-version, least-privilege workflow controls, non-suppressed auto-merge
-token usage, workflow-dispatch access, or merged-PR main-releasability dispatch
-from local or GitHub validation.
+data-mesh contract validation, migration contract validation, coverage,
+security, Docker, release-evidence, action-version, least-privilege workflow
+controls, non-suppressed auto-merge token usage, workflow-dispatch access, or
+merged-PR main-releasability dispatch from local or GitHub validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

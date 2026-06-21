@@ -29,7 +29,9 @@ internal report evidence-pack request foundation plus a certified internal API
 for reviewed report conversion intents, and the first bounded operation-event
 observability foundation across certified internal signal, persistence,
 lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
-data-mesh-readiness APIs. No business feature is supported until the relevant
+data-mesh-readiness APIs. The first versioned persistence schema and rollback
+contract now exists behind a blocking migration contract gate, but runtime API
+state is still not database-backed. No business feature is supported until the relevant
 RFC slice has full runtime evidence, tests, data-mesh posture, downstream
 proof, Gateway/Workbench proof, and supported-feature registration.
 
@@ -144,6 +146,9 @@ source-authority contracts only, not runtime certification.
 - `src/app/infrastructure/`: adapters and clients behind ports, including a
   conservative Core high-cash source adapter that does not infer cash weight
   when Core omits a source-reported value.
+- `migrations/`: versioned SQL migration and rollback contracts. The first
+  contract defines the future durable idea repository schema; it is not runtime
+  database wiring by itself.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, lifecycle, AI explanation, advisor queue, review, feedback,
@@ -167,6 +172,7 @@ make install
 make lint
 make ci-contract-gate
 make data-mesh-contract-gate
+make migration-contract-gate
 make typecheck
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -184,6 +190,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe -m ruff format --check .
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
+.venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py
 .venv\Scripts\python.exe -m pytest tests/unit tests/integration tests/e2e
@@ -227,7 +234,9 @@ Main Releasability dispatch so post-merge release evidence is produced on
 - Conversion governance guide: `docs/operations/conversion-governance.md`
 - Report evidence-pack guide: `docs/operations/report-evidence-packs.md`
 - Data mesh readiness guide: `docs/operations/mesh-readiness.md`
+- Persistence and migration guide: `docs/operations/persistence.md`
 - Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
+- Migration contract gate: `scripts/migration_contract_gate.py`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`
 
