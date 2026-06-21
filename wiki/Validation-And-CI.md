@@ -7,6 +7,8 @@
 3. Main Releasability Gate for post-merge truth.
 4. Merged PR Main Releasability Dispatch so rebase auto-merged PRs still
    generate post-merge release evidence on `main`.
+5. Non-suppressed auto-merge token enforcement through `LOTUS_AUTOMERGE_TOKEN`;
+   without that secret, use a human/release actor to rebase merge.
 
 Repo-native validation commands:
 
@@ -30,8 +32,8 @@ The CI contract gate is blocking from day one. It prevents accidental removal of
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 approved action-runtime majors, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
-data-mesh contract validation, workflow-dispatch access, merged-PR main-releasability dispatch,
-and source-safe local quality gates.
+data-mesh contract validation, workflow-dispatch access, non-suppressed auto-merge token usage,
+merged-PR main-releasability dispatch, and source-safe local quality gates.
 
 Data-mesh foundation checks:
 
