@@ -120,14 +120,19 @@ foundation in `src/app/domain/persistence.py`. The repository now has immutable
 candidate persistence records, deterministic source-ref evidence hashes,
 idempotent candidate persistence decisions, duplicate candidate suppression,
 evidence replay posture for matched, stale, mismatched, expired, and missing
-records, lifecycle-transition history, safe audit events for mutating actions,
-snapshot recovery for internal replay tests, and application-level high-cash
-evaluate-and-persist orchestration in
-`src/app/application/high_cash_signal.py`. The orchestration persists only
-created candidates, replays matching idempotency keys, conflicts on changed
-payloads, and leaves blocked/not-eligible/suppressed evaluations non-mutating.
+records, idempotent lifecycle-transition recording, lifecycle-transition
+history, safe audit events for mutating actions, snapshot recovery for internal
+replay tests, application-level high-cash evaluate-and-persist orchestration in
+`src/app/application/high_cash_signal.py`, and candidate lifecycle orchestration
+in `src/app/application/candidate_lifecycle.py`. The high-cash orchestration
+persists only created candidates, replays matching idempotency keys, conflicts
+on changed payloads, and leaves blocked/not-eligible/suppressed evaluations
+non-mutating. The lifecycle API records governed transitions through the
+canonical domain transition graph with accepted, replayed, not-found, conflict,
+and invalid-transition posture while still reporting
+`durableStorageBacked=false`.
 This is not yet database-backed durable persistence: no migration, rollback,
-durable stateful API surface, integration proof over database storage,
+database-backed stateful API surface, integration proof over database storage,
 data-product certification, or supported-feature promotion exists.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
@@ -194,8 +199,13 @@ conflict posture. `GET /api/v1/review-queues/advisor` exposes deterministic
 advisor queue projection over persisted candidate snapshots. The review-action
 and feedback APIs expose internal review workflow persistence over the same
 repository provider and return accepted, replayed, not-found, conflict,
-permission, or invalid-state posture without granting downstream authority. All
-five business routes are covered by OpenAPI and endpoint certification evidence.
+permission, or invalid-state posture without granting downstream authority.
+`POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` exposes the
+idempotent lifecycle transition foundation over persisted candidates, requires
+`idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
+canonical lifecycle graph, and records audit/lifecycle history without granting
+downstream authority. All six business routes are covered by OpenAPI and
+endpoint certification evidence.
 This is not yet a supported product capability: there are no live source
 adapters, Gateway routes, Workbench surfaces, database-backed API state,
 data-product certification, runtime trust telemetry, or supported-feature
@@ -249,7 +259,9 @@ logs; fix or document the owned warning source instead.
    ordering/exclusion behavior to the Slice 07 domain policy. Review/feedback
    workflow orchestration applies Slice 08 domain governance to repository
    snapshots and persists accepted decisions and feedback through the same
-   idempotency/audit posture.
+   idempotency/audit posture. Candidate lifecycle orchestration maps API
+   commands into the Slice 06 idempotent lifecycle transition repository
+   contract.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, evidence policy, deterministic governance checks,

@@ -47,6 +47,13 @@ class ReviewPersistenceDecision(StrEnum):
     NOT_FOUND = "not_found"
 
 
+class LifecyclePersistenceDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REPLAYED = "replayed"
+    CONFLICT = "conflict"
+    NOT_FOUND = "not_found"
+
+
 @dataclass(frozen=True)
 class LifecycleHistoryEntry:
     candidate_id: str
@@ -101,6 +108,13 @@ class EvidenceReplayResult:
 @dataclass(frozen=True)
 class ReviewPersistenceResult:
     decision: ReviewPersistenceDecision
+    record: CandidatePersistenceRecord | None
+    audit_event: AuditEvent | None = None
+
+
+@dataclass(frozen=True)
+class LifecyclePersistenceResult:
+    decision: LifecyclePersistenceDecision
     record: CandidatePersistenceRecord | None
     audit_event: AuditEvent | None = None
 
@@ -214,36 +228,79 @@ class InMemoryIdeaRepository:
         event_time = occurred_at_utc or datetime.now(UTC)
         _require_aware_utc(event_time, "occurred_at_utc")
         record = self._candidate_records[candidate_id]
-        transitioned = transition_candidate(
-            record.candidate,
-            target_status,
-            updated_at_utc=event_time,
-        )
-        history_entry = LifecycleHistoryEntry(
-            candidate_id=candidate_id,
-            source_status=record.candidate.lifecycle_status,
+        updated, _ = self._transition_record(
+            record,
             target_status=target_status,
             actor_subject=actor_subject,
-            changed_at_utc=event_time,
-        )
-        audit_event = _audit_event(
-            event_type="idea.lifecycle.transitioned",
-            actor_subject=actor_subject,
-            outcome="accepted",
             occurred_at_utc=event_time,
-            attributes={
-                "source_status": record.candidate.lifecycle_status.value,
-                "target_status": target_status.value,
-            },
+            attributes={},
         )
-        updated = replace(
-            record,
-            candidate=transitioned,
-            lifecycle_history=(*record.lifecycle_history, history_entry),
-            audit_events=(*record.audit_events, audit_event),
-        )
-        self._candidate_records[candidate_id] = updated
         return updated
+
+    def record_lifecycle_transition(
+        self,
+        candidate_id: str,
+        target_status: IdeaLifecycleStatus,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+        actor_subject: str,
+        occurred_at_utc: datetime | None = None,
+        transition_id: str | None = None,
+        reason_codes: tuple[str, ...] = (),
+    ) -> LifecyclePersistenceResult:
+        _require_text(candidate_id, "candidate_id")
+        _require_text(idempotency_key, "idempotency_key")
+        _require_text(actor_subject, "actor_subject")
+        if transition_id is not None:
+            _require_text(transition_id, "transition_id")
+        event_time = occurred_at_utc or datetime.now(UTC)
+        _require_aware_utc(event_time, "occurred_at_utc")
+
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return LifecyclePersistenceResult(
+                decision=LifecyclePersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return LifecyclePersistenceResult(
+                decision=LifecyclePersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return LifecyclePersistenceResult(
+                decision=LifecyclePersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+
+        attributes = {
+            "idempotency_decision": idempotency_decision.value,
+            "reason_codes": ",".join(reason_codes),
+        }
+        if transition_id is not None:
+            attributes["transition_id"] = transition_id
+        updated, audit_event = self._transition_record(
+            record,
+            target_status=target_status,
+            actor_subject=actor_subject,
+            occurred_at_utc=event_time,
+            attributes=attributes,
+        )
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        return LifecyclePersistenceResult(
+            decision=LifecyclePersistenceDecision.ACCEPTED,
+            record=updated,
+            audit_event=audit_event,
+        )
 
     def replay_evidence(
         self,
@@ -430,6 +487,49 @@ class InMemoryIdeaRepository:
         if candidate_id is None:
             return None
         return self._candidate_records.get(candidate_id)
+
+    def _transition_record(
+        self,
+        record: CandidatePersistenceRecord,
+        *,
+        target_status: IdeaLifecycleStatus,
+        actor_subject: str,
+        occurred_at_utc: datetime,
+        attributes: Mapping[str, str],
+    ) -> tuple[CandidatePersistenceRecord, AuditEvent]:
+        candidate_id = record.candidate.candidate_id
+        transitioned = transition_candidate(
+            record.candidate,
+            target_status,
+            updated_at_utc=occurred_at_utc,
+        )
+        history_entry = LifecycleHistoryEntry(
+            candidate_id=candidate_id,
+            source_status=record.candidate.lifecycle_status,
+            target_status=target_status,
+            actor_subject=actor_subject,
+            changed_at_utc=occurred_at_utc,
+        )
+        audit_attributes = {
+            "source_status": record.candidate.lifecycle_status.value,
+            "target_status": target_status.value,
+            **dict(attributes),
+        }
+        audit_event = _audit_event(
+            event_type="idea.lifecycle.transitioned",
+            actor_subject=actor_subject,
+            outcome="accepted",
+            occurred_at_utc=occurred_at_utc,
+            attributes=audit_attributes,
+        )
+        updated = replace(
+            record,
+            candidate=transitioned,
+            lifecycle_history=(*record.lifecycle_history, history_entry),
+            audit_events=(*record.audit_events, audit_event),
+        )
+        self._candidate_records[candidate_id] = updated
+        return updated, audit_event
 
 
 def evidence_hash_for_candidate(candidate: IdeaCandidate) -> str:

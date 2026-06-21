@@ -53,6 +53,7 @@ def test_endpoint_certification_ledger_starts_with_scaffold_operations() -> None
     assert operations == {
         ("GET", "/api/v1/review-queues/advisor"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/feedback"),
+        ("POST", "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/review-actions"),
         ("POST", "/api/v1/idea-signals/high-cash/evaluate"),
         ("POST", "/api/v1/idea-signals/high-cash/evaluate-and-persist"),

@@ -22,9 +22,10 @@ Current support:
 5. planned supported-feature registry,
 6. certified internal high-cash signal evaluation API foundation over
    caller-supplied, source-owned Core evidence,
-7. certified internal advisor queue, review-action, and feedback API foundations
-   over persisted candidates.
+7. certified internal candidate lifecycle, advisor queue, review-action, and
+   feedback API foundations over persisted candidates.
 
 No external business feature is supported yet. The high-cash, advisor queue,
-review-action, and feedback API foundations are certified for internal contract
-evolution, not for live Gateway/Workbench or client-demo feature claims.
+lifecycle, review-action, and feedback API foundations are certified for
+internal contract evolution, not for live Gateway/Workbench or client-demo
+feature claims.

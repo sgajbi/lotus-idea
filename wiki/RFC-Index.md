@@ -25,9 +25,10 @@ Current RFC-0002 implementation-start baseline:
 4. Slice 05 partially implements the high-cash / idle-liquidity deterministic
    domain policy without source adapters, API, or supported-feature promotion.
 5. Slice 06 partially implements internal candidate persistence records,
-   evidence replay posture, idempotency conflict handling, lifecycle audit
-   history, and snapshot recovery without database migrations, API, or
-   supported-feature promotion.
+   evidence replay posture, idempotency conflict handling, idempotent lifecycle
+   transition recording, lifecycle audit history, and snapshot recovery without
+   database migrations, database-backed API state, or supported-feature
+   promotion.
 6. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
@@ -45,9 +46,10 @@ Current RFC-0002 implementation-start baseline:
    and no AI downstream authority without `lotus-ai` runtime execution, API,
    Gateway, Workbench, or supported-feature promotion.
 9. Slice 10 partially implements certified internal API foundations for
-   high-cash evaluation, high-cash evaluate-and-persist, advisor queues, review
-   actions, and feedback. Gateway, Workbench, live source adapters, data-product
-   certification, and supported-feature promotion remain planned.
+   high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
+   transitions, advisor queues, review actions, and feedback. Gateway,
+   Workbench, live source adapters, data-product certification, and
+   supported-feature promotion remain planned.
 10. Slice 12 partially implements internal conversion governance for
    review-gated conversion intent and downstream outcome tracking, with
    target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and

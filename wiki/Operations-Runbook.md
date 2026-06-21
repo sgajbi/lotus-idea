@@ -1,7 +1,8 @@
 # Operations Runbook
 
 Current posture: scaffold operations plus internal domain, persistence/replay,
-review, AI-governance, certified high-cash API foundation, and conversion
+lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
+advisor queue, review-action, and feedback API foundations, and conversion
 governance tests. Conversion governance is internal only: there is no
 database-backed conversion persistence, migration, downstream adapter, runtime
 recovery command, or supported conversion business API yet.
