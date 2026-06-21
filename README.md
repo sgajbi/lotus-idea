@@ -30,8 +30,10 @@ for reviewed report conversion intents, and the first bounded operation-event
 observability foundation across certified internal signal, persistence,
 lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
 data-mesh-readiness APIs. The first versioned persistence schema, rollback
-contract, and PostgreSQL migration execution CLI now exist behind blocking
-contract and dry-run gates, but runtime API state is still not database-backed.
+contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
+adapter, and opt-in API repository wiring now exist behind blocking gates.
+Runtime API state is process-local by default and becomes repository-durable
+only when `LOTUS_IDEA_DATABASE_URL` is configured after migrations are applied.
 No business feature is supported until the relevant
 RFC slice has full runtime evidence, tests, data-mesh posture, downstream
 proof, Gateway/Workbench proof, and supported-feature registration.
@@ -109,8 +111,9 @@ source-authority contracts only, not runtime certification.
 ## Repository Map
 
 - `src/app/api/`: HTTP route modules, API DTO mapping, shared caller-header
-  parsing, and the temporary process-local repository provider used by certified
-  internal API foundations until durable PostgreSQL wiring is proven.
+  parsing, and the repository provider used by certified internal API
+  foundations. The provider defaults to a process-local repository and selects
+  `PostgresIdeaRepository` when `LOTUS_IDEA_DATABASE_URL` is configured.
 - `src/app/application/`: use-case orchestration. The current first use cases
   evaluate high-cash signals over caller-supplied Core evidence and over a
   Core source port that fetches governed Core evidence, and internally persist
@@ -147,12 +150,12 @@ source-authority contracts only, not runtime certification.
 - `src/app/infrastructure/`: adapters and clients behind ports, including a
   conservative Core high-cash source adapter that does not infer cash weight
   when Core omits a source-reported value, PostgreSQL migration execution
-  helpers, and the tested `PostgresIdeaRepository` adapter foundation.
+  helpers, and the tested `PostgresIdeaRepository` adapter.
 - `migrations/`: versioned SQL migration and rollback contracts. The first
   contract defines the future durable idea repository schema; it can be applied
   or rolled back with `make migrate` / `make migrate-rollback` when
-  `LOTUS_IDEA_DATABASE_URL` is set. This is not runtime API database wiring by
-  itself.
+  `LOTUS_IDEA_DATABASE_URL` is set. Runtime API repository wiring uses the same
+  variable after the schema exists.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, lifecycle, AI explanation, advisor queue, review, feedback,
@@ -208,6 +211,20 @@ Equivalent explicit commands:
 ```powershell
 uvicorn app.main:app --reload --port 8330
 ```
+
+To run the API against PostgreSQL, apply migrations first and keep the database
+URL configured:
+
+```powershell
+$env:LOTUS_IDEA_DATABASE_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
+make migrate
+uvicorn app.main:app --reload --port 8330
+```
+
+Repository-backed endpoints report `durableStorageBacked=true` only in this
+configured posture. This does not promote data-product certification,
+Gateway/Workbench support, live source ingestion, downstream realization, or a
+supported business feature.
 
 ## Docker
 

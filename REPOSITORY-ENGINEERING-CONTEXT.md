@@ -82,12 +82,11 @@ not add API, persistence, source adapters, data-product certification, or
 supported-feature promotion.
 
 RFC-0002 Slice 02 is partially implemented as cleanup and current-surface
-normalization. API process-local repository state is now isolated in
-`src/app/api/repository_state.py` instead of being owned by the high-cash signal
-route module. The high-cash evaluate-and-persist API, and future review,
-feedback, queue, and lifecycle API modules, share the same in-memory repository
-provider until database-backed persistence replaces it. This is structural
-cleanup only and does not promote a supported business feature.
+normalization. API repository state was first isolated out of the high-cash
+route module; the current composition provider now lives in
+`src/app/repository_state.py`, with `src/app/api/repository_state.py` retained
+as a compatibility shim. This is structural cleanup only and does not promote a
+supported business feature.
 
 RFC-0002 Slice 04 data-mesh baseline now declares the current source-authority
 consumer set from the Slice 00 map, including Core portfolio state,
@@ -162,10 +161,15 @@ dry-running apply and rollback plans in CI, and `make migrate` /
 PostgreSQL repository adapter over the governed repository port surface. It
 round-trips candidate, idempotency, lifecycle, audit, review, feedback,
 conversion, and report evidence-pack state through typed tables and JSONB
-snapshots, and rolls back on database flush failure. This is not yet API-level
-durable persistence: the API provider remains process-local, the adapter has not
-been wired behind runtime routes, and there is no real-PostgreSQL integration
-proof, data-product certification, or supported-feature promotion.
+snapshots, and rolls back on database flush failure.
+`src/app/repository_state.py` now wires the adapter into API runtime
+selection when `LOTUS_IDEA_DATABASE_URL` is configured, while keeping
+process-local state as the default. Repository-backed routes derive
+`durableStorageBacked` responses and operation-event labels from the active
+repository. This is still not production storage certification: there is no
+real-PostgreSQL integration/e2e proof, deploy migration evidence,
+rollback/recovery proof, data-product certification, or supported-feature
+promotion.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -357,9 +361,11 @@ logs; fix or document the owned warning source instead.
    providers. Routes must expose explicit idea contracts and must not embed
    domain logic. Current business routes are registered directly on the FastAPI
    app before Prometheus instrumentation so endpoint certification and metrics
-   instrumentation remain compatible. `repository_state.py` owns the temporary
-   process-local in-memory idea repository provider used by API modules until a
-   database-backed repository replaces it.
+   instrumentation remain compatible. `app.repository_state` owns the API
+   repository provider at the composition root: process-local in-memory by
+   default, PostgreSQL-backed when `LOTUS_IDEA_DATABASE_URL` is configured. The
+   `app.api.repository_state` shim preserves existing route/test imports without
+   importing concrete infrastructure into the API layer.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows. Current use cases map the certified high-cash API
    requests into framework-free domain signal evaluation, fetch Core high-cash
@@ -391,8 +397,8 @@ logs; fix or document the owned warning source instead.
    current Core adapter preserves source-data product refs and requires Core to
    report cash weight explicitly rather than deriving it locally. The layer also
    contains migration execution helpers and `PostgresIdeaRepository`, which is
-   tested as a durable repository adapter foundation but is not yet wired into
-   API runtime state.
+   tested as a durable repository adapter and selected by API runtime wiring
+   when `LOTUS_IDEA_DATABASE_URL` is configured.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, bounded
    idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement

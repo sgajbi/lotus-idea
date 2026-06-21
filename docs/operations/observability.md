@@ -54,8 +54,8 @@ fields. Do not add identifiers or payload fragments to operation labels.
 
 ## Operator Interpretation
 
-1. `accepted` means the internal foundation recorded a new operation in the process-local
-   repository.
+1. `accepted` means the internal foundation recorded a new operation in the active
+   repository provider.
 2. `fallback` means the AI explanation evaluator returned deterministic evidence because no
    verified AI workflow output was supplied or available.
 3. `replayed` means the same idempotency key and payload returned an existing foundation record.
@@ -70,6 +70,7 @@ fields. Do not add identifiers or payload fragments to operation labels.
 9. `blocked` means the verifier rejected unsupported AI output or the mesh-readiness diagnostic
    remains blocked until runtime trust telemetry and platform mesh certification exist.
 
-These signals are operational support evidence only. They do not certify a data product, durable
-database state, Gateway/Workbench route, downstream Report/Render/Archive realization, or supported
-business feature.
+These signals are operational support evidence only. `durable_storage_backed=true` confirms only
+that the active repository provider is durable; it does not certify a data product, production
+recovery readiness, Gateway/Workbench route, downstream Report/Render/Archive realization, or
+supported business feature.

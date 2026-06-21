@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, and PostgreSQL adapter foundation
+Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, and opt-in API repository wiring
 
 ## Outcome
 
@@ -55,7 +55,7 @@ Implemented first-wave internal scope:
 8. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
-   conflict errors, and explicit `durableStorageBacked=false` posture.
+   conflict errors, and repository-derived `durableStorageBacked` posture.
 9. `src/app/application/candidate_lifecycle.py` and
    `src/app/api/candidate_lifecycle.py` now expose certified internal candidate
    lifecycle transition orchestration over the same repository contract.
@@ -63,8 +63,7 @@ Implemented first-wave internal scope:
    `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
    canonical domain lifecycle transition graph, writes lifecycle history and
    audit evidence, returns accepted/replayed/not-found/conflict/invalid-state
-   posture, and keeps `durableStorageBacked=false` and
-   `supportedFeaturePromoted=false`.
+   posture, and keeps `supportedFeaturePromoted=false`.
 10. `src/app/ports/idea_repository.py` now centralizes the repository workflow
     protocols used by application orchestration. Candidate persistence,
     candidate snapshots, lifecycle mutation, review and feedback mutation,
@@ -72,7 +71,7 @@ Implemented first-wave internal scope:
     reads depend on the ports layer instead of declaring local per-use-case
     repository protocols. `tests/unit/test_repository_port_boundary.py`
     prevents future application modules from reintroducing scattered
-    repository protocol declarations before durable runtime wiring lands.
+    repository protocol declarations outside the governed runtime provider.
 11. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,
@@ -97,29 +96,43 @@ Implemented first-wave internal scope:
     idempotency replay, lifecycle history, audit events, review decisions,
     feedback, conversion intent/outcome, report evidence-pack requests, snapshot
     hydration, and rollback behavior with a fake Postgres cursor.
+14. `src/app/repository_state.py` now selects the process-local
+    `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
+    when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
+    mapping rows so the adapter receives the row shape it enforces. The
+    `src/app/api/repository_state.py` module remains a compatibility shim so
+    concrete infrastructure wiring stays out of the API layer.
+15. Repository-backed API routes now derive `durableStorageBacked` responses and
+    `durable_storage_backed` operation-event labels from the active repository
+    instead of hardcoding storage posture. Default local/test runtime remains
+    process-local and continues to report `durableStorageBacked=false`; a
+    configured PostgreSQL runtime reports `durableStorageBacked=true` for the
+    repository-backed foundation routes.
 
 Not implemented yet:
 
-1. API runtime wiring to the PostgreSQL repository adapter,
-2. deploy-pipeline migration execution proof against a real PostgreSQL service,
-3. database-backed source-ingestion workers,
-4. database-backed stateful API routes,
-5. integration or e2e persistence proof over real durable storage,
-6. data-product certification,
+1. deploy-pipeline migration execution proof against a real PostgreSQL service,
+2. database-backed source-ingestion workers,
+3. integration or e2e persistence proof over real durable storage,
+4. rollback/recovery proof against a real PostgreSQL service,
+5. data-product certification,
+6. Gateway/Workbench/downstream proof,
 7. supported-feature promotion.
 
 ## Migration And Rollback Posture
 
-The slice now introduces the first explicit schema, rollback contract, and
-executable migration path. CI dry-runs the apply and rollback plans; real
-execution requires `LOTUS_IDEA_DATABASE_URL`. This is intentionally ahead of the
-durable runtime wiring so schema, rollback, indexing, relationship posture, and
-execution command shape become CI-blocking before any database-backed API claim
-is made. The next durable persistence slice must execute this migration against
-a real database in integration proof, wire `PostgresIdeaRepository` behind
-`src/app/api/repository_state.py`, prove rollback/recovery behavior against that
-service, and keep API responses truthful until `durableStorageBacked=true` is
-backed by integration and e2e evidence.
+The slice now introduces the first explicit schema, rollback contract,
+executable migration path, adapter, and opt-in runtime repository wiring. CI
+dry-runs the apply and rollback plans; real execution requires
+`LOTUS_IDEA_DATABASE_URL`. This is intentionally ahead of production storage
+promotion so schema, rollback, indexing, relationship posture, execution
+command shape, adapter behavior, and runtime selection become CI-visible before
+any supported database-backed product claim is made. The next durable
+persistence slice must execute this migration against a real database in
+integration proof, prove rollback/recovery behavior against that service, and
+keep API responses truthful: `durableStorageBacked=true` means the configured
+repository adapter is active, not that the idea product is data-mesh certified
+or supported.
 
 ## Validation
 

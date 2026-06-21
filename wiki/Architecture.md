@@ -68,41 +68,48 @@ integration proof exists.
 certified internal API foundations. They evaluate caller-supplied, source-owned
 Core evidence and source-reported cash weight, then return deterministic
 high-cash signal posture. The persist variant requires `Idempotency-Key` and
-`idea.candidate.persist`, writes only to the internal in-memory repository, and
-returns `durableStorageBacked=false`. These endpoints do not retrieve live
-source data, certify a data product, expose a Gateway route, or promote a
-supported business feature.
+`idea.candidate.persist`, writes through the active idea repository provider,
+and reports `durableStorageBacked` from that provider. Default local runtime is
+process-local and reports `false`; runtime configured with
+`LOTUS_IDEA_DATABASE_URL` uses the PostgreSQL adapter and reports `true` for
+repository-backed routes. These endpoints do not retrieve live source data,
+certify a data product, expose a Gateway route, or promote a supported business
+feature.
 
-API modules share the temporary process-local repository through
-`src/app/api/repository_state.py`. Signal, review, feedback, queue, and
-lifecycle routes must use that provider until the RFC-0002 persistence slice
-introduces a database-backed repository adapter, so API modules do not create
-duplicate candidate stores.
+API modules share the active repository provider through
+`src/app/repository_state.py`. Signal, review, feedback, queue, and lifecycle
+routes must use that provider so API modules do not create duplicate candidate
+stores. The provider defaults to an in-memory repository and selects
+`PostgresIdeaRepository` when `LOTUS_IDEA_DATABASE_URL` is configured. The
+`src/app/api/repository_state.py` module is only a compatibility shim so
+concrete infrastructure wiring stays out of the API layer.
 
 Application use cases depend on repository workflow protocols from
 `src/app/ports/idea_repository.py`. Candidate snapshots, candidate persistence,
 lifecycle mutation, review and feedback mutation, conversion mutation, report
 evidence-pack requests, and AI explanation reads must use those central ports
-instead of declaring local repository protocols. This keeps the future durable
-storage adapter behind one governed contract surface while the current
-`durableStorageBacked=false` posture remains truthful.
+instead of declaring local repository protocols. This keeps durable storage
+behind one governed contract surface while default process-local and configured
+PostgreSQL-backed runtime postures remain truthful.
 
 `migrations/001_idea_repository_foundation.sql` and its rollback file define the
 first governed schema contract for future durable candidate, idempotency,
 lifecycle, audit, review, feedback, conversion, and report evidence-pack state.
 The migration contract and execution dry-run are CI-blocking, and real execution
 uses `make migrate` / `make migrate-rollback` with `LOTUS_IDEA_DATABASE_URL`.
-This is not runtime API database persistence until an adapter is implemented and
-proven.
+Runtime API repository wiring uses this adapter when `LOTUS_IDEA_DATABASE_URL`
+is configured after migrations are applied. Production storage readiness still
+requires real PostgreSQL integration/e2e proof, deploy migration evidence, and
+rollback/recovery evidence.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
 review workflow API foundations. They require mutating capabilities, caller
 role, upstream-authorized tenant/book/portfolio/client scope, and
-`Idempotency-Key`. They record review decisions or feedback through the
-in-memory repository foundation and return product-safe conflict, not-found, and
-permission posture without granting downstream suitability, compliance, mandate,
-execution, or client-communication authority.
+`Idempotency-Key`. They record review decisions or feedback through the active
+repository provider and return product-safe conflict, not-found, and permission
+posture without granting downstream suitability, compliance, mandate, execution,
+or client-communication authority.
 
 `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` is the
 certified internal lifecycle transition API foundation. It requires
@@ -133,8 +140,8 @@ created candidates through the Slice 06 idempotency/audit repository contract.
 Repeated requests with the same idempotency payload replay, changed payloads
 conflict, and blocked, suppressed, or not-eligible evaluations do not mutate
 state. The evaluate-and-persist API exposes this as an internal certified
-foundation while still reporting `durableStorageBacked=false`; it is not durable
-database support or a supported product workflow.
+foundation and reports repository-backed storage posture from the active
+provider; it is not a supported product workflow.
 
 The internal application layer can now also record idempotent lifecycle
 transitions for persisted candidates. This closes the foundation gap between
@@ -144,8 +151,10 @@ domain transition graph or review approval rules.
 The repository now has a versioned schema and rollback contract for the durable
 repository, a PostgreSQL migration execution CLI, and a tested
 `PostgresIdeaRepository` adapter behind the central repository ports. API state
-remains process-local until a later slice wires the adapter behind runtime
-dependencies and proves it against a real PostgreSQL service.
+is process-local by default and PostgreSQL-backed only when
+`LOTUS_IDEA_DATABASE_URL` is configured. This opt-in wiring is not data-product
+certification, live-source support, Gateway/Workbench support, or
+supported-feature promotion.
 
 ## Review Queue Projection Foundation
 

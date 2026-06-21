@@ -27,17 +27,19 @@ cash weight and source references; they do not fetch upstream data and do not
 calculate official cash, holdings, or portfolio values.
 
 `evaluate-and-persist` adds internal candidate persistence through the Slice 06
-in-memory repository foundation. It requires `Idempotency-Key` and
+repository foundation. It requires `Idempotency-Key` and
 `idea.candidate.persist`, returns replay/conflict posture for idempotency
-behavior, and keeps `durableStorageBacked=false` until database-backed
-persistence, migrations, and recovery evidence exist.
+behavior, and reports `durableStorageBacked` from the active repository
+provider. Default runtime remains process-local; configured
+`LOTUS_IDEA_DATABASE_URL` runtime uses the PostgreSQL repository adapter.
 
 The lifecycle transition endpoint exposes the Slice 06 internal lifecycle
 history, idempotency, and audit foundation over persisted candidates. It
 requires `Idempotency-Key` and `idea.candidate.lifecycle.transition`, applies
 the canonical domain lifecycle transition graph, returns replay/conflict,
 not-found, and invalid-transition posture, and keeps
-`durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+`supportedFeaturePromoted=false`. `durableStorageBacked` follows the active
+repository provider.
 
 The review-action and feedback endpoints expose the Slice 08 internal workflow
 foundation over persisted candidates. They require `Idempotency-Key`, a
@@ -45,7 +47,8 @@ mutating capability, caller role, and upstream-authorized review scope. They
 record review decisions or feedback through the same internal repository
 foundation, return replay/conflict/not-found posture, never grant downstream
 suitability/compliance/mandate/execution/client-communication authority, and
-keep `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+keep `supportedFeaturePromoted=false`. `durableStorageBacked` follows the
+active repository provider.
 
 The conversion-intent and conversion-outcome endpoints expose the Slice 12
 internal conversion workflow foundation over persisted, review-approved
@@ -53,14 +56,14 @@ candidates. They require `Idempotency-Key` and conversion-specific
 capabilities, record source-authority mapped conversion intent/outcome audit
 evidence, enforce target-source authority for downstream outcomes, never grant
 Advise/Manage/Report workflow authority, suitability, execution, or
-client-communication authority, and keep `durableStorageBacked=false` and
-`supportedFeaturePromoted=false`.
+client-communication authority, and keep `supportedFeaturePromoted=false`.
+`durableStorageBacked` follows the active repository provider.
 
 The advisor review queue endpoint exposes the Slice 07 deterministic queue
 projection over persisted candidate snapshots. It requires
 `idea.review.queue.read` capability or advisor role, returns ranked items plus
-exclusions, and keeps `durableStorageBacked=false` and
-`supportedFeaturePromoted=false`.
+exclusions, and keeps `supportedFeaturePromoted=false`.
+`durableStorageBacked` follows the active repository provider.
 
 The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires

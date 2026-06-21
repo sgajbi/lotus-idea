@@ -5,10 +5,11 @@ lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
 AI explanation, advisor queue, review-action, and feedback API foundations, and
 conversion governance plus certified internal conversion intent/outcome and
 report evidence-pack API foundations. The service remains internal foundation only:
-there is no database-backed business persistence, downstream adapter, runtime
-recovery command, Gateway/Workbench proof, or supported business API yet. A
-versioned migration/rollback schema contract exists for the future durable
-repository and is enforced by `make migration-contract-gate`.
+repository-backed API persistence is process-local by default and
+PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. There is no
+downstream adapter, production recovery command, Gateway/Workbench proof, or
+supported business API yet. A versioned migration/rollback schema contract
+exists for the durable repository and is enforced by `make migration-contract-gate`.
 `make migration-execution-gate` dry-runs apply and rollback execution plans, and
 `make migrate` / `make migrate-rollback` execute against PostgreSQL when
 `LOTUS_IDEA_DATABASE_URL` is configured.
@@ -52,7 +53,7 @@ diagnostic reads.
 
 Current outcomes:
 
-1. `accepted`: new process-local foundation record created.
+1. `accepted`: new foundation record created in the active repository provider.
 2. `fallback`: deterministic AI explanation was returned without verified AI
    workflow output.
 3. `replayed`: duplicate submission with the same idempotency key and payload.
@@ -74,9 +75,11 @@ The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 holding, transaction, request body, response body, raw entitlement failure,
 trace id, or correlation id values.
 
-These signals are operator diagnostics only. They do not certify durable
-database state, data-product promotion, downstream Report/Render/Archive
-realization, Gateway/Workbench proof, or supported business capability.
+These signals are operator diagnostics only. `durable_storage_backed=true`
+confirms only that the active repository provider is durable; it does not
+certify production recovery readiness, data-product promotion, downstream
+Report/Render/Archive realization, Gateway/Workbench proof, or supported
+business capability.
 
 ## API Certification Reference
 
