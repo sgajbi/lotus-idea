@@ -1,6 +1,6 @@
 # RFC-0002 Slice 08: Review Queues, Feedback, And Human Governance
 
-Status: Partially implemented - internal advisor review/feedback governance plus persistence orchestration only
+Status: Partially implemented - internal advisor review/feedback governance plus certified API foundations only
 
 ## Outcome
 
@@ -42,6 +42,19 @@ Implemented in this slice:
     persistence, replay before domain reapplication, idempotency conflict,
     feedback source provenance, safe audit persistence, and missing-candidate
     behavior.
+12. `src/app/api/review_workflow.py` exposes certified internal API
+    foundations for review actions and feedback:
+    `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
+    `POST /api/v1/idea-candidates/{candidateId}/feedback`.
+13. The review and feedback APIs require `Idempotency-Key`, mutating
+    capabilities, caller role, upstream-authorized tenant/book/portfolio/client
+    scope, and return product-safe 403, 404, and 409 errors.
+14. The APIs share the current in-memory repository provider and explicitly
+    return `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+15. `tests/integration/test_review_workflow_api.py` covers suppression
+    persistence, idempotency replay/conflict, generated-state approval conflict,
+    feedback persistence, missing candidate, capability denial, and scope
+    denial.
 
 Validation evidence from the implementation slice:
 
@@ -55,18 +68,21 @@ Validation evidence from the implementation slice:
    data-mesh, and contract gates.
 7. `make ci` - passed with integration tests, e2e tests, coverage gate at
    99.17%, and dependency audit.
+8. `.venv\Scripts\python.exe -m ruff check src\app\api\caller_headers.py src\app\api\review_workflow.py src\app\api\idea_signals.py src\app\main.py tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py`
+9. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py -q`
+10. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py`
 
 ## Remaining Work
 
 This slice is not yet a supported review product. Remaining work includes:
 
 1. database-backed durable review decision and feedback persistence,
-2. API/OpenAPI contracts,
-3. endpoint certification and Gateway/Workbench integration proof,
-4. PM, compliance, and operator queue surfaces and permission policy,
-5. integration with the runtime caller-context and entitlement system,
-6. feedback data-product declaration promotion and mesh certification,
-7. trust telemetry, operational support, and supported-feature promotion.
+2. Gateway/Workbench integration proof,
+3. PM, compliance, and operator queue surfaces and permission policy,
+4. richer platform runtime caller-context entitlement integration so scope does
+   not need to be supplied by upstream-authorized request payloads,
+5. feedback data-product declaration promotion and mesh certification,
+6. trust telemetry, operational support, and supported-feature promotion.
 
 ## Required Work
 
@@ -86,5 +102,6 @@ This slice is not yet a supported review product. Remaining work includes:
 4. Feedback events are source-provenanced.
 
 The durable feedback portion remains planned until database-backed persistence,
-API contracts, and endpoint certification store and expose review decisions and
-feedback events behind runtime caller-context and entitlement controls.
+Gateway/Workbench proof, platform-scoped runtime entitlements, and mesh
+certification store and expose review decisions and feedback events as a
+supported product surface.

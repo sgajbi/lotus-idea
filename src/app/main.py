@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.idea_signals import register_idea_signal_routes
+from app.api.review_workflow import register_review_workflow_routes
 from app.errors import problem_response
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.observability import configure_logging, log_event
@@ -13,6 +14,7 @@ ROUNDING_POLICY_VERSION = "v1"
 app = FastAPI(title=SERVICE_NAME, version=SERVICE_VERSION)
 app.add_middleware(CorrelationIdMiddleware, service_name=SERVICE_NAME)
 register_idea_signal_routes(app)
+register_review_workflow_routes(app)
 Instrumentator().instrument(app).expose(app, include_in_schema=False)
 configure_logging()
 

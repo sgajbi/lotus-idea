@@ -19,10 +19,11 @@ orchestration foundation, an internal advisor review/feedback governance and
 workflow persistence foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
 first certified internal high-cash signal evaluation and evaluate-and-persist
-API foundations for caller-supplied, source-owned Core evidence, and contains
-an internal conversion-governance foundation for review-gated downstream
-intent/outcome tracking. No business feature is supported until the relevant
-RFC slice has full runtime evidence, endpoint certification, tests, data-mesh
+API foundations for caller-supplied, source-owned Core evidence, certified
+internal review-action and feedback API foundations over persisted candidates,
+and an internal conversion-governance foundation for review-gated downstream
+intent/outcome tracking. No business feature is supported until the relevant RFC
+slice has full runtime evidence, endpoint certification, tests, data-mesh
 posture, downstream proof, and supported-feature registration.
 
 ## Product Boundary
@@ -90,7 +91,9 @@ source-authority contracts only, not runtime certification.
 
 ## Repository Map
 
-- `src/app/api/`: HTTP route modules and API DTO mapping.
+- `src/app/api/`: HTTP route modules, API DTO mapping, shared caller-header
+  parsing, and the temporary process-local repository provider used by certified
+  internal API foundations until durable persistence is implemented.
 - `src/app/application/`: use-case orchestration. The current first use cases
   evaluate high-cash signals over caller-supplied Core evidence and over a
   Core source port that fetches governed Core evidence, and internally persist
@@ -98,7 +101,8 @@ source-authority contracts only, not runtime certification.
   Internal review-queue orchestration projects persisted candidate snapshots
   through the Slice 07 deterministic queue policy. Internal review/feedback
   workflow orchestration records governed decisions and feedback through the
-  repository idempotency/audit contract.
+  repository idempotency/audit contract and certified internal review/feedback
+  API foundations.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,
