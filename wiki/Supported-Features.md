@@ -2,6 +2,11 @@
 
 Current posture: no business feature is supported yet.
 
+Internal foundation exists for domain vocabulary, high-cash signal evaluation,
+candidate persistence/replay/idempotency/audit, and deterministic scoring with
+review-queue projection. These are not externally supported features until API,
+runtime, certification, and supported-feature evidence are present.
+
 Planned capabilities:
 
 1. idea lifecycle and review state,

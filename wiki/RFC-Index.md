@@ -24,10 +24,15 @@ Current RFC-0002 implementation-start baseline:
    evidence replay posture, idempotency conflict handling, lifecycle audit
    history, and snapshot recovery without database migrations, API, or
    supported-feature promotion.
-5. The first opportunity journey is high cash / idle liquidity for
+5. Slice 07 partially implements internal deterministic scoring, score reason
+   codes, priority buckets, stable queue projection, snooze, suppression,
+   deduplication, expiry, unsupported-evidence, and unscored-candidate
+   exclusions without persisted queue state, API, Gateway, Workbench, or
+   supported-feature promotion.
+6. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
-6. The first review audience is advisor only.
-7. The first downstream conversion posture is report-only evidence after
+7. The first review audience is advisor only.
+8. The first downstream conversion posture is report-only evidence after
    advisor review.
-8. Business features remain unsupported until later slices implement runtime
+9. Business features remain unsupported until later slices implement runtime
    behavior, certification, and supported-feature promotion.

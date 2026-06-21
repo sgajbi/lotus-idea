@@ -101,6 +101,19 @@ durable persistence: no migration, rollback, API surface, source adapter,
 integration proof, data-product certification, or supported-feature promotion
 exists.
 
+RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
+and review-queue projection foundation in `src/app/domain/scoring.py`. The
+repository now has bounded score inputs for materiality, urgency, confidence,
+evidence quality, freshness, relevance, downstream fit, and conflict flags;
+policy-versioned score breakdowns with typed reason codes; immutable candidate
+score attachment; priority buckets; stable review queue ordering; snooze,
+suppression, unsupported-evidence, expired, unscored, non-reviewable, and
+duplicate exclusion rules; and golden unit coverage for expected ordering and
+edge cases. This is not yet a supported queue product: no database-backed queue
+state, application orchestration, API/OpenAPI surface, Gateway/Workbench proof,
+data-product certification, trust telemetry, or supported-feature promotion
+exists.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -125,8 +138,9 @@ logs; fix or document the owned warning source instead.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
-   policies, evidence policy, deterministic governance checks, internal
-   persistence records, replay posture, idempotency, and audit primitives.
+   policies, review-queue projection, evidence policy, deterministic
+   governance checks, internal persistence records, replay posture, idempotency,
+   and audit primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports.

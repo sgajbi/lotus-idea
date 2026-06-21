@@ -14,7 +14,11 @@ Current state:
    policy,
 7. RFC-0002 Slice 06 partially implements internal persistence, replay,
    idempotency, lifecycle audit history, and recovery primitives,
-8. business features remain Planned.
+8. RFC-0002 Slice 07 partially implements internal deterministic scoring,
+   priority buckets, stable queue projection, snooze, suppression,
+   deduplication, expiry, unsupported-evidence, and unscored-candidate
+   exclusions,
+9. business features remain Planned.
 
 First implementation program:
 
@@ -23,8 +27,8 @@ First implementation program:
 2. normalize structure before adding product scope,
 3. add source contracts and data-mesh baseline,
 4. add source adapters and application orchestration for high-cash / idle-liquidity evidence,
-5. add database-backed persistence, source ingestion orchestration, scoring,
-   ranking, suppression, review, and feedback,
+5. add database-backed persistence, source ingestion orchestration, persisted
+   queue state, review, and feedback,
 6. expose certified APIs and Gateway/Workbench product surfaces,
 7. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
 8. prove canonical demo scenarios and publish implementation-backed documentation.
