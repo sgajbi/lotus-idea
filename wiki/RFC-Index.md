@@ -34,10 +34,15 @@ Current RFC-0002 implementation-start baseline:
    source provenance, and queue projection interaction without database-backed
    review persistence, API, Gateway, Workbench, PM/compliance/operator queue
    surfaces, or supported-feature promotion.
-7. The first opportunity journey is high cash / idle liquidity for
+7. Slice 09 partially implements internal AI governance with redacted evidence
+   envelopes, forbidden metadata rejection, deterministic fallback,
+   unsupported-claim and forbidden-action verifier outcomes, safe audit events,
+   and no AI downstream authority without `lotus-ai` runtime execution, API,
+   Gateway, Workbench, or supported-feature promotion.
+8. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
-8. The first review audience is advisor only.
-9. The first downstream conversion posture is report-only evidence after
+9. The first review audience is advisor only.
+10. The first downstream conversion posture is report-only evidence after
    advisor review.
-10. Business features remain unsupported until later slices implement runtime
+11. Business features remain unsupported until later slices implement runtime
    behavior, certification, and supported-feature promotion.

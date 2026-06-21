@@ -1,0 +1,570 @@
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+from decimal import Decimal
+
+import pytest
+
+from app.domain import (
+    AIFallbackReason,
+    AIExplanationPosture,
+    AIExplanationRequest,
+    AIExplanationResult,
+    AIOutputClaim,
+    AIProposedAction,
+    AIProposedActionType,
+    AIVerifierOutcome,
+    AIWorkflowOutput,
+    AIWorkflowPackRef,
+    AIWorkflowPurpose,
+    EvidenceFreshness,
+    EvidenceSupportability,
+    IdeaCandidate,
+    IdeaEvidencePacket,
+    IdeaLifecycleStatus,
+    IdeaScore,
+    InvalidAIExplanationRequest,
+    InvalidAIWorkflowOutput,
+    LineageRef,
+    OpportunityFamily,
+    ReasonCode,
+    RedactedIdeaEvidence,
+    RedactedSourceRef,
+    ReviewPosture,
+    SourceRef,
+    SourceSystem,
+    UnsupportedEvidenceReason,
+    build_ai_explanation_request,
+    deterministic_ai_fallback,
+    evaluate_ai_workflow_output,
+)
+from app.domain.ai_governance import AIExplanationCommand
+
+
+AS_OF_DATE = date(2026, 6, 21)
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+REQUESTED_AT = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
+VERIFIED_AT = datetime(2026, 6, 21, 10, 16, tzinfo=UTC)
+
+
+def source_ref(
+    product_id: str = "lotus-core:PortfolioStateSnapshot:v1",
+    *,
+    route: str = "/integration/portfolios/{portfolio_id}/core-snapshot",
+) -> SourceRef:
+    return SourceRef(
+        product_id=product_id,
+        source_system=SourceSystem.LOTUS_CORE,
+        product_version="v1",
+        route=route,
+        as_of_date=AS_OF_DATE,
+        generated_at_utc=EVALUATED_AT,
+        content_hash=f"sha256:{product_id}:raw-source",
+        data_quality_status="complete",
+        freshness=EvidenceFreshness.CURRENT,
+    )
+
+
+def evidence_packet(
+    *,
+    supportability: EvidenceSupportability = EvidenceSupportability.READY,
+) -> IdeaEvidencePacket:
+    source_refs = (
+        source_ref(),
+        source_ref(
+            "lotus-core:HoldingsAsOf:v1",
+            route="/portfolios/{portfolio_id}/positions",
+        ),
+    )
+    return IdeaEvidencePacket(
+        evidence_packet_id="iep_ai_test",
+        supportability=supportability,
+        source_refs=source_refs,
+        lineage_ref=LineageRef(
+            lineage_id="lineage:lotus-idea:ai:test",
+            source_refs=source_refs,
+            content_hash="sha256:ai-redacted-evidence",
+        ),
+        reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.CASH_SOURCE_READY),
+        unsupported_reasons=(
+            (UnsupportedEvidenceReason.AI_UNAVAILABLE,)
+            if supportability is EvidenceSupportability.BLOCKED
+            else ()
+        ),
+        created_at_utc=EVALUATED_AT,
+    )
+
+
+def candidate(
+    *,
+    lifecycle_status: IdeaLifecycleStatus = IdeaLifecycleStatus.READY_FOR_REVIEW,
+    supportability: EvidenceSupportability = EvidenceSupportability.READY,
+) -> IdeaCandidate:
+    return IdeaCandidate(
+        candidate_id="idea-ai-001",
+        family=OpportunityFamily.HIGH_CASH,
+        lifecycle_status=lifecycle_status,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+        evidence_packet=evidence_packet(supportability=supportability),
+        source_signal_ids=("signal-ai-001", "signal-ai-002"),
+        score=IdeaScore(
+            policy_version="idea-deterministic-ranking-v1",
+            score=Decimal("84"),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.QUEUE_PRIORITY),
+        ),
+        created_at_utc=EVALUATED_AT,
+        updated_at_utc=EVALUATED_AT,
+    )
+
+
+def workflow_pack(
+    purpose: AIWorkflowPurpose = AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
+) -> AIWorkflowPackRef:
+    return AIWorkflowPackRef(
+        workflow_pack_id="lotus-ai:idea-unsupported-claim-verifier",
+        workflow_pack_version="v1.0.0",
+        purpose=purpose,
+        evaluation_ref="lotus-ai-eval:idea-verifier:v1",
+    )
+
+
+def command(
+    purpose: AIWorkflowPurpose = AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
+    *,
+    approved_metadata: dict[str, str] | None = None,
+) -> AIExplanationCommand:
+    return AIExplanationCommand(
+        request_id=f"ai-request-{purpose.value}",
+        actor_subject="advisor-001",
+        workflow_pack=workflow_pack(purpose),
+        approved_metadata=approved_metadata or {"audience": "internal_advisor_review"},
+        requested_at_utc=REQUESTED_AT,
+    )
+
+
+def output(
+    request_id: str,
+    *,
+    claims: tuple[AIOutputClaim, ...] | None = None,
+    proposed_actions: tuple[AIProposedAction, ...] | None = None,
+) -> AIWorkflowOutput:
+    return AIWorkflowOutput(
+        output_id="ai-output-001",
+        request_id=request_id,
+        workflow_pack_id="lotus-ai:idea-unsupported-claim-verifier",
+        workflow_pack_version="v1.0.0",
+        explanation_text="The evidence supports an internal advisor review of idle cash.",
+        claims=claims
+        or (
+            AIOutputClaim(
+                claim_id="claim-001",
+                claim_text="Cash attention is supported by Core portfolio state.",
+                source_product_ids=("lotus-core:PortfolioStateSnapshot:v1",),
+            ),
+        ),
+        proposed_actions=proposed_actions
+        or (
+            AIProposedAction(
+                action_type=AIProposedActionType.ADVISOR_REVIEW,
+                action_label="Review evidence internally",
+            ),
+        ),
+        verifier_ran_at_utc=VERIFIED_AT,
+    )
+
+
+def test_ai_request_redacts_source_routes_and_raw_source_hashes() -> None:
+    source_candidate = candidate()
+    request = build_ai_explanation_request(
+        source_candidate,
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+
+    assert request.redacted_evidence.candidate_id == "idea-ai-001"
+    assert request.redacted_evidence.evidence_packet_id == "iep_ai_test"
+    assert request.redacted_evidence.evidence_content_hash == "sha256:ai-redacted-evidence"
+    assert request.redacted_evidence.source_signal_count == 2
+    assert request.reason_codes == (ReasonCode.AI_REDACTION_APPLIED,)
+    assert request.redacted_evidence.source_refs[0].product_id == (
+        "lotus-core:PortfolioStateSnapshot:v1"
+    )
+    assert not hasattr(request.redacted_evidence.source_refs[0], "route")
+    assert not hasattr(request.redacted_evidence.source_refs[0], "content_hash")
+    assert source_candidate.lifecycle_status is IdeaLifecycleStatus.READY_FOR_REVIEW
+    assert source_candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
+
+
+def test_ai_request_rejects_sensitive_metadata() -> None:
+    with pytest.raises(InvalidAIExplanationRequest, match="forbidden keys"):
+        build_ai_explanation_request(
+            candidate(),
+            command(approved_metadata={"portfolio_id": "PB_SG_GLOBAL_BAL_001"}),
+        )
+
+
+def test_rationale_drafting_requires_ready_reviewable_evidence() -> None:
+    with pytest.raises(InvalidAIExplanationRequest, match="ready evidence"):
+        build_ai_explanation_request(
+            candidate(supportability=EvidenceSupportability.BLOCKED),
+            command(AIWorkflowPurpose.ADVISOR_RATIONALE_DRAFT),
+        )
+
+    with pytest.raises(InvalidAIExplanationRequest, match="review-ready"):
+        build_ai_explanation_request(
+            candidate(lifecycle_status=IdeaLifecycleStatus.GENERATED),
+            command(AIWorkflowPurpose.ADVISOR_RATIONALE_DRAFT),
+        )
+
+
+def test_missing_evidence_check_can_run_on_blocked_evidence() -> None:
+    request = build_ai_explanation_request(
+        candidate(supportability=EvidenceSupportability.BLOCKED),
+        command(AIWorkflowPurpose.MISSING_EVIDENCE_CHECK),
+    )
+
+    assert request.redacted_evidence.supportability is EvidenceSupportability.BLOCKED
+    assert request.redacted_evidence.unsupported_reasons == (
+        UnsupportedEvidenceReason.AI_UNAVAILABLE,
+    )
+
+
+def test_ai_unavailable_returns_deterministic_fallback_without_authority() -> None:
+    source_candidate = candidate()
+    request = build_ai_explanation_request(
+        source_candidate,
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    result = deterministic_ai_fallback(
+        request,
+        fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+        occurred_at_utc=VERIFIED_AT,
+    )
+
+    assert result.posture is AIExplanationPosture.FALLBACK_USED
+    assert result.verifier_outcome is AIVerifierOutcome.NOT_RUN
+    assert result.fallback_used is True
+    assert result.grants_downstream_authority is False
+    assert result.reason_codes == (ReasonCode.AI_FALLBACK_USED,)
+    assert "high_cash" in result.explanation_text
+    assert result.audit_event.outcome == "fallback"
+    assert "portfolio_id" not in result.audit_event.attributes
+    assert "client_id" not in result.audit_event.attributes
+    assert source_candidate.score is not None
+    assert source_candidate.score.score == Decimal("84")
+    assert source_candidate.lifecycle_status is IdeaLifecycleStatus.READY_FOR_REVIEW
+
+
+def test_ai_output_with_supported_claims_passes_for_advisor_review() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    result = evaluate_ai_workflow_output(request, output(request.request_id))
+
+    assert result.posture is AIExplanationPosture.READY_FOR_ADVISOR_REVIEW
+    assert result.verifier_outcome is AIVerifierOutcome.PASSED
+    assert result.fallback_used is False
+    assert result.grants_downstream_authority is False
+    assert result.reason_codes == (ReasonCode.AI_VERIFIER_PASSED,)
+    assert result.audit_event.outcome == "accepted"
+
+
+def test_ai_output_blocks_unsupported_claims() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    unsupported_output = output(
+        request.request_id,
+        claims=(
+            AIOutputClaim(
+                claim_id="claim-unsupported",
+                claim_text="Risk reduction is guaranteed by a risk report.",
+                source_product_ids=("lotus-risk:RiskMetricsReport:v1",),
+            ),
+        ),
+    )
+
+    result = evaluate_ai_workflow_output(request, unsupported_output)
+
+    assert result.posture is AIExplanationPosture.BLOCKED_UNSUPPORTED_CLAIM
+    assert result.verifier_outcome is AIVerifierOutcome.FAILED_UNSUPPORTED_CLAIM
+    assert result.reason_codes == (ReasonCode.AI_UNSUPPORTED_CLAIM_BLOCKED,)
+    assert result.audit_event.outcome == "blocked"
+
+
+def test_ai_output_blocks_forbidden_actions() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+    forbidden_output = output(
+        request.request_id,
+        proposed_actions=(
+            AIProposedAction(
+                action_type=AIProposedActionType.TRADE_OR_ORDER,
+                action_label="Place an order",
+            ),
+        ),
+    )
+
+    result = evaluate_ai_workflow_output(request, forbidden_output)
+
+    assert result.posture is AIExplanationPosture.BLOCKED_FORBIDDEN_ACTION
+    assert result.verifier_outcome is AIVerifierOutcome.FAILED_FORBIDDEN_ACTION
+    assert result.reason_codes == (ReasonCode.AI_FORBIDDEN_ACTION_BLOCKED,)
+    assert result.audit_event.outcome == "blocked"
+
+
+def test_ai_output_must_match_request_identity_and_workflow_version() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+
+    with pytest.raises(InvalidAIWorkflowOutput, match="request_id"):
+        evaluate_ai_workflow_output(request, output("different-request"))
+
+    wrong_version = AIWorkflowOutput(
+        output_id="ai-output-wrong-version",
+        request_id=request.request_id,
+        workflow_pack_id=request.workflow_pack.workflow_pack_id,
+        workflow_pack_version="v0.9.0",
+        explanation_text="Mismatched version.",
+        claims=(
+            AIOutputClaim(
+                claim_id="claim-001",
+                claim_text="Supported by Core.",
+                source_product_ids=("lotus-core:PortfolioStateSnapshot:v1",),
+            ),
+        ),
+        proposed_actions=(
+            AIProposedAction(
+                action_type=AIProposedActionType.ADVISOR_REVIEW,
+                action_label="Review evidence internally",
+            ),
+        ),
+        verifier_ran_at_utc=VERIFIED_AT,
+    )
+
+    with pytest.raises(InvalidAIWorkflowOutput, match="workflow_pack_version"):
+        evaluate_ai_workflow_output(request, wrong_version)
+
+
+def test_ai_domain_objects_validate_required_redaction_fields() -> None:
+    with pytest.raises(ValueError, match="workflow_pack_id is required"):
+        AIWorkflowPackRef(
+            workflow_pack_id=" ",
+            workflow_pack_version="v1.0.0",
+            purpose=AIWorkflowPurpose.MISSING_EVIDENCE_CHECK,
+            evaluation_ref="lotus-ai-eval:idea-verifier:v1",
+        )
+
+    with pytest.raises(ValueError, match="product_id is required"):
+        RedactedSourceRef(
+            product_id=" ",
+            source_system=SourceSystem.LOTUS_CORE,
+            product_version="v1",
+            as_of_date=AS_OF_DATE,
+            freshness=EvidenceFreshness.CURRENT,
+            data_quality_status="complete",
+        )
+
+    redacted_source = RedactedSourceRef(
+        product_id="lotus-core:PortfolioStateSnapshot:v1",
+        source_system=SourceSystem.LOTUS_CORE,
+        product_version="v1",
+        as_of_date=AS_OF_DATE,
+        freshness=EvidenceFreshness.CURRENT,
+        data_quality_status="complete",
+    )
+
+    with pytest.raises(ValueError, match="source_refs is required"):
+        RedactedIdeaEvidence(
+            candidate_id="idea-ai-001",
+            family=OpportunityFamily.HIGH_CASH,
+            lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+            review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            evidence_packet_id="iep_ai_test",
+            evidence_content_hash="sha256:ai-redacted-evidence",
+            supportability=EvidenceSupportability.READY,
+            source_refs=(),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            unsupported_reasons=(),
+            score_policy_version=None,
+            score=None,
+            source_signal_count=1,
+        )
+
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        RedactedIdeaEvidence(
+            candidate_id="idea-ai-001",
+            family=OpportunityFamily.HIGH_CASH,
+            lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+            review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            evidence_packet_id="iep_ai_test",
+            evidence_content_hash="sha256:ai-redacted-evidence",
+            supportability=EvidenceSupportability.READY,
+            source_refs=(redacted_source,),
+            reason_codes=(),
+            unsupported_reasons=(),
+            score_policy_version=None,
+            score=None,
+            source_signal_count=1,
+        )
+
+    with pytest.raises(ValueError, match="source_signal_count must be positive"):
+        RedactedIdeaEvidence(
+            candidate_id="idea-ai-001",
+            family=OpportunityFamily.HIGH_CASH,
+            lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+            review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            evidence_packet_id="iep_ai_test",
+            evidence_content_hash="sha256:ai-redacted-evidence",
+            supportability=EvidenceSupportability.READY,
+            source_refs=(redacted_source,),
+            reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+            unsupported_reasons=(),
+            score_policy_version=None,
+            score=None,
+            source_signal_count=0,
+        )
+
+
+def test_ai_request_and_output_validate_required_verifier_fields() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+
+    with pytest.raises(ValueError, match="metadata\\[audience\\] is required"):
+        command(approved_metadata={"audience": " "})
+
+    with pytest.raises(ValueError, match="requested_at_utc must be timezone-aware"):
+        AIExplanationCommand(
+            request_id="ai-request-naive",
+            actor_subject="advisor-001",
+            workflow_pack=workflow_pack(),
+            approved_metadata={"audience": "internal_advisor_review"},
+            requested_at_utc=datetime(2026, 6, 21, 10, 15),
+        )
+
+    with pytest.raises(ValueError, match="reason_codes is required"):
+        AIExplanationRequest(
+            request_id=request.request_id,
+            actor_subject=request.actor_subject,
+            workflow_pack=request.workflow_pack,
+            redacted_evidence=request.redacted_evidence,
+            approved_metadata=request.approved_metadata,
+            requested_at_utc=request.requested_at_utc,
+            reason_codes=(),
+        )
+
+    with pytest.raises(ValueError, match="source_product_ids is required"):
+        AIOutputClaim(
+            claim_id="claim-no-source",
+            claim_text="No source.",
+            source_product_ids=(),
+        )
+
+    with pytest.raises(ValueError, match="source_product_ids cannot contain blank"):
+        AIOutputClaim(
+            claim_id="claim-blank-source",
+            claim_text="Blank source.",
+            source_product_ids=(" ",),
+        )
+
+    with pytest.raises(ValueError, match="claims is required"):
+        AIWorkflowOutput(
+            output_id="ai-output-no-claims",
+            request_id=request.request_id,
+            workflow_pack_id=request.workflow_pack.workflow_pack_id,
+            workflow_pack_version=request.workflow_pack.workflow_pack_version,
+            explanation_text="No claims.",
+            claims=(),
+            proposed_actions=(
+                AIProposedAction(
+                    action_type=AIProposedActionType.ADVISOR_REVIEW,
+                    action_label="Review",
+                ),
+            ),
+            verifier_ran_at_utc=VERIFIED_AT,
+        )
+
+    with pytest.raises(ValueError, match="proposed_actions is required"):
+        AIWorkflowOutput(
+            output_id="ai-output-no-actions",
+            request_id=request.request_id,
+            workflow_pack_id=request.workflow_pack.workflow_pack_id,
+            workflow_pack_version=request.workflow_pack.workflow_pack_version,
+            explanation_text="No actions.",
+            claims=(
+                AIOutputClaim(
+                    claim_id="claim-001",
+                    claim_text="Supported by Core.",
+                    source_product_ids=("lotus-core:PortfolioStateSnapshot:v1",),
+                ),
+            ),
+            proposed_actions=(),
+            verifier_ran_at_utc=VERIFIED_AT,
+        )
+
+
+def test_ai_result_and_output_identity_validation_fail_closed() -> None:
+    request = build_ai_explanation_request(
+        candidate(),
+        command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+    )
+
+    with pytest.raises(ValueError, match="fallback_reason is required"):
+        AIExplanationResult(
+            request=request,
+            posture=AIExplanationPosture.FALLBACK_USED,
+            verifier_outcome=AIVerifierOutcome.NOT_RUN,
+            explanation_text="Fallback without reason.",
+            reason_codes=(ReasonCode.AI_FALLBACK_USED,),
+            audit_event=deterministic_ai_fallback(
+                request,
+                fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+                occurred_at_utc=VERIFIED_AT,
+            ).audit_event,
+        )
+
+    with pytest.raises(ValueError, match="fallback_reason requires fallback posture"):
+        AIExplanationResult(
+            request=request,
+            posture=AIExplanationPosture.READY_FOR_ADVISOR_REVIEW,
+            verifier_outcome=AIVerifierOutcome.PASSED,
+            explanation_text="Ready with invalid fallback reason.",
+            reason_codes=(ReasonCode.AI_VERIFIER_PASSED,),
+            audit_event=evaluate_ai_workflow_output(
+                request,
+                output(request.request_id),
+            ).audit_event,
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+        )
+
+    wrong_pack = AIWorkflowOutput(
+        output_id="ai-output-wrong-pack",
+        request_id=request.request_id,
+        workflow_pack_id="lotus-ai:different-pack",
+        workflow_pack_version=request.workflow_pack.workflow_pack_version,
+        explanation_text="Mismatched workflow pack.",
+        claims=(
+            AIOutputClaim(
+                claim_id="claim-001",
+                claim_text="Supported by Core.",
+                source_product_ids=("lotus-core:PortfolioStateSnapshot:v1",),
+            ),
+        ),
+        proposed_actions=(
+            AIProposedAction(
+                action_type=AIProposedActionType.ADVISOR_REVIEW,
+                action_label="Review evidence internally",
+            ),
+        ),
+        verifier_ran_at_utc=VERIFIED_AT,
+    )
+
+    with pytest.raises(InvalidAIWorkflowOutput, match="workflow_pack_id"):
+        evaluate_ai_workflow_output(request, wrong_pack)
