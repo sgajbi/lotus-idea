@@ -3,9 +3,10 @@
 Current posture: scaffold operations plus internal domain, persistence/replay,
 lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
 advisor queue, review-action, and feedback API foundations, and conversion
-governance tests. Conversion governance is internal only: there is no
-database-backed conversion persistence, migration, downstream adapter, runtime
-recovery command, or supported conversion business API yet.
+governance plus certified internal conversion intent/outcome API foundations.
+Conversion remains internal foundation only: there is no database-backed
+conversion persistence, migration, downstream adapter, runtime recovery command,
+Gateway/Workbench proof, or supported conversion business API yet.
 
 Initial commands:
 

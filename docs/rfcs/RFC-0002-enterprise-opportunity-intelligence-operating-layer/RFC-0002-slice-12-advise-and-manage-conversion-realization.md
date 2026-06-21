@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance foundation only
+Status: Partially implemented - internal conversion governance and certified API foundation only
 
 ## Outcome
 
@@ -39,6 +39,25 @@ Implemented in this slice:
    target mapping, review gating, blocked evidence, idempotency-key validation,
    target source-authority enforcement, safe audit fields, forbidden target
    vocabulary, and no downstream-authority semantics.
+9. `src/app/domain/persistence.py` stores conversion intents and outcomes in
+   the in-memory repository foundation with idempotency replay, conflict,
+   not-found posture, lifecycle history updates, safe audit event append, and
+   snapshot recovery for conversion-intent lookup.
+10. `src/app/application/conversion_workflow.py` adds the application use case
+    layer for repository precheck, conversion intent creation, and conversion
+    outcome recording without re-running domain transitions on idempotency
+    replay.
+11. `src/app/api/conversion_governance.py` exposes certified internal API
+    foundations:
+    - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
+    - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
+12. `docs/operations/endpoint-certification-ledger.json` records certification
+    evidence, examples, error posture, and test proof for the conversion API
+    foundations.
+13. `tests/unit/test_idea_persistence.py` and
+    `tests/integration/test_review_workflow_api.py` cover repository
+    idempotency, audit posture, API permission, invalid state, missing
+    resources, wrong source authority, replay, and conflict behavior.
 
 ## Remaining Work
 
@@ -46,24 +65,27 @@ This slice is not yet a supported conversion product. Remaining work includes:
 
 1. database-backed persistence and idempotency storage for conversion intents
    and outcomes,
-2. application use cases and API/OpenAPI contracts,
-3. endpoint certification and Gateway/Workbench proof,
-4. `lotus-advise` acceptance contract for proposal/suitability workflow intake,
-5. `lotus-manage` acceptance contract for DPM review/action candidate intake,
-6. `lotus-report` report-evidence package intake proof for the first
+2. Gateway/Workbench proof,
+3. `lotus-advise` acceptance contract for proposal/suitability workflow intake,
+4. `lotus-manage` acceptance contract for DPM review/action candidate intake,
+5. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
-7. downstream failure/rejection/completion integration tests,
-8. data-product trust telemetry and mesh certification,
-9. supported-feature promotion after runtime and downstream proof.
+6. downstream failure/rejection/completion integration tests across owning
+   services,
+7. data-product trust telemetry and mesh certification,
+8. supported-feature promotion after runtime and downstream proof.
 
 ## Required Work
 
 1. Implement `IdeaConversionIntent` and `IdeaConversionOutcome`.
-2. Add advisory conversion contract into `lotus-advise` for proposal or
+2. Add certified internal API/OpenAPI contracts for conversion intent and
+   outcome recording.
+3. Add advisory conversion contract into `lotus-advise` for proposal or
    suitability workflow intake.
-3. Add manage conversion contract into `lotus-manage` for DPM review/action
+4. Add manage conversion contract into `lotus-manage` for DPM review/action
    candidate intake.
-4. Record idempotency, downstream acceptance, rejection, failure, and completion.
+5. Record idempotency, downstream acceptance, rejection, failure, and
+   completion.
 
 ## Acceptance Gate
 
@@ -73,5 +95,6 @@ This slice is not yet a supported conversion product. Remaining work includes:
 4. No conversion path creates orders, client communications, or autonomous
    advice.
 
-The current implementation satisfies the internal domain governance portion of
-this gate only. Cross-repository downstream realization remains planned.
+The current implementation satisfies the internal domain governance and
+certified internal API foundation portions of this gate only. Cross-repository
+downstream realization remains planned.

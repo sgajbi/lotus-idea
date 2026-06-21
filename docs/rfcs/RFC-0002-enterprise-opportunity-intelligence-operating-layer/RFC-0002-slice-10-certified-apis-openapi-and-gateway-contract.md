@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified high-cash, lifecycle, advisor queue, review-action, and feedback API foundations only
+Status: Partially implemented - certified high-cash, lifecycle, advisor queue, review-action, feedback, and conversion API foundations only
 
 ## Outcome
 
@@ -16,6 +16,8 @@ The first certified API foundations are:
 - `GET /api/v1/review-queues/advisor`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
 - `POST /api/v1/idea-candidates/{candidateId}/feedback`
+- `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`
+- `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`
 
 These endpoints evaluate caller-supplied, source-owned `lotus-core` evidence
 for the high-cash / idle-liquidity signal family. They consume source-reported
@@ -42,6 +44,15 @@ record review decisions or feedback through the same internal repository
 foundation, return replay/conflict/not-found posture, never grant downstream
 suitability/compliance/mandate/execution/client-communication authority, and
 keep `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+
+The conversion-intent and conversion-outcome endpoints expose the Slice 12
+internal conversion workflow foundation over persisted, review-approved
+candidates. They require `Idempotency-Key` and conversion-specific
+capabilities, record source-authority mapped conversion intent/outcome audit
+evidence, enforce target-source authority for downstream outcomes, never grant
+Advise/Manage/Report workflow authority, suitability, execution, or
+client-communication authority, and keep `durableStorageBacked=false` and
+`supportedFeaturePromoted=false`.
 
 The advisor review queue endpoint exposes the Slice 07 deterministic queue
 projection over persisted candidate snapshots. It requires
@@ -77,9 +88,16 @@ Implementation files:
     OpenAPI examples, and route registration.
 11. `src/app/application/candidate_lifecycle.py`: application command and
     idempotency payload construction for lifecycle transitions.
-12. `tests/integration/test_review_workflow_api.py`: certified API behavior
-   evidence for lifecycle transition, review action, and feedback foundations.
-13. `tests/integration/test_review_queue_api.py`: certified API behavior
+12. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
+    authorization mapping, product-safe errors, idempotency-conflict handling,
+    OpenAPI examples, and route registration.
+13. `src/app/application/conversion_workflow.py`: application commands,
+    idempotency payload construction, repository precheck, and domain
+    invocation for conversion intent/outcome workflow.
+14. `tests/integration/test_review_workflow_api.py`: certified API behavior
+   evidence for lifecycle transition, review action, feedback, and conversion
+   foundations.
+15. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
 
 ## Current Contract
@@ -118,6 +136,19 @@ only target statuses allowed by the domain lifecycle graph and returns
 product-safe Problem Details for validation, permission, missing candidate,
 idempotency conflict, or invalid lifecycle transition failures.
 
+The conversion-intent endpoint is permissioned by
+`idea.conversion.intent.record` and requires `Idempotency-Key`. It accepts only
+persisted candidates that are already approved for conversion and returns
+product-safe Problem Details for validation, permission, missing candidate,
+idempotency conflict, or invalid conversion-state failures.
+
+The conversion-outcome endpoint is permissioned by
+`idea.conversion.outcome.record` and requires `Idempotency-Key`. It records
+downstream outcome posture only when the reporting `sourceSystem` matches the
+conversion target source authority and returns product-safe Problem Details for
+validation, permission, missing intent, idempotency conflict, or wrong-source
+failures.
+
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
 `durableStorageBacked` is always `false` for mutating foundation endpoints. The
 endpoints are certified as API foundations but are not supported business
@@ -147,9 +178,8 @@ supported-feature registration are not implemented yet.
 4. Add Workbench review-surface proof before any UI or demo claim.
 5. Add data-product trust telemetry, platform mesh certification, and
    supported-feature promotion only after runtime proof exists.
-6. Add additional route families for evidence packs, conversion intent, and
-   supportability after their storage and orchestration slices are
-   implementation-backed.
+6. Add additional route families for evidence packs and supportability after
+   their storage and orchestration slices are implementation-backed.
 
 ## Platform Follow-Up
 
@@ -195,6 +225,10 @@ Focused validation passed for the current foundation:
     tests under coverage, coverage gate at `99.14%`, and dependency audit
     reporting no known vulnerabilities.
 17. `make docker-build` passed for `backend-service:ci-test`.
+18. `.venv\Scripts\python.exe -m pytest tests\unit\test_conversion_governance.py tests\unit\test_idea_persistence.py tests\integration\test_review_workflow_api.py -q`
+    passed with `42 passed` after adding conversion intent/outcome API
+    foundations, repository idempotency persistence, and outcome source
+    authority enforcement.
 
 PR merge-gate evidence remains required before merge.
 

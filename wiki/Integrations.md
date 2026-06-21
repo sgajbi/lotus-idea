@@ -82,7 +82,12 @@ conversion targets to downstream source authorities:
 2. `manage_review` outcomes must come from `lotus-manage`,
 3. `report_evidence` outcomes must come from `lotus-report`.
 
-The current implementation records intent and outcome posture only. It does not
-call downstream services, create proposals, create manage actions, create report
-evidence packs, render documents, archive material, or grant suitability,
-execution, compliance, mandate, or client-communication authority.
+The current implementation records intent and outcome posture only through
+certified internal API foundations:
+
+1. `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
+2. `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
+
+It does not call downstream services, create proposals, create manage actions,
+create report evidence packs, render documents, archive material, or grant
+suitability, execution, compliance, mandate, or client-communication authority.
