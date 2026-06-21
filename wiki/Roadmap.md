@@ -9,20 +9,20 @@ Current state:
 3. RFC-0002 defines the enterprise opportunity intelligence implementation program,
 4. RFC-0002 Slice 00 records the implementation-start source map and first
    journey decisions,
-5. business features remain Planned.
+5. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
+6. business features remain Planned.
 
 First implementation program:
 
-1. implement the pure domain model, lifecycle, and vocabulary from the recorded
-   Slice 00 baseline,
-2. apply reusable scaffold improvements in `lotus-platform`,
-3. normalize structure before adding product scope,
-4. add source contracts and data-mesh baseline,
-5. implement deterministic high-cash / idle-liquidity signal evaluation before AI explanation,
-6. add persistence, replay, idempotency, audit, scoring, ranking, suppression, review, and feedback,
-7. expose certified APIs and Gateway/Workbench product surfaces,
-8. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
-9. prove canonical demo scenarios and publish implementation-backed documentation.
+1. apply reusable scaffold improvements in `lotus-platform` when implementation
+   exposes repeatable gaps,
+2. normalize structure before adding product scope,
+3. add source contracts and data-mesh baseline,
+4. implement deterministic high-cash / idle-liquidity signal evaluation before AI explanation,
+5. add persistence, replay, idempotency, audit, scoring, ranking, suppression, review, and feedback,
+6. expose certified APIs and Gateway/Workbench product surfaces,
+7. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
+8. prove canonical demo scenarios and publish implementation-backed documentation.
 
 Unsupported until proved:
 
