@@ -183,7 +183,9 @@ def test_ci_contract_gate_requires_job_timeouts(tmp_path: Path) -> None:
 
     feature_lane = workflow_dir / "feature-lane.yml"
     feature_lane.write_text(
-        feature_lane.read_text(encoding="utf-8").replace("    timeout-minutes: 10\n", "", 1),
+        feature_lane.read_text(encoding="utf-8")
+        .replace("jobs:", "jobs: # generated lanes", 1)
+        .replace("    timeout-minutes: 10\n", "", 1),
         encoding="utf-8",
     )
 
@@ -205,7 +207,7 @@ def test_ci_contract_gate_blocks_soft_failed_workflow_jobs(tmp_path: Path) -> No
     feature_lane.write_text(
         feature_lane.read_text(encoding="utf-8").replace(
             "    timeout-minutes: 10\n",
-            "    timeout-minutes: 10\n    continue-on-error: true\n",
+            "    timeout-minutes: 10\n    continue-on-error: ${{ true }}\n",
             1,
         ),
         encoding="utf-8",
@@ -213,7 +215,17 @@ def test_ci_contract_gate_blocks_soft_failed_workflow_jobs(tmp_path: Path) -> No
 
     errors = module.validate_workflows(workflow_dir)
 
-    assert "feature-lane.yml must not contain `continue-on-error: true`" in errors
+    assert "feature-lane.yml must not contain `continue-on-error:`" in errors
+
+
+def test_ci_contract_gate_rejects_workflows_without_parseable_jobs() -> None:
+    module = _load_ci_contract_gate()
+
+    errors = module.validate_workflows(ROOT / "tests" / "fixtures" / "missing-workflow-dir")
+    timeout_errors = module._validate_job_timeouts("synthetic.yml", "name: Synthetic\n")
+
+    assert errors
+    assert timeout_errors == ["synthetic.yml must define at least one parseable job"]
 
 
 def test_generated_quality_reports_do_not_dirty_worktree() -> None:

@@ -163,22 +163,22 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "pull_request_target:",
         "contents: write",
         "pull-requests: write",
-        "continue-on-error: true",
+        "continue-on-error:",
     ),
     "pr-merge-gate.yml": (
         "pull_request_target:",
         "contents: write",
         "pull-requests: write",
-        "continue-on-error: true",
+        "continue-on-error:",
     ),
     "main-releasability.yml": (
         "pull_request_target:",
         "contents: write",
         "pull-requests: write",
-        "continue-on-error: true",
+        "continue-on-error:",
     ),
-    "pr-auto-merge.yml": ("continue-on-error: true",),
-    "merged-pr-main-releasability.yml": ("continue-on-error: true",),
+    "pr-auto-merge.yml": ("continue-on-error:",),
+    "merged-pr-main-releasability.yml": ("continue-on-error:",),
 }
 
 
@@ -250,7 +250,10 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
 
 def _validate_job_timeouts(workflow_name: str, workflow: str) -> list[str]:
     errors: list[str] = []
-    for job_name, job_block in _job_blocks(workflow).items():
+    job_blocks = _job_blocks(workflow)
+    if not job_blocks:
+        return [f"{workflow_name} must define at least one parseable job"]
+    for job_name, job_block in job_blocks.items():
         timeout_match = re.search(r"^    timeout-minutes:\s*(?P<value>\d+)\s*$", job_block, re.M)
         if not timeout_match:
             errors.append(f"{workflow_name} job `{job_name}` missing timeout-minutes")
@@ -266,7 +269,9 @@ def _validate_job_timeouts(workflow_name: str, workflow: str) -> list[str]:
 def _job_blocks(workflow: str) -> dict[str, str]:
     lines = workflow.splitlines()
     try:
-        jobs_index = next(index for index, line in enumerate(lines) if line == "jobs:")
+        jobs_index = next(
+            index for index, line in enumerate(lines) if re.match(r"^\s*jobs\s*:\s*(?:#.*)?$", line)
+        )
     except StopIteration:
         return {}
 
