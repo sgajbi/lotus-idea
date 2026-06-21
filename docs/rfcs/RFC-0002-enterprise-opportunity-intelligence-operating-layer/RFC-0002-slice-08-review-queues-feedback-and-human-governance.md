@@ -1,6 +1,6 @@
 # RFC-0002 Slice 08: Review Queues, Feedback, And Human Governance
 
-Status: Partially implemented - internal advisor review and feedback governance foundation only
+Status: Partially implemented - internal advisor review/feedback governance plus persistence orchestration only
 
 ## Outcome
 
@@ -31,19 +31,37 @@ Implemented in this slice:
    failure, non-advisor denial, blocked-evidence approval denial, rejection,
    no-action, suppression, snooze, escalation, feedback provenance, safe audit
    attributes, and command validation.
+9. `src/app/application/review_workflow.py` applies review actions and feedback
+   to repository snapshots, prechecks idempotency before reapplying domain
+   transitions, and persists accepted governance results through the repository
+   contract.
+10. `src/app/domain/persistence.py` records review decisions, feedback events,
+    safe audit events, lifecycle history, idempotency replay, conflict, and
+    not-found posture for internal review workflow mutations.
+11. `tests/unit/test_review_workflow_application.py` covers approval
+    persistence, replay before domain reapplication, idempotency conflict,
+    feedback source provenance, safe audit persistence, and missing-candidate
+    behavior.
 
 Validation evidence from the implementation slice:
 
 1. `.venv\Scripts\python.exe -m ruff check src\app\domain\review_governance.py src\app\domain\ideas.py src\app\domain\__init__.py tests\unit\test_review_governance.py`
 2. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini`
 3. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_governance.py`
+4. `.venv\Scripts\python.exe -m pytest tests\unit\test_review_workflow_application.py tests\unit\test_review_governance.py tests\unit\test_idea_persistence.py -q`
+5. `.venv\Scripts\python.exe -m ruff check src\app\domain\persistence.py src\app\application\review_workflow.py tests\unit\test_review_workflow_application.py`
+6. `make check` - passed with 187 unit tests plus lint, format, typecheck,
+   architecture, OpenAPI, supported-feature, endpoint-certification,
+   data-mesh, and contract gates.
+7. `make ci` - passed with integration tests, e2e tests, coverage gate at
+   99.17%, and dependency audit.
 
 ## Remaining Work
 
 This slice is not yet a supported review product. Remaining work includes:
 
 1. database-backed durable review decision and feedback persistence,
-2. application use cases and API/OpenAPI contracts,
+2. API/OpenAPI contracts,
 3. endpoint certification and Gateway/Workbench integration proof,
 4. PM, compliance, and operator queue surfaces and permission policy,
 5. integration with the runtime caller-context and entitlement system,
@@ -67,6 +85,6 @@ This slice is not yet a supported review product. Remaining work includes:
 3. Queue projections update after decisions.
 4. Feedback events are source-provenanced.
 
-The durable feedback portion remains planned until a database-backed persistence
-slice stores review decisions and feedback events behind application/API
-contracts.
+The durable feedback portion remains planned until database-backed persistence,
+API contracts, and endpoint certification store and expose review decisions and
+feedback events behind runtime caller-context and entitlement controls.

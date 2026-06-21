@@ -70,6 +70,8 @@ from app.domain.persistence import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     LifecycleHistoryEntry,
+    ReviewPersistenceDecision,
+    ReviewPersistenceResult,
     evidence_hash_for_candidate,
     evidence_hash_for_source_refs,
 )
@@ -185,6 +187,8 @@ __all__ = [
     "IdeaRepositorySnapshot",
     "InMemoryIdeaRepository",
     "LifecycleHistoryEntry",
+    "ReviewPersistenceDecision",
+    "ReviewPersistenceResult",
     "SignalEvaluationOutcome",
     "SignalEvaluationResult",
     "evidence_hash_for_candidate",

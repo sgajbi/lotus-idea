@@ -142,10 +142,15 @@ repository now has advisor-only first-wave review action policy, fail-closed
 tenant/book/portfolio/client scope checks, approve-for-conversion, reject,
 no-action, suppress, snooze, and escalation outcomes, governed feedback events,
 safe audit events, source/evidence provenance, and queue projection interaction
-tests. This is not yet a supported review product: no durable database-backed
-review store, application orchestration, API/OpenAPI surface,
-Gateway/Workbench proof, PM/compliance/operator queue surface, data-product
-certification, trust telemetry, or supported-feature promotion exists.
+tests. `src/app/application/review_workflow.py` and
+`src/app/domain/persistence.py` now add internal repository-backed review and
+feedback workflow persistence orchestration with idempotency replay, conflict,
+not-found posture, safe audit events, review decision and feedback event
+snapshots, and lifecycle history updates. This is not yet a supported review
+product: no durable database-backed review store, API/OpenAPI surface,
+Gateway/Workbench proof, runtime caller-context entitlement integration,
+PM/compliance/operator queue surface, data-product certification, trust
+telemetry, or supported-feature promotion exists.
 
 RFC-0002 Slice 09 is partially implemented as an internal AI governance
 foundation in `src/app/domain/ai_governance.py`. The repository now has
@@ -210,7 +215,10 @@ logs; fix or document the owned warning source instead.
    evidence through a source port, and internally persist created high-cash
    candidates through the Slice 06 idempotency/audit repository contract.
    Review-queue orchestration reads candidate repository snapshots and delegates
-   ordering/exclusion behavior to the Slice 07 domain policy.
+   ordering/exclusion behavior to the Slice 07 domain policy. Review/feedback
+   workflow orchestration applies Slice 08 domain governance to repository
+   snapshots and persists accepted decisions and feedback through the same
+   idempotency/audit posture.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, evidence policy, deterministic governance checks,

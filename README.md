@@ -15,8 +15,8 @@ high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
 high-cash evaluate-and-persist orchestration foundation,
 deterministic scoring/review-queue projection and repository-snapshot queue
-orchestration foundation, and an internal
-advisor review/feedback governance foundation, and an internal AI governance
+orchestration foundation, an internal advisor review/feedback governance and
+workflow persistence foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
 first certified internal high-cash signal evaluation API foundation for
 caller-supplied, source-owned Core evidence, and contains an internal
@@ -96,7 +96,9 @@ source-authority contracts only, not runtime certification.
   Core source port that fetches governed Core evidence, and internally persist
   created candidates through the Slice 06 idempotency/audit repository contract.
   Internal review-queue orchestration projects persisted candidate snapshots
-  through the Slice 07 deterministic queue policy.
+  through the Slice 07 deterministic queue policy. Internal review/feedback
+  workflow orchestration records governed decisions and feedback through the
+  repository idempotency/audit contract.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,

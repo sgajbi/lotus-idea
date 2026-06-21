@@ -24,8 +24,9 @@ Current state:
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
    and repository-snapshot queue orchestration,
 10. RFC-0002 Slice 08 partially implements internal advisor review and feedback
-   governance with fail-closed scope checks, review actions, safe audit events,
-   source provenance, and queue projection interaction,
+   governance plus workflow persistence with fail-closed scope checks, review
+   actions, safe audit events, source provenance, idempotency replay/conflict,
+   and queue projection interaction,
 11. RFC-0002 Slice 09 partially implements internal AI governance with redacted
     evidence envelopes, verifier/fallback controls, safe audit events, and no
     AI downstream authority,
