@@ -1,10 +1,11 @@
 # Persistence And Migration Operations
 
-Current posture: `lotus-idea` has internal in-memory repository behavior plus a
-versioned SQL schema, rollback contract, and PostgreSQL migration execution CLI
-for the future durable repository. Runtime API state is still process-local and
-must report `durableStorageBacked=false` until a database repository adapter and
-integration/e2e storage proof exist.
+Current posture: `lotus-idea` has internal in-memory repository behavior, a
+versioned SQL schema, rollback contract, PostgreSQL migration execution CLI, and
+a tested PostgreSQL repository adapter foundation. Runtime API state is still
+process-local and must report `durableStorageBacked=false` until the adapter is
+wired behind API dependencies and proven against a real PostgreSQL service in
+integration/e2e storage checks.
 
 ## Current Contract
 
@@ -20,6 +21,11 @@ integration/e2e storage proof exist.
 4. `scripts/run_migrations.py` executes the migration plan against PostgreSQL
    when `LOTUS_IDEA_DATABASE_URL` is set, and dry-runs the apply/rollback plan
    for CI without requiring a database.
+5. `src/app/infrastructure/postgres_repository.py` implements the governed
+   repository port surface over the schema. It materializes candidate,
+   idempotency, lifecycle, audit, review, feedback, conversion, and report
+   evidence-pack state through typed table columns plus JSONB snapshots, and
+   rolls back the database transaction on flush failure.
 
 ## Validation
 
@@ -42,12 +48,13 @@ make migrate-rollback
 
 ## Unsupported Until Proven
 
-Do not claim durable database persistence, recovery, data-product promotion, or
-supported business workflows until a later slice adds:
+Do not claim API-level durable database persistence, recovery, data-product
+promotion, or supported business workflows until a later slice adds:
 
-1. a database-backed adapter behind `src/app/ports/idea_repository.py`,
-2. integration/e2e proof against real storage,
+1. API dependency wiring from `src/app/api/repository_state.py` to the
+   PostgreSQL adapter,
+2. integration/e2e proof against a real PostgreSQL service,
 3. deploy-pipeline migration evidence,
-4. rollback/recovery evidence,
+4. rollback/recovery evidence against the real service,
 5. updated endpoint certification, supported-feature, docs, wiki, and mesh
    posture.

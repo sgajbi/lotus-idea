@@ -110,7 +110,7 @@ source-authority contracts only, not runtime certification.
 
 - `src/app/api/`: HTTP route modules, API DTO mapping, shared caller-header
   parsing, and the temporary process-local repository provider used by certified
-  internal API foundations until durable persistence is implemented.
+  internal API foundations until durable PostgreSQL wiring is proven.
 - `src/app/application/`: use-case orchestration. The current first use cases
   evaluate high-cash signals over caller-supplied Core evidence and over a
   Core source port that fetches governed Core evidence, and internally persist
@@ -146,7 +146,8 @@ source-authority contracts only, not runtime certification.
   high-cash evidence port.
 - `src/app/infrastructure/`: adapters and clients behind ports, including a
   conservative Core high-cash source adapter that does not infer cash weight
-  when Core omits a source-reported value.
+  when Core omits a source-reported value, PostgreSQL migration execution
+  helpers, and the tested `PostgresIdeaRepository` adapter foundation.
 - `migrations/`: versioned SQL migration and rollback contracts. The first
   contract defines the future durable idea repository schema; it can be applied
   or rolled back with `make migrate` / `make migrate-rollback` when
