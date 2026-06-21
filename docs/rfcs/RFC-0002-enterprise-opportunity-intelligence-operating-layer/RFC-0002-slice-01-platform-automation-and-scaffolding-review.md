@@ -1,12 +1,53 @@
 # RFC-0002 Slice 01: Platform Automation And Scaffolding Review
 
-Status: Planned
+Status: Implemented - platform scaffold wiki baseline verified
 
 ## Outcome
 
 Review whether the Lotus scaffold and platform automation already support an
 enterprise opportunity-intelligence service. Fix reusable gaps in
 `lotus-platform` instead of patching only `lotus-idea`.
+
+## Current Implementation Evidence
+
+This slice is complete as a scaffold review and evidence slice. No new
+`lotus-core` or `lotus-platform` code change is required from this repository
+slice.
+
+The reusable scaffold gap discovered during `lotus-idea` creation has already
+been addressed in `lotus-platform`:
+
+1. `lotus-platform` commit `549d290` (`Improve scaffold wiki baseline`) adds
+   the standard repo-local wiki baseline to `automation/New-Lotus-Service.ps1`.
+2. The generated wiki baseline includes `_Sidebar.md`, `Home.md`,
+   `Overview.md`, `Architecture.md`, `Getting-Started.md`,
+   `Development-Workflow.md`, `Validation-And-CI.md`,
+   `Operations-Runbook.md`, `Security-And-Governance.md`, `Integrations.md`,
+   `Roadmap.md`, and `Supported-Features.md`.
+3. `lotus-platform/tests/unit/test_repository_hygiene_scaffold_contract.py`
+   asserts that generated services contain the standard wiki page set,
+   branch-hygiene guidance, validation/CI guidance, quality-scorecard posture,
+   and supported-feature anti-claim wording.
+4. `lotus-platform/docs/onboarding/LOTUS-BACKEND-SERVICE-SCAFFOLD-GUIDE.md`
+   documents the generated wiki shape as part of the standard backend-service
+   scaffold.
+5. The current `lotus-idea/wiki/` source contains the standard page set plus
+   service-specific RFC, roadmap, operations, security, integration, and
+   supported-feature truth.
+
+Explicit no-change decisions for this slice:
+
+1. No `lotus-core` change is needed. Slice 01 is scaffold/platform evidence,
+   not source-data contract implementation.
+2. No new `lotus-platform` PR is needed from this slice because the previously
+   identified wiki-baseline scaffold gap is already implemented and covered by
+   platform tests.
+3. No supported-feature promotion is allowed from this slice. It only verifies
+   that future Lotus apps start with stronger repo organization, wiki source,
+   CI/validation guidance, and supported-feature discipline.
+4. The remaining platform follow-up from later API work, Prometheus-compatible
+   FastAPI business-route registration, stays tracked separately in
+   `sgajbi/lotus-platform#420` and does not block Slice 01 closure.
 
 ## Required Work
 
@@ -34,6 +75,15 @@ The missing authored pages were:
 This is a platform-scaffold issue, not just a `lotus-idea` local documentation
 issue. Future Lotus apps should start with onboarding, workflow, validation,
 branch-hygiene, roadmap, and supported-feature wiki structure already present.
+
+## Slice Closure Posture
+
+Slice 01 is closed as implemented because the required reusable scaffold
+improvement exists in `lotus-platform`, the platform scaffold contract tests
+cover it, and `lotus-idea` now records the evidence rather than carrying a
+stale Planned status. This closure does not claim product functionality,
+Gateway/Workbench proof, data-product certification, or source-adapter runtime
+readiness.
 
 ## Acceptance Gate
 

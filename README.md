@@ -9,9 +9,9 @@ Workbench workflows.
 Service profile: `domain-service`
 
 Current status: scaffolded foundation, governance RFCs, the first pure domain
-model/lifecycle foundation, an internal high-cash deterministic signal policy,
-the first Core source-port and conservative HTTP adapter foundation for
-high-cash evidence,
+model/lifecycle foundation, verified platform scaffold/wiki baseline evidence,
+an internal high-cash deterministic signal policy, the first Core source-port
+and conservative HTTP adapter foundation for high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
 high-cash evaluate-and-persist orchestration foundation,
 deterministic scoring/review-queue projection and repository-snapshot queue

@@ -707,7 +707,7 @@ assertions.
 | Slice | Name | Status | Evidence expectation |
 | --- | --- | --- | --- |
 | 0 | Critical review, source map, and product gap allocation | Completed - implementation baseline recorded | source map, overlap decisions, open questions, branch/state baseline |
-| 1 | Platform automation and scaffolding review | Planned | scaffold gap ledger, platform PRs or explicit no-change evidence |
+| 1 | Platform automation and scaffolding review | Implemented - platform scaffold wiki baseline verified | scaffold gap ledger, platform scaffold evidence, explicit no-change decisions |
 | 2 | Cleanup, structure, and current surface normalization | Planned | dead-code/doc-sprawl cleanup, module boundaries, vocabulary baseline |
 | 3 | Opportunity domain model, vocabulary, and lifecycle | Implemented - pure domain foundation only | pure domain model, lifecycle tests, unsupported transition behavior |
 | 4 | Source authority, signal contracts, and data mesh baseline | Partially implemented - repo-native mesh contract gate enforced | consumer/producer contracts, source authority tests, blocked telemetry posture, optional platform catalog/source-manifest reconciliation |

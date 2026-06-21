@@ -15,7 +15,7 @@ tests, docs, wiki, and supported-feature promotion.
 | Slice | Evidence file | Status |
 | --- | --- | --- |
 | 0 | [Critical Review, Source Map, And Product Gap Allocation](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md) | Completed - implementation baseline recorded |
-| 1 | [Platform Automation And Scaffolding Review](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-01-platform-automation-and-scaffolding-review.md) | Planned |
+| 1 | [Platform Automation And Scaffolding Review](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-01-platform-automation-and-scaffolding-review.md) | Implemented - platform scaffold wiki baseline verified |
 | 2 | [Cleanup, Structure, And Current Surface Normalization](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-02-cleanup-structure-and-current-surface-normalization.md) | Partially implemented - API repository state normalized for shared route use |
 | 3 | [Opportunity Domain Model, Vocabulary, And Lifecycle](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-03-opportunity-domain-model-vocabulary-and-lifecycle.md) | Implemented - pure domain foundation only |
 | 4 | [Source Authority, Signal Contracts, And Data Mesh Baseline](RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-04-source-authority-signal-contracts-and-data-mesh-baseline.md) | Partially implemented - repo-native mesh contract gate enforced |
