@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified high-cash, review-action, and feedback API foundations only
+Status: Partially implemented - certified high-cash, advisor queue, review-action, and feedback API foundations only
 
 ## Outcome
 
@@ -12,6 +12,7 @@ The first certified API foundations are:
 
 - `POST /api/v1/idea-signals/high-cash/evaluate`
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
+- `GET /api/v1/review-queues/advisor`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
 - `POST /api/v1/idea-candidates/{candidateId}/feedback`
 
@@ -34,6 +35,12 @@ foundation, return replay/conflict/not-found posture, never grant downstream
 suitability/compliance/mandate/execution/client-communication authority, and
 keep `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
 
+The advisor review queue endpoint exposes the Slice 07 deterministic queue
+projection over persisted candidate snapshots. It requires
+`idea.review.queue.read` capability or advisor role, returns ranked items plus
+exclusions, and keeps `durableStorageBacked=false` and
+`supportedFeaturePromoted=false`.
+
 Implementation files:
 
 1. `src/app/api/idea_signals.py`: FastAPI DTOs, authorization mapping,
@@ -53,10 +60,14 @@ Implementation files:
 7. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
    authorization/scope mapping, product-safe errors, idempotency-conflict
    handling, OpenAPI examples, and route registration.
-8. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
+8. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
+   product-safe errors, OpenAPI examples, and route registration.
+9. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
    signal and review routes.
-9. `tests/integration/test_review_workflow_api.py`: certified API behavior
+10. `tests/integration/test_review_workflow_api.py`: certified API behavior
    evidence for review action and feedback foundations.
+11. `tests/integration/test_review_queue_api.py`: certified API behavior
+    evidence for advisor queue projection.
 
 ## Current Contract
 
@@ -82,6 +93,11 @@ require upstream-authorized tenant/book/portfolio/client scope in the request
 until the platform caller context carries scoped entitlements. Scope,
 permission, missing candidate, idempotency conflict, and invalid candidate-state
 failures return product-safe Problem Details.
+
+The advisor review queue endpoint is permissioned by
+`idea.review.queue.read` capability or advisor role. It requires a
+timezone-aware `evaluatedAtUtc` query parameter and returns product-safe Problem
+Details for permission or validation failures.
 
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
 `durableStorageBacked` is always `false` for mutating foundation endpoints. The
@@ -113,8 +129,8 @@ supported-feature registration are not implemented yet.
 5. Add data-product trust telemetry, platform mesh certification, and
    supported-feature promotion only after runtime proof exists.
 6. Add additional route families for candidate lifecycle, evidence packs,
-   review queues, conversion intent, and supportability after their storage and
-   orchestration slices are implementation-backed.
+   conversion intent, and supportability after their storage and orchestration
+   slices are implementation-backed.
 
 ## Platform Follow-Up
 
@@ -142,6 +158,10 @@ Focused validation passed for the current foundation:
 9. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py -q` passed with `17 passed` after adding review-action and feedback API certification.
 10. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` passed
     after adding review-action and feedback route ledger evidence.
+11. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_queue_api.py -q`
+    passed with `4 passed` after adding advisor review queue API certification.
+12. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` passed
+    after adding advisor review queue route ledger evidence.
 
 PR merge-gate evidence remains required before merge.
 

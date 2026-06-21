@@ -131,18 +131,20 @@ durable stateful API surface, integration proof over database storage,
 data-product certification, or supported-feature promotion exists.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
-and review-queue projection foundation in `src/app/domain/scoring.py`. The
+and review-queue projection plus certified API foundation in
+`src/app/domain/scoring.py`. The
 repository now has bounded score inputs for materiality, urgency, confidence,
 evidence quality, freshness, relevance, downstream fit, and conflict flags;
 policy-versioned score breakdowns with typed reason codes; immutable candidate
 score attachment; priority buckets; stable review queue ordering; snooze,
 suppression, unsupported-evidence, expired, unscored, non-reviewable, and
 duplicate exclusion rules; repository-snapshot application orchestration in
-`src/app/application/review_queue.py`; and golden unit coverage for expected
-ordering and edge cases. This is not yet a supported queue product: no
-database-backed queue state, API/OpenAPI surface, Gateway/Workbench proof,
-data-product certification, trust telemetry, or supported-feature promotion
-exists.
+`src/app/application/review_queue.py`; certified internal advisor queue API
+foundation in `src/app/api/review_queues.py`; and golden unit/integration
+coverage for expected ordering and edge cases. This is not yet a supported
+queue product: no database-backed queue state, Gateway/Workbench proof,
+entitlement-backed scope filtering, data-product certification, trust
+telemetry, or supported-feature promotion exists.
 
 RFC-0002 Slice 08 is partially implemented as an internal advisor review and
 feedback governance plus certified API foundation in
@@ -188,14 +190,16 @@ deterministic candidate, blocked, suppressed, or not-eligible posture.
 evidence contract, requires `idea.candidate.persist` plus `Idempotency-Key`,
 and persists created candidates through the internal in-memory
 idempotency/audit repository foundation with accepted, replayed, duplicate, or
-conflict posture. The review-action and feedback APIs expose internal review
-workflow persistence over the same repository provider and return accepted,
-replayed, not-found, conflict, permission, or invalid-state posture without
-granting downstream authority. All four business routes are covered by OpenAPI
-and endpoint certification evidence. This is not yet a supported product
-capability: there are no live source adapters, Gateway routes, Workbench
-surfaces, database-backed API state, data-product certification, runtime trust
-telemetry, or supported-feature promotion.
+conflict posture. `GET /api/v1/review-queues/advisor` exposes deterministic
+advisor queue projection over persisted candidate snapshots. The review-action
+and feedback APIs expose internal review workflow persistence over the same
+repository provider and return accepted, replayed, not-found, conflict,
+permission, or invalid-state posture without granting downstream authority. All
+five business routes are covered by OpenAPI and endpoint certification evidence.
+This is not yet a supported product capability: there are no live source
+adapters, Gateway routes, Workbench surfaces, database-backed API state,
+data-product certification, runtime trust telemetry, or supported-feature
+promotion.
 
 RFC-0002 Slice 12 is partially implemented as an internal conversion governance
 foundation in `src/app/domain/conversion_governance.py`. The repository now has

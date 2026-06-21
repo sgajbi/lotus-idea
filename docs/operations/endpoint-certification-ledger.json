@@ -116,6 +116,33 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/review-queues/advisor",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return the deterministic advisor review queue projection over persisted idea candidate snapshots.",
+      "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 10 API foundation when an internal caller has advisor queue read authority and needs a deterministic queue projection for persisted candidates.",
+      "when_not_to_use": "Do not use as a durable queue store, scoped Workbench product surface, Gateway contract, data-product certification proof, PM/compliance/operator queue surface, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read"
+      ],
+      "response_examples": [
+        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idle-liquidity-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.review.queue.read capability or advisor role.",
+        "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_projects_persisted_candidates",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_returns_empty_queue_without_candidates",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_requires_read_permission",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_naive_evaluation_time_safely"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
       "path": "/health",
       "certification_status": "baseline_certified",
       "owner": "lotus-idea owners",
