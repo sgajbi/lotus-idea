@@ -12,6 +12,7 @@ Repo-native validation commands:
 make check
 make ci
 make ci-contract-gate
+make data-mesh-contract-gate
 make openapi-gate
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -20,13 +21,14 @@ make quality-baseline
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 OpenAPI quality, supported-feature gate, endpoint-certification gate, unit tests, integration
-tests, e2e tests, coverage gate, security audit, Docker build validation, and workflow lint.
+tests, e2e tests, data-mesh contract validation, coverage gate, security audit, Docker build
+validation, and workflow lint.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 approved action-runtime majors, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
-and source-safe local quality gates.
+data-mesh contract validation, and source-safe local quality gates.
 
 Data-mesh foundation checks:
 
@@ -34,7 +36,9 @@ Data-mesh foundation checks:
 2. mesh placeholder files must not exist in contract or operations paths,
 3. planned trust telemetry must remain blocked and `not_certified`,
 4. SLO, access, and evidence policies must be present before promotion work,
-5. platform mesh certification is required before any supported mesh claim.
+5. optional sibling platform catalog/source-manifest evidence is used to catch
+   source-product drift or premature `lotus-idea` source-manifest inclusion,
+6. platform mesh certification is required before any supported mesh claim.
 
 CI warning policy:
 

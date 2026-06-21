@@ -30,6 +30,9 @@ and certified.
 
 Mesh integration truth starts in
 `contracts/domain-data-products/lotus-idea-consumers.v1.json`.
+`make data-mesh-contract-gate` keeps this declaration aligned with the current
+source-authority posture and optionally reconciles it with the sibling
+`lotus-platform` generated product catalog when that checkout is present.
 
 The current planned consumer declaration names source-authority products for
 the RFC-0002 first-wave map:

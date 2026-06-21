@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard data-mesh-contract-gate supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -19,6 +19,7 @@ lint:
 	$(MAKE) ci-contract-gate
 	$(MAKE) monetary-float-guard
 	$(MAKE) no-sensitive-content-guard
+	$(MAKE) data-mesh-contract-gate
 	$(MAKE) supported-features-gate
 	$(MAKE) endpoint-certification-gate
 
@@ -30,6 +31,9 @@ monetary-float-guard:
 
 no-sensitive-content-guard:
 	$(VENV_PYTHON) scripts/no_sensitive_content_guard.py
+
+data-mesh-contract-gate:
+	$(VENV_PYTHON) scripts/data_mesh_contract_gate.py
 
 supported-features-gate:
 	$(VENV_PYTHON) scripts/supported_features_gate.py
@@ -85,4 +89,3 @@ docker-build:
 
 clean:
 	python -c "import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in ['.pytest_cache', '.ruff_cache', '.mypy_cache']]; [pathlib.Path(p).unlink(missing_ok=True) for p in ['.coverage', '.coverage.unit', '.coverage.integration', '.coverage.e2e']]"
-

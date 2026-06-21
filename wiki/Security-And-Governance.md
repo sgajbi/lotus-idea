@@ -16,8 +16,9 @@ Required posture:
    client communication,
 6. AI through `lotus-ai` workflow packs only,
 7. endpoint certification and OpenAPI quality gates,
-8. proposed data-product declarations, blocked static trust telemetry, and
-   planned SLO/access/evidence policies before mesh promotion,
+8. proposed data-product declarations, repo-native data-mesh contract gate,
+   blocked static trust telemetry, and planned SLO/access/evidence policies
+   before mesh promotion,
 9. branch protection and CI lane governance.
 
 Mesh certification rule:
@@ -25,5 +26,6 @@ Mesh certification rule:
 1. no `lotus-idea` product is certified from static declarations alone,
 2. static trust telemetry must remain blocked until runtime implementation
    exists,
-3. platform source-manifest inclusion and certification gates are required
+3. the repo-native data-mesh contract gate is pre-certification evidence only,
+4. platform source-manifest inclusion and certification gates are required
    before Gateway or Workbench expose the product as supported.
