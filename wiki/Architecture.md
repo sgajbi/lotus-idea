@@ -39,6 +39,11 @@ Certification is not claimed. Products stay `proposed` and the current static
 telemetry is blocked until runtime implementation and platform mesh validation
 exist.
 
+The first consumer contract expansion is source-authority only. It prepares the
+high-cash / idle-liquidity path around Core-owned cash and holdings products,
+and records later first-wave Performance, Risk, Advise, Manage, Report, and AI
+dependencies without certifying runtime behavior.
+
 ## Architecture Decisions
 
 ADRs live in `docs/architecture/adr/`:

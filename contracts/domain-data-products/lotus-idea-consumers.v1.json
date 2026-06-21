@@ -33,6 +33,110 @@
       "failure_posture": "fail_closed"
     },
     {
+      "product_name": "HoldingsAsOf",
+      "producer_repository": "lotus-core",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned positions and cash balances as high-cash and holdings-backed opportunity evidence without making lotus-idea the holdings or accounting authority.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "fail_closed"
+    },
+    {
+      "product_name": "PortfolioCashMovementSummary",
+      "producer_repository": "lotus-core",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned cash movement classification and direction evidence for liquidity opportunity context without inferring funding advice or treasury instructions.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "PortfolioCashflowProjection",
+      "producer_repository": "lotus-core",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned projected cashflow and liquidity-window evidence for high-cash and cash-pressure opportunity context without making lotus-idea a financial-planning or cashflow-forecasting authority.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "BenchmarkAssignment",
+      "producer_repository": "lotus-core",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned benchmark identity to support benchmark-dependent opportunity evidence without assigning, changing, or inferring benchmark authority.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
       "product_name": "ReturnsSeriesBundle",
       "producer_repository": "lotus-performance",
       "required_product_version": "v1",
@@ -49,6 +153,54 @@
       },
       "consumption_mode": "api_read",
       "business_purpose": "Use source-owned performance returns and benchmark context as opportunity evidence without recalculating official performance methodology.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "BenchmarkExposureContext",
+      "producer_repository": "lotus-performance",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned benchmark exposure context where opportunity evidence needs benchmark composition without recomputing benchmark analytics locally.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "MandatePerformanceHealthContext",
+      "producer_repository": "lotus-performance",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned active-return and mandate performance health posture as opportunity evidence without creating mandate actions or recalculating performance methodology.",
       "validation_lanes": [
         "feature",
         "pr-merge",
@@ -82,6 +234,56 @@
       "failure_posture": "degrade_to_partial"
     },
     {
+      "product_name": "MandateRiskHealthContext",
+      "producer_repository": "lotus-risk",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "lineage_version",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned mandate risk health posture as opportunity evidence without creating mandate actions, risk methodology, or risk approvals locally.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "RegimeScenarioPackEvaluation",
+      "producer_repository": "lotus-risk",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "lineage_version",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned scenario and regime-stress evidence as opportunity context without calculating scenario methodology, CIO approval posture, or portfolio applicability locally.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
       "product_name": "AdvisoryProposalLifecycleRecord",
       "producer_repository": "lotus-advise",
       "required_product_version": "v1",
@@ -100,6 +302,32 @@
       },
       "consumption_mode": "api_read",
       "business_purpose": "Preserve advisory proposal and suitability workflow context while keeping proposal creation, suitability, and client-advice authority in lotus-advise.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "AdvisoryPolicyEvaluationRecord",
+      "producer_repository": "lotus-advise",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Preserve advisory policy evaluation and missing-evidence posture where ideas need advisory conversion gating while keeping policy evaluation, sign-off, suitability, and client-advice authority in lotus-advise.",
       "validation_lanes": [
         "feature",
         "pr-merge",

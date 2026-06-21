@@ -21,9 +21,18 @@ REQUIRED_PRODUCTS = {
 
 REQUIRED_DEPENDENCIES = {
     ("lotus-core", "PortfolioStateSnapshot"),
+    ("lotus-core", "HoldingsAsOf"),
+    ("lotus-core", "PortfolioCashMovementSummary"),
+    ("lotus-core", "PortfolioCashflowProjection"),
+    ("lotus-core", "BenchmarkAssignment"),
     ("lotus-performance", "ReturnsSeriesBundle"),
+    ("lotus-performance", "BenchmarkExposureContext"),
+    ("lotus-performance", "MandatePerformanceHealthContext"),
     ("lotus-risk", "RiskMetricsReport"),
+    ("lotus-risk", "MandateRiskHealthContext"),
+    ("lotus-risk", "RegimeScenarioPackEvaluation"),
     ("lotus-advise", "AdvisoryProposalLifecycleRecord"),
+    ("lotus-advise", "AdvisoryPolicyEvaluationRecord"),
     ("lotus-manage", "PortfolioActionRegister"),
     ("lotus-report", "ClientReportEvidencePack"),
     ("lotus-advise", "AdvisoryCopilotInteractionRecord"),

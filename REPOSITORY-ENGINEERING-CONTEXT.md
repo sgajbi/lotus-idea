@@ -71,6 +71,15 @@ boundaries, conversion gating, immutable models, and bounded scoring. It does
 not add API, persistence, source adapters, data-product certification, or
 supported-feature promotion.
 
+RFC-0002 Slice 04 data-mesh baseline now declares the current source-authority
+consumer set from the Slice 00 map, including Core portfolio state,
+holdings/cash balance, cash movement, cashflow projection, and benchmark
+assignment; Performance returns, benchmark exposure, and mandate performance
+health; Risk metrics, mandate risk health, and scenario-pack evaluation; Advise
+proposal, policy, and copilot records; Manage action register; and Report
+client report evidence. These are source contracts only until runtime adapters,
+supportability, and certification evidence exist.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
