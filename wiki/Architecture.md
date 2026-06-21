@@ -99,11 +99,12 @@ The migration contract and execution dry-run are CI-blocking, and real execution
 uses `make migrate` / `make migrate-rollback` with `LOTUS_IDEA_DATABASE_URL`.
 Runtime API repository wiring uses this adapter when `LOTUS_IDEA_DATABASE_URL`
 is configured after migrations are applied. `make postgres-integration-gate`
-now proves the first high-cash API persistence/replay path against a real
-PostgreSQL 18 service, including schema apply, provider reload, idempotency
-replay from database state, and schema rollback. Production storage readiness
-still requires deploy migration evidence, broader workflow proof, and
-rollback/recovery evidence.
+now proves high-cash API persistence/replay and the first internal review,
+feedback, conversion, report evidence-pack, and advisor queue workflow path
+against a real PostgreSQL 18 service, including schema apply, provider reload,
+idempotency replay from database state, backing table validation, and schema
+rollback. Production storage readiness still requires deploy migration
+evidence and broader rollback/recovery evidence.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -155,10 +156,12 @@ The repository now has a versioned schema and rollback contract for the durable
 repository, a PostgreSQL migration execution CLI, and a tested
 `PostgresIdeaRepository` adapter behind the central repository ports. API state
 is process-local by default and PostgreSQL-backed only when
-`LOTUS_IDEA_DATABASE_URL` is configured. The first real PostgreSQL runtime proof
-covers the high-cash evaluate-and-persist API replay path only. This opt-in
-wiring and proof are not data-product certification, live-source support,
-Gateway/Workbench support, or supported-feature promotion.
+`LOTUS_IDEA_DATABASE_URL` is configured. The real PostgreSQL runtime proof now
+covers high-cash evaluate-and-persist replay plus the first internal advisor
+queue, review, feedback, conversion, and report evidence-pack workflow path.
+This opt-in wiring and proof are not data-product certification, live-source
+support, Gateway/Workbench support, downstream realization, or
+supported-feature promotion.
 
 ## Review Queue Projection Foundation
 
@@ -175,8 +178,9 @@ The internal application layer can apply governed advisor review actions and
 feedback to repository snapshots, then persist accepted decisions, feedback
 events, safe audit evidence, lifecycle history, and idempotency replay/conflict
 posture through the Slice 06 repository contract. This is still an internal
-foundation; real PostgreSQL proof for review workflows, Gateway/Workbench
-functionality, and supported review-product promotion remain planned.
+foundation; PostgreSQL-backed review workflow proof exists only inside the
+opt-in runtime proof, while Gateway/Workbench functionality and supported
+review-product promotion remain planned.
 
 ## Architecture Decisions
 

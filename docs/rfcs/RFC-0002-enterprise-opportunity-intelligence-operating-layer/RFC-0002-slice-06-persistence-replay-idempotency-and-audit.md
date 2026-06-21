@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, and high-cash PostgreSQL runtime proof
+Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, and first PostgreSQL runtime workflow proof
 
 ## Outcome
 
@@ -113,8 +113,11 @@ Implemented first-wave internal scope:
     persists a high-cash candidate through
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, reloads the
     repository provider to force a new database connection, proves idempotency
-    replay from PostgreSQL state, validates candidate/idempotency table counts,
-    and rolls the schema back. `make postgres-integration-gate` is the
+    replay from PostgreSQL state, projects the advisor queue from the reloaded
+    repository, transitions the candidate to review-ready state, records review
+    approval, advisor feedback, report conversion intent, conversion outcome,
+    and report evidence-pack request state, validates the backing workflow
+    tables, and rolls the schema back. `make postgres-integration-gate` is the
     repo-native command, and PR Merge Gate / Main Releasability run it against
     `postgres:18-alpine` with
     `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`.
@@ -123,9 +126,8 @@ Not implemented yet:
 
 1. deploy-pipeline migration execution proof against a real PostgreSQL service,
 2. database-backed source-ingestion workers,
-3. real PostgreSQL proof for review, conversion, report-evidence, and queue
-   workflows beyond the current high-cash persistence/replay path,
-4. broader rollback/recovery proof against a real PostgreSQL service,
+3. broader rollback/recovery proof against a real PostgreSQL service,
+4. live source adapter and source-ingestion proof,
 5. data-product certification,
 6. Gateway/Workbench/downstream proof,
 7. supported-feature promotion.
@@ -140,9 +142,10 @@ service execution still requires `LOTUS_IDEA_DATABASE_URL`. This is
 intentionally ahead of production storage promotion so schema, rollback,
 indexing, relationship posture, execution command shape, adapter behavior,
 runtime selection, and the first durable replay path become CI-visible before
-any supported database-backed product claim is made. The next durable
-persistence slices must broaden real database proof across review, queue,
-conversion, and report evidence-pack workflows, prove recovery behavior against
+any supported database-backed product claim is made. The current proof now also
+exercises the first internal review, queue, conversion, and report
+evidence-pack workflow against PostgreSQL. The next durable persistence slices
+must prove source-ingestion worker behavior, broader recovery behavior against
 that service, and keep API responses truthful: `durableStorageBacked=true`
 means the configured repository adapter is active, not that the idea product is
 data-mesh certified or supported.
@@ -168,8 +171,8 @@ Targeted validation:
    tests under coverage, coverage gate at `99.37%`, and dependency audit
    reporting no known vulnerabilities.
 7. Later endpoint foundation validation covered the certified
-   evaluate-and-persist API with OpenAPI and endpoint-certification gates, but
-   database-backed persistence remains planned.
+   evaluate-and-persist API with OpenAPI and endpoint-certification gates; at
+   that point database-backed persistence remained planned.
 8. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_service_contract.py tests\integration\test_review_workflow_api.py -q`
    passed with `29 passed` after adding idempotent lifecycle transition
    repository and API coverage.
@@ -221,6 +224,22 @@ Targeted validation:
     reporting no known vulnerabilities.
 26. `make docker-build` passed for `backend-service:ci-test` after adding
     `migrations/` to the Docker image.
+27. `make postgres-integration-gate` passed against a disposable
+    `postgres:18-alpine` service on `localhost:55434` with `2 passed` after
+    broadening the proof to cover high-cash persistence/replay, advisor queue
+    projection, lifecycle transitions, review approval replay, feedback,
+    report conversion intent replay, conversion outcome, report evidence-pack
+    request replay, and backing workflow table counts.
+28. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+    guards, data-mesh contract gate, migration contract gate,
+    migration execution dry-run gate, supported-feature gate,
+    endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
+    `237` unit tests.
+29. `make ci` passed with `60` integration tests, `2` local PostgreSQL skips,
+    `2` e2e tests, `237` unit tests under coverage, coverage gate at `99.15%`,
+    and dependency audit reporting no known vulnerabilities.
+30. `make docker-build` passed for `backend-service:ci-test` after broadening
+    the PostgreSQL runtime proof and synchronizing docs/wiki truth.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.

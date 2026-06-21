@@ -34,7 +34,8 @@ Current RFC-0002 implementation-start baseline:
    central repository workflow port boundary. It also adds the first versioned
    schema/rollback contract, PostgreSQL migration execution CLI, tested
    PostgreSQL repository adapter foundation, opt-in API runtime wiring, and a
-   real PostgreSQL high-cash persistence/replay proof without supported-feature
+   real PostgreSQL high-cash persistence/replay plus first internal
+   review/feedback/conversion/report workflow proof without supported-feature
    promotion.
 7. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
@@ -45,8 +46,9 @@ Current RFC-0002 implementation-start baseline:
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, queue projection interaction, repository-backed
    persistence orchestration, and certified internal review/feedback API
-   foundations without database-backed review persistence, Gateway, Workbench,
-   PM/compliance/operator queue surfaces, or supported-feature promotion.
+   foundations with PostgreSQL-backed internal workflow proof but without
+   Gateway, Workbench, PM/compliance/operator queue surfaces, mesh
+   certification, or supported-feature promotion.
 9. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,

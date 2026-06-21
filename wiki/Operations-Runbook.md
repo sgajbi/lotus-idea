@@ -13,8 +13,10 @@ exists for the durable repository and is enforced by `make migration-contract-ga
 `make migration-execution-gate` dry-runs apply and rollback execution plans, and
 `make migrate` / `make migrate-rollback` execute against PostgreSQL when
 `LOTUS_IDEA_DATABASE_URL` is configured. `make postgres-integration-gate` proves
-the first high-cash API persistence/replay path against a real PostgreSQL 18
-service when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured.
+the high-cash API persistence/replay path and the first internal review,
+feedback, conversion, report evidence-pack, and advisor queue workflow path
+against a real PostgreSQL 18 service when
+`LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.

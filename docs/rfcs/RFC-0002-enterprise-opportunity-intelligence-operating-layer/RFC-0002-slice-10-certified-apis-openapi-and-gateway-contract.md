@@ -182,11 +182,13 @@ validation, permission, missing intent, idempotency conflict, or wrong-source
 failures.
 
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
-`durableStorageBacked` is always `false` for mutating foundation endpoints. The
-endpoints are certified as API foundations but are not supported business
-features because live source adapters, Gateway/Workbench proof, database-backed
-API state, data-product certification, runtime trust telemetry, and
-supported-feature registration are not implemented yet.
+`durableStorageBacked` follows the active repository provider for
+repository-backed foundation endpoints: process-local runtime reports `false`,
+and `LOTUS_IDEA_DATABASE_URL` runtime reports `true`. The endpoints are
+certified as API foundations but are not supported business features because
+live source adapters, Gateway/Workbench proof, data-product certification,
+runtime trust telemetry, downstream realization proof, and supported-feature
+registration are not implemented yet.
 
 ## Required Work
 
@@ -199,15 +201,14 @@ supported-feature registration are not implemented yet.
 
 ## Remaining Work
 
-1. Add database-backed application state and idempotent API persistence once the
-   persistence slice moves from internal records to durable storage.
-2. Extend the current Core high-cash source-port and conservative HTTP adapter
+1. Extend the current Core high-cash source-port and conservative HTTP adapter
    into live source contract proof once Core publishes an explicit
    source-reported cash-weight field; keep all official cash/holding
    calculations in `lotus-core`.
-3. Add Gateway contracts and tests that prove Gateway preserves `lotus-idea`
+2. Add Gateway contracts and tests that prove Gateway preserves `lotus-idea`
    source authority and does not rank or generate ideas.
-4. Add Workbench review-surface proof before any UI or demo claim.
+3. Add Workbench review-surface proof before any UI or demo claim.
+4. Add deployment and recovery proof for PostgreSQL-backed API state.
 5. Add data-product trust telemetry, platform mesh certification, and
    supported-feature promotion only after runtime proof exists.
 6. Add additional route families for evidence packs and supportability after

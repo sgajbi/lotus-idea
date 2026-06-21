@@ -55,10 +55,11 @@ Current proof lives in:
 1. `tests/unit/test_report_evidence.py`,
 2. `tests/unit/test_idea_persistence.py`,
 3. `tests/integration/test_review_workflow_api.py`,
-4. `tests/unit/test_service_contract.py`,
-5. `docs/operations/endpoint-certification-ledger.json`.
+4. `tests/integration/test_postgres_runtime_integration.py`,
+5. `tests/unit/test_service_contract.py`,
+6. `docs/operations/endpoint-certification-ledger.json`.
 
-Promotion requires real PostgreSQL proof for report evidence-pack workflows and recovery evidence,
-downstream acceptance tests, render/archive proof, Gateway/Workbench proof,
-data-mesh certification, runtime trust telemetry, supported-feature
+Promotion requires deploy and recovery evidence for the PostgreSQL-backed
+workflow, downstream acceptance tests, render/archive proof, Gateway/Workbench
+proof, data-mesh certification, runtime trust telemetry, supported-feature
 registration, and published wiki truth.

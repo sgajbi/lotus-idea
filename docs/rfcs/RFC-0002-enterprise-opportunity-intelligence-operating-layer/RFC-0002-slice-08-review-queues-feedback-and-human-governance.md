@@ -49,12 +49,20 @@ Implemented in this slice:
 13. The review and feedback APIs require `Idempotency-Key`, mutating
     capabilities, caller role, upstream-authorized tenant/book/portfolio/client
     scope, and return product-safe 403, 404, and 409 errors.
-14. The APIs share the current in-memory repository provider and explicitly
-    return `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+14. The APIs share the active repository provider. They return
+    `durableStorageBacked=false` in default process-local runtime and
+    `durableStorageBacked=true` only when `LOTUS_IDEA_DATABASE_URL` activates
+    the PostgreSQL provider; they always return `supportedFeaturePromoted=false`.
 15. `tests/integration/test_review_workflow_api.py` covers suppression
     persistence, idempotency replay/conflict, generated-state approval conflict,
     feedback persistence, missing candidate, capability denial, and scope
     denial.
+16. `tests/integration/test_postgres_runtime_integration.py` now proves the
+    first PostgreSQL-backed internal review workflow path by projecting the
+    advisor queue from reloaded database state, transitioning lifecycle to
+    review-ready, recording approval, replaying the review decision from
+    database idempotency state, recording feedback, and validating review and
+    feedback tables.
 
 Validation evidence from the implementation slice:
 
@@ -76,13 +84,12 @@ Validation evidence from the implementation slice:
 
 This slice is not yet a supported review product. Remaining work includes:
 
-1. database-backed durable review decision and feedback persistence,
-2. Gateway/Workbench integration proof,
-3. PM, compliance, and operator queue surfaces and permission policy,
-4. richer platform runtime caller-context entitlement integration so scope does
+1. Gateway/Workbench integration proof,
+2. PM, compliance, and operator queue surfaces and permission policy,
+3. richer platform runtime caller-context entitlement integration so scope does
    not need to be supplied by upstream-authorized request payloads,
-5. feedback data-product declaration promotion and mesh certification,
-6. trust telemetry, operational support, and supported-feature promotion.
+4. feedback data-product declaration promotion and mesh certification,
+5. trust telemetry, operational support, and supported-feature promotion.
 
 ## Required Work
 
@@ -101,7 +108,8 @@ This slice is not yet a supported review product. Remaining work includes:
 3. Queue projections update after decisions.
 4. Feedback events are source-provenanced.
 
-The durable feedback portion remains planned until database-backed persistence,
-Gateway/Workbench proof, platform-scoped runtime entitlements, and mesh
-certification store and expose review decisions and feedback events as a
-supported product surface.
+The durable feedback portion has first PostgreSQL-backed internal workflow
+proof only. It remains unsupported until Gateway/Workbench proof,
+platform-scoped runtime entitlements, mesh certification, and supported-feature
+evidence store and expose review decisions and feedback events as a supported
+product surface.

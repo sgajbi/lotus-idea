@@ -37,6 +37,9 @@ Current non-supported scope:
 5. the API foundations report `supportedFeaturePromoted=false`,
 6. `durableStorageBacked` is `false` by default and `true` only when
    `LOTUS_IDEA_DATABASE_URL` activates the PostgreSQL repository provider.
+   `make postgres-integration-gate` now proves the report conversion
+   intent/outcome path against a real PostgreSQL runtime, but this remains
+   internal workflow-state proof only.
 
 Implementation source:
 
@@ -54,7 +57,7 @@ Implementation source:
 
 Promotion requirements:
 
-1. real PostgreSQL integration proof for conversion workflows and recovery evidence,
+1. deploy and recovery evidence for the PostgreSQL-backed workflow,
 2. Gateway/Workbench proof,
 3. downstream acceptance tests in `lotus-advise`, `lotus-manage`, and
    `lotus-report` where each service remains source authority for its workflow,

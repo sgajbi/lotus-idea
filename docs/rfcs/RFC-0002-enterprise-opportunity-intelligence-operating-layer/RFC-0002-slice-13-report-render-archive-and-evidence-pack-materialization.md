@@ -37,6 +37,7 @@ Implemented in the first Slice 13 foundation:
    - `tests/unit/test_report_evidence.py`,
    - `tests/unit/test_idea_persistence.py`,
    - `tests/integration/test_review_workflow_api.py`,
+   - `tests/integration/test_postgres_runtime_integration.py`,
    - `tests/unit/test_service_contract.py`.
 
 Current endpoint behavior:
@@ -48,7 +49,8 @@ Current endpoint behavior:
 4. preserves source evidence summaries and evidence hash without returning raw
    source routes or payloads,
 5. records retention policy reference and safe audit event,
-6. returns `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+6. returns `durableStorageBacked` from the active repository provider and
+   `supportedFeaturePromoted=false`.
 
 ## Acceptance Gate
 
@@ -75,8 +77,9 @@ Not yet satisfied:
    record exists.
 4. No rendered-output equivalence proof exists.
 5. No Gateway/Workbench product surface, data-product certification, runtime
-   trust telemetry, database-backed persistence, or supported-feature promotion
-   exists.
+   trust telemetry, downstream materialization proof, or supported-feature
+   promotion exists. PostgreSQL-backed internal request recording proof exists
+   only inside the opt-in runtime proof.
 
 ## Boundary Decision
 
