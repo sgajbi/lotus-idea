@@ -6,6 +6,7 @@ from app.infrastructure.downstream_client import (
     DownstreamClientConfigurationError,
     DownstreamJsonClient,
     DownstreamServiceError,
+    build_trace_headers,
 )
 
 
@@ -19,6 +20,20 @@ def _client_for(handler: httpx.MockTransport) -> DownstreamJsonClient:
 def test_invalid_base_url_is_rejected() -> None:
     with pytest.raises(DownstreamClientConfigurationError):
         DownstreamClientConfig(base_url="not-a-url")
+
+
+def test_invalid_timeout_is_rejected() -> None:
+    with pytest.raises(DownstreamClientConfigurationError):
+        DownstreamClientConfig(base_url="https://upstream.example", timeout_seconds=0)
+
+
+def test_default_client_can_be_constructed_for_valid_config() -> None:
+    client = DownstreamJsonClient(DownstreamClientConfig(base_url="https://upstream.example"))
+    assert client is not None
+
+
+def test_empty_trace_headers_are_omitted() -> None:
+    assert build_trace_headers(correlation_id=None, trace_id=None) == {}
 
 
 def test_trace_headers_are_forwarded() -> None:
@@ -44,6 +59,15 @@ def test_timeout_maps_to_safe_upstream_error() -> None:
     assert exc_info.value.code == "upstream_timeout"
 
 
+def test_generic_http_error_maps_to_safe_upstream_error() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ConnectError("connection failed", request=request)
+
+    with pytest.raises(DownstreamServiceError) as exc_info:
+        _client_for(httpx.MockTransport(handler)).get_json("/status")
+    assert exc_info.value.code == "upstream_unavailable"
+
+
 @pytest.mark.parametrize(
     ("status_code", "expected_code"),
     [
@@ -67,6 +91,13 @@ def test_malformed_response_maps_to_safe_error() -> None:
     client = _client_for(
         httpx.MockTransport(lambda request: httpx.Response(200, content=b"not-json"))
     )
+    with pytest.raises(DownstreamServiceError) as exc_info:
+        client.get_json("/status")
+    assert exc_info.value.code == "upstream_malformed_response"
+
+
+def test_non_object_json_response_maps_to_safe_error() -> None:
+    client = _client_for(httpx.MockTransport(lambda request: httpx.Response(200, json=["x"])))
     with pytest.raises(DownstreamServiceError) as exc_info:
         client.get_json("/status")
     assert exc_info.value.code == "upstream_malformed_response"
