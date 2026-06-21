@@ -136,6 +136,16 @@ prompt/RAG/provider integration, durable AI lineage store, API/OpenAPI surface,
 Gateway/Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
 
+RFC-0002 Slice 10 is partially implemented as the first certified internal API
+foundation. `POST /api/v1/idea-signals/high-cash/evaluate` accepts
+caller-supplied, source-owned Core evidence references and source-reported cash
+weight, enforces `idea.signal.evaluate` capability or advisor role, returns
+deterministic candidate, blocked, suppressed, or not-eligible posture, and is
+covered by OpenAPI and endpoint certification evidence. This is not yet a
+supported product capability: there are no live source adapters, Gateway routes,
+Workbench surfaces, database-backed API state, data-product certification,
+runtime trust telemetry, or supported-feature promotion.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -156,9 +166,12 @@ logs; fix or document the owned warning source instead.
 1. `src/app/main.py`: application entrypoint, health, readiness, metadata, and
    OpenAPI surface.
 2. `src/app/api/`: route modules and DTO mapping. Routes must expose explicit
-   idea contracts and must not embed domain logic.
+   idea contracts and must not embed domain logic. Current business routes are
+   registered directly on the FastAPI app before Prometheus instrumentation so
+   endpoint certification and metrics instrumentation remain compatible.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
-   conversion workflows.
+   conversion workflows. The current first use case maps the certified
+   high-cash API request into framework-free domain signal evaluation.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    evidence policy, deterministic governance checks, internal persistence

@@ -5,6 +5,12 @@ from pydantic import BaseModel, Field
 
 
 class ProblemDetails(BaseModel):
+    type: str = Field(
+        default="about:blank",
+        description="Stable problem type URI or about:blank when no external type is assigned.",
+        examples=["about:blank"],
+    )
+    status: int = Field(..., description="HTTP response status code.", examples=[400])
     code: str = Field(
         ..., description="Stable product-safe error code.", examples=["invalid_request"]
     )
@@ -19,5 +25,5 @@ class ProblemDetails(BaseModel):
 
 
 def problem_response(status_code: int, code: str, title: str, detail: str) -> JSONResponse:
-    problem = ProblemDetails(code=code, title=title, detail=detail)
+    problem = ProblemDetails(status=status_code, code=code, title=title, detail=detail)
     return JSONResponse(status_code=status_code, content=problem.model_dump())

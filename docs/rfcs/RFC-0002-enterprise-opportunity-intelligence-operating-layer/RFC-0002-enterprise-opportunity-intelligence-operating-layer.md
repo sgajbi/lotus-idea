@@ -716,7 +716,7 @@ assertions.
 | 7 | Scoring, ranking, suppression, and queue policy | Partially implemented - internal foundation only | deterministic score inputs/policy, reason codes, stable queue projection, snooze/suppression/dedupe tests; persisted queue/API proof remains planned |
 | 8 | Review queues, feedback, and human governance | Partially implemented - internal advisor governance foundation only | advisor review actions, feedback model, entitlement tests, audit proof; APIs, persistence, PM/compliance/operator surfaces remain planned |
 | 9 | Governed AI explanation and model-risk controls | Partially implemented - internal foundation only | redacted AI request envelopes, verifier/fallback, safe audit, no-authority proof; `lotus-ai` runtime execution and APIs remain planned |
-| 10 | Certified APIs, OpenAPI, and Gateway contract | Planned | certified endpoints, OpenAPI examples, Gateway route contract |
+| 10 | Certified APIs, OpenAPI, and Gateway contract | Partially implemented - certified high-cash API foundation only | high-cash evaluate endpoint, OpenAPI examples, endpoint certification; Gateway route contract remains planned |
 | 11 | Workbench product realization | Planned | review queue UI, evidence drawer, browser/accessibility proof |
 | 12 | Advise and Manage conversion realization | Planned | advisory and manage conversion intents/outcomes with contract tests |
 | 13 | Report, Render, Archive, and evidence-pack materialization | Planned | report package, deterministic render, archive refs, retention/access proof |

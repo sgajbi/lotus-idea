@@ -15,6 +15,20 @@ The machine-readable source for endpoint certification tracking is:
 - docs/operations/endpoint-certification-ledger.json
 
 Run make endpoint-certification-gate before promoting any endpoint as supported.
+
+## Certified Foundation Endpoints
+
+`POST /api/v1/idea-signals/high-cash/evaluate` is the first certified API
+foundation for RFC-0002 Slice 10. It evaluates caller-supplied, source-owned
+Core evidence and source-reported cash weight for deterministic high-cash signal
+posture.
+
+Use it only when the caller already has source-authorized Core evidence
+references. Do not use it as live source ingestion proof, Gateway proof,
+Workbench proof, data-product certification, or supported-feature promotion.
+Those remain blocked until later RFC slices add runtime adapters, downstream
+contracts, trust telemetry, and supported-feature registration.
+
 ## Source-Degraded And Reconciliation Endpoints
 
 Endpoints that reconcile expected-versus-realized state or consume another Lotus app as source

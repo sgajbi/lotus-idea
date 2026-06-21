@@ -4,10 +4,11 @@ Current posture: no business feature is supported yet.
 
 Internal foundation exists for domain vocabulary, high-cash signal evaluation,
 candidate persistence/replay/idempotency/audit, deterministic scoring with
-review-queue projection, advisor review/feedback governance, and AI governance
-redaction/verifier/fallback controls. These are not externally supported
-features until API, runtime, certification, and supported-feature evidence are
-present.
+review-queue projection, advisor review/feedback governance, AI governance
+redaction/verifier/fallback controls, and the first certified internal
+high-cash API foundation. These are not externally supported features until
+live source adapters, durable runtime state, Gateway/Workbench proof,
+data-product certification, and supported-feature evidence are present.
 
 Planned capabilities:
 

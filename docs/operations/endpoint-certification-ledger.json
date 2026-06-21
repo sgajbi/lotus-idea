@@ -3,6 +3,32 @@
   "policy": "Every public OpenAPI operation requires certification evidence before promotion.",
   "endpoints": [
     {
+      "method": "POST",
+      "path": "/api/v1/idea-signals/high-cash/evaluate",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Core evidence for the first high-cash opportunity signal family.",
+      "when_to_use": "Use as the RFC-0002 Slice 10 API foundation for deterministic high-cash evaluation when the caller already has source-authorized evidence references and cash weight.",
+      "when_not_to_use": "Do not use as a live source-ingestion API, data-product certification proof, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedCashWeight\":\"0.18\",\"sourceEvidence\":{\"portfolioStateRef\":{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/integration/portfolios/{portfolioRef}/core-snapshot\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-state-snapshot-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"holdingsRef\":{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/{portfolioRef}/cash-balances\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:holdings-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"cashMovementRef\":{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/{portfolioRef}/cash-movement-summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:cash-movement-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"cashflowProjectionRef\":{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/{portfolioRef}/cashflow-projection\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:cashflow-projection-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}},\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"high_cash\",\"reasonCodes\":[\"high_cash_ratio\",\"cash_source_ready\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_cash\",\"reasonCodes\":[\"review_required\"],\"unsupportedReasons\":[\"entitlement_denied\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_creates_candidate_from_source_owned_evidence",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_requires_signal_evaluation_capability"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "GET",
       "path": "/health",
       "certification_status": "baseline_certified",

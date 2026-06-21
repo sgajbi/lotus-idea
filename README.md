@@ -13,9 +13,11 @@ model/lifecycle foundation, an internal high-cash deterministic signal policy,
 an internal persistence/replay/idempotency/audit foundation, an internal
 deterministic scoring/review-queue projection foundation, and an internal
 advisor review/feedback governance foundation, and an internal AI governance
-foundation for redaction, verifier, and fallback controls. No business feature
-is supported until the relevant RFC slice has implementation evidence, endpoint
-certification, tests, and supported-feature registration.
+foundation for redaction, verifier, and fallback controls. It also exposes the
+first certified internal high-cash signal evaluation API foundation for
+caller-supplied, source-owned Core evidence. No business feature is supported
+until the relevant RFC slice has full runtime evidence, endpoint certification,
+tests, data-mesh posture, downstream proof, and supported-feature registration.
 
 ## Product Boundary
 
@@ -83,7 +85,8 @@ source-authority contracts only, not runtime certification.
 ## Repository Map
 
 - `src/app/api/`: HTTP route modules and API DTO mapping.
-- `src/app/application/`: use-case orchestration.
+- `src/app/application/`: use-case orchestration. The current first use case is
+  high-cash signal evaluation over caller-supplied, source-owned Core evidence.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   internal persistence records, replay posture, idempotency, and audit

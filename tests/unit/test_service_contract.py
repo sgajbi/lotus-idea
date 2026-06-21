@@ -18,12 +18,15 @@ def test_service_profile_is_domain_authoritative() -> None:
 
 def test_problem_details_are_product_safe() -> None:
     problem = ProblemDetails(
+        status=400,
         code="invalid_request",
         title="Invalid request",
         detail="Correct the request fields and retry.",
     )
     payload = problem.model_dump()
     assert payload == {
+        "type": "about:blank",
+        "status": 400,
         "code": "invalid_request",
         "title": "Invalid request",
         "detail": "Correct the request fields and retry.",
@@ -48,6 +51,7 @@ def test_endpoint_certification_ledger_starts_with_scaffold_operations() -> None
     payload = json.loads(Path("docs/operations/endpoint-certification-ledger.json").read_text())
     operations = {(endpoint["method"], endpoint["path"]) for endpoint in payload["endpoints"]}
     assert operations == {
+        ("POST", "/api/v1/idea-signals/high-cash/evaluate"),
         ("GET", "/health"),
         ("GET", "/health/live"),
         ("GET", "/health/ready"),
