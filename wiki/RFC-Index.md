@@ -47,13 +47,16 @@ Current RFC-0002 implementation-start baseline:
 9. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,
-   and no AI downstream authority without `lotus-ai` runtime execution, API,
-   Gateway, Workbench, or supported-feature promotion.
+   no AI downstream authority, and a certified internal AI explanation
+   evaluator API without `lotus-ai` runtime execution, Gateway, Workbench, or
+   supported-feature promotion.
 10. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
-   transitions, advisor queues, review actions, feedback, conversion intent,
-   and conversion outcome. Gateway, Workbench, live source adapters,
-   data-product certification, and supported-feature promotion remain planned.
+   transitions, AI explanation evaluation, advisor queues, review actions,
+   feedback, conversion intent, conversion outcome, report evidence-pack
+   request, and data-mesh-readiness diagnostics. Gateway, Workbench, live source
+   adapters, data-product certification, and supported-feature promotion remain
+   planned.
 11. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and

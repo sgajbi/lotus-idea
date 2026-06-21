@@ -1,0 +1,312 @@
+from __future__ import annotations
+
+from typing import Any
+
+import pytest
+from fastapi.testclient import TestClient
+
+import app.api.ai_governance as ai_governance_api
+from app.api.repository_state import reset_idea_repository_for_tests
+from app.domain import InvalidAIWorkflowOutput
+from app.main import app
+
+
+def source_ref(product_id: str) -> dict[str, str]:
+    return {
+        "productId": product_id,
+        "sourceSystem": "lotus-core",
+        "productVersion": "v1",
+        "route": f"/source/{product_id}",
+        "asOfDate": "2026-06-21",
+        "generatedAtUtc": "2026-06-21T10:00:00Z",
+        "contentHash": f"sha256:{product_id}",
+        "dataQualityStatus": "complete",
+        "freshness": "current",
+    }
+
+
+def high_cash_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "sourceReportedCashWeight": "0.18",
+        "sourceEvidence": {
+            "portfolioStateRef": source_ref("lotus-core:PortfolioStateSnapshot:v1"),
+            "holdingsRef": source_ref("lotus-core:HoldingsAsOf:v1"),
+            "cashMovementRef": source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
+            "cashflowProjectionRef": source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        },
+        "entitlementAllowed": True,
+    }
+
+
+def persist_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "signal-ingestion-worker",
+        "X-Caller-Capabilities": "idea.candidate.persist",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "idea-lifecycle-worker",
+        "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def ai_headers(capabilities: str = "idea.ai-explanation.evaluate") -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-ai-governance-api",
+    }
+
+
+def lifecycle_payload(target_status: str, minute: int) -> dict[str, Any]:
+    return {
+        "transitionId": f"ai-lifecycle-{target_status}-001",
+        "targetLifecycleStatus": target_status,
+        "changedAtUtc": f"2026-06-21T10:{minute:02d}:00Z",
+        "reasonCodes": ["review_required"],
+    }
+
+
+def ai_request_payload(
+    *,
+    request_id: str = "ai-explanation-001",
+    purpose: str = "missing_evidence_check",
+    workflow_output: dict[str, Any] | None = None,
+    approved_metadata: dict[str, str] | None = None,
+) -> dict[str, Any]:
+    payload = {
+        "requestId": request_id,
+        "workflowPack": {
+            "workflowPackId": "lotus-ai:idea-explanation:v1",
+            "workflowPackVersion": "v1",
+            "purpose": purpose,
+            "evaluationRef": "lotus-ai:governed-verifier:v1",
+        },
+        "approvedMetadata": approved_metadata or {"channel": "advisor-workbench"},
+        "requestedAtUtc": "2026-06-21T10:12:00Z",
+        "fallbackReason": "ai_unavailable",
+    }
+    if workflow_output is not None:
+        payload["workflowOutput"] = workflow_output
+    return payload
+
+
+def workflow_output(
+    *,
+    claim_source_ids: list[str] | None = None,
+    action_type: str = "advisor_review",
+) -> dict[str, Any]:
+    return {
+        "outputId": "ai-output-001",
+        "explanationText": "Candidate has elevated idle cash and source-ready evidence.",
+        "claims": [
+            {
+                "claimId": "claim-001",
+                "claimText": "Cash weight is above idle-liquidity policy threshold.",
+                "sourceProductIds": claim_source_ids or ["lotus-core:PortfolioStateSnapshot:v1"],
+            }
+        ],
+        "proposedActions": [
+            {
+                "actionType": action_type,
+                "actionLabel": "Route to advisor review",
+            }
+        ],
+        "verifierRanAtUtc": "2026-06-21T10:12:30Z",
+    }
+
+
+def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(),
+        headers=persist_headers(idempotency_key),
+    )
+    assert response.status_code == 200
+    return str(response.json()["persistence"]["candidateId"])
+
+
+def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) -> None:
+    for index, target_status in enumerate(
+        ("enriched", "scored", "governance_checked", "ready_for_review"),
+        start=1,
+    ):
+        response = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+            json=lifecycle_payload(target_status, index),
+            headers=lifecycle_headers(f"ai-lifecycle-{target_status}-001"),
+        )
+        assert response.status_code == 200
+
+
+def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-fallback-001")
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(),
+        headers=ai_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-ai-governance-api"
+    payload = response.json()
+    assert payload["posture"] == "fallback_used"
+    assert payload["verifierOutcome"] == "not_run"
+    assert payload["fallbackUsed"] is True
+    assert payload["fallbackReason"] == "ai_unavailable"
+    assert payload["grantsDownstreamAuthority"] is False
+    assert payload["durableStorageBacked"] is False
+    assert payload["lotusAiRuntimeExecuted"] is False
+    assert payload["supportedFeaturePromoted"] is False
+    assert payload["redactedEvidence"]["candidateId"] == candidate_id
+    assert "route" not in response.text
+
+
+def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-accepted-001")
+    transition_candidate_to_review_ready(client, candidate_id)
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(
+            purpose="advisor_rationale_draft",
+            workflow_output=workflow_output(),
+        ),
+        headers=ai_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["posture"] == "ready_for_advisor_review"
+    assert payload["verifierOutcome"] == "passed"
+    assert payload["reasonCodes"] == ["ai_verifier_passed"]
+    assert payload["verifiedOutput"]["outputId"] == "ai-output-001"
+    assert payload["verifiedOutput"]["claimIds"] == ["claim-001"]
+    assert payload["approvedMetadataKeys"] == ["channel"]
+    assert payload["lotusAiRuntimeExecuted"] is False
+
+
+def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-blocked-001")
+
+    unsupported_claim = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(
+            request_id="ai-explanation-unsupported-001",
+            workflow_output=workflow_output(
+                claim_source_ids=["lotus-risk:RiskDecomposition:v1"],
+            ),
+        ),
+        headers=ai_headers(),
+    )
+    forbidden_action = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(
+            request_id="ai-explanation-forbidden-001",
+            workflow_output=workflow_output(action_type="final_investment_recommendation"),
+        ),
+        headers=ai_headers(),
+    )
+
+    assert unsupported_claim.status_code == 200
+    assert unsupported_claim.json()["posture"] == "blocked_unsupported_claim"
+    assert unsupported_claim.json()["verifierOutcome"] == "failed_unsupported_claim"
+    assert unsupported_claim.json()["reasonCodes"] == ["ai_unsupported_claim_blocked"]
+    assert forbidden_action.status_code == 200
+    assert forbidden_action.json()["posture"] == "blocked_forbidden_action"
+    assert forbidden_action.json()["verifierOutcome"] == "failed_forbidden_action"
+    assert forbidden_action.json()["reasonCodes"] == ["ai_forbidden_action_blocked"]
+
+
+def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-permission-001")
+
+    denied = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(),
+        headers=ai_headers("idea.review.record"),
+    )
+    missing = client.post(
+        "/api/v1/idea-candidates/missing-candidate/ai-explanations/evaluate",
+        json=ai_request_payload(),
+        headers=ai_headers(),
+    )
+
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "permission_denied"
+    assert missing.status_code == 404
+    assert missing.json()["code"] == "candidate_not_found"
+
+
+def test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metadata() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-invalid-001")
+
+    invalid_state = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(purpose="advisor_rationale_draft"),
+        headers=ai_headers(),
+    )
+    leaked_metadata = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(approved_metadata={"prompt": "summarize private client data"}),
+        headers=ai_headers(),
+    )
+
+    assert invalid_state.status_code == 409
+    assert invalid_state.json()["code"] == "ai_explanation_conflict"
+    assert leaked_metadata.status_code == 400
+    assert leaked_metadata.json()["code"] == "invalid_request"
+    assert "summarize private client data" not in leaked_metadata.text
+
+
+def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_metadata_value(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-safe-errors-001")
+
+    def raise_invalid_output(*_: Any, **__: Any) -> None:
+        raise InvalidAIWorkflowOutput("output request_id does not match request")
+
+    monkeypatch.setattr(
+        ai_governance_api,
+        "evaluate_ai_explanation_to_repository",
+        raise_invalid_output,
+    )
+    invalid_output = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(),
+        headers=ai_headers(),
+    )
+    monkeypatch.undo()
+
+    blank_metadata_value = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(approved_metadata={"channel": " "}),
+        headers=ai_headers(),
+    )
+
+    assert invalid_output.status_code == 400
+    assert invalid_output.json()["code"] == "invalid_ai_output"
+    assert "request_id" not in invalid_output.text
+    assert blank_metadata_value.status_code == 400
+    assert blank_metadata_value.json()["code"] == "invalid_request"

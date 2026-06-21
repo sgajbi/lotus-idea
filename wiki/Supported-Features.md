@@ -5,8 +5,9 @@ Current posture: no business feature is supported yet.
 Internal foundation exists for domain vocabulary, high-cash signal evaluation,
 candidate persistence/replay/idempotency/audit, deterministic scoring with
 review-queue projection, advisor review/feedback governance, AI governance
-redaction/verifier/fallback controls, and the first certified internal
-high-cash API foundation. Internal conversion governance and certified internal
+redaction/verifier/fallback controls, and a certified internal AI explanation
+evaluator API, plus the first certified internal high-cash API foundation.
+Internal conversion governance and certified internal
 conversion intent/outcome API foundations also exist for review-gated
 conversion tracking, source-authority mapping, and no-authority conversion
 boundaries. Internal report evidence-pack request governance also exists for

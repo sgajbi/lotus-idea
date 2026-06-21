@@ -2,9 +2,9 @@
 
 Current posture: scaffold operations plus internal domain, persistence/replay,
 lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
-advisor queue, review-action, and feedback API foundations, and conversion
-governance plus certified internal conversion intent/outcome and report
-evidence-pack API foundations. The service remains internal foundation only:
+AI explanation, advisor queue, review-action, and feedback API foundations, and
+conversion governance plus certified internal conversion intent/outcome and
+report evidence-pack API foundations. The service remains internal foundation only:
 there is no database-backed business persistence, migration, downstream adapter,
 runtime recovery command, Gateway/Workbench proof, or supported business API yet.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
@@ -40,23 +40,28 @@ RFC-0002 will add support runbooks for:
 RFC-0002 Slice 15 now emits bounded operation-event logs and the
 `lotus_idea_operation_events_total` metric for high-cash signal evaluation,
 candidate persistence, lifecycle transitions, advisor queue reads, review
-actions, feedback records, conversion intent recording, conversion outcome
+actions, AI explanation fallback/verifier evaluation, feedback records,
+conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, and data-mesh-readiness
 diagnostic reads.
 
 Current outcomes:
 
 1. `accepted`: new process-local foundation record created.
-2. `replayed`: duplicate submission with the same idempotency key and payload.
-3. `conflict`: idempotency key reused with a different payload.
-4. `not_found`: candidate, conversion intent, or related foundation record is absent.
-5. `duplicate`, `suppressed`, and `not_eligible`: deterministic signal or
+2. `fallback`: deterministic AI explanation was returned without verified AI
+   workflow output.
+3. `replayed`: duplicate submission with the same idempotency key and payload.
+4. `conflict`: idempotency key reused with a different payload.
+5. `not_found`: candidate, conversion intent, or related foundation record is absent.
+6. `duplicate`, `suppressed`, and `not_eligible`: deterministic signal or
    persistence outcomes that did not create a new candidate.
-6. `permission_denied`: caller capability failed closed.
-7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
-8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
-9. `blocked`: expected current data-mesh-readiness posture while runtime trust
-   telemetry and platform certification remain absent.
+7. `permission_denied`: caller capability failed closed.
+8. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
+9. `invalid_state`: lifecycle, review, target authority, report intent, or AI
+   explanation precondition failed.
+10. `blocked`: verifier rejected unsupported AI output, or expected current
+    data-mesh-readiness posture while runtime trust telemetry and platform
+    certification remain absent.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -75,7 +80,8 @@ The current certified foundation endpoint inventory is summarized in
 `docs/operations/endpoint-certification-ledger.json`.
 
 The inventory covers high-cash evaluation, high-cash persistence, lifecycle
-transition, advisor queue, review action, feedback, conversion intent,
-conversion outcome, report evidence-pack request, and data-mesh-readiness
-diagnostic endpoints. These endpoints are certified as internal foundations or
-operator diagnostics only; they are not supported business features.
+transition, AI explanation evaluation, advisor queue, review action, feedback,
+conversion intent, conversion outcome, report evidence-pack request, and
+data-mesh-readiness diagnostic endpoints. These endpoints are certified as
+internal foundations or operator diagnostics only; they are not supported
+business features.

@@ -33,12 +33,15 @@ Current state:
    actions, safe audit events, source provenance, idempotency replay/conflict,
    and queue projection interaction,
 12. RFC-0002 Slice 09 partially implements internal AI governance with redacted
-    evidence envelopes, verifier/fallback controls, safe audit events, and no
-    AI downstream authority,
+    evidence envelopes, verifier/fallback controls, safe audit events,
+    certified internal AI explanation evaluator API, and no AI downstream
+    authority,
 13. RFC-0002 Slice 10 partially implements the certified internal
     `POST /api/v1/idea-signals/high-cash/evaluate` and
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
-    over caller-supplied, source-owned Core evidence,
+    over caller-supplied, source-owned Core evidence, plus certified internal
+    lifecycle, AI explanation, advisor queue, review, feedback, conversion,
+    report evidence-pack, and data-mesh-readiness endpoint foundations,
 14. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, and no-authority conversion boundaries,

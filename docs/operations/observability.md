@@ -30,6 +30,7 @@ Current instrumented operations:
 | `signal_evaluation` | Internal high-cash signal evaluation | `lotus-core` | `foundation_only` |
 | `candidate_persistence` | Internal high-cash candidate persistence and replay | `lotus-core` | `foundation_only` |
 | `lifecycle_transition` | Internal candidate lifecycle transition recording | `lotus-idea` | `foundation_only` |
+| `ai_explanation` | Internal AI explanation fallback/verifier evaluation | `lotus-idea` | `foundation_only` |
 | `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
 | `review_action` | Internal human review decision recording | `lotus-idea` | `foundation_only` |
 | `feedback_record` | Internal advisor feedback recording | `lotus-idea` | `foundation_only` |
@@ -55,17 +56,19 @@ fields. Do not add identifiers or payload fragments to operation labels.
 
 1. `accepted` means the internal foundation recorded a new operation in the process-local
    repository.
-2. `replayed` means the same idempotency key and payload returned an existing foundation record.
-3. `conflict` means the idempotency key was reused with a different payload.
-4. `not_found` means the referenced candidate, conversion intent, or related foundation record was
+2. `fallback` means the AI explanation evaluator returned deterministic evidence because no
+   verified AI workflow output was supplied or available.
+3. `replayed` means the same idempotency key and payload returned an existing foundation record.
+4. `conflict` means the idempotency key was reused with a different payload.
+5. `not_found` means the referenced candidate, conversion intent, or related foundation record was
    not present.
-5. `duplicate`, `suppressed`, and `not_eligible` describe deterministic signal or persistence
+6. `duplicate`, `suppressed`, and `not_eligible` describe deterministic signal or persistence
    outcomes that did not create a new candidate.
-6. `permission_denied` means fail-closed capability policy blocked the caller.
-7. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
+7. `permission_denied` means fail-closed capability policy blocked the caller.
+8. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
-8. `blocked` on `mesh_readiness_read` is the expected current diagnostic posture until runtime
-   trust telemetry and platform mesh certification exist.
+9. `blocked` means the verifier rejected unsupported AI output or the mesh-readiness diagnostic
+   remains blocked until runtime trust telemetry and platform mesh certification exist.
 
 These signals are operational support evidence only. They do not certify a data product, durable
 database state, Gateway/Workbench route, downstream Report/Render/Archive realization, or supported

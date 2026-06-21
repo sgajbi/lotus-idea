@@ -101,6 +101,15 @@ foundation. It projects persisted candidate snapshots through the deterministic
 Slice 07 queue policy and returns ranked items plus exclusions without a durable
 queue store, Gateway route, Workbench surface, or supported-feature promotion.
 
+`POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate` is the
+certified internal AI explanation evaluator foundation. It evaluates
+deterministic fallback or supplied workflow output against persisted candidate
+evidence, redacts source refs, blocks unsupported claims and forbidden actions,
+and emits bounded `ai_explanation` operation events. It does not call providers,
+execute `lotus-ai` runtime workflows, persist durable AI lineage, grant
+downstream authority, expose a Gateway/Workbench surface, or promote a
+supported feature.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist

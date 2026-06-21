@@ -1,13 +1,16 @@
 # AI Governance And Model-Risk Posture
 
 `lotus-idea` uses AI only as a governed assistance layer. The current
-implementation is an internal domain foundation; it does not call providers,
-does not expose AI APIs, and does not promote AI-assisted explanation as a
-supported feature.
+implementation is an internal domain and API foundation; it does not call
+providers, does not execute `lotus-ai` runtime workflows, does not persist
+durable AI lineage, and does not promote AI-assisted explanation as a supported
+feature.
 
 ## Current Implementation
 
-RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py` with:
+RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
+`src/app/application/ai_governance.py`, and
+`src/app/api/ai_governance.py` with:
 
 1. redacted evidence envelopes for `lotus-ai` workflow-pack requests,
 2. approved metadata validation that rejects portfolio, client, raw prompt,
@@ -15,11 +18,24 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py` with:
 3. deterministic fallback records for AI-unavailable posture,
 4. verifier outcomes for unsupported claims and forbidden actions,
 5. safe audit events for AI explanation evaluation,
-6. explicit no-downstream-authority semantics for AI output.
+6. explicit no-downstream-authority semantics for AI output,
+7. a certified internal API foundation at
+   `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`,
+8. bounded operation telemetry through `ai_explanation` events with
+   `accepted`, `fallback`, or `blocked` outcomes.
 
-The module preserves source authority: AI output cannot mutate candidate score,
-lifecycle, source facts, review state, conversion state, or downstream
-workflow authority.
+The API preserves source authority: AI output cannot mutate candidate score,
+lifecycle, source facts, review state, conversion state, or downstream workflow
+authority. It returns redacted source refs without routes, raw prompts, provider
+responses, trace ids, correlation ids, portfolio ids, client ids, request bodies,
+or response bodies.
+
+Successful API responses always return:
+
+1. `durableStorageBacked=false`,
+2. `lotusAiRuntimeExecuted=false`,
+3. `supportedFeaturePromoted=false`,
+4. `grantsDownstreamAuthority=false`.
 
 ## Allowed Current Purposes
 
@@ -35,6 +51,23 @@ The internal domain model supports these bounded workflow purposes:
 Runtime execution through `lotus-ai` remains planned. `lotus-ai` owns provider
 execution, prompt registry, RAG, evaluation, workflow-pack runtime, and AI
 telemetry.
+
+## API Behavior
+
+The internal evaluator supports two modes:
+
+1. **Deterministic fallback**: when no workflow output is supplied, the route
+   returns a governed fallback explanation over persisted candidate evidence
+   and emits a `fallback` operation event.
+2. **Verifier evaluation**: when workflow output is supplied, the route checks
+   that every claim references source products already present in the redacted
+   evidence envelope and that proposed actions are limited to advisor review or
+   missing-evidence requests.
+
+Unsupported claims and forbidden actions return `200` with a blocked posture
+because the verifier successfully evaluated and rejected the output. Missing
+candidates, permission failures, invalid request shape, forbidden metadata, and
+invalid candidate lifecycle posture return product-safe Problem Details.
 
 ## Prohibited Behavior
 

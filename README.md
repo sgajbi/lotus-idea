@@ -17,7 +17,8 @@ high-cash evaluate-and-persist orchestration foundation,
 deterministic scoring/review-queue projection and repository-snapshot queue
 orchestration foundation, an internal advisor review/feedback governance and
 workflow persistence foundation, and an internal AI governance
-foundation for redaction, verifier, and fallback controls. It also exposes the
+foundation for redaction, verifier, fallback controls, and a certified internal
+AI explanation evaluator API. It also exposes the
 first certified internal high-cash signal evaluation and evaluate-and-persist
 API foundations for caller-supplied, source-owned Core evidence, certified
 internal candidate lifecycle, advisor queue, review-action, and feedback API
@@ -27,7 +28,7 @@ for review-gated downstream intent/outcome tracking. It now also has an
 internal report evidence-pack request foundation plus a certified internal API
 for reviewed report conversion intents, and the first bounded operation-event
 observability foundation across certified internal signal, persistence,
-lifecycle, queue, review, feedback, conversion, report evidence, and
+lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
 data-mesh-readiness APIs. No business feature is supported until the relevant
 RFC slice has full runtime evidence, tests, data-mesh posture, downstream
 proof, Gateway/Workbench proof, and supported-feature registration.
@@ -119,6 +120,10 @@ source-authority contracts only, not runtime certification.
   Internal review/feedback workflow orchestration records
   governed decisions and feedback through the repository idempotency/audit
   contract and certified internal review/feedback API foundations.
+  Internal AI governance orchestration evaluates deterministic fallback or
+  supplied workflow output against persisted candidate evidence without calling
+  providers, executing `lotus-ai` runtime workflows, persisting durable AI
+  lineage, or granting downstream authority.
   Internal conversion workflow orchestration records review-gated conversion
   intents and source-authorized outcomes through the repository
   idempotency/audit contract and certified internal conversion API foundations.
@@ -138,10 +143,11 @@ source-authority contracts only, not runtime certification.
   when Core omits a source-reported value.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
-  persistence, lifecycle, advisor queue, review, feedback, conversion, and
-  report evidence-pack foundation APIs plus the data-mesh-readiness diagnostic
-  emit product-safe operation logs and the `lotus_idea_operation_events_total`
-  metric without sensitive labels or supported-feature promotion.
+  persistence, lifecycle, AI explanation, advisor queue, review, feedback,
+  conversion, and report evidence-pack foundation APIs plus the
+  data-mesh-readiness diagnostic emit product-safe operation logs and the
+  `lotus_idea_operation_events_total` metric without sensitive labels or
+  supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.
 - `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.
 - `contracts/`: proposed data-product declarations, consumer dependencies,

@@ -5,6 +5,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+import app.api.ai_governance as ai_governance_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.idea_signals as idea_signals_api
 import app.api.review_queues as review_queues_api
@@ -104,6 +105,15 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
+def ai_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
+        "X-Correlation-Id": "corr-operation-ai-api",
+    }
+
+
 def access_scope() -> dict[str, str]:
     return {
         "tenantId": "tenant-private-bank-sg",
@@ -155,6 +165,21 @@ def feedback_payload() -> dict[str, Any]:
         "outcome": "useful",
         "reasonCodes": ["review_required"],
         "recordedAtUtc": "2026-06-21T10:06:00Z",
+    }
+
+
+def ai_payload() -> dict[str, Any]:
+    return {
+        "requestId": "operation-ai-explanation-001",
+        "workflowPack": {
+            "workflowPackId": "lotus-ai:idea-explanation:v1",
+            "workflowPackVersion": "v1",
+            "purpose": "missing_evidence_check",
+            "evaluationRef": "lotus-ai:governed-verifier:v1",
+        },
+        "approvedMetadata": {"channel": "advisor-workbench"},
+        "requestedAtUtc": "2026-06-21T10:12:00Z",
+        "fallbackReason": "ai_unavailable",
     }
 
 
@@ -265,3 +290,25 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
         ("review_action", "accepted", "lotus-idea", None),
         ("feedback_record", "accepted", "lotus-idea", None),
     ]
+
+
+def test_ai_explanation_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, ai_governance_api)
+    candidate_id = persist_candidate(
+        client,
+        suffix="-ai-explanation",
+        idempotency_key="operation-persist-ai-001",
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_payload(),
+        headers=ai_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("ai_explanation", "fallback", "lotus-idea", None)]

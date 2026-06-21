@@ -188,13 +188,20 @@ queue surface, data-product certification, trust telemetry, or supported-feature
 promotion exists.
 
 RFC-0002 Slice 09 is partially implemented as an internal AI governance
-foundation in `src/app/domain/ai_governance.py`. The repository now has
-redacted evidence envelopes for future `lotus-ai` workflow-pack requests,
-forbidden metadata rejection, deterministic AI-unavailable fallback, verifier
-outcomes for unsupported claims and forbidden actions, safe AI audit events,
-and no-downstream-authority semantics for AI output. This is not yet a
-supported AI explanation product: no `lotus-ai` runtime workflow execution,
-prompt/RAG/provider integration, durable AI lineage store, API/OpenAPI surface,
+foundation in `src/app/domain/ai_governance.py`,
+`src/app/application/ai_governance.py`, and `src/app/api/ai_governance.py`.
+The repository now has redacted evidence envelopes for future `lotus-ai`
+workflow-pack requests, forbidden metadata rejection, deterministic
+AI-unavailable fallback, verifier outcomes for unsupported claims and
+forbidden actions, safe AI audit events, no-downstream-authority semantics for
+AI output, and a certified internal API at
+`POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`. The API
+requires `idea.ai-explanation.evaluate`, returns redacted evidence without
+routes or raw provider/prompt material, emits bounded `ai_explanation`
+operation events, and always reports `durableStorageBacked=false`,
+`lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`. This is
+not yet a supported AI explanation product: no `lotus-ai` runtime workflow
+execution, prompt/RAG/provider integration, durable AI lineage store,
 Gateway/Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
 
@@ -229,8 +236,14 @@ recording for reviewed report conversion intents:
 It requires `idea.report-evidence-pack.request` plus `Idempotency-Key`,
 preserves safe source summaries and Report/Render/Archive source-authority
 refs, and explicitly does not create Report, Render, or Archive records or
-authorize client-ready publication. All nine business routes are covered by OpenAPI and
-endpoint certification evidence.
+authorize client-ready publication. The AI explanation API exposes internal
+fallback/verifier evaluation over persisted candidate evidence:
+`POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`. It
+requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
+forbidden actions, and explicitly does not call providers, execute `lotus-ai`
+runtime workflows, persist durable AI lineage, or grant downstream authority.
+All ten business routes plus the data-mesh-readiness operator diagnostic are
+covered by OpenAPI and endpoint certification evidence.
 This is not yet a supported product capability: there are no live source
 adapters, Gateway routes, Workbench surfaces, database-backed API state,
 data-product certification, runtime trust telemetry, or supported-feature
@@ -280,13 +293,14 @@ foundation. `src/app/observability/logging.py` now defines the
 supportability vocabulary, product-safe structured operation logs, and
 sensitive operation-attribute rejection. High-cash evaluation, candidate
 persistence, lifecycle transition, advisor review queue, review action,
-feedback, conversion intent, conversion outcome, report evidence-pack request,
-and data-mesh-readiness diagnostic APIs emit bounded operation events without
+AI explanation, feedback, conversion intent, conversion outcome, report
+evidence-pack request, and data-mesh-readiness diagnostic APIs emit bounded
+operation events without
 portfolio/client/account/holding/transaction identifiers, request/response
 bodies, trace ids, or correlation ids as metric labels. This is not yet full
-production observability: AI governance runtime/API events, live source
-readiness, dashboard/alert, Gateway entitlement, durable persistence,
-data-product certification, and supported-feature promotion remain planned.
+production observability: live AI runtime telemetry, live source readiness,
+dashboard/alert, Gateway entitlement, durable persistence, data-product
+certification, and supported-feature promotion remain planned.
 
 RFC-0002 Slice 18 is partially implemented for documentation and agent context
 truth. `docs/operations/api-certification.md` now summarizes the full certified
