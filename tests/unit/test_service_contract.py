@@ -51,6 +51,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
     payload = json.loads(Path("docs/operations/endpoint-certification-ledger.json").read_text())
     operations = {(endpoint["method"], endpoint["path"]) for endpoint in payload["endpoints"]}
     assert operations == {
+        ("GET", "/api/v1/data-mesh/readiness"),
         ("GET", "/api/v1/review-queues/advisor"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/outcomes"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"),
