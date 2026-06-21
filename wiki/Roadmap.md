@@ -9,39 +9,44 @@ Current state:
 3. RFC-0002 defines the enterprise opportunity intelligence implementation program,
 4. RFC-0002 Slice 00 records the implementation-start source map and first
    journey decisions,
-5. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
-6. RFC-0002 Slice 04 partially implements source-authority and data-mesh
+5. RFC-0002 Slice 01 verifies the reusable platform scaffold baseline:
+   generated services now start with the standard repo-local wiki page set,
+   validation/CI guidance, branch-hygiene posture, and supported-feature
+   anti-claim wording, with coverage in the `lotus-platform` scaffold contract
+   tests,
+6. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
+7. RFC-0002 Slice 04 partially implements source-authority and data-mesh
    baseline contracts plus a repo-native data-mesh contract gate while keeping
    mesh certification planned,
-7. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
+8. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
    policy plus the first Core source-port and conservative HTTP adapter
    foundation,
-8. RFC-0002 Slice 06 partially implements internal persistence, replay,
+9. RFC-0002 Slice 06 partially implements internal persistence, replay,
    idempotency, lifecycle audit history, recovery primitives, and high-cash
    evaluate-and-persist orchestration,
-9. RFC-0002 Slice 07 partially implements internal deterministic scoring,
+10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
    and repository-snapshot queue orchestration,
-10. RFC-0002 Slice 08 partially implements internal advisor review and feedback
+11. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance plus workflow persistence with fail-closed scope checks, review
    actions, safe audit events, source provenance, idempotency replay/conflict,
    and queue projection interaction,
-11. RFC-0002 Slice 09 partially implements internal AI governance with redacted
+12. RFC-0002 Slice 09 partially implements internal AI governance with redacted
     evidence envelopes, verifier/fallback controls, safe audit events, and no
     AI downstream authority,
-12. RFC-0002 Slice 10 partially implements the certified internal
+13. RFC-0002 Slice 10 partially implements the certified internal
     `POST /api/v1/idea-signals/high-cash/evaluate` and
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
     over caller-supplied, source-owned Core evidence,
-13. RFC-0002 Slice 12 partially implements internal conversion governance for
+14. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, and no-authority conversion boundaries,
-14. RFC-0002 Slice 13 partially implements internal report evidence-pack
+15. RFC-0002 Slice 13 partially implements internal report evidence-pack
     request governance for reviewed report conversion intents, source summaries,
     retention refs, Report/Render/Archive authority refs, idempotency, audit,
     and a certified internal API foundation,
-15. business features remain Planned.
+16. business features remain Planned.
 
 First implementation program:
 

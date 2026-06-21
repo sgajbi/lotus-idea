@@ -64,6 +64,16 @@ evidence / unsupported-claim verification is the first AI posture. The baseline
 keeps all source calculations in their owning services and does not promote any
 business capability beyond the current foundation-only supported-feature state.
 
+RFC-0002 Slice 01 is implemented as platform automation and scaffold review
+evidence. The reusable generated-wiki gap found during `lotus-idea` creation is
+already addressed in `lotus-platform` commit `549d290` through
+`automation/New-Lotus-Service.ps1`, the backend service scaffold guide, and
+platform scaffold contract tests that assert the standard repo-local wiki page
+set, validation/CI guidance, branch-hygiene posture, and supported-feature
+anti-claim wording. No `lotus-core` change or new platform PR is required for
+this slice; it closes only scaffold evidence and does not promote product
+functionality.
+
 RFC-0002 Slice 03 now implements the pure domain model and lifecycle vocabulary
 in `src/app/domain/ideas.py`, with unit coverage for source provenance,
 unsupported evidence, valid and invalid lifecycle transitions, review authority
