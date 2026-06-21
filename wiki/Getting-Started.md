@@ -10,6 +10,7 @@ Use the repo-native commands:
 make install
 make check
 make ci
+make migration-contract-gate
 uvicorn app.main:app --reload --port 8330
 ```
 

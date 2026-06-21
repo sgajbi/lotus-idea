@@ -25,6 +25,14 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) ci-contract-gate" in makefile
     assert "data-mesh-contract-gate:" in makefile
     assert "$(MAKE) data-mesh-contract-gate" in makefile
+    assert "migration-contract-gate:" in makefile
+    assert "$(MAKE) migration-contract-gate" in makefile
+    assert (
+        "check: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate"
+    ) in makefile
+    assert (
+        "ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate"
+    ) in makefile
 
 
 def test_architecture_boundary_gate_runs_in_github_lanes() -> None:

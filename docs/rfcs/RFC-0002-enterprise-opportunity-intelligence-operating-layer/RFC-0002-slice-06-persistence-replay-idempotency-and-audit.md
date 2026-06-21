@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence plus idempotent lifecycle and high-cash orchestration foundations only
+Status: Partially implemented - internal persistence plus schema/rollback contract foundation only
 
 ## Outcome
 
@@ -73,11 +73,19 @@ Implemented first-wave internal scope:
     repository protocols. `tests/unit/test_repository_port_boundary.py`
     prevents future application modules from reintroducing scattered
     repository protocol declarations before the durable adapter lands.
+11. `migrations/001_idea_repository_foundation.sql` and
+    `migrations/001_idea_repository_foundation.rollback.sql` now define the
+    first versioned database schema and rollback contract for future candidate,
+    idempotency, lifecycle, audit, review, feedback, conversion, and report
+    evidence-pack repository state. `scripts/migration_contract_gate.py`
+    validates required tables, indexes, JSONB payload columns, UTC timestamp
+    columns, source relationships, and rollback statements so future agents
+    cannot add persistence-shaped work without governed reversibility evidence.
 
 Not implemented yet:
 
-1. database-backed durable persistence,
-2. migrations and rollback automation,
+1. runtime database-backed repository adapter,
+2. migration execution automation in local/deploy runtime,
 3. database-backed source-ingestion workers,
 4. database-backed stateful API routes,
 5. integration or e2e persistence proof over durable storage,
@@ -86,11 +94,15 @@ Not implemented yet:
 
 ## Migration And Rollback Posture
 
-This slice intentionally does not introduce a database schema. No migration is
-required for the current internal in-memory persistence foundation. The first
-database-backed persistence slice must add explicit migrations, rollback
-posture, integration tests, and recovery evidence before any API or
-data-product claim is promoted.
+The slice now introduces the first explicit schema and rollback contract but
+does not execute migrations or wire runtime API state to a database. The
+contract is intentionally ahead of the durable adapter so schema, rollback,
+indexing, and relationship posture become CI-blocking before any database-backed
+claim is made. The next durable persistence slice must execute this migration
+against a real database, add a repository adapter behind
+`src/app/ports/idea_repository.py`, prove rollback/recovery behavior, and keep
+API responses truthful until `durableStorageBacked=true` is backed by
+integration and e2e evidence.
 
 ## Validation
 
@@ -135,6 +147,17 @@ Targeted validation:
     passed with `43 passed`.
 15. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\application src\app\ports\idea_repository.py`
     passed.
+16. `.venv\Scripts\python.exe scripts\migration_contract_gate.py` passed after
+    adding the first versioned schema/rollback contract.
+17. `.venv\Scripts\python.exe -m pytest tests\unit\test_migration_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
+    passed with `14 passed`.
+18. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+    guards, data-mesh contract gate, migration contract gate,
+    supported-feature gate, endpoint-certification gate, typecheck,
+    architecture boundary, OpenAPI, and `223` unit tests.
+19. `make ci` passed with `59` integration tests, `2` e2e tests, `223` unit
+    tests under coverage, coverage gate at `99.17%`, and dependency audit
+    reporting no known vulnerabilities.
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.
