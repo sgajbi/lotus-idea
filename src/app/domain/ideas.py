@@ -70,6 +70,16 @@ class ReasonCode(StrEnum):
     DUPLICATE_SUPPRESSED = "duplicate_suppressed"
     BELOW_MATERIALITY = "below_materiality"
     REVIEW_REQUIRED = "review_required"
+    MATERIALITY_SCORE = "materiality_score"
+    URGENCY_SCORE = "urgency_score"
+    CONFIDENCE_SCORE = "confidence_score"
+    EVIDENCE_QUALITY_SCORE = "evidence_quality_score"
+    FRESHNESS_SCORE = "freshness_score"
+    RELEVANCE_SCORE = "relevance_score"
+    DOWNSTREAM_FIT_SCORE = "downstream_fit_score"
+    CONFLICT_PENALTY = "conflict_penalty"
+    QUEUE_PRIORITY = "queue_priority"
+    QUEUE_EXCLUDED = "queue_excluded"
 
 
 class IdeaLifecycleStatus(StrEnum):
