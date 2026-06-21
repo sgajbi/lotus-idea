@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, and first PostgreSQL runtime workflow proof
+Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -117,7 +117,8 @@ Implemented first-wave internal scope:
     repository, transitions the candidate to review-ready state, records review
     approval, advisor feedback, report conversion intent, conversion outcome,
     and report evidence-pack request state, validates the backing workflow
-    tables, and rolls the schema back. `make postgres-integration-gate` is the
+    tables, rolls the schema back, reapplies it, and proves the recovered API
+    persistence contract is usable. `make postgres-integration-gate` is the
     repo-native command, and PR Merge Gate / Main Releasability run it against
     `postgres:18-alpine` with
     `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`.
@@ -126,7 +127,7 @@ Not implemented yet:
 
 1. deploy-pipeline migration execution proof against a real PostgreSQL service,
 2. database-backed source-ingestion workers,
-3. broader rollback/recovery proof against a real PostgreSQL service,
+3. source-ingestion recovery proof against a real PostgreSQL service,
 4. live source adapter and source-ingestion proof,
 5. data-product certification,
 6. Gateway/Workbench/downstream proof,
@@ -136,19 +137,20 @@ Not implemented yet:
 
 The slice now introduces the first explicit schema, rollback contract,
 executable migration path, adapter, opt-in runtime repository wiring, and a real
-PostgreSQL API persistence/replay proof. CI dry-runs the apply and rollback
-plans and separately runs the PostgreSQL runtime proof in PR/main lanes. Real
-service execution still requires `LOTUS_IDEA_DATABASE_URL`. This is
-intentionally ahead of production storage promotion so schema, rollback,
-indexing, relationship posture, execution command shape, adapter behavior,
-runtime selection, and the first durable replay path become CI-visible before
-any supported database-backed product claim is made. The current proof now also
-exercises the first internal review, queue, conversion, and report
-evidence-pack workflow against PostgreSQL. The next durable persistence slices
-must prove source-ingestion worker behavior, broader recovery behavior against
-that service, and keep API responses truthful: `durableStorageBacked=true`
-means the configured repository adapter is active, not that the idea product is
-data-mesh certified or supported.
+PostgreSQL API persistence/replay proof plus migration rollback/reapply
+recovery proof. CI dry-runs the apply and rollback plans and separately runs the
+PostgreSQL runtime proof in PR/main lanes. Real service execution still requires
+`LOTUS_IDEA_DATABASE_URL`. This is intentionally ahead of production storage
+promotion so schema, rollback, indexing, relationship posture, execution command
+shape, adapter behavior, runtime selection, and the first durable replay path
+become CI-visible before any supported database-backed product claim is made.
+The current proof now also exercises the first internal review, queue,
+conversion, and report evidence-pack workflow against PostgreSQL. The next
+durable persistence slices must prove source-ingestion worker behavior,
+deploy-pipeline migration evidence, and source-ingestion recovery behavior
+against that service, and keep API responses truthful:
+`durableStorageBacked=true` means the configured repository adapter is active,
+not that the idea product is data-mesh certified or supported.
 
 ## Validation
 

@@ -172,10 +172,11 @@ persisting a high-cash candidate through the API, reloading the provider,
 proving idempotency replay from database state, projecting the advisor queue,
 transitioning lifecycle state, recording review approval, recording feedback,
 recording report conversion intent/outcome state, recording a report
-evidence-pack request, and validating the backing workflow tables. This is
-still not production storage certification: deploy migration evidence, broader
-rollback/recovery proof, data-product certification, downstream workflow proof,
-and supported-feature promotion remain planned.
+evidence-pack request, validating the backing workflow tables, and proving schema
+rollback/reapply restores a usable API persistence contract. This is still not
+production storage certification: deploy migration evidence, source-ingestion
+recovery proof, data-product certification, downstream workflow proof, and
+supported-feature promotion remain planned.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in

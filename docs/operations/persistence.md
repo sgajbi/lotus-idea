@@ -5,7 +5,8 @@ versioned SQL schema, rollback contract, PostgreSQL migration execution CLI, a
 tested PostgreSQL repository adapter foundation, and opt-in API repository
 wiring through `LOTUS_IDEA_DATABASE_URL`. It also has real PostgreSQL runtime
 proof for high-cash API persistence/replay and the first internal review,
-feedback, conversion, report evidence-pack, and advisor queue workflow path.
+feedback, conversion, report evidence-pack, advisor queue, and migration
+rollback/reapply recovery workflow path.
 Runtime API state remains process-local by default and reports
 `durableStorageBacked=false` unless the database URL is configured. When
 configured, repository-backed API responses and operation events report
@@ -45,7 +46,8 @@ downstream realization proof, or supported-feature promotion.
    idempotency replay from database state, projects the advisor queue, records
    lifecycle transitions, review approval, feedback, conversion intent,
    conversion outcome, and report evidence-pack request state, validates the
-   backing tables, and rolls back the schema. GitHub PR Merge Gate and Main
+   backing tables, rolls back the schema, reapplies it, and proves the recovered
+   API persistence contract is usable. GitHub PR Merge Gate and Main
    Releasability run this proof against `postgres:18-alpine`.
 
 ## Validation
@@ -93,11 +95,11 @@ as durable storage.
 
 ## Unsupported Until Proven
 
-Do not claim production storage readiness, recovery, data-product promotion, or
-supported business workflows until later slices add:
+Do not claim production storage readiness, production recovery,
+data-product promotion, or supported business workflows until later slices add:
 
 1. deploy-pipeline migration evidence,
-2. broader rollback/recovery evidence against the real service,
+2. source-ingestion worker recovery evidence against the real service,
 3. source-ingestion worker proof and live source adapter proof,
 4. data-product telemetry and platform mesh certification,
 5. Gateway/Workbench/downstream proof for supported workflows,
