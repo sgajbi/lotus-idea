@@ -44,7 +44,7 @@ def test_supported_features_policy_starts_unpromoted() -> None:
     assert payload["policy"] == "Only implementation-backed behavior may be promoted to supported."
 
 
-def test_endpoint_certification_ledger_starts_with_scaffold_operations() -> None:
+def test_endpoint_certification_ledger_matches_public_operations() -> None:
     import json
     from pathlib import Path
 
@@ -52,6 +52,8 @@ def test_endpoint_certification_ledger_starts_with_scaffold_operations() -> None
     operations = {(endpoint["method"], endpoint["path"]) for endpoint in payload["endpoints"]}
     assert operations == {
         ("GET", "/api/v1/review-queues/advisor"),
+        ("POST", "/api/v1/conversion-intents/{conversionIntentId}/outcomes"),
+        ("POST", "/api/v1/idea-candidates/{candidateId}/conversion-intents"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/feedback"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/review-actions"),

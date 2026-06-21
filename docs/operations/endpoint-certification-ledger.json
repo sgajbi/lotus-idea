@@ -144,6 +144,61 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/idea-candidates/{candidateId}/conversion-intents",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Record an internal governed conversion intent for a review-approved persisted idea candidate through the conversion workflow foundation.",
+      "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 12 API foundation when an internal caller has an approved candidate, idea.conversion.intent.record capability, an Idempotency-Key, and needs to record intent-only conversion toward Advise, Manage, or Report.",
+      "when_not_to_use": "Do not use as durable database persistence proof, downstream proposal authority, manage-review authority, report-authority proof, suitability approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"reasonCodes\":[\"review_approved_for_conversion\"],\"requestedAtUtc\":\"2026-06-21T10:15:00Z\"}"
+      ],
+      "response_examples": [
+        "{\"conversionIntent\":{\"conversionIntentId\":\"conversion-report-001\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"target\":\"report_evidence\",\"sourceStatus\":\"approved\",\"targetSourceAuthority\":\"lotus-report\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"evidenceContentHash\":\"sha256:evidence-lineage\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"boundary\":\"intent_only\",\"reasonCodes\":[\"review_approved_for_conversion\"],\"requestedAtUtc\":\"2026-06-21T10:15:00Z\",\"grantsDownstreamAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.intent_requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"conversionIntent\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.intent_requested\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.conversion.intent.record capability.",
+        "404 returns product-safe Problem Details when the candidate is not found.",
+        "409 returns product-safe Problem Details for idempotency conflict or invalid conversion state.",
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_records_review_approved_candidate_without_downstream_authority",
+        "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_replays_and_conflicts_idempotently",
+        "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_requires_approved_state_permission_and_valid_request"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/conversion-intents/{conversionIntentId}/outcomes",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Record an internal source-authorized downstream conversion outcome against a previously recorded idea conversion intent.",
+      "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 12 API foundation when an internal caller has idea.conversion.outcome.record capability, an Idempotency-Key, and source-system evidence that the downstream owner accepted, rejected, failed, or completed the requested realization.",
+      "when_not_to_use": "Do not use as durable database persistence proof, downstream workflow execution proof, suitability approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, data-product certification proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"downstreamReference\":\"report-evidence-pack-001\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\"}"
+      ],
+      "response_examples": [
+        "{\"conversionOutcome\":{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"downstreamReference\":\"report-evidence-pack-001\",\"boundary\":\"downstream_realization_required\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\",\"grantsExecutionAuthority\":false,\"grantsClientCommunicationAuthority\":false,\"grantsSuitabilityAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"conversionOutcome\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.conversion.outcome.record capability.",
+        "404 returns product-safe Problem Details when the conversion intent is not found.",
+        "409 returns product-safe Problem Details for idempotency conflict or a source system that does not match the conversion target authority.",
+        "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
+      ],
+      "test_evidence": [
+        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_records_source_authorized_result",
+        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/review-queues/advisor",
       "certification_status": "certified",

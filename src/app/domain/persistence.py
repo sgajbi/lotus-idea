@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 import hashlib
@@ -16,6 +16,12 @@ from app.domain.ideas import (
     IdeaLifecycleStatus,
     SourceRef,
     transition_candidate,
+)
+from app.domain.conversion_governance import (
+    ConversionIntentResult,
+    ConversionOutcomeResult,
+    GovernedConversionIntent,
+    GovernedConversionOutcome,
 )
 from app.domain.review_governance import (
     FeedbackResult,
@@ -54,6 +60,13 @@ class LifecyclePersistenceDecision(StrEnum):
     NOT_FOUND = "not_found"
 
 
+class ConversionPersistenceDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REPLAYED = "replayed"
+    CONFLICT = "conflict"
+    NOT_FOUND = "not_found"
+
+
 @dataclass(frozen=True)
 class LifecycleHistoryEntry:
     candidate_id: str
@@ -77,6 +90,8 @@ class CandidatePersistenceRecord:
     audit_events: tuple[AuditEvent, ...] = ()
     review_decisions: tuple[GovernedReviewDecision, ...] = ()
     feedback_events: tuple[GovernedFeedbackEvent, ...] = ()
+    conversion_intents: tuple[GovernedConversionIntent, ...] = ()
+    conversion_outcomes: tuple[GovernedConversionOutcome, ...] = ()
 
     def __post_init__(self) -> None:
         _require_text(self.evidence_hash, "evidence_hash")
@@ -85,6 +100,8 @@ class CandidatePersistenceRecord:
         object.__setattr__(self, "audit_events", tuple(self.audit_events))
         object.__setattr__(self, "review_decisions", tuple(self.review_decisions))
         object.__setattr__(self, "feedback_events", tuple(self.feedback_events))
+        object.__setattr__(self, "conversion_intents", tuple(self.conversion_intents))
+        object.__setattr__(self, "conversion_outcomes", tuple(self.conversion_outcomes))
 
     def is_expired_at(self, evaluated_at_utc: datetime) -> bool:
         _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
@@ -120,10 +137,18 @@ class LifecyclePersistenceResult:
 
 
 @dataclass(frozen=True)
+class ConversionPersistenceResult:
+    decision: ConversionPersistenceDecision
+    record: CandidatePersistenceRecord | None
+    audit_event: AuditEvent | None = None
+
+
+@dataclass(frozen=True)
 class IdeaRepositorySnapshot:
     candidate_records: Mapping[str, CandidatePersistenceRecord]
     idempotency_records: Mapping[str, IdempotencyRecord]
     idempotency_candidates: Mapping[str, str]
+    conversion_intent_candidates: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -139,6 +164,11 @@ class IdeaRepositorySnapshot:
             "idempotency_candidates",
             MappingProxyType(dict(self.idempotency_candidates)),
         )
+        object.__setattr__(
+            self,
+            "conversion_intent_candidates",
+            MappingProxyType(dict(self.conversion_intent_candidates)),
+        )
 
 
 class InMemoryIdeaRepository:
@@ -148,10 +178,12 @@ class InMemoryIdeaRepository:
         self._candidate_records: dict[str, CandidatePersistenceRecord] = {}
         self._idempotency_records: dict[str, IdempotencyRecord] = {}
         self._idempotency_candidates: dict[str, str] = {}
+        self._conversion_intent_candidates: dict[str, str] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
             self._idempotency_records.update(snapshot.idempotency_records)
             self._idempotency_candidates.update(snapshot.idempotency_candidates)
+            self._conversion_intent_candidates.update(snapshot.conversion_intent_candidates)
 
     def persist_candidate(
         self,
@@ -473,11 +505,172 @@ class InMemoryIdeaRepository:
             audit_event=result.audit_event,
         )
 
+    def precheck_conversion_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> ConversionPersistenceResult | None:
+        _require_text(idempotency_key, "idempotency_key")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        if existing_idempotency is None:
+            return None
+        idempotency_decision, _ = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        return ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.REPLAYED,
+            record=self._record_for_idempotency_key(idempotency_key),
+        )
+
+    def record_conversion_intent(
+        self,
+        result: ConversionIntentResult,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> ConversionPersistenceResult:
+        _require_text(idempotency_key, "idempotency_key")
+        candidate_id = result.conversion_intent.intent.candidate_id
+        _require_text(candidate_id, "candidate_id")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+
+        history = record.lifecycle_history
+        if record.candidate.lifecycle_status is not result.candidate.lifecycle_status:
+            history = (
+                *history,
+                LifecycleHistoryEntry(
+                    candidate_id=candidate_id,
+                    source_status=record.candidate.lifecycle_status,
+                    target_status=result.candidate.lifecycle_status,
+                    actor_subject=result.conversion_intent.actor_subject,
+                    changed_at_utc=result.conversion_intent.intent.requested_at_utc,
+                ),
+            )
+        updated = replace(
+            record,
+            candidate=result.candidate,
+            lifecycle_history=history,
+            audit_events=(*record.audit_events, result.audit_event),
+            conversion_intents=(*record.conversion_intents, result.conversion_intent),
+        )
+        self._candidate_records[candidate_id] = updated
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        self._conversion_intent_candidates[result.conversion_intent.intent.conversion_intent_id] = (
+            candidate_id
+        )
+        return ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.ACCEPTED,
+            record=updated,
+            audit_event=result.audit_event,
+        )
+
+    def conversion_intent_by_id(
+        self,
+        conversion_intent_id: str,
+    ) -> GovernedConversionIntent | None:
+        _require_text(conversion_intent_id, "conversion_intent_id")
+        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
+        if candidate_id is None:
+            return None
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return None
+        for conversion_intent in record.conversion_intents:
+            if conversion_intent.intent.conversion_intent_id == conversion_intent_id:
+                return conversion_intent
+        return None
+
+    def record_conversion_outcome(
+        self,
+        result: ConversionOutcomeResult,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> ConversionPersistenceResult:
+        _require_text(idempotency_key, "idempotency_key")
+        conversion_intent_id = result.conversion_outcome.conversion_intent_id
+        _require_text(conversion_intent_id, "conversion_intent_id")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.CONFLICT:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.CONFLICT,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+        if idempotency_decision is IdempotencyDecision.REPLAYED:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.REPLAYED,
+                record=self._record_for_idempotency_key(idempotency_key),
+            )
+
+        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
+        if candidate_id is None:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return ConversionPersistenceResult(
+                decision=ConversionPersistenceDecision.NOT_FOUND,
+                record=None,
+            )
+
+        updated = replace(
+            record,
+            audit_events=(*record.audit_events, result.audit_event),
+            conversion_outcomes=(*record.conversion_outcomes, result.conversion_outcome),
+        )
+        self._candidate_records[candidate_id] = updated
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = candidate_id
+        return ConversionPersistenceResult(
+            decision=ConversionPersistenceDecision.ACCEPTED,
+            record=updated,
+            audit_event=result.audit_event,
+        )
+
     def snapshot(self) -> IdeaRepositorySnapshot:
         return IdeaRepositorySnapshot(
             candidate_records=self._candidate_records,
             idempotency_records=self._idempotency_records,
             idempotency_candidates=self._idempotency_candidates,
+            conversion_intent_candidates=self._conversion_intent_candidates,
         )
 
     def _record_for_idempotency_key(

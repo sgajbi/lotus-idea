@@ -124,9 +124,11 @@ class ConversionOutcomeCommand:
     source_system: SourceSystem
     recorded_at_utc: datetime
     downstream_reference: str | None = None
+    actor_subject: str = "downstream-system"
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_outcome_id, "conversion_outcome_id")
+        _require_text(self.actor_subject, "actor_subject")
         _require_aware_utc(self.recorded_at_utc, "recorded_at_utc")
         if self.downstream_reference is not None:
             _require_text(self.downstream_reference, "downstream_reference")
@@ -232,7 +234,7 @@ def record_conversion_outcome(
     )
     audit_event = AuditEvent(
         event_type="idea.conversion.outcome_recorded",
-        actor_subject=governed_intent.actor_subject,
+        actor_subject=command.actor_subject,
         outcome="accepted",
         occurred_at_utc=command.recorded_at_utc,
         attributes={
