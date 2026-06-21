@@ -84,6 +84,32 @@ def test_ci_contract_gate_blocks_write_permissions_in_read_only_lanes(tmp_path: 
     assert "feature-lane.yml must not contain `contents: write`" in errors
 
 
+def test_ci_contract_gate_requires_merged_pr_main_releasability_dispatch(tmp_path: Path) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    for workflow_name in module.WORKFLOW_EXPECTATIONS:
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflow_dir / workflow_name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    dispatch_workflow = workflow_dir / "merged-pr-main-releasability.yml"
+    dispatch_workflow.write_text(
+        dispatch_workflow.read_text(encoding="utf-8").replace(
+            "gh workflow run main-releasability.yml",
+            "echo missing dispatch",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "merged-pr-main-releasability.yml missing `gh workflow run main-releasability.yml`"
+        in errors
+    )
+
+
 def test_generated_quality_reports_do_not_dirty_worktree() -> None:
     gitignore = _read(".gitignore")
 
