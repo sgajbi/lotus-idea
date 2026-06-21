@@ -712,7 +712,7 @@ assertions.
 | 3 | Opportunity domain model, vocabulary, and lifecycle | Implemented - pure domain foundation only | pure domain model, lifecycle tests, unsupported transition behavior |
 | 4 | Source authority, signal contracts, and data mesh baseline | Planned | consumer/producer contracts, source authority tests, mesh validation |
 | 5 | Deterministic signal evaluation and candidate generation | Partially implemented - high-cash domain policy only | first signal families, candidate generation, golden scenario tests |
-| 6 | Persistence, replay, idempotency, and audit | Planned | durable records, hashes, replay, audit events, idempotency tests |
+| 6 | Persistence, replay, idempotency, and audit | Partially implemented - internal foundation only | internal records, hashes, replay posture, audit events, idempotency tests; database persistence remains planned |
 | 7 | Scoring, ranking, suppression, and queue policy | Planned | scoring policy, ranking stability, dedupe/suppression, queue projection |
 | 8 | Review queues, feedback, and human governance | Planned | review APIs, feedback model, entitlement tests, audit proof |
 | 9 | Governed AI explanation and model-risk controls | Planned | `lotus-ai` workflow pack, redaction, verifier/fallback, review posture |

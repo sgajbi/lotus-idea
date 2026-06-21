@@ -9,10 +9,10 @@ Workbench workflows.
 Service profile: `domain-service`
 
 Current status: scaffolded foundation, governance RFCs, the first pure domain
-model/lifecycle foundation, and an internal high-cash deterministic signal
-policy. No business feature is supported until the relevant RFC slice has
-implementation evidence, endpoint certification, tests, and supported-feature
-registration.
+model/lifecycle foundation, an internal high-cash deterministic signal policy,
+and an internal persistence/replay/idempotency/audit foundation. No business
+feature is supported until the relevant RFC slice has implementation evidence,
+endpoint certification, tests, and supported-feature registration.
 
 ## Product Boundary
 
@@ -81,8 +81,9 @@ source-authority contracts only, not runtime certification.
 
 - `src/app/api/`: HTTP route modules and API DTO mapping.
 - `src/app/application/`: use-case orchestration.
-- `src/app/domain/`: framework-free idea domain models, policies, scoring, and
-  lifecycle rules.
+- `src/app/domain/`: framework-free idea domain models, policies, scoring,
+  lifecycle rules, internal persistence records, replay posture, idempotency,
+  and audit primitives.
 - `src/app/ports/`: source-owned service interfaces consumed by application logic.
 - `src/app/infrastructure/`: adapters and clients behind ports.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing.

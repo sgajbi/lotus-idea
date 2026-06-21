@@ -27,6 +27,14 @@ class AuditEvent:
     attributes: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
+        if not self.event_type.strip():
+            raise ValueError("event_type is required")
+        if not self.actor_subject.strip():
+            raise ValueError("actor_subject is required")
+        if not self.outcome.strip():
+            raise ValueError("outcome is required")
+        if self.occurred_at_utc.tzinfo is None or self.occurred_at_utc.utcoffset() is None:
+            raise ValueError("occurred_at_utc must be timezone-aware")
         leaked = FORBIDDEN_ATTRIBUTE_KEYS.intersection(self.attributes)
         if leaked:
             raise ValueError(

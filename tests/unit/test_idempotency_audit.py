@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 
 from app.domain.audit import AuditEvent
@@ -56,3 +58,19 @@ def test_audit_event_allows_bounded_non_sensitive_attributes() -> None:
         attributes={"workflow_state": "planned"},
     )
     assert event.attributes["workflow_state"] == "planned"
+
+
+def test_audit_event_requires_bounded_identity_and_timezone() -> None:
+    with pytest.raises(ValueError, match="event_type is required"):
+        AuditEvent(event_type=" ", actor_subject="operator", outcome="accepted")
+    with pytest.raises(ValueError, match="actor_subject is required"):
+        AuditEvent(event_type="workflow.updated", actor_subject=" ", outcome="accepted")
+    with pytest.raises(ValueError, match="outcome is required"):
+        AuditEvent(event_type="workflow.updated", actor_subject="operator", outcome=" ")
+    with pytest.raises(ValueError, match="occurred_at_utc must be timezone-aware"):
+        AuditEvent(
+            event_type="workflow.updated",
+            actor_subject="operator",
+            outcome="accepted",
+            occurred_at_utc=datetime(2026, 6, 21, 10, 0),
+        )

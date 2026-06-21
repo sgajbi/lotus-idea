@@ -3,9 +3,10 @@
 `lotus-idea` is the Lotus wealth opportunity intelligence and idea lifecycle
 service.
 
-Current posture: foundation and RFC planning only. Business capabilities are
-planned, not supported, until implementation evidence, endpoint certification,
-data-product promotion, supported-feature registration, and validation exist.
+Current posture: foundation and RFC implementation in progress. Business
+capabilities are planned, not supported, until implementation evidence,
+endpoint certification, data-product promotion, supported-feature registration,
+and validation exist.
 
 ## Start Here
 

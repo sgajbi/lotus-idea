@@ -12,7 +12,9 @@ Current state:
 5. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
 6. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
    policy,
-7. business features remain Planned.
+7. RFC-0002 Slice 06 partially implements internal persistence, replay,
+   idempotency, lifecycle audit history, and recovery primitives,
+8. business features remain Planned.
 
 First implementation program:
 
@@ -21,7 +23,8 @@ First implementation program:
 2. normalize structure before adding product scope,
 3. add source contracts and data-mesh baseline,
 4. add source adapters and application orchestration for high-cash / idle-liquidity evidence,
-5. add persistence, replay, idempotency, audit, scoring, ranking, suppression, review, and feedback,
+5. add database-backed persistence, source ingestion orchestration, scoring,
+   ranking, suppression, review, and feedback,
 6. expose certified APIs and Gateway/Workbench product surfaces,
 7. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
 8. prove canonical demo scenarios and publish implementation-backed documentation.
