@@ -50,6 +50,7 @@ class IdeaOperation(StrEnum):
     CONVERSION_INTENT = "conversion_intent"
     CONVERSION_OUTCOME = "conversion_outcome"
     REPORT_EVIDENCE_PACK = "report_evidence_pack"
+    MESH_READINESS_READ = "mesh_readiness_read"
 
 
 class OperationOutcome(StrEnum):

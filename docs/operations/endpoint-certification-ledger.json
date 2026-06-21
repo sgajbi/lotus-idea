@@ -256,6 +256,34 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/data-mesh/readiness",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return the repo-authored lotus-idea data-mesh readiness posture, source-of-truth contract paths, and explicit blockers for internal operators.",
+      "when_to_use": "Use for internal platform/operator validation when a caller has idea.mesh.readiness.read capability and needs to confirm the current planned, not-certified mesh posture before product promotion.",
+      "when_not_to_use": "Do not use as data-product certification proof, platform source-manifest inclusion proof, runtime lineage proof, Gateway contract, Workbench product proof, business product discovery, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/data-mesh/readiness with X-Caller-Roles: operator and X-Caller-Capabilities: idea.mesh.readiness.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"lifecycleStatus\":\"planned\",\"certificationStatus\":\"not_certified\",\"meshRole\":\"planned_producer_and_consumer\",\"sourceOfTruth\":{\"producer_declaration\":\"contracts/domain-data-products/lotus-idea-products.v1.json\",\"trust_telemetry\":\"contracts/trust-telemetry/idea-candidate.telemetry.v1.json\"},\"products\":[{\"productId\":\"lotus-idea:IdeaCandidate:v1\",\"lifecycleStatus\":\"proposed\",\"approvedConsumers\":[\"lotus-gateway\"]}],\"blockers\":[\"data_mesh_not_certified\",\"producer_products_not_active\",\"runtime_trust_telemetry_blocked\"],\"certificationGatesBeforePromotion\":[\"business capability implemented with source-owned evidence and endpoint certification\"],\"runtimeTelemetryBacked\":false,\"platformCertified\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.mesh.readiness.read capability or operator role.",
+        "503 returns product-safe Problem Details when repo-authored data-mesh readiness contracts cannot be read."
+      ],
+      "test_evidence": [
+        "tests/unit/test_data_mesh_readiness.py::test_data_mesh_readiness_snapshot_reports_not_certified_posture",
+        "tests/unit/test_data_mesh_readiness.py::test_data_mesh_readiness_snapshot_includes_repo_declared_products",
+        "tests/unit/test_data_mesh_readiness.py::test_data_mesh_readiness_snapshot_fails_closed_when_contracts_are_missing",
+        "tests/integration/test_data_mesh_readiness_api.py::test_data_mesh_readiness_api_returns_not_certified_operator_posture",
+        "tests/integration/test_data_mesh_readiness_api.py::test_data_mesh_readiness_api_requires_operator_permission",
+        "tests/integration/test_data_mesh_readiness_api.py::test_data_mesh_readiness_api_emits_not_certified_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
       "path": "/health",
       "certification_status": "baseline_certified",
       "owner": "lotus-idea owners",
