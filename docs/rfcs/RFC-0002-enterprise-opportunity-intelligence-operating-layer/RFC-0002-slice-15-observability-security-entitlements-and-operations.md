@@ -27,11 +27,18 @@ foundation:
 6. `src/app/api/report_evidence.py` emits bounded operation events for report
    evidence-pack request accepted, replayed, conflict, not-found,
    permission-denied, invalid-request, and invalid-state outcomes.
-7. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
+7. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
+   `src/app/api/review_queues.py`, and `src/app/api/review_workflow.py` emit
+   bounded operation events for high-cash evaluation, candidate persistence,
+   lifecycle transitions, advisor queue reads, review actions, and feedback.
+8. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
    attribute and metric-label contract.
-8. `tests/integration/test_review_workflow_api.py` continues to prove the
-   conversion and report evidence-pack API behavior while the new event layer is
-   active.
+9. `tests/integration/test_api_operation_events.py` proves the operation-event
+   coverage for the certified internal high-cash, candidate persistence,
+   lifecycle, queue, review, and feedback API foundations.
+10. `tests/integration/test_review_workflow_api.py` continues to prove the
+    conversion and report evidence-pack API behavior while the event layer is
+    active.
 
 This foundation remains internal and `foundation_only`. It does not prove
 durable database-backed persistence, data-product certification, downstream
@@ -50,9 +57,9 @@ certification, or supported-feature promotion.
 
 ## Remaining Gap
 
-1. Extend operation-event coverage to high-cash evaluation, candidate
-   persistence, lifecycle transition, review action, feedback, review queue,
-   and AI governance paths.
+1. Extend operation-event coverage to AI governance paths when an API/runtime
+   surface exists; the current AI foundation remains framework-free domain
+   governance without a route-level operation boundary.
 2. Add dashboard and alert references only after metric families are stable and
    implemented.
 3. Add supportability endpoints or diagnostics for runtime source readiness

@@ -256,15 +256,15 @@ RFC-0002 Slice 15 is partially implemented as a bounded operation observability
 foundation. `src/app/observability/logging.py` now defines the
 `lotus_idea_operation_events_total` metric, bounded operation/outcome/
 supportability vocabulary, product-safe structured operation logs, and
-sensitive operation-attribute rejection. Conversion intent, conversion outcome,
-and report evidence-pack request APIs emit accepted, replayed, conflict,
-not-found, permission-denied, invalid-request, and invalid-state operation
-events without portfolio/client/account/holding/transaction identifiers,
-request/response bodies, trace ids, or correlation ids as metric labels. This
-is not yet full production observability: high-cash, lifecycle, review, feedback,
-queue, AI, live source readiness, dashboard/alert, Gateway entitlement, durable
-persistence, data-product certification, and supported-feature promotion remain
-planned.
+sensitive operation-attribute rejection. High-cash evaluation, candidate
+persistence, lifecycle transition, advisor review queue, review action,
+feedback, conversion intent, conversion outcome, and report evidence-pack
+request APIs emit bounded operation events without
+portfolio/client/account/holding/transaction identifiers, request/response
+bodies, trace ids, or correlation ids as metric labels. This is not yet full
+production observability: AI governance runtime/API events, live source
+readiness, dashboard/alert, Gateway entitlement, durable persistence,
+data-product certification, and supported-feature promotion remain planned.
 
 ## CI And Merge Governance
 

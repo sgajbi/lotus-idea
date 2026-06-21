@@ -26,10 +26,11 @@ foundation plus certified internal conversion intent/outcome API foundations
 for review-gated downstream intent/outcome tracking. It now also has an
 internal report evidence-pack request foundation plus a certified internal API
 for reviewed report conversion intents, and the first bounded operation-event
-observability foundation for conversion/report-evidence outcomes. No business
-feature is supported until the relevant RFC slice has full runtime evidence,
-tests, data-mesh posture, downstream proof, Gateway/Workbench proof, and
-supported-feature registration.
+observability foundation across certified internal signal, persistence,
+lifecycle, queue, review, feedback, conversion, and report evidence APIs. No
+business feature is supported until the relevant RFC slice has full runtime
+evidence, tests, data-mesh posture, downstream proof, Gateway/Workbench proof,
+and supported-feature registration.
 
 ## Product Boundary
 
@@ -127,8 +128,9 @@ source-authority contracts only, not runtime certification.
   conservative Core high-cash source adapter that does not infer cash weight
   when Core omits a source-reported value.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
-  and bounded idea operation events. Conversion and report evidence-pack
-  foundation APIs emit product-safe operation logs and the
+  and bounded idea operation events. Certified internal high-cash, candidate
+  persistence, lifecycle, advisor queue, review, feedback, conversion, and
+  report evidence-pack foundation APIs emit product-safe operation logs and the
   `lotus_idea_operation_events_total` metric without sensitive labels or
   supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.
