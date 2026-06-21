@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard data-mesh-contract-gate migration-contract-gate migration-execution-gate migrate migrate-rollback supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard data-mesh-contract-gate migration-contract-gate migration-execution-gate migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -55,6 +55,9 @@ supported-features-gate:
 
 endpoint-certification-gate:
 	$(VENV_PYTHON) scripts/endpoint_certification_gate.py
+
+postgres-integration-gate:
+	$(VENV_PYTHON) -m pytest tests/integration/test_postgres_runtime_integration.py
 
 typecheck:
 	$(VENV_PYTHON) -m mypy --config-file mypy.ini
