@@ -229,10 +229,12 @@ promotion.
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
 RFC, workflow, scaffold, or implementation commits; keep small commits linear
 and let branch protection require the PR merge gate before `main` updates.
-Rebase auto-merge is allowed, but merged PRs must explicitly dispatch the Main
-Releasability Gate so post-merge truth does not depend only on a push-triggered
-workflow. After every merge, delete the remote feature branch and the matching
-local feature branch, then re-run branch hygiene before final closure. Durable
+Rebase auto-merge is allowed only when `LOTUS_AUTOMERGE_TOKEN` is configured so
+the merge actor is not the suppressed workflow `GITHUB_TOKEN`. Merged PRs must
+explicitly dispatch the Main Releasability Gate so post-merge truth does not
+depend only on a push-triggered workflow. After every merge, delete the remote
+feature branch and the matching local feature branch, then re-run branch hygiene
+before final closure. Durable
 RFC/docs/wiki/context/contract truth is complete only when it is present on
 `main`, published where required, and not stranded on a side branch.
 
@@ -363,8 +365,9 @@ tests, e2e tests, coverage gate, security audit, and Docker build validation.
 bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, coverage, security, Docker, release-evidence,
-action-version, least-privilege workflow controls, workflow-dispatch access, or
-merged-PR main-releasability dispatch from local or GitHub validation.
+action-version, least-privilege workflow controls, non-suppressed auto-merge
+token usage, workflow-dispatch access, or merged-PR main-releasability dispatch
+from local or GitHub validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

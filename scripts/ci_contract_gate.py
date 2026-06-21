@@ -120,9 +120,10 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     ),
     "pr-auto-merge.yml": (
         "pull_request_target:",
-        "contents: write",
-        "pull-requests: write",
+        "contents: read",
         "github.event.pull_request.head.repo.fork == false",
+        "secrets.LOTUS_AUTOMERGE_TOKEN",
+        "LOTUS_AUTOMERGE_TOKEN is required",
         "gh pr merge",
         "--auto --rebase --delete-branch",
     ),

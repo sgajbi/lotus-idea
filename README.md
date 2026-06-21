@@ -177,8 +177,9 @@ Day-one governing standard:
 `lotus-idea` must treat this as an active delivery contract from the first
 commit: supported claims require code, tests, CI, endpoint certification,
 security/dependency posture, documentation, wiki source, and operating evidence.
-Rebase auto-merge is allowed only with merged-PR Main Releasability dispatch so
-post-merge release evidence is produced on `main`.
+Rebase auto-merge is allowed only with `LOTUS_AUTOMERGE_TOKEN` plus merged-PR
+Main Releasability dispatch so post-merge release evidence is produced on
+`main` by a non-suppressed merge actor.
 
 - Bank-buyable contract:
   `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`

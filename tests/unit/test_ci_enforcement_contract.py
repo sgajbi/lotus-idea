@@ -110,6 +110,29 @@ def test_ci_contract_gate_requires_merged_pr_main_releasability_dispatch(tmp_pat
     )
 
 
+def test_ci_contract_gate_requires_non_suppressed_auto_merge_token(tmp_path: Path) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    for workflow_name in module.WORKFLOW_EXPECTATIONS:
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflow_dir / workflow_name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    auto_merge = workflow_dir / "pr-auto-merge.yml"
+    auto_merge.write_text(
+        auto_merge.read_text(encoding="utf-8").replace(
+            "secrets.LOTUS_AUTOMERGE_TOKEN",
+            "github.token",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "pr-auto-merge.yml missing `secrets.LOTUS_AUTOMERGE_TOKEN`" in errors
+
+
 def test_generated_quality_reports_do_not_dirty_worktree() -> None:
     gitignore = _read(".gitignore")
 
