@@ -44,10 +44,15 @@ Current RFC-0002 implementation-start baseline:
    source-owned Core high-cash evidence. Gateway, Workbench, live source
    adapters, data-product certification, and supported-feature promotion remain
    planned.
-9. The first opportunity journey is high cash / idle liquidity for
+9. Slice 12 partially implements internal conversion governance for
+   review-gated conversion intent and downstream outcome tracking, with
+   target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
+   `lotus-report`. It does not expose conversion APIs, invoke downstream
+   adapters, create downstream records, or promote a supported feature.
+10. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
-10. The first review audience is advisor only.
-11. The first downstream conversion posture is report-only evidence after
+11. The first review audience is advisor only.
+12. The first downstream conversion posture is report-only evidence after
    advisor review.
-12. Business features remain unsupported until later slices implement runtime
+13. Business features remain unsupported until later slices implement runtime
    behavior, certification, and supported-feature promotion.

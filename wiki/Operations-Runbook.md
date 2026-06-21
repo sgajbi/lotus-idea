@@ -1,8 +1,10 @@
 # Operations Runbook
 
-Current posture: scaffold operations plus internal domain persistence/replay
-tests only. There is no database-backed persistence, migration, runtime
-recovery command, or supported business API yet.
+Current posture: scaffold operations plus internal domain, persistence/replay,
+review, AI-governance, certified high-cash API foundation, and conversion
+governance tests. Conversion governance is internal only: there is no
+database-backed conversion persistence, migration, downstream adapter, runtime
+recovery command, or supported conversion business API yet.
 
 Initial commands:
 

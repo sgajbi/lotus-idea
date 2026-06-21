@@ -53,3 +53,17 @@ the RFC-0002 first-wave map:
 
 `lotus-idea` planned producer products remain proposed until implementation and
 platform certification.
+
+## Conversion Boundaries
+
+RFC-0002 Slice 12 now has an internal governed conversion foundation. It maps
+conversion targets to downstream source authorities:
+
+1. `advise_proposal` outcomes must come from `lotus-advise`,
+2. `manage_review` outcomes must come from `lotus-manage`,
+3. `report_evidence` outcomes must come from `lotus-report`.
+
+The current implementation records intent and outcome posture only. It does not
+call downstream services, create proposals, create manage actions, create report
+evidence packs, render documents, archive material, or grant suitability,
+execution, compliance, mandate, or client-communication authority.

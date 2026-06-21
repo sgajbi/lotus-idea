@@ -146,6 +146,19 @@ supported product capability: there are no live source adapters, Gateway routes,
 Workbench surfaces, database-backed API state, data-product certification,
 runtime trust telemetry, or supported-feature promotion.
 
+RFC-0002 Slice 12 is partially implemented as an internal conversion governance
+foundation in `src/app/domain/conversion_governance.py`. The repository now has
+review-gated conversion intent creation for Advise proposal, Manage review, and
+Report evidence targets; target-to-source-authority mapping; lifecycle
+transition to converted posture; downstream outcome recording; safe audit
+events; idempotency-key validation at the domain command boundary; and explicit
+no-authority semantics for execution, suitability, client communication, and
+downstream realization. This is not yet a supported conversion product: there
+are no downstream adapters, APIs/OpenAPI contracts, Gateway/Workbench proof,
+Advise/Manage/Report acceptance tests, database-backed persistence,
+data-product certification, runtime trust telemetry, or supported-feature
+promotion.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -174,8 +187,9 @@ logs; fix or document the owned warning source instead.
    high-cash API request into framework-free domain signal evaluation.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
-   evidence policy, deterministic governance checks, internal persistence
-   records, replay posture, idempotency, and audit primitives.
+   conversion governance, evidence policy, deterministic governance checks,
+   internal persistence records, replay posture, idempotency, and audit
+   primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports.

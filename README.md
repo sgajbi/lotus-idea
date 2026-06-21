@@ -15,9 +15,11 @@ deterministic scoring/review-queue projection foundation, and an internal
 advisor review/feedback governance foundation, and an internal AI governance
 foundation for redaction, verifier, and fallback controls. It also exposes the
 first certified internal high-cash signal evaluation API foundation for
-caller-supplied, source-owned Core evidence. No business feature is supported
-until the relevant RFC slice has full runtime evidence, endpoint certification,
-tests, data-mesh posture, downstream proof, and supported-feature registration.
+caller-supplied, source-owned Core evidence, and contains an internal
+conversion-governance foundation for review-gated downstream intent/outcome
+tracking. No business feature is supported until the relevant RFC slice has full
+runtime evidence, endpoint certification, tests, data-mesh posture, downstream
+proof, and supported-feature registration.
 
 ## Product Boundary
 
@@ -89,8 +91,8 @@ source-authority contracts only, not runtime certification.
   high-cash signal evaluation over caller-supplied, source-owned Core evidence.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
-  internal persistence records, replay posture, idempotency, and audit
-  primitives.
+  conversion governance, internal persistence records, replay posture,
+  idempotency, and audit primitives.
 - `src/app/ports/`: source-owned service interfaces consumed by application logic.
 - `src/app/infrastructure/`: adapters and clients behind ports.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing.
@@ -162,6 +164,7 @@ security/dependency posture, documentation, wiki source, and operating evidence.
 - API certification guide: `docs/operations/api-certification.md`
 - Observability guide: `docs/operations/observability.md`
 - AI governance guide: `docs/operations/ai-governance.md`
+- Conversion governance guide: `docs/operations/conversion-governance.md`
 - Data mesh readiness guide: `docs/operations/mesh-readiness.md`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`
