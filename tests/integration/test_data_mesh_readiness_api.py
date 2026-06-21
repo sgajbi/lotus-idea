@@ -89,3 +89,34 @@ def test_data_mesh_readiness_api_emits_not_certified_operation_event(
             None,
         )
     ]
+
+
+def test_data_mesh_readiness_api_reports_unavailable_contracts_safely(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[tuple[str, str, str | None]] = []
+
+    def fail_snapshot() -> None:
+        raise ValueError("broken contract")
+
+    def capture(event: Any) -> None:
+        events.append((event.operation.value, event.outcome.value, event.error_code))
+
+    monkeypatch.setattr(
+        data_mesh_readiness_api, "build_data_mesh_readiness_snapshot", fail_snapshot
+    )
+    monkeypatch.setattr(data_mesh_readiness_api, "emit_operation_event", capture)
+    client = TestClient(app)
+
+    response = client.get("/api/v1/data-mesh/readiness", headers=mesh_readiness_headers())
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "mesh_readiness_unavailable"
+    assert "broken contract" not in response.text
+    assert events == [
+        (
+            "mesh_readiness_read",
+            "invalid_state",
+            "mesh_readiness_unavailable",
+        )
+    ]

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import json
+from typing import Any
 
 import pytest
 
@@ -52,3 +54,64 @@ def test_data_mesh_readiness_snapshot_fails_closed_when_contracts_are_missing(
 ) -> None:
     with pytest.raises(FileNotFoundError):
         build_data_mesh_readiness_snapshot(repository_root=tmp_path)
+
+
+def test_data_mesh_readiness_snapshot_rejects_invalid_source_truth(tmp_path: Path) -> None:
+    _write_contracts(tmp_path, readiness_overrides={"source_of_truth": []})
+
+    with pytest.raises(ValueError, match="source_of_truth"):
+        build_data_mesh_readiness_snapshot(repository_root=tmp_path)
+
+
+def test_data_mesh_readiness_snapshot_rejects_invalid_product_list(tmp_path: Path) -> None:
+    _write_contracts(tmp_path, producer_overrides={"products": {}})
+
+    with pytest.raises(ValueError, match="products must be a list"):
+        build_data_mesh_readiness_snapshot(repository_root=tmp_path)
+
+
+def _write_contracts(
+    repository_root: Path,
+    *,
+    producer_overrides: dict[str, object] | None = None,
+    readiness_overrides: dict[str, object] | None = None,
+) -> None:
+    producer = {
+        "products": [
+            {
+                "product_name": "IdeaCandidate",
+                "product_version": "v1",
+                "lifecycle_status": "proposed",
+                "approved_consumers": ["lotus-gateway"],
+            }
+        ]
+    } | (producer_overrides or {})
+    readiness = {
+        "repository": "lotus-idea",
+        "lifecycle_status": "planned",
+        "certification_status": "not_certified",
+        "mesh_role": "planned_producer_and_consumer",
+        "source_of_truth": {
+            "producer_declaration": "contracts/domain-data-products/lotus-idea-products.v1.json",
+        },
+        "certification_gates_before_promotion": ["runtime telemetry"],
+    } | (readiness_overrides or {})
+    telemetry = {"blocking": {"blocked": True}}
+
+    _write_json(
+        repository_root / "contracts/domain-data-products/lotus-idea-products.v1.json",
+        producer,
+    )
+    _write_json(
+        repository_root / "contracts/domain-data-products/mesh-readiness.v1.json",
+        readiness,
+    )
+    _write_json(
+        repository_root / "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
+        telemetry,
+    )
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
