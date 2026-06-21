@@ -22,6 +22,17 @@ ROOT = Path(__file__).resolve().parents[2]
 MIGRATIONS_DIR = ROOT / "migrations"
 POSTGRES_URL_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_URL"
 POSTGRES_REQUIRED_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED"
+POSTGRES_SCHEMA_TABLES = (
+    "idea_candidate_record",
+    "idea_idempotency_record",
+    "idea_lifecycle_history",
+    "idea_audit_event",
+    "idea_review_decision",
+    "idea_feedback_event",
+    "idea_conversion_intent",
+    "idea_conversion_outcome",
+    "idea_report_evidence_pack_request",
+)
 
 
 @pytest.fixture
@@ -74,6 +85,33 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
         replayed_payload["persistence"]["candidateId"]
         == accepted_payload["persistence"]["candidateId"]
     )
+    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
+    assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
+
+
+def test_postgres_migration_rollback_and_reapply_restores_runtime_contract(
+    postgres_database_url: str,
+) -> None:
+    assert _schema_tables_exist(postgres_database_url) is True
+
+    _execute_migrations(postgres_database_url, MigrationDirection.ROLLBACK)
+    assert _schema_tables_exist(postgres_database_url) is False
+
+    _execute_migrations(postgres_database_url, MigrationDirection.APPLY)
+    assert _schema_tables_exist(postgres_database_url) is True
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    client = TestClient(app)
+    recovered = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=_high_cash_payload(),
+        headers=_persistence_headers("postgres-runtime-proof-recovery-001"),
+    )
+
+    assert recovered.status_code == 200
+    recovered_payload = recovered.json()
+    assert recovered_payload["durableStorageBacked"] is True
+    assert recovered_payload["persistence"]["decision"] == "accepted"
     assert _table_count(postgres_database_url, "idea_candidate_record") == 1
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
 
@@ -214,16 +252,7 @@ def _execute_migrations(database_url: str, direction: MigrationDirection) -> Non
 
 
 def _table_count(database_url: str, table_name: str) -> int:
-    allowed_tables = {
-        "idea_candidate_record",
-        "idea_idempotency_record",
-        "idea_review_decision",
-        "idea_feedback_event",
-        "idea_conversion_intent",
-        "idea_conversion_outcome",
-        "idea_report_evidence_pack_request",
-    }
-    if table_name not in allowed_tables:
+    if table_name not in POSTGRES_SCHEMA_TABLES:
         raise ValueError(f"Unsupported test table: {table_name}")
     with psycopg.connect(database_url) as connection:
         with connection.cursor() as cursor:
@@ -232,6 +261,22 @@ def _table_count(database_url: str, table_name: str) -> int:
     if row is None:
         raise AssertionError(f"No count returned for {table_name}")
     return int(row[0])
+
+
+def _schema_tables_exist(database_url: str) -> bool:
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT table_name
+                FROM information_schema.tables
+                WHERE table_schema = 'public'
+                  AND table_name = ANY(%s)
+                """,
+                (list(POSTGRES_SCHEMA_TABLES),),
+            )
+            existing_tables = {str(row[0]) for row in cursor.fetchall()}
+    return existing_tables == set(POSTGRES_SCHEMA_TABLES)
 
 
 def _source_ref(product_id: str) -> dict[str, str]:
