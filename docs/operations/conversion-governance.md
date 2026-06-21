@@ -19,11 +19,19 @@ Current implemented scope:
    - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
    - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
 
+The report conversion path now has one additional internal request foundation:
+
+- `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`
+
+This records source-provenanced report evidence-pack request truth for reviewed
+report conversion intents. It does not create `lotus-report`, `lotus-render`, or
+`lotus-archive` records.
+
 Current non-supported scope:
 
 1. no downstream adapter is implemented,
-2. no proposal, DPM action, report package, rendered document, or archive record
-   is created by `lotus-idea`,
+2. no proposal, DPM action, downstream report package, rendered document, or
+   archive record is created by `lotus-idea`,
 3. no conversion data product is certified,
 4. no supported feature is promoted,
 5. the API foundations still report `durableStorageBacked=false` and
@@ -34,6 +42,9 @@ Implementation source:
 - `src/app/domain/conversion_governance.py`
 - `src/app/application/conversion_workflow.py`
 - `src/app/api/conversion_governance.py`
+- `src/app/domain/report_evidence.py`
+- `src/app/application/report_evidence.py`
+- `src/app/api/report_evidence.py`
 - `tests/unit/test_conversion_governance.py`
 - `tests/unit/test_idea_persistence.py`
 - `tests/integration/test_review_workflow_api.py`

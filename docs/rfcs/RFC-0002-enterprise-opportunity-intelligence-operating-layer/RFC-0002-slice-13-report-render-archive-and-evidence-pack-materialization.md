@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Planned
+Status: Partially implemented - internal report evidence-pack request foundation only
 
 ## Outcome
 
@@ -15,6 +15,41 @@ services where product claims require documentable proof.
 4. Integrate with `lotus-archive` for archive metadata, retention, legal hold
    posture, retrieval refs, and access audit.
 
+## Current Implementation Evidence
+
+Implemented in the first Slice 13 foundation:
+
+1. `src/app/domain/report_evidence.py` defines the governed report evidence-pack
+   request contract, purpose vocabulary, source-summary projection,
+   Report/Render/Archive source-authority refs, retention policy refs, audit
+   event, and explicit no-client-publication/no-render/no-archive authority.
+2. `src/app/application/report_evidence.py` orchestrates report evidence-pack
+   requests through repository protocols instead of route-owned business logic.
+3. `src/app/domain/persistence.py` persists report evidence-pack requests with
+   idempotency replay/conflict posture and snapshot recovery.
+4. `src/app/api/report_evidence.py` exposes the certified internal endpoint:
+   `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`.
+5. `docs/operations/endpoint-certification-ledger.json` records the route,
+   examples, non-goals, error posture, and test evidence.
+6. Tests cover domain gating, idempotency, source-authority refs, API
+   permission, safe errors, replay/conflict, missing resource, and blocked
+   client-ready publication:
+   - `tests/unit/test_report_evidence.py`,
+   - `tests/unit/test_idea_persistence.py`,
+   - `tests/integration/test_review_workflow_api.py`,
+   - `tests/unit/test_service_contract.py`.
+
+Current endpoint behavior:
+
+1. requires a previously recorded `report_evidence` conversion intent,
+2. requires `idea.report-evidence-pack.request` and `Idempotency-Key`,
+3. requires reviewed, approved, ready evidence that has already moved to
+   `converted_to_report`,
+4. preserves source evidence summaries and evidence hash without returning raw
+   source routes or payloads,
+5. records retention policy reference and safe audit event,
+6. returns `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
+
 ## Acceptance Gate
 
 1. Only reviewed idea evidence can be materialized.
@@ -22,3 +57,32 @@ services where product claims require documentable proof.
 3. Archive refs preserve lineage and access posture.
 4. Client-ready publication remains blocked unless explicitly supported and
    proven.
+
+## Acceptance Status
+
+Partially satisfied:
+
+1. Reviewed idea evidence gate is implemented for the internal request
+   foundation.
+2. Client-ready publication is explicitly blocked.
+3. Source evidence lineage and safe source summaries are preserved.
+
+Not yet satisfied:
+
+1. No `lotus-report` package intake adapter or acceptance proof exists.
+2. No `lotus-render` deterministic output projection exists.
+3. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
+   record exists.
+4. No rendered-output equivalence proof exists.
+5. No Gateway/Workbench product surface, data-product certification, runtime
+   trust telemetry, database-backed persistence, or supported-feature promotion
+   exists.
+
+## Boundary Decision
+
+This slice intentionally starts with `lotus-idea` source-owned request truth. It
+does not call downstream services yet because Report, Render, and Archive remain
+the authorities for package intake, deterministic rendering, archive records,
+retention, legal hold, retrieval, and access audit. The next Slice 13 increment
+should add downstream adapter contracts only after the accepted request shape is
+stable and can be tested without moving downstream authority into `lotus-idea`.

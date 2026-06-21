@@ -9,8 +9,11 @@ redaction/verifier/fallback controls, and the first certified internal
 high-cash API foundation. Internal conversion governance and certified internal
 conversion intent/outcome API foundations also exist for review-gated
 conversion tracking, source-authority mapping, and no-authority conversion
-boundaries. These are not externally supported features until live source
-adapters, durable runtime state, Gateway/Workbench proof, downstream
+boundaries. Internal report evidence-pack request governance also exists for
+reviewed report conversion intents, with safe source summaries, retention refs,
+Report/Render/Archive authority refs, idempotency, audit, and a certified
+internal API foundation. These are not externally supported features until live
+source adapters, durable runtime state, Gateway/Workbench proof, downstream
 acceptance, data-product certification, and supported-feature evidence are
 present.
 

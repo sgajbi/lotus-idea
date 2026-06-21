@@ -37,7 +37,11 @@ Current state:
 13. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, and no-authority conversion boundaries,
-14. business features remain Planned.
+14. RFC-0002 Slice 13 partially implements internal report evidence-pack
+    request governance for reviewed report conversion intents, source summaries,
+    retention refs, Report/Render/Archive authority refs, idempotency, audit,
+    and a certified internal API foundation,
+15. business features remain Planned.
 
 First implementation program:
 
@@ -54,7 +58,9 @@ First implementation program:
    source adapters and durable state exist,
 7. persist conversion intents/outcomes and add downstream adapter contracts only
    after source ownership and idempotency guarantees are explicit,
-8. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
+8. realize Advise, Manage, Report, Render, Archive, and AI integration only
+   where source-backed; current report evidence-pack support is request truth
+   only and not downstream materialization,
 9. prove canonical demo scenarios and publish implementation-backed documentation.
 
 Unsupported until proved:
