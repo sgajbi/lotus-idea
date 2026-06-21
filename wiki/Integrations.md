@@ -88,6 +88,13 @@ certified internal API foundations:
 1. `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
 2. `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
 
-It does not call downstream services, create proposals, create manage actions,
-create report evidence packs, render documents, archive material, or grant
-suitability, execution, compliance, mandate, or client-communication authority.
+The report conversion path also has an internal evidence-pack request foundation:
+
+1. `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`.
+
+That route records source-provenanced request truth for reviewed report
+conversion intents and preserves Report/Render/Archive authority refs. It does
+not call downstream services, create proposals, create manage actions, create
+downstream report packages, render documents, archive material, authorize
+client-ready publication, or grant suitability, execution, compliance, mandate,
+or client-communication authority.

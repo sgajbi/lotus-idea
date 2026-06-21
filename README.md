@@ -23,10 +23,11 @@ API foundations for caller-supplied, source-owned Core evidence, certified
 internal candidate lifecycle, advisor queue, review-action, and feedback API
 foundations over persisted candidates, and an internal conversion-governance
 foundation plus certified internal conversion intent/outcome API foundations
-for review-gated downstream intent/outcome tracking. No business feature is
-supported until the relevant RFC slice has full runtime evidence, tests,
-data-mesh posture, downstream proof, Gateway/Workbench proof, and
-supported-feature registration.
+for review-gated downstream intent/outcome tracking. It now also has an
+internal report evidence-pack request foundation plus a certified internal API
+for reviewed report conversion intents. No business feature is supported until
+the relevant RFC slice has full runtime evidence, tests, data-mesh posture,
+downstream proof, Gateway/Workbench proof, and supported-feature registration.
 
 ## Product Boundary
 
@@ -111,10 +112,13 @@ source-authority contracts only, not runtime certification.
   Internal conversion workflow orchestration records review-gated conversion
   intents and source-authorized outcomes through the repository
   idempotency/audit contract and certified internal conversion API foundations.
+  Internal report evidence-pack orchestration records source-provenanced request
+  packages for reviewed report conversion intents without creating Report,
+  Render, or Archive records.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
-  conversion governance, internal persistence records, replay posture,
-  idempotency, and audit primitives.
+  conversion governance, report evidence-pack request governance, internal
+  persistence records, replay posture, idempotency, and audit primitives.
 - `src/app/ports/`: source-owned service interfaces consumed by application
   logic, including the first Core high-cash evidence port.
 - `src/app/infrastructure/`: adapters and clients behind ports, including a
@@ -195,6 +199,7 @@ Main Releasability dispatch so post-merge release evidence is produced on
 - Observability guide: `docs/operations/observability.md`
 - AI governance guide: `docs/operations/ai-governance.md`
 - Conversion governance guide: `docs/operations/conversion-governance.md`
+- Report evidence-pack guide: `docs/operations/report-evidence-packs.md`
 - Data mesh readiness guide: `docs/operations/mesh-readiness.md`
 - Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`

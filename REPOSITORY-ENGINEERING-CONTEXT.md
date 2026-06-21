@@ -121,8 +121,9 @@ candidate persistence records, deterministic source-ref evidence hashes,
 idempotent candidate persistence decisions, duplicate candidate suppression,
 evidence replay posture for matched, stale, mismatched, expired, and missing
 records, idempotent lifecycle-transition recording, lifecycle-transition
-history, conversion intent/outcome records, conversion intent lookup, safe audit
-events for mutating actions, snapshot recovery for internal replay tests,
+history, conversion intent/outcome records, conversion intent lookup, report
+evidence-pack request records, safe audit events for mutating actions, snapshot
+recovery for internal replay tests,
 application-level high-cash evaluate-and-persist orchestration in
 `src/app/application/high_cash_signal.py`, and candidate lifecycle orchestration
 in `src/app/application/candidate_lifecycle.py`. The high-cash orchestration
@@ -212,7 +213,13 @@ recording over review-approved persisted candidates:
 conversion-specific capabilities plus `Idempotency-Key`, enforce the candidate
 review gate, target-source authority, replay/conflict posture, and explicit
 no-authority semantics for downstream realization, suitability, execution, and
-client communication. All eight business routes are covered by OpenAPI and
+client communication. The report evidence-pack API exposes internal request
+recording for reviewed report conversion intents:
+`POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs`.
+It requires `idea.report-evidence-pack.request` plus `Idempotency-Key`,
+preserves safe source summaries and Report/Render/Archive source-authority
+refs, and explicitly does not create Report, Render, or Archive records or
+authorize client-ready publication. All nine business routes are covered by OpenAPI and
 endpoint certification evidence.
 This is not yet a supported product capability: there are no live source
 adapters, Gateway routes, Workbench surfaces, database-backed API state,
@@ -232,6 +239,18 @@ This is not yet a supported conversion product: there are no downstream
 adapters, Gateway/Workbench proof, Advise/Manage/Report acceptance tests,
 database-backed persistence, data-product certification, runtime trust
 telemetry, or supported-feature promotion.
+
+RFC-0002 Slice 13 is partially implemented as an internal report evidence-pack
+request foundation in `src/app/domain/report_evidence.py`. The repository now
+has report conversion-intent gating, evidence-hash reconciliation, safe source
+summary projection, Report/Render/Archive source-authority refs, retention
+policy references, idempotent repository persistence, safe audit events, and a
+certified internal API for report evidence-pack requests. This is not yet a
+supported report evidence product: there is no `lotus-report` package intake
+adapter, no `lotus-render` deterministic output, no `lotus-archive` metadata or
+access-audit record, no client-ready publication authority, no Gateway/Workbench
+proof, no database-backed persistence, no data-product certification, no runtime
+trust telemetry, and no supported-feature promotion.
 
 ## CI And Merge Governance
 
@@ -276,12 +295,15 @@ logs; fix or document the owned warning source instead.
    commands into the Slice 06 idempotent lifecycle transition repository
    contract. Conversion workflow orchestration applies Slice 12 conversion
    governance to repository snapshots and persists accepted intents/outcomes
-   through the same idempotency/audit posture.
+   through the same idempotency/audit posture. Report evidence-pack
+   orchestration applies Slice 13 evidence-pack governance to report conversion
+   intents and persists source-provenanced request packages without downstream
+   Report/Render/Archive realization.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
-   conversion governance, evidence policy, deterministic governance checks,
-   internal persistence records, replay posture, idempotency, and audit
-   primitives.
+   conversion governance, report evidence-pack request governance, evidence
+   policy, deterministic governance checks, internal persistence records,
+   replay posture, idempotency, and audit primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
    The current implemented port is `core_sources.py` for high-cash Core

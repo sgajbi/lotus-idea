@@ -719,7 +719,7 @@ assertions.
 | 10 | Certified APIs, OpenAPI, and Gateway contract | Partially implemented - certified high-cash, lifecycle, advisor queue, review-action, feedback, and conversion API foundations only | high-cash evaluate/evaluate-and-persist, lifecycle transition, advisor queue, review-action, feedback, conversion intent, and conversion outcome endpoints; Gateway route contract remains planned |
 | 11 | Workbench product realization | Planned | review queue UI, evidence drawer, browser/accessibility proof |
 | 12 | Advise and Manage conversion realization | Partially implemented - internal conversion governance and certified API foundation only | review-gated conversion intents/outcomes, source-authority mapping, certified internal conversion API proof, no downstream authority proof; downstream adapters and contracts remain planned |
-| 13 | Report, Render, Archive, and evidence-pack materialization | Planned | report package, deterministic render, archive refs, retention/access proof |
+| 13 | Report, Render, Archive, and evidence-pack materialization | Partially implemented - internal report evidence-pack request foundation only | certified internal request API, source summaries, retention refs, idempotency/audit proof; Report/Render/Archive downstream materialization remains planned |
 | 14 | Data-product promotion, trust telemetry, and platform hardening | Planned | repo-native declarations, trust telemetry, SLO/access/evidence policies |
 | 15 | Observability, security, entitlements, and operations | Planned | runbooks, metrics/log review, vulnerability treatment, fail-closed proof |
 | 16 | Demo readiness, archetype scenarios, and commercial proof | Planned | canonical scenarios, claim ledger, RFP-safe wording, demo guide |
