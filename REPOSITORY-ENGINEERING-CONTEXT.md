@@ -80,6 +80,16 @@ proposal, policy, and copilot records; Manage action register; and Report
 client report evidence. These are source contracts only until runtime adapters,
 supportability, and certification evidence exist.
 
+RFC-0002 Slice 05 is partially implemented for the high-cash / idle-liquidity
+domain policy. `src/app/domain/signal_evaluation.py` consumes source-reported
+cash-weight evidence and Core source refs, creates deterministic
+`OpportunitySignal`, `IdeaEvidencePacket`, and `IdeaCandidate` domain objects
+for positive cases, and returns blocked/suppressed/not-eligible outcomes for
+missing source, stale source, missing cash weight, entitlement denial,
+duplicate, and below-threshold cases. This remains internal domain behavior:
+there are no source adapters, APIs, persistence, integration proof,
+data-product certification, or supported-feature promotion yet.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash

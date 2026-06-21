@@ -10,7 +10,9 @@ Current state:
 4. RFC-0002 Slice 00 records the implementation-start source map and first
    journey decisions,
 5. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
-6. business features remain Planned.
+6. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
+   policy,
+7. business features remain Planned.
 
 First implementation program:
 
@@ -18,7 +20,7 @@ First implementation program:
    exposes repeatable gaps,
 2. normalize structure before adding product scope,
 3. add source contracts and data-mesh baseline,
-4. implement deterministic high-cash / idle-liquidity signal evaluation before AI explanation,
+4. add source adapters and application orchestration for high-cash / idle-liquidity evidence,
 5. add persistence, replay, idempotency, audit, scoring, ranking, suppression, review, and feedback,
 6. expose certified APIs and Gateway/Workbench product surfaces,
 7. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,

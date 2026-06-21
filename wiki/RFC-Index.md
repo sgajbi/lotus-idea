@@ -18,10 +18,13 @@ Current RFC-0002 implementation-start baseline:
    allocation.
 2. Slice 03 implements the pure domain model and lifecycle foundation without
    API, persistence, or supported-feature promotion.
-3. The first opportunity journey is high cash / idle liquidity for
+3. Slice 05 partially implements the high-cash / idle-liquidity deterministic
+   domain policy without source adapters, API, persistence, or supported-feature
+   promotion.
+4. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
-4. The first review audience is advisor only.
-5. The first downstream conversion posture is report-only evidence after
+5. The first review audience is advisor only.
+6. The first downstream conversion posture is report-only evidence after
    advisor review.
-6. Business features remain unsupported until later slices implement runtime
+7. Business features remain unsupported until later slices implement runtime
    behavior, certification, and supported-feature promotion.

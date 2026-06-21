@@ -711,7 +711,7 @@ assertions.
 | 2 | Cleanup, structure, and current surface normalization | Planned | dead-code/doc-sprawl cleanup, module boundaries, vocabulary baseline |
 | 3 | Opportunity domain model, vocabulary, and lifecycle | Implemented - pure domain foundation only | pure domain model, lifecycle tests, unsupported transition behavior |
 | 4 | Source authority, signal contracts, and data mesh baseline | Planned | consumer/producer contracts, source authority tests, mesh validation |
-| 5 | Deterministic signal evaluation and candidate generation | Planned | first signal families, candidate generation, golden scenario tests |
+| 5 | Deterministic signal evaluation and candidate generation | Partially implemented - high-cash domain policy only | first signal families, candidate generation, golden scenario tests |
 | 6 | Persistence, replay, idempotency, and audit | Planned | durable records, hashes, replay, audit events, idempotency tests |
 | 7 | Scoring, ranking, suppression, and queue policy | Planned | scoring policy, ranking stability, dedupe/suppression, queue projection |
 | 8 | Review queues, feedback, and human governance | Planned | review APIs, feedback model, entitlement tests, audit proof |
