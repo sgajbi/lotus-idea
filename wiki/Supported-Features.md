@@ -14,9 +14,9 @@ boundaries. Internal report evidence-pack request governance also exists for
 reviewed report conversion intents, with safe source summaries, retention refs,
 Report/Render/Archive authority refs, idempotency, audit, and a certified
 internal API foundation. These are not externally supported features until live
-source adapters, durable runtime state, Gateway/Workbench proof, downstream
-acceptance, data-product certification, and supported-feature evidence are
-present.
+source adapters, broader durable runtime workflow proof, Gateway/Workbench
+proof, downstream acceptance, data-product certification, and supported-feature
+evidence are present.
 
 Planned capabilities:
 

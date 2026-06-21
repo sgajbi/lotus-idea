@@ -166,10 +166,13 @@ snapshots, and rolls back on database flush failure.
 selection when `LOTUS_IDEA_DATABASE_URL` is configured, while keeping
 process-local state as the default. Repository-backed routes derive
 `durableStorageBacked` responses and operation-event labels from the active
-repository. This is still not production storage certification: there is no
-real-PostgreSQL integration/e2e proof, deploy migration evidence,
-rollback/recovery proof, data-product certification, or supported-feature
-promotion.
+repository. `make postgres-integration-gate` now exercises the real FastAPI
+runtime provider against a PostgreSQL 18 service by applying migrations,
+persisting a high-cash candidate through the API, reloading the provider, and
+proving idempotency replay from database state. This is still not production
+storage certification: deploy migration evidence, broader rollback/recovery
+proof, data-product certification, downstream workflow proof, and
+supported-feature promotion remain planned.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -269,7 +272,8 @@ runtime workflows, persist durable AI lineage, or grant downstream authority.
 All ten business routes plus the data-mesh-readiness operator diagnostic are
 covered by OpenAPI and endpoint certification evidence.
 This is not yet a supported product capability: there are no live source
-adapters, Gateway routes, Workbench surfaces, database-backed API state,
+adapters, Gateway routes, Workbench surfaces, supported database-backed API
+state beyond the current high-cash PostgreSQL persistence/replay proof,
 data-product certification, runtime trust telemetry, or supported-feature
 promotion.
 
@@ -468,8 +472,10 @@ owned by upstream services.
 14. data-mesh contract gate: `make data-mesh-contract-gate`
 15. migration contract gate: `make migration-contract-gate`
 16. migration execution dry-run gate: `make migration-execution-gate`
-17. apply migrations with configured PostgreSQL URL: `make migrate`
-18. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+17. PostgreSQL runtime proof with configured integration URL:
+    `make postgres-integration-gate`
+18. apply migrations with configured PostgreSQL URL: `make migrate`
+19. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -485,16 +491,17 @@ Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, OpenAPI quality, supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, unit tests, integration tests, e2e tests,
-coverage gate, security audit, and Docker build validation.
+PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
+and Docker build validation.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
-safe migration execution dry-run validation, coverage, security, Docker,
-release-evidence, action-version, least-privilege workflow controls,
-non-suppressed auto-merge token usage, workflow-dispatch access, or merged-PR
-main-releasability dispatch from local or GitHub validation.
+safe migration execution dry-run validation, PostgreSQL runtime proof, coverage,
+security, Docker, release-evidence, action-version, least-privilege workflow
+controls, non-suppressed auto-merge token usage, workflow-dispatch access, or
+merged-PR main-releasability dispatch from local or GitHub validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

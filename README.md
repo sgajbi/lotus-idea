@@ -31,7 +31,8 @@ observability foundation across certified internal signal, persistence,
 lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
 data-mesh-readiness APIs. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
-adapter, and opt-in API repository wiring now exist behind blocking gates.
+adapter, opt-in API repository wiring, and real PostgreSQL runtime proof now
+exist behind blocking gates.
 Runtime API state is process-local by default and becomes repository-durable
 only when `LOTUS_IDEA_DATABASE_URL` is configured after migrations are applied.
 No business feature is supported until the relevant
@@ -181,6 +182,7 @@ make ci-contract-gate
 make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
+make postgres-integration-gate
 make typecheck
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -200,6 +202,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
+.venv\Scripts\python.exe -m pytest tests/integration/test_postgres_runtime_integration.py
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py
 .venv\Scripts\python.exe -m pytest tests/unit tests/integration tests/e2e
@@ -219,6 +222,17 @@ URL configured:
 $env:LOTUS_IDEA_DATABASE_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
 make migrate
 uvicorn app.main:app --reload --port 8330
+```
+
+To run the PostgreSQL runtime proof locally, provide an integration database URL.
+The test applies and rolls back the repository schema, persists a high-cash
+candidate through the API, resets the repository provider, and proves idempotent
+replay from PostgreSQL:
+
+```powershell
+$env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
+$env:LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED = "1"
+make postgres-integration-gate
 ```
 
 Repository-backed endpoints report `durableStorageBacked=true` only in this

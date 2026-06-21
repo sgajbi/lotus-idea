@@ -54,7 +54,7 @@ Implementation source:
 
 Promotion requirements:
 
-1. real PostgreSQL integration/e2e proof and recovery evidence,
+1. real PostgreSQL integration proof for conversion workflows and recovery evidence,
 2. Gateway/Workbench proof,
 3. downstream acceptance tests in `lotus-advise`, `lotus-manage`, and
    `lotus-report` where each service remains source authority for its workflow,

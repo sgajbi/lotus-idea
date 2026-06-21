@@ -5,6 +5,7 @@
 - make lint
 - make typecheck
 - make ci
+- make postgres-integration-gate
 - docker compose up --build
 
 ## Health and Readiness
@@ -18,7 +19,10 @@
 
 1. Check container logs for request failures and stack traces.
 2. Verify /health/ready and metrics endpoint.
-3. Run local parity check (make ci) before hotfix PR.
+3. Run local parity check (`make ci`) before hotfix PR.
+4. For persistence or repository-provider changes, run
+   `make postgres-integration-gate` with `LOTUS_IDEA_POSTGRES_INTEGRATION_URL`
+   pointed at a disposable PostgreSQL database.
 
 ## Current Operation Event Diagnostics
 

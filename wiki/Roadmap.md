@@ -64,8 +64,9 @@ First implementation program:
 4. extend the current Core source-port foundation into live high-cash /
    idle-liquidity source proof after Core exposes explicit source-reported cash
    weight,
-5. add database-backed persistence, source ingestion workers, durable queue
-   state, review, and feedback,
+5. broaden the current PostgreSQL high-cash persistence/replay proof into
+   source ingestion workers, durable queue state, review, feedback,
+   conversion, report evidence-pack, and recovery proof,
 6. extend certified APIs into Gateway/Workbench product surfaces after live
    source adapters and durable state exist,
 7. persist conversion intents/outcomes and add downstream adapter contracts only
