@@ -67,6 +67,30 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
+def conversion_intent_headers(
+    idempotency_key: str,
+    capabilities: str = "idea.conversion.intent.record",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-conversion-intent-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def conversion_outcome_headers(
+    idempotency_key: str,
+    capabilities: str = "idea.conversion.outcome.record",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "lotus-report-worker",
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-conversion-outcome-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
 def lifecycle_headers(
     idempotency_key: str,
     capabilities: str = "idea.candidate.lifecycle.transition",
@@ -135,6 +159,34 @@ def feedback_payload() -> dict[str, Any]:
     }
 
 
+def conversion_intent_payload(
+    *,
+    conversion_intent_id: str = "conversion-report-001",
+    target: str = "report_evidence",
+) -> dict[str, Any]:
+    return {
+        "conversionIntentId": conversion_intent_id,
+        "target": target,
+        "reasonCodes": ["review_approved_for_conversion"],
+        "requestedAtUtc": "2026-06-21T10:15:00Z",
+    }
+
+
+def conversion_outcome_payload(
+    *,
+    conversion_outcome_id: str = "conversion-report-outcome-001",
+    source_system: str = "lotus-report",
+    downstream_reference: str = "report-evidence-pack-001",
+) -> dict[str, Any]:
+    return {
+        "conversionOutcomeId": conversion_outcome_id,
+        "status": "accepted",
+        "sourceSystem": source_system,
+        "downstreamReference": downstream_reference,
+        "recordedAtUtc": "2026-06-21T10:20:00Z",
+    }
+
+
 def lifecycle_payload(
     *,
     transition_id: str = "lifecycle-enriched-001",
@@ -198,6 +250,19 @@ def transition_candidate_to_review_ready(client: TestClient, candidate_id: str) 
             transition_id=f"lifecycle-{target_status}-001",
             minute=index,
         )
+
+
+def approve_candidate_for_conversion(client: TestClient, candidate_id: str) -> None:
+    transition_candidate_to_review_ready(client, candidate_id)
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=approve_review_payload(),
+        headers=review_headers(f"review-approve-for-conversion-{candidate_id}"),
+    )
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["persistence"]["lifecycleStatus"] == "approved"
+    assert payload["persistence"]["reviewPosture"] == "approved_for_conversion"
 
 
 def test_lifecycle_transition_api_records_idempotent_transition() -> None:
@@ -620,3 +685,248 @@ def test_feedback_api_rejects_invalid_identity_time_and_idempotency() -> None:
     assert blank_feedback_response.status_code == 400
     assert naive_time_response.status_code == 400
     assert blank_idempotency_response.status_code == 400
+
+
+def test_conversion_intent_api_records_review_approved_candidate_without_downstream_authority() -> (
+    None
+):
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-intent-001")
+    approve_candidate_for_conversion(client, candidate_id)
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers("conversion-intent-api-report-001"),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-conversion-intent-api"
+    payload = response.json()
+    assert payload["conversionIntent"]["conversionIntentId"] == "conversion-report-001"
+    assert payload["conversionIntent"]["target"] == "report_evidence"
+    assert payload["conversionIntent"]["targetSourceAuthority"] == "lotus-report"
+    assert payload["conversionIntent"]["boundary"] == "intent_only"
+    assert payload["conversionIntent"]["grantsDownstreamAuthority"] is False
+    assert payload["persistence"]["decision"] == "accepted"
+    assert payload["persistence"]["candidateId"] == candidate_id
+    assert payload["persistence"]["lifecycleStatus"] == "converted_to_report"
+    assert payload["persistence"]["reviewPosture"] == "approved_for_conversion"
+    assert payload["persistence"]["auditEventType"] == "idea.conversion.intent_requested"
+    assert payload["durableStorageBacked"] is False
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_conversion_intent_api_replays_and_conflicts_idempotently() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-replay-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    headers = conversion_intent_headers("conversion-intent-api-replay-001")
+
+    first = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-replay-001"),
+        headers=headers,
+    )
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-replay-001"),
+        headers=headers,
+    )
+    conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-replay-002"),
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert replayed.status_code == 200
+    assert replayed.json()["conversionIntent"] is None
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+
+
+def test_conversion_intent_api_requires_approved_state_permission_and_valid_request() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-invalid-001")
+
+    invalid_state = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers("conversion-intent-api-state-001"),
+    )
+    denied = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers(
+            "conversion-intent-api-denied-001",
+            capabilities="idea.review.record",
+        ),
+    )
+    blank_id = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id=" "),
+        headers=conversion_intent_headers("conversion-intent-api-blank-001"),
+    )
+    no_reasons_payload = conversion_intent_payload()
+    no_reasons_payload["reasonCodes"] = []
+    no_reasons = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=no_reasons_payload,
+        headers=conversion_intent_headers("conversion-intent-api-no-reasons-001"),
+    )
+    naive_time_payload = conversion_intent_payload()
+    naive_time_payload["requestedAtUtc"] = "2026-06-21T10:15:00"
+    naive_time = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=naive_time_payload,
+        headers=conversion_intent_headers("conversion-intent-api-naive-time-001"),
+    )
+    blank_idempotency = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers(" "),
+    )
+    missing = client.post(
+        "/api/v1/idea-candidates/missing-candidate/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers("conversion-intent-api-missing-001"),
+    )
+
+    assert invalid_state.status_code == 409
+    assert invalid_state.json()["code"] == "conversion_intent_conflict"
+    assert denied.status_code == 403
+    assert denied.json()["code"] == "permission_denied"
+    assert blank_id.status_code == 400
+    assert no_reasons.status_code == 400
+    assert naive_time.status_code == 400
+    assert blank_idempotency.status_code == 400
+    assert missing.status_code == 404
+    assert missing.json()["code"] == "conversion_resource_not_found"
+
+
+def test_conversion_outcome_api_records_source_authorized_result() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-conversion-outcome-001")
+    approve_candidate_for_conversion(client, candidate_id)
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-outcome-001"),
+        headers=conversion_intent_headers("conversion-intent-api-outcome-001"),
+    )
+    assert intent.status_code == 200
+
+    response = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-001/outcomes",
+        json=conversion_outcome_payload(),
+        headers=conversion_outcome_headers("conversion-outcome-api-report-001"),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-conversion-outcome-api"
+    payload = response.json()
+    assert payload["conversionOutcome"]["conversionOutcomeId"] == "conversion-report-outcome-001"
+    assert payload["conversionOutcome"]["sourceSystem"] == "lotus-report"
+    assert payload["conversionOutcome"]["downstreamReference"] == "report-evidence-pack-001"
+    assert payload["conversionOutcome"]["boundary"] == "downstream_realization_required"
+    assert payload["conversionOutcome"]["grantsExecutionAuthority"] is False
+    assert payload["conversionOutcome"]["grantsClientCommunicationAuthority"] is False
+    assert payload["conversionOutcome"]["grantsSuitabilityAuthority"] is False
+    assert payload["persistence"]["decision"] == "accepted"
+    assert payload["persistence"]["auditEventType"] == "idea.conversion.outcome_recorded"
+    assert payload["durableStorageBacked"] is False
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(
+        client, idempotency_key="seed-conversion-outcome-invalid-001"
+    )
+    approve_candidate_for_conversion(client, candidate_id)
+    intent = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(conversion_intent_id="conversion-outcome-invalid-001"),
+        headers=conversion_intent_headers("conversion-intent-api-outcome-invalid-001"),
+    )
+    assert intent.status_code == 200
+    headers = conversion_outcome_headers("conversion-outcome-api-replay-001")
+
+    first = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id="conversion-outcome-replay-001"),
+        headers=headers,
+    )
+    replayed = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id="conversion-outcome-replay-001"),
+        headers=headers,
+    )
+    wrong_source = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=conversion_outcome_payload(
+            conversion_outcome_id="conversion-outcome-wrong-source-001",
+            source_system="lotus-manage",
+        ),
+        headers=conversion_outcome_headers("conversion-outcome-api-wrong-source-001"),
+    )
+    denied = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id="conversion-outcome-denied-001"),
+        headers=conversion_outcome_headers(
+            "conversion-outcome-api-denied-001",
+            capabilities="idea.review.record",
+        ),
+    )
+    missing = client.post(
+        "/api/v1/conversion-intents/missing-intent/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id="conversion-outcome-missing-001"),
+        headers=conversion_outcome_headers("conversion-outcome-api-missing-001"),
+    )
+    blank_outcome = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id=" "),
+        headers=conversion_outcome_headers("conversion-outcome-api-blank-id-001"),
+    )
+    blank_reference_payload = conversion_outcome_payload(
+        conversion_outcome_id="conversion-outcome-blank-reference-001"
+    )
+    blank_reference_payload["downstreamReference"] = " "
+    blank_reference = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=blank_reference_payload,
+        headers=conversion_outcome_headers("conversion-outcome-api-blank-reference-001"),
+    )
+    naive_time_payload = conversion_outcome_payload(
+        conversion_outcome_id="conversion-outcome-naive-time-001"
+    )
+    naive_time_payload["recordedAtUtc"] = "2026-06-21T10:20:00"
+    naive_time = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=naive_time_payload,
+        headers=conversion_outcome_headers("conversion-outcome-api-naive-time-001"),
+    )
+    blank_idempotency = client.post(
+        "/api/v1/conversion-intents/conversion-outcome-invalid-001/outcomes",
+        json=conversion_outcome_payload(conversion_outcome_id="conversion-outcome-blank-key-001"),
+        headers=conversion_outcome_headers(" "),
+    )
+
+    assert first.status_code == 200
+    assert replayed.status_code == 200
+    assert replayed.json()["conversionOutcome"] is None
+    assert replayed.json()["persistence"]["decision"] == "replayed"
+    assert wrong_source.status_code == 409
+    assert wrong_source.json()["code"] == "conversion_outcome_conflict"
+    assert denied.status_code == 403
+    assert missing.status_code == 404
+    assert blank_outcome.status_code == 400
+    assert blank_reference.status_code == 400
+    assert naive_time.status_code == 400
+    assert blank_idempotency.status_code == 400

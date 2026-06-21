@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 
@@ -7,18 +8,28 @@ import pytest
 
 from app.domain import (
     CandidatePersistenceDecision,
+    ConversionIntentCommand,
+    ConversionOutcomeCommand,
+    ConversionOutcomeStatus,
+    ConversionPersistenceDecision,
+    ConversionTarget,
     EvidenceFreshness,
     EvidenceReplayStatus,
     HighCashSignalInput,
     HighCashSignalPolicy,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
+    ReasonCode,
+    ReviewPosture,
     SourceRef,
     SourceSystem,
     evaluate_high_cash_signal,
+    record_conversion_outcome,
+    request_conversion_intent,
 )
 
 
@@ -88,6 +99,32 @@ def high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
     )
     assert result.candidate is not None
     return result.candidate, refs
+
+
+def approved_high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
+    candidate, refs = high_cash_candidate()
+    return (
+        replace(
+            candidate,
+            lifecycle_status=IdeaLifecycleStatus.APPROVED,
+            review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+        ),
+        refs,
+    )
+
+
+def conversion_intent_command(
+    *,
+    target: ConversionTarget = ConversionTarget.REPORT_EVIDENCE,
+) -> ConversionIntentCommand:
+    return ConversionIntentCommand(
+        conversion_intent_id=f"conversion-{target.value}-001",
+        target=target,
+        actor_subject="advisor-001",
+        idempotency_key=f"conversion-{target.value}-key-001",
+        reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
+        requested_at_utc=datetime(2026, 6, 21, 10, 15, tzinfo=UTC),
+    )
 
 
 def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -> None:
@@ -200,6 +237,19 @@ def test_replay_matches_hash_or_returns_stale_and_mismatch_posture() -> None:
     assert matched.current_evidence_hash == persisted.record.evidence_hash
     assert stale.status is EvidenceReplayStatus.STALE_SOURCE
     assert mismatch.status is EvidenceReplayStatus.HASH_MISMATCH
+
+
+def test_replay_returns_not_found_for_missing_candidate() -> None:
+    repository = InMemoryIdeaRepository()
+
+    replay = repository.replay_evidence(
+        "missing-candidate",
+        current_source_refs=high_cash_candidate_source_refs(),
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert replay.status is EvidenceReplayStatus.NOT_FOUND
+    assert replay.record is None
 
 
 def test_expired_candidate_replay_returns_expired_posture_with_audit_history() -> None:
@@ -351,3 +401,214 @@ def test_repository_snapshot_recovers_candidate_idempotency_and_replay_state() -
 
     assert replayed.decision is CandidatePersistenceDecision.REPLAYED
     assert replay.status is EvidenceReplayStatus.MATCHED
+
+
+def test_conversion_intent_persistence_records_lifecycle_audit_and_idempotency() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:approved-high-cash:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    command = conversion_intent_command()
+    result = request_conversion_intent(candidate, command)
+    payload = {"candidate_id": candidate.candidate_id, "target": command.target.value}
+
+    first = repository.record_conversion_intent(
+        result,
+        idempotency_key=command.idempotency_key,
+        payload=payload,
+    )
+    replayed = repository.record_conversion_intent(
+        result,
+        idempotency_key=command.idempotency_key,
+        payload=payload,
+    )
+    conflict = repository.record_conversion_intent(
+        result,
+        idempotency_key=command.idempotency_key,
+        payload={"candidate_id": candidate.candidate_id, "target": "manage_review"},
+    )
+
+    assert first.decision is ConversionPersistenceDecision.ACCEPTED
+    assert replayed.decision is ConversionPersistenceDecision.REPLAYED
+    assert conflict.decision is ConversionPersistenceDecision.CONFLICT
+    assert first.record is not None
+    assert first.record.candidate.lifecycle_status is IdeaLifecycleStatus.CONVERTED_TO_REPORT
+    assert (
+        first.record.lifecycle_history[-1].target_status is IdeaLifecycleStatus.CONVERTED_TO_REPORT
+    )
+    assert first.record.conversion_intents[-1].intent.conversion_intent_id == (
+        "conversion-report_evidence-001"
+    )
+    assert first.record.audit_events[-1].event_type == "idea.conversion.intent_requested"
+
+
+def test_conversion_intent_persistence_returns_not_found_without_candidate_record() -> None:
+    candidate, _ = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    command = conversion_intent_command()
+    result = request_conversion_intent(candidate, command)
+
+    missing = repository.record_conversion_intent(
+        result,
+        idempotency_key=command.idempotency_key,
+        payload={"candidate_id": candidate.candidate_id, "target": command.target.value},
+    )
+
+    assert missing.decision is ConversionPersistenceDecision.NOT_FOUND
+    assert missing.record is None
+
+
+def test_conversion_outcome_persistence_records_source_reported_result_and_snapshot_lookup() -> (
+    None
+):
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:conversion-outcome:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    command = conversion_intent_command()
+    intent_result = request_conversion_intent(candidate, command)
+    repository.record_conversion_intent(
+        intent_result,
+        idempotency_key=command.idempotency_key,
+        payload={"candidate_id": candidate.candidate_id, "target": command.target.value},
+    )
+    recovered = InMemoryIdeaRepository(repository.snapshot())
+    conversion_intent = recovered.conversion_intent_by_id(command.conversion_intent_id)
+    assert conversion_intent is not None
+    outcome_result = record_conversion_outcome(
+        conversion_intent,
+        ConversionOutcomeCommand(
+            conversion_outcome_id="conversion-report-outcome-001",
+            status=ConversionOutcomeStatus.ACCEPTED,
+            source_system=SourceSystem.LOTUS_REPORT,
+            downstream_reference="report-evidence-pack-001",
+            recorded_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
+            actor_subject="lotus-report-worker",
+        ),
+    )
+
+    first = recovered.record_conversion_outcome(
+        outcome_result,
+        idempotency_key="conversion-outcome-report-001",
+        payload={"conversion_outcome_id": "conversion-report-outcome-001"},
+    )
+    replayed = recovered.record_conversion_outcome(
+        outcome_result,
+        idempotency_key="conversion-outcome-report-001",
+        payload={"conversion_outcome_id": "conversion-report-outcome-001"},
+    )
+
+    assert first.decision is ConversionPersistenceDecision.ACCEPTED
+    assert replayed.decision is ConversionPersistenceDecision.REPLAYED
+    assert first.record is not None
+    assert first.record.conversion_outcomes[-1].outcome.downstream_reference == (
+        "report-evidence-pack-001"
+    )
+    assert first.record.audit_events[-1].event_type == "idea.conversion.outcome_recorded"
+    assert first.record.audit_events[-1].actor_subject == "lotus-report-worker"
+
+
+def test_conversion_intent_lookup_handles_stale_snapshot_index() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:stale-conversion-index:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    no_record_index = InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={},
+            idempotency_records={},
+            idempotency_candidates={},
+            conversion_intent_candidates={"missing-intent": "missing-candidate"},
+        )
+    )
+    no_matching_intent = InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={candidate.candidate_id: persisted.record},
+            idempotency_records={},
+            idempotency_candidates={},
+            conversion_intent_candidates={"missing-intent": candidate.candidate_id},
+        )
+    )
+
+    assert no_record_index.conversion_intent_by_id("missing-intent") is None
+    assert no_matching_intent.conversion_intent_by_id("missing-intent") is None
+
+
+def test_conversion_outcome_persistence_handles_conflict_and_missing_intent_mapping() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:conversion-outcome-conflict:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    command = conversion_intent_command()
+    intent_result = request_conversion_intent(candidate, command)
+    repository.record_conversion_intent(
+        intent_result,
+        idempotency_key=command.idempotency_key,
+        payload={"candidate_id": candidate.candidate_id, "target": command.target.value},
+    )
+    outcome_result = record_conversion_outcome(
+        intent_result.conversion_intent,
+        ConversionOutcomeCommand(
+            conversion_outcome_id="conversion-report-outcome-conflict-001",
+            status=ConversionOutcomeStatus.ACCEPTED,
+            source_system=SourceSystem.LOTUS_REPORT,
+            downstream_reference="report-evidence-pack-001",
+            recorded_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
+            actor_subject="lotus-report-worker",
+        ),
+    )
+
+    accepted = repository.record_conversion_outcome(
+        outcome_result,
+        idempotency_key="conversion-outcome-conflict-001",
+        payload={"conversion_outcome_id": "conversion-report-outcome-conflict-001"},
+    )
+    conflict = repository.record_conversion_outcome(
+        outcome_result,
+        idempotency_key="conversion-outcome-conflict-001",
+        payload={"conversion_outcome_id": "changed-outcome-id"},
+    )
+    no_mapping = InMemoryIdeaRepository().record_conversion_outcome(
+        outcome_result,
+        idempotency_key="conversion-outcome-missing-mapping-001",
+        payload={"conversion_outcome_id": "conversion-report-outcome-conflict-001"},
+    )
+    stale_mapping = InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={},
+            idempotency_records={},
+            idempotency_candidates={},
+            conversion_intent_candidates={command.conversion_intent_id: "missing-candidate"},
+        )
+    ).record_conversion_outcome(
+        outcome_result,
+        idempotency_key="conversion-outcome-stale-mapping-001",
+        payload={"conversion_outcome_id": "conversion-report-outcome-conflict-001"},
+    )
+
+    assert accepted.decision is ConversionPersistenceDecision.ACCEPTED
+    assert conflict.decision is ConversionPersistenceDecision.CONFLICT
+    assert no_mapping.decision is ConversionPersistenceDecision.NOT_FOUND
+    assert stale_mapping.decision is ConversionPersistenceDecision.NOT_FOUND
