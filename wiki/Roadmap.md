@@ -27,7 +27,10 @@ Current state:
 11. RFC-0002 Slice 10 partially implements the certified internal
     `POST /api/v1/idea-signals/high-cash/evaluate` API foundation over
     caller-supplied, source-owned Core evidence,
-12. business features remain Planned.
+12. RFC-0002 Slice 12 partially implements internal conversion governance for
+    review-gated conversion intents, target source-authority mapping, downstream
+    outcome recording, and no-authority conversion boundaries,
+13. business features remain Planned.
 
 First implementation program:
 
@@ -40,8 +43,10 @@ First implementation program:
    queue state, review, and feedback,
 6. extend certified APIs into Gateway/Workbench product surfaces after live
    source adapters and durable state exist,
-7. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
-8. prove canonical demo scenarios and publish implementation-backed documentation.
+7. persist conversion intents/outcomes and add downstream adapter contracts only
+   after source ownership and idempotency guarantees are explicit,
+8. realize Advise, Manage, Report, Render, Archive, and AI integration only where source-backed,
+9. prove canonical demo scenarios and publish implementation-backed documentation.
 
 Unsupported until proved:
 

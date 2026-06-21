@@ -718,7 +718,7 @@ assertions.
 | 9 | Governed AI explanation and model-risk controls | Partially implemented - internal foundation only | redacted AI request envelopes, verifier/fallback, safe audit, no-authority proof; `lotus-ai` runtime execution and APIs remain planned |
 | 10 | Certified APIs, OpenAPI, and Gateway contract | Partially implemented - certified high-cash API foundation only | high-cash evaluate endpoint, OpenAPI examples, endpoint certification; Gateway route contract remains planned |
 | 11 | Workbench product realization | Planned | review queue UI, evidence drawer, browser/accessibility proof |
-| 12 | Advise and Manage conversion realization | Planned | advisory and manage conversion intents/outcomes with contract tests |
+| 12 | Advise and Manage conversion realization | Partially implemented - internal conversion governance foundation only | review-gated conversion intents/outcomes, source-authority mapping, no downstream authority proof; downstream adapters and contracts remain planned |
 | 13 | Report, Render, Archive, and evidence-pack materialization | Planned | report package, deterministic render, archive refs, retention/access proof |
 | 14 | Data-product promotion, trust telemetry, and platform hardening | Planned | repo-native declarations, trust telemetry, SLO/access/evidence policies |
 | 15 | Observability, security, entitlements, and operations | Planned | runbooks, metrics/log review, vulnerability treatment, fail-closed proof |
