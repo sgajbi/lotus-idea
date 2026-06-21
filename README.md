@@ -76,6 +76,7 @@ Primary downstream consumers:
 make install
 make lint
 make typecheck
+make architecture-boundary-gate
 make architecture-boundary-report
 make quality-baseline
 make openapi-gate

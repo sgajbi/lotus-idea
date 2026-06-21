@@ -1,4 +1,4 @@
-.PHONY: install lint monetary-float-guard no-sensitive-content-guard supported-features-gate endpoint-certification-gate typecheck architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint monetary-float-guard no-sensitive-content-guard supported-features-gate endpoint-certification-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -36,6 +36,9 @@ endpoint-certification-gate:
 typecheck:
 	$(VENV_PYTHON) -m mypy --config-file mypy.ini
 
+architecture-boundary-gate:
+	$(VENV_PYTHON) scripts/architecture_boundary_gate.py --mode blocking
+
 architecture-boundary-report:
 	$(VENV_PYTHON) scripts/architecture_boundary_gate.py --mode report-only
 
@@ -69,9 +72,9 @@ coverage-gate:
 security-audit:
 	$(VENV_PYTHON) -m pip_audit -r requirements/shared-runtime.lock.txt -r requirements/ci-tooling.lock.txt
 
-check: lint typecheck openapi-gate supported-features-gate endpoint-certification-gate test
+check: lint typecheck architecture-boundary-gate openapi-gate supported-features-gate endpoint-certification-gate test
 
-ci: lint typecheck openapi-gate supported-features-gate endpoint-certification-gate test-integration test-e2e test-coverage security-audit
+ci: lint typecheck architecture-boundary-gate openapi-gate supported-features-gate endpoint-certification-gate test-integration test-e2e test-coverage security-audit
 
 docker-build:
 	docker build -t backend-service:ci-test .

@@ -12,13 +12,14 @@ Repo-native validation commands:
 make check
 make ci
 make openapi-gate
+make architecture-boundary-gate
 make architecture-boundary-report
 make quality-baseline
 ```
 
-Baseline required checks include lint, format check, typecheck, OpenAPI quality,
-supported-feature gate, endpoint-certification gate, unit tests, integration tests, e2e tests,
-coverage gate, security audit, Docker build validation, and workflow lint.
+Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
+OpenAPI quality, supported-feature gate, endpoint-certification gate, unit tests, integration
+tests, e2e tests, coverage gate, security audit, Docker build validation, and workflow lint.
 
 CI warning policy:
 
