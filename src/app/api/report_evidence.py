@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.report_evidence import (
     RequestReportEvidencePackToRepositoryCommand,
     request_report_evidence_pack_to_repository,
@@ -243,13 +243,15 @@ async def record_report_evidence_pack(
     try:
         _require_report_evidence_caller(caller)
         _validate_idempotency_key(idempotency_key)
+        repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = request_report_evidence_pack_to_repository(
             request.to_command(
                 conversion_intent_id=conversion_intent_id,
                 caller=caller,
                 idempotency_key=idempotency_key,
             ),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_report_evidence_operation_event(
@@ -287,10 +289,12 @@ async def record_report_evidence_pack(
         _emit_report_evidence_operation_event(
             _operation_outcome_from_evidence_pack_decision(result.persistence.decision),
             _error_code_from_evidence_pack_decision(result.persistence.decision),
+            durable_storage_backed,
         )
         return problem
     _emit_report_evidence_operation_event(
-        _operation_outcome_from_evidence_pack_decision(result.persistence.decision)
+        _operation_outcome_from_evidence_pack_decision(result.persistence.decision),
+        durable_storage_backed=durable_storage_backed,
     )
     return ReportEvidencePackApiResponse(
         reportEvidencePack=(
@@ -299,7 +303,7 @@ async def record_report_evidence_pack(
             else None
         ),
         persistence=EvidencePackPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -346,6 +350,7 @@ def _permission_denied(detail: str) -> JSONResponse:
 def _emit_report_evidence_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_operation_event(
         OperationEvent(
@@ -353,7 +358,7 @@ def _emit_report_evidence_operation_event(
             outcome=outcome,
             source_authority="lotus-report",
             error_code=error_code,
-            durable_storage_backed=False,
+            durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
         )
     )

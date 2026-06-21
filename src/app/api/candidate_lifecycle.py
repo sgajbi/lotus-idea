@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
     apply_candidate_lifecycle_transition_to_repository,
@@ -146,13 +146,15 @@ async def record_candidate_lifecycle_transition(
     try:
         _require_lifecycle_caller(caller)
         _validate_idempotency_key(idempotency_key)
+        repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = apply_candidate_lifecycle_transition_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
                 caller=caller,
                 idempotency_key=idempotency_key,
             ),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_lifecycle_operation_event(
@@ -188,9 +190,13 @@ async def record_candidate_lifecycle_transition(
         _emit_lifecycle_operation_event(
             _operation_outcome_from_lifecycle_decision(result.decision),
             _error_code_from_lifecycle_decision(result.decision),
+            durable_storage_backed,
         )
         return problem
-    _emit_lifecycle_operation_event(_operation_outcome_from_lifecycle_decision(result.decision))
+    _emit_lifecycle_operation_event(
+        _operation_outcome_from_lifecycle_decision(result.decision),
+        durable_storage_backed=durable_storage_backed,
+    )
     return CandidateLifecycleTransitionResponse(
         transition=(
             CandidateLifecycleTransitionSummaryResponse(
@@ -205,7 +211,7 @@ async def record_candidate_lifecycle_transition(
             else None
         ),
         persistence=LifecyclePersistenceSummaryResponse.from_result(result),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -252,12 +258,14 @@ def _permission_denied(detail: str) -> JSONResponse:
 def _emit_lifecycle_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_foundation_operation_event(
         IdeaOperation.LIFECYCLE_TRANSITION,
         outcome,
         source_authority="lotus-idea",
         error_code=error_code,
+        durable_storage_backed=durable_storage_backed,
     )
 
 

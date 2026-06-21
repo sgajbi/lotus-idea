@@ -137,3 +137,17 @@ class ReportEvidenceWorkflowRepository(Protocol):
 
 class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
     pass
+
+
+class IdeaRepository(
+    CandidatePersistenceRepository,
+    CandidateLifecycleRepository,
+    ReviewWorkflowRepository,
+    ConversionWorkflowRepository,
+    ReportEvidenceWorkflowRepository,
+    AIExplanationRepository,
+    Protocol,
+):
+    """Complete repository port surface used by API runtime wiring."""
+
+    pass

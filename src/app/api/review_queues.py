@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     build_review_queue_from_repository,
@@ -114,7 +114,12 @@ class AdvisorReviewQueueResponse(CamelModel):
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
     @classmethod
-    def from_domain(cls, queue: ReviewQueueProjection) -> "AdvisorReviewQueueResponse":
+    def from_domain(
+        cls,
+        queue: ReviewQueueProjection,
+        *,
+        durable_storage_backed: bool = False,
+    ) -> "AdvisorReviewQueueResponse":
         return cls(
             policyVersion=queue.policy_version,
             evaluatedAtUtc=queue.evaluated_at_utc,
@@ -123,7 +128,7 @@ class AdvisorReviewQueueResponse(CamelModel):
                 ReviewQueueExclusionResponse.from_domain(exclusion)
                 for exclusion in queue.exclusions
             ),
-            durableStorageBacked=False,
+            durableStorageBacked=durable_storage_backed,
             supportedFeaturePromoted=False,
         )
 
@@ -164,23 +169,33 @@ async def get_advisor_review_queue(
             detail="evaluatedAtUtc must be timezone-aware.",
         )
 
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
     queue = build_review_queue_from_repository(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
-        repository=get_idea_repository(),
+        repository=repository,
     )
-    _emit_review_queue_operation_event(OperationOutcome.ACCEPTED)
-    return AdvisorReviewQueueResponse.from_domain(queue)
+    _emit_review_queue_operation_event(
+        OperationOutcome.ACCEPTED,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return AdvisorReviewQueueResponse.from_domain(
+        queue,
+        durable_storage_backed=durable_storage_backed,
+    )
 
 
 def _emit_review_queue_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_foundation_operation_event(
         IdeaOperation.REVIEW_QUEUE_READ,
         outcome,
         source_authority="lotus-idea",
         error_code=error_code,
+        durable_storage_backed=durable_storage_backed,
     )
 
 

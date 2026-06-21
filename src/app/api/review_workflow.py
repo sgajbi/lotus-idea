@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.review_workflow import (
     ApplyReviewActionToRepositoryCommand,
     RecordFeedbackToRepositoryCommand,
@@ -312,6 +312,8 @@ async def record_review_action(
             capability=_REVIEW_ACTION_CAPABILITY,
         )
         _validate_idempotency_key(idempotency_key)
+        repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = apply_review_action_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
@@ -319,7 +321,7 @@ async def record_review_action(
                 role=role,
                 idempotency_key=idempotency_key,
             ),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_review_operation_event(
@@ -366,11 +368,13 @@ async def record_review_action(
             IdeaOperation.REVIEW_ACTION,
             _operation_outcome_from_review_decision(result.persistence.decision),
             _error_code_from_review_decision(result.persistence.decision),
+            durable_storage_backed,
         )
         return problem
     _emit_review_operation_event(
         IdeaOperation.REVIEW_ACTION,
         _operation_outcome_from_review_decision(result.persistence.decision),
+        durable_storage_backed=durable_storage_backed,
     )
     return ReviewActionResponse(
         reviewDecision=(
@@ -379,7 +383,7 @@ async def record_review_action(
             else None
         ),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -403,6 +407,8 @@ async def record_feedback(
             capability=_FEEDBACK_CAPABILITY,
         )
         _validate_idempotency_key(idempotency_key)
+        repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = record_feedback_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
@@ -410,7 +416,7 @@ async def record_feedback(
                 role=role,
                 idempotency_key=idempotency_key,
             ),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_review_operation_event(
@@ -447,11 +453,13 @@ async def record_feedback(
             IdeaOperation.FEEDBACK_RECORD,
             _operation_outcome_from_review_decision(result.persistence.decision),
             _error_code_from_review_decision(result.persistence.decision),
+            durable_storage_backed,
         )
         return problem
     _emit_review_operation_event(
         IdeaOperation.FEEDBACK_RECORD,
         _operation_outcome_from_review_decision(result.persistence.decision),
+        durable_storage_backed=durable_storage_backed,
     )
     return FeedbackResponse(
         feedbackEvent=(
@@ -460,7 +468,7 @@ async def record_feedback(
             else None
         ),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -516,12 +524,14 @@ def _emit_review_operation_event(
     operation: IdeaOperation,
     outcome: OperationOutcome,
     error_code: str | None = None,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_foundation_operation_event(
         operation,
         outcome,
         source_authority="lotus-idea",
         error_code=error_code,
+        durable_storage_backed=durable_storage_backed,
     )
 
 
@@ -612,8 +622,10 @@ FEEDBACK_ROUTE: RouteMetadata = {
         "Records internal advisor feedback for a persisted idea candidate through the "
         "RFC-0002 Slice 08 feedback foundation. The route requires a mutating feedback "
         "capability, caller role, upstream-authorized scope, and Idempotency-Key. "
-        "Feedback is source-provenanced and audited, but remains an internal foundation "
-        "until durable storage, data-product certification, Gateway, and Workbench proof exist."
+        "Feedback is source-provenanced and audited, but remains an internal foundation. "
+        "Storage is process-local by default and PostgreSQL-backed only when "
+        "LOTUS_IDEA_DATABASE_URL is configured; data-product certification, Gateway, "
+        "and Workbench proof remain separate future promotion gates."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": FeedbackResponse,

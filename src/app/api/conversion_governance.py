@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.conversion_workflow import (
     RecordConversionOutcomeToRepositoryCommand,
     RequestConversionIntentToRepositoryCommand,
@@ -279,13 +279,15 @@ async def record_conversion_intent(
     try:
         _require_conversion_caller(caller, capability=_CONVERSION_INTENT_CAPABILITY)
         _validate_idempotency_key(idempotency_key)
+        repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = request_conversion_intent_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
                 caller=caller,
                 idempotency_key=idempotency_key,
             ),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_conversion_operation_event(
@@ -325,11 +327,13 @@ async def record_conversion_intent(
             IdeaOperation.CONVERSION_INTENT,
             _operation_outcome_from_conversion_decision(result.persistence.decision),
             _error_code_from_conversion_decision(result.persistence.decision),
+            durable_storage_backed,
         )
         return problem
     _emit_conversion_operation_event(
         IdeaOperation.CONVERSION_INTENT,
         _operation_outcome_from_conversion_decision(result.persistence.decision),
+        durable_storage_backed=durable_storage_backed,
     )
     return ConversionIntentApiResponse(
         conversionIntent=(
@@ -338,7 +342,7 @@ async def record_conversion_intent(
             else None
         ),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -359,13 +363,15 @@ async def record_conversion_outcome(
     try:
         _require_conversion_caller(caller, capability=_CONVERSION_OUTCOME_CAPABILITY)
         _validate_idempotency_key(idempotency_key)
+        repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = record_conversion_outcome_to_repository(
             request.to_command(
                 conversion_intent_id=conversion_intent_id,
                 caller=caller,
                 idempotency_key=idempotency_key,
             ),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_conversion_operation_event(
@@ -405,11 +411,13 @@ async def record_conversion_outcome(
             IdeaOperation.CONVERSION_OUTCOME,
             _operation_outcome_from_conversion_decision(result.persistence.decision),
             _error_code_from_conversion_decision(result.persistence.decision),
+            durable_storage_backed,
         )
         return problem
     _emit_conversion_operation_event(
         IdeaOperation.CONVERSION_OUTCOME,
         _operation_outcome_from_conversion_decision(result.persistence.decision),
+        durable_storage_backed=durable_storage_backed,
     )
     return ConversionOutcomeApiResponse(
         conversionOutcome=(
@@ -418,7 +426,7 @@ async def record_conversion_outcome(
             else None
         ),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=False,
+        durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -466,6 +474,7 @@ def _emit_conversion_operation_event(
     operation: IdeaOperation,
     outcome: OperationOutcome,
     error_code: str | None = None,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_operation_event(
         OperationEvent(
@@ -473,7 +482,7 @@ def _emit_conversion_operation_event(
             outcome=outcome,
             source_authority="lotus-idea",
             error_code=error_code,
-            durable_storage_backed=False,
+            durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
         )
     )
@@ -567,8 +576,9 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
         "Records an internal downstream conversion outcome against a previously recorded "
         "idea conversion intent. The route verifies that the reporting source system "
         "matches the target source authority, writes audit evidence, and remains an "
-        "internal foundation until downstream contracts, durable storage, Gateway, "
-        "Workbench, and data-product certification are proven."
+        "internal foundation. Storage is process-local by default and PostgreSQL-backed "
+        "only when LOTUS_IDEA_DATABASE_URL is configured; downstream contracts, Gateway, "
+        "Workbench, and data-product certification remain separate promotion gates."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ConversionOutcomeApiResponse,

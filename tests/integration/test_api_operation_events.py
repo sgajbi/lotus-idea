@@ -14,7 +14,7 @@ from app.api.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
 
-OperationEventCall = tuple[str, str, str, str | None]
+OperationEventCall = tuple[str, str, str, bool, str | None]
 
 
 def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
@@ -194,9 +194,12 @@ def capture_operation_events(
         outcome: Any,
         *,
         source_authority: str = "lotus-idea",
+        durable_storage_backed: bool = False,
         error_code: str | None = None,
     ) -> None:
-        events.append((operation.value, outcome.value, source_authority, error_code))
+        events.append(
+            (operation.value, outcome.value, source_authority, durable_storage_backed, error_code)
+        )
 
     for module in modules:
         monkeypatch.setattr(module, "emit_foundation_operation_event", capture)
@@ -236,8 +239,8 @@ def test_signal_and_candidate_persistence_emit_bounded_operation_events(
     assert signal_response.status_code == 200
     assert persist_response.status_code == 200
     assert events == [
-        ("signal_evaluation", "accepted", "lotus-core", None),
-        ("candidate_persistence", "accepted", "lotus-core", None),
+        ("signal_evaluation", "accepted", "lotus-core", False, None),
+        ("candidate_persistence", "accepted", "lotus-core", False, None),
     ]
 
 
@@ -284,11 +287,11 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
     assert queue_response.status_code == 200
     assert review_response.status_code == 200
     assert feedback_response.status_code == 200
-    assert lifecycle_events == [("lifecycle_transition", "accepted", "lotus-idea", None)]
-    assert queue_events == [("review_queue_read", "accepted", "lotus-idea", None)]
+    assert lifecycle_events == [("lifecycle_transition", "accepted", "lotus-idea", False, None)]
+    assert queue_events == [("review_queue_read", "accepted", "lotus-idea", False, None)]
     assert review_events == [
-        ("review_action", "accepted", "lotus-idea", None),
-        ("feedback_record", "accepted", "lotus-idea", None),
+        ("review_action", "accepted", "lotus-idea", False, None),
+        ("feedback_record", "accepted", "lotus-idea", False, None),
     ]
 
 
@@ -311,4 +314,4 @@ def test_ai_explanation_api_emits_bounded_operation_event(
     )
 
     assert response.status_code == 200
-    assert events == [("ai_explanation", "fallback", "lotus-idea", None)]
+    assert events == [("ai_explanation", "fallback", "lotus-idea", False, None)]
