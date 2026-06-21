@@ -120,9 +120,41 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
 
+  postgres-runtime-proof:
+    name: Main Releasability / PostgreSQL Runtime Proof
+    needs: [lint-typecheck-security]
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lotus_idea
+          POSTGRES_PASSWORD: lotus_idea
+          POSTGRES_USER: lotus_idea
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lotus_idea -d lotus_idea"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED: "1"
+      LOTUS_IDEA_POSTGRES_INTEGRATION_URL: postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install
+        run: make install
+      - name: Run PostgreSQL runtime proof
+        run: make postgres-integration-gate
+
   docker-build:
     name: Main Releasability / Validate Docker Build
-    needs: [coverage-gate]
+    needs: [coverage-gate, postgres-runtime-proof]
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: "1"
