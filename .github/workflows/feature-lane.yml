@@ -17,6 +17,9 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PYTHONUNBUFFERED: "1"
   PYTHON_VERSION: "3.12"
+  GIT_CONFIG_COUNT: "1"
+  GIT_CONFIG_KEY_0: "init.defaultBranch"
+  GIT_CONFIG_VALUE_0: "main"
 
 jobs:
   workflow-lint:
