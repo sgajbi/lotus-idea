@@ -29,3 +29,14 @@ Mesh certification rule:
 3. the repo-native data-mesh contract gate is pre-certification evidence only,
 4. platform source-manifest inclusion and certification gates are required
    before Gateway or Workbench expose the product as supported.
+
+Operation-event governance:
+
+1. conversion and report evidence-pack foundation APIs emit bounded operation
+   events for accepted, replayed, conflict, not-found, permission-denied,
+   invalid-request, and invalid-state outcomes,
+2. operation metrics use only bounded labels and keep identifiers, payloads,
+   trace ids, and correlation ids out of metric labels,
+3. operation events retain `foundation_only` supportability until durable
+   persistence, downstream proof, Gateway/Workbench proof, and supported-feature
+   promotion are completed.
