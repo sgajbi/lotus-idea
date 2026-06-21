@@ -9,6 +9,7 @@
 | **Primary Business Outcome** | turn source-owned Lotus portfolio, performance, risk, advisory, management, report, and AI evidence into a bank-buyable opportunity intelligence operating layer that helps advisors find, explain, review, and route wealth opportunities without creating autonomous advice or execution |
 | **Requires Approval From** | `lotus-idea`, `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-ai`, `lotus-report`, `lotus-render`, `lotus-archive`, `lotus-gateway`, `lotus-workbench`, and `lotus-platform` maintainers where source, consumer, or platform proof is required |
 | **Depends On** | RFC-0001; platform RFC-0067, RFC-0072, RFC-0073, RFC-0084, RFC-0086, RFC-0087, RFC-0089, RFC-0091; current repository engineering contexts for `lotus-core`, `lotus-performance`, `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-ai`, `lotus-report`, `lotus-render`, `lotus-archive`, `lotus-gateway`, and `lotus-workbench` |
+| **Day-One Engineering Contract** | `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md` |
 | **Cross-Repository Scope** | `lotus-idea` owns the opportunity product; source services own source facts; `lotus-ai` owns workflow-pack execution; `lotus-gateway` composes; `lotus-workbench` renders; `lotus-advise` and `lotus-manage` realize conversions; `lotus-report`, `lotus-render`, and `lotus-archive` materialize evidence; `lotus-platform` owns reusable governance and mesh automation |
 | **Compatibility Posture** | strategic reset allowed. Backward compatibility is not required when a cleaner enterprise contract is the right design. Any breaking route, schema, data-product, or consumer change must update every affected Lotus consumer inside this RFC before capability promotion. |
 | **No Second-Wave Rule** | no follow-up RFC, WTBD ledger, or second implementation wave may contain work required for RFC-0002's bank-buyable product claim. Required upstream, downstream, platform, AI, report, archive, Manage, Advise, Workbench, Gateway, docs, CI, security, and data-mesh work belongs in this RFC or the supported claim must be narrowed. |
@@ -33,6 +34,12 @@ layer that can answer:
 
 RFC-0002 defines that product: the **Enterprise Opportunity Intelligence
 Operating Layer**.
+
+This RFC is governed from day one by the Lotus bank-buyable engineering
+contract. That means the implementation program must treat architecture,
+security, dependency hygiene, test quality, data lineage, endpoint
+certification, observability, documentation, wiki source, supported-feature
+truth, and operating evidence as part of the feature, not late refactoring.
 
 `lotus-idea` is not a generic next-best-action demo, not a chatbot, not a
 calculation service, not a suitability engine, and not an order system. It is a

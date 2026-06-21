@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.errors import problem_response
@@ -29,6 +29,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         code="invalid_request",
         title="Invalid request",
         detail="Request validation failed. Correct the request fields and retry.",
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
+    log_event(
+        "request.http_error",
+        service=SERVICE_NAME,
+        path=str(request.url.path),
+        method=request.method,
+        status_code=exc.status_code,
+    )
+    return problem_response(
+        status_code=exc.status_code,
+        code="request_rejected",
+        title="Request rejected",
+        detail="The service rejected the request. Correct the request or contact support with the correlation id.",
     )
 
 

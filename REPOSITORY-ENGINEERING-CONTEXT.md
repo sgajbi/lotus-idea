@@ -138,6 +138,13 @@ Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression
 tests in the same change.
 
+`lotus-idea` adopts
+`lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
+from day one. Treat the contract as a merge-time obligation, not a later
+hardening theme: dependency hygiene, source-authority discipline, supported
+claims, CI evidence, docs/wiki truth, and operational supportability must move
+with each implementation slice.
+
 ## Standards And RFCs That Govern This Repository
 
 1. `lotus-platform/rfcs/RFC-0072-platform-wide-multi-lane-ci-validation-and-release-governance.md`

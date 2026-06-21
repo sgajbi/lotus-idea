@@ -1,9 +1,19 @@
 from app.errors import ProblemDetails
+from app.application.service_profile import current_service_profile
+from app.domain.service_profile import DEFAULT_SERVICE_PROFILE, ServiceProfile
 from app.main import SERVICE_NAME
 
 
 def test_service_name_is_lotus_prefixed() -> None:
     assert SERVICE_NAME.startswith("lotus-")
+
+
+def test_service_profile_is_domain_authoritative() -> None:
+    profile = current_service_profile()
+    assert profile is DEFAULT_SERVICE_PROFILE
+    assert profile.name == "domain-service"
+    assert "Domain-authoritative" in profile.description
+    assert ServiceProfile(name=profile.name, description=profile.description) == profile
 
 
 def test_problem_details_are_product_safe() -> None:
