@@ -21,6 +21,8 @@ The repository now carries proposed source-truth mesh contracts:
 The baseline is deliberately not certified. Products remain `proposed`, the
 static telemetry snapshot is blocked, and platform mesh promotion waits for
 implementation-backed runtime evidence.
+`make data-mesh-contract-gate` now enforces this baseline as a blocking
+repo-native gate through `make lint` and `make check`.
 
 The consumer declaration is aligned to the Slice 00 source map. Current
 declared upstream source products are:
@@ -57,7 +59,13 @@ supportability handling.
 2. Maintain freshness, source-owner, compatibility, quality, access, SLO, and
    evidence-policy fields for the first promoted product family.
 3. Add validation tests or repo-native commands for every declaration expansion.
+   Current evidence: `scripts/data_mesh_contract_gate.py` and
+   `tests/unit/test_data_mesh_contract_gate.py`.
 4. Reconcile exact upstream product names with platform-generated catalogs.
+   Current evidence: the gate validates against the sibling
+   `lotus-platform/generated/domain-product-catalog.json` when available and
+   blocks premature source-manifest inclusion when the sibling source manifest
+   is available.
 
 ## Acceptance Gate
 
@@ -74,5 +82,20 @@ Current local validation:
 1. `tests/unit/test_data_mesh_foundation_contract.py` asserts the declared
    consumer dependencies include the current source-authority products from
    Slice 00.
-2. `make check` validates JSON contract readability through the unit suite and
-   keeps producer products proposed and blocked from certification.
+2. `scripts/data_mesh_contract_gate.py` validates proposed producer posture,
+   consumer source-authority dependencies, blocked static trust telemetry,
+   SLO/access/evidence policy coherence, and optional platform catalog/source
+   manifest reconciliation.
+3. `tests/unit/test_data_mesh_contract_gate.py` covers pass/fail behavior for
+   premature product promotion, invalid dependency posture, platform catalog
+   drift, and premature platform source-manifest inclusion.
+4. `make check` runs the data-mesh contract gate through `make lint` and keeps
+   producer products proposed and blocked from certification.
+
+## Platform Follow-Up
+
+This slice exposed a reusable scaffold improvement: new mesh-capable backend
+services should start with a repo-native data-mesh contract gate, focused
+pass/fail tests, and documentation that separates pre-certification guardrails
+from platform mesh certification. Platform follow-up is tracked in
+`sgajbi/lotus-platform#421`.

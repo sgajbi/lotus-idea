@@ -80,6 +80,13 @@ proposal, policy, and copilot records; Manage action register; and Report
 client report evidence. These are source contracts only until runtime adapters,
 supportability, and certification evidence exist.
 
+`make data-mesh-contract-gate` now enforces the current Slice 04 posture:
+producer products stay proposed, consumer dependencies name governed source
+authorities, static trust telemetry remains blocked, SLO/access/evidence policy
+files stay coherent, and optional sibling `lotus-platform` catalog/source
+manifest evidence is used to catch source-product drift or premature mesh
+inclusion.
+
 RFC-0002 Slice 05 is partially implemented for the high-cash / idle-liquidity
 domain policy. `src/app/domain/signal_evaluation.py` consumes source-reported
 cash-weight evidence and Core source refs, creates deterministic
@@ -259,6 +266,7 @@ owned by upstream services.
 11. architecture report: `make architecture-boundary-report`
 12. quality scorecard refresh: `make quality-baseline`
 13. CI contract gate: `make ci-contract-gate`
+14. data-mesh contract gate: `make data-mesh-contract-gate`
 
 ## Validation And CI Expectations
 
@@ -270,14 +278,15 @@ owned by upstream services.
 
 Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, OpenAPI quality, supported-feature gate,
-endpoint-certification gate, unit tests, integration tests, e2e tests, coverage
-gate, security audit, and Docker build validation.
+endpoint-certification gate, data-mesh contract gate, unit tests, integration
+tests, e2e tests, coverage gate, security audit, and Docker build validation.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, OpenAPI, endpoint-certification, supported-feature,
-coverage, security, Docker, release-evidence, action-version, or
-least-privilege workflow controls from local or GitHub validation.
+data-mesh contract validation, coverage, security, Docker, release-evidence,
+action-version, or least-privilege workflow controls from local or GitHub
+validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression
@@ -286,6 +295,9 @@ tests in the same change.
 Data-mesh declarations are repo-owned from day one, but certification remains
 `not_certified` until implementation-backed products emit runtime telemetry,
 the platform source manifest includes `lotus-idea`, and platform mesh gates pass.
+The repo-native data-mesh contract gate is a pre-certification anti-drift guard:
+it is not platform certification and must not be used to promote supported mesh
+claims.
 
 `lotus-idea` adopts
 `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`

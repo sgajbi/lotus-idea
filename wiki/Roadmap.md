@@ -10,27 +10,30 @@ Current state:
 4. RFC-0002 Slice 00 records the implementation-start source map and first
    journey decisions,
 5. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
-6. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
+6. RFC-0002 Slice 04 partially implements source-authority and data-mesh
+   baseline contracts plus a repo-native data-mesh contract gate while keeping
+   mesh certification planned,
+7. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
    policy,
-7. RFC-0002 Slice 06 partially implements internal persistence, replay,
+8. RFC-0002 Slice 06 partially implements internal persistence, replay,
    idempotency, lifecycle audit history, and recovery primitives,
-8. RFC-0002 Slice 07 partially implements internal deterministic scoring,
+9. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
    exclusions,
-9. RFC-0002 Slice 08 partially implements internal advisor review and feedback
+10. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, and queue projection interaction,
-10. RFC-0002 Slice 09 partially implements internal AI governance with redacted
+11. RFC-0002 Slice 09 partially implements internal AI governance with redacted
     evidence envelopes, verifier/fallback controls, safe audit events, and no
     AI downstream authority,
-11. RFC-0002 Slice 10 partially implements the certified internal
+12. RFC-0002 Slice 10 partially implements the certified internal
     `POST /api/v1/idea-signals/high-cash/evaluate` API foundation over
     caller-supplied, source-owned Core evidence,
-12. RFC-0002 Slice 12 partially implements internal conversion governance for
+13. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, and no-authority conversion boundaries,
-13. business features remain Planned.
+14. business features remain Planned.
 
 First implementation program:
 

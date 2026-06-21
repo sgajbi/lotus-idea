@@ -168,7 +168,8 @@ def test_rfc_index_and_main_rfc_match_data_mesh_foundation_truth() -> None:
     )
 
     assert (
-        "source-authority-signal-contracts-and-data-mesh-baseline.md) | Partially implemented |"
+        "source-authority-signal-contracts-and-data-mesh-baseline.md) | "
+        "Partially implemented - repo-native mesh contract gate enforced |"
     ) in rfc_index
     assert "OpportunitySignalCandidate:v1" in main_rfc
     assert "IdeaCandidate:v1" in main_rfc

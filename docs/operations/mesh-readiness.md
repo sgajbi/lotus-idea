@@ -37,6 +37,31 @@ Every `lotus-idea` product remains `proposed` until:
 The static telemetry snapshot is deliberately blocked so operators and future
 agents cannot treat the day-one contract baseline as runtime certification.
 
+## Repo-Native Gate
+
+Run:
+
+```powershell
+make data-mesh-contract-gate
+```
+
+The gate validates:
+
+1. producer products remain `proposed`,
+2. consumer dependencies name current source-authority repositories and
+   products,
+3. placeholder mesh files are absent from governed contract and operations
+   paths,
+4. static trust telemetry remains blocked and unknown,
+5. SLO, access, and evidence policies stay coherent for
+   `lotus-idea:IdeaCandidate:v1`,
+6. optional sibling `lotus-platform` catalog/source-manifest evidence catches
+   source-product drift or premature `lotus-idea` source-manifest inclusion.
+
+This gate is not mesh certification. It is a pre-certification guardrail so
+future implementation slices cannot accidentally promote proposed contracts or
+consume non-governed source products.
+
 ## Current Consumer Source Map
 
 The repo-local consumer declaration names the source-authority products needed

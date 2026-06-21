@@ -14,6 +14,7 @@ REQUIRED_TARGETS = (
     "ci-contract-gate",
     "monetary-float-guard",
     "no-sensitive-content-guard",
+    "data-mesh-contract-gate",
     "supported-features-gate",
     "endpoint-certification-gate",
     "typecheck",
@@ -32,6 +33,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) ci-contract-gate",
     "$(MAKE) monetary-float-guard",
     "$(MAKE) no-sensitive-content-guard",
+    "$(MAKE) data-mesh-contract-gate",
     "$(MAKE) supported-features-gate",
     "$(MAKE) endpoint-certification-gate",
 )

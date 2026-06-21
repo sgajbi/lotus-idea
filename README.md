@@ -111,6 +111,7 @@ source-authority contracts only, not runtime certification.
 make install
 make lint
 make ci-contract-gate
+make data-mesh-contract-gate
 make typecheck
 make architecture-boundary-gate
 make architecture-boundary-report
@@ -127,6 +128,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe -m ruff check .
 .venv\Scripts\python.exe -m ruff format --check .
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
+.venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py
 .venv\Scripts\python.exe -m pytest tests/unit tests/integration tests/e2e
@@ -166,5 +168,6 @@ security/dependency posture, documentation, wiki source, and operating evidence.
 - AI governance guide: `docs/operations/ai-governance.md`
 - Conversion governance guide: `docs/operations/conversion-governance.md`
 - Data mesh readiness guide: `docs/operations/mesh-readiness.md`
+- Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`
