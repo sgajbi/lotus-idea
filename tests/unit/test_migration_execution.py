@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -108,7 +109,7 @@ def test_execute_migration_plan_rolls_back_on_error() -> None:
 def test_run_migrations_dry_run_cli_does_not_require_database_url() -> None:
     result = subprocess.run(
         [
-            str(ROOT / ".venv" / "Scripts" / "python.exe"),
+            sys.executable,
             str(ROOT / "scripts" / "run_migrations.py"),
             "--direction",
             "apply",
