@@ -95,6 +95,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "NODE_OPTIONS: --no-deprecation",
     ),
     "main-releasability.yml": (
+        "workflow_dispatch:",
         "permissions:\n  contents: read",
         "actions/checkout@v7",
         "actions/setup-python@v6",
@@ -124,6 +125,16 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "github.event.pull_request.head.repo.fork == false",
         "gh pr merge",
         "--auto --rebase --delete-branch",
+    ),
+    "merged-pr-main-releasability.yml": (
+        "pull_request_target:",
+        "types: [closed]",
+        "actions: write",
+        "contents: read",
+        "github.event.pull_request.merged == true",
+        "github.event.pull_request.base.ref == 'main'",
+        "gh workflow run main-releasability.yml",
+        "--ref main",
     ),
 }
 
