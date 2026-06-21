@@ -172,6 +172,50 @@ def test_ci_contract_gate_requires_postgres_runtime_proof(tmp_path: Path) -> Non
     assert "pr-merge-gate.yml missing `make postgres-integration-gate`" in errors
 
 
+def test_ci_contract_gate_requires_job_timeouts(tmp_path: Path) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    for workflow_name in module.WORKFLOW_EXPECTATIONS:
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflow_dir / workflow_name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    feature_lane = workflow_dir / "feature-lane.yml"
+    feature_lane.write_text(
+        feature_lane.read_text(encoding="utf-8").replace("    timeout-minutes: 10\n", "", 1),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "feature-lane.yml job `workflow-lint` missing timeout-minutes" in errors
+
+
+def test_ci_contract_gate_blocks_soft_failed_workflow_jobs(tmp_path: Path) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    for workflow_name in module.WORKFLOW_EXPECTATIONS:
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflow_dir / workflow_name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    feature_lane = workflow_dir / "feature-lane.yml"
+    feature_lane.write_text(
+        feature_lane.read_text(encoding="utf-8").replace(
+            "    timeout-minutes: 10\n",
+            "    timeout-minutes: 10\n    continue-on-error: true\n",
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "feature-lane.yml must not contain `continue-on-error: true`" in errors
+
+
 def test_generated_quality_reports_do_not_dirty_worktree() -> None:
     gitignore = _read(".gitignore")
 

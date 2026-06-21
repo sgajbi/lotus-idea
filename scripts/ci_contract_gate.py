@@ -159,9 +159,26 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
 }
 
 PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
-    "feature-lane.yml": ("pull_request_target:", "contents: write", "pull-requests: write"),
-    "pr-merge-gate.yml": ("pull_request_target:", "contents: write", "pull-requests: write"),
-    "main-releasability.yml": ("pull_request_target:", "contents: write", "pull-requests: write"),
+    "feature-lane.yml": (
+        "pull_request_target:",
+        "contents: write",
+        "pull-requests: write",
+        "continue-on-error: true",
+    ),
+    "pr-merge-gate.yml": (
+        "pull_request_target:",
+        "contents: write",
+        "pull-requests: write",
+        "continue-on-error: true",
+    ),
+    "main-releasability.yml": (
+        "pull_request_target:",
+        "contents: write",
+        "pull-requests: write",
+        "continue-on-error: true",
+    ),
+    "pr-auto-merge.yml": ("continue-on-error: true",),
+    "merged-pr-main-releasability.yml": ("continue-on-error: true",),
 }
 
 
@@ -227,7 +244,43 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
         for prohibited in PROHIBITED_WORKFLOW_PATTERNS.get(workflow_name, ()):
             if prohibited in content:
                 errors.append(f"{workflow_name} must not contain `{prohibited}`")
+        errors.extend(_validate_job_timeouts(workflow_name, content))
     return errors
+
+
+def _validate_job_timeouts(workflow_name: str, workflow: str) -> list[str]:
+    errors: list[str] = []
+    for job_name, job_block in _job_blocks(workflow).items():
+        timeout_match = re.search(r"^    timeout-minutes:\s*(?P<value>\d+)\s*$", job_block, re.M)
+        if not timeout_match:
+            errors.append(f"{workflow_name} job `{job_name}` missing timeout-minutes")
+            continue
+        timeout = int(timeout_match.group("value"))
+        if timeout < 1 or timeout > 60:
+            errors.append(
+                f"{workflow_name} job `{job_name}` timeout-minutes must be between 1 and 60"
+            )
+    return errors
+
+
+def _job_blocks(workflow: str) -> dict[str, str]:
+    lines = workflow.splitlines()
+    try:
+        jobs_index = next(index for index, line in enumerate(lines) if line == "jobs:")
+    except StopIteration:
+        return {}
+
+    blocks: dict[str, list[str]] = {}
+    current_job: str | None = None
+    for line in lines[jobs_index + 1 :]:
+        job_match = re.match(r"^  (?P<job>[A-Za-z0-9_-]+):\s*$", line)
+        if job_match:
+            current_job = job_match.group("job")
+            blocks[current_job] = [line]
+            continue
+        if current_job is not None:
+            blocks[current_job].append(line)
+    return {job: "\n".join(block_lines) for job, block_lines in blocks.items()}
 
 
 def validate_ci_contract() -> list[str]:

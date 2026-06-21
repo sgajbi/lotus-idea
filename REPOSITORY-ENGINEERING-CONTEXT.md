@@ -500,7 +500,8 @@ boundary enforcement, OpenAPI quality, supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, unit tests, integration tests, e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
-and Docker build validation.
+Docker build validation, bounded GitHub job timeouts, and no soft-failed
+critical workflow jobs.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
@@ -508,7 +509,8 @@ remove architecture, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, action-version, least-privilege workflow
-controls, non-suppressed auto-merge token usage, workflow-dispatch access, or
+controls, bounded workflow timeouts, no `continue-on-error: true` in critical
+lanes, non-suppressed auto-merge token usage, workflow-dispatch access, or
 merged-PR main-releasability dispatch from local or GitHub validation.
 
 Every RFC slice that exposes behavior must update endpoint certification,

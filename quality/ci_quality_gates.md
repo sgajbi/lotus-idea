@@ -21,4 +21,5 @@ ignored by git unless an RFC explicitly promotes a specific evidence snapshot.
 `make ci-contract-gate` is the anti-drift gate for the day-one bank-buyable baseline. It checks that
 the Makefile and GitHub workflow lanes still include architecture boundaries, OpenAPI quality,
 supported-feature promotion control, endpoint certification, coverage, security audit, Docker build,
-release evidence, least-privilege workflow permissions, and approved action-runtime majors.
+release evidence, least-privilege workflow permissions, bounded job timeouts, no soft-failed
+critical jobs, and approved action-runtime majors.
