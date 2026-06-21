@@ -141,10 +141,11 @@ transitions for persisted candidates. This closes the foundation gap between
 generated high-cash candidates and review-ready candidates without weakening the
 domain transition graph or review approval rules.
 
-The repository now has a versioned schema and rollback contract for the future
-durable repository plus a PostgreSQL migration execution CLI. API state remains
-process-local until a later slice wires adapter proof behind the central
-repository ports.
+The repository now has a versioned schema and rollback contract for the durable
+repository, a PostgreSQL migration execution CLI, and a tested
+`PostgresIdeaRepository` adapter behind the central repository ports. API state
+remains process-local until a later slice wires the adapter behind runtime
+dependencies and proves it against a real PostgreSQL service.
 
 ## Review Queue Projection Foundation
 

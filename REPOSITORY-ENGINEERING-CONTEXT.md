@@ -158,10 +158,14 @@ objects, missing indexes, missing rollback posture, or placeholder SQL.
 the first PostgreSQL migration execution path, with `make migration-execution-gate`
 dry-running apply and rollback plans in CI, and `make migrate` /
 `make migrate-rollback` requiring `LOTUS_IDEA_DATABASE_URL` for real execution.
-This is not yet database-backed durable persistence: there is no runtime
-database repository adapter, database-backed stateful API surface, integration
-proof over database storage, data-product certification, or supported-feature
-promotion.
+`src/app/infrastructure/postgres_repository.py` now adds the first tested
+PostgreSQL repository adapter over the governed repository port surface. It
+round-trips candidate, idempotency, lifecycle, audit, review, feedback,
+conversion, and report evidence-pack state through typed tables and JSONB
+snapshots, and rolls back on database flush failure. This is not yet API-level
+durable persistence: the API provider remains process-local, the adapter has not
+been wired behind runtime routes, and there is no real-PostgreSQL integration
+proof, data-product certification, or supported-feature promotion.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -385,7 +389,10 @@ logs; fix or document the owned warning source instead.
    evidence port.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
    current Core adapter preserves source-data product refs and requires Core to
-   report cash weight explicitly rather than deriving it locally.
+   report cash weight explicitly rather than deriving it locally. The layer also
+   contains migration execution helpers and `PostgresIdeaRepository`, which is
+   tested as a durable repository adapter foundation but is not yet wired into
+   API runtime state.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, bounded
    idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement

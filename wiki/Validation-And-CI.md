@@ -31,6 +31,17 @@ tests, e2e tests, data-mesh contract validation, migration contract validation, 
 safe migration execution dry-run validation, security audit, Docker build validation, and workflow
 lint.
 
+Persistence adapter validation:
+
+1. `tests/unit/test_postgres_repository.py` exercises the PostgreSQL repository
+   adapter with a fake Postgres cursor across candidate persistence,
+   idempotency replay, lifecycle history, audit events, review decisions,
+   feedback, conversion intent/outcome, report evidence-pack requests, snapshot
+   hydration, commit behavior, and rollback on flush failure.
+2. This is adapter proof only. Runtime API responses must still report
+   `durableStorageBacked=false` until real PostgreSQL integration/e2e checks and
+   API dependency wiring land.
+
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 approved action-runtime majors, 99% combined coverage in merge/releasability lanes, Docker build
