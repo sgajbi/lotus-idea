@@ -2,6 +2,7 @@ import json
 import logging
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 
 from app.observability import (
     FORBIDDEN_OPERATION_FIELD_KEYS,
@@ -11,6 +12,7 @@ from app.observability import (
     OperationOutcome,
     OperationSupportability,
     configure_logging,
+    emit_foundation_operation_event,
     emit_operation_event,
     log_event,
 )
@@ -21,7 +23,7 @@ def test_configure_logging_sets_product_safe_message_format() -> None:
     assert logging.getLogger().level in {logging.INFO, logging.WARNING}
 
 
-def test_log_event_emits_structured_json(caplog) -> None:  # type: ignore[no-untyped-def]
+def test_log_event_emits_structured_json(caplog: LogCaptureFixture) -> None:
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
         log_event("idea.test", service="lotus-idea", status="ok")
 
@@ -64,7 +66,9 @@ def test_operation_event_rejects_sensitive_attributes() -> None:
         )
 
 
-def test_emit_operation_event_logs_without_sensitive_labels(caplog) -> None:  # type: ignore[no-untyped-def]
+def test_emit_operation_event_logs_without_sensitive_labels(
+    caplog: LogCaptureFixture,
+) -> None:
     event = OperationEvent(
         operation=IdeaOperation.CONVERSION_OUTCOME,
         outcome=OperationOutcome.NOT_FOUND,
@@ -82,6 +86,29 @@ def test_emit_operation_event_logs_without_sensitive_labels(caplog) -> None:  # 
         "event": "idea.operation.conversion_outcome",
         "operation": "conversion_outcome",
         "outcome": "not_found",
+        "service": "lotus-idea",
+        "source_authority": "lotus-idea",
+        "supportability_status": "foundation_only",
+        "supported_feature_promoted": False,
+    }
+    assert FORBIDDEN_OPERATION_FIELD_KEYS.isdisjoint(payload)
+
+
+def test_emit_foundation_operation_event_defaults_to_unpromoted_foundation(
+    caplog: LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        emit_foundation_operation_event(
+            IdeaOperation.REVIEW_QUEUE_READ,
+            OperationOutcome.ACCEPTED,
+        )
+
+    payload = json.loads(caplog.records[-1].message)
+    assert payload == {
+        "durable_storage_backed": False,
+        "event": "idea.operation.review_queue_read",
+        "operation": "review_queue_read",
+        "outcome": "accepted",
         "service": "lotus-idea",
         "source_authority": "lotus-idea",
         "supportability_status": "foundation_only",

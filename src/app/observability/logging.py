@@ -44,6 +44,7 @@ class IdeaOperation(StrEnum):
     SIGNAL_EVALUATION = "signal_evaluation"
     CANDIDATE_PERSISTENCE = "candidate_persistence"
     LIFECYCLE_TRANSITION = "lifecycle_transition"
+    REVIEW_QUEUE_READ = "review_queue_read"
     REVIEW_ACTION = "review_action"
     FEEDBACK_RECORD = "feedback_record"
     CONVERSION_INTENT = "conversion_intent"
@@ -55,11 +56,14 @@ class OperationOutcome(StrEnum):
     ACCEPTED = "accepted"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
+    DUPLICATE = "duplicate"
     NOT_FOUND = "not_found"
     PERMISSION_DENIED = "permission_denied"
     INVALID_REQUEST = "invalid_request"
     INVALID_STATE = "invalid_state"
     BLOCKED = "blocked"
+    SUPPRESSED = "suppressed"
+    NOT_ELIGIBLE = "not_eligible"
 
 
 class OperationSupportability(StrEnum):
@@ -147,3 +151,22 @@ def emit_operation_event(event: OperationEvent) -> None:
         **event.log_fields(),
     )
     _OPERATION_EVENTS.labels(**event.metric_labels()).inc()
+
+
+def emit_foundation_operation_event(
+    operation: IdeaOperation,
+    outcome: OperationOutcome,
+    *,
+    source_authority: str = SERVICE_NAME,
+    error_code: str | None = None,
+) -> None:
+    emit_operation_event(
+        OperationEvent(
+            operation=operation,
+            outcome=outcome,
+            source_authority=source_authority,
+            error_code=error_code,
+            durable_storage_backed=False,
+            supported_feature_promoted=False,
+        )
+    )

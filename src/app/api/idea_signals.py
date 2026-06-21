@@ -27,6 +27,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.errors import ProblemDetails, problem_response
+from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
@@ -363,6 +364,12 @@ async def evaluate_high_cash_signal(
     try:
         require_capability(caller, _EVALUATE_HIGH_CASH_POLICY)
     except PermissionDeniedError:
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.PERMISSION_DENIED,
+            source_authority="lotus-core",
+            error_code="permission_denied",
+        )
         return problem_response(
             status_code=status.HTTP_403_FORBIDDEN,
             code="permission_denied",
@@ -371,6 +378,11 @@ async def evaluate_high_cash_signal(
         )
 
     result = evaluate_high_cash_signal_command(request.to_command())
+    emit_foundation_operation_event(
+        IdeaOperation.SIGNAL_EVALUATION,
+        _operation_outcome_from_signal_evaluation(result),
+        source_authority="lotus-core",
+    )
     return EvaluateHighCashSignalResponse.from_domain(result)
 
 
@@ -389,6 +401,12 @@ async def evaluate_and_persist_high_cash_signal(
     try:
         require_capability(caller, _PERSIST_HIGH_CASH_POLICY)
     except PermissionDeniedError:
+        emit_foundation_operation_event(
+            IdeaOperation.CANDIDATE_PERSISTENCE,
+            OperationOutcome.PERMISSION_DENIED,
+            source_authority="lotus-core",
+            error_code="permission_denied",
+        )
         return problem_response(
             status_code=status.HTTP_403_FORBIDDEN,
             code="permission_denied",
@@ -396,6 +414,12 @@ async def evaluate_and_persist_high_cash_signal(
             detail="The caller is not permitted to persist idea candidates.",
         )
     if not idempotency_key.strip():
+        emit_foundation_operation_event(
+            IdeaOperation.CANDIDATE_PERSISTENCE,
+            OperationOutcome.INVALID_REQUEST,
+            source_authority="lotus-core",
+            error_code="invalid_request",
+        )
         return problem_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -415,6 +439,12 @@ async def evaluate_and_persist_high_cash_signal(
         result.persistence is not None
         and result.persistence.decision is CandidatePersistenceDecision.CONFLICT
     ):
+        emit_foundation_operation_event(
+            IdeaOperation.CANDIDATE_PERSISTENCE,
+            OperationOutcome.CONFLICT,
+            source_authority="lotus-core",
+            error_code="idempotency_conflict",
+        )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
             code="idempotency_conflict",
@@ -422,6 +452,16 @@ async def evaluate_and_persist_high_cash_signal(
             detail="The idempotency key was already used with a different request payload.",
         )
 
+    emit_foundation_operation_event(
+        IdeaOperation.CANDIDATE_PERSISTENCE,
+        _operation_outcome_from_candidate_persistence(
+            persistence_decision=(
+                result.persistence.decision if result.persistence is not None else None
+            ),
+            evaluation=result.evaluation,
+        ),
+        source_authority="lotus-core",
+    )
     return EvaluateAndPersistHighCashSignalResponse(
         evaluation=EvaluateHighCashSignalResponse.from_domain(result.evaluation),
         persistence=(
@@ -435,6 +475,35 @@ async def evaluate_and_persist_high_cash_signal(
         durableStorageBacked=False,
         supportedFeaturePromoted=False,
     )
+
+
+def _operation_outcome_from_signal_evaluation(
+    result: SignalEvaluationResult,
+) -> OperationOutcome:
+    outcome = result.outcome.value
+    if outcome == "candidate_created":
+        return OperationOutcome.ACCEPTED
+    if outcome == "suppressed":
+        return OperationOutcome.SUPPRESSED
+    if outcome == "not_eligible":
+        return OperationOutcome.NOT_ELIGIBLE
+    return OperationOutcome.BLOCKED
+
+
+def _operation_outcome_from_candidate_persistence(
+    *,
+    persistence_decision: CandidatePersistenceDecision | None,
+    evaluation: SignalEvaluationResult,
+) -> OperationOutcome:
+    if persistence_decision is None:
+        return _operation_outcome_from_signal_evaluation(evaluation)
+    if persistence_decision is CandidatePersistenceDecision.ACCEPTED:
+        return OperationOutcome.ACCEPTED
+    if persistence_decision is CandidatePersistenceDecision.REPLAYED:
+        return OperationOutcome.REPLAYED
+    if persistence_decision is CandidatePersistenceDecision.DUPLICATE_CANDIDATE:
+        return OperationOutcome.DUPLICATE
+    return OperationOutcome.CONFLICT
 
 
 HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
