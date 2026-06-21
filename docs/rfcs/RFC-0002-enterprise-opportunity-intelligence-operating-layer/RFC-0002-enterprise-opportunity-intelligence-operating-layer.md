@@ -709,7 +709,7 @@ assertions.
 | 0 | Critical review, source map, and product gap allocation | Completed - implementation baseline recorded | source map, overlap decisions, open questions, branch/state baseline |
 | 1 | Platform automation and scaffolding review | Planned | scaffold gap ledger, platform PRs or explicit no-change evidence |
 | 2 | Cleanup, structure, and current surface normalization | Planned | dead-code/doc-sprawl cleanup, module boundaries, vocabulary baseline |
-| 3 | Opportunity domain model, vocabulary, and lifecycle | Planned | pure domain model, lifecycle tests, unsupported transition behavior |
+| 3 | Opportunity domain model, vocabulary, and lifecycle | Implemented - pure domain foundation only | pure domain model, lifecycle tests, unsupported transition behavior |
 | 4 | Source authority, signal contracts, and data mesh baseline | Planned | consumer/producer contracts, source authority tests, mesh validation |
 | 5 | Deterministic signal evaluation and candidate generation | Planned | first signal families, candidate generation, golden scenario tests |
 | 6 | Persistence, replay, idempotency, and audit | Planned | durable records, hashes, replay, audit events, idempotency tests |

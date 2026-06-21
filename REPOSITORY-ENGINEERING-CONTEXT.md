@@ -46,13 +46,15 @@ Default local port: `8330`
 
 The repository is a newly scaffolded Lotus backend baseline. It contains the
 bank-buyable engineering shell, CI lane definitions, quality scripts, Docker
-baseline, source wiki, supported-feature registry, governance documents, and
-repo-owned proposed data-mesh contracts.
+baseline, source wiki, supported-feature registry, governance documents,
+repo-owned proposed data-mesh contracts, and the first framework-free idea
+domain model/lifecycle foundation.
 
-Business functionality is intentionally not implemented yet. Initial work is
-limited to repository foundation, architecture decisions, data-mesh contract
-posture, and RFCs that define the build order for a bank-buyable `lotus-idea`
-service.
+Externally supported business functionality is intentionally not implemented
+yet. Initial work is limited to repository foundation, architecture decisions,
+data-mesh contract posture, RFCs that define the build order for a
+bank-buyable `lotus-idea` service, and internal domain primitives for later
+API/persistence slices.
 
 RFC-0002 Slice 00 now records the implementation-start baseline: high cash /
 idle liquidity is the first opportunity family, `PB_SG_GLOBAL_BAL_001` is the
@@ -61,6 +63,13 @@ report-only evidence is the first downstream conversion path, and missing
 evidence / unsupported-claim verification is the first AI posture. The baseline
 keeps all source calculations in their owning services and does not promote any
 business capability beyond the current foundation-only supported-feature state.
+
+RFC-0002 Slice 03 now implements the pure domain model and lifecycle vocabulary
+in `src/app/domain/ideas.py`, with unit coverage for source provenance,
+unsupported evidence, valid and invalid lifecycle transitions, review authority
+boundaries, conversion gating, immutable models, and bounded scoring. It does
+not add API, persistence, source adapters, data-product certification, or
+supported-feature promotion.
 
 ## CI And Merge Governance
 

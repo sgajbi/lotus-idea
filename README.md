@@ -8,9 +8,10 @@ Workbench workflows.
 
 Service profile: `domain-service`
 
-Current status: scaffolded foundation and governance RFCs only. No business
-feature is supported until the relevant RFC slice has implementation evidence,
-endpoint certification, tests, and supported-feature registration.
+Current status: scaffolded foundation, governance RFCs, and the first pure
+domain model/lifecycle foundation. No business feature is supported until the
+relevant RFC slice has implementation evidence, endpoint certification, tests,
+and supported-feature registration.
 
 ## Product Boundary
 
