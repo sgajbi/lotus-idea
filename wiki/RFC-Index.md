@@ -33,9 +33,9 @@ Current RFC-0002 implementation-start baseline:
    transition recording, lifecycle audit history, snapshot recovery, and a
    central repository workflow port boundary. It also adds the first versioned
    schema/rollback contract, PostgreSQL migration execution CLI, tested
-   PostgreSQL repository adapter foundation, and blocking migration
-   contract/execution dry-run gates without database-backed API state or
-   supported-feature promotion.
+   PostgreSQL repository adapter foundation, opt-in API runtime wiring, and a
+   real PostgreSQL high-cash persistence/replay proof without supported-feature
+   promotion.
 7. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate

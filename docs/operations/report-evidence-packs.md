@@ -58,7 +58,7 @@ Current proof lives in:
 4. `tests/unit/test_service_contract.py`,
 5. `docs/operations/endpoint-certification-ledger.json`.
 
-Promotion requires real PostgreSQL integration/e2e proof and recovery evidence,
+Promotion requires real PostgreSQL proof for report evidence-pack workflows and recovery evidence,
 downstream acceptance tests, render/archive proof, Gateway/Workbench proof,
 data-mesh certification, runtime trust telemetry, supported-feature
 registration, and published wiki truth.

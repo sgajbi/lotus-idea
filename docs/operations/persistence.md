@@ -3,12 +3,14 @@
 Current posture: `lotus-idea` has internal in-memory repository behavior, a
 versioned SQL schema, rollback contract, PostgreSQL migration execution CLI, a
 tested PostgreSQL repository adapter foundation, and opt-in API repository
-wiring through `LOTUS_IDEA_DATABASE_URL`. Runtime API state remains
-process-local by default and reports `durableStorageBacked=false` unless the
-database URL is configured. When configured, repository-backed API responses and
-operation events report `durableStorageBacked=true`, but this is still not
-data-product certification, live source integration proof, downstream
-realization proof, or supported-feature promotion.
+wiring through `LOTUS_IDEA_DATABASE_URL`. It also has a real PostgreSQL runtime
+proof for the first high-cash API persistence/replay path. Runtime API state
+remains process-local by default and reports `durableStorageBacked=false`
+unless the database URL is configured. When configured, repository-backed API
+responses and operation events report `durableStorageBacked=true`, but this is
+still not production storage certification, data-product certification, live
+source integration proof, downstream realization proof, or supported-feature
+promotion.
 
 ## Current Contract
 
@@ -36,6 +38,11 @@ realization proof, or supported-feature promotion.
 7. Repository-backed endpoints derive `durableStorageBacked` and
    `durable_storage_backed` operation-event labels from the active repository
    instead of hardcoding storage posture.
+8. `tests/integration/test_postgres_runtime_integration.py` applies the schema
+   to a real PostgreSQL service, persists through the FastAPI
+   evaluate-and-persist endpoint, reloads the repository provider, proves
+   idempotency replay from database state, and rolls back the schema. GitHub PR
+   Merge Gate and Main Releasability run this proof against `postgres:18-alpine`.
 
 ## Validation
 
@@ -47,6 +54,19 @@ make migration-execution-gate
 ```
 
 Both gates are also part of `make lint`, `make check`, and `make ci`.
+
+Run the opt-in PostgreSQL runtime proof locally with a disposable or dedicated
+integration database:
+
+```powershell
+$env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
+$env:LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED = "1"
+make postgres-integration-gate
+```
+
+When `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not set, the proof test skips
+locally. GitHub lanes set `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`, so a
+missing database URL fails instead of silently skipping release evidence.
 
 Apply or roll back against a configured PostgreSQL database:
 
@@ -72,9 +92,10 @@ as durable storage.
 Do not claim production storage readiness, recovery, data-product promotion, or
 supported business workflows until later slices add:
 
-1. integration/e2e proof against a real PostgreSQL service,
-2. deploy-pipeline migration evidence,
-3. rollback/recovery evidence against the real service,
+1. deploy-pipeline migration evidence,
+2. broader rollback/recovery evidence against the real service,
+3. real PostgreSQL proof for review, conversion, report-evidence, and queue
+   workflows beyond the current high-cash persistence/replay path,
 4. data-product telemetry and platform mesh certification,
 5. Gateway/Workbench/downstream proof for supported workflows,
 6. updated endpoint certification, supported-feature, docs, wiki, and mesh

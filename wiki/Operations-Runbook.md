@@ -12,7 +12,9 @@ supported business API yet. A versioned migration/rollback schema contract
 exists for the durable repository and is enforced by `make migration-contract-gate`.
 `make migration-execution-gate` dry-runs apply and rollback execution plans, and
 `make migrate` / `make migrate-rollback` execute against PostgreSQL when
-`LOTUS_IDEA_DATABASE_URL` is configured.
+`LOTUS_IDEA_DATABASE_URL` is configured. `make postgres-integration-gate` proves
+the first high-cash API persistence/replay path against a real PostgreSQL 18
+service when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.
@@ -23,6 +25,7 @@ Initial commands:
 make install
 make check
 make ci
+make postgres-integration-gate
 uvicorn app.main:app --reload --port 8330
 ```
 
@@ -77,9 +80,9 @@ trace id, or correlation id values.
 
 These signals are operator diagnostics only. `durable_storage_backed=true`
 confirms only that the active repository provider is durable; it does not
-certify production recovery readiness, data-product promotion, downstream
-Report/Render/Archive realization, Gateway/Workbench proof, or supported
-business capability.
+certify production recovery readiness, data-product promotion, broader
+downstream Report/Render/Archive realization, Gateway/Workbench proof, or
+supported business capability.
 
 ## API Certification Reference
 
