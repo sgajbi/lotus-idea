@@ -35,19 +35,19 @@ Current RFC-0002 implementation-start baseline:
    supported-feature promotion.
 7. Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
-   source provenance, and queue projection interaction without database-backed
-   review persistence, API, Gateway, Workbench, PM/compliance/operator queue
-   surfaces, or supported-feature promotion.
+   source provenance, queue projection interaction, repository-backed
+   persistence orchestration, and certified internal review/feedback API
+   foundations without database-backed review persistence, Gateway, Workbench,
+   PM/compliance/operator queue surfaces, or supported-feature promotion.
 8. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,
    and no AI downstream authority without `lotus-ai` runtime execution, API,
    Gateway, Workbench, or supported-feature promotion.
-9. Slice 10 partially implements the first certified internal API foundation:
-   `POST /api/v1/idea-signals/high-cash/evaluate` for caller-supplied,
-   source-owned Core high-cash evidence. Gateway, Workbench, live source
-   adapters, data-product certification, and supported-feature promotion remain
-   planned.
+9. Slice 10 partially implements certified internal API foundations for
+   high-cash evaluation, high-cash evaluate-and-persist, review actions, and
+   feedback. Gateway, Workbench, live source adapters, data-product
+   certification, and supported-feature promotion remain planned.
 10. Slice 12 partially implements internal conversion governance for
    review-gated conversion intent and downstream outcome tracking, with
    target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and

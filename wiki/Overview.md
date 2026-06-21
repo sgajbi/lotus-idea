@@ -21,8 +21,10 @@ Current support:
 4. source wiki,
 5. planned supported-feature registry,
 6. certified internal high-cash signal evaluation API foundation over
-   caller-supplied, source-owned Core evidence.
+   caller-supplied, source-owned Core evidence,
+7. certified internal review-action and feedback API foundations over persisted
+   candidates.
 
-No external business feature is supported yet. The high-cash API foundation is
-certified for internal contract evolution, not for live Gateway/Workbench or
-client-demo feature claims.
+No external business feature is supported yet. The high-cash, review-action,
+and feedback API foundations are certified for internal contract evolution, not
+for live Gateway/Workbench or client-demo feature claims.

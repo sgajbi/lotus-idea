@@ -9,6 +9,8 @@ from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.api.caller_headers import caller_context_from_headers
+from app.api.repository_state import get_idea_repository
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashSignalCommand,
@@ -24,10 +26,8 @@ from app.domain import (
     SourceRef,
     SourceSystem,
 )
-from app.api.repository_state import get_idea_repository
 from app.errors import ProblemDetails, problem_response
 from app.security.caller_context import (
-    CallerContext,
     CapabilityPolicy,
     PermissionDeniedError,
     require_capability,
@@ -349,26 +349,13 @@ class EvaluateAndPersistHighCashSignalResponse(CamelModel):
     )
 
 
-def _caller_from_headers(
-    *,
-    subject: str | None,
-    roles: str | None,
-    capabilities: str | None,
-) -> CallerContext:
-    return CallerContext.from_iterables(
-        subject=subject or "anonymous",
-        roles=(role.strip() for role in (roles or "").split(",")),
-        capabilities=(capability.strip() for capability in (capabilities or "").split(",")),
-    )
-
-
 async def evaluate_high_cash_signal(
     request: EvaluateHighCashSignalRequest,
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
 ) -> EvaluateHighCashSignalResponse | JSONResponse:
-    caller = _caller_from_headers(
+    caller = caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
@@ -394,7 +381,7 @@ async def evaluate_and_persist_high_cash_signal(
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
 ) -> EvaluateAndPersistHighCashSignalResponse | JSONResponse:
-    caller = _caller_from_headers(
+    caller = caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,

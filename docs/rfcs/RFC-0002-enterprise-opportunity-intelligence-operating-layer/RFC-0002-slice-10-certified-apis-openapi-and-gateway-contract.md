@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified high-cash evaluate and evaluate-and-persist API foundations only
+Status: Partially implemented - certified high-cash, review-action, and feedback API foundations only
 
 ## Outcome
 
@@ -12,6 +12,8 @@ The first certified API foundations are:
 
 - `POST /api/v1/idea-signals/high-cash/evaluate`
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
+- `POST /api/v1/idea-candidates/{candidateId}/review-actions`
+- `POST /api/v1/idea-candidates/{candidateId}/feedback`
 
 These endpoints evaluate caller-supplied, source-owned `lotus-core` evidence
 for the high-cash / idle-liquidity signal family. They consume source-reported
@@ -23,6 +25,14 @@ in-memory repository foundation. It requires `Idempotency-Key` and
 `idea.candidate.persist`, returns replay/conflict posture for idempotency
 behavior, and keeps `durableStorageBacked=false` until database-backed
 persistence, migrations, and recovery evidence exist.
+
+The review-action and feedback endpoints expose the Slice 08 internal workflow
+foundation over persisted candidates. They require `Idempotency-Key`, a
+mutating capability, caller role, and upstream-authorized review scope. They
+record review decisions or feedback through the same internal repository
+foundation, return replay/conflict/not-found posture, never grant downstream
+suitability/compliance/mandate/execution/client-communication authority, and
+keep `durableStorageBacked=false` and `supportedFeaturePromoted=false`.
 
 Implementation files:
 
@@ -40,6 +50,13 @@ Implementation files:
    `type`, `status`, `code`, `title`, and `detail` fields.
 6. `docs/operations/endpoint-certification-ledger.json`: machine-readable
    endpoint certification evidence for the new route.
+7. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
+   authorization/scope mapping, product-safe errors, idempotency-conflict
+   handling, OpenAPI examples, and route registration.
+8. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
+   signal and review routes.
+9. `tests/integration/test_review_workflow_api.py`: certified API behavior
+   evidence for review action and feedback foundations.
 
 ## Current Contract
 
@@ -58,12 +75,20 @@ advisor role. The evaluate-and-persist endpoint is permissioned by
 permission, and idempotency-conflict failures return product-safe Problem
 Details.
 
+The review-action endpoint is permissioned by `idea.review.record` plus one
+recognized review actor role. The feedback endpoint is permissioned by
+`idea.feedback.record` plus one recognized review actor role. Both endpoints
+require upstream-authorized tenant/book/portfolio/client scope in the request
+until the platform caller context carries scoped entitlements. Scope,
+permission, missing candidate, idempotency conflict, and invalid candidate-state
+failures return product-safe Problem Details.
+
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
-`durableStorageBacked` is always `false` for evaluate-and-persist. The endpoints
-are certified as API foundations but are not supported business features because
-live source adapters, Gateway/Workbench proof, database-backed API state,
-data-product certification, runtime trust telemetry, and supported-feature
-registration are not implemented yet.
+`durableStorageBacked` is always `false` for mutating foundation endpoints. The
+endpoints are certified as API foundations but are not supported business
+features because live source adapters, Gateway/Workbench proof, database-backed
+API state, data-product certification, runtime trust telemetry, and
+supported-feature registration are not implemented yet.
 
 ## Required Work
 
@@ -88,8 +113,8 @@ registration are not implemented yet.
 5. Add data-product trust telemetry, platform mesh certification, and
    supported-feature promotion only after runtime proof exists.
 6. Add additional route families for candidate lifecycle, evidence packs,
-   review actions, feedback, conversion intent, and supportability after their
-   storage and orchestration slices are implementation-backed.
+   review queues, conversion intent, and supportability after their storage and
+   orchestration slices are implementation-backed.
 
 ## Platform Follow-Up
 
@@ -114,6 +139,9 @@ Focused validation passed for the current foundation:
    data-mesh, and contract gates.
 8. `make ci` passed with `19` integration tests, `2` e2e tests, `187` unit
    tests under coverage, coverage gate at `99.18%`, and dependency audit.
+9. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py -q` passed with `17 passed` after adding review-action and feedback API certification.
+10. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` passed
+    after adding review-action and feedback route ledger evidence.
 
 PR merge-gate evidence remains required before merge.
 

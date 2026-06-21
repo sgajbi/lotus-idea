@@ -74,6 +74,15 @@ lifecycle routes must use that provider until the RFC-0002 persistence slice
 introduces a database-backed repository adapter, so API modules do not create
 duplicate candidate stores.
 
+`POST /api/v1/idea-candidates/{candidateId}/review-actions` and
+`POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
+review workflow API foundations. They require mutating capabilities, caller
+role, upstream-authorized tenant/book/portfolio/client scope, and
+`Idempotency-Key`. They record review decisions or feedback through the
+in-memory repository foundation and return product-safe conflict, not-found, and
+permission posture without granting downstream suitability, compliance, mandate,
+execution, or client-communication authority.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist
@@ -99,8 +108,8 @@ The internal application layer can apply governed advisor review actions and
 feedback to repository snapshots, then persist accepted decisions, feedback
 events, safe audit evidence, lifecycle history, and idempotency replay/conflict
 posture through the Slice 06 repository contract. This is still an internal
-in-memory foundation, not durable database support, a public API,
-Gateway/Workbench functionality, or a supported review product.
+in-memory foundation, not durable database support, Gateway/Workbench
+functionality, or a supported review product.
 
 ## Architecture Decisions
 
