@@ -1,0 +1,190 @@
+{
+  "contract_id": "domain-data-product-consumers",
+  "contract_version": "1.0.0",
+  "governed_by_rfc": "RFC-0084",
+  "consumer_repository": "lotus-idea",
+  "dependencies": [
+    {
+      "product_name": "PortfolioStateSnapshot",
+      "producer_repository": "lotus-core",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "source_batch_fingerprint",
+        "snapshot_id",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Resolve portfolio, cash, holding, mandate, client, product, benchmark, and source-readiness context for opportunity detection without making lotus-idea the portfolio-state authority.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "fail_closed"
+    },
+    {
+      "product_name": "ReturnsSeriesBundle",
+      "producer_repository": "lotus-performance",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned performance returns and benchmark context as opportunity evidence without recalculating official performance methodology.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "RiskMetricsReport",
+      "producer_repository": "lotus-risk",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "lineage_version",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned risk, concentration, drawdown, stress, and scenario evidence as idea inputs without taking ownership of risk methodology.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "AdvisoryProposalLifecycleRecord",
+      "producer_repository": "lotus-advise",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Preserve advisory proposal and suitability workflow context while keeping proposal creation, suitability, and client-advice authority in lotus-advise.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "PortfolioActionRegister",
+      "producer_repository": "lotus-manage",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned portfolio action and DPM workflow posture to avoid duplicate opportunity recommendations and support conversion into management workflows.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "ClientReportEvidencePack",
+      "producer_repository": "lotus-report",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Preserve reportable evidence requirements so reviewed ideas can be included in governed reporting without making lotus-idea the report generator.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
+      "product_name": "AdvisoryCopilotInteractionRecord",
+      "producer_repository": "lotus-advise",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "supportability_lookup",
+      "business_purpose": "Reuse governed advisory AI supportability evidence where idea explanations reference advisory copilot context while keeping AI execution and evaluation behind governed source services.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge"
+      ],
+      "failure_posture": "support_only"
+    }
+  ]
+}

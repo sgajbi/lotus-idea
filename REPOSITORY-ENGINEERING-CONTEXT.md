@@ -46,11 +46,13 @@ Default local port: `8330`
 
 The repository is a newly scaffolded Lotus backend baseline. It contains the
 bank-buyable engineering shell, CI lane definitions, quality scripts, Docker
-baseline, source wiki, supported-feature registry, and governance documents.
+baseline, source wiki, supported-feature registry, governance documents, and
+repo-owned proposed data-mesh contracts.
 
 Business functionality is intentionally not implemented yet. Initial work is
-limited to repository foundation, architecture decisions, and RFCs that define
-the build order for a bank-buyable `lotus-idea` service.
+limited to repository foundation, architecture decisions, data-mesh contract
+posture, and RFCs that define the build order for a bank-buyable `lotus-idea`
+service.
 
 ## CI And Merge Governance
 
@@ -87,12 +89,16 @@ logs; fix or document the owned warning source instead.
 9. `src/app/resilience/`: timeout, retry, backoff, and circuit-breaker policies.
 10. `src/app/contracts/`: contract models shared by route and application
     boundaries.
-11. `contracts/domain-data-products/`: producer and consumer data-product
-    contracts.
-12. `docs/architecture/adr/`: architecture decisions that shape implementation.
-13. `docs/rfcs/`: governed implementation slices and evidence requirements.
-14. `tests/unit`, `tests/integration`, `tests/e2e`: test pyramid baseline.
-15. `wiki/`: repo-authored GitHub wiki source with the standard Lotus operator
+11. `contracts/domain-data-products/`: proposed producer products, consumer
+    dependencies, and mesh readiness posture.
+12. `contracts/trust-telemetry/`, `contracts/mesh-slo/`,
+    `contracts/mesh-access/`, and `contracts/mesh-evidence/`: planned trust,
+    SLO, access, and evidence policies that stay blocked until runtime
+    certification.
+13. `docs/architecture/adr/`: architecture decisions that shape implementation.
+14. `docs/rfcs/`: governed implementation slices and evidence requirements.
+15. `tests/unit`, `tests/integration`, `tests/e2e`: test pyramid baseline.
+16. `wiki/`: repo-authored GitHub wiki source with the standard Lotus operator
     pages for getting started, development workflow, validation/CI, roadmap,
     supported features, operations, security, integrations, architecture, and
     RFC navigation.
@@ -158,6 +164,10 @@ gate, security audit, and Docker build validation.
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression
 tests in the same change.
+
+Data-mesh declarations are repo-owned from day one, but certification remains
+`not_certified` until implementation-backed products emit runtime telemetry,
+the platform source manifest includes `lotus-idea`, and platform mesh gates pass.
 
 `lotus-idea` adopts
 `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`

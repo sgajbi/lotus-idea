@@ -1,0 +1,34 @@
+{
+  "contract_id": "lotus-mesh-slo-policy",
+  "contract_version": "1.0.0",
+  "governed_by_rfcs": [
+    "RFC-0091"
+  ],
+  "product_id": "lotus-idea:IdeaCandidate:v1",
+  "producer_repository": "lotus-idea",
+  "freshness": {
+    "max_allowed_age_seconds": 86400,
+    "violation_severity": "blocking"
+  },
+  "completeness": {
+    "required_status": "complete",
+    "violation_severity": "blocking"
+  },
+  "reconciliation": {
+    "required_status": "reconciled",
+    "violation_severity": "blocking"
+  },
+  "data_quality": {
+    "required_status": "quality_passed",
+    "violation_severity": "blocking"
+  },
+  "lineage": {
+    "lineage_materialized_required": true,
+    "violation_severity": "blocking"
+  },
+  "escalation": {
+    "owner_repository": "lotus-idea",
+    "owner_role": "opportunity-intelligence-product-owner",
+    "remediation": "Block IdeaCandidate publication until source-owned evidence, deterministic scoring, lifecycle state, and runtime trust telemetry are implementation-backed and certified."
+  }
+}

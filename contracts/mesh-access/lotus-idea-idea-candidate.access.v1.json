@@ -1,0 +1,38 @@
+{
+  "contract_id": "lotus-mesh-access-policy",
+  "contract_version": "1.0.0",
+  "governed_by_rfcs": [
+    "RFC-0091"
+  ],
+  "product_id": "lotus-idea:IdeaCandidate:v1",
+  "producer_repository": "lotus-idea",
+  "default_posture": "restricted",
+  "allowed_consumers": [
+    {
+      "consumer_repository": "lotus-gateway",
+      "tenant_scope": [
+        "TENANT_PRIVATE_BANKING_DEMO"
+      ],
+      "roles": [
+        "operator",
+        "advisor",
+        "portfolio_manager"
+      ],
+      "use_cases": [
+        "discovery",
+        "advisor_opportunity_review",
+        "portfolio_manager_opportunity_review"
+      ]
+    }
+  ],
+  "denial_posture": {
+    "customer_visible_state": "requestable",
+    "operator_visible_state": "restricted_with_reason",
+    "reason": "Idea candidates contain client-confidential source evidence and advisor workflow state; publication requires tenant, role, entitlement, and supported-surface certification."
+  },
+  "audit": {
+    "owner_repository": "lotus-idea",
+    "policy_owner": "opportunity-intelligence-product-owner",
+    "decision_evidence": "access-policy:lotus-idea:idea-candidate:v1"
+  }
+}

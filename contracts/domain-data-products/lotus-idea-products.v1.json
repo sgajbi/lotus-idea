@@ -1,0 +1,529 @@
+{
+  "contract_id": "domain-data-products",
+  "contract_version": "1.0.0",
+  "governed_by_rfc": "RFC-0084",
+  "producer_repository": "lotus-idea",
+  "authoritative_domain": "opportunity_intelligence",
+  "products": [
+    {
+      "product_name": "OpportunitySignalCandidate",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "analytics_output",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "portfolio",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "as_of_date",
+        "freshness_basis": "as_of_date",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "as_of_date",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "daily",
+        "max_allowed_age_description": "Opportunity signal candidates must be derived from source-owned portfolio, performance, risk, advisory, management, and reporting evidence for the governed as-of date."
+      },
+      "completeness_policy": {
+        "default_status": "partial",
+        "partial_allowed": true
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaCandidate",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "workflow_and_decision_state",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "portfolio",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "as_of_date",
+        "freshness_basis": "as_of_date",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "as_of_date",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "daily",
+        "max_allowed_age_description": "Idea candidates must preserve the signal evidence, deterministic score policy, suppression posture, and source freshness used to create or refresh the candidate."
+      },
+      "completeness_policy": {
+        "default_status": "partial",
+        "partial_allowed": true
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaEvidencePacket",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "reporting_and_evidence",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "portfolio",
+        "supports_bulk": false
+      },
+      "temporal_scope": {
+        "primary_time_field": "as_of_date",
+        "freshness_basis": "as_of_date",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "as_of_date",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "event_driven",
+        "max_allowed_age_description": "Idea evidence packets are refreshed when a candidate is created, materially re-scored, reviewed, converted, expired, or included in reportable evidence."
+      },
+      "completeness_policy": {
+        "default_status": "complete",
+        "partial_allowed": false
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway",
+        "lotus-report"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "AdvisorOpportunityQueue",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "workflow_and_decision_state",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "tenant",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "as_of_date",
+        "freshness_basis": "as_of_date",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "as_of_date",
+      "identifier_refs": [
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "intraday",
+        "max_allowed_age_description": "Advisor queues must reflect latest candidate lifecycle, suppression, assignment, entitlement, and review-priority evidence without fabricating advisor action state."
+      },
+      "completeness_policy": {
+        "default_status": "partial",
+        "partial_allowed": true
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaReviewDecision",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "workflow_and_decision_state",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "workflow_run",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "observed_at",
+        "freshness_basis": "event_time",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "observed_at",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "event_driven",
+        "max_allowed_age_description": "Review decisions are event-sourced and must be tied to the exact candidate evidence packet, reviewer context, and lifecycle transition."
+      },
+      "completeness_policy": {
+        "default_status": "complete",
+        "partial_allowed": false
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway",
+        "lotus-advise",
+        "lotus-manage"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaFeedbackEvent",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "workflow_and_decision_state",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "workflow_run",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "observed_at",
+        "freshness_basis": "event_time",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "observed_at",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "event_driven",
+        "max_allowed_age_description": "Feedback events must preserve the reviewer action, suppression reason, signal policy version, and source evidence hashes used by learning and queue controls."
+      },
+      "completeness_policy": {
+        "default_status": "complete",
+        "partial_allowed": false
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaConversionIntent",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "workflow_and_decision_state",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "workflow_run",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "observed_at",
+        "freshness_basis": "event_time",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "observed_at",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "event_driven",
+        "max_allowed_age_description": "Conversion intents must preserve human review approval, target workflow, idempotency key, evidence packet identity, and source authority posture."
+      },
+      "completeness_policy": {
+        "default_status": "complete",
+        "partial_allowed": false
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway",
+        "lotus-advise",
+        "lotus-manage",
+        "lotus-report"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaConversionOutcome",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "workflow_and_decision_state",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "workflow_run",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "observed_at",
+        "freshness_basis": "event_time",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "observed_at",
+      "identifier_refs": [
+        "portfolio_id",
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "event_driven",
+        "max_allowed_age_description": "Conversion outcomes must be sourced from the target workflow acknowledgement and must not imply execution, suitability approval, report generation, or client communication unless the target service certifies it."
+      },
+      "completeness_policy": {
+        "default_status": "partial",
+        "partial_allowed": true
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "customer_consumable"
+      },
+      "security_profile_ref": "business_consumer_access:client_confidential:retain_for_client_record:audit_read_and_export",
+      "approved_consumers": [
+        "lotus-gateway",
+        "lotus-advise",
+        "lotus-manage",
+        "lotus-report"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    },
+    {
+      "product_name": "IdeaTrustTelemetry",
+      "product_version": "v1",
+      "owner_repository": "lotus-idea",
+      "product_family": "supportability_and_control_plane",
+      "authoritative_domain": "opportunity_intelligence",
+      "lifecycle_status": "proposed",
+      "request_scope": {
+        "scope_level": "tenant",
+        "supports_bulk": true
+      },
+      "temporal_scope": {
+        "primary_time_field": "generated_at",
+        "freshness_basis": "event_time",
+        "supports_restatement": true
+      },
+      "temporal_semantics_ref": "generated_at",
+      "identifier_refs": [
+        "tenant_id",
+        "correlation_id"
+      ],
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "tenant_id",
+        "generated_at",
+        "as_of_date",
+        "reconciliation_status",
+        "data_quality_status",
+        "lineage_bundle_id",
+        "source_batch_fingerprint",
+        "correlation_id"
+      ],
+      "freshness_policy": {
+        "freshness_class": "intraday",
+        "max_allowed_age_description": "Idea trust telemetry must describe current data-mesh certification posture, source coverage, stale-source reasons, blocked products, and safe operator remediation guidance."
+      },
+      "completeness_policy": {
+        "default_status": "partial",
+        "partial_allowed": true
+      },
+      "lineage_policy": {
+        "lineage_required": true,
+        "evidence_bundle_required": true,
+        "lineage_bundle_class_ref": "customer_lineage_summary",
+        "evidence_access_class_ref": "operator_only"
+      },
+      "security_profile_ref": "operator_access:client_confidential:retain_for_source_audit:audit_system_access",
+      "approved_consumers": [
+        "lotus-gateway"
+      ],
+      "deprecation_policy": {
+        "state": "not_deprecated",
+        "successor_product": null
+      }
+    }
+  ]
+}

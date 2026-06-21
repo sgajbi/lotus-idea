@@ -23,6 +23,22 @@ recompute official calculations.
 | Product composition | `lotus-gateway` |
 | User experience | `lotus-workbench` |
 
+## Data Mesh Baseline
+
+Repo-owned proposed mesh declarations live under `contracts/`:
+
+1. `contracts/domain-data-products/lotus-idea-products.v1.json`
+2. `contracts/domain-data-products/lotus-idea-consumers.v1.json`
+3. `contracts/domain-data-products/mesh-readiness.v1.json`
+4. `contracts/trust-telemetry/idea-candidate.telemetry.v1.json`
+5. `contracts/mesh-slo/`
+6. `contracts/mesh-access/`
+7. `contracts/mesh-evidence/`
+
+Certification is not claimed. Products stay `proposed` and the current static
+telemetry is blocked until runtime implementation and platform mesh validation
+exist.
+
 ## Architecture Decisions
 
 ADRs live in `docs/architecture/adr/`:
