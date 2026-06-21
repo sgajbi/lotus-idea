@@ -179,6 +179,39 @@ Baseline state at implementation start:
 7. next low-risk implementation slice: Slice 3 pure domain model, vocabulary,
    and lifecycle.
 
+## PR-Sized Implementation Sequence
+
+Use small linear commits and one small PR per coherent implementation surface
+unless a slice is explicitly documentation-only:
+
+1. **Foundation PR**: Slice 00 baseline, Slice 03 pure domain model, Slice 04
+   source-contract alignment, and first Slice 05 high-cash domain policy. No
+   API, persistence, or supported-feature promotion.
+2. **Source-adapter PR**: ports and application orchestration for Core high-cash
+   evidence, including source readiness, entitlement-denied, stale-source, and
+   missing-source paths. No public support claim until endpoint certification.
+3. **Persistence PR**: Slice 06 durable candidate/evidence records,
+   idempotency, replay hashes, and audit events.
+4. **Queue/scoring PR**: Slice 07 scoring/ranking/suppression queue projection
+   over persisted candidates, with policy-versioned deterministic behavior.
+5. **Review PR**: Slice 08 advisor review, feedback, suppression/no-action, and
+   audit APIs.
+6. **API certification PR**: Slice 10 certified idea/candidate/evidence/review
+   APIs, OpenAPI examples, endpoint-certification ledger, and no-alias
+   vocabulary proof.
+7. **Gateway/Workbench PRs**: Slice 11 product-surface realization through
+   Gateway-only Workbench consumption and browser/accessibility proof.
+8. **AI PR**: Slice 09 missing-evidence and unsupported-claim verifier workflow
+   through `lotus-ai`, with deterministic fallback and no rationale drafting
+   until evidence/review posture is proven.
+9. **Downstream conversion PRs**: Slice 12 Advise/Manage acceptance contracts
+   and Slice 13 report/render/archive materialization, each in owner repos when
+   authority belongs there.
+10. **Promotion/hardening PRs**: Slices 14-20 data-product promotion, trust
+    telemetry, observability/security, demo proof, documentation/wiki/context,
+    live validation, final hardening, and branch hygiene. Supported features
+    can be promoted only in these proof-backed PRs.
+
 ## Documentation And Wiki Decision
 
 This slice updates RFC truth and repository/wiki navigation only. It does not
