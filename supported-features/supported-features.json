@@ -1,0 +1,38 @@
+{
+  "repository": "lotus-idea",
+  "policy": "Only implementation-backed behavior may be promoted to supported.",
+  "current_posture": "foundation_only",
+  "features": [],
+  "planned_capabilities": [
+    {
+      "id": "idea-lifecycle",
+      "name": "Idea lifecycle and review state",
+      "governing_rfc": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
+      "status": "planned"
+    },
+    {
+      "id": "signal-ingestion",
+      "name": "Source-owned signal ingestion and data-mesh contracts",
+      "governing_rfc": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
+      "status": "planned"
+    },
+    {
+      "id": "scoring-ranking-explanation",
+      "name": "Governed scoring, ranking, and AI-assisted explanation",
+      "governing_rfc": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
+      "status": "planned"
+    },
+    {
+      "id": "review-feedback-conversion",
+      "name": "Review queues, feedback, and downstream conversion",
+      "governing_rfc": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
+      "status": "planned"
+    },
+    {
+      "id": "demo-commercial-proof",
+      "name": "Demo readiness, evidence packs, and commercial proof",
+      "governing_rfc": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
+      "status": "planned"
+    }
+  ]
+}
