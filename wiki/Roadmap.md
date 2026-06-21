@@ -21,7 +21,10 @@ Current state:
 9. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, and queue projection interaction,
-10. business features remain Planned.
+10. RFC-0002 Slice 09 partially implements internal AI governance with redacted
+    evidence envelopes, verifier/fallback controls, safe audit events, and no
+    AI downstream authority,
+11. business features remain Planned.
 
 First implementation program:
 

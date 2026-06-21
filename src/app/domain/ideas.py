@@ -88,6 +88,11 @@ class ReasonCode(StrEnum):
     REVIEW_ESCALATED = "review_escalated"
     FEEDBACK_RECORDED = "feedback_recorded"
     ENTITLEMENT_DENIED = "entitlement_denied"
+    AI_REDACTION_APPLIED = "ai_redaction_applied"
+    AI_FALLBACK_USED = "ai_fallback_used"
+    AI_VERIFIER_PASSED = "ai_verifier_passed"
+    AI_UNSUPPORTED_CLAIM_BLOCKED = "ai_unsupported_claim_blocked"
+    AI_FORBIDDEN_ACTION_BLOCKED = "ai_forbidden_action_blocked"
 
 
 class IdeaLifecycleStatus(StrEnum):

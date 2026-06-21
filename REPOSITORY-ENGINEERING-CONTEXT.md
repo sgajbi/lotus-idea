@@ -125,6 +125,17 @@ review store, application orchestration, API/OpenAPI surface,
 Gateway/Workbench proof, PM/compliance/operator queue surface, data-product
 certification, trust telemetry, or supported-feature promotion exists.
 
+RFC-0002 Slice 09 is partially implemented as an internal AI governance
+foundation in `src/app/domain/ai_governance.py`. The repository now has
+redacted evidence envelopes for future `lotus-ai` workflow-pack requests,
+forbidden metadata rejection, deterministic AI-unavailable fallback, verifier
+outcomes for unsupported claims and forbidden actions, safe AI audit events,
+and no-downstream-authority semantics for AI output. This is not yet a
+supported AI explanation product: no `lotus-ai` runtime workflow execution,
+prompt/RAG/provider integration, durable AI lineage store, API/OpenAPI surface,
+Gateway/Workbench proof, trust telemetry, model-risk operations dashboard, or
+supported-feature promotion exists.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
@@ -149,9 +160,9 @@ logs; fix or document the owned warning source instead.
 3. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
-   policies, review-queue projection, review governance, evidence policy,
-   deterministic governance checks, internal persistence records, replay
-   posture, idempotency, and audit primitives.
+   policies, review-queue projection, review governance, AI governance,
+   evidence policy, deterministic governance checks, internal persistence
+   records, replay posture, idempotency, and audit primitives.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports.
