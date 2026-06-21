@@ -34,8 +34,9 @@ Current non-supported scope:
    archive record is created by `lotus-idea`,
 3. no conversion data product is certified,
 4. no supported feature is promoted,
-5. the API foundations still report `durableStorageBacked=false` and
-   `supportedFeaturePromoted=false`.
+5. the API foundations report `supportedFeaturePromoted=false`,
+6. `durableStorageBacked` is `false` by default and `true` only when
+   `LOTUS_IDEA_DATABASE_URL` activates the PostgreSQL repository provider.
 
 Implementation source:
 
@@ -53,7 +54,7 @@ Implementation source:
 
 Promotion requirements:
 
-1. database-backed persistence and idempotency storage,
+1. real PostgreSQL integration/e2e proof and recovery evidence,
 2. Gateway/Workbench proof,
 3. downstream acceptance tests in `lotus-advise`, `lotus-manage`, and
    `lotus-report` where each service remains source authority for its workflow,

@@ -38,9 +38,18 @@ Persistence adapter validation:
    idempotency replay, lifecycle history, audit events, review decisions,
    feedback, conversion intent/outcome, report evidence-pack requests, snapshot
    hydration, commit behavior, and rollback on flush failure.
-2. This is adapter proof only. Runtime API responses must still report
-   `durableStorageBacked=false` until real PostgreSQL integration/e2e checks and
-   API dependency wiring land.
+2. `tests/unit/test_repository_state.py` proves repository provider selection:
+   process-local by default, `PostgresIdeaRepository` when
+   `LOTUS_IDEA_DATABASE_URL` is configured, psycopg mapping-row configuration,
+   provider caching, durable-storage status, and connection close/reset
+   behavior.
+3. `tests/integration/test_high_cash_signal_api.py` pins route-level
+   `durableStorageBacked` derivation with an injected durable repository so
+   future changes cannot hardcode repository-backed API posture to `false`.
+4. Runtime API database wiring is opt-in and still requires real PostgreSQL
+   integration/e2e checks, deploy migration evidence, rollback/recovery proof,
+   and mesh/support promotion evidence before any supported durable product
+   claim.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,

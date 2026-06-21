@@ -37,7 +37,7 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
-1. `accepted`: new process-local foundation record created.
+1. `accepted`: new foundation record created in the active repository provider.
 2. `replayed`: duplicate submission with the same idempotency key and payload.
 3. `conflict`: idempotency key reused with a different payload.
 4. `not_found`: candidate, conversion intent, or related foundation record is absent.
@@ -47,6 +47,7 @@ Use the operation `outcome` before inspecting payload-level evidence:
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 
-Operation metrics are diagnostic support evidence only. They do not prove durable database state,
+Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
+that the active repository provider is durable; it does not prove production recovery readiness,
 data-product certification, downstream Report/Render/Archive realization, Gateway/Workbench proof,
 or supported-feature promotion.
