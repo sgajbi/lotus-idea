@@ -88,6 +88,8 @@ jobs:
     name: PR Merge Gate / Coverage Gate (Combined)
     needs: [test-suites]
     runs-on: ubuntu-latest
+    env:
+      NODE_OPTIONS: --no-deprecation
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
