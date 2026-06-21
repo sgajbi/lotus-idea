@@ -221,3 +221,7 @@ Main Releasability dispatch so post-merge release evidence is produced on
 - Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`
+
+The API certification guide mirrors the machine-readable endpoint certification
+ledger and must keep current foundation endpoints, required capabilities, and
+unsupported boundaries synchronized with implementation truth.

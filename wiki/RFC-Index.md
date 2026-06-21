@@ -55,15 +55,19 @@ Current RFC-0002 implementation-start baseline:
    and conversion outcome. Gateway, Workbench, live source adapters,
    data-product certification, and supported-feature promotion remain planned.
 11. Slice 12 partially implements internal conversion governance for
-   review-gated conversion intent and downstream outcome tracking, with
-   target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
-   `lotus-report`, plus certified internal API foundations. It does not invoke
-   downstream adapters, create downstream records, or promote a supported
-   feature.
-12. The first opportunity journey is high cash / idle liquidity for
-   `PB_SG_GLOBAL_BAL_001`.
-13. The first review audience is advisor only.
-14. The first downstream conversion posture is report-only evidence after
-   advisor review.
-15. Business features remain unsupported until later slices implement runtime
-   behavior, certification, and supported-feature promotion.
+    review-gated conversion intent and downstream outcome tracking, with
+    target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
+    `lotus-report`, plus certified internal API foundations. It does not invoke
+    downstream adapters, create downstream records, or promote a supported
+    feature.
+12. Slice 18 is partially implemented for API certification documentation
+    truth. `docs/operations/api-certification.md` now mirrors the certified
+    foundation endpoint inventory, current capabilities, and unsupported
+    boundaries from the machine-readable endpoint certification ledger.
+13. The first opportunity journey is high cash / idle liquidity for
+    `PB_SG_GLOBAL_BAL_001`.
+14. The first review audience is advisor only.
+15. The first downstream conversion posture is report-only evidence after
+    advisor review.
+16. Business features remain unsupported until later slices implement runtime
+    behavior, certification, and supported-feature promotion.

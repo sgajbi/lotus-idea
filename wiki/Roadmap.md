@@ -46,7 +46,11 @@ Current state:
     request governance for reviewed report conversion intents, source summaries,
     retention refs, Report/Render/Archive authority refs, idempotency, audit,
     and a certified internal API foundation,
-16. business features remain Planned.
+16. RFC-0002 Slice 18 partially synchronizes API certification documentation
+    with the machine-readable endpoint certification ledger so current
+    foundation endpoints, capabilities, and unsupported boundaries are visible
+    to operators and future agents,
+17. business features remain Planned.
 
 First implementation program:
 

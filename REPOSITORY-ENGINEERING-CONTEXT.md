@@ -288,6 +288,14 @@ production observability: AI governance runtime/API events, live source
 readiness, dashboard/alert, Gateway entitlement, durable persistence,
 data-product certification, and supported-feature promotion remain planned.
 
+RFC-0002 Slice 18 is partially implemented for documentation and agent context
+truth. `docs/operations/api-certification.md` now summarizes the full certified
+internal foundation endpoint inventory from
+`docs/operations/endpoint-certification-ledger.json`, including each endpoint's
+foundation scope, required capability, and unsupported boundary. This keeps
+operator-facing documentation aligned with endpoint certification evidence
+without promoting any supported business feature.
+
 ## CI And Merge Governance
 
 `lotus-idea` follows the Lotus rebase-only PR completion model. Do not squash
