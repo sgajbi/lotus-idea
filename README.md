@@ -22,10 +22,11 @@ first certified internal high-cash signal evaluation and evaluate-and-persist
 API foundations for caller-supplied, source-owned Core evidence, certified
 internal candidate lifecycle, advisor queue, review-action, and feedback API
 foundations over persisted candidates, and an internal conversion-governance
-foundation for review-gated downstream intent/outcome tracking. No business feature is
-supported until the relevant RFC slice has full runtime evidence, endpoint
-certification, tests, data-mesh posture, downstream proof, and supported-feature
-registration.
+foundation plus certified internal conversion intent/outcome API foundations
+for review-gated downstream intent/outcome tracking. No business feature is
+supported until the relevant RFC slice has full runtime evidence, tests,
+data-mesh posture, downstream proof, Gateway/Workbench proof, and
+supported-feature registration.
 
 ## Product Boundary
 
@@ -107,6 +108,9 @@ source-authority contracts only, not runtime certification.
   Internal review/feedback workflow orchestration records
   governed decisions and feedback through the repository idempotency/audit
   contract and certified internal review/feedback API foundations.
+  Internal conversion workflow orchestration records review-gated conversion
+  intents and source-authorized outcomes through the repository
+  idempotency/audit contract and certified internal conversion API foundations.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, internal persistence records, replay posture,

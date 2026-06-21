@@ -47,14 +47,15 @@ Current RFC-0002 implementation-start baseline:
    Gateway, Workbench, or supported-feature promotion.
 9. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
-   transitions, advisor queues, review actions, and feedback. Gateway,
-   Workbench, live source adapters, data-product certification, and
-   supported-feature promotion remain planned.
+   transitions, advisor queues, review actions, feedback, conversion intent,
+   and conversion outcome. Gateway, Workbench, live source adapters,
+   data-product certification, and supported-feature promotion remain planned.
 10. Slice 12 partially implements internal conversion governance for
    review-gated conversion intent and downstream outcome tracking, with
    target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
-   `lotus-report`. It does not expose conversion APIs, invoke downstream
-   adapters, create downstream records, or promote a supported feature.
+   `lotus-report`, plus certified internal API foundations. It does not invoke
+   downstream adapters, create downstream records, or promote a supported
+   feature.
 11. The first opportunity journey is high cash / idle liquidity for
    `PB_SG_GLOBAL_BAL_001`.
 12. The first review audience is advisor only.

@@ -121,8 +121,9 @@ candidate persistence records, deterministic source-ref evidence hashes,
 idempotent candidate persistence decisions, duplicate candidate suppression,
 evidence replay posture for matched, stale, mismatched, expired, and missing
 records, idempotent lifecycle-transition recording, lifecycle-transition
-history, safe audit events for mutating actions, snapshot recovery for internal
-replay tests, application-level high-cash evaluate-and-persist orchestration in
+history, conversion intent/outcome records, conversion intent lookup, safe audit
+events for mutating actions, snapshot recovery for internal replay tests,
+application-level high-cash evaluate-and-persist orchestration in
 `src/app/application/high_cash_signal.py`, and candidate lifecycle orchestration
 in `src/app/application/candidate_lifecycle.py`. The high-cash orchestration
 persists only created candidates, replays matching idempotency keys, conflicts
@@ -204,7 +205,14 @@ permission, or invalid-state posture without granting downstream authority.
 idempotent lifecycle transition foundation over persisted candidates, requires
 `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
 canonical lifecycle graph, and records audit/lifecycle history without granting
-downstream authority. All six business routes are covered by OpenAPI and
+downstream authority. The conversion APIs expose internal intent/outcome
+recording over review-approved persisted candidates:
+`POST /api/v1/idea-candidates/{candidateId}/conversion-intents` and
+`POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`. They require
+conversion-specific capabilities plus `Idempotency-Key`, enforce the candidate
+review gate, target-source authority, replay/conflict posture, and explicit
+no-authority semantics for downstream realization, suitability, execution, and
+client communication. All eight business routes are covered by OpenAPI and
 endpoint certification evidence.
 This is not yet a supported product capability: there are no live source
 adapters, Gateway routes, Workbench surfaces, database-backed API state,
@@ -216,13 +224,14 @@ foundation in `src/app/domain/conversion_governance.py`. The repository now has
 review-gated conversion intent creation for Advise proposal, Manage review, and
 Report evidence targets; target-to-source-authority mapping; lifecycle
 transition to converted posture; downstream outcome recording; safe audit
-events; idempotency-key validation at the domain command boundary; and explicit
-no-authority semantics for execution, suitability, client communication, and
-downstream realization. This is not yet a supported conversion product: there
-are no downstream adapters, APIs/OpenAPI contracts, Gateway/Workbench proof,
-Advise/Manage/Report acceptance tests, database-backed persistence,
-data-product certification, runtime trust telemetry, or supported-feature
-promotion.
+events; idempotency-key validation at the domain command boundary; repository
+idempotency and snapshot lookup for conversion intents/outcomes; certified
+internal conversion intent/outcome APIs; and explicit no-authority semantics
+for execution, suitability, client communication, and downstream realization.
+This is not yet a supported conversion product: there are no downstream
+adapters, Gateway/Workbench proof, Advise/Manage/Report acceptance tests,
+database-backed persistence, data-product certification, runtime trust
+telemetry, or supported-feature promotion.
 
 ## CI And Merge Governance
 
@@ -265,7 +274,9 @@ logs; fix or document the owned warning source instead.
    snapshots and persists accepted decisions and feedback through the same
    idempotency/audit posture. Candidate lifecycle orchestration maps API
    commands into the Slice 06 idempotent lifecycle transition repository
-   contract.
+   contract. Conversion workflow orchestration applies Slice 12 conversion
+   governance to repository snapshots and persists accepted intents/outcomes
+   through the same idempotency/audit posture.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, evidence policy, deterministic governance checks,

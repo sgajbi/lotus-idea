@@ -6,12 +6,13 @@ Internal foundation exists for domain vocabulary, high-cash signal evaluation,
 candidate persistence/replay/idempotency/audit, deterministic scoring with
 review-queue projection, advisor review/feedback governance, AI governance
 redaction/verifier/fallback controls, and the first certified internal
-high-cash API foundation. Internal conversion governance also exists for
-review-gated conversion intent/outcome tracking, source-authority mapping, and
-no-authority conversion boundaries. These are not externally supported features
-until live source adapters, durable runtime state, Gateway/Workbench proof,
-downstream acceptance, data-product certification, and supported-feature
-evidence are present.
+high-cash API foundation. Internal conversion governance and certified internal
+conversion intent/outcome API foundations also exist for review-gated
+conversion tracking, source-authority mapping, and no-authority conversion
+boundaries. These are not externally supported features until live source
+adapters, durable runtime state, Gateway/Workbench proof, downstream
+acceptance, data-product certification, and supported-feature evidence are
+present.
 
 Planned capabilities:
 
