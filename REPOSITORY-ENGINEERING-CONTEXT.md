@@ -389,6 +389,12 @@ feature branch and the matching local feature branch, then re-run branch hygiene
 before final closure. Durable
 RFC/docs/wiki/context/contract truth is complete only when it is present on
 `main`, published where required, and not stranded on a side branch.
+Strict branch protection requires the PR Merge Gate contexts for workflow lint,
+lint/typecheck/security, unit, integration, e2e, combined coverage, PostgreSQL
+runtime proof, and Docker build validation. PostgreSQL runtime proof is a
+first-class required status so durable persistence, migration, idempotency, and
+source-ingestion recovery behavior cannot regress behind an implicit Docker
+dependency.
 
 Coverage aggregation jobs use the current approved `actions/download-artifact`
 major and suppress its upstream Node deprecation noise with

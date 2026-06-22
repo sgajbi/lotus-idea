@@ -12,8 +12,20 @@ Blocking scaffold commands:
 3. `make maintainability-gate`
 4. `make documentation-contract-gate`
 5. `make quality-scorecard-gate`
-6. `make implementation-truth-gate`
-7. `make endpoint-certification-gate`
+6. `make monetary-float-guard`
+7. `make no-sensitive-content-guard`
+8. `make implementation-truth-gate`
+9. `make data-mesh-contract-gate`
+10. `make migration-contract-gate`
+11. `make migration-execution-gate`
+12. `make source-ingestion-worker-check`
+13. `make supported-features-gate`
+14. `make endpoint-certification-gate`
+15. `make postgres-integration-gate`
+16. `make openapi-gate`
+17. `make coverage-gate`
+18. `make security-audit`
+19. `make docker-build`
 
 Report-only scaffold commands:
 
@@ -26,9 +38,17 @@ ignored by git unless an RFC explicitly promotes a specific evidence snapshot.
 `make ci-contract-gate` is the anti-drift gate for the day-one bank-buyable baseline. It checks that
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
 OpenAPI quality,
-supported-feature promotion control, endpoint certification, coverage, security audit, Docker build,
-release evidence, least-privilege workflow permissions, bounded job timeouts, no soft-failed
-critical jobs, implementation-truth enforcement, and approved action-runtime majors.
+supported-feature promotion control, endpoint certification, data-mesh contract validation,
+migration contract validation, migration execution dry-run validation, source-ingestion worker
+manifest validation, PostgreSQL runtime proof, coverage, security audit, Docker build, release
+evidence, least-privilege workflow permissions, bounded job timeouts, no soft-failed critical jobs,
+implementation-truth enforcement, non-suppressed auto-merge dispatch posture, and approved
+action-runtime majors.
+
+GitHub branch protection requires the strict PR Merge Gate contexts, including
+`PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also
+depends on the PostgreSQL proof, but the runtime proof is listed as a first-class required status so
+durable persistence and migration behavior cannot become an implicit or forgotten prerequisite.
 
 `make maintainability-gate` blocks oversized Python files/functions across `src`, `tests`, and
 `scripts`. The thresholds are set above the current measured baseline so the gate prevents new
