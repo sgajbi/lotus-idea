@@ -72,7 +72,7 @@ migration-execution-gate:
 	$(VENV_PYTHON) scripts/run_migrations.py --direction rollback --dry-run
 
 source-ingestion-worker-check:
-	$(VENV_PYTHON) scripts/run_source_ingestion_worker.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --check-only
+	$(VENV_PYTHON) scripts/source_ingestion_worker_contract_gate.py
 
 implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z
