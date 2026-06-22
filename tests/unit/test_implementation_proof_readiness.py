@@ -69,6 +69,8 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         if capability.capability_id == "runtime-trust-telemetry-preview"
     )
     assert "make runtime-trust-telemetry-preview-check" in runtime_telemetry.evidence_refs
+    assert "make runtime-trust-telemetry-snapshot-check" in runtime_telemetry.evidence_refs
+    assert "scripts/generate_runtime_trust_telemetry_snapshot.py" in runtime_telemetry.evidence_refs
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
     outbox_delivery = next(
         capability

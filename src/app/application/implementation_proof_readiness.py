@@ -256,6 +256,7 @@ def _data_mesh_capability(
             "GET /api/v1/data-mesh/readiness",
             "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
             "make runtime-trust-telemetry-preview-check",
+            "make runtime-trust-telemetry-snapshot-check",
         ),
         blockers=snapshot.blockers,
     )
@@ -273,7 +274,9 @@ def _runtime_trust_telemetry_capability(
             "src/app/application/runtime_trust_telemetry.py",
             "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
             "scripts/generate_runtime_trust_telemetry_preview.py",
+            "scripts/generate_runtime_trust_telemetry_snapshot.py",
             "make runtime-trust-telemetry-preview-check",
+            "make runtime-trust-telemetry-snapshot-check",
         ),
         blockers=snapshot.certification_blockers,
     )

@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check implementation-proof-readiness-check runtime-trust-telemetry-preview-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -32,6 +32,7 @@ lint:
 	$(MAKE) source-ingestion-worker-check
 	$(MAKE) implementation-proof-readiness-check
 	$(MAKE) runtime-trust-telemetry-preview-check
+	$(MAKE) runtime-trust-telemetry-snapshot-check
 	$(MAKE) supported-features-gate
 	$(MAKE) endpoint-certification-gate
 
@@ -83,6 +84,9 @@ implementation-proof-readiness-check:
 
 runtime-trust-telemetry-preview-check:
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z
+
+runtime-trust-telemetry-snapshot-check:
+	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc 2026-06-21T10:10:00Z
 
 migrate:
 	$(VENV_PYTHON) scripts/run_migrations.py --direction apply
