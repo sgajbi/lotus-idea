@@ -46,6 +46,10 @@ class RouteMetadata(TypedDict):
 
 
 _DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY = "idea.downstream-realization.submit"
+_SUBMISSION_ERROR_CODES_BY_STATUS = {
+    DownstreamRealizationStatus.NOT_FOUND: "downstream_realization_resource_not_found",
+    DownstreamRealizationStatus.UNSUPPORTED_TARGET: "unsupported_downstream_realization_target",
+}
 
 
 class CamelModel(BaseModel):
@@ -311,11 +315,7 @@ def _operation_outcome_from_submission_status(
 def _error_code_from_submission_status(
     submission_status: DownstreamRealizationStatus,
 ) -> str | None:
-    if submission_status is DownstreamRealizationStatus.NOT_FOUND:
-        return "downstream_realization_resource_not_found"
-    if submission_status is DownstreamRealizationStatus.UNSUPPORTED_TARGET:
-        return "unsupported_downstream_realization_target"
-    return None
+    return _SUBMISSION_ERROR_CODES_BY_STATUS.get(submission_status)
 
 
 def _emit_downstream_submission_event(

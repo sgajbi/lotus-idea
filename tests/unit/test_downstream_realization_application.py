@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+import pytest
+
 from app.application.downstream_realization import (
     DownstreamRealizationStatus,
     RealizeConversionIntentCommand,
@@ -249,6 +251,41 @@ def test_downstream_realization_returns_not_found_without_calling_clients() -> N
     assert pack_result.status is DownstreamRealizationStatus.NOT_FOUND
     assert advise_client.submitted == ()
     assert manage_client.submitted == ()
+    assert report_client.submitted == ()
+
+
+def test_submit_conversion_intent_requires_non_blank_identifier() -> None:
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    manage_client = CapturingManageClient(DownstreamRealizationOutcome.accepted_by_downstream())
+
+    with pytest.raises(ValueError, match="conversion_intent_id is required"):
+        submit_conversion_intent_to_downstream(
+            RealizeConversionIntentCommand(
+                conversion_intent_id=" ",
+                idempotency_key="submission-blank-conversion-001",
+            ),
+            repository=InMemoryIdeaRepository(),
+            advise_client=advise_client,
+            manage_client=manage_client,
+        )
+
+    assert advise_client.submitted == ()
+    assert manage_client.submitted == ()
+
+
+def test_submit_report_evidence_pack_requires_non_blank_identifier() -> None:
+    report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
+
+    with pytest.raises(ValueError, match="report_evidence_pack_id is required"):
+        submit_report_evidence_pack_to_downstream(
+            RealizeReportEvidencePackCommand(
+                report_evidence_pack_id=" ",
+                idempotency_key="submission-blank-report-pack-001",
+            ),
+            repository=InMemoryIdeaRepository(),
+            report_client=report_client,
+        )
+
     assert report_client.submitted == ()
 
 
