@@ -267,8 +267,15 @@ AI output, and a certified internal API at
 requires `idea.ai-explanation.evaluate`, returns redacted evidence without
 routes or raw provider/prompt material, emits bounded `ai_explanation`
 operation events, and always reports `durableStorageBacked=false`,
-`lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`. This is
-not yet a supported AI explanation product: no `lotus-ai` runtime workflow
+`lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
+`GET /api/v1/ai-explanations/readiness` now exposes a certified internal
+operator diagnostic for AI explanation supportability. It requires both the
+`operator` role and `idea.ai-explanation.readiness.read`, returns guardrail
+availability plus `not_certified` blockers, emits bounded
+`ai_explanation_readiness_read` operation events with `lotus-ai` source
+authority, and does not expose prompts, provider payloads, candidate
+identifiers, source routes, portfolio identifiers, or client identifiers. This
+is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
 execution, prompt/RAG/provider integration, durable AI lineage store,
 Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
@@ -321,8 +328,11 @@ fallback/verifier evaluation over persisted candidate evidence:
 requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
 runtime workflows, persist durable AI lineage, or grant downstream authority.
-All twelve business routes plus the data-mesh-readiness,
-source-ingestion-readiness, and advisor-queue-readiness operator diagnostics
+`GET /api/v1/ai-explanations/readiness` exposes the internal model-risk
+supportability diagnostic for AI explanation guardrails and certification
+blockers without executing `lotus-ai`. All twelve business routes plus the
+AI-explanation-readiness, data-mesh-readiness, source-ingestion-readiness, and
+advisor-queue-readiness operator diagnostics
 are covered by OpenAPI and endpoint certification evidence. The PostgreSQL runtime
 proof now covers the high-cash persist, advisor queue, lifecycle, review,
 feedback, conversion intent/outcome, and report evidence-pack request path.
@@ -391,6 +401,10 @@ data-mesh-readiness diagnostic APIs emit bounded operation events. The
 source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,
 blocked/accepted configuration posture, and no source payloads.
+The AI-explanation-readiness diagnostic emits
+`ai_explanation_readiness_read` events with `not_certified` supportability,
+blocked certification posture, `lotus-ai` source authority, and no prompt,
+provider, candidate, source-route, portfolio, or client identifiers.
 The advisor-queue-readiness diagnostic emits
 `review_queue_readiness_read` events with `not_certified` supportability,
 aggregate-only queue counts, blocked certification posture, and no candidate or

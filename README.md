@@ -22,7 +22,8 @@ deterministic scoring/review-queue projection and repository-snapshot queue
 orchestration foundation, an internal advisor review/feedback governance and
 workflow persistence foundation, and an internal AI governance
 foundation for redaction, verifier, fallback controls, and a certified internal
-AI explanation evaluator API. It also exposes the
+AI explanation evaluator API plus a certified internal AI explanation
+readiness diagnostic for operator model-risk supportability checks. It also exposes the
 first certified internal high-cash signal evaluation and evaluate-and-persist
 API foundations for caller-supplied, source-owned Core evidence, certified
 internal candidate lifecycle, advisor queue, review-action, and feedback API
@@ -35,8 +36,8 @@ report conversion intents, a certified internal candidate evidence replay API
 foundation for source-ref hash replay posture, and the first bounded
 operation-event observability foundation across certified internal signal,
 persistence, candidate detail, evidence replay, lifecycle, AI explanation,
-queue, queue-readiness, review, feedback, conversion, report evidence, and
-data-mesh-readiness APIs plus certified internal source-ingestion and advisor
+AI explanation readiness, queue, queue-readiness, review, feedback, conversion,
+report evidence, and data-mesh-readiness APIs plus certified internal source-ingestion and advisor
 queue readiness diagnostics for operator configuration and certification
 blockers. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
@@ -133,6 +134,15 @@ aggregate candidate counts, queue exclusion counts, durable-storage posture,
 and certification blockers. It does not expose candidate identifiers, inspect
 access-scope identifiers, certify a durable queue store, provide a
 Gateway/Workbench surface, certify a data product, or promote a supported
+feature.
+
+`GET /api/v1/ai-explanations/readiness` is a certified internal operator
+diagnostic for AI explanation supportability. It requires
+`idea.ai-explanation.readiness.read` plus the `operator` role and reports
+guardrail availability, model-risk supportability posture, and certification
+blockers. It does not call `lotus-ai`, execute provider workflows, expose
+prompts or provider payloads, certify durable AI lineage, provide
+Gateway/Workbench support, certify a data product, or promote a supported
 feature.
 
 The first consumer dependency set is aligned to the RFC-0002 source map:
@@ -363,6 +373,14 @@ or access scope:
 
 ```powershell
 curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.review.queue.readiness.read" "http://localhost:8330/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
+```
+
+To inspect AI explanation model-risk supportability without invoking `lotus-ai`
+or exposing prompts, provider payloads, candidate identifiers, or source
+routes:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.ai-explanation.readiness.read" http://localhost:8330/api/v1/ai-explanations/readiness
 ```
 
 Repository-backed endpoints report `durableStorageBacked=true` only in this

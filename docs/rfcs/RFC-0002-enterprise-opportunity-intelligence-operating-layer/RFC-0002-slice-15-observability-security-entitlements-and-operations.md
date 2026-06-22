@@ -78,6 +78,19 @@ foundation:
     counts, non-storage blockers, permission-denied behavior, timestamp
     validation, product-safe payloads, and operation-event behavior for the
     advisor queue readiness diagnostic.
+20. `GET /api/v1/ai-explanations/readiness` exposes a source-safe model-risk
+    operator diagnostic for AI explanation guardrail availability and
+    certification blockers. It requires both the `operator` role and
+    `idea.ai-explanation.readiness.read`, returns `not_certified` posture and
+    `supportedFeaturePromoted=false`, and emits bounded
+    `ai_explanation_readiness_read` operation events with `lotus-ai` source
+    authority.
+21. `tests/unit/test_ai_explanation_readiness.py`,
+    `tests/integration/test_ai_governance_api.py`, and
+    `tests/integration/test_api_operation_events.py` prove blocked readiness
+    posture, permission-denied behavior, product-safe payloads, and
+    not-certified operation-event behavior for the AI explanation readiness
+    diagnostic.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -89,6 +102,10 @@ telemetry, and Gateway/Workbench proof exist.
 The advisor queue readiness diagnostic is explicitly `not_certified` until
 durable queue posture, platform caller-context entitlement proof, Workbench
 proof, data-product certification, and runtime trust telemetry exist.
+The AI explanation readiness diagnostic is explicitly `not_certified` until
+`lotus-ai` runtime workflow execution, durable AI lineage storage,
+workflow-pack runtime certification, model-risk operations dashboards, runtime
+trust telemetry, and Workbench proof exist.
 
 ## Required Work
 

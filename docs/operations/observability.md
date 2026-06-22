@@ -40,6 +40,7 @@ Current instrumented operations:
 | `candidate_evidence_replay` | Internal candidate evidence hash replay posture | `lotus-idea` | `foundation_only` |
 | `lifecycle_transition` | Internal candidate lifecycle transition recording | `lotus-idea` | `foundation_only` |
 | `ai_explanation` | Internal AI explanation fallback/verifier evaluation | `lotus-idea` | `foundation_only` |
+| `ai_explanation_readiness_read` | Internal AI explanation readiness diagnostic | `lotus-ai` | `not_certified` |
 | `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
 | `review_queue_readiness_read` | Internal advisor review queue readiness diagnostic | `lotus-idea` | `not_certified` |
 | `review_action` | Internal human review decision recording | `lotus-idea` | `foundation_only` |
@@ -79,12 +80,15 @@ fields. Do not add identifiers or payload fragments to operation labels.
 8. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
 9. `blocked` means the verifier rejected unsupported AI output, evidence
-   replay found stale source posture, the mesh-readiness diagnostic remains
-   blocked until runtime trust telemetry and platform mesh certification exist,
-   the source-ingestion readiness diagnostic is missing run-once worker
-   configuration inputs, or the advisor queue readiness diagnostic still lacks
-   durable repository posture, entitlement proof, Workbench proof, data-product
-   certification, or runtime trust telemetry.
+   replay found stale source posture, the AI explanation readiness diagnostic
+   remains blocked until `lotus-ai` runtime execution, durable AI lineage,
+   model-risk dashboard, runtime trust telemetry, and Workbench proof exist,
+   the mesh-readiness diagnostic remains blocked until runtime trust telemetry
+   and platform mesh certification exist, the source-ingestion readiness
+   diagnostic is missing run-once worker configuration inputs, or the advisor
+   queue readiness diagnostic still lacks durable repository posture,
+   entitlement proof, Workbench proof, data-product certification, or runtime
+   trust telemetry.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

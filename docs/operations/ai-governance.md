@@ -22,7 +22,12 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
 7. a certified internal API foundation at
    `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`,
 8. bounded operation telemetry through `ai_explanation` events with
-   `accepted`, `fallback`, or `blocked` outcomes.
+   `accepted`, `fallback`, or `blocked` outcomes,
+9. a certified internal operator diagnostic at
+   `GET /api/v1/ai-explanations/readiness` that reports guardrail availability,
+   `not_certified` supportability, and remaining certification blockers without
+   invoking `lotus-ai` or exposing prompts, provider payloads, candidate
+   identifiers, source routes, portfolio identifiers, or client identifiers.
 
 The API preserves source authority: AI output cannot mutate candidate score,
 lifecycle, source facts, review state, conversion state, or downstream workflow
@@ -36,6 +41,18 @@ Successful API responses always return:
 2. `lotusAiRuntimeExecuted=false`,
 3. `supportedFeaturePromoted=false`,
 4. `grantsDownstreamAuthority=false`.
+
+The readiness diagnostic always returns:
+
+1. `readinessStatus=blocked`,
+2. `supportabilityStatus=not_certified`,
+3. `certificationReady=false`,
+4. `durableAiLineageStoreBacked=false`,
+5. `lotusAiRuntimeExecuted=false`,
+6. `supportedFeaturePromoted=false`.
+
+It requires both the `operator` role and
+`idea.ai-explanation.readiness.read` capability.
 
 ## Allowed Current Purposes
 

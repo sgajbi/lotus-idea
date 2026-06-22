@@ -50,12 +50,24 @@ Implemented in this slice:
     blocks unsupported claims and forbidden actions, emits bounded
     `ai_explanation` operation events, and keeps `durableStorageBacked=false`,
     `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
-11. `tests/integration/test_ai_governance_api.py` covers deterministic
+11. `src/app/application/ai_governance.py` also exposes a deterministic
+    AI-explanation readiness snapshot, and `src/app/api/ai_governance.py`
+    publishes it through `GET /api/v1/ai-explanations/readiness` for operator
+    model-risk diagnostics. The route requires both the `operator` role and
+    `idea.ai-explanation.readiness.read`, reports `readinessStatus=blocked`,
+    `supportabilityStatus=not_certified`, `lotusAiRuntimeExecuted=false`,
+    `durableAiLineageStoreBacked=false`, and `supportedFeaturePromoted=false`,
+    and returns only guardrail availability plus certification blockers.
+12. `tests/unit/test_ai_explanation_readiness.py` proves the readiness snapshot
+    stays blocked and not certified until runtime and lineage evidence exist.
+13. `tests/integration/test_ai_governance_api.py` covers deterministic
     fallback, verified-output acceptance, unsupported-claim blocking,
     forbidden-action blocking, permission denial, missing candidate handling,
-    invalid candidate state, and forbidden metadata.
-12. `tests/integration/test_api_operation_events.py` proves the API emits the
-    bounded `ai_explanation` operation event.
+    invalid candidate state, forbidden metadata, and source-safe AI readiness
+    diagnostics.
+14. `tests/integration/test_api_operation_events.py` proves the API emits the
+    bounded `ai_explanation` operation event and the not-certified
+    `ai_explanation_readiness_read` operation event.
 
 Validation evidence from the implementation slice:
 
@@ -67,6 +79,8 @@ Validation evidence from the implementation slice:
 6. `make ci` passed after the API foundation with `59` integration tests, `2`
    e2e tests, `218` unit tests, coverage gate at `99.17%`, and dependency
    audit reporting no known vulnerabilities.
+7. `python -m pytest tests/unit/test_ai_explanation_readiness.py tests/integration/test_ai_governance_api.py tests/integration/test_api_operation_events.py`
+   is the focused readiness diagnostic proof for the current slice.
 
 ## Current Governance References
 

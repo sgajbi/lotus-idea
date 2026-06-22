@@ -51,6 +51,15 @@ remaining certification blockers without exposing candidate identifiers or
 access-scope identifiers. It remains `not_certified` until durable queue
 posture, platform caller-context entitlement proof, Workbench proof,
 data-product certification, and runtime trust telemetry exist.
+The internal `GET /api/v1/ai-explanations/readiness` diagnostic is available
+for operators with `idea.ai-explanation.readiness.read` to inspect AI
+explanation guardrail availability, model-risk supportability posture, and
+remaining certification blockers without invoking `lotus-ai`, exposing prompts,
+provider payloads, candidate identifiers, source routes, portfolio identifiers,
+or client identifiers. It remains `not_certified` until `lotus-ai` runtime
+workflow execution, durable AI lineage storage, workflow-pack runtime
+certification, model-risk operations dashboards, runtime trust telemetry, and
+Workbench proof exist.
 
 Initial commands:
 
@@ -84,7 +93,7 @@ RFC-0002 Slice 15 now emits bounded operation-event logs and the
 `lotus_idea_operation_events_total` metric for high-cash signal evaluation,
 candidate persistence, candidate evidence replay, lifecycle transitions,
 advisor queue reads, review actions, AI explanation fallback/verifier
-evaluation, feedback records,
+evaluation, AI explanation readiness diagnostic reads, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, data-mesh-readiness
 diagnostic reads, source-ingestion-readiness diagnostic reads, and advisor
@@ -105,12 +114,14 @@ Current outcomes:
 9. `invalid_state`: lifecycle, review, target authority, report intent, or AI
    explanation precondition failed.
 10. `blocked`: verifier rejected unsupported AI output, candidate evidence
-    replay found stale source posture, expected current data-mesh-readiness
-    posture while runtime trust telemetry and platform certification remain
-    absent, source-ingestion readiness is missing run-once worker
-    configuration/certification proof, or advisor queue readiness is missing
-    durable queue posture, entitlement proof, Workbench proof, data-product
-    certification, or runtime trust telemetry.
+    replay found stale source posture, AI explanation readiness is missing
+    `lotus-ai` runtime execution, durable lineage, model-risk dashboard,
+    runtime trust telemetry, or Workbench proof, expected current
+    data-mesh-readiness posture while runtime trust telemetry and platform
+    certification remain absent, source-ingestion readiness is missing run-once
+    worker configuration/certification proof, or advisor queue readiness is
+    missing durable queue posture, entitlement proof, Workbench proof,
+    data-product certification, or runtime trust telemetry.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -141,15 +152,24 @@ certification cannot pass if supportability telemetry proof is missing.
 The inventory covers high-cash evaluation, high-cash persistence, candidate
 evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
-evidence-pack request, and data-mesh-readiness, source-ingestion-readiness, and
-advisor-queue-readiness diagnostic endpoints. These endpoints are certified as
-internal foundations or operator diagnostics only; they are not supported
-business features.
+evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
+source-ingestion-readiness, and advisor-queue-readiness diagnostic endpoints.
+These endpoints are certified as internal foundations or operator diagnostics
+only; they are not supported business features.
 
 `GET /api/v1/review-queues/advisor/readiness` is the certified internal
 advisor queue readiness diagnostic. It returns aggregate queue counts,
 exclusion counts, durable-storage posture, and certification blockers for
 operators without exposing candidate identifiers or access-scope identifiers.
 It is not a Gateway route, Workbench proof, PM/compliance queue surface,
+data-product certification, client-ready publication, or supported-feature
+promotion.
+
+`GET /api/v1/ai-explanations/readiness` is the certified internal AI
+explanation readiness diagnostic. It returns guardrail availability and
+certification blockers for operators without exposing prompts, provider
+payloads, candidate identifiers, source routes, portfolio identifiers, or
+client identifiers. It is not `lotus-ai` runtime proof, durable AI lineage
+certification, model-risk dashboard proof, Gateway/Workbench support,
 data-product certification, client-ready publication, or supported-feature
 promotion.

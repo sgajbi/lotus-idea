@@ -38,11 +38,18 @@ for this posture. It requires the `operator` role and
 returns `supportedFeaturePromoted=false`. It is not data-product certification
 or product discovery.
 
+`GET /api/v1/ai-explanations/readiness` is the current internal operator
+diagnostic for AI explanation model-risk supportability. It requires both the
+`operator` role and `idea.ai-explanation.readiness.read`, reports
+`not_certified` blockers, and returns `supportedFeaturePromoted=false`. It does
+not call `lotus-ai`, expose prompts or provider payloads, certify durable AI
+lineage, or create Gateway/Workbench support.
+
 Operation-event governance:
 
 1. high-cash, candidate persistence, candidate evidence replay, lifecycle,
-   AI explanation, advisor queue, review, feedback, conversion, and report
-   evidence-pack foundation APIs emit bounded operation events for accepted,
+   AI explanation, AI explanation readiness, advisor queue, review, feedback,
+   conversion, and report evidence-pack foundation APIs emit bounded operation events for accepted,
    replayed, duplicate, suppressed, not-eligible, fallback, blocked, conflict,
    not-found, permission-denied, invalid-request, and invalid-state outcomes,
 2. operation metrics use only bounded labels and keep identifiers, payloads,
