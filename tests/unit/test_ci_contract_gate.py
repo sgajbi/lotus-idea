@@ -127,3 +127,22 @@ def test_ci_contract_gate_blocks_stale_implementation_proof_readiness_target() -
         "Makefile implementation-proof-readiness-check target must pass the scheduled "
         "source-ingestion worker proof artifact into readiness generation"
     ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_durable_repository_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--durable-repository-proof output/persistence/durable-repository-proof.json",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "durable repository proof artifact into readiness generation"
+    ) in errors

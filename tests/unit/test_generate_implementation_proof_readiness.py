@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 import scripts.generate_implementation_proof_readiness as proof_report
+from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
@@ -130,6 +131,40 @@ def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_
     assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
     assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
     assert os.environ[SCHEDULED_WORKER_PROOF_ENV] == "pre-existing-proof.json"
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_durable_repository_proof(
+    tmp_path: Path,
+) -> None:
+    durable_proof = tmp_path / "durable-repository-proof.json"
+    durable_proof.write_text(
+        json.dumps(
+            build_durable_repository_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--durable-repository-proof",
+            str(durable_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "durable_repository_not_configured" not in payload["overallBlockers"]
+    assert "live_core_source_proof_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
 
 
 def test_generate_implementation_proof_readiness_rejects_naive_timestamp(

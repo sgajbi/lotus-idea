@@ -20,6 +20,7 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
+from app.application.durable_repository_proof import durable_repository_proof_is_valid
 from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
@@ -92,6 +93,8 @@ def build_implementation_proof_readiness_snapshot(
     evaluated_at_utc: datetime,
     repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
+    durable_repository_proof: Mapping[str, object] | None = None,
+    durable_repository_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -122,7 +125,7 @@ def build_implementation_proof_readiness_snapshot(
     )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
-    capabilities = (
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...] = (
         _source_ingestion_capability(source_ingestion),
         _review_queue_capability(review_queue),
         _ai_explanation_capability(ai_explanation),
@@ -133,6 +136,11 @@ def build_implementation_proof_readiness_snapshot(
         _downstream_realization_capability(downstream_realization),
         _supported_feature_capability(supported_feature_count),
     )
+    if durable_repository_proof and durable_repository_proof_is_valid(durable_repository_proof):
+        capabilities = tuple(
+            _apply_durable_repository_proof(capability, durable_repository_proof_ref)
+            for capability in capabilities
+        )
 
     overall_blockers = tuple(
         dict.fromkeys(blocker for capability in capabilities for blocker in capability.blockers)
@@ -182,6 +190,30 @@ def _capability(
         evidence_refs=evidence_refs,
         blockers=blockers,
         supported_feature_promoted=supported_feature_promoted,
+    )
+
+
+def _apply_durable_repository_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    durable_repository_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if "durable_repository_not_configured" not in capability.blockers:
+        return capability
+    evidence_refs = capability.evidence_refs
+    if durable_repository_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, durable_repository_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in capability.blockers
+            if blocker != "durable_repository_not_configured"
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
     )
 
 

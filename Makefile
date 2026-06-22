@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate durable-repository-proof-contract-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -32,6 +32,7 @@ lint:
 	$(MAKE) downstream-realization-contract-gate
 	$(MAKE) migration-contract-gate
 	$(MAKE) migration-execution-gate
+	$(MAKE) durable-repository-proof-contract-gate
 	$(MAKE) source-ingestion-worker-check
 	$(MAKE) source-ingestion-scheduled-worker-check
 	$(MAKE) source-ingestion-live-proof-contract-gate
@@ -81,6 +82,9 @@ migration-execution-gate:
 	$(VENV_PYTHON) scripts/run_migrations.py --direction apply --dry-run
 	$(VENV_PYTHON) scripts/run_migrations.py --direction rollback --dry-run
 
+durable-repository-proof-contract-gate:
+	$(VENV_PYTHON) scripts/durable_repository_proof_contract_gate.py
+
 source-ingestion-worker-check:
 	$(VENV_PYTHON) scripts/source_ingestion_worker_contract_gate.py
 
@@ -92,7 +96,8 @@ source-ingestion-live-proof-contract-gate:
 
 implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --generated-at-utc 2026-06-21T10:10:00Z --output output/source-ingestion/scheduled-worker-proof.json
-	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json
+	$(VENV_PYTHON) scripts/generate_durable_repository_proof.py --generated-at-utc 2026-06-21T10:10:00Z --output output/persistence/durable-repository-proof.json
+	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json --durable-repository-proof output/persistence/durable-repository-proof.json
 
 runtime-trust-telemetry-preview-check:
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z

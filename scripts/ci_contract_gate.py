@@ -36,6 +36,7 @@ REQUIRED_TARGETS = (
     "downstream-realization-contract-gate",
     "migration-contract-gate",
     "migration-execution-gate",
+    "durable-repository-proof-contract-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
@@ -69,6 +70,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) downstream-realization-contract-gate",
     "$(MAKE) migration-contract-gate",
     "$(MAKE) migration-execution-gate",
+    "$(MAKE) durable-repository-proof-contract-gate",
     "$(MAKE) source-ingestion-worker-check",
     "$(MAKE) source-ingestion-scheduled-worker-check",
     "$(MAKE) source-ingestion-live-proof-contract-gate",
@@ -241,6 +243,37 @@ def _target_deps(makefile: str, target: str) -> set[str]:
     return {dependency.strip() for dependency in match.group("deps").split() if dependency.strip()}
 
 
+def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
+    errors: list[str] = []
+    target_block = _target_block(makefile, "implementation-proof-readiness-check")
+    if "scripts/generate_scheduled_source_ingestion_worker_proof.py" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must generate "
+            "a scheduled source-ingestion worker proof artifact"
+        )
+    if "scripts/generate_durable_repository_proof.py" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must generate "
+            "a durable repository proof artifact"
+        )
+    if "--source-ingestion-scheduled-worker-proof" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "scheduled source-ingestion worker proof artifact into readiness generation"
+        )
+    if "--durable-repository-proof" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "durable repository proof artifact into readiness generation"
+        )
+    if "--source-ingestion-manifest" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "source-ingestion manifest into readiness generation"
+        )
+    return errors
+
+
 def validate_makefile(makefile: str) -> list[str]:
     errors: list[str] = []
     for target in REQUIRED_TARGETS:
@@ -314,26 +347,15 @@ def validate_makefile(makefile: str) -> list[str]:
             "Makefile source-ingestion-live-proof-contract-gate target must run "
             "`scripts/source_ingestion_live_proof_contract_gate.py`"
         )
-    implementation_proof_readiness_check = _target_block(
-        makefile, "implementation-proof-readiness-check"
+    durable_repository_proof_check = _target_block(
+        makefile, "durable-repository-proof-contract-gate"
     )
-    if "scripts/generate_scheduled_source_ingestion_worker_proof.py" not in (
-        implementation_proof_readiness_check
-    ):
+    if "scripts/durable_repository_proof_contract_gate.py" not in (durable_repository_proof_check):
         errors.append(
-            "Makefile implementation-proof-readiness-check target must generate "
-            "a scheduled source-ingestion worker proof artifact"
+            "Makefile durable-repository-proof-contract-gate target must run "
+            "`scripts/durable_repository_proof_contract_gate.py`"
         )
-    if "--source-ingestion-scheduled-worker-proof" not in implementation_proof_readiness_check:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "scheduled source-ingestion worker proof artifact into readiness generation"
-        )
-    if "--source-ingestion-manifest" not in implementation_proof_readiness_check:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "source-ingestion manifest into readiness generation"
-        )
+    errors.extend(_validate_implementation_proof_readiness_target(makefile))
     runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
     if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
         errors.append(

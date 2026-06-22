@@ -9,7 +9,10 @@ from app.application.implementation_proof_readiness import (
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.domain import InMemoryIdeaRepository
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_implementation_proof_readiness_reports_blocked_foundation_posture(
@@ -120,6 +123,39 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "client_id" not in serialized
     assert "request_body" not in serialized
     assert "response_body" not in serialized
+
+
+def test_implementation_proof_readiness_uses_durable_repository_proof_without_support_promotion() -> (
+    None
+):
+    proof = build_durable_repository_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        durable_repository_proof=proof,
+        durable_repository_proof_ref="output/persistence/durable-repository-proof.json",
+    )
+
+    assert "durable_repository_not_configured" not in snapshot.overall_blockers
+    assert "live_core_source_proof_missing" in snapshot.overall_blockers
+    assert "platform_mesh_certification_missing" in snapshot.overall_blockers
+    assert "workbench_panel_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+    source_ingestion = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "source-ingestion"
+    )
+    assert "durable_repository_not_configured" not in source_ingestion.blockers
+    assert "output/persistence/durable-repository-proof.json" in source_ingestion.evidence_refs
 
 
 def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:

@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.implementation_proof_readiness import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -34,10 +35,16 @@ def main(argv: list[str] | None = None) -> int:
         evaluated_at_utc = _parse_evaluated_at_utc(args.evaluated_at_utc)
         with _temporary_environment(_readiness_environment_overrides(args)):
             repository = get_idea_repository()
+            durable_repository_proof_path = _resolve_optional_path(args.durable_repository_proof)
+            durable_repository_proof = _read_optional_json_object(durable_repository_proof_path)
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
                 durable_storage_backed=idea_repository_durable_storage_backed(repository),
+                durable_repository_proof=durable_repository_proof,
+                durable_repository_proof_ref=_source_safe_artifact_ref(
+                    durable_repository_proof_path
+                ),
             )
         payload = implementation_proof_readiness_payload(snapshot)
         rendered = json.dumps(payload, indent=2, sort_keys=True)
@@ -124,6 +131,14 @@ def _parser() -> argparse.ArgumentParser:
             f"{SCHEDULED_WORKER_PROOF_ENV}."
         ),
     )
+    parser.add_argument(
+        "--durable-repository-proof",
+        default=os.getenv(DURABLE_REPOSITORY_PROOF_ENV),
+        help=(
+            "Optional durable PostgreSQL repository proof artifact path. "
+            f"Defaults to {DURABLE_REPOSITORY_PROOF_ENV} when set."
+        ),
+    )
     return parser
 
 
@@ -148,6 +163,30 @@ def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str 
         LIVE_PROOF_ENV: args.source_ingestion_live_proof,
         SCHEDULED_WORKER_PROOF_ENV: args.source_ingestion_scheduled_worker_proof,
     }
+
+
+def _resolve_optional_path(path_value: str | None) -> Path | None:
+    if not path_value:
+        return None
+    return Path(path_value)
+
+
+def _read_optional_json_object(path: Path | None) -> dict[str, Any] | None:
+    if path is None:
+        return None
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise ValueError("durable repository proof must be a JSON object")
+    return payload
+
+
+def _source_safe_artifact_ref(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    try:
+        return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return "durable repository proof artifact"
 
 
 @contextmanager
