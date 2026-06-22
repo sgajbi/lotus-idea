@@ -154,6 +154,15 @@ def ai_headers() -> dict[str, str]:
     }
 
 
+def ai_readiness_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": "operator",
+        "X-Caller-Capabilities": "idea.ai-explanation.readiness.read",
+        "X-Correlation-Id": "corr-operation-ai-readiness-api",
+    }
+
+
 def detail_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -492,6 +501,44 @@ def test_ai_explanation_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("ai_explanation", "fallback", "lotus-idea", False, None)]
+
+
+def test_ai_explanation_readiness_api_emits_not_certified_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events: list[tuple[str, str, str, str, bool, str | None]] = []
+
+    def capture_event(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.source_authority,
+                event.supportability_status.value,
+                event.supported_feature_promoted,
+                event.error_code,
+            )
+        )
+
+    monkeypatch.setattr(ai_governance_api, "emit_operation_event", capture_event)
+
+    response = client.get(
+        "/api/v1/ai-explanations/readiness",
+        headers=ai_readiness_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [
+        (
+            "ai_explanation_readiness_read",
+            "blocked",
+            "lotus-ai",
+            "not_certified",
+            False,
+            None,
+        )
+    ]
 
 
 def test_candidate_detail_api_emits_bounded_operation_event(
