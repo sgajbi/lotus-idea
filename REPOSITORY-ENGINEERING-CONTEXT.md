@@ -161,9 +161,18 @@ replay. The lifecycle API records governed transitions through the
 canonical domain transition graph with accepted, replayed, not-found, conflict,
 and invalid-transition posture while still reporting
 `durableStorageBacked=false`.
+`src/app/application/candidate_evidence_replay.py` and
+`POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now expose the
+same evidence-hash replay posture as a certified internal operator API. The
+route requires `idea.candidate.evidence.replay` plus operator role, compares
+caller-supplied current source refs with persisted evidence hashes, returns
+matched, stale-source, hash-mismatch, expired, or not-found posture, and does
+not call Core, expose raw source routes, grant downstream authority, or promote
+a supported feature.
 `src/app/ports/idea_repository.py` now centralizes the repository workflow
-protocols for candidate snapshots, persistence, lifecycle, review and feedback,
-conversion, report evidence-pack requests, and AI explanation reads. Application
+protocols for candidate snapshots, persistence, evidence replay, lifecycle,
+review and feedback, conversion, report evidence-pack requests, and AI
+explanation reads. Application
 use cases must depend on that port instead of defining local repository
 protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
 so the future durable adapter has one governed contract surface.
@@ -274,7 +283,12 @@ conflict posture. `GET /api/v1/idea-candidates/{candidateId}` exposes a
 source-safe candidate detail projection over persisted snapshots, redacted
 evidence, lifecycle history, review/feedback/conversion/report summaries, and
 audit summary posture without exposing source routes, raw evidence hashes, or
-downstream authority. `GET /api/v1/review-queues/advisor` exposes deterministic
+downstream authority. `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
+exposes internal operator replay posture over current source refs and persisted
+evidence hashes with matched, stale-source, hash-mismatch, expired, and
+not-found outcomes, without live Core calls, raw source export, downstream
+authority, Gateway/Workbench proof, data-product certification, or
+supported-feature promotion. `GET /api/v1/review-queues/advisor` exposes deterministic
 advisor queue projection over persisted candidate snapshots. The review-action
 and feedback APIs expose internal review workflow persistence over the same
 repository provider and return accepted, replayed, not-found, conflict,
@@ -302,7 +316,7 @@ fallback/verifier evaluation over persisted candidate evidence:
 requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
 runtime workflows, persist durable AI lineage, or grant downstream authority.
-All eleven business routes plus the data-mesh-readiness and
+All twelve business routes plus the data-mesh-readiness and
 source-ingestion-readiness operator diagnostics are covered by OpenAPI and
 endpoint certification evidence. The PostgreSQL runtime
 proof now covers the high-cash persist, advisor queue, lifecycle, review,
@@ -358,9 +372,10 @@ foundation. `src/app/observability/logging.py` now defines the
 supportability vocabulary, product-safe structured operation logs, and
 sensitive operation-attribute rejection. High-cash evaluation, candidate
 persistence, candidate detail read, lifecycle transition, advisor review queue,
-review action, AI explanation, feedback, conversion intent, conversion outcome, report
-evidence-pack request, and data-mesh-readiness diagnostic APIs emit bounded
-operation events. The source-ingestion-readiness diagnostic emits
+candidate evidence replay, review action, AI explanation, feedback, conversion
+intent, conversion outcome, report evidence-pack request, and
+data-mesh-readiness diagnostic APIs emit bounded operation events. The
+source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,
 blocked/accepted configuration posture, and no source payloads. Operation
 events are emitted without

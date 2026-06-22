@@ -14,10 +14,10 @@ durable operating-context enforcement:
 1. `docs/operations/api-certification.md` now lists the full certified internal
    foundation endpoint inventory from
    `docs/operations/endpoint-certification-ledger.json`, including high-cash
-   evaluation, high-cash persistence, lifecycle transition, AI explanation
-   evaluation, advisor queue, review action, feedback, conversion intent,
-   conversion outcome, report evidence-pack request, and data-mesh-readiness
-   diagnostic endpoints.
+   evaluation, high-cash persistence, candidate evidence replay, lifecycle
+   transition, AI explanation evaluation, advisor queue, review action,
+   feedback, conversion intent, conversion outcome, report evidence-pack
+   request, and data-mesh-readiness diagnostic endpoints.
 2. The certification guide records each endpoint's current foundation scope,
    required capability, and unsupported boundary so future agents do not
    promote internal API foundations as business-supported product features.
