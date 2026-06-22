@@ -81,6 +81,12 @@ support, or client-ready publication while `supported-features/supported-feature
 implemented features. It prevents agent-written README/wiki/operations text from outpacing code,
 endpoint certification, data-mesh proof, and supported-feature evidence.
 
+`make no-sensitive-content-guard` blocks sensitive marker names in local
+evidence, log, and output artifacts before those artifacts can become PR or
+wiki evidence. The guard has focused pass/fail unit coverage for clean
+artifacts, forbidden marker detection, allowlisted documentation, and binary
+artifact handling.
+
 `make source-observability-contract-gate` blocks ad hoc application logging in `src/app`. Feature
 code must use bounded operation-event emitters or the central request diagnostic helper instead of
 raw `print()`, direct Python logging, or low-level `log_event` calls. Request diagnostics log route

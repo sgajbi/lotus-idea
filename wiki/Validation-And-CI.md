@@ -21,6 +21,8 @@ make repository-hygiene-gate
 make maintainability-gate
 make documentation-contract-gate
 make quality-scorecard-gate
+make monetary-float-guard
+make no-sensitive-content-guard
 make source-observability-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
@@ -37,8 +39,9 @@ make quality-baseline
 ```
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
-repository hygiene, maintainability thresholds, documentation contract enforcement, quality-scorecard truth, OpenAPI quality,
-source-observability contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+repository hygiene, maintainability thresholds, documentation contract enforcement,
+quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
+OpenAPI quality, source-observability contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest validation,
@@ -118,7 +121,8 @@ validation, source-ingestion worker manifest validation, PostgreSQL runtime
 proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,
-repository-hygiene enforcement, implementation-truth enforcement, and source-safe local quality gates.
+repository-hygiene enforcement, no-sensitive-content evidence guarding,
+implementation-truth enforcement, and source-safe local quality gates.
 It also has unit coverage for current-repository pass behavior and failure cases for floating
 action tags, wrong verified SHAs, and missing version provenance comments.
 
@@ -135,6 +139,12 @@ The monetary-float guard blocks money-like `float` annotations, literals, and
 conversions in application source. It is AST-backed and intentionally allows
 non-monetary operational floats, such as timeout seconds, so the guard protects
 private-banking precision without creating noisy exceptions.
+
+The no-sensitive-content guard scans local evidence, log, and output artifacts
+for forbidden sensitive marker names such as portfolio, client, account,
+holding, transaction, request-body, response-body, and raw entitlement failure
+markers. It is blocking through `make lint` and has focused pass/fail unit
+coverage so future evidence artifacts cannot quietly leak sensitive material.
 
 The documentation contract gate blocks deletion, thinning, missing anchors, and
 placeholder text across the required README, repository context, standards,

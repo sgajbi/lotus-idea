@@ -395,7 +395,7 @@ The advisor-queue-readiness diagnostic emits
 `review_queue_readiness_read` events with `not_certified` supportability,
 aggregate-only queue counts, blocked certification posture, and no candidate or
 access-scope identifiers.
-events are emitted without
+All operation events are emitted without
 portfolio/client/account/holding/transaction identifiers, request/response
 bodies, trace ids, or correlation ids as metric labels. This is not yet full
 production observability: live AI runtime telemetry, live source certification,
@@ -556,18 +556,20 @@ owned by upstream services.
 15. maintainability gate: `make maintainability-gate`
 16. documentation contract gate: `make documentation-contract-gate`
 17. quality scorecard gate: `make quality-scorecard-gate`
-18. source-observability contract gate:
+18. monetary float guard: `make monetary-float-guard`
+19. no-sensitive-content guard: `make no-sensitive-content-guard`
+20. source-observability contract gate:
     `make source-observability-contract-gate`
-19. implementation-truth gate: `make implementation-truth-gate`
-20. data-mesh contract gate: `make data-mesh-contract-gate`
-21. migration contract gate: `make migration-contract-gate`
-22. migration execution dry-run gate: `make migration-execution-gate`
-23. run-once source-ingestion worker manifest gate:
+21. implementation-truth gate: `make implementation-truth-gate`
+22. data-mesh contract gate: `make data-mesh-contract-gate`
+23. migration contract gate: `make migration-contract-gate`
+24. migration execution dry-run gate: `make migration-execution-gate`
+25. run-once source-ingestion worker manifest gate:
     `make source-ingestion-worker-check`
-24. PostgreSQL runtime proof with configured integration URL:
+26. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-25. apply migrations with configured PostgreSQL URL: `make migrate`
-26. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+27. apply migrations with configured PostgreSQL URL: `make migrate`
+28. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -580,8 +582,10 @@ owned by upstream services.
    `main`.
 
 Required baseline checks include lint, format check, typecheck, architecture
-boundary enforcement, repository hygiene, maintainability thresholds, documentation contract enforcement,
-quality-scorecard truth, source-observability contract enforcement, OpenAPI quality, implementation-truth gate,
+boundary enforcement, repository hygiene, maintainability thresholds,
+documentation contract enforcement, quality-scorecard truth, monetary precision
+guarding, no-sensitive-content evidence guarding, source-observability contract
+enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest validation,
@@ -595,7 +599,8 @@ bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
-validation, source-observability contract validation, PostgreSQL runtime proof, coverage,
+validation, no-sensitive-content evidence validation, source-observability
+contract validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded
 workflow timeouts, no `continue-on-error: true` in critical lanes,
@@ -642,6 +647,13 @@ checks to fail money-like `float` annotations, literals, and conversions across
 `src` while allowing non-monetary operational float usage such as timeout
 seconds. This keeps Lotus Idea aligned to the financial precision posture from
 the first implementation slices.
+
+`make no-sensitive-content-guard` is blocking through `make lint`. It scans
+local evidence, log, and output artifacts for forbidden sensitive marker names
+including portfolio, client, account, holding, transaction, request-body,
+response-body, and raw entitlement failure markers. The guard has focused
+pass/fail unit coverage so future agents cannot leave untested artifact-leak
+checks in the merge path.
 
 `make source-observability-contract-gate` is blocking through `make lint`. It
 scans application source and fails raw `print()`, direct Python logging imports
