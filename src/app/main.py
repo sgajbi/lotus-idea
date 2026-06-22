@@ -59,8 +59,8 @@ def _register_product_routes(application: FastAPI) -> None:
 
 
 def _register_exception_handlers(application: FastAPI) -> None:
-    application.add_exception_handler(RequestValidationError, validation_exception_handler)
-    application.add_exception_handler(HTTPException, http_exception_handler)
+    application.add_exception_handler(RequestValidationError, validation_exception_handler_adapter)
+    application.add_exception_handler(HTTPException, http_exception_handler_adapter)
     application.add_exception_handler(Exception, unhandled_exception_handler)
 
 
@@ -150,6 +150,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+async def validation_exception_handler_adapter(request: Request, exc: Exception) -> Response:
+    if not isinstance(exc, RequestValidationError):
+        return await unhandled_exception_handler(request, exc)
+    return await validation_exception_handler(request, exc)
+
+
 async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
     emit_request_diagnostic_event(
         "request.http_error",
@@ -163,6 +169,12 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> Respon
         title="Request rejected",
         detail="The service rejected the request. Correct the request or contact support with the correlation id.",
     )
+
+
+async def http_exception_handler_adapter(request: Request, exc: Exception) -> Response:
+    if not isinstance(exc, HTTPException):
+        return await unhandled_exception_handler(request, exc)
+    return await http_exception_handler(request, exc)
 
 
 async def unhandled_exception_handler(request: Request, exc: Exception) -> Response:
