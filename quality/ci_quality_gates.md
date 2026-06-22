@@ -65,11 +65,15 @@ allowing operational floats such as timeout seconds. This protects private
 banking precision without forcing unrelated runtime configuration code into
 Decimal types.
 
-`make documentation-contract-gate` blocks removal, thinning, or placeholder
-erosion of the required durable documentation and wiki surfaces. It is scoped to
-operator and agent context, not RFC target-state prose, so it remains fast and
-deterministic while preserving the context needed to apply the bank-buyable
-contract across future implementation slices.
+`make documentation-contract-gate` blocks removal, thinning, placeholder
+erosion, and text-dump operator guides across the required durable
+documentation and wiki surfaces. It is scoped to operator and agent context,
+not RFC target-state prose, so it remains fast and deterministic while
+preserving the context needed to apply the bank-buyable contract across future
+implementation slices. Proof and readiness guides must keep a polished
+operator structure with current-truth tables, explicit proof and non-proof
+boundaries, blocker sections, response-shape tables, evidence references, and
+executable examples.
 
 `make quality-scorecard-gate` blocks bank-buyable scorecard drift. It verifies
 the required control matrix, approved status vocabulary, non-empty evidence and

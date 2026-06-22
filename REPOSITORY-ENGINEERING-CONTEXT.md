@@ -683,9 +683,12 @@ the durable agent and operator context surface: `AGENTS.md`, `README.md`,
 `REPOSITORY-ENGINEERING-CONTEXT.md`, RFC index, enterprise standard, operations
 runbooks, quality evidence, RFC implementation evidence guide, and wiki source
 must remain present, substantive, and anchored to validation and governance
-commands. This gate complements implementation-truth enforcement: it prevents
-deletion or hollowing-out of context, while implementation-truth prevents
-overclaiming unsupported product posture.
+commands. The gate also enforces a polished operator-document profile for proof
+and readiness guides: current-truth tables, explicit proof and non-proof
+boundaries, blocker sections, response-shape tables, evidence references, and
+executable examples. This gate complements implementation-truth enforcement:
+it prevents deletion, hollowing-out, and text-dump erosion of context, while
+implementation-truth prevents overclaiming unsupported product posture.
 
 `make quality-scorecard-gate` is blocking through `make lint`. It protects the
 bank-buyable control matrix from drift by requiring the standard control rows,
