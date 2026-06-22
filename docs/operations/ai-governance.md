@@ -56,7 +56,8 @@ The readiness diagnostic always returns:
 1. `readinessStatus=blocked`,
 2. `supportabilityStatus=not_certified`,
 3. `certificationReady=false`,
-4. `durableAiLineageStoreBacked=false`,
+4. `durableAiLineageStoreBacked=false` in the default process-local runtime and
+   `true` only when the active repository provider reports durable storage,
 5. `lotusAiRuntimeExecuted=false`,
 6. `supportedFeaturePromoted=false`.
 
@@ -87,9 +88,11 @@ client ids, request bodies, response bodies, and free-form source payloads.
 
 `lotus-ai` remains the owner for runtime workflow execution, prompt registry,
 RAG context construction, provider telemetry, evaluation telemetry, and
-model-risk operating evidence. The readiness diagnostic therefore remains
-`not_certified` until runtime execution, certified AI lineage-store evidence,
-model-risk dashboards, runtime trust telemetry, and Workbench proof exist.
+model-risk operating evidence. Durable repository-backed lineage persistence
+is necessary proof, but it is not sufficient certification. The readiness
+diagnostic therefore remains `not_certified` until runtime execution, certified
+AI lineage-store evidence, model-risk dashboards, runtime trust telemetry, and
+Workbench proof exist.
 
 ## API Behavior
 

@@ -59,7 +59,10 @@ class AIExplanationWorkflowResult:
     lineage_persistence_result: AIExplanationLineagePersistenceResult | None = None
 
 
-def build_ai_explanation_readiness_snapshot() -> AIExplanationReadinessSnapshot:
+def build_ai_explanation_readiness_snapshot(
+    *,
+    durable_ai_lineage_store_backed: bool = False,
+) -> AIExplanationReadinessSnapshot:
     return AIExplanationReadinessSnapshot(
         repository="lotus-idea",
         source_authority="lotus-idea",
@@ -72,7 +75,7 @@ def build_ai_explanation_readiness_snapshot() -> AIExplanationReadinessSnapshot:
         redacted_evidence_envelope_available=True,
         unsupported_claim_blocking_available=True,
         forbidden_action_blocking_available=True,
-        durable_ai_lineage_store_backed=False,
+        durable_ai_lineage_store_backed=durable_ai_lineage_store_backed,
         lotus_ai_runtime_executed=False,
         certification_blockers=(
             "lotus_ai_runtime_execution_missing",

@@ -347,8 +347,9 @@ operator diagnostic for AI explanation supportability. It requires both the
 `operator` role and `idea.ai-explanation.readiness.read`, returns guardrail
 availability plus `not_certified` blockers, emits bounded
 `ai_explanation_readiness_read` operation events with `lotus-ai` source
-authority, and does not expose prompts, provider payloads, candidate
-identifiers, source routes, portfolio identifiers, or client identifiers. This
+authority, reports durable lineage-store backing from the active repository,
+and does not expose prompts, provider payloads, candidate identifiers, source
+routes, portfolio identifiers, or client identifiers. This
 is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
 execution, prompt/RAG/provider integration, certified AI lineage-store proof,
 Workbench proof, trust telemetry, model-risk operations dashboard, or

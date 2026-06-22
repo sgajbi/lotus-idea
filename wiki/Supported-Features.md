@@ -41,8 +41,10 @@ operator
 supportability check only; it does not invoke `lotus-ai`, prove model-risk
 dashboards, or promote AI explanation support. Source-safe AI explanation
 lineage persistence has PostgreSQL runtime proof for accepted, replayed, and
-conflicting request ids, but that proof is repository durability evidence, not
-`lotus-ai` runtime execution or AI product certification. The
+conflicting request ids, and the readiness diagnostic reports durable lineage
+backing when the active repository is durable. That proof is repository
+durability evidence, not `lotus-ai` runtime execution or AI product
+certification. The
 downstream realization readiness diagnostic is an operator supportability
 check only; it reports workflow counts, planned Advise/Manage/Report contract
 posture, and Advise/Manage/Report/Render/Archive blockers without calling
