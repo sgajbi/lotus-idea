@@ -96,6 +96,8 @@ def _validate_source_of_truth(
     required_keys = {
         "readiness_builder",
         "contract_loader",
+        "downstream_adapter_port",
+        "downstream_adapter_foundation",
         "contract_gate",
         "operations_runbook",
         "rfc_slice_12",
@@ -140,8 +142,8 @@ def _validate_contracts(plan: DownstreamRealizationContractPlan) -> list[str]:
             errors.append(f"{contract_id}: target_route must remain planned before route proof")
         if contract.route_fit_status != "not_certified":
             errors.append(f"{contract_id}: route_fit_status must remain not_certified")
-        if contract.adapter_status != "planned":
-            errors.append(f"{contract_id}: adapter_status must remain planned")
+        if contract.adapter_status != "adapter_foundation_present":
+            errors.append(f"{contract_id}: adapter_status must be adapter_foundation_present")
         if not contract.blockers:
             errors.append(f"{contract_id}: blockers are required before certification")
 

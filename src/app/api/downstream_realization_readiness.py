@@ -120,6 +120,10 @@ class DownstreamRealizationReadinessResponse(CamelModel):
         ...,
         alias="reportEvidencePackRequestCount",
     )
+    downstream_adapter_foundation_present: bool = Field(
+        ...,
+        alias="downstreamAdapterFoundationPresent",
+    )
     source_of_truth: Mapping[str, str] = Field(..., alias="sourceOfTruth")
     blockers: tuple[str, ...]
     capabilities: tuple[DownstreamRealizationCapabilityReadinessResponse, ...]
@@ -142,6 +146,7 @@ class DownstreamRealizationReadinessResponse(CamelModel):
             conversionIntentCount=snapshot.conversion_intent_count,
             conversionOutcomeCount=snapshot.conversion_outcome_count,
             reportEvidencePackRequestCount=snapshot.report_evidence_pack_request_count,
+            downstreamAdapterFoundationPresent=snapshot.downstream_adapter_foundation_present,
             sourceOfTruth=dict(snapshot.source_of_truth),
             blockers=snapshot.blockers,
             capabilities=tuple(
@@ -225,10 +230,10 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "lotus-advise, lotus-manage, lotus-report, lotus-render, and lotus-archive. "
         "The endpoint reports lotus-idea-owned conversion intent, conversion outcome, "
         "report evidence-pack request counts, planned Advise/Manage/Report downstream "
-        "contract posture, and explicit downstream blockers. "
-        "It does not call downstream systems, create proposals, create manage actions, "
-        "prove downstream route existence, render documents, archive records, authorize "
-        "client publication, or promote a supported feature."
+        "contract posture, source-safe adapter-foundation presence, and explicit "
+        "downstream blockers. It does not call downstream systems, create proposals, "
+        "create manage actions, prove downstream route existence, render documents, "
+        "archive records, authorize client publication, or promote a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": DownstreamRealizationReadinessResponse,
@@ -247,9 +252,14 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "conversionIntentCount": 0,
                         "conversionOutcomeCount": 0,
                         "reportEvidencePackRequestCount": 0,
+                        "downstreamAdapterFoundationPresent": True,
                         "sourceOfTruth": {
                             "conversion_workflow": "src/app/application/conversion_workflow.py",
                             "report_evidence_workflow": "src/app/application/report_evidence.py",
+                            "downstream_adapter_port": "src/app/ports/downstream_realization.py",
+                            "downstream_adapter_foundation": (
+                                "src/app/infrastructure/downstream_realization.py"
+                            ),
                             "downstream_contract_plan": (
                                 "contracts/downstream-realization/"
                                 "lotus-idea-downstream-contracts.v1.json"
@@ -259,9 +269,9 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                             ),
                         },
                         "blockers": [
-                            "advise_proposal_creation_adapter_missing",
-                            "manage_action_register_adapter_missing",
-                            "report_evidence_pack_materialization_missing",
+                            "advise_live_contract_proof_missing",
+                            "manage_live_contract_proof_missing",
+                            "report_evidence_pack_live_materialization_proof_missing",
                             "dedicated_report_idea_evidence_intake_contract_missing",
                         ],
                         "capabilities": [
@@ -275,7 +285,7 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                 "evidenceRefs": [
                                     "POST /api/v1/idea-candidates/{candidateId}/conversion-intents"
                                 ],
-                                "blockers": ["advise_proposal_creation_adapter_missing"],
+                                "blockers": ["advise_live_contract_proof_missing"],
                             }
                         ],
                         "downstreamContracts": [
@@ -287,7 +297,7 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                 "sourceAuthority": "lotus-report",
                                 "targetRoute": "planned:lotus-report-idea-evidence-pack-intake",
                                 "routeFitStatus": "not_certified",
-                                "adapterStatus": "planned",
+                                "adapterStatus": "adapter_foundation_present",
                                 "certificationReady": False,
                                 "evidenceRefs": [
                                     "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"

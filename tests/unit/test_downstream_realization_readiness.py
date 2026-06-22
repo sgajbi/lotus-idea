@@ -30,14 +30,20 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert snapshot.conversion_intent_count == 0
     assert snapshot.conversion_outcome_count == 0
     assert snapshot.report_evidence_pack_request_count == 0
+    assert snapshot.downstream_adapter_foundation_present is True
     assert snapshot.supported_feature_promoted is False
-    assert "advise_proposal_creation_adapter_missing" in snapshot.blockers
-    assert "manage_action_register_adapter_missing" in snapshot.blockers
-    assert "report_evidence_pack_materialization_missing" in snapshot.blockers
+    assert "advise_proposal_creation_adapter_missing" not in snapshot.blockers
+    assert "manage_action_register_adapter_missing" not in snapshot.blockers
+    assert "report_evidence_pack_materialization_missing" not in snapshot.blockers
+    assert "advise_live_contract_proof_missing" in snapshot.blockers
+    assert "manage_live_contract_proof_missing" in snapshot.blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers
     assert "dedicated_report_idea_evidence_intake_contract_missing" in snapshot.blockers
     assert set(snapshot.source_of_truth) == {
         "conversion_workflow",
         "report_evidence_workflow",
+        "downstream_adapter_port",
+        "downstream_adapter_foundation",
         "downstream_contract_plan",
         "downstream_contract_gate",
         "rfc_slice_12",
@@ -125,7 +131,7 @@ def test_downstream_realization_readiness_contracts_preserve_downstream_authorit
     assert "dedicated_report_idea_evidence_intake_contract_missing" in (report_contract.blockers)
     assert all(
         contract.route_fit_status == "not_certified"
-        and contract.adapter_status == "planned"
+        and contract.adapter_status == "adapter_foundation_present"
         and not contract.certification_ready
         for contract in snapshot.downstream_contracts
     )

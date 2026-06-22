@@ -87,7 +87,7 @@ def test_downstream_realization_contract_gate_blocks_contract_drift() -> None:
     assert any("source_authority must be lotus-advise" in error for error in errors)
     assert any("target_route must remain planned" in error for error in errors)
     assert any("route_fit_status must remain not_certified" in error for error in errors)
-    assert any("adapter_status must remain planned" in error for error in errors)
+    assert any("adapter_status must be adapter_foundation_present" in error for error in errors)
     assert any("blockers are required" in error for error in errors)
     assert any("evidence_refs missing required references" in error for error in errors)
     assert any("must not include downstream current routes" in error for error in errors)

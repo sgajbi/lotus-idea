@@ -60,6 +60,7 @@ class DownstreamRealizationReadinessSnapshot:
     conversion_intent_count: int
     conversion_outcome_count: int
     report_evidence_pack_request_count: int
+    downstream_adapter_foundation_present: bool
     source_of_truth: Mapping[str, str]
     blockers: tuple[str, ...]
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...]
@@ -119,9 +120,12 @@ def build_downstream_realization_readiness_snapshot(
         conversion_intent_count=conversion_intent_count,
         conversion_outcome_count=conversion_outcome_count,
         report_evidence_pack_request_count=report_evidence_pack_request_count,
+        downstream_adapter_foundation_present=True,
         source_of_truth={
             "conversion_workflow": "src/app/application/conversion_workflow.py",
             "report_evidence_workflow": "src/app/application/report_evidence.py",
+            "downstream_adapter_port": "src/app/ports/downstream_realization.py",
+            "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
             "downstream_contract_plan": (
                 "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json"
             ),
@@ -172,7 +176,6 @@ def _advise_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
             "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
         ),
         blockers=(
-            "advise_proposal_creation_adapter_missing",
             "suitability_policy_authority_remains_lotus_advise",
             "advise_live_contract_proof_missing",
         ),
@@ -190,7 +193,6 @@ def _manage_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
             "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
         ),
         blockers=(
-            "manage_action_register_adapter_missing",
             "rebalance_execution_authority_remains_lotus_manage",
             "manage_live_contract_proof_missing",
         ),
@@ -209,7 +211,7 @@ def _report_render_archive_capability() -> DownstreamRealizationCapabilityReadin
             "lotus-archive",
         ),
         blockers=(
-            "report_evidence_pack_materialization_missing",
+            "report_evidence_pack_live_materialization_proof_missing",
             "rendered_output_creation_missing",
             "archive_record_creation_missing",
             "client_publication_authority_blocked",
