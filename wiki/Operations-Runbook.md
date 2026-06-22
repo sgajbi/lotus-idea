@@ -280,7 +280,11 @@ source-of-truth paths, and downstream source-authority refs without exposing
 candidate identifiers, source payloads, portfolio identifiers, or client
 identifiers. The planned contract records identify owner repositories and
 adapter posture for Advise, Manage, and Report handoffs; they are not
-route-existence proof. The endpoint is not Advise proposal proof, Manage action
+route-existence proof. The records are governed by
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`, and
+`make downstream-realization-contract-gate` blocks source-authority drift,
+current-route claims, missing blockers, and premature certification. The
+endpoint is not Advise proposal proof, Manage action
 proof, Report/Render/Archive materialization proof, Gateway/Workbench proof,
 client-ready publication, or supported-feature promotion.
 

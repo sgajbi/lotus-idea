@@ -46,9 +46,11 @@ The diagnostic is deliberately not downstream execution proof. It does not:
 
 ## Downstream Contract Plan
 
-The diagnostic exposes planned contract seams so implementation agents can
-build the next RFC slice without inventing local adapters or moving authority
-into `lotus-idea`.
+The diagnostic exposes planned contract seams from the governed source file
+[contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json](../../contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json).
+Implementation agents must update that contract plan when Advise, Manage, or
+Report handoff truth changes; the runtime readiness snapshot reads the same
+artifact that CI validates.
 
 | Contract | Owner | Target Route Posture | Current Status |
 | --- | --- | --- | --- |
@@ -59,6 +61,16 @@ into `lotus-idea`.
 These contract records are planning and certification evidence only. They are
 not route-existence proof in the downstream repositories and must remain
 blocked until the owning service accepts, tests, and certifies the contract.
+
+`make downstream-realization-contract-gate` blocks:
+
+1. missing Advise, Manage, or Report contract records,
+2. premature `supported`, route-existence, downstream-execution, or
+   supported-feature claims,
+3. contract rows that move source authority into `lotus-idea`,
+4. planned target routes that are rewritten as current downstream routes,
+5. missing blocker or evidence references,
+6. broken source-of-truth paths.
 
 ## Current Blockers
 
@@ -98,19 +110,25 @@ Implementation-backed evidence:
 
 1. application builder:
    `src/app/application/downstream_realization_readiness.py`,
-2. API route: `src/app/api/downstream_realization_readiness.py`,
-3. operation event: `downstream_realization_readiness_read`,
-4. endpoint ledger:
+2. governed contract plan:
+   `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
+3. contract gate: `scripts/downstream_realization_contract_gate.py`,
+4. API route: `src/app/api/downstream_realization_readiness.py`,
+5. operation event: `downstream_realization_readiness_read`,
+6. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-5. unit tests:
+7. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-6. integration tests:
+8. gate tests:
+   `tests/unit/test_downstream_realization_contract_gate.py`,
+9. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py`.
 
 Run:
 
 ```powershell
 python -m pytest tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_readiness_api.py -q
+make downstream-realization-contract-gate
 make endpoint-certification-gate
 make openapi-gate
 ```

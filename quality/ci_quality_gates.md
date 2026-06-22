@@ -17,17 +17,18 @@ Blocking scaffold commands:
 8. `make source-observability-contract-gate`
 9. `make implementation-truth-gate`
 10. `make data-mesh-contract-gate`
-11. `make migration-contract-gate`
-12. `make migration-execution-gate`
-13. `make source-ingestion-worker-check`
-14. `make implementation-proof-readiness-check`
-15. `make supported-features-gate`
-16. `make endpoint-certification-gate`
-17. `make postgres-integration-gate`
-18. `make openapi-gate`
-19. `make coverage-gate`
-20. `make security-audit`
-21. `make docker-build`
+11. `make downstream-realization-contract-gate`
+12. `make migration-contract-gate`
+13. `make migration-execution-gate`
+14. `make source-ingestion-worker-check`
+15. `make implementation-proof-readiness-check`
+16. `make supported-features-gate`
+17. `make endpoint-certification-gate`
+18. `make postgres-integration-gate`
+19. `make openapi-gate`
+20. `make coverage-gate`
+21. `make security-audit`
+22. `make docker-build`
 
 Cleanup support command:
 
@@ -45,7 +46,8 @@ ignored by git unless an RFC explicitly promotes a specific evidence snapshot.
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
-migration contract validation, migration execution dry-run validation,
+downstream realization contract validation, migration contract validation,
+migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 implementation-proof readiness artifact generation, source-observability
 contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
@@ -109,6 +111,13 @@ instead of becoming another unreviewed shell one-liner.
 code must use bounded operation-event emitters or the central request diagnostic helper instead of
 raw `print()`, direct Python logging, or low-level `log_event` calls. Request diagnostics log route
 templates rather than raw URL paths, keeping operator evidence product-safe.
+
+`make downstream-realization-contract-gate` validates
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
+It keeps planned Advise, Manage, and Report handoff records source-authority
+preserving, blocker-backed, and free of route-existence, downstream-execution,
+or supported-feature claims until the owning repositories certify live
+contracts.
 
 `make endpoint-certification-gate` blocks weak API certification. It requires every public OpenAPI
 operation to have a ledger entry; validates required evidence fields, valid JSON examples,

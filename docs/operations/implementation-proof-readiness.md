@@ -79,6 +79,12 @@ validated through the owning repositories and platform gates:
 7. downstream Advise, Manage, Report, Render, and Archive realization,
 8. supported-feature promotion evidence.
 
+Downstream realization blockers are backed by
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
+`make downstream-realization-contract-gate` validates that the planned
+contract rows stay source-authority preserving and do not become false
+route-existence, downstream-execution, or supported-feature claims.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -129,14 +135,15 @@ Implementation-backed evidence:
 2. API route: `src/app/api/implementation_proof_readiness.py`,
 3. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
 4. repo-native check: `make implementation-proof-readiness-check`,
-5. operation event: `implementation_proof_readiness_read`,
-6. endpoint ledger:
+5. downstream contract check: `make downstream-realization-contract-gate`,
+6. operation event: `implementation_proof_readiness_read`,
+7. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-7. unit tests:
+8. unit tests:
    `tests/unit/test_implementation_proof_readiness.py`,
-8. generator tests:
+9. generator tests:
    `tests/unit/test_generate_implementation_proof_readiness.py`,
-9. integration tests:
+10. integration tests:
    `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
@@ -144,6 +151,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_implementation_proof_readiness.py tests/integration/test_implementation_proof_readiness_api.py -q
 make implementation-proof-readiness-check
+make downstream-realization-contract-gate
 make endpoint-certification-gate
 make openapi-gate
 ```

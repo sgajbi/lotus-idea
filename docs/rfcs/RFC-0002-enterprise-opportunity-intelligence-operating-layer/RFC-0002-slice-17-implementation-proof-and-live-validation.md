@@ -35,6 +35,10 @@ Prove the complete supported opportunity journey end to end.
    downstream-consumer, platform mesh-event, Gateway/Workbench, and
    supported-feature blockers without publishing events, exposing event
    identifiers, exposing raw idempotency keys, or exposing broker payloads.
+8. `make downstream-realization-contract-gate` now validates the planned
+   downstream realization contract plan used by the downstream readiness proof
+   family, so proof blockers stay source-authority preserving and cannot be
+   rewritten as route-existence or downstream-execution claims.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -65,7 +69,9 @@ without relying on chat memory.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close
-the downstream proof gap.
+the downstream proof gap. The downstream realization contract gate makes those
+blockers durable and machine-readable; it also does not close the downstream
+proof gap.
 The outbox-delivery readiness diagnostic does the same for broker and event
 delivery posture; it does not close the external publication or downstream
 consumer proof gap.

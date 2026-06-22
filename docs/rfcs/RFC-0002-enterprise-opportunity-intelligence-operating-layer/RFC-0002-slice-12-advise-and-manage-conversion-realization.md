@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance and certified API foundation only
+Status: Partially implemented - internal conversion governance, certified API foundation, and governed downstream contract-plan gate only
 
 ## Outcome
 
@@ -63,7 +63,15 @@ Implemented in this slice:
     review-approved candidate, recording the report conversion intent, replaying
     the intent from database idempotency state, recording a source-authorized
     conversion outcome, and validating the conversion intent/outcome tables.
-15. `src/app/application/downstream_realization_readiness.py` and
+15. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
+    now holds the planned Advise, Manage, and Report handoff contract rows as
+    machine-readable repository truth.
+16. `scripts/downstream_realization_contract_gate.py` and
+    `make downstream-realization-contract-gate` block missing contract rows,
+    source-authority drift, current-route claims, missing blockers, and
+    premature route-existence, downstream-execution, or supported-feature
+    claims.
+17. `src/app/application/downstream_realization_readiness.py` and
     `GET /api/v1/downstream-realization/readiness` add a certified internal
     operator diagnostic over current conversion intent/outcome counts and
     Advise/Manage realization blockers. The diagnostic also exposes planned

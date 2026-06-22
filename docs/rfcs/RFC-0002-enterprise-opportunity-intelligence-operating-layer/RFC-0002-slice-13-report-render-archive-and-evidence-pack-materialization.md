@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Partially implemented - internal report evidence-pack request foundation only
+Status: Partially implemented - internal report evidence-pack request foundation and governed downstream contract-plan gate only
 
 ## Outcome
 
@@ -46,6 +46,11 @@ Implemented in the first Slice 13 foundation:
    `lotus-idea-to-lotus-report-evidence-pack-intake:v1` contract readiness
    record with `lotus-report` ownership, planned route posture, adapter status,
    and the dedicated report idea evidence intake blocker.
+8. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
+   is the governed source for that planned report handoff row, and
+   `make downstream-realization-contract-gate` keeps it planned,
+   source-authority preserving, blocker-backed, and free of route-existence,
+   downstream-execution, or supported-feature claims.
 
 Current endpoint behavior:
 

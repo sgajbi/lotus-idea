@@ -30,8 +30,9 @@ Current implemented foundations include:
 - AI explanation governance diagnostics without provider execution,
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
-- planned downstream contract-readiness diagnostics for Advise, Manage, and
-  Report handoff seams without downstream route-existence claims,
+- governed downstream contract-readiness diagnostics for Advise, Manage, and
+  Report handoff seams, backed by a repo contract plan and blocking gate,
+  without downstream route-existence claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics and readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry preview and data-mesh readiness diagnostics,
@@ -146,8 +147,8 @@ flowchart LR
   and bounded operation events.
 - `src/app/security/`: caller context and fail-closed authorization policy.
 - `migrations/`: versioned SQL migration and rollback contracts.
-- `contracts/`: data-mesh, trust telemetry, SLO, access, and evidence-policy
-  contracts.
+- `contracts/`: data-mesh, downstream realization, trust telemetry, SLO,
+  access, and evidence-policy contracts.
 - `docs/`: RFCs, standards, operations, architecture decisions, and runbooks.
 - `wiki/`: authored GitHub wiki source.
 
@@ -193,6 +194,7 @@ docker compose up --build
 | `make openapi-gate` | Validate OpenAPI quality. |
 | `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
+| `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
 | `make migration-contract-gate` | Validate migration contract structure. |
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make source-ingestion-worker-check` | Validate the run-once source-ingestion manifest and source-safe check-only output contract without calling Core. |
@@ -238,6 +240,7 @@ Documentation and governance checks:
 make documentation-contract-gate
 make implementation-truth-gate
 make quality-scorecard-gate
+make downstream-realization-contract-gate
 make supported-features-gate
 ```
 
