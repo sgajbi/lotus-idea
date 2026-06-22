@@ -22,11 +22,12 @@ source-ingestion worker CLI and `make source-ingestion-worker-check` also
 exist; the gate validates both manifest shape and source-safe check-only output
 shape. Accepted internal mutations now create source-safe outbox records with
 retryable failed status, published status, and dead-letter status through the
-repository port. A certified internal outbox delivery readiness diagnostic now
-reports aggregate backlog, status counts, durable repository posture, broker
-configuration posture, and certification blockers without exposing event
-identifiers or publishing events. That is recoverability foundation only; no
-broker adapter, downstream consumer, Gateway event, platform mesh event, or
+repository port. Certified internal outbox delivery readiness and run-once
+operator endpoints now report aggregate backlog/status posture and can execute
+one bounded configured-publisher pass without exposing event identifiers,
+aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
+or downstream claims. That is recoverability foundation only; no certified live
+broker runtime, downstream consumer, Gateway event, platform mesh event, or
 supported event publication exists. `lotus-gateway` now publishes bounded read-only advisor
 queue and candidate detail routes, but these foundations are not deployed
 scheduler daemon proof, live Core worker certification, Workbench proof, or

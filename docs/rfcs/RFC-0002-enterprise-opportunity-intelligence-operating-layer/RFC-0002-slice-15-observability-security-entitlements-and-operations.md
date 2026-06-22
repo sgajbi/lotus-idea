@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, outbox delivery, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, outbox delivery readiness/run-once, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
 
 ## Outcome
 
@@ -135,12 +135,21 @@ foundation:
     invalid retry-limit guard, role plus capability enforcement, product-safe
     payloads, and operation-event behavior for the outbox delivery readiness
     diagnostic.
-29. `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the
+29. `POST /api/v1/outbox-delivery/run-once` exposes the bounded outbox
+    delivery orchestration as an internal operator action with
+    `idea.outbox-delivery.run`. It emits bounded
+    `outbox_delivery_run_once` events, fails closed without valid broker
+    configuration, and returns aggregate counts only.
+30. `tests/integration/test_outbox_delivery_readiness_api.py` proves the
+    run-once action's blocked-without-broker posture, configured publisher
+    delivery path, permission denial, UTC validation, product-safe response
+    shape, and `not_certified` operation-event behavior.
+31. `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the
     contract-shaped runtime trust telemetry diagnostic for callers with the
     `operator` role and `idea.mesh.trust-telemetry.snapshot.read`, returning
     source-safe platform trust fields while emitting bounded
     `mesh_trust_telemetry_snapshot_read` operation events.
-30. `tests/integration/test_runtime_trust_telemetry_api.py` proves source-safe
+32. `tests/integration/test_runtime_trust_telemetry_api.py` proves source-safe
     payloads, role plus capability enforcement, timezone validation, and
     not-certified operation-event behavior for the runtime trust telemetry
     snapshot diagnostic.
@@ -166,9 +175,10 @@ The downstream realization readiness diagnostic is explicitly `not_certified`
 until Advise proposal/suitability intake, Manage action realization,
 Report/Render/Archive materialization, Gateway/Workbench product proof,
 runtime trust telemetry, and supported-feature evidence exist.
-The outbox delivery readiness diagnostic is explicitly `not_certified` until
-live broker runtime proof, downstream consumer contracts, platform mesh event
-certification, Gateway/Workbench proof, and supported-feature evidence exist.
+The outbox delivery readiness diagnostic and run-once operator action are
+explicitly `not_certified` until live broker runtime proof, downstream consumer
+contracts, platform mesh event certification, Gateway/Workbench proof, and
+supported-feature evidence exist.
 The runtime trust telemetry preview and snapshot diagnostics are explicitly
 `not_certified` until platform mesh certification, Gateway/Workbench
 discovery, and supported-feature evidence exist.

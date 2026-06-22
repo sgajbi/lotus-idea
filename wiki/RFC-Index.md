@@ -39,10 +39,11 @@ Current RFC-0002 implementation-start baseline:
    source-ingestion replay/conflict recovery, manifest-backed run-once
    ingestion worker CLI with check-only gate, and
    review/feedback/conversion/report workflow proof. A certified internal
-   outbox-delivery-readiness diagnostic now reports aggregate backlog/status
-   posture, durable repository posture, broker configuration posture, and
-   certification blockers without publishing events, exposing event
-   identifiers, calling downstream services, or promoting a supported feature.
+   outbox-delivery-readiness diagnostic and run-once operator action now
+   report aggregate backlog/status posture, durable repository posture, broker
+   configuration posture, and certification blockers while proving bounded
+   configured-publisher orchestration without exposing event identifiers,
+   calling downstream services, or promoting a supported feature.
 7. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
@@ -101,7 +102,7 @@ Current RFC-0002 implementation-start baseline:
     certified foundation endpoint inventory, current capabilities,
     implementation proof blockers, and unsupported boundaries.
 13. Slice 15 partially implements evidence replay, AI explanation readiness,
-    source-ingestion readiness, outbox delivery readiness, downstream
+    source-ingestion readiness, outbox delivery readiness/run-once, downstream
     realization readiness, and aggregate implementation-proof readiness
     supportability: operators can replay candidate evidence posture over
     current source refs, inspect model-risk blockers without invoking

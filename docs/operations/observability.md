@@ -66,6 +66,7 @@ Current instrumented operations:
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
 | `downstream_realization_submission` | Internal downstream submission posture for Advise/Manage conversion intents and Report evidence-pack requests | `lotus-idea` | `not_certified` |
+| `outbox_delivery_run_once` | Internal outbox delivery run-once operator action | `lotus-idea` | `not_certified` |
 | `outbox_delivery_readiness_read` | Internal outbox delivery readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `downstream_realization_readiness_read` | Internal downstream realization readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
@@ -120,10 +121,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
    trust telemetry preview and snapshot diagnostics while they are not yet
    platform-certified or published through Gateway/Workbench discovery, and the
    aggregate implementation-proof readiness diagnostic when any RFC-0002 proof
-   family remains uncertified. It also covers outbox
-   delivery readiness while broker configuration, live broker runtime proof,
-   downstream consumer contracts, platform mesh event certification, and
-   supported-feature evidence are absent.
+   family remains uncertified. It also covers outbox delivery run-once and
+   readiness while broker configuration, live broker runtime proof, downstream
+   consumer contracts, platform mesh event certification, and supported-feature
+   evidence are absent.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

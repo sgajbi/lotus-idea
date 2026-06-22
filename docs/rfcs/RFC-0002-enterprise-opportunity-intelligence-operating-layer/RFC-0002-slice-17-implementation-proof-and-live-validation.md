@@ -30,11 +30,14 @@ Prove the complete supported opportunity journey end to end.
    Advise, Manage, Report, Render, and Archive blockers with current
    conversion/report workflow counts, while preserving the no-downstream-call
    and no-supported-feature boundary.
-7. `GET /api/v1/outbox-delivery/readiness` now supplies the outbox-delivery
-   proof family used by the aggregate diagnostic. It reports broker,
+7. `GET /api/v1/outbox-delivery/readiness` and
+   `POST /api/v1/outbox-delivery/run-once` now supply the outbox-delivery
+   proof family used by the aggregate diagnostic. Readiness reports broker,
    downstream-consumer, platform mesh-event, Gateway/Workbench, and
-   supported-feature blockers without publishing events, exposing event
-   identifiers, exposing raw idempotency keys, or exposing broker payloads.
+   supported-feature blockers. Run-once proves the bounded internal publisher
+   orchestration surface and fail-closed broker configuration behavior without
+   exposing event identifiers, exposing raw idempotency keys, exposing broker
+   payloads, or claiming downstream delivery.
 8. `make downstream-realization-contract-gate` now validates the planned
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
@@ -77,9 +80,10 @@ The new downstream realization readiness diagnostic narrows the proof gap from
 the downstream proof gap. The downstream realization contract gate makes those
 blockers durable and machine-readable; it also does not close the downstream
 proof gap.
-The outbox-delivery readiness diagnostic does the same for broker and event
-delivery posture; it does not close the external publication or downstream
-consumer proof gap.
+The outbox-delivery readiness diagnostic and run-once operator action do the
+same for broker and event delivery posture; they do not close the external
+publication, platform mesh event certification, or downstream consumer proof
+gap.
 The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench

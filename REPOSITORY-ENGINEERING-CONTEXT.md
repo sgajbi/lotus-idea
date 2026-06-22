@@ -206,6 +206,13 @@ durable repository posture, broker configuration posture, and certification
 blockers without exposing event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims. This is not external
 event-publication certification, downstream delivery, or mesh certification.
+`POST /api/v1/outbox-delivery/run-once` now exposes the same run-once
+orchestration as a certified internal operator action requiring
+`idea.outbox-delivery.run`. It fails closed without valid broker configuration,
+does not mutate pending outbox records in that blocked posture, emits bounded
+`outbox_delivery_run_once` operation events, and returns aggregate counts only.
+This is still not live broker runtime certification, downstream consumer proof,
+Gateway/Workbench support, or supported-feature promotion.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report
