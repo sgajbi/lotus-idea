@@ -4,10 +4,7 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from app.application.outbox_delivery import (
-    OutboxPublishOutcome,
-    run_outbox_delivery_once,
-)
+from app.application.outbox_delivery import run_outbox_delivery_once
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
@@ -17,6 +14,7 @@ from app.domain import (
     OutboxEventStatus,
     build_candidate_outbox_event,
 )
+from app.ports.outbox_publisher import OutboxPublishOutcome
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
