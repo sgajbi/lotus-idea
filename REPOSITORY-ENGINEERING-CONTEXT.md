@@ -477,13 +477,14 @@ owned by upstream services.
 11. architecture report: `make architecture-boundary-report`
 12. quality scorecard refresh: `make quality-baseline`
 13. CI contract gate: `make ci-contract-gate`
-14. data-mesh contract gate: `make data-mesh-contract-gate`
-15. migration contract gate: `make migration-contract-gate`
-16. migration execution dry-run gate: `make migration-execution-gate`
-17. PostgreSQL runtime proof with configured integration URL:
+14. implementation-truth gate: `make implementation-truth-gate`
+15. data-mesh contract gate: `make data-mesh-contract-gate`
+16. migration contract gate: `make migration-contract-gate`
+17. migration execution dry-run gate: `make migration-execution-gate`
+18. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-18. apply migrations with configured PostgreSQL URL: `make migrate`
-19. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+19. apply migrations with configured PostgreSQL URL: `make migrate`
+20. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -496,7 +497,8 @@ owned by upstream services.
    `main`.
 
 Required baseline checks include lint, format check, typecheck, architecture
-boundary enforcement, OpenAPI quality, supported-feature gate,
+boundary enforcement, OpenAPI quality, implementation-truth gate,
+supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, unit tests, integration tests, e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
@@ -510,8 +512,18 @@ data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, action-version, least-privilege workflow
 controls, bounded workflow timeouts, no `continue-on-error: true` in critical
-lanes, non-suppressed auto-merge token usage, workflow-dispatch access, or
-merged-PR main-releasability dispatch from local or GitHub validation.
+lanes, implementation-truth enforcement, non-suppressed auto-merge token usage,
+workflow-dispatch access, or merged-PR main-releasability dispatch from local
+or GitHub validation.
+
+`make implementation-truth-gate` is blocking through `make lint`. It scans the
+durable current-state surfaces (`README.md`, repository context, operations and
+demo docs, quality docs, and wiki source) and fails unqualified claims of demo
+readiness, production readiness, external support, certification, live source
+ingestion, Gateway/Workbench support, or client-ready publication while the
+supported-feature registry has no implemented features. RFC target-state
+planning text is intentionally excluded; current-state surfaces must use
+explicit blocked, planned, unsupported, not-yet, or evidence-required wording.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

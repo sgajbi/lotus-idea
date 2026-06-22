@@ -16,6 +16,7 @@ Repo-native validation commands:
 make check
 make ci
 make ci-contract-gate
+make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
@@ -27,8 +28,8 @@ make quality-baseline
 ```
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
-OpenAPI quality, supported-feature gate, endpoint-certification gate, unit tests, integration
-tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
+OpenAPI quality, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
 jobs, and workflow lint.
@@ -68,7 +69,13 @@ validation, SBOM/release evidence, endpoint certification, supported-feature pro
 data-mesh contract validation, migration contract validation, migration execution dry-run
 validation, PostgreSQL runtime proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
-in critical lanes, and source-safe local quality gates.
+in critical lanes, implementation-truth enforcement, and source-safe local quality gates.
+
+The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
+and wiki source for unqualified current-state claims that imply demo readiness, production support,
+certification, live source ingestion, Gateway/Workbench support, or client-ready publication while
+no supported feature is implemented. RFC target-state planning text is excluded; current-state
+surfaces must describe unsupported, planned, blocked, or evidence-required posture explicitly.
 
 Data-mesh foundation checks:
 

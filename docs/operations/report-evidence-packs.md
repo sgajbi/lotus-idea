@@ -30,7 +30,7 @@ The endpoint does not:
 1. create a `lotus-report` package,
 2. create a `lotus-render` output,
 3. create a `lotus-archive` record,
-4. authorize client-ready publication,
+4. authorize any client-ready publication without downstream approval,
 5. grant suitability, compliance, mandate, execution, or client-communication
    authority,
 6. certify a data product,

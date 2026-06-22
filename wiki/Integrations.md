@@ -104,5 +104,5 @@ That route records source-provenanced request truth for reviewed report
 conversion intents and preserves Report/Render/Archive authority refs. It does
 not call downstream services, create proposals, create manage actions, create
 downstream report packages, render documents, archive material, authorize
-client-ready publication, or grant suitability, execution, compliance, mandate,
+any client-ready publication without downstream approval, or grant suitability, execution, compliance, mandate,
 or client-communication authority.
