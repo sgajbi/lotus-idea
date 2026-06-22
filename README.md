@@ -33,7 +33,8 @@ internal report evidence-pack request foundation plus a certified internal API
 for reviewed report conversion intents, and the first bounded operation-event
 observability foundation across certified internal signal, persistence,
 lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
-data-mesh-readiness APIs. The first versioned persistence schema, rollback
+data-mesh-readiness APIs plus a certified internal source-ingestion readiness
+diagnostic for operator configuration and certification blockers. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
 high-cash persistence plus the first internal review, feedback, conversion,
@@ -108,6 +109,14 @@ role, reads the repo-owned contract files above, and returns the current
 products, and `supportedFeaturePromoted=false`. It is not data-product
 certification and must not be exposed as Gateway/Workbench product discovery.
 
+`GET /api/v1/source-ingestion/readiness` is a certified internal operator
+diagnostic for the high-cash Core source-ingestion run-once worker posture. It
+requires `idea.source-ingestion.readiness.read` plus the `operator` role and
+reports manifest, Core base URL, durable repository configuration, and
+certification blockers. It does not call Core, certify live source ingestion,
+prove a scheduled worker deployment, certify a data product, expose
+Gateway/Workbench support, or promote a supported feature.
+
 The first consumer dependency set is aligned to the RFC-0002 source map:
 `lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
 projection, and benchmark assignment; `lotus-performance` returns and mandate
@@ -152,7 +161,10 @@ source-authority contracts only, not runtime certification.
   packages for reviewed report conversion intents without creating Report,
   Render, or Archive records. Internal data-mesh-readiness orchestration reads
   repo-owned contract truth and returns operator-facing planned/not-certified
-  posture without promoting products.
+  posture without promoting products. Internal source-ingestion-readiness
+  orchestration returns source-safe operator posture for the high-cash
+  run-once worker configuration and certification blockers without calling
+  Core or promoting live source support.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, report evidence-pack request governance, internal
@@ -175,9 +187,9 @@ source-authority contracts only, not runtime certification.
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, lifecycle, AI explanation, advisor queue, review, feedback,
   conversion, and report evidence-pack foundation APIs plus the
-  data-mesh-readiness diagnostic emit product-safe operation logs and the
-  `lotus_idea_operation_events_total` metric without sensitive labels or
-  supported-feature promotion.
+  data-mesh-readiness and source-ingestion-readiness diagnostics emit
+  product-safe operation logs and the `lotus_idea_operation_events_total`
+  metric without sensitive labels or supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.
 - `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.
 - `scripts/run_source_ingestion_worker.py`: run-once high-cash source-ingestion
@@ -290,6 +302,13 @@ $env:LOTUS_CORE_BASE_URL = "http://localhost:8310"
 Run mode is an internal run-once operator entrypoint only. It is not a scheduled
 daemon, deploy-pipeline worker proof, live Core certification, Gateway/Workbench
 support, data-product certification, or supported-feature promotion.
+
+To inspect source-ingestion run-once configuration and certification blockers
+without calling Core or writing repository state:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.source-ingestion.readiness.read" http://localhost:8330/api/v1/source-ingestion/readiness
+```
 
 Repository-backed endpoints report `durableStorageBacked=true` only in this
 configured posture. This does not promote data-product certification,

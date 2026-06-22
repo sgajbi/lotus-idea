@@ -41,11 +41,25 @@ foundation:
 10. `tests/integration/test_review_workflow_api.py` continues to prove the
     conversion and report evidence-pack API behavior while the event layer is
     active.
+11. `src/app/application/source_ingestion_readiness.py` adds a source-safe
+    readiness snapshot for the high-cash Core source-ingestion run-once worker
+    configuration and certification blockers.
+12. `GET /api/v1/source-ingestion/readiness` exposes that snapshot to
+    operators with `idea.source-ingestion.readiness.read`, returns
+    `not_certified` posture, and emits bounded
+    `source_ingestion_readiness_read` operation events.
+13. `tests/unit/test_source_ingestion_readiness.py` and
+    `tests/integration/test_source_ingestion_readiness_api.py` prove blocked,
+    configured, permission-denied, relative-manifest, and operation-event
+    behavior without calling Core or writing repository state.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
 downstream Report/Render/Archive realization, Gateway/Workbench proof,
 dashboard/alert certification, or supported-feature promotion.
+The source-ingestion readiness diagnostic is explicitly `not_certified` until
+live Core source proof, scheduled worker deploy proof, runtime data-mesh
+telemetry, and Gateway/Workbench proof exist.
 
 ## Required Work
 
@@ -61,8 +75,8 @@ dashboard/alert certification, or supported-feature promotion.
 
 1. Add dashboard and alert references only after metric families are stable and
    implemented.
-2. Add supportability endpoints or diagnostics for runtime source readiness
-   once live source adapters and durable persistence exist.
+2. Add live runtime source-readiness proof after Core source adapters and
+   deployable worker runtime exist.
 3. Add Gateway path entitlement proof when Gateway routes are implemented.
 4. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
    and container reviews for the full supported service surface before any

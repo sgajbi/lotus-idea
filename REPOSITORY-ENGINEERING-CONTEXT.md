@@ -128,10 +128,14 @@ and `scripts/run_source_ingestion_worker.py` now add the versioned
 manifest-backed run-once worker entrypoint, product-safe check-only summary,
 and product-safe run summary. `make source-ingestion-worker-check` validates
 the example manifest in the local lint path so future agent changes cannot
-silently break the worker contract. There is still no live Core integration
-proof, scheduled daemon/deploy source-ingestion worker, Gateway route,
-Workbench proof, data-product certification, or supported-feature promotion
-yet.
+silently break the worker contract.
+`src/app/application/source_ingestion_readiness.py` and
+`GET /api/v1/source-ingestion/readiness` now expose a certified internal
+operator diagnostic for run-once worker configuration and certification
+blockers without calling Core or leaking source payloads. There is still no
+live Core integration proof, scheduled daemon/deploy source-ingestion worker,
+Gateway route, Workbench proof, data-product certification, or
+supported-feature promotion yet.
 The upstream Core cash-weight contract dependency is tracked in
 `sgajbi/lotus-core#430`.
 
@@ -294,8 +298,9 @@ fallback/verifier evaluation over persisted candidate evidence:
 requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
 runtime workflows, persist durable AI lineage, or grant downstream authority.
-All ten business routes plus the data-mesh-readiness operator diagnostic are
-covered by OpenAPI and endpoint certification evidence. The PostgreSQL runtime
+All ten business routes plus the data-mesh-readiness and
+source-ingestion-readiness operator diagnostics are covered by OpenAPI and
+endpoint certification evidence. The PostgreSQL runtime
 proof now covers the high-cash persist, advisor queue, lifecycle, review,
 feedback, conversion intent/outcome, and report evidence-pack request path.
 This is not yet a supported product capability: there are no live source
@@ -351,10 +356,13 @@ sensitive operation-attribute rejection. High-cash evaluation, candidate
 persistence, lifecycle transition, advisor review queue, review action,
 AI explanation, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and data-mesh-readiness diagnostic APIs emit bounded
-operation events without
+operation events. The source-ingestion-readiness diagnostic emits
+`source_ingestion_readiness_read` events with `not_certified` supportability,
+blocked/accepted configuration posture, and no source payloads. Operation
+events are emitted without
 portfolio/client/account/holding/transaction identifiers, request/response
 bodies, trace ids, or correlation ids as metric labels. This is not yet full
-production observability: live AI runtime telemetry, live source readiness,
+production observability: live AI runtime telemetry, live source certification,
 dashboard/alert, Gateway entitlement, durable persistence, data-product
 certification, and supported-feature promotion remain planned.
 
@@ -414,7 +422,10 @@ logs; fix or document the owned warning source instead.
    through the same idempotency/audit posture. Report evidence-pack
    orchestration applies Slice 13 evidence-pack governance to report conversion
    intents and persists source-provenanced request packages without downstream
-   Report/Render/Archive realization.
+   Report/Render/Archive realization. Source-ingestion-readiness orchestration
+   reports manifest, Core base URL, durable repository configuration, and
+   certification blockers for the high-cash run-once worker without executing
+   Core source reads.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence

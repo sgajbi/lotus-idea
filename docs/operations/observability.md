@@ -38,6 +38,7 @@ Current instrumented operations:
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
+| `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
 
 Metric labels are limited to:
 
@@ -67,10 +68,17 @@ fields. Do not add identifiers or payload fragments to operation labels.
 7. `permission_denied` means fail-closed capability policy blocked the caller.
 8. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
-9. `blocked` means the verifier rejected unsupported AI output or the mesh-readiness diagnostic
-   remains blocked until runtime trust telemetry and platform mesh certification exist.
+9. `blocked` means the verifier rejected unsupported AI output, the mesh-readiness diagnostic
+   remains blocked until runtime trust telemetry and platform mesh certification exist, or the
+   source-ingestion readiness diagnostic is missing run-once worker configuration inputs.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production
 recovery readiness, Gateway/Workbench route, downstream Report/Render/Archive realization, or any
 supported business feature.
+
+The source-ingestion readiness diagnostic reports `accepted` only when the
+configured manifest, Core base URL, and durable repository environment are
+present. It still reports `not_certified` until live Core source proof,
+scheduled worker deploy proof, runtime data-mesh telemetry, and
+Gateway/Workbench proof exist.

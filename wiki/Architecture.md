@@ -109,6 +109,10 @@ source-ingestion worker CLI with check-only validation through
 `make source-ingestion-worker-check`. Production storage readiness still
 requires deploy migration evidence, scheduled daemon/deploy worker evidence,
 and live Core source-worker evidence.
+`GET /api/v1/source-ingestion/readiness` now exposes the internal operator
+readiness posture for that run-once worker configuration and certification
+blockers without calling Core, certifying live source ingestion, or promoting a
+supported feature.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal

@@ -35,6 +35,13 @@ business feature.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.
+The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
+for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
+run-once worker manifest, Core base URL, durable repository configuration, and
+remaining certification blockers without calling Core or exposing source
+payloads. It remains `not_certified` until live Core source proof, scheduled
+worker deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof
+exist.
 
 Initial commands:
 
@@ -69,8 +76,8 @@ RFC-0002 Slice 15 now emits bounded operation-event logs and the
 candidate persistence, lifecycle transitions, advisor queue reads, review
 actions, AI explanation fallback/verifier evaluation, feedback records,
 conversion intent recording, conversion outcome
-recording, report evidence-pack request recording, and data-mesh-readiness
-diagnostic reads.
+recording, report evidence-pack request recording, data-mesh-readiness
+diagnostic reads, and source-ingestion-readiness diagnostic reads.
 
 Current outcomes:
 
@@ -88,7 +95,8 @@ Current outcomes:
    explanation precondition failed.
 10. `blocked`: verifier rejected unsupported AI output, or expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
-    certification remain absent.
+    certification remain absent, or source-ingestion readiness is missing
+    run-once worker configuration/certification proof.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -111,6 +119,6 @@ The current certified foundation endpoint inventory is summarized in
 The inventory covers high-cash evaluation, high-cash persistence, lifecycle
 transition, AI explanation evaluation, advisor queue, review action, feedback,
 conversion intent, conversion outcome, report evidence-pack request, and
-data-mesh-readiness diagnostic endpoints. These endpoints are certified as
+data-mesh-readiness and source-ingestion-readiness diagnostic endpoints. These endpoints are certified as
 internal foundations or operator diagnostics only; they are not supported
 business features.
