@@ -256,7 +256,7 @@ def test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture()
         "platform_caller_context_entitlement_proof_missing",
         "workbench_product_proof_missing",
         "data_product_certification_missing",
-        "runtime_trust_telemetry_missing",
+        "certified_runtime_trust_telemetry_missing",
     )
     assert snapshot.supported_feature_promoted is False
     assert reviewable_candidate_id not in str(snapshot.exclusion_counts)

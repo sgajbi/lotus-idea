@@ -126,7 +126,7 @@ def _review_queue_certification_blockers(*, durable_storage_backed: bool) -> tup
             "platform_caller_context_entitlement_proof_missing",
             "workbench_product_proof_missing",
             "data_product_certification_missing",
-            "runtime_trust_telemetry_missing",
+            "certified_runtime_trust_telemetry_missing",
         )
     )
     return tuple(blockers)

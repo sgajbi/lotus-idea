@@ -111,5 +111,5 @@ def _readiness_blockers(
     if any(status != "active" for status in product_statuses):
         blockers.append("producer_products_not_active")
     if telemetry_blocking.get("blocked") is True:
-        blockers.append("runtime_trust_telemetry_blocked")
+        blockers.append("certified_runtime_trust_telemetry_missing")
     return tuple(blockers)

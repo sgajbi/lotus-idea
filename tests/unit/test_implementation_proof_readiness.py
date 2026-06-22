@@ -27,9 +27,9 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.certification_ready is False
-    assert snapshot.capability_count == 7
+    assert snapshot.capability_count == 8
     assert snapshot.certification_ready_capability_count == 0
-    assert snapshot.blocked_capability_count == 7
+    assert snapshot.blocked_capability_count == 8
     assert snapshot.supported_feature_count == 0
     assert snapshot.supported_features_promoted is False
     assert "source_ingestion_manifest_not_configured" in snapshot.overall_blockers
@@ -53,10 +53,18 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "advisor-review-queue",
         "ai-explanation",
         "data-mesh-certification",
+        "runtime-trust-telemetry-preview",
         "workbench-product-proof",
         "downstream-realization",
         "supported-feature-promotion",
     }
+    runtime_telemetry = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "runtime-trust-telemetry-preview"
+    )
+    assert "make runtime-trust-telemetry-preview-check" in runtime_telemetry.evidence_refs
+    assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
     downstream = next(
         capability
         for capability in snapshot.capabilities

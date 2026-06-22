@@ -25,7 +25,7 @@ def test_data_mesh_readiness_snapshot_reports_not_certified_posture() -> None:
     assert snapshot.blockers == (
         "data_mesh_not_certified",
         "producer_products_not_active",
-        "runtime_trust_telemetry_blocked",
+        "certified_runtime_trust_telemetry_missing",
     )
     assert snapshot.source_of_truth == {
         "producer_declaration": "contracts/domain-data-products/lotus-idea-products.v1.json",

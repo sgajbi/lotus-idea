@@ -44,9 +44,9 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["certificationReady"] is False
-    assert payload["capabilityCount"] == 7
+    assert payload["capabilityCount"] == 8
     assert payload["certificationReadyCapabilityCount"] == 0
-    assert payload["blockedCapabilityCount"] == 7
+    assert payload["blockedCapabilityCount"] == 8
     assert payload["supportedFeatureCount"] == 0
     assert payload["supportedFeaturesPromoted"] is False
     assert payload["supportedFeaturePromoted"] is False
@@ -60,6 +60,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "advisor-review-queue",
         "ai-explanation",
         "data-mesh-certification",
+        "runtime-trust-telemetry-preview",
         "workbench-product-proof",
         "downstream-realization",
         "supported-feature-promotion",

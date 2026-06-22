@@ -25,6 +25,10 @@ from app.application.review_queue import (
     ReviewQueueReadinessSnapshot,
     build_review_queue_readiness_snapshot,
 )
+from app.application.runtime_trust_telemetry import (
+    RuntimeTrustTelemetryPreview,
+    build_runtime_trust_telemetry_preview,
+)
 from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
@@ -99,6 +103,11 @@ def build_implementation_proof_readiness_snapshot(
     )
     ai_explanation = build_ai_explanation_readiness_snapshot()
     data_mesh = build_data_mesh_readiness_snapshot(repository_root=repository_root)
+    runtime_trust_telemetry = build_runtime_trust_telemetry_preview(
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+        generated_at_utc=evaluated_at_utc,
+    )
     downstream_realization = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
@@ -110,6 +119,7 @@ def build_implementation_proof_readiness_snapshot(
         _review_queue_capability(review_queue),
         _ai_explanation_capability(ai_explanation),
         _data_mesh_capability(data_mesh),
+        _runtime_trust_telemetry_capability(runtime_trust_telemetry),
         _workbench_product_capability(),
         _downstream_realization_capability(downstream_realization),
         _supported_feature_capability(supported_feature_count),
@@ -235,8 +245,28 @@ def _data_mesh_capability(
             "contracts/domain-data-products/lotus-idea-consumers.v1.json",
             "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
             "GET /api/v1/data-mesh/readiness",
+            "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
+            "make runtime-trust-telemetry-preview-check",
         ),
         blockers=snapshot.blockers,
+    )
+
+
+def _runtime_trust_telemetry_capability(
+    snapshot: RuntimeTrustTelemetryPreview,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "runtime-trust-telemetry-preview",
+        "Source-safe runtime trust telemetry preview",
+        readiness_status=("ready" if snapshot.certification_ready else "blocked"),
+        supportability_status=snapshot.certification_status,
+        evidence_refs=(
+            "src/app/application/runtime_trust_telemetry.py",
+            "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
+            "scripts/generate_runtime_trust_telemetry_preview.py",
+            "make runtime-trust-telemetry-preview-check",
+        ),
+        blockers=snapshot.certification_blockers,
     )
 
 

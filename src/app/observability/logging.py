@@ -64,6 +64,7 @@ class IdeaOperation(StrEnum):
     REPORT_EVIDENCE_PACK = "report_evidence_pack"
     DOWNSTREAM_REALIZATION_READINESS_READ = "downstream_realization_readiness_read"
     MESH_READINESS_READ = "mesh_readiness_read"
+    MESH_TRUST_TELEMETRY_PREVIEW_READ = "mesh_trust_telemetry_preview_read"
     SOURCE_INGESTION_READINESS_READ = "source_ingestion_readiness_read"
     IMPLEMENTATION_PROOF_READINESS_READ = "implementation_proof_readiness_read"
 

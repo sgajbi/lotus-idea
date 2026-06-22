@@ -23,6 +23,6 @@ def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> Non
         "durable_ai_lineage_store_missing",
         "workflow_pack_runtime_contract_not_certified",
         "model_risk_operations_dashboard_missing",
-        "runtime_trust_telemetry_missing",
+        "certified_runtime_trust_telemetry_missing",
         "workbench_product_proof_missing",
     )

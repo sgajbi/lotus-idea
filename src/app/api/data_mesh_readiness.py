@@ -199,7 +199,7 @@ DATA_MESH_READINESS_ROUTE: RouteMetadata = {
                         "blockers": [
                             "data_mesh_not_certified",
                             "producer_products_not_active",
-                            "runtime_trust_telemetry_blocked",
+                            "certified_runtime_trust_telemetry_missing",
                         ],
                         "certificationGatesBeforePromotion": [
                             "business capability implemented with source-owned evidence and endpoint certification"
