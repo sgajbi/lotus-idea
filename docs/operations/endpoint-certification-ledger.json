@@ -115,6 +115,35 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-candidates/{candidateId}/evidence-replay",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Replay the persisted evidence hash posture for an internal idea candidate against caller-supplied current source refs without exposing raw source routes or payloads.",
+      "when_to_use": "Use as the RFC-0002 Slice 06, Slice 10, and Slice 15 API foundation when an internal operator has idea.candidate.evidence.replay capability and needs product-safe matched, stale-source, hash-mismatch, expired, or missing-candidate replay posture for an existing persisted candidate.",
+      "when_not_to_use": "Do not use as live Core source-ingestion proof, data-product certification proof, downstream workflow execution proof, source-system route disclosure, raw evidence export, Gateway contract, Workbench product proof, durable production recovery certification, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"evaluatedAtUtc\":\"2026-06-21T10:30:00Z\",\"currentSourceRefs\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/integration/portfolios/{portfolioRef}/core-snapshot\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-state-snapshot-demo\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]}"
+      ],
+      "response_examples": [
+        "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"matched\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":\"sha256:evidence-lineage\",\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}",
+        "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"hash_mismatch\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":\"sha256:changed-evidence-lineage\",\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.candidate.evidence.replay capability or operator role.",
+        "404 returns product-safe Problem Details when the candidate is not found for evidence replay.",
+        "400 returns product-safe Problem Details when currentSourceRefs is empty or request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_returns_matched_posture_without_source_payloads",
+        "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_reports_hash_mismatch_and_stale_source",
+        "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_requires_operator_permission_and_existing_candidate",
+        "tests/integration/test_candidate_evidence_replay_api.py::test_candidate_evidence_replay_api_rejects_missing_current_source_refs",
+        "tests/integration/test_api_operation_events.py::test_candidate_evidence_replay_api_emits_bounded_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
@@ -379,10 +408,18 @@
       "purpose": "Report lightweight service health for diagnostics and platform smoke checks.",
       "when_to_use": "Use for simple service health probes and local diagnostics.",
       "when_not_to_use": "Do not use as a readiness or dependency-quality signal.",
-      "request_examples": ["No request body."],
-      "response_examples": ["{\"status\":\"ok\",\"service\":\"lotus-idea\"}"],
-      "error_examples": ["Unhandled service errors return product-safe Problem Details."],
-      "test_evidence": ["tests/integration/test_health.py::test_health_endpoints"],
+      "request_examples": [
+        "No request body."
+      ],
+      "response_examples": [
+        "{\"status\":\"ok\",\"service\":\"lotus-idea\"}"
+      ],
+      "error_examples": [
+        "Unhandled service errors return product-safe Problem Details."
+      ],
+      "test_evidence": [
+        "tests/integration/test_health.py::test_health_endpoints"
+      ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
@@ -393,10 +430,18 @@
       "purpose": "Report whether the service process is live.",
       "when_to_use": "Use for liveness probes that should only prove the process is running.",
       "when_not_to_use": "Do not use to decide whether the service is ready for traffic.",
-      "request_examples": ["No request body."],
-      "response_examples": ["{\"status\":\"live\"}"],
-      "error_examples": ["Unhandled service errors return product-safe Problem Details."],
-      "test_evidence": ["tests/integration/test_health.py::test_health_endpoints"],
+      "request_examples": [
+        "No request body."
+      ],
+      "response_examples": [
+        "{\"status\":\"live\"}"
+      ],
+      "error_examples": [
+        "Unhandled service errors return product-safe Problem Details."
+      ],
+      "test_evidence": [
+        "tests/integration/test_health.py::test_health_endpoints"
+      ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
@@ -407,10 +452,20 @@
       "purpose": "Report whether the service is ready to receive traffic.",
       "when_to_use": "Use for readiness probes and deployment routing decisions.",
       "when_not_to_use": "Do not use as a business capability or upstream data-quality signal.",
-      "request_examples": ["No request body."],
-      "response_examples": ["{\"status\":\"ready\"}", "{\"status\":\"draining\"}"],
-      "error_examples": ["503 readiness response returns {\"status\":\"draining\"} during intentional drain."],
-      "test_evidence": ["tests/integration/test_health.py::test_health_endpoints", "tests/integration/test_health.py::test_readiness_reports_draining_state"],
+      "request_examples": [
+        "No request body."
+      ],
+      "response_examples": [
+        "{\"status\":\"ready\"}",
+        "{\"status\":\"draining\"}"
+      ],
+      "error_examples": [
+        "503 readiness response returns {\"status\":\"draining\"} during intentional drain."
+      ],
+      "test_evidence": [
+        "tests/integration/test_health.py::test_health_endpoints",
+        "tests/integration/test_health.py::test_readiness_reports_draining_state"
+      ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
@@ -421,10 +476,18 @@
       "purpose": "Report service identity and policy-version metadata for operators and validators.",
       "when_to_use": "Use for operator diagnostics, inventory, and validation metadata checks.",
       "when_not_to_use": "Do not use as a business data or supportability endpoint.",
-      "request_examples": ["No request body."],
-      "response_examples": ["{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\"}"],
-      "error_examples": ["Unhandled service errors return product-safe Problem Details."],
-      "test_evidence": ["tests/e2e/test_smoke.py::test_metadata_endpoint"],
+      "request_examples": [
+        "No request body."
+      ],
+      "response_examples": [
+        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\"}"
+      ],
+      "error_examples": [
+        "Unhandled service errors return product-safe Problem Details."
+      ],
+      "test_evidence": [
+        "tests/e2e/test_smoke.py::test_metadata_endpoint"
+      ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     }
   ]

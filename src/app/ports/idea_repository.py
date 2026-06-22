@@ -9,6 +9,7 @@ from app.domain import (
     ConversionIntentResult,
     ConversionOutcomeResult,
     ConversionPersistenceResult,
+    EvidenceReplayResult,
     EvidencePackPersistenceResult,
     GovernedConversionIntent,
     IdeaCandidate,
@@ -19,6 +20,7 @@ from app.domain import (
     ReviewActionResult,
     ReviewPersistenceResult,
     FeedbackResult,
+    SourceRef,
 )
 
 
@@ -51,6 +53,16 @@ class CandidateLifecycleRepository(Protocol):
         transition_id: str | None = None,
         reason_codes: tuple[str, ...] = (),
     ) -> LifecyclePersistenceResult: ...
+
+
+class CandidateEvidenceReplayRepository(Protocol):
+    def replay_evidence(
+        self,
+        candidate_id: str,
+        *,
+        current_source_refs: tuple[SourceRef, ...],
+        evaluated_at_utc: datetime | None = None,
+    ) -> EvidenceReplayResult: ...
 
 
 class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
@@ -142,6 +154,7 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
 class IdeaRepository(
     CandidatePersistenceRepository,
     CandidateLifecycleRepository,
+    CandidateEvidenceReplayRepository,
     ReviewWorkflowRepository,
     ConversionWorkflowRepository,
     ReportEvidenceWorkflowRepository,
