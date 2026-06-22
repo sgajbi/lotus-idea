@@ -221,13 +221,14 @@ score attachment; priority buckets; stable review queue ordering; snooze,
 suppression, unsupported-evidence, expired, unscored, non-reviewable, and
 duplicate exclusion rules; repository-snapshot application orchestration in
 `src/app/application/review_queue.py`; certified internal advisor queue API
-foundation in `src/app/api/review_queues.py`; and golden unit/integration
-coverage for expected ordering and edge cases. This is not yet a supported
-queue product: database-backed queue projection proof exists only inside the
-opt-in PostgreSQL runtime proof, and bounded read-only Gateway publication now
-exists for the advisor queue; Workbench proof, entitlement-backed scope
-filtering, data-product certification, trust telemetry, and supported-feature
-promotion remain planned.
+foundation in `src/app/api/review_queues.py`; optional
+tenant/book/portfolio/client access-scope filtering over persisted candidate
+truth; and golden unit/integration coverage for expected ordering and edge
+cases. This is not yet a supported queue product: database-backed queue
+projection proof exists only inside the opt-in PostgreSQL runtime proof, and
+bounded read-only Gateway publication now exists for the advisor queue.
+Workbench proof, platform caller-context entitlement proof, data-product
+certification, trust telemetry, and supported-feature promotion remain planned.
 
 RFC-0002 Slice 08 is partially implemented as an internal advisor review and
 feedback governance plus certified API foundation in
@@ -292,7 +293,8 @@ evidence hashes with matched, stale-source, hash-mismatch, expired, and
 not-found outcomes, without live Core calls, raw source export, downstream
 authority, Workbench proof, data-product certification, or
 supported-feature promotion. `GET /api/v1/review-queues/advisor` exposes deterministic
-advisor queue projection over persisted candidate snapshots. The review-action
+advisor queue projection over persisted candidate snapshots and optional
+tenant/book/portfolio/client scope filters. The review-action
 and feedback APIs expose internal review workflow persistence over the same
 repository provider and return accepted, replayed, not-found, conflict,
 permission, or invalid-state posture without granting downstream authority.
