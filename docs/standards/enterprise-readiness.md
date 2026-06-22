@@ -7,8 +7,10 @@ Enterprise-quality enforcement is repo-native from day one. `make lint`, `make c
 lanes protect architecture boundaries, maintainability thresholds, documentation surface
 contracts, quality-scorecard truth, OpenAPI quality, data-mesh
 contract posture, migration safety, supported-feature promotion control, endpoint certification,
-security audit, coverage, workflow timeout posture, no soft-failed critical CI jobs, and
-implementation-truth claims in README/docs/wiki current-state surfaces.
+security audit, coverage, PostgreSQL runtime proof, workflow timeout posture, no soft-failed
+critical CI jobs, and implementation-truth claims in README/docs/wiki current-state surfaces.
+Protected `main` requires the strict PR Merge Gate status set, including
+`PR Merge Gate / PostgreSQL Runtime Proof`, before merge.
 
 Day-one enterprise posture is governed by
 `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`.

@@ -43,6 +43,21 @@ source-ingestion worker manifest validation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
 jobs, and workflow lint.
 
+Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
+
+1. `PR Merge Gate / Workflow Lint`
+2. `PR Merge Gate / Lint Typecheck Security`
+3. `PR Merge Gate / Tests (unit)`
+4. `PR Merge Gate / Tests (integration)`
+5. `PR Merge Gate / Tests (e2e)`
+6. `PR Merge Gate / Coverage Gate (Combined)`
+7. `PR Merge Gate / PostgreSQL Runtime Proof`
+8. `PR Merge Gate / Validate Docker Build`
+
+The PostgreSQL runtime proof is required explicitly, not only as a Docker-build dependency, because
+it proves durable repository behavior, migration rollback/reapply, idempotency replay, and
+source-ingestion recovery against real `postgres:18-alpine` state.
+
 Persistence adapter validation:
 
 1. `tests/unit/test_postgres_repository.py` exercises the PostgreSQL repository
