@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Any
 
 from app.application.source_ingestion import run_high_cash_source_ingestion_batch
+from app.application.source_ingestion_readiness import (
+    CORE_BASE_URL_ENV,
+    MANIFEST_ENV,
+    TIMEOUT_SECONDS_ENV,
+)
 from app.application.source_ingestion_worker import (
     source_ingestion_worker_plan_from_manifest,
     summarize_source_ingestion_worker_failure,
@@ -22,11 +27,6 @@ from app.infrastructure.downstream_client import (
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
 from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
-
-
-CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
-MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
-TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS"
 
 
 def main(argv: list[str] | None = None) -> int:

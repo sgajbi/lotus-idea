@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -8,8 +12,43 @@ from fastapi.testclient import TestClient
 
 import app.api.source_ingestion_readiness as source_ingestion_readiness_api
 from app.application.source_ingestion_readiness import CORE_BASE_URL_ENV, MANIFEST_ENV
+from app.application.source_ingestion_worker import (
+    MANIFEST_SCHEMA_VERSION,
+    source_ingestion_worker_plan_from_manifest,
+)
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
+from app.ports.core_sources import (
+    CoreHighCashEvidence,
+    CoreHighCashEvidenceRequest,
+    CoreOpportunitySourcePort,
+)
 from app.repository_state import DATABASE_URL_ENV
+from app.repository_state import reset_idea_repository_for_tests
+from app.source_ingestion_state import SourceIngestionRuntime, SourceIngestionRuntimeBlocker
+
+
+AS_OF_DATE = date(2026, 6, 21)
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+
+
+@pytest.fixture(autouse=True)
+def reset_repository_provider() -> Iterator[None]:
+    reset_idea_repository_for_tests()
+    yield
+    reset_idea_repository_for_tests()
+
+
+@dataclass
+class RecordingCoreSource(CoreOpportunitySourcePort):
+    seen_request: CoreHighCashEvidenceRequest | None = None
+
+    def fetch_high_cash_evidence(
+        self, request: CoreHighCashEvidenceRequest
+    ) -> CoreHighCashEvidence:
+        self.seen_request = request
+        return _core_evidence()
 
 
 def source_ingestion_readiness_headers(
@@ -22,6 +61,19 @@ def source_ingestion_readiness_headers(
         "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-source-ingestion-readiness-api",
+    }
+
+
+def source_ingestion_run_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.source-ingestion.run",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-source-ingestion-run-api",
     }
 
 
@@ -174,3 +226,258 @@ def test_source_ingestion_readiness_api_emits_configured_run_once_event(
             None,
         )
     ]
+
+
+def test_source_ingestion_run_once_api_blocks_without_durable_repository(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(MANIFEST_ENV, raising=False)
+    monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
+    runtime_builder_called = False
+
+    def fail_if_called() -> SourceIngestionRuntime:
+        nonlocal runtime_builder_called
+        runtime_builder_called = True
+        raise AssertionError("runtime builder must not run without durable repository")
+
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        fail_if_called,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "blocked"
+    assert payload["durableStorageBacked"] is False
+    assert payload["totalCount"] == 0
+    assert payload["decisionCounts"]["accepted"] == 0
+    assert payload["configurationBlockers"] == ["durable_repository_not_configured"]
+    assert runtime_builder_called is False
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+    assert "idempotency" not in response.text.lower()
+
+
+def test_source_ingestion_run_once_api_blocks_runtime_configuration_without_mutation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    reset_idea_repository_for_tests(repository=repository)
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda _repository: True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        lambda: SourceIngestionRuntimeBlocker(
+            "source_ingestion_manifest_not_configured",
+            configured_manifest_available=False,
+            core_base_url_configured=False,
+        ),
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "blocked"
+    assert payload["durableStorageBacked"] is True
+    assert payload["configuredManifestAvailable"] is False
+    assert payload["coreBaseUrlConfigured"] is False
+    assert payload["totalCount"] == 0
+    assert "source_ingestion_manifest_not_configured" in payload["configurationBlockers"]
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    reset_idea_repository_for_tests(repository=repository)
+    source = RecordingCoreSource()
+    runtime = SourceIngestionRuntime(
+        plan=source_ingestion_worker_plan_from_manifest(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "correlationId": "corr-source-ingestion-run-api",
+                "traceId": "trace-source-ingestion-run-api",
+                "workItems": [
+                    {
+                        "portfolioId": PORTFOLIO_ID,
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
+            }
+        ),
+        core_source=source,
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda _repository: True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        lambda: runtime,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "completed"
+    assert payload["supportabilityStatus"] == "not_certified"
+    assert payload["sourceAuthority"] == "lotus-core"
+    assert payload["opportunityFamily"] == "high_cash"
+    assert payload["durableStorageBacked"] is True
+    assert payload["configuredManifestAvailable"] is True
+    assert payload["coreBaseUrlConfigured"] is True
+    assert payload["totalCount"] == 1
+    assert payload["decisionCounts"]["accepted"] == 1
+    assert payload["configurationBlockers"] == []
+    assert payload["liveSourceCertified"] is False
+    assert payload["supportedFeaturePromoted"] is False
+    assert "live_core_source_proof_missing" in payload["certificationBlockers"]
+    assert len(repository.snapshot().candidate_records) == 1
+    assert source.seen_request is not None
+    assert source.seen_request.correlation_id == "corr-source-ingestion-run-api"
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+    assert "candidateId" not in response.text
+    assert "idempotency" not in response.text.lower()
+
+
+def test_source_ingestion_run_once_api_requires_operator_permission() -> None:
+    client = TestClient(app)
+
+    response = client.post("/api/v1/source-ingestion/run-once")
+    role_denied = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(roles="advisor"),
+    )
+    capability_denied = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(
+            capabilities="idea.source-ingestion.readiness.read",
+        ),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
+
+
+def test_source_ingestion_run_once_api_emits_not_certified_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    reset_idea_repository_for_tests(repository=repository)
+    runtime = SourceIngestionRuntime(
+        plan=source_ingestion_worker_plan_from_manifest(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "workItems": [
+                    {
+                        "portfolioId": PORTFOLIO_ID,
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
+            }
+        ),
+        core_source=RecordingCoreSource(),
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda _repository: True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        lambda: runtime,
+    )
+    events: list[tuple[str, str, str, bool, bool, str | None, dict[str, str]]] = []
+
+    def capture(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.supportability_status.value,
+                event.durable_storage_backed,
+                event.supported_feature_promoted,
+                event.error_code,
+                dict(event.attributes),
+            )
+        )
+
+    monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [
+        (
+            "source_ingestion_run_once",
+            "accepted",
+            "not_certified",
+            True,
+            False,
+            None,
+            {"work_item_count_bucket": "1-10"},
+        )
+    ]
+
+
+def _source_ref(product_id: str) -> SourceRef:
+    return SourceRef(
+        product_id=product_id,
+        source_system=SourceSystem.LOTUS_CORE,
+        product_version="v1",
+        route=f"/source/{product_id}",
+        as_of_date=AS_OF_DATE,
+        generated_at_utc=EVALUATED_AT,
+        content_hash=f"sha256:{product_id}",
+        data_quality_status="complete",
+        freshness=EvidenceFreshness.CURRENT,
+    )
+
+
+def _core_evidence() -> CoreHighCashEvidence:
+    return CoreHighCashEvidence(
+        source_reported_cash_weight=Decimal("0.18"),
+        portfolio_state_ref=_source_ref("lotus-core:PortfolioStateSnapshot:v1"),
+        holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
+        cash_movement_ref=_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
+        cashflow_projection_ref=_source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+    )

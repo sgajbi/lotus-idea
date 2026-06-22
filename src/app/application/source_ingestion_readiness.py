@@ -11,6 +11,7 @@ from app.repository_state import DATABASE_URL_ENV
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
+TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS"
 EXAMPLE_MANIFEST_PATH = Path(
     "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
 )
@@ -48,7 +49,7 @@ def build_source_ingestion_readiness_snapshot(
 ) -> SourceIngestionReadinessSnapshot:
     example_manifest = repository_root / EXAMPLE_MANIFEST_PATH
     configured_manifest = os.getenv(MANIFEST_ENV, "").strip()
-    configured_manifest_path = _resolve_manifest_path(
+    configured_manifest_path = resolve_source_ingestion_manifest_path(
         configured_manifest,
         repository_root=repository_root,
     )
@@ -100,7 +101,7 @@ def _configuration_blockers(
     return tuple(blockers)
 
 
-def _resolve_manifest_path(
+def resolve_source_ingestion_manifest_path(
     configured_manifest: str,
     *,
     repository_root: Path,

@@ -8,6 +8,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.application.source_ingestion import (
+    HighCashSourceIngestionBatchResult,
+    HighCashSourceIngestionDecision,
+    run_high_cash_source_ingestion_batch,
+)
 from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
@@ -25,6 +31,11 @@ from app.security.caller_context import (
     PermissionDeniedError,
     require_role_and_capability,
 )
+from app.source_ingestion_state import (
+    SourceIngestionRuntime,
+    SourceIngestionRuntimeBlocker,
+    build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
+)
 
 
 class RouteMetadata(TypedDict):
@@ -40,6 +51,10 @@ class RouteMetadata(TypedDict):
 
 _READ_SOURCE_INGESTION_READINESS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.source-ingestion.readiness.read",
+    allowed_roles=("operator",),
+)
+_RUN_SOURCE_INGESTION_POLICY = CapabilityPolicy.for_roles(
+    required_capability="idea.source-ingestion.run",
     allowed_roles=("operator",),
 )
 
@@ -91,6 +106,74 @@ class SourceIngestionReadinessResponse(CamelModel):
         )
 
 
+class SourceIngestionRunOnceResponse(CamelModel):
+    repository: str
+    run_status: str = Field(..., alias="runStatus")
+    supportability_status: str = Field(..., alias="supportabilityStatus")
+    source_authority: str = Field(..., alias="sourceAuthority")
+    opportunity_family: str = Field(..., alias="opportunityFamily")
+    durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
+    configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
+    core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
+    total_count: int = Field(..., alias="totalCount")
+    decision_counts: dict[str, int] = Field(..., alias="decisionCounts")
+    configuration_blockers: tuple[str, ...] = Field(..., alias="configurationBlockers")
+    certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
+    live_source_certified: bool = Field(False, alias="liveSourceCertified")
+    supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
+
+    @classmethod
+    def blocked(
+        cls,
+        *,
+        blocker: str,
+        durable_storage_backed: bool,
+        configured_manifest_available: bool = False,
+        core_base_url_configured: bool = False,
+    ) -> "SourceIngestionRunOnceResponse":
+        return cls(
+            repository="lotus-idea",
+            runStatus="blocked",
+            supportabilityStatus="not_certified",
+            sourceAuthority="lotus-core",
+            opportunityFamily="high_cash",
+            durableStorageBacked=durable_storage_backed,
+            configuredManifestAvailable=configured_manifest_available,
+            coreBaseUrlConfigured=core_base_url_configured,
+            totalCount=0,
+            decisionCounts=_empty_decision_counts(),
+            configurationBlockers=(blocker,),
+            certificationBlockers=_source_ingestion_certification_blockers(),
+            liveSourceCertified=False,
+            supportedFeaturePromoted=False,
+        )
+
+    @classmethod
+    def from_domain(
+        cls,
+        result: HighCashSourceIngestionBatchResult,
+        *,
+        runtime: SourceIngestionRuntime,
+        durable_storage_backed: bool,
+    ) -> "SourceIngestionRunOnceResponse":
+        return cls(
+            repository="lotus-idea",
+            runStatus="completed",
+            supportabilityStatus="not_certified",
+            sourceAuthority=result.source_authority,
+            opportunityFamily="high_cash",
+            durableStorageBacked=durable_storage_backed,
+            configuredManifestAvailable=runtime.configured_manifest_available,
+            coreBaseUrlConfigured=runtime.core_base_url_configured,
+            totalCount=result.total_count,
+            decisionCounts=result.decision_counts(),
+            configurationBlockers=(),
+            certificationBlockers=_source_ingestion_certification_blockers(),
+            liveSourceCertified=False,
+            supportedFeaturePromoted=False,
+        )
+
+
 async def get_source_ingestion_readiness(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
@@ -123,6 +206,77 @@ async def get_source_ingestion_readiness(
     return SourceIngestionReadinessResponse.from_domain(snapshot)
 
 
+async def post_source_ingestion_run_once(
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> SourceIngestionRunOnceResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        require_role_and_capability(caller, _RUN_SOURCE_INGESTION_POLICY)
+    except PermissionDeniedError:
+        _emit_source_ingestion_run_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to run idea source ingestion.",
+        )
+
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    if not durable_storage_backed:
+        _emit_source_ingestion_run_event(
+            OperationOutcome.BLOCKED,
+            "durable_repository_not_configured",
+            durable_storage_backed=durable_storage_backed,
+        )
+        snapshot = build_source_ingestion_readiness_snapshot()
+        return SourceIngestionRunOnceResponse.blocked(
+            blocker="durable_repository_not_configured",
+            durable_storage_backed=durable_storage_backed,
+            configured_manifest_available=snapshot.configured_manifest_available,
+            core_base_url_configured=snapshot.core_base_url_configured,
+        )
+
+    runtime = _build_source_ingestion_runtime_from_environment()
+    if isinstance(runtime, SourceIngestionRuntimeBlocker):
+        _emit_source_ingestion_run_event(
+            OperationOutcome.BLOCKED,
+            runtime.code,
+            durable_storage_backed=durable_storage_backed,
+        )
+        return SourceIngestionRunOnceResponse.blocked(
+            blocker=runtime.code,
+            durable_storage_backed=durable_storage_backed,
+            configured_manifest_available=runtime.configured_manifest_available,
+            core_base_url_configured=runtime.core_base_url_configured,
+        )
+
+    result = run_high_cash_source_ingestion_batch(
+        runtime.plan.command,
+        core_source=runtime.core_source,
+        repository=repository,
+    )
+    _emit_source_ingestion_run_event(
+        _source_ingestion_operation_outcome(result),
+        durable_storage_backed=durable_storage_backed,
+        total_count=result.total_count,
+    )
+    return SourceIngestionRunOnceResponse.from_domain(
+        result,
+        runtime=runtime,
+        durable_storage_backed=durable_storage_backed,
+    )
+
+
 def _emit_source_ingestion_readiness_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
@@ -139,6 +293,64 @@ def _emit_source_ingestion_readiness_event(
             error_code=error_code,
         )
     )
+
+
+def _emit_source_ingestion_run_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+    *,
+    durable_storage_backed: bool = False,
+    total_count: int | None = None,
+) -> None:
+    attributes: dict[str, str] = {}
+    if total_count is not None:
+        attributes["work_item_count_bucket"] = _count_bucket(total_count)
+    emit_operation_event(
+        OperationEvent(
+            operation=IdeaOperation.SOURCE_INGESTION_RUN_ONCE,
+            outcome=outcome,
+            source_authority="lotus-core",
+            supportability_status=OperationSupportability.NOT_CERTIFIED,
+            durable_storage_backed=durable_storage_backed,
+            supported_feature_promoted=False,
+            error_code=error_code,
+            attributes=attributes,
+        )
+    )
+
+
+def _source_ingestion_operation_outcome(
+    result: HighCashSourceIngestionBatchResult,
+) -> OperationOutcome:
+    if result.total_count == 0:
+        return OperationOutcome.BLOCKED
+    if result.count(HighCashSourceIngestionDecision.BLOCKED) == result.total_count:
+        return OperationOutcome.BLOCKED
+    return OperationOutcome.ACCEPTED
+
+
+def _empty_decision_counts() -> dict[str, int]:
+    return {decision.value: 0 for decision in HighCashSourceIngestionDecision}
+
+
+def _source_ingestion_certification_blockers() -> tuple[str, ...]:
+    return (
+        "live_core_source_proof_missing",
+        "scheduled_worker_deploy_proof_missing",
+        "data_mesh_runtime_telemetry_not_certified",
+        "gateway_workbench_proof_missing",
+        "supported_feature_promotion_missing",
+    )
+
+
+def _count_bucket(value: int) -> str:
+    if value == 0:
+        return "0"
+    if value <= 10:
+        return "1-10"
+    if value <= 100:
+        return "11-100"
+    return "100+"
 
 
 SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
@@ -201,6 +413,67 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
 }
 
 
+SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/source-ingestion/run-once",
+    "operation_id": "runIdeaSourceIngestionOnce",
+    "summary": "Run idea source ingestion once",
+    "description": (
+        "Runs one bounded internal high-cash Core source-ingestion pass for operators using the "
+        "configured worker manifest, active repository provider, and Core source adapter. The "
+        "endpoint returns aggregate counts only, requires durable repository configuration, and "
+        "remains not certified until live Core source proof, scheduled worker deployment proof, "
+        "data-mesh runtime telemetry certification, Gateway/Workbench proof, and "
+        "supported-feature promotion exist."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": SourceIngestionRunOnceResponse,
+    "tags": ["Operations"],
+    "responses": {
+        200: {
+            "description": "Source-ingestion run-once summary returned.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "repository": "lotus-idea",
+                        "runStatus": "blocked",
+                        "supportabilityStatus": "not_certified",
+                        "sourceAuthority": "lotus-core",
+                        "opportunityFamily": "high_cash",
+                        "durableStorageBacked": False,
+                        "configuredManifestAvailable": False,
+                        "coreBaseUrlConfigured": False,
+                        "totalCount": 0,
+                        "decisionCounts": {
+                            "accepted": 0,
+                            "replayed": 0,
+                            "conflict": 0,
+                            "duplicate_candidate": 0,
+                            "skipped_not_eligible": 0,
+                            "blocked": 0,
+                            "suppressed": 0,
+                        },
+                        "configurationBlockers": ["durable_repository_not_configured"],
+                        "certificationBlockers": [
+                            "live_core_source_proof_missing",
+                            "scheduled_worker_deploy_proof_missing",
+                            "data_mesh_runtime_telemetry_not_certified",
+                            "gateway_workbench_proof_missing",
+                            "supported_feature_promotion_missing",
+                        ],
+                        "liveSourceCertified": False,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        403: {
+            "model": ProblemDetails,
+            "description": "Caller lacks source-ingestion run permission.",
+        },
+    },
+}
+
+
 def register_source_ingestion_readiness_routes(app: FastAPI) -> None:
     app.get(
         path=SOURCE_INGESTION_READINESS_ROUTE["path"],
@@ -212,3 +485,13 @@ def register_source_ingestion_readiness_routes(app: FastAPI) -> None:
         tags=SOURCE_INGESTION_READINESS_ROUTE["tags"],
         responses=SOURCE_INGESTION_READINESS_ROUTE["responses"],
     )(get_source_ingestion_readiness)
+    app.post(
+        path=SOURCE_INGESTION_RUN_ONCE_ROUTE["path"],
+        operation_id=SOURCE_INGESTION_RUN_ONCE_ROUTE["operation_id"],
+        summary=SOURCE_INGESTION_RUN_ONCE_ROUTE["summary"],
+        description=SOURCE_INGESTION_RUN_ONCE_ROUTE["description"],
+        status_code=SOURCE_INGESTION_RUN_ONCE_ROUTE["status_code"],
+        response_model=SOURCE_INGESTION_RUN_ONCE_ROUTE["response_model"],
+        tags=SOURCE_INGESTION_RUN_ONCE_ROUTE["tags"],
+        responses=SOURCE_INGESTION_RUN_ONCE_ROUTE["responses"],
+    )(post_source_ingestion_run_once)

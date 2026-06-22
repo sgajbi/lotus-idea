@@ -85,6 +85,15 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "src/app/infrastructure/outbox_publisher.py" in outbox_delivery.evidence_refs
     assert "outbox_broker_not_configured" in outbox_delivery.blockers
     assert "external_broker_runtime_proof_missing" in outbox_delivery.blockers
+    source_ingestion = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "source-ingestion"
+    )
+    assert "GET /api/v1/source-ingestion/readiness" in source_ingestion.evidence_refs
+    assert "POST /api/v1/source-ingestion/run-once" in source_ingestion.evidence_refs
+    assert "make source-ingestion-worker-check" in source_ingestion.evidence_refs
+    assert "live_core_source_proof_missing" in source_ingestion.blockers
     downstream = next(
         capability
         for capability in snapshot.capabilities
