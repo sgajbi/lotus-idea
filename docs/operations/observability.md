@@ -41,6 +41,7 @@ Current instrumented operations:
 | `lifecycle_transition` | Internal candidate lifecycle transition recording | `lotus-idea` | `foundation_only` |
 | `ai_explanation` | Internal AI explanation fallback/verifier evaluation | `lotus-idea` | `foundation_only` |
 | `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
+| `review_queue_readiness_read` | Internal advisor review queue readiness diagnostic | `lotus-idea` | `not_certified` |
 | `review_action` | Internal human review decision recording | `lotus-idea` | `foundation_only` |
 | `feedback_record` | Internal advisor feedback recording | `lotus-idea` | `foundation_only` |
 | `conversion_intent` | Internal review-gated conversion intent recording | `lotus-idea` | `foundation_only` |
@@ -80,8 +81,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
 9. `blocked` means the verifier rejected unsupported AI output, evidence
    replay found stale source posture, the mesh-readiness diagnostic remains
    blocked until runtime trust telemetry and platform mesh certification exist,
-   or the source-ingestion readiness diagnostic is missing run-once worker
-   configuration inputs.
+   the source-ingestion readiness diagnostic is missing run-once worker
+   configuration inputs, or the advisor queue readiness diagnostic still lacks
+   durable repository posture, entitlement proof, Workbench proof, data-product
+   certification, or runtime trust telemetry.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

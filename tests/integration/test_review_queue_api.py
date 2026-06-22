@@ -71,6 +71,17 @@ def queue_headers(capabilities: str = "idea.review.queue.read") -> dict[str, str
     }
 
 
+def readiness_headers(
+    capabilities: str = "idea.review.queue.readiness.read",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": "operator",
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-review-queue-readiness-api",
+    }
+
+
 def persist_candidate(
     client: TestClient,
     *,
@@ -237,4 +248,106 @@ def test_advisor_review_queue_api_rejects_blank_scope_filter_safely() -> None:
         "code": "invalid_request",
         "title": "Invalid request",
         "detail": "Scope query fields cannot be blank.",
+    }
+
+
+def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    first = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-readiness-first",
+        idempotency_key="seed-review-queue-readiness-001",
+    )
+    second = persist_candidate(
+        client,
+        cash_weight="0.20",
+        suffix="-readiness-second",
+        idempotency_key="seed-review-queue-readiness-002",
+    )
+
+    response = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=readiness_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-review-queue-readiness-api"
+    payload = response.json()
+    assert payload == {
+        "repository": "lotus-idea",
+        "policyVersion": "idea-deterministic-ranking-v1",
+        "evaluatedAtUtc": "2026-06-21T10:10:00Z",
+        "queueProjectionAvailable": True,
+        "candidateSnapshotCount": 2,
+        "reviewableItemCount": 2,
+        "excludedCandidateCount": 0,
+        "exclusionCounts": {
+            "suppressed": 0,
+            "duplicate": 0,
+            "expired": 0,
+            "closed": 0,
+            "rejected": 0,
+            "unsupported_evidence": 0,
+            "snoozed": 0,
+            "unscored": 0,
+            "non_reviewable_status": 0,
+            "access_scope_mismatch": 0,
+        },
+        "scoredCandidateCount": 2,
+        "unscoredCandidateCount": 0,
+        "durableStorageBacked": False,
+        "readinessStatus": "blocked",
+        "supportabilityStatus": "not_certified",
+        "certificationReady": False,
+        "certificationBlockers": [
+            "durable_repository_not_configured",
+            "platform_caller_context_entitlement_proof_missing",
+            "workbench_product_proof_missing",
+            "data_product_certification_missing",
+            "runtime_trust_telemetry_missing",
+        ],
+        "supportedFeaturePromoted": False,
+    }
+    assert first not in response.text
+    assert second not in response.text
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+
+
+def test_advisor_review_queue_readiness_api_requires_operator_permission() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to read idea review queue readiness.",
+    }
+
+
+def test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00",
+        headers=readiness_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "evaluatedAtUtc must be timezone-aware.",
     }
