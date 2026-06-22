@@ -112,8 +112,12 @@ cash-weight posture, but it does not reconstruct that value from cash totals,
 invested market value, or portfolio totals. If Core omits the value or reports
 blocked denominator supportability, high-cash evaluation remains blocked.
 Core's source-contract dependency was closed in `sgajbi/lotus-core#430`; live
-Core proof is still required before source-ingestion support or product claims
-can be promoted.
+Core proof can now be captured through
+`scripts/generate_source_ingestion_live_proof.py` and referenced through
+`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`. That proof clears only the live-Core
+blocker; scheduled worker deployment, mesh certification, Gateway/Workbench
+proof, and supported-feature promotion remain required before source-ingestion
+support or product claims can be promoted.
 
 ## Conversion Boundaries
 

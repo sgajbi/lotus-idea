@@ -9,6 +9,7 @@
 | `make ci` | Broader CI-equivalent local suite. |
 | `make postgres-integration-gate` | Real PostgreSQL persistence/replay proof. |
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
+| `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
 | `make implementation-proof-readiness-check` | RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
@@ -55,14 +56,21 @@ flowchart TD
 6. For runtime source-ingestion configuration checks, call
    `GET /api/v1/source-ingestion/readiness` with the `operator` role and
    `idea.source-ingestion.readiness.read` capability. This reports manifest,
-   Core base URL, durable repository configuration, and remaining certification
-   blockers without calling Core or exposing source payloads.
+   Core base URL, durable repository configuration, live-proof artifact
+   validity, and remaining certification blockers without calling Core or
+   exposing source payloads.
 7. For bounded source-ingestion operator execution, call
    `POST /api/v1/source-ingestion/run-once` with the `operator` role and
    `idea.source-ingestion.run` capability. This requires durable repository,
    manifest, and Core configuration, blocks before mutation when runtime
    inputs are missing or invalid, and returns aggregate decision counts only.
-8. For aggregate RFC-0002 proof posture checks, call
+8. For live Core source-ingestion proof capture, run
+   `scripts/generate_source_ingestion_live_proof.py --manifest <path> --core-base-url <url> --generated-at-utc <timestamp> --output output/source-ingestion/live-proof.json`.
+   Then set `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` to that output path.
+   A valid artifact clears only the live-Core blocker; it is not scheduled
+   worker, data-mesh, Gateway/Workbench, downstream, or supported-feature
+   proof.
+9. For aggregate RFC-0002 proof posture checks, call
    `GET /api/v1/implementation-proof/readiness?evaluatedAtUtc=<timestamp>`
    with the `operator` role and
    `idea.implementation-proof.readiness.read` capability. This reports
@@ -73,27 +81,27 @@ flowchart TD
    not live proof, certified live broker runtime, downstream delivery,
    Workbench proof, data-product certification, or supported-feature
    promotion.
-8. For downstream realization blocker checks, call
+10. For downstream realization blocker checks, call
    `GET /api/v1/downstream-realization/readiness` with the `operator` role and
    `idea.downstream-realization.readiness.read` capability. This reports
    source-safe workflow counts, planned Advise/Manage/Report handoff contract
    posture, and blockers for Advise, Manage, Report, Render, and Archive
    without calling downstream services, proving downstream route existence, or
    creating downstream records.
-9. For runtime trust telemetry preview checks, call
+11. For runtime trust telemetry preview checks, call
    `GET /api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=<timestamp>`
    with the `operator` role and
    `idea.mesh.trust-telemetry.preview.read` capability. This reports aggregate
    active-repository counts only and is not data-product certification.
-10. For CI or async evidence without running the service, run
+12. For CI or async evidence without running the service, run
    `make implementation-proof-readiness-check` or
    `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
    The generated JSON is an operator proof-readiness artifact, not a supported
    product claim.
-11. For source-safe runtime trust telemetry preview evidence without running
+13. For source-safe runtime trust telemetry preview evidence without running
     the service, run `make runtime-trust-telemetry-preview-check` or
     `scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc <timestamp>`.
-12. For contract-shaped runtime trust telemetry snapshot evidence without
+14. For contract-shaped runtime trust telemetry snapshot evidence without
     running the service, run `make runtime-trust-telemetry-snapshot-check` or
     `scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc <timestamp>`.
     The generated file is ignored under `output/trust-telemetry/runtime/` and

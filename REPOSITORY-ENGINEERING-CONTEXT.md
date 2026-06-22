@@ -136,7 +136,7 @@ leak source-sensitive fields.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
-blockers without calling Core or leaking source payloads. There is still no
+blockers without calling Core or leaking source payloads.
 `POST /api/v1/source-ingestion/run-once` now exposes a certified internal
 operator action for the same bounded source-ingestion batch foundation. It
 requires `idea.source-ingestion.run`, blocks before mutation unless durable
@@ -146,6 +146,15 @@ decision counts only. The upstream Core cash-weight contract dependency from
 now tracks this adapter-consumption slice. There is still no live Core
 integration proof, scheduled daemon/deploy source-ingestion worker, Workbench
 proof, data-product certification, or supported-feature promotion yet.
+`src/app/application/source_ingestion_live_proof.py` and
+`scripts/generate_source_ingestion_live_proof.py` now define the source-safe
+live Core source-ingestion proof artifact contract. A valid artifact referenced
+through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` can clear only the
+`live_core_source_proof_missing` blocker in the source-ingestion readiness
+diagnostic. `make source-ingestion-live-proof-contract-gate` blocks proof
+payload shape drift, source-sensitive fields, and accidental support promotion.
+Scheduled worker deployment proof, data-mesh/runtime telemetry certification,
+Gateway/Workbench proof, and supported-feature promotion remain planned.
 
 RFC-0002 Slice 06 is partially implemented as an internal persistence
 foundation in `src/app/domain/persistence.py`. The repository now has immutable
@@ -734,17 +743,19 @@ owned by upstream services.
 25. migration execution dry-run gate: `make migration-execution-gate`
 26. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-27. implementation proof readiness generator:
+27. source-ingestion live-proof artifact contract gate:
+    `make source-ingestion-live-proof-contract-gate`
+28. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-28. runtime trust telemetry preview generator:
+29. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-29. runtime trust telemetry snapshot generator:
+30. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-30. PostgreSQL runtime proof with configured integration URL:
+31. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-31. apply migrations with configured PostgreSQL URL: `make migrate`
-32. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-33. remove ignored generated local artifacts: `make clean`
+32. apply migrations with configured PostgreSQL URL: `make migrate`
+33. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+34. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -764,7 +775,7 @@ enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest and
-output-contract validation,
+output-contract validation, source-ingestion live-proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,
