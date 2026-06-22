@@ -34,6 +34,9 @@ from app.application.runtime_trust_telemetry import (
     RuntimeTrustTelemetryPreview,
     build_runtime_trust_telemetry_preview,
 )
+from app.application.runtime_trust_telemetry_proof import (
+    runtime_trust_telemetry_proof_is_valid,
+)
 from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
@@ -95,6 +98,8 @@ def build_implementation_proof_readiness_snapshot(
     durable_storage_backed: bool,
     durable_repository_proof: Mapping[str, object] | None = None,
     durable_repository_proof_ref: str | None = None,
+    runtime_trust_telemetry_proof: Mapping[str, object] | None = None,
+    runtime_trust_telemetry_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -139,6 +144,16 @@ def build_implementation_proof_readiness_snapshot(
     if durable_repository_proof and durable_repository_proof_is_valid(durable_repository_proof):
         capabilities = tuple(
             _apply_durable_repository_proof(capability, durable_repository_proof_ref)
+            for capability in capabilities
+        )
+    if runtime_trust_telemetry_proof and runtime_trust_telemetry_proof_is_valid(
+        runtime_trust_telemetry_proof
+    ):
+        capabilities = tuple(
+            _apply_runtime_trust_telemetry_proof(
+                capability,
+                runtime_trust_telemetry_proof_ref,
+            )
             for capability in capabilities
         )
 
@@ -212,6 +227,30 @@ def _apply_durable_repository_proof(
             blocker
             for blocker in capability.blockers
             if blocker != "durable_repository_not_configured"
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_runtime_trust_telemetry_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    runtime_trust_telemetry_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if "runtime_candidate_snapshot_missing" not in capability.blockers:
+        return capability
+    evidence_refs = capability.evidence_refs
+    if runtime_trust_telemetry_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, runtime_trust_telemetry_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in capability.blockers
+            if blocker != "runtime_candidate_snapshot_missing"
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )

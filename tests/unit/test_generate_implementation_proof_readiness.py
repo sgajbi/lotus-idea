@@ -11,6 +11,9 @@ from app.application.durable_repository_proof import build_durable_repository_pr
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.runtime_trust_telemetry_proof import (
+    build_runtime_trust_telemetry_proof_payload,
+)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     MANIFEST_ENV,
@@ -163,6 +166,40 @@ def test_generate_implementation_proof_readiness_uses_explicit_durable_repositor
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
     assert "live_core_source_proof_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_runtime_trust_telemetry_proof(
+    tmp_path: Path,
+) -> None:
+    telemetry_proof = tmp_path / "runtime-trust-telemetry-proof.json"
+    telemetry_proof.write_text(
+        json.dumps(
+            build_runtime_trust_telemetry_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--runtime-trust-telemetry-proof",
+            str(telemetry_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
+    assert "platform_mesh_certification_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
