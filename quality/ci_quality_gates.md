@@ -11,7 +11,8 @@ Blocking scaffold commands:
 2. `make ci-contract-gate`
 3. `make maintainability-gate`
 4. `make documentation-contract-gate`
-5. `make implementation-truth-gate`
+5. `make quality-scorecard-gate`
+6. `make implementation-truth-gate`
 
 Report-only scaffold commands:
 
@@ -37,6 +38,12 @@ erosion of the required durable documentation and wiki surfaces. It is scoped to
 operator and agent context, not RFC target-state prose, so it remains fast and
 deterministic while preserving the context needed to apply the bank-buyable
 contract across future implementation slices.
+
+`make quality-scorecard-gate` blocks bank-buyable scorecard drift. It verifies
+the required control matrix, approved status vocabulary, non-empty evidence and
+gap cells, implementation-backed evidence anchors, and stale scaffold-era
+underclaims such as claiming business endpoints or behavior tests do not exist
+after certified internal API foundations have landed.
 
 `make implementation-truth-gate` blocks unqualified current-state claims of demo readiness,
 production readiness, external support, certification, live source ingestion, Gateway/Workbench

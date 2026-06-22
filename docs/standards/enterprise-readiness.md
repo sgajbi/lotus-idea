@@ -5,7 +5,7 @@
 
 Enterprise-quality enforcement is repo-native from day one. `make lint`, `make check`, and GitHub
 lanes protect architecture boundaries, maintainability thresholds, documentation surface
-contracts, OpenAPI quality, data-mesh
+contracts, quality-scorecard truth, OpenAPI quality, data-mesh
 contract posture, migration safety, supported-feature promotion control, endpoint certification,
 security audit, coverage, workflow timeout posture, no soft-failed critical CI jobs, and
 implementation-truth claims in README/docs/wiki current-state surfaces.
@@ -20,6 +20,12 @@ scorecard, evidence guide, and repo-local wiki source.
 The maintainability gate is intentionally conservative and measured against the current baseline:
 source files/functions, test files/functions, and script files/functions have explicit maximum
 line-count thresholds. New work should refactor or split modules before exceeding those thresholds.
+
+`make quality-scorecard-gate` protects the local bank-buyable scorecard from
+becoming stale as implementation lands. The scorecard must retain the required
+control rows, use approved readiness statuses, name implementation-backed
+evidence for each control, and avoid scaffold-era underclaims once certified
+internal APIs, persistence proof, operation events, and meaningful tests exist.
 
 `make implementation-truth-gate` also protects against stale scaffold-era underclaims in
 current-state demo documentation. As internal APIs, architecture gates, persistence, and other

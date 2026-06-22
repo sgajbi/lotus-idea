@@ -1,6 +1,6 @@
 # RFC-0002 Slice 19: Second-Last Hardening And Review
 
-Status: Planned
+Status: Partially implemented
 
 ## Outcome
 
@@ -21,3 +21,29 @@ Perform the full engineering review before final closure.
    leakage, raw provider output leakage, or source-authority violations remain.
 2. All affected local and GitHub checks are green or formally treated.
 3. The codebase is cleaner, more modular, and easier to extend than before.
+
+## Current Implementation Evidence
+
+This slice now includes the first enterprise-quality hardening control over the
+bank-buyable scorecard itself:
+
+1. `scripts/quality_scorecard_gate.py` validates the required control matrix,
+   approved readiness vocabulary, non-empty evidence/gap/next-slice cells,
+   implementation-backed evidence anchors, and stale scaffold-era scorecard
+   underclaims.
+2. `make quality-scorecard-gate` runs the validator directly and `make lint`
+   runs it as a blocking local and GitHub lane gate.
+3. `scripts/ci_contract_gate.py` requires the target and lint call so future
+   agents cannot silently remove scorecard enforcement from the repo-native
+   quality path.
+4. `tests/unit/test_quality_scorecard_gate.py` covers current pass behavior and
+   failure cases for stale scaffold claims, missing control rows, unsupported
+   status vocabulary, and missing evidence anchors.
+5. `quality/quality_scorecard.md` now reflects the current internal API,
+   persistence, source-ingestion, observability, and testing foundation without
+   promoting Gateway/Workbench support, live source ingestion, data-product
+   certification, or externally supported product capability.
+
+This does not close the full second-last review slice. Dead-code review,
+duplication review, broader API/data-mesh/security review, and live proof
+hardening remain planned before final closure.

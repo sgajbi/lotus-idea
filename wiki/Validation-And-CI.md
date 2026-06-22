@@ -18,6 +18,7 @@ make ci
 make ci-contract-gate
 make maintainability-gate
 make documentation-contract-gate
+make quality-scorecard-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
@@ -31,7 +32,7 @@ make quality-baseline
 ```
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
-maintainability thresholds, documentation contract enforcement, OpenAPI quality,
+maintainability thresholds, documentation contract enforcement, quality-scorecard truth, OpenAPI quality,
 implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
@@ -84,7 +85,8 @@ data-mesh contract validation, migration contract validation, migration executio
 validation, source-ingestion worker manifest validation, PostgreSQL runtime
 proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
-in critical lanes, maintainability enforcement, implementation-truth enforcement, and source-safe local quality gates.
+in critical lanes, maintainability enforcement, quality-scorecard truth,
+implementation-truth enforcement, and source-safe local quality gates.
 
 The maintainability gate blocks oversized Python files/functions in source, test, and script
 trees. It is calibrated above the current baseline so new agentic work must split or refactor
@@ -95,6 +97,12 @@ placeholder text across the required README, repository context, standards,
 runbooks, quality, evidence, and wiki surfaces. It keeps enterprise operating
 context intact for future implementation agents without promoting any business
 capability.
+
+The quality-scorecard gate keeps the bank-buyable control matrix executable. It
+requires the standard control rows, approved readiness statuses, non-empty
+evidence/gap/next-slice cells, implementation-backed evidence anchors, and
+stale scaffold-era underclaim detection after internal API, persistence,
+observability, and test foundations have landed.
 
 The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
 and wiki source for unqualified current-state claims that imply demo readiness, production support,

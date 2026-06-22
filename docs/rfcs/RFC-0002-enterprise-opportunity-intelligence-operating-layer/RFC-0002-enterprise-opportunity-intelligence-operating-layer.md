@@ -725,7 +725,7 @@ assertions.
 | 16 | Demo readiness, archetype scenarios, and commercial proof | Planned | canonical scenarios, claim ledger, RFP-safe wording, demo guide |
 | 17 | Implementation proof and live validation | Planned | full proof index, live canonical evidence, critical result review |
 | 18 | Documentation, wiki, support, and agent context | Partially implemented - API certification documentation synchronized | README/wiki/context/runbook updates and wiki check-only result |
-| 19 | Second-last hardening and review | Planned | code/API/security/data-mesh/docs review and fixes |
+| 19 | Second-last hardening and review | Partially implemented - quality scorecard truth gate enforced | code/API/security/data-mesh/docs review and fixes remain before closure |
 | 20 | Final closure and branch hygiene | Planned | mainline truth, CI proof, wiki publish, branch cleanup, no stranded truth |
 | 21 | Post-completion communication and LinkedIn draft | Planned | implementation-backed post-completion communication draft or explicit no-post decision |
 
