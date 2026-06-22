@@ -146,3 +146,42 @@ def test_ci_contract_gate_blocks_missing_durable_repository_proof_readiness_wiri
         "Makefile implementation-proof-readiness-check target must pass the "
         "durable repository proof artifact into readiness generation"
     ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--runtime-trust-telemetry-proof "
+            "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "runtime trust telemetry proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "scripts/runtime_trust_telemetry_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile runtime-trust-telemetry-proof-contract-gate target must run "
+        "`scripts/runtime_trust_telemetry_proof_contract_gate.py`"
+    ) in errors

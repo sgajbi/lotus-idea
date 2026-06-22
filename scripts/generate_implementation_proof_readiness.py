@@ -22,6 +22,7 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
+from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -36,14 +37,30 @@ def main(argv: list[str] | None = None) -> int:
         with _temporary_environment(_readiness_environment_overrides(args)):
             repository = get_idea_repository()
             durable_repository_proof_path = _resolve_optional_path(args.durable_repository_proof)
-            durable_repository_proof = _read_optional_json_object(durable_repository_proof_path)
+            durable_repository_proof = _read_optional_json_object(
+                durable_repository_proof_path,
+                artifact_name="durable repository proof",
+            )
+            runtime_trust_telemetry_proof_path = _resolve_optional_path(
+                args.runtime_trust_telemetry_proof
+            )
+            runtime_trust_telemetry_proof = _read_optional_json_object(
+                runtime_trust_telemetry_proof_path,
+                artifact_name="runtime trust telemetry proof",
+            )
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
                 durable_storage_backed=idea_repository_durable_storage_backed(repository),
                 durable_repository_proof=durable_repository_proof,
                 durable_repository_proof_ref=_source_safe_artifact_ref(
-                    durable_repository_proof_path
+                    durable_repository_proof_path,
+                    artifact_name="durable repository proof artifact",
+                ),
+                runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
+                runtime_trust_telemetry_proof_ref=_source_safe_artifact_ref(
+                    runtime_trust_telemetry_proof_path,
+                    artifact_name="runtime trust telemetry proof artifact",
                 ),
             )
         payload = implementation_proof_readiness_payload(snapshot)
@@ -139,6 +156,14 @@ def _parser() -> argparse.ArgumentParser:
             f"Defaults to {DURABLE_REPOSITORY_PROOF_ENV} when set."
         ),
     )
+    parser.add_argument(
+        "--runtime-trust-telemetry-proof",
+        default=os.getenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV),
+        help=(
+            "Optional runtime trust telemetry candidate snapshot proof artifact path. "
+            f"Defaults to {RUNTIME_TRUST_TELEMETRY_PROOF_ENV} when set."
+        ),
+    )
     return parser
 
 
@@ -171,22 +196,30 @@ def _resolve_optional_path(path_value: str | None) -> Path | None:
     return Path(path_value)
 
 
-def _read_optional_json_object(path: Path | None) -> dict[str, Any] | None:
+def _read_optional_json_object(
+    path: Path | None,
+    *,
+    artifact_name: str,
+) -> dict[str, Any] | None:
     if path is None:
         return None
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
-        raise ValueError("durable repository proof must be a JSON object")
+        raise ValueError(f"{artifact_name} must be a JSON object")
     return payload
 
 
-def _source_safe_artifact_ref(path: Path | None) -> str | None:
+def _source_safe_artifact_ref(
+    path: Path | None,
+    *,
+    artifact_name: str,
+) -> str | None:
     if path is None:
         return None
     try:
         return path.resolve().relative_to(Path.cwd().resolve()).as_posix()
     except ValueError:
-        return "durable repository proof artifact"
+        return artifact_name
 
 
 @contextmanager
