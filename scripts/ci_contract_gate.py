@@ -8,6 +8,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE_PATH = ROOT / "Makefile"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
+ACTION_USE_RE = re.compile(r"uses:\s+(?P<action>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@(?P<ref>[^ \t#]+)")
+FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
+PINNED_ACTIONS: dict[str, tuple[str, str]] = {
+    "actions/checkout": ("9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0", "v7.0.0"),
+    "actions/setup-python": ("a309ff8b426b58ec0e2a45f0f869d46889d02405", "v6.2.0"),
+    "actions/upload-artifact": ("043fb46d1a93c77aae656e7c1c64a875d1fc6a0a", "v7.0.1"),
+    "actions/download-artifact": ("3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c", "v8.0.1"),
+    "docker/setup-buildx-action": ("d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5", "v4.1.0"),
+    "reviewdog/action-actionlint": ("6fb7acc99f4a1008869fa8a0f09cfca740837d9d", "v1.72.0"),
+}
 
 
 REQUIRED_TARGETS = (
@@ -87,9 +99,9 @@ REQUIRED_CI_DEPS = (
 WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "feature-lane.yml": (
         "permissions:\n  contents: read",
-        "actions/checkout@v7",
-        "actions/setup-python@v6",
-        "reviewdog/action-actionlint@v1",
+        "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
+        "reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0",
         "make lint",
         "make typecheck",
         "make architecture-boundary-gate",
@@ -99,12 +111,12 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     ),
     "pr-merge-gate.yml": (
         "permissions:\n  contents: read",
-        "actions/checkout@v7",
-        "actions/setup-python@v6",
-        "reviewdog/action-actionlint@v1",
-        "actions/upload-artifact@v7",
-        "actions/download-artifact@v8",
-        "docker/setup-buildx-action@v4",
+        "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
+        "reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0",
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
+        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1",
+        "docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0",
         "suite: unit",
         "suite: integration",
         "suite: e2e",
@@ -125,12 +137,12 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "main-releasability.yml": (
         "workflow_dispatch:",
         "permissions:\n  contents: read",
-        "actions/checkout@v7",
-        "actions/setup-python@v6",
-        "reviewdog/action-actionlint@v1",
-        "actions/upload-artifact@v7",
-        "actions/download-artifact@v8",
-        "docker/setup-buildx-action@v4",
+        "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
+        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
+        "reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0",
+        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
+        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1",
+        "docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0",
         "suite: unit",
         "suite: integration",
         "suite: e2e",
@@ -259,6 +271,41 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
             if prohibited in content:
                 errors.append(f"{workflow_name} must not contain `{prohibited}`")
         errors.extend(_validate_job_timeouts(workflow_name, content))
+        errors.extend(_validate_action_pins(workflow_name, content))
+    return errors
+
+
+def _validate_action_pins(workflow_name: str, workflow: str) -> list[str]:
+    errors: list[str] = []
+    for line_number, line in enumerate(workflow.splitlines(), start=1):
+        match = ACTION_USE_RE.search(line)
+        if not match:
+            continue
+
+        action = match.group("action")
+        ref = match.group("ref")
+        if not FULL_SHA_RE.fullmatch(ref):
+            errors.append(
+                f"{workflow_name}:{line_number}: {action} must use an immutable "
+                "40-character SHA pin, not a floating tag or branch"
+            )
+            continue
+
+        expected = PINNED_ACTIONS.get(action)
+        if expected is None:
+            continue
+
+        expected_sha, expected_version = expected
+        if ref != expected_sha:
+            errors.append(
+                f"{workflow_name}:{line_number}: {action} must pin {expected_sha} "
+                f"for verified {expected_version}"
+            )
+        if f"# {expected_version}" not in line:
+            errors.append(
+                f"{workflow_name}:{line_number}: {action} SHA pin must carry "
+                f"`# {expected_version}` provenance"
+            )
     return errors
 
 

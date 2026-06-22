@@ -43,7 +43,7 @@ unit tests, integration tests, e2e tests, data-mesh contract validation, migrati
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest validation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
-jobs, and workflow lint.
+jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
@@ -104,7 +104,7 @@ Persistence adapter validation:
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
-approved action-runtime majors, 99% combined coverage in merge/releasability lanes, Docker build
+verified immutable action SHA pins with version provenance, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, migration contract validation, migration execution dry-run
 validation, source-ingestion worker manifest validation, PostgreSQL runtime
@@ -112,6 +112,8 @@ proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,
 repository-hygiene enforcement, implementation-truth enforcement, and source-safe local quality gates.
+It also has unit coverage for current-repository pass behavior and failure cases for floating
+action tags, wrong verified SHAs, and missing version provenance comments.
 
 The repository-hygiene gate blocks tracked generated artifacts and local runtime byproducts:
 Python cache files, coverage outputs, build/dist outputs, dependency directories, local
@@ -189,9 +191,10 @@ or supported-feature promotion.
 CI warning policy:
 
 1. use current approved action versions,
-2. fix owned warning sources,
-3. suppress only known upstream runner noise with an explicit rationale,
-4. do not downgrade action versions to make logs quieter.
+2. pin actions to verified immutable upstream tag SHAs with readable version comments,
+3. fix owned warning sources,
+4. suppress only known upstream runner noise with an explicit rationale,
+5. do not downgrade action versions to make logs quieter.
 
 Branch hygiene policy:
 

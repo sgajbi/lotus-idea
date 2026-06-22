@@ -592,11 +592,14 @@ remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-cert
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
 validation, source-observability contract validation, PostgreSQL runtime proof, coverage,
-security, Docker, release-evidence, action-version, least-privilege workflow
-controls, bounded workflow timeouts, no `continue-on-error: true` in critical
-lanes, implementation-truth enforcement, non-suppressed auto-merge token usage,
+security, Docker, release-evidence, verified immutable action SHA pins with
+version provenance comments, least-privilege workflow controls, bounded
+workflow timeouts, no `continue-on-error: true` in critical lanes,
+implementation-truth enforcement, non-suppressed auto-merge token usage,
 workflow-dispatch access, or merged-PR main-releasability dispatch from local
-or GitHub validation.
+or GitHub validation. Unit coverage proves current pass behavior and failure
+cases for floating action tags, wrong verified SHAs, and missing action-version
+provenance.
 
 `make repository-hygiene-gate` is blocking through `make lint`. It scans
 tracked Git files and fails if generated Python cache files, local coverage

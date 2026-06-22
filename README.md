@@ -373,7 +373,9 @@ auto-merge helper emits an explicit warning and skips queuing auto-merge; use
 an authorized human or release actor for a manual rebase merge. GitHub workflow
 jobs must declare bounded `timeout-minutes` values, and critical lanes must not use
 `continue-on-error: true`; `make ci-contract-gate` blocks drift in those
-controls. `make repository-hygiene-gate` is blocking through `make lint`;
+controls and rejects floating GitHub Action tags in favor of verified immutable
+action SHAs with version provenance comments. `make repository-hygiene-gate` is
+blocking through `make lint`;
 it prevents future agentic changes from committing generated Python cache,
 coverage, build, dependency, local environment, or local database artifacts.
 `make maintainability-gate` is also blocking through `make lint`;

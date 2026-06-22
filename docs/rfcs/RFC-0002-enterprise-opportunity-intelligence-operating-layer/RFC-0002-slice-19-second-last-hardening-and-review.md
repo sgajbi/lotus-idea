@@ -85,3 +85,17 @@ This slice also hardens repository hygiene:
    generated/cache/local-artifact failure cases.
 5. README, repository context, enterprise-readiness guidance, quality
    scorecard, and wiki source now describe the new source-tree hygiene control.
+
+This slice also hardens CI runtime provenance:
+
+1. GitHub workflow actions are pinned to verified immutable upstream tag SHAs
+   while retaining readable version comments for operator review.
+2. `scripts/ci_contract_gate.py` now rejects floating action tags or branches,
+   wrong verified SHAs for approved actions, and missing version provenance
+   comments.
+3. `tests/unit/test_ci_contract_gate.py` covers current repository pass
+   behavior plus failure cases for floating tags, unverified SHAs, and missing
+   provenance comments.
+4. The CI quality guide, enterprise-readiness standard, README, repository
+   context, quality scorecard, and wiki source now describe the immutable
+   action-pin expectation for future agentic work.

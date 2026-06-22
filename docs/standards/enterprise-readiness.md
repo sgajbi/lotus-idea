@@ -8,8 +8,8 @@ lanes protect architecture boundaries, maintainability thresholds, documentation
 contracts, quality-scorecard truth, OpenAPI quality, data-mesh
 contract posture, migration safety, supported-feature promotion control, endpoint certification,
 security audit, coverage, PostgreSQL runtime proof, workflow timeout posture, no soft-failed
-critical CI jobs, repository hygiene, and implementation-truth claims in README/docs/wiki
-current-state surfaces.
+critical CI jobs, immutable GitHub Action SHA pins with version provenance,
+repository hygiene, and implementation-truth claims in README/docs/wiki current-state surfaces.
 Protected `main` requires the strict PR Merge Gate status set, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before merge.
 
