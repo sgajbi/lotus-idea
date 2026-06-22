@@ -47,6 +47,7 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture()
     assert "advise_proposal_creation_adapter_missing" in payload["blockers"]
     assert "manage_action_register_adapter_missing" in payload["blockers"]
     assert "report_evidence_pack_materialization_missing" in payload["blockers"]
+    assert "dedicated_report_idea_evidence_intake_contract_missing" in payload["blockers"]
     assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
         "advise-proposal-realization",
         "manage-action-realization",
@@ -57,9 +58,29 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture()
         "lotus-manage",
         "lotus-report",
     }
+    assert {contract["contractId"] for contract in payload["downstreamContracts"]} == {
+        "lotus-idea-to-lotus-advise-proposal-intake:v1",
+        "lotus-idea-to-lotus-manage-action-intake:v1",
+        "lotus-idea-to-lotus-report-evidence-pack-intake:v1",
+    }
+    report_contract = next(
+        contract
+        for contract in payload["downstreamContracts"]
+        if contract["contractId"] == "lotus-idea-to-lotus-report-evidence-pack-intake:v1"
+    )
+    assert report_contract["ownerRepository"] == "lotus-report"
+    assert report_contract["sourceAuthority"] == "lotus-report"
+    assert report_contract["targetRoute"] == "planned:lotus-report-idea-evidence-pack-intake"
+    assert report_contract["routeFitStatus"] == "not_certified"
+    assert report_contract["adapterStatus"] == "planned"
+    assert report_contract["certificationReady"] is False
+    assert "dedicated_report_idea_evidence_intake_contract_missing" in (report_contract["blockers"])
     assert "client_id" not in response.text
     assert "portfolio_id" not in response.text
     assert "request_body" not in response.text
+    assert "clientId" not in response.text
+    assert "portfolioId" not in response.text
+    assert "requestBody" not in response.text
 
 
 def test_downstream_realization_readiness_api_requires_operator_permission() -> None:

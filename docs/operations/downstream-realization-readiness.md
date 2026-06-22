@@ -26,7 +26,9 @@ It returns:
 4. source-of-truth implementation paths,
 5. capability-level blockers for Advise, Manage, and Report/Render/Archive
    realization,
-6. `not_certified` supportability until downstream live contracts and product
+6. planned downstream contract readiness for the Advise proposal, Manage
+   action, and Report evidence-pack handoff seams,
+7. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
 ## What It Does Not Prove
@@ -42,6 +44,22 @@ The diagnostic is deliberately not downstream execution proof. It does not:
 7. authorize publication of client-facing material,
 8. promote a supported feature.
 
+## Downstream Contract Plan
+
+The diagnostic exposes planned contract seams so implementation agents can
+build the next RFC slice without inventing local adapters or moving authority
+into `lotus-idea`.
+
+| Contract | Owner | Target Route Posture | Current Status |
+| --- | --- | --- | --- |
+| `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | `planned:lotus-advise-proposal-intake` | `not_certified`; adapter planned |
+| `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | `planned:lotus-manage-action-intake` | `not_certified`; adapter planned |
+| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` | `not_certified`; adapter planned |
+
+These contract records are planning and certification evidence only. They are
+not route-existence proof in the downstream repositories and must remain
+blocked until the owning service accepts, tests, and certifies the contract.
+
 ## Current Blockers
 
 The response remains `blocked` until all of the following are implemented and
@@ -50,13 +68,15 @@ validated through the owning repositories and platform gates:
 1. `lotus-advise` proposal/suitability intake is implemented and certified,
 2. `lotus-manage` action-register or DPM review intake is implemented and
    certified,
-3. `lotus-report`, `lotus-render`, and `lotus-archive` materialization proof
+3. dedicated `lotus-report` idea evidence-pack intake is implemented and
+   certified,
+4. `lotus-report`, `lotus-render`, and `lotus-archive` materialization proof
    exists for an idea evidence pack,
-4. downstream live contract proof is captured,
-5. Gateway/Workbench product proof exists where a product surface consumes the
+5. downstream live contract proof is captured,
+6. Gateway/Workbench product proof exists where a product surface consumes the
    flow,
-6. data-mesh runtime trust telemetry and platform certification are complete,
-7. supported-feature promotion evidence is present.
+7. data-mesh runtime trust telemetry and platform certification are complete,
+8. supported-feature promotion evidence is present.
 
 ## Response Shape
 
@@ -68,6 +88,7 @@ The success response is intentionally aggregate and source-safe:
 | `conversionOutcomeCount` | Count of recorded downstream outcome records in `lotus-idea` |
 | `reportEvidencePackRequestCount` | Count of Report/Render/Archive request records in `lotus-idea` |
 | `capabilities` | Capability-level downstream readiness posture and blockers |
+| `downstreamContracts` | Planned downstream handoff contracts, owner repositories, target route posture, adapter status, evidence refs, and blockers |
 | `sourceOfTruth` | Implementation and RFC paths that define current behavior |
 | `supportedFeaturePromoted` | Always `false` until supported-feature evidence exists |
 
