@@ -70,6 +70,9 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "make runtime-trust-telemetry-preview-check" in runtime_telemetry.evidence_refs
     assert "make runtime-trust-telemetry-snapshot-check" in runtime_telemetry.evidence_refs
+    assert (
+        "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot" in runtime_telemetry.evidence_refs
+    )
     assert "scripts/generate_runtime_trust_telemetry_snapshot.py" in runtime_telemetry.evidence_refs
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
     outbox_delivery = next(

@@ -54,6 +54,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("GET", "/api/v1/ai-explanations/readiness"),
         ("GET", "/api/v1/data-mesh/readiness"),
         ("GET", "/api/v1/data-mesh/trust-telemetry/runtime-preview"),
+        ("GET", "/api/v1/data-mesh/trust-telemetry/runtime-snapshot"),
         ("GET", "/api/v1/downstream-realization/readiness"),
         ("GET", "/api/v1/implementation-proof/readiness"),
         ("GET", "/api/v1/outbox-delivery/readiness"),

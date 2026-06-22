@@ -255,6 +255,7 @@ def _data_mesh_capability(
             "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
             "GET /api/v1/data-mesh/readiness",
             "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
+            "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot",
             "make runtime-trust-telemetry-preview-check",
             "make runtime-trust-telemetry-snapshot-check",
         ),
@@ -273,6 +274,7 @@ def _runtime_trust_telemetry_capability(
         evidence_refs=(
             "src/app/application/runtime_trust_telemetry.py",
             "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
+            "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot",
             "scripts/generate_runtime_trust_telemetry_preview.py",
             "scripts/generate_runtime_trust_telemetry_snapshot.py",
             "make runtime-trust-telemetry-preview-check",
