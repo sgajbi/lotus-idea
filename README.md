@@ -248,6 +248,10 @@ make ci
 `make endpoint-certification-gate` now requires certified business/operator
 endpoints to cite bounded operation-event test evidence in addition to
 OpenAPI, capability, 403, test-reference, and unsupported-boundary evidence.
+For the first bounded read-only Gateway publication routes, the same gate
+requires the endpoint ledger to cite the exact `lotus-gateway` route and keep
+Workbench proof, data-product certification, client-ready publication, and
+supported-feature promotion explicitly out of scope.
 
 Equivalent explicit commands:
 

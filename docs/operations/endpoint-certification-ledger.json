@@ -96,7 +96,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return a source-safe internal detail projection for a persisted idea candidate, including redacted source evidence, lifecycle history, review, feedback, conversion, report-evidence, and audit summary posture.",
       "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 11 API foundation when an internal caller has idea.candidate.detail.read capability or an advisor/operator role and needs a source-safe evidence-drawer projection for an existing candidate.",
-      "when_not_to_use": "Do not use as a Gateway contract, Workbench product proof, data-product certification proof, source-system route disclosure, raw evidence export, downstream authority, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}. Do not use as Workbench product proof, data-product certification proof, source-system route disclosure, raw evidence export, downstream authority, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/idea-candidates/idea_high_cash_8d57adbf52f7f5a7 with X-Caller-Capabilities: idea.candidate.detail.read"
       ],
@@ -331,7 +331,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return the deterministic advisor review queue projection over persisted idea candidate snapshots.",
       "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 10 API foundation when an internal caller has advisor queue read authority and needs a deterministic queue projection for persisted candidates.",
-      "when_not_to_use": "Do not use as a durable queue store, scoped Workbench product surface, Gateway contract, data-product certification proof, PM/compliance/operator queue surface, or supported-feature promotion.",
+      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor. Do not use as a durable queue store, Workbench product proof, data-product certification proof, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read"
       ],

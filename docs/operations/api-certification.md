@@ -25,7 +25,10 @@ blocks weak certification by requiring:
 6. certified business/operator endpoints to name an `idea.*` capability,
 7. certified endpoints to preserve Gateway, Workbench, and supported-feature-promotion boundaries,
 8. product-safe 403 behavior and `scripts/openapi_quality_gate.py` evidence,
-9. bounded operation-event test evidence for every certified business/operator endpoint.
+9. bounded operation-event test evidence for every certified business/operator endpoint,
+10. exact bounded read-only `lotus-gateway` route citation before a ledger entry can claim Gateway
+    publication, while still preserving Workbench, data-product, client-ready publication, and
+    supported-feature boundaries.
 
 ## Certified Foundation Endpoints
 
@@ -39,7 +42,7 @@ The current certified foundation inventory is:
 | `GET /api/v1/idea-candidates/{candidateId}` | Internal source-safe candidate detail projection over persisted candidate snapshots, redacted evidence, workflow summaries, and audit summary. | `idea.candidate.detail.read` or advisor/operator role | Read-only Gateway publication exists through `lotus-gateway` `GET /api/v1/ideas/candidates/{candidate_id}`. No source-system route disclosure, raw evidence export, Workbench proof, data-product certification, downstream authority, client-ready publication, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` | Internal operator evidence replay posture over persisted candidate evidence hashes and caller-supplied current source refs. | `idea.candidate.evidence.replay` plus operator role | No live Core source-ingestion proof, raw source export, downstream authority, Gateway/Workbench proof, data-product certification, production recovery certification, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate` | Internal governed AI explanation fallback/verifier evaluation over persisted candidate evidence. | `idea.ai-explanation.evaluate` | No provider call, `lotus-ai` runtime execution, durable AI lineage store, autonomous advice, downstream authority, Gateway/Workbench surface, or supported-feature promotion. |
-| `GET /api/v1/review-queues/advisor` | Internal deterministic advisor queue projection over persisted candidate snapshots. | `idea.review.queue.read` or advisor role | Read-only Gateway publication exists through `lotus-gateway` `GET /api/v1/ideas/review-queues/advisor`. No durable queue store, Workbench surface, PM/compliance/operator queue surface, or supported-feature promotion. |
+| `GET /api/v1/review-queues/advisor` | Internal deterministic advisor queue projection over persisted candidate snapshots. | `idea.review.queue.read` or advisor role | Read-only Gateway publication exists through `lotus-gateway` `GET /api/v1/ideas/review-queues/advisor`. No durable queue store, Workbench proof, data-product certification, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/review-actions` | Internal advisor review decision recording with fail-closed scope checks. | `idea.review.record`, advisor role, authorized scope, and `Idempotency-Key` | No suitability, compliance, mandate, execution, client-communication, Gateway, Workbench, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/feedback` | Internal source-provenanced advisor feedback recording. | `idea.feedback.record`, advisor role, authorized scope, and `Idempotency-Key` | No model-training automation, Gateway, Workbench, data-product certification, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/conversion-intents` | Internal review-gated conversion intent recording for Advise, Manage, or Report targets. | `idea.conversion.intent.record` plus `Idempotency-Key` | Intent only; no downstream proposal, manage-review, report authority, suitability, execution, client communication, or supported-feature promotion. |

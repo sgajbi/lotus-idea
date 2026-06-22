@@ -59,11 +59,16 @@ This slice also hardens endpoint certification quality:
    explicit Gateway/Workbench/supported-feature-promotion boundary wording, and
    bounded operation-event test evidence for certified business/operator
    endpoints.
-3. `tests/unit/test_endpoint_certification_gate.py` covers current pass behavior
+3. The gate now blocks stale Gateway-publication truth: only endpoints with
+   implemented bounded read-only `lotus-gateway` publication may cite Gateway
+   publication, and those ledger entries must name the exact Gateway route while
+   preserving Workbench, data-product, client-ready publication, and
+   supported-feature boundaries.
+4. `tests/unit/test_endpoint_certification_gate.py` covers current pass behavior
    and failure cases for missing capabilities, weak unsupported-boundary text,
-   missing operation-event evidence, stale test references, and malformed JSON
-   examples.
-4. `docs/operations/api-certification.md`, README, repository context, quality
+   missing operation-event evidence, stale Gateway-publication claims, stale
+   test references, and malformed JSON examples.
+5. `docs/operations/api-certification.md`, README, repository context, quality
    scorecard, CI quality guide, and wiki source now describe the stronger gate.
 
 This slice also hardens repository hygiene:

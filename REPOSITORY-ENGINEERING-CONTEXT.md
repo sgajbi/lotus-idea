@@ -665,6 +665,11 @@ product-safe 403 behavior, preserve Gateway and Workbench boundaries, preserve
 the no-supported-feature-promotion boundary, reference
 `scripts/openapi_quality_gate.py` evidence, and cite bounded operation-event
 test evidence before remaining `certified`.
+For endpoints with implemented bounded read-only Gateway publication, the same
+gate also requires `docs/operations/endpoint-certification-ledger.json` to name
+the exact `lotus-gateway` route and to keep Workbench proof, data-product
+certification, client-ready publication, and supported-feature promotion
+explicitly out of scope.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

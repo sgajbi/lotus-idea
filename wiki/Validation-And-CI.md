@@ -161,7 +161,9 @@ and requires certified business/operator endpoints to name an `idea.*` capabilit
 product-safe 403 behavior, cite the OpenAPI quality gate, and preserve Gateway, Workbench, and
 supported-feature-promotion boundaries. It also requires bounded operation-event test evidence for
 every certified business/operator endpoint, so API certification and operator telemetry proof stay
-coupled.
+coupled. When an endpoint has implemented bounded read-only Gateway publication, the gate requires
+the ledger to cite the exact `lotus-gateway` route and still preserve Workbench, data-product,
+client-ready publication, and supported-feature boundaries.
 
 Data-mesh foundation checks:
 

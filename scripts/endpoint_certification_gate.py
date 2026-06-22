@@ -36,6 +36,25 @@ BOUNDARY_TERMS = ("Gateway", "Workbench", "supported-feature promotion")
 CAPABILITY_PATTERN = re.compile(r"\bidea\.[a-z0-9.-]+\b")
 TEST_REFERENCE_PATTERN = re.compile(r"^(?P<path>tests/.+\.py)::(?P<test>[A-Za-z_][A-Za-z0-9_]*)$")
 OPERATION_EVENT_TEST_TERMS = ("operation_event", "operation_events")
+GATEWAY_PUBLICATION_ROUTES = {
+    ("GET", "/api/v1/idea-candidates/{candidateId}"): (
+        "GET /api/v1/ideas/candidates/{candidate_id}"
+    ),
+    ("GET", "/api/v1/review-queues/advisor"): ("GET /api/v1/ideas/review-queues/advisor"),
+}
+GATEWAY_PUBLICATION_CLAIM_TERMS = (
+    "lotus-gateway",
+    "Gateway publication",
+    "/api/v1/ideas/",
+)
+GATEWAY_PUBLICATION_BOUNDARY_TERMS = (
+    "Read-only Gateway publication",
+    "lotus-gateway",
+    "Workbench",
+    "data-product certification",
+    "client-ready publication",
+    "supported-feature promotion",
+)
 
 
 def _openapi_operations_from_app() -> set[tuple[str, str]]:
@@ -165,6 +184,45 @@ def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
         errors.append(
             f"{operation}: certified endpoint must reference bounded operation-event test evidence"
         )
+
+    errors.extend(_validate_gateway_publication_posture(endpoint))
+
+    return errors
+
+
+def _validate_gateway_publication_posture(endpoint: dict[str, Any]) -> list[str]:
+    operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
+    unsupported_boundary = str(endpoint.get("when_not_to_use", ""))
+    errors: list[str] = []
+
+    claims_gateway_publication = any(
+        term in unsupported_boundary for term in GATEWAY_PUBLICATION_CLAIM_TERMS
+    )
+    published_route = GATEWAY_PUBLICATION_ROUTES.get(operation)
+
+    if claims_gateway_publication and published_route is None:
+        errors.append(
+            f"{operation}: only endpoints with implemented bounded Gateway publication may cite "
+            "lotus-gateway publication"
+        )
+
+    if published_route is None:
+        return errors
+
+    if "Gateway contract" in unsupported_boundary:
+        errors.append(
+            f"{operation}: when_not_to_use must name the bounded read-only Gateway publication "
+            "route instead of a generic Gateway contract denial"
+        )
+
+    for boundary_term in GATEWAY_PUBLICATION_BOUNDARY_TERMS:
+        if boundary_term not in unsupported_boundary:
+            errors.append(
+                f"{operation}: Gateway publication boundary must include `{boundary_term}`"
+            )
+
+    if published_route not in unsupported_boundary:
+        errors.append(f"{operation}: Gateway publication boundary must cite `{published_route}`")
 
     return errors
 
