@@ -80,6 +80,15 @@ def queue_headers() -> dict[str, str]:
     }
 
 
+def queue_readiness_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": "operator",
+        "X-Caller-Capabilities": "idea.review.queue.readiness.read",
+        "X-Correlation-Id": "corr-operation-queue-readiness-api",
+    }
+
+
 def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": "idea-lifecycle-worker",
@@ -432,6 +441,10 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
         "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
         headers=queue_headers(),
     )
+    queue_readiness_response = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=queue_readiness_headers(),
+    )
     review_response = client.post(
         f"/api/v1/idea-candidates/{lifecycle_candidate_id}/review-actions",
         json=review_payload(),
@@ -445,10 +458,14 @@ def test_lifecycle_queue_review_and_feedback_emit_operation_events(
 
     assert lifecycle_response.status_code == 200
     assert queue_response.status_code == 200
+    assert queue_readiness_response.status_code == 200
     assert review_response.status_code == 200
     assert feedback_response.status_code == 200
     assert lifecycle_events == [("lifecycle_transition", "accepted", "lotus-idea", False, None)]
-    assert queue_events == [("review_queue_read", "accepted", "lotus-idea", False, None)]
+    assert queue_events == [
+        ("review_queue_read", "accepted", "lotus-idea", False, None),
+        ("review_queue_readiness_read", "blocked", "lotus-idea", False, None),
+    ]
     assert review_events == [
         ("review_action", "accepted", "lotus-idea", False, None),
         ("feedback_record", "accepted", "lotus-idea", False, None),

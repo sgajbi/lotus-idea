@@ -54,6 +54,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("GET", "/api/v1/data-mesh/readiness"),
         ("GET", "/api/v1/source-ingestion/readiness"),
         ("GET", "/api/v1/review-queues/advisor"),
+        ("GET", "/api/v1/review-queues/advisor/readiness"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/outcomes"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"),
         ("GET", "/api/v1/idea-candidates/{candidateId}"),

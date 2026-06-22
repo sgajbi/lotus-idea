@@ -13,6 +13,7 @@ from app.application.high_cash_signal import (
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     build_review_queue_from_repository,
+    build_review_queue_readiness_snapshot,
 )
 from app.domain import (
     CandidatePersistenceDecision,
@@ -210,3 +211,68 @@ def test_build_review_queue_from_repository_requires_timezone_aware_evaluation_t
         BuildReviewQueueFromRepositoryCommand(
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
         )
+
+
+def test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture() -> None:
+    repository = InMemoryIdeaRepository()
+    reviewable_candidate_id = persist_high_cash_candidate(repository, suffix="-reviewable")
+    expired_candidate_id = persist_high_cash_candidate(
+        repository,
+        cash_weight=Decimal("0.20"),
+        suffix="-expired",
+        idempotency_key="signal-ingestion:high-cash:readiness-expired",
+    )
+    repository.transition_candidate(
+        expired_candidate_id,
+        IdeaLifecycleStatus.EXPIRED,
+        actor_subject="signal-expiry-worker",
+        occurred_at_utc=datetime(2026, 6, 22, 10, 0, tzinfo=UTC),
+    )
+
+    snapshot = build_review_queue_readiness_snapshot(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=datetime(2026, 6, 22, 10, 1, tzinfo=UTC),
+        ),
+        repository=repository,
+        durable_storage_backed=False,
+    )
+
+    assert snapshot.repository == "lotus-idea"
+    assert snapshot.policy_version == "idea-deterministic-ranking-v1"
+    assert snapshot.queue_projection_available is True
+    assert snapshot.candidate_snapshot_count == 2
+    assert snapshot.reviewable_item_count == 1
+    assert snapshot.excluded_candidate_count == 1
+    assert snapshot.exclusion_counts["expired"] == 1
+    assert snapshot.exclusion_counts["unsupported_evidence"] == 0
+    assert snapshot.scored_candidate_count == 2
+    assert snapshot.unscored_candidate_count == 0
+    assert snapshot.durable_storage_backed is False
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.certification_ready is False
+    assert snapshot.certification_blockers == (
+        "durable_repository_not_configured",
+        "platform_caller_context_entitlement_proof_missing",
+        "workbench_product_proof_missing",
+        "data_product_certification_missing",
+        "runtime_trust_telemetry_missing",
+    )
+    assert snapshot.supported_feature_promoted is False
+    assert reviewable_candidate_id not in str(snapshot.exclusion_counts)
+    assert expired_candidate_id not in str(snapshot.exclusion_counts)
+
+
+def test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers() -> None:
+    repository = InMemoryIdeaRepository()
+
+    snapshot = build_review_queue_readiness_snapshot(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=EVALUATED_AT),
+        repository=repository,
+        durable_storage_backed=True,
+    )
+
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.certification_ready is False
+    assert "durable_repository_not_configured" not in snapshot.certification_blockers
+    assert "workbench_product_proof_missing" in snapshot.certification_blockers

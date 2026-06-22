@@ -358,6 +358,34 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/review-queues/advisor/readiness",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return source-safe operator readiness for the deterministic advisor review queue projection, including aggregate queue counts, exclusion counts, durable-storage posture, and certification blockers.",
+      "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 15 operator diagnostic when an internal platform operator has idea.review.queue.readiness.read capability and needs to validate queue projection supportability before Workbench, mesh, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, durable queue store proof, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: operator and X-Caller-Capabilities: idea.review.queue.readiness.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"queueProjectionAvailable\":true,\"candidateSnapshotCount\":2,\"reviewableItemCount\":2,\"excludedCandidateCount\":0,\"exclusionCounts\":{\"suppressed\":0,\"duplicate\":0,\"expired\":0,\"closed\":0,\"rejected\":0,\"unsupported_evidence\":0,\"snoozed\":0,\"unscored\":0,\"non_reviewable_status\":0,\"access_scope_mismatch\":0},\"scoredCandidateCount\":2,\"unscoredCandidateCount\":0,\"durableStorageBacked\":false,\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"certificationBlockers\":[\"durable_repository_not_configured\",\"platform_caller_context_entitlement_proof_missing\",\"workbench_product_proof_missing\",\"data_product_certification_missing\",\"runtime_trust_telemetry_missing\"],\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.review.queue.readiness.read capability or operator role.",
+        "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware."
+      ],
+      "test_evidence": [
+        "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture",
+        "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_requires_operator_permission",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely",
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/source-ingestion/readiness",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

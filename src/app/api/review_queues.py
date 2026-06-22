@@ -12,12 +12,21 @@ from app.api.caller_headers import caller_context_from_headers
 from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
+    ReviewQueueReadinessSnapshot,
     build_review_queue_from_repository,
+    build_review_queue_readiness_snapshot,
 )
 from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.errors import ProblemDetails, problem_response
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.observability import (
+    IdeaOperation,
+    OperationEvent,
+    OperationOutcome,
+    OperationSupportability,
+    emit_foundation_operation_event,
+    emit_operation_event,
+)
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
@@ -39,6 +48,11 @@ class RouteMetadata(TypedDict):
 _READ_ADVISOR_QUEUE_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.review.queue.read",
     allowed_roles=("advisor",),
+)
+
+_READ_QUEUE_READINESS_POLICY = CapabilityPolicy.for_roles(
+    required_capability="idea.review.queue.readiness.read",
+    allowed_roles=("operator",),
 )
 
 
@@ -134,6 +148,49 @@ class AdvisorReviewQueueResponse(CamelModel):
         )
 
 
+class ReviewQueueReadinessResponse(CamelModel):
+    repository: str
+    policy_version: str = Field(..., alias="policyVersion")
+    evaluated_at_utc: datetime = Field(..., alias="evaluatedAtUtc")
+    queue_projection_available: bool = Field(..., alias="queueProjectionAvailable")
+    candidate_snapshot_count: int = Field(..., alias="candidateSnapshotCount")
+    reviewable_item_count: int = Field(..., alias="reviewableItemCount")
+    excluded_candidate_count: int = Field(..., alias="excludedCandidateCount")
+    exclusion_counts: dict[str, int] = Field(..., alias="exclusionCounts")
+    scored_candidate_count: int = Field(..., alias="scoredCandidateCount")
+    unscored_candidate_count: int = Field(..., alias="unscoredCandidateCount")
+    durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
+    readiness_status: str = Field(..., alias="readinessStatus")
+    supportability_status: str = Field(..., alias="supportabilityStatus")
+    certification_ready: bool = Field(..., alias="certificationReady")
+    certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
+    supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
+
+    @classmethod
+    def from_domain(
+        cls,
+        snapshot: ReviewQueueReadinessSnapshot,
+    ) -> "ReviewQueueReadinessResponse":
+        return cls(
+            repository=snapshot.repository,
+            policyVersion=snapshot.policy_version,
+            evaluatedAtUtc=snapshot.evaluated_at_utc,
+            queueProjectionAvailable=snapshot.queue_projection_available,
+            candidateSnapshotCount=snapshot.candidate_snapshot_count,
+            reviewableItemCount=snapshot.reviewable_item_count,
+            excludedCandidateCount=snapshot.excluded_candidate_count,
+            exclusionCounts=dict(snapshot.exclusion_counts),
+            scoredCandidateCount=snapshot.scored_candidate_count,
+            unscoredCandidateCount=snapshot.unscored_candidate_count,
+            durableStorageBacked=snapshot.durable_storage_backed,
+            readinessStatus=snapshot.readiness_status,
+            supportabilityStatus=snapshot.supportability_status,
+            certificationReady=snapshot.certification_ready,
+            certificationBlockers=snapshot.certification_blockers,
+            supportedFeaturePromoted=snapshot.supported_feature_promoted,
+        )
+
+
 async def get_advisor_review_queue(
     evaluated_at_utc: datetime = Query(..., alias="evaluatedAtUtc"),
     tenant_id: str | None = Query(default=None, alias="tenantId"),
@@ -211,6 +268,56 @@ async def get_advisor_review_queue(
     )
 
 
+async def get_advisor_review_queue_readiness(
+    evaluated_at_utc: datetime = Query(..., alias="evaluatedAtUtc"),
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> ReviewQueueReadinessResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        require_capability(caller, _READ_QUEUE_READINESS_POLICY)
+    except PermissionDeniedError:
+        _emit_review_queue_readiness_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to read idea review queue readiness.",
+        )
+    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+        _emit_review_queue_readiness_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="evaluatedAtUtc must be timezone-aware.",
+        )
+
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    snapshot = build_review_queue_readiness_snapshot(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
+    _emit_review_queue_readiness_operation_event(
+        OperationOutcome.ACCEPTED if snapshot.certification_ready else OperationOutcome.BLOCKED,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return ReviewQueueReadinessResponse.from_domain(snapshot)
+
+
 def _emit_review_queue_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
@@ -222,6 +329,24 @@ def _emit_review_queue_operation_event(
         source_authority="lotus-idea",
         error_code=error_code,
         durable_storage_backed=durable_storage_backed,
+    )
+
+
+def _emit_review_queue_readiness_operation_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+    durable_storage_backed: bool = False,
+) -> None:
+    emit_operation_event(
+        OperationEvent(
+            operation=IdeaOperation.REVIEW_QUEUE_READINESS_READ,
+            outcome=outcome,
+            source_authority="lotus-idea",
+            supportability_status=OperationSupportability.NOT_CERTIFIED,
+            durable_storage_backed=durable_storage_backed,
+            supported_feature_promoted=False,
+            error_code=error_code,
+        )
     )
 
 
@@ -283,6 +408,71 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
     },
 }
 
+ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
+    "path": "/api/v1/review-queues/advisor/readiness",
+    "operation_id": "getAdvisorIdeaReviewQueueReadiness",
+    "summary": "Get advisor review queue readiness",
+    "description": (
+        "Returns source-safe operator readiness for the deterministic advisor review "
+        "queue projection. The diagnostic reports aggregate queue counts, exclusion "
+        "counts, durable-storage posture, and certification blockers only; it does "
+        "not expose candidate identifiers, access-scope identifiers, Workbench proof, "
+        "data-product certification, PM/compliance queue support, or a supported feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": ReviewQueueReadinessResponse,
+    "tags": ["Operations"],
+    "responses": {
+        200: {
+            "description": "Advisor review queue readiness posture returned.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "repository": "lotus-idea",
+                        "policyVersion": "idea-deterministic-ranking-v1",
+                        "evaluatedAtUtc": "2026-06-21T10:10:00Z",
+                        "queueProjectionAvailable": True,
+                        "candidateSnapshotCount": 2,
+                        "reviewableItemCount": 1,
+                        "excludedCandidateCount": 1,
+                        "exclusionCounts": {
+                            "access_scope_mismatch": 0,
+                            "closed": 0,
+                            "duplicate": 0,
+                            "expired": 1,
+                            "non_reviewable_status": 0,
+                            "rejected": 0,
+                            "snoozed": 0,
+                            "suppressed": 0,
+                            "unscored": 0,
+                            "unsupported_evidence": 0,
+                        },
+                        "scoredCandidateCount": 2,
+                        "unscoredCandidateCount": 0,
+                        "durableStorageBacked": False,
+                        "readinessStatus": "blocked",
+                        "supportabilityStatus": "not_certified",
+                        "certificationReady": False,
+                        "certificationBlockers": [
+                            "durable_repository_not_configured",
+                            "platform_caller_context_entitlement_proof_missing",
+                            "workbench_product_proof_missing",
+                            "data_product_certification_missing",
+                            "runtime_trust_telemetry_missing",
+                        ],
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        400: {"model": ProblemDetails, "description": "Request validation failed."},
+        403: {
+            "model": ProblemDetails,
+            "description": "Caller lacks queue readiness read permission.",
+        },
+    },
+}
+
 
 def register_review_queue_routes(app: FastAPI) -> None:
     app.get(
@@ -295,3 +485,13 @@ def register_review_queue_routes(app: FastAPI) -> None:
         tags=ADVISOR_REVIEW_QUEUE_ROUTE["tags"],
         responses=ADVISOR_REVIEW_QUEUE_ROUTE["responses"],
     )(get_advisor_review_queue)
+    app.get(
+        path=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["path"],
+        operation_id=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["operation_id"],
+        summary=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["summary"],
+        description=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["description"],
+        status_code=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["status_code"],
+        response_model=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["response_model"],
+        tags=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["tags"],
+        responses=ADVISOR_REVIEW_QUEUE_READINESS_ROUTE["responses"],
+    )(get_advisor_review_queue_readiness)

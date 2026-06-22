@@ -55,6 +55,7 @@ class IdeaOperation(StrEnum):
     CANDIDATE_EVIDENCE_REPLAY = "candidate_evidence_replay"
     LIFECYCLE_TRANSITION = "lifecycle_transition"
     REVIEW_QUEUE_READ = "review_queue_read"
+    REVIEW_QUEUE_READINESS_READ = "review_queue_readiness_read"
     REVIEW_ACTION = "review_action"
     FEEDBACK_RECORD = "feedback_record"
     CONVERSION_INTENT = "conversion_intent"
