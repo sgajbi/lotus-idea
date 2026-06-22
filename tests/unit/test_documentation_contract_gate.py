@@ -62,6 +62,29 @@ def test_documentation_contract_gate_blocks_thin_surface(tmp_path: Path) -> None
     assert errors == ["README.md: has 2 non-empty lines; minimum is 3"]
 
 
+def test_documentation_contract_gate_blocks_bloated_surface(tmp_path: Path) -> None:
+    module = _load_gate()
+    readme = tmp_path / "README.md"
+    readme.write_text(
+        "\n".join(("# Service", "Product Boundary", "Quick Start", "Extra line")),
+        encoding="utf-8",
+    )
+    surface = module.DocumentationSurface(
+        "README.md",
+        1,
+        ("Product Boundary",),
+        3,
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(surface,),
+        polished_surfaces=(),
+    )
+
+    assert errors == ["README.md: has 4 non-empty lines; maximum is 3"]
+
+
 def test_documentation_contract_gate_blocks_missing_anchor(tmp_path: Path) -> None:
     module = _load_gate()
     readme = tmp_path / "README.md"
@@ -131,6 +154,38 @@ def test_documentation_contract_gate_blocks_unpolished_operator_doc(
         "docs/operations/implementation-proof-readiness.md: has 0 markdown tables; minimum is 1",
         "docs/operations/implementation-proof-readiness.md: has 0 code fences; minimum is 1",
     ]
+
+
+def test_documentation_contract_gate_blocks_missing_required_diagram(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "wiki" / "Architecture.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "# Architecture\n\n"
+        "| Field | Value |\n"
+        "| --- | --- |\n"
+        "| Source Authority | lotus-core |\n\n"
+        "## Source Authority\n\n"
+        "Source ownership summary.\n",
+        encoding="utf-8",
+    )
+    surface = module.PolishedDocumentationSurface(
+        "wiki/Architecture.md",
+        ("## Source Authority",),
+        1,
+        0,
+        1,
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(),
+        polished_surfaces=(surface,),
+    )
+
+    assert errors == ["wiki/Architecture.md: has 0 Mermaid diagrams; minimum is 1"]
 
 
 def test_documentation_contract_gate_accepts_polished_operator_doc(
