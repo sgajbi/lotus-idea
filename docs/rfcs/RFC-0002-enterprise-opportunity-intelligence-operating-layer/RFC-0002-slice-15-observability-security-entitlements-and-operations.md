@@ -123,8 +123,9 @@ foundation:
 27. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose certified internal outbox
     delivery readiness for aggregate backlog, status counts, durable repository
-    posture, broker configuration posture, source-of-truth paths, and
-    certification blockers. The route requires both the `operator` role and
+    posture, broker configuration posture, publisher-adapter presence,
+    source-of-truth paths, and certification blockers. The route requires both
+    the `operator` role and
     `idea.outbox-delivery.readiness.read`, returns source-safe aggregate counts
     only, and emits bounded `outbox_delivery_readiness_read` operation events.
 28. `tests/unit/test_outbox_delivery_readiness.py` and
@@ -155,8 +156,8 @@ The downstream realization readiness diagnostic is explicitly `not_certified`
 until Advise proposal/suitability intake, Manage action realization,
 Report/Render/Archive materialization, Gateway/Workbench product proof,
 runtime trust telemetry, and supported-feature evidence exist.
-The outbox delivery readiness diagnostic is explicitly `not_certified` until an
-external publisher, downstream consumer contracts, platform mesh event
+The outbox delivery readiness diagnostic is explicitly `not_certified` until
+live broker runtime proof, downstream consumer contracts, platform mesh event
 certification, Gateway/Workbench proof, and supported-feature evidence exist.
 
 ## Required Work

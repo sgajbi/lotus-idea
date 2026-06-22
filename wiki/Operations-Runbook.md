@@ -9,9 +9,10 @@ remains internal foundation only:
 repository-backed API persistence is process-local by default and
 PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Accepted
 internal mutations also create source-safe outbox records with internal
-retry/dead-letter delivery state semantics, but there is no external broker
-publication, downstream adapter, production recovery command, Workbench proof,
-or supported business API yet. Bounded read-only Gateway
+retry/dead-letter delivery state semantics and a source-safe HTTP
+broker-publisher adapter foundation, but there is no certified live broker
+runtime, downstream adapter, production recovery command, Workbench proof, or
+supported business API yet. Bounded read-only Gateway
 publication exists for advisor queue and candidate detail only. A versioned
 migration/rollback schema contract exists for the durable repository and is
 enforced by `make migration-contract-gate`.
@@ -61,10 +62,11 @@ exist.
 The internal `GET /api/v1/outbox-delivery/readiness` diagnostic is available
 for operators with `idea.outbox-delivery.readiness.read` to inspect aggregate
 outbox backlog, retry/dead-letter posture, durable repository posture, broker
-configuration posture, and remaining certification blockers. It does not expose
-event identifiers, aggregate identifiers, raw idempotency keys, broker payloads,
-or downstream claims. It remains `not_certified` until external publisher,
-downstream consumer contracts, platform mesh event certification,
+configuration posture, publisher-adapter presence, and remaining certification
+blockers. It does not expose event identifiers, aggregate identifiers, raw
+idempotency keys, broker payloads, or downstream claims. It remains
+`not_certified` until live broker runtime proof, downstream consumer contracts,
+platform mesh event certification,
 Gateway/Workbench proof, and supported-feature evidence exist.
 The internal `GET /api/v1/review-queues/advisor/readiness` diagnostic is
 available for operators with `idea.review.queue.readiness.read` to inspect
@@ -89,7 +91,7 @@ queue, AI explanation, data mesh, runtime trust telemetry preview, outbox
 delivery, Workbench realization, downstream realization, and
 supported-feature promotion. It remains `not_certified` and `blocked` while
 any proof family lacks live evidence, and it must not be used as live implementation proof,
-external broker publication, downstream delivery, Gateway/Workbench proof,
+live broker runtime, downstream delivery, Gateway/Workbench proof,
 data-product certification, certified runtime trust telemetry, client-ready
 publication, or supported-feature promotion.
 The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
@@ -108,7 +110,7 @@ downstream services or create downstream records.
 | --- | --- | --- |
 | Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation | Deployed scheduler, live Core certification, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, and aggregate readiness diagnostic for accepted internal mutations | External broker publication or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, and aggregate readiness diagnostic for accepted internal mutations | Certified live broker runtime or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
 | Downstream realization | Readiness diagnostics over current workflow counts plus planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
 
@@ -199,7 +201,7 @@ Current outcomes:
     worker configuration/certification proof, advisor queue readiness is
     missing durable queue posture, entitlement proof, Workbench proof,
     data-product certification, or runtime trust telemetry, outbox delivery
-    readiness is missing external publisher, downstream consumer contracts,
+    readiness is missing live broker runtime proof, downstream consumer contracts,
     platform mesh event certification, Gateway/Workbench proof, and
     supported-feature evidence, or downstream realization readiness is missing
     Advise proposal/suitability intake,
@@ -266,8 +268,8 @@ source-of-truth paths, and current supportability posture for operators without
 exposing candidate identifiers, source payloads, portfolio identifiers, or
 client identifiers. It includes the outbox-delivery proof family but does not
 expose event identifiers, aggregate identifiers, raw idempotency keys, or
-broker payloads. It is not live implementation proof, external broker
-publication, downstream delivery, data-product certification, Workbench proof,
+broker payloads. It is not live implementation proof, certified broker runtime,
+downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the same source-safe
 readiness snapshot without running the HTTP service. Use it as CI or async
@@ -290,9 +292,10 @@ client-ready publication, or supported-feature promotion.
 
 `GET /api/v1/outbox-delivery/readiness` is the certified internal outbox
 delivery readiness diagnostic. It returns aggregate backlog and status posture,
-durable-storage posture, source-of-truth paths, and certification blockers for
-operators without exposing event identifiers, aggregate identifiers, raw
-idempotency keys, source payloads, or broker payloads. It is not external
-broker publication, downstream delivery proof, platform mesh event
+durable-storage posture, publisher-adapter presence, source-of-truth paths, and
+certification blockers for operators without exposing event identifiers,
+aggregate identifiers, raw idempotency keys, source payloads, or broker
+payloads. It is not certified live broker runtime, downstream delivery proof,
+platform mesh event
 certification, Gateway/Workbench proof, client-ready publication, or
 supported-feature promotion.

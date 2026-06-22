@@ -117,7 +117,7 @@ fields. Do not add identifiers or payload fragments to operation labels.
    preview is not yet platform-certified or published through Gateway/Workbench
    discovery, and the aggregate implementation-proof readiness diagnostic when
    any RFC-0002 proof family remains uncertified. It also covers outbox
-   delivery readiness while broker configuration, external publisher,
+   delivery readiness while broker configuration, live broker runtime proof,
    downstream consumer contracts, platform mesh event certification, and
    supported-feature evidence are absent.
 

@@ -193,14 +193,19 @@ limit, maps publisher exceptions to bounded source-safe failure reasons, and
 returns aggregate counts only. `InMemoryIdeaRepository` and
 `PostgresIdeaRepository` expose the same delivery-ready query and status update
 contract through `src/app/ports/idea_repository.py`, with unit coverage for
-PostgreSQL persistence of delivery status. `src/app/application/outbox_delivery_readiness.py`
+PostgreSQL persistence of delivery status. `src/app/ports/outbox_publisher.py`
+now owns the outbox publisher port and `src/app/infrastructure/outbox_publisher.py`
+adds a source-safe HTTP broker-publisher adapter foundation that emits bounded
+Lotus event envelopes with trace headers and product-safe failure reasons. It
+is not wired as certified live broker publication until broker runtime proof,
+platform mesh event certification, and downstream consumer contracts exist.
+`src/app/application/outbox_delivery_readiness.py`
 and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
 operator diagnostic over aggregate outbox status counts, delivery-ready backlog,
 durable repository posture, broker configuration posture, and certification
 blockers without exposing event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims. This is not external
-event publication, broker integration, downstream delivery, or mesh
-certification.
+event-publication certification, downstream delivery, or mesh certification.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report
@@ -234,7 +239,7 @@ validating the backing workflow tables, and proving schema rollback/reapply
 restores a usable API persistence contract. This is still not production
 storage certification: deploy migration evidence, scheduled daemon/deploy
 source-ingestion worker proof, live Core source adapter proof, data-product
-certification, external broker publication, downstream consumer proof,
+certification, live broker runtime proof, downstream consumer proof,
 downstream workflow proof, and supported-feature promotion remain planned. The
 current run-once worker CLI is developer/operator foundation only and is
 validated in check-only mode by `make source-ingestion-worker-check`.

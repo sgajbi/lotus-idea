@@ -169,11 +169,12 @@ Persistence adapter validation:
 14. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
    outbox delivery readiness diagnostic for aggregate backlog/status posture,
-   durable repository posture, broker configuration posture, operator plus
-   capability enforcement, product-safe payloads, and bounded `not_certified`
-   operation events without exposing event identifiers, raw idempotency keys,
-   source payloads, broker payloads, or downstream contract details.
-14. Runtime API database wiring is opt-in and still requires deploy migration
+   durable repository posture, broker configuration posture, publisher-adapter
+   presence, operator plus capability enforcement, product-safe payloads, and
+   bounded `not_certified` operation events without exposing event identifiers,
+   raw idempotency keys, source payloads, broker payloads, or downstream
+   contract details.
+15. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -300,8 +301,8 @@ supported-feature promotion.
 
 The internal outbox-delivery-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
-the diagnostic route only; they do not certify external broker publication,
-downstream consumer delivery, platform mesh event certification,
+the diagnostic route only; they do not certify live broker runtime, downstream
+consumer delivery, platform mesh event certification,
 Gateway/Workbench support, data-product promotion, client-ready publication,
 or supported-feature promotion.
 
