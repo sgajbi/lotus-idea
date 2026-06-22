@@ -24,7 +24,7 @@ flowchart LR
     Sources -->|"provenance, freshness, source refs"| Idea["lotus-idea"]
     Idea -->|"read-only composition"| Gateway["lotus-gateway"]
     Gateway --> Workbench["lotus-workbench"]
-    Idea -->|"review-gated intent"| Downstream["Advise / Manage / Report / Render / Archive"]
+    Idea -->|"review-gated intent and submission posture"| Downstream["Advise / Manage / Report / Render / Archive"]
 ```
 
 | Domain | Source owner |
@@ -256,6 +256,18 @@ not-certified. They are not downstream route-existence proof. The endpoint
 does not call downstream services, create
 proposals, create manage actions, materialize reports, render output, archive
 records, authorize client-ready publication, or promote a supported feature.
+
+`POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
+and
+`POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
+are certified internal submission foundations. They require
+`idea.downstream-realization.submit` and `Idempotency-Key`, use configured
+source-safe Advise, Manage, and Report adapters, propagate correlation/trace
+context, and return submission posture only. Missing adapter configuration
+fails closed with `503 downstream_realization_not_configured`. They do not
+record authoritative downstream outcomes, prove downstream route existence,
+grant suitability/execution/publication authority, or promote a supported
+feature.
 
 ## Persistence Orchestration Foundation
 

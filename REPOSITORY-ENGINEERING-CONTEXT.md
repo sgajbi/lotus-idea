@@ -422,7 +422,18 @@ orchestration for submitting Advise and Manage conversion intents and Report
 evidence-pack requests through downstream ports. It deliberately does not
 record authoritative downstream outcomes, because downstream services remain
 the source of acceptance, rejection, completion, materialization, and failure
-truth. `src/app/ports/downstream_realization.py` and
+truth. `src/app/api/downstream_realization.py` now exposes certified internal
+submission APIs for existing Advise/Manage conversion intents and Report
+evidence-pack requests:
+`POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
+and
+`POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`.
+Both routes require `idea.downstream-realization.submit` and
+`Idempotency-Key`, propagate correlation/trace/idempotency headers through the
+adapter port, fail closed with `503 downstream_realization_not_configured` when
+adapter configuration is absent, and return submission posture only. They do
+not record downstream outcomes, grant downstream authority, prove route
+existence, or promote a supported feature. `src/app/ports/downstream_realization.py` and
 `src/app/infrastructure/downstream_realization.py` add source-safe HTTP adapter
 foundations for Advise proposal intent, Manage action intent, and Report
 evidence-pack materialization request handoff envelopes. The adapters preserve
@@ -479,6 +490,12 @@ persistence, candidate detail read, lifecycle transition, advisor review queue,
 candidate evidence replay, review action, AI explanation, feedback, conversion
 intent, conversion outcome, report evidence-pack request, and
 data-mesh-readiness diagnostic APIs emit bounded operation events. The
+downstream submission API emits `downstream_realization_submission` events with
+`not_certified` supportability, source authority `lotus-idea`, accepted,
+blocked, not-found, permission-denied, invalid-request, or invalid-state
+outcomes, and no candidate, portfolio, client, request-body, or response-body
+identifiers.
+The
 source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,
 blocked/accepted configuration posture, and no source payloads.

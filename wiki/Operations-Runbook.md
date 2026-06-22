@@ -11,7 +11,7 @@ PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Accepted
 internal mutations also create source-safe outbox records with internal
 retry/dead-letter delivery state semantics and a source-safe HTTP
 broker-publisher adapter foundation, and source-safe downstream adapter
-foundations plus internal downstream submission orchestration. There is still
+foundations plus certified internal downstream submission APIs. There is still
 no certified live broker runtime, downstream execution proof, production
 recovery command, Workbench proof, or supported business API. Bounded
 read-only Gateway publication exists for advisor queue and candidate detail
@@ -106,6 +106,17 @@ trust telemetry, and supported-feature evidence exist. Planned contract
 records are not downstream route-existence proof; the endpoint does not call
 downstream services or create downstream records.
 
+The internal downstream submission routes are available for callers with
+`idea.downstream-realization.submit` and `Idempotency-Key`:
+
+| Route | Current use | Boundary |
+| --- | --- | --- |
+| `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters. | Submission posture only; no outcome recording, suitability, execution, Gateway/Workbench proof, or supported-feature promotion. |
+| `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter. | Submission posture only; no package intake proof, render output, archive record, client-ready publication, or supported-feature promotion. |
+
+Missing adapter configuration returns `503 downstream_realization_not_configured`
+instead of producing a false support claim.
+
 ## Operator Map
 
 | Operating area | Current proof | Must not be inferred |
@@ -114,7 +125,7 @@ downstream services or create downstream records.
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, and aggregate readiness diagnostic for accepted internal mutations | Certified live broker runtime or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
-| Downstream realization | Readiness diagnostics over current workflow counts, source-safe adapter-foundation presence, and planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
+| Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, and planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
 
 ```mermaid
 flowchart LR
@@ -174,7 +185,8 @@ candidate persistence, candidate evidence replay, lifecycle transitions,
 advisor queue reads, review actions, AI explanation fallback/verifier
 evaluation, AI explanation readiness diagnostic reads, feedback records,
 conversion intent recording, conversion outcome
-recording, report evidence-pack request recording, data-mesh-readiness
+recording, report evidence-pack request recording, downstream realization
+submission, data-mesh-readiness
 diagnostic reads, source-ingestion-readiness diagnostic reads, advisor
 queue-readiness diagnostic reads, outbox-delivery-readiness diagnostic reads,
 downstream-realization-readiness diagnostic reads, plus aggregate
@@ -209,7 +221,8 @@ Current outcomes:
     Advise proposal/suitability intake,
     Manage action realization, Report/Render/Archive materialization,
     Gateway/Workbench proof, runtime trust telemetry, and supported-feature
-    evidence. Aggregate implementation-proof readiness reports `blocked`
+    evidence, or downstream submission is not configured or rejected by the
+    target adapter. Aggregate implementation-proof readiness reports `blocked`
     whenever any RFC-0002 proof family still lacks certification evidence.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
@@ -242,8 +255,9 @@ The inventory covers high-cash evaluation, high-cash persistence, candidate
 evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
-source-ingestion-readiness, downstream-realization-readiness, and
-advisor-queue-readiness, and outbox-delivery-readiness diagnostic endpoints.
+source-ingestion-readiness, downstream-realization-readiness, downstream
+submission, advisor-queue-readiness, and outbox-delivery-readiness diagnostic
+endpoints.
 These endpoints are certified as internal foundations or operator diagnostics
 only; they are not supported business features.
 

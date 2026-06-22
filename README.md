@@ -29,9 +29,10 @@ Current implemented foundations include:
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
 - governed downstream contract-readiness diagnostics, source-safe application
-  orchestration, and HTTP adapter foundations for Advise, Manage, and Report
-  handoff seams, backed by a repo contract plan and blocking gate, without
-  downstream route-existence or execution claims,
+  orchestration, certified internal downstream submission APIs, and HTTP
+  adapter foundations for Advise, Manage, and Report handoff seams, backed by
+  a repo contract plan and blocking gate, without downstream route-existence
+  or execution claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics, a source-safe HTTP broker-publisher adapter foundation, and
   readiness diagnostics for accepted internal mutations,
@@ -127,7 +128,7 @@ flowchart LR
     Idea -->|"idempotent records"| Store
     Idea -->|"source-safe diagnostics"| Gateway
     Gateway --> Workbench
-    Idea -->|"review-gated intent/outcome"| Downstream
+    Idea -->|"review-gated intent, submission posture, outcome tracking"| Downstream
 ```
 
 - `src/app/api/`: FastAPI routes, DTO mapping, caller headers, repository
@@ -307,8 +308,7 @@ Local controls keep implementation claims grounded:
 - [wiki/Overview.md](wiki/Overview.md): product and current-state summary.
 - [wiki/Architecture.md](wiki/Architecture.md): architecture and flow summary.
 - [wiki/Integrations.md](wiki/Integrations.md): upstream and downstream map.
-- [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md): CI lane model and
-  branch hygiene policy.
+- [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md): CI lane model and branch hygiene policy.
 - [wiki/Supported-Features.md](wiki/Supported-Features.md): promotion status.
 - [docs/rfcs/README.md](docs/rfcs/README.md): RFC index and slice evidence.
 - [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md):
