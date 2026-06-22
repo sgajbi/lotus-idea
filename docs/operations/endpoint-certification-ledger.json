@@ -468,6 +468,37 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/implementation-proof/readiness",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return an aggregate, source-safe RFC-0002 implementation proof readiness snapshot for internal operators.",
+      "when_to_use": "Use for internal platform/operator validation when a caller has idea.implementation-proof.readiness.read capability and needs to see aggregate proof blockers across source ingestion, review queue, AI explanation, data mesh, Workbench realization, downstream realization, and supported-feature promotion.",
+      "when_not_to_use": "Do not use as live implementation proof, data-product certification proof, platform source-manifest inclusion proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/implementation-proof/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: operator and X-Caller-Capabilities: idea.implementation-proof.readiness.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"capabilityCount\":7,\"certificationReadyCapabilityCount\":0,\"blockedCapabilityCount\":7,\"supportedFeatureCount\":0,\"supportedFeaturesPromoted\":false,\"overallBlockers\":[\"source_ingestion_manifest_not_configured\",\"workbench_panel_missing\",\"no_supported_features_promoted\"],\"sourceOfTruth\":{\"rfc\":\"docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md\",\"supported_features\":\"supported-features/supported-features.json\"},\"capabilities\":[{\"capabilityId\":\"advisor-review-queue\",\"name\":\"Deterministic advisor review queue\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"evidenceRefs\":[\"GET /api/v1/review-queues/advisor\"],\"blockers\":[\"workbench_product_proof_missing\"],\"supportedFeaturePromoted\":false}],\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.implementation-proof.readiness.read capability or operator role.",
+        "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware.",
+        "503 returns product-safe Problem Details when implementation proof readiness source contracts cannot be read."
+      ],
+      "test_evidence": [
+        "tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_reports_blocked_foundation_posture",
+        "tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_capabilities_are_source_safe",
+        "tests/unit/test_implementation_proof_readiness.py::test_implementation_proof_readiness_rejects_naive_evaluation_time",
+        "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_returns_blocked_operator_posture",
+        "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_requires_operator_permission",
+        "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_rejects_naive_evaluation_time",
+        "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_emits_not_certified_operation_event",
+        "tests/integration/test_implementation_proof_readiness_api.py::test_implementation_proof_readiness_api_reports_unavailable_contracts_safely"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
       "path": "/health",
       "certification_status": "baseline_certified",
       "owner": "lotus-idea owners",
