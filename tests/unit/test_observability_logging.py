@@ -37,20 +37,20 @@ def test_log_event_emits_structured_json(caplog: LogCaptureFixture) -> None:
 
 def test_operation_event_metric_labels_are_bounded_and_product_safe() -> None:
     event = OperationEvent(
-        operation=IdeaOperation.REPORT_EVIDENCE_PACK,
-        outcome=OperationOutcome.ACCEPTED,
-        source_authority="lotus-report",
-        supportability_status=OperationSupportability.FOUNDATION_ONLY,
+        operation=IdeaOperation.SOURCE_INGESTION_READINESS_READ,
+        outcome=OperationOutcome.BLOCKED,
+        source_authority="lotus-core",
+        supportability_status=OperationSupportability.NOT_CERTIFIED,
     )
 
     labels = event.metric_labels()
 
     assert tuple(labels) == OPERATION_METRIC_LABELS
     assert labels == {
-        "operation": "report_evidence_pack",
-        "outcome": "accepted",
-        "supportability_status": "foundation_only",
-        "source_authority": "lotus-report",
+        "operation": "source_ingestion_readiness_read",
+        "outcome": "blocked",
+        "supportability_status": "not_certified",
+        "source_authority": "lotus-core",
         "durable_storage_backed": "false",
         "supported_feature_promoted": "false",
     }

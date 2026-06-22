@@ -52,6 +52,7 @@ class IdeaOperation(StrEnum):
     CONVERSION_OUTCOME = "conversion_outcome"
     REPORT_EVIDENCE_PACK = "report_evidence_pack"
     MESH_READINESS_READ = "mesh_readiness_read"
+    SOURCE_INGESTION_READINESS_READ = "source_ingestion_readiness_read"
 
 
 class OperationOutcome(StrEnum):
