@@ -243,6 +243,8 @@ make repository-hygiene-gate
 make maintainability-gate
 make documentation-contract-gate
 make quality-scorecard-gate
+make monetary-float-guard
+make no-sensitive-content-guard
 make source-observability-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
@@ -276,9 +278,14 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe -m ruff check .
 .venv\Scripts\python.exe -m ruff format --check .
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
+.venv\Scripts\python.exe scripts/repository_hygiene_gate.py
 .venv\Scripts\python.exe scripts/maintainability_gate.py
 .venv\Scripts\python.exe scripts/documentation_contract_gate.py
+.venv\Scripts\python.exe scripts/quality_scorecard_gate.py
+.venv\Scripts\python.exe scripts/check_monetary_float_usage.py
+.venv\Scripts\python.exe scripts/no_sensitive_content_guard.py
 .venv\Scripts\python.exe scripts/source_observability_contract_gate.py
+.venv\Scripts\python.exe scripts/implementation_truth_gate.py
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
@@ -405,6 +412,11 @@ script files/functions beyond the measured enterprise-quality thresholds.
 precision checks; it fails money-like `float` annotations, literals, and
 conversions so private-banking amounts, prices, balances, rates, valuations,
 and P&L fields continue to use explicit decimal/domain types.
+`make no-sensitive-content-guard` is blocking through `make lint` and has
+focused pass/fail unit coverage; it scans local evidence, log, and output
+artifacts for sensitive marker names so future CI evidence cannot accidentally
+publish portfolio, client, account, holding, transaction, request-body, response-body,
+or raw-entitlement-failure material.
 `make source-observability-contract-gate` is also blocking through
 `make lint`; it prevents future application code from adding raw `print()`,
 direct Python logging, or low-level `log_event` bypasses outside the central

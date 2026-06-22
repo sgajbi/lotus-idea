@@ -86,6 +86,22 @@ This slice also hardens repository hygiene:
 5. README, repository context, enterprise-readiness guidance, quality
    scorecard, and wiki source now describe the new source-tree hygiene control.
 
+This slice also hardens no-sensitive-content evidence guarding:
+
+1. `scripts/no_sensitive_content_guard.py` now exposes a testable
+   `validate_no_sensitive_content(...)` validation function while preserving
+   the blocking CLI behavior used by `make no-sensitive-content-guard`.
+2. The guard scans local evidence, log, and output artifacts for forbidden
+   sensitive marker names covering portfolio, client, account, holding,
+   transaction, request-body, response-body, and raw entitlement failure
+   material before those artifacts become PR or wiki evidence.
+3. `tests/unit/test_no_sensitive_content_guard.py` covers clean artifacts,
+   forbidden marker detection, allowlisted documentation, and binary artifact
+   handling so this blocking merge-path check has explicit pass/fail proof.
+4. README, repository context, CI quality guide, RFC index, and wiki source now
+   describe the stronger evidence-artifact guard without promoting any
+   supported business feature.
+
 This slice also hardens CI runtime provenance:
 
 1. GitHub workflow actions are pinned to verified immutable upstream tag SHAs
