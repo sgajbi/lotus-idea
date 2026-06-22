@@ -38,8 +38,11 @@ Current RFC-0002 implementation-start baseline:
    high-cash persistence/replay plus first internal
    source-ingestion replay/conflict recovery, manifest-backed run-once
    ingestion worker CLI with check-only gate, and
-   review/feedback/conversion/report workflow proof without supported-feature
-   promotion.
+   review/feedback/conversion/report workflow proof. A certified internal
+   outbox-delivery-readiness diagnostic now reports aggregate backlog/status
+   posture, durable repository posture, broker configuration posture, and
+   certification blockers without publishing events, exposing event
+   identifiers, calling downstream services, or promoting a supported feature.
 7. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
@@ -90,15 +93,16 @@ Current RFC-0002 implementation-start baseline:
     certified foundation endpoint inventory, current capabilities,
     implementation proof blockers, and unsupported boundaries.
 13. Slice 15 partially implements evidence replay, AI explanation readiness,
-    source-ingestion readiness, downstream realization readiness, and aggregate
-    implementation-proof readiness supportability: operators can replay
-    candidate evidence posture over current source refs, inspect model-risk
-    blockers without invoking `lotus-ai`, and inspect run-once worker
-    configuration and certification blockers without calling Core, inspect
-    downstream realization blockers without calling Advise, Manage, Report,
-    Render, or Archive, and inspect aggregate proof blockers without promoting
-    live ingestion, Workbench, downstream, data-mesh, or supported-feature
-    support.
+    source-ingestion readiness, outbox delivery readiness, downstream
+    realization readiness, and aggregate implementation-proof readiness
+    supportability: operators can replay candidate evidence posture over
+    current source refs, inspect model-risk blockers without invoking
+    `lotus-ai`, inspect run-once worker configuration and certification
+    blockers without calling Core, inspect aggregate outbox delivery blockers
+    without publishing broker events, inspect downstream realization blockers
+    without calling Advise, Manage, Report, Render, or Archive, and inspect
+    aggregate proof blockers without promoting live ingestion, Workbench,
+    downstream, data-mesh, or supported-feature support.
 14. The first opportunity journey is high cash / idle liquidity for
     `PB_SG_GLOBAL_BAL_001`.
 15. The first review audience is advisor only.

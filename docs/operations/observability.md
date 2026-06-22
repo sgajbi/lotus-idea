@@ -65,6 +65,7 @@ Current instrumented operations:
 | `conversion_intent` | Internal review-gated conversion intent recording | `lotus-idea` | `foundation_only` |
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
+| `outbox_delivery_readiness_read` | Internal outbox delivery readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `downstream_realization_readiness_read` | Internal downstream realization readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_trust_telemetry_preview_read` | Internal runtime trust telemetry preview diagnostic read | `lotus-idea` | `not_certified` |
@@ -115,7 +116,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
    remain absent. It also covers the runtime trust telemetry preview while the
    preview is not yet platform-certified or published through Gateway/Workbench
    discovery, and the aggregate implementation-proof readiness diagnostic when
-   any RFC-0002 proof family remains uncertified.
+   any RFC-0002 proof family remains uncertified. It also covers outbox
+   delivery readiness while broker configuration, external publisher,
+   downstream consumer contracts, platform mesh event certification, and
+   supported-feature evidence are absent.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

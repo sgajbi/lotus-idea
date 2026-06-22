@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -133,7 +133,17 @@ Implemented first-wave internal scope:
     through the existing `idea_outbox_event` table. This is not external broker
     publication, downstream delivery, Gateway event publication, data-product
     certification, or supported-feature promotion.
-18. `migrations/001_idea_repository_foundation.sql` and
+18. `src/app/application/outbox_delivery_readiness.py` and
+    `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
+    foundation through a certified internal operator diagnostic. The endpoint
+    requires the `operator` role and `idea.outbox-delivery.readiness.read`,
+    returns aggregate status counts, delivery-ready backlog, durable repository
+    posture, broker configuration posture, source-of-truth paths, and
+    certification blockers, and emits bounded `outbox_delivery_readiness_read`
+    operation events. It does not expose event identifiers, aggregate
+    identifiers, raw idempotency keys, broker payloads, downstream contracts,
+    Gateway/Workbench support, or supported-feature promotion.
+19. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,
     idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
@@ -141,14 +151,14 @@ Implemented first-wave internal scope:
     validates required tables, indexes, JSONB payload columns, UTC timestamp
     columns, source relationships, and rollback statements so future agents
     cannot add persistence-shaped work without governed reversibility evidence.
-19. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
+20. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
     provide a PostgreSQL migration execution path. `make migration-execution-gate`
     dry-runs apply and rollback plans in CI without needing a database, while
     `make migrate` and `make migrate-rollback` execute the same plans when
     `LOTUS_IDEA_DATABASE_URL` points to a PostgreSQL database. The Docker image
     now includes `migrations/` so runtime migration commands have the same SQL
     contract as local development.
-20. `src/app/infrastructure/postgres_repository.py` now implements the first
+21. `src/app/infrastructure/postgres_repository.py` now implements the first
     PostgreSQL repository adapter behind the governed port surface. The adapter
     hydrates repository snapshots from the schema, delegates domain decisions to
     the same in-memory repository contract, flushes typed table rows and JSONB
@@ -158,22 +168,22 @@ Implemented first-wave internal scope:
     idempotency replay, lifecycle history, audit events, review decisions,
     feedback, conversion intent/outcome, report evidence-pack requests, pending
     outbox hydration, and rollback behavior with a fake Postgres cursor.
-21. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
+22. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
     serialization/deserialization helpers from the repository adapter so future
     persistence growth does not erode source-file maintainability gates.
-22. `src/app/repository_state.py` now selects the process-local
+23. `src/app/repository_state.py` now selects the process-local
     `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
     when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
     mapping rows so the adapter receives the row shape it enforces. The
     `src/app/api/repository_state.py` module remains a compatibility shim so
     concrete infrastructure wiring stays out of the API layer.
-23. Repository-backed API routes now derive `durableStorageBacked` responses and
+24. Repository-backed API routes now derive `durableStorageBacked` responses and
     `durable_storage_backed` operation-event labels from the active repository
     instead of hardcoding storage posture. Default local/test runtime remains
     process-local and continues to report `durableStorageBacked=false`; a
     configured PostgreSQL runtime reports `durableStorageBacked=true` for the
     repository-backed foundation routes.
-24. `tests/integration/test_postgres_runtime_integration.py` now runs the
+25. `tests/integration/test_postgres_runtime_integration.py` now runs the
     first real PostgreSQL runtime proof. It applies the governed schema,
     persists a high-cash candidate through
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, reloads the
@@ -196,7 +206,8 @@ Not implemented yet:
 2. scheduled daemon/deploy source-ingestion workers,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
-5. external broker/downstream consumer proof,
+5. external broker/downstream consumer proof beyond the aggregate outbox
+   readiness diagnostic,
 6. Gateway/Workbench/downstream proof,
 7. supported-feature promotion.
 
@@ -287,6 +298,14 @@ Current slice validation:
     passed.
 16. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\domain\events.py src\app\domain\persistence.py src\app\application\outbox_delivery.py src\app\ports\idea_repository.py src\app\infrastructure\postgres_repository.py`
     passed.
+17. `.venv\Scripts\python.exe -m pytest tests\unit\test_outbox_delivery_readiness.py tests\integration\test_outbox_delivery_readiness_api.py -q`
+    passed with `6 passed` after adding the certified aggregate outbox delivery
+    readiness diagnostic, source-safe response proof, permission proof, and
+    bounded operation-event proof.
+18. `.venv\Scripts\python.exe scripts\openapi_quality_gate.py` and
+    `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` passed
+    after adding the outbox delivery readiness OpenAPI route and endpoint
+    certification ledger entry.
 
 Prior Slice 06 validation:
 

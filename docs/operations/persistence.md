@@ -28,6 +28,12 @@ configured, repository-backed API responses and operation events report
 certification, data-product certification, live source integration proof,
 downstream realization proof, external broker publication, or supported-feature
 promotion.
+`GET /api/v1/outbox-delivery/readiness` now exposes the outbox delivery
+foundation as a certified internal operator diagnostic. It reports aggregate
+outbox status counts, delivery-ready backlog, durable repository posture,
+broker configuration posture, and certification blockers. It does not expose
+event identifiers, aggregate identifiers, raw idempotency keys, broker payloads,
+or downstream claims.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
 active repository provider. It compares caller-supplied current source refs with
@@ -41,7 +47,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, and dead-letter status for accepted internal mutations | No external broker publication or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, and aggregate readiness diagnostic for accepted internal mutations | No external broker publication or downstream delivery |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
 
@@ -129,6 +135,12 @@ flowchart LR
     delivery-ready query and status-update contract. This is internal
     recoverability foundation only; no broker adapter, downstream consumer, or
     event-publication support is implemented.
+14. `src/app/application/outbox_delivery_readiness.py` and
+    `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
+    delivery readiness for operators. The diagnostic reports aggregate status
+    counts and blockers only, so operators can see backlog posture without
+    accessing event ids, aggregate ids, raw idempotency keys, source payloads,
+    broker payloads, or downstream event contracts.
 
 ## Validation
 

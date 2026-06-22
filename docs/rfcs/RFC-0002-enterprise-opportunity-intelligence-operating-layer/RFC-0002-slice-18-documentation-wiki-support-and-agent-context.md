@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification and implementation-proof documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, and implementation-proof documentation synchronized
 
 ## Outcome
 
@@ -57,6 +57,13 @@ durable operating-context enforcement:
     contract gate, making implementation proof posture readable for business,
     engineering, operations, release, and demo reviewers without overclaiming
     live proof or supported-feature promotion.
+11. README, repository context, `docs/operations/api-certification.md`,
+    `docs/operations/persistence.md`, `docs/operations/observability.md`, RFC
+    index, quality scorecard, and wiki source now describe the certified
+    internal outbox delivery readiness diagnostic while preserving the boundary
+    that no external broker publication, downstream delivery, platform mesh
+    event certification, Gateway/Workbench proof, or supported-feature
+    promotion exists.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,

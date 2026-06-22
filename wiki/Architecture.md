@@ -158,6 +158,12 @@ internal outbox retry/dead-letter foundation.
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
 supported feature.
+`GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
+readiness posture for outbox delivery foundation state. It reports aggregate
+status counts, delivery-ready backlog, durable repository posture, broker
+configuration posture, and certification blockers without exposing event ids,
+aggregate ids, raw idempotency keys, broker payloads, downstream delivery
+contracts, or a supported-feature claim.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -280,6 +286,9 @@ the same repository snapshot contract. The repository port and PostgreSQL
 adapter support delivery-ready reads, published status, failed retry status,
 and dead-letter status, while `src/app/application/outbox_delivery.py`
 orchestrates a run-once publisher-port pass with aggregate source-safe counts.
+`src/app/application/outbox_delivery_readiness.py` and
+`GET /api/v1/outbox-delivery/readiness` add aggregate operator visibility over
+that foundation without mutating records or publishing events.
 This is not a broker publisher, Gateway event, platform mesh event, downstream
 delivery contract, or supported feature.
 This opt-in wiring and proof are not data-product certification, live-source

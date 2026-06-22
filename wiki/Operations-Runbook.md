@@ -58,6 +58,14 @@ remaining certification blockers without calling Core or exposing source
 payloads. It remains `not_certified` until live Core source proof, scheduled
 worker deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof
 exist.
+The internal `GET /api/v1/outbox-delivery/readiness` diagnostic is available
+for operators with `idea.outbox-delivery.readiness.read` to inspect aggregate
+outbox backlog, retry/dead-letter posture, durable repository posture, broker
+configuration posture, and remaining certification blockers. It does not expose
+event identifiers, aggregate identifiers, raw idempotency keys, broker payloads,
+or downstream claims. It remains `not_certified` until external publisher,
+downstream consumer contracts, platform mesh event certification,
+Gateway/Workbench proof, and supported-feature evidence exist.
 The internal `GET /api/v1/review-queues/advisor/readiness` diagnostic is
 available for operators with `idea.review.queue.readiness.read` to inspect
 aggregate advisor queue posture, exclusion counts, durable-storage posture, and
@@ -97,7 +105,7 @@ not call downstream services or create downstream records.
 | --- | --- | --- |
 | Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation | Deployed scheduler, live Core certification, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, and dead-letter status for accepted internal mutations | External broker publication or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, and aggregate readiness diagnostic for accepted internal mutations | External broker publication or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
 | Downstream realization | Readiness diagnostics over current workflow counts | Advise/Manage/Report/Render/Archive materialization |
 
@@ -161,8 +169,9 @@ evaluation, AI explanation readiness diagnostic reads, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, data-mesh-readiness
 diagnostic reads, source-ingestion-readiness diagnostic reads, advisor
-queue-readiness diagnostic reads, downstream-realization-readiness diagnostic
-reads, plus aggregate implementation-proof-readiness diagnostic reads.
+queue-readiness diagnostic reads, outbox-delivery-readiness diagnostic reads,
+downstream-realization-readiness diagnostic reads, plus aggregate
+implementation-proof-readiness diagnostic reads.
 
 Current outcomes:
 
@@ -186,8 +195,11 @@ Current outcomes:
     certification remain absent, source-ingestion readiness is missing run-once
     worker configuration/certification proof, advisor queue readiness is
     missing durable queue posture, entitlement proof, Workbench proof,
-    data-product certification, or runtime trust telemetry, or downstream
-    realization readiness is missing Advise proposal/suitability intake,
+    data-product certification, or runtime trust telemetry, outbox delivery
+    readiness is missing external publisher, downstream consumer contracts,
+    platform mesh event certification, Gateway/Workbench proof, and
+    supported-feature evidence, or downstream realization readiness is missing
+    Advise proposal/suitability intake,
     Manage action realization, Report/Render/Archive materialization,
     Gateway/Workbench proof, runtime trust telemetry, and supported-feature
     evidence. Aggregate implementation-proof readiness reports `blocked`
@@ -224,7 +236,7 @@ evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
 source-ingestion-readiness, downstream-realization-readiness, and
-advisor-queue-readiness diagnostic endpoints.
+advisor-queue-readiness, and outbox-delivery-readiness diagnostic endpoints.
 These endpoints are certified as internal foundations or operator diagnostics
 only; they are not supported business features.
 
@@ -264,3 +276,12 @@ portfolio identifiers, or client identifiers. It is not Advise proposal proof,
 Manage action proof, Report/Render/Archive materialization proof,
 Gateway/Workbench proof, client-ready publication, or supported-feature
 promotion.
+
+`GET /api/v1/outbox-delivery/readiness` is the certified internal outbox
+delivery readiness diagnostic. It returns aggregate backlog and status posture,
+durable-storage posture, source-of-truth paths, and certification blockers for
+operators without exposing event identifiers, aggregate identifiers, raw
+idempotency keys, source payloads, or broker payloads. It is not external
+broker publication, downstream delivery proof, platform mesh event
+certification, Gateway/Workbench proof, client-ready publication, or
+supported-feature promotion.
