@@ -43,12 +43,14 @@ adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
 high-cash persistence plus the first internal review, feedback, conversion,
 report evidence-pack, advisor queue, source-ingestion replay/conflict recovery,
 and migration rollback/reapply recovery workflow now exist behind blocking
-gates.
+gates. `lotus-gateway` now publishes bounded read-only routes for advisor
+queue and candidate detail while preserving `lotus-idea` source authority and
+blocking unsupported-feature promotion.
 Runtime API state is process-local by default and becomes repository-durable
 only when `LOTUS_IDEA_DATABASE_URL` is configured after migrations are applied.
 No business feature is supported until the relevant
 RFC slice has full runtime evidence, tests, data-mesh posture, downstream
-proof, Gateway/Workbench proof, and supported-feature registration.
+proof, Workbench proof, and supported-feature registration.
 
 ## Product Boundary
 

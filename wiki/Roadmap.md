@@ -42,7 +42,9 @@ Current state:
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
     over caller-supplied, source-owned Core evidence, plus certified internal
     lifecycle, AI explanation, advisor queue, review, feedback, conversion,
-    report evidence-pack, and data-mesh-readiness endpoint foundations,
+    report evidence-pack, and data-mesh-readiness endpoint foundations, with
+    bounded read-only Gateway publication for advisor queue and candidate
+    detail,
 14. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, and no-authority conversion boundaries,
@@ -69,8 +71,9 @@ First implementation program:
    check-only gate, and PostgreSQL replay/conflict recovery proof into
    scheduled daemon/deploy source-ingestion workers, deploy migration evidence,
    live Core source-adapter proof, and durable operational procedures,
-6. extend certified APIs into Gateway/Workbench product surfaces after live
-   source adapters and durable state exist,
+6. extend the first bounded read-only Gateway publication into Workbench
+   product surfaces only after live source adapters, durable state, and
+   supportability proof exist,
 7. persist conversion intents/outcomes and add downstream adapter contracts only
    after source ownership and idempotency guarantees are explicit,
 8. realize Advise, Manage, Report, Render, Archive, and AI integration only

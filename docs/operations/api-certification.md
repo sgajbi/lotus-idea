@@ -36,10 +36,10 @@ The current certified foundation inventory is:
 | `POST /api/v1/idea-signals/high-cash/evaluate` | High-cash deterministic evaluation over caller-supplied, source-owned Core evidence. | `idea.signal.evaluate` or advisor role | No live source ingestion, durable state, Gateway, Workbench, mesh certification, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` | High-cash evaluation plus internal candidate persistence, idempotency, replay, and audit posture through the active repository provider. | `idea.candidate.persist` plus `Idempotency-Key` | Process-local by default; PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Real PostgreSQL persistence/replay, source-ingestion replay/conflict recovery, and migration rollback/reapply recovery proof exists for this path and the first review/conversion/report workflow path, while production storage certification, live Core source-worker proof, mesh certification, Gateway/Workbench proof, and supported-feature promotion remain planned. |
 | `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` | Internal governed lifecycle transition recording over persisted candidate snapshots. | `idea.candidate.lifecycle.transition` plus `Idempotency-Key` | No downstream authority, suitability, execution, Gateway, Workbench, or supported-feature promotion. |
-| `GET /api/v1/idea-candidates/{candidateId}` | Internal source-safe candidate detail projection over persisted candidate snapshots, redacted evidence, workflow summaries, and audit summary. | `idea.candidate.detail.read` or advisor/operator role | No source-system route disclosure, raw evidence export, Gateway/Workbench proof, data-product certification, downstream authority, client-ready publication, or supported-feature promotion. |
+| `GET /api/v1/idea-candidates/{candidateId}` | Internal source-safe candidate detail projection over persisted candidate snapshots, redacted evidence, workflow summaries, and audit summary. | `idea.candidate.detail.read` or advisor/operator role | Read-only Gateway publication exists through `lotus-gateway` `GET /api/v1/ideas/candidates/{candidate_id}`. No source-system route disclosure, raw evidence export, Workbench proof, data-product certification, downstream authority, client-ready publication, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` | Internal operator evidence replay posture over persisted candidate evidence hashes and caller-supplied current source refs. | `idea.candidate.evidence.replay` plus operator role | No live Core source-ingestion proof, raw source export, downstream authority, Gateway/Workbench proof, data-product certification, production recovery certification, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate` | Internal governed AI explanation fallback/verifier evaluation over persisted candidate evidence. | `idea.ai-explanation.evaluate` | No provider call, `lotus-ai` runtime execution, durable AI lineage store, autonomous advice, downstream authority, Gateway/Workbench surface, or supported-feature promotion. |
-| `GET /api/v1/review-queues/advisor` | Internal deterministic advisor queue projection over persisted candidate snapshots. | `idea.review.queue.read` or advisor role | No durable queue store, Gateway/Workbench surface, PM/compliance/operator queue surface, or supported-feature promotion. |
+| `GET /api/v1/review-queues/advisor` | Internal deterministic advisor queue projection over persisted candidate snapshots. | `idea.review.queue.read` or advisor role | Read-only Gateway publication exists through `lotus-gateway` `GET /api/v1/ideas/review-queues/advisor`. No durable queue store, Workbench surface, PM/compliance/operator queue surface, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/review-actions` | Internal advisor review decision recording with fail-closed scope checks. | `idea.review.record`, advisor role, authorized scope, and `Idempotency-Key` | No suitability, compliance, mandate, execution, client-communication, Gateway, Workbench, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/feedback` | Internal source-provenanced advisor feedback recording. | `idea.feedback.record`, advisor role, authorized scope, and `Idempotency-Key` | No model-training automation, Gateway, Workbench, data-product certification, or supported-feature promotion. |
 | `POST /api/v1/idea-candidates/{candidateId}/conversion-intents` | Internal review-gated conversion intent recording for Advise, Manage, or Report targets. | `idea.conversion.intent.record` plus `Idempotency-Key` | Intent only; no downstream proposal, manage-review, report authority, suitability, execution, client communication, or supported-feature promotion. |
@@ -56,12 +56,14 @@ Baseline health and metadata endpoints are also tracked in the ledger with
 3. `GET /health/ready`,
 4. `GET /metadata`.
 
-Use these endpoints only for their current internal foundation or operator
-diagnostic purpose. Do not use them as live source ingestion proof, Gateway
-proof, Workbench proof, data-product certification, durable database evidence,
-downstream realization proof, or supported-feature promotion. Those remain
-blocked until later RFC slices add runtime adapters, downstream contracts,
-trust telemetry, UI proof, and supported-feature registration.
+Use these endpoints only for their current internal foundation, bounded
+read-only Gateway publication, or operator diagnostic purpose. Do not use them
+as live source ingestion proof, Workbench proof, data-product certification,
+durable database evidence beyond the explicit PostgreSQL runtime proof,
+downstream realization proof, client-ready publication, or supported-feature
+promotion. Those remain blocked until later RFC slices add runtime adapters,
+downstream contracts, trust telemetry, UI proof, and supported-feature
+registration.
 
 Every row above is backed by
 `docs/operations/endpoint-certification-ledger.json`; keep this narrative guide

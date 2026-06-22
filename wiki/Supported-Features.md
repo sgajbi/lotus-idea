@@ -19,9 +19,11 @@ persistence/replay plus the first internal advisor queue, lifecycle, review,
 feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also
-exist, but they are not deployed scheduler daemon proof or live Core worker
-certification. These are not externally supported features until live source
-adapters, scheduled daemon/deploy source-worker proof, Gateway/Workbench proof,
+exist, and `lotus-gateway` now publishes bounded read-only advisor queue and
+candidate detail routes, but they are not deployed scheduler daemon proof,
+live Core worker certification, Workbench proof, or supported-feature
+promotion. These are not externally supported features until live source
+adapters, scheduled daemon/deploy source-worker proof, Workbench proof,
 downstream acceptance,
 data-product certification, and supported-feature evidence are present.
 
