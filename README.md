@@ -28,10 +28,10 @@ Current implemented foundations include:
 - AI explanation governance diagnostics without provider execution,
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
-- governed downstream contract-readiness diagnostics and source-safe HTTP
-  adapter foundations for Advise, Manage, and Report handoff seams, backed by a
-  repo contract plan and blocking gate, without downstream route-existence or
-  execution claims,
+- governed downstream contract-readiness diagnostics, source-safe application
+  orchestration, and HTTP adapter foundations for Advise, Manage, and Report
+  handoff seams, backed by a repo contract plan and blocking gate, without
+  downstream route-existence or execution claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics, a source-safe HTTP broker-publisher adapter foundation, and
   readiness diagnostics for accepted internal mutations,
@@ -134,8 +134,8 @@ flowchart LR
   provider selection, and certified internal API foundations.
 - `src/app/application/`: use-case orchestration for signal evaluation,
   source ingestion, candidate detail, evidence replay, review queues,
-  lifecycle, feedback, AI diagnostics, conversion, report evidence, and
-  readiness views.
+  lifecycle, feedback, AI diagnostics, conversion, report evidence, downstream
+  realization submission foundations, and readiness views.
 - `src/app/domain/`: framework-free domain models, policies, scoring,
   lifecycle, review, AI governance, conversion, report evidence, persistence
   records, idempotency, replay, audit primitives, outbox records, and

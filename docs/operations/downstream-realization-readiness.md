@@ -26,8 +26,9 @@ It returns:
 4. source-of-truth implementation paths,
 5. capability-level blockers for Advise, Manage, and Report/Render/Archive
    realization,
-6. source-safe HTTP adapter-foundation presence for the Advise proposal,
-   Manage action, and Report evidence-pack handoff seams,
+6. source-safe application orchestration and HTTP adapter-foundation presence
+   for the Advise proposal, Manage action, and Report evidence-pack handoff
+   seams,
 7. planned downstream contract readiness for the Advise proposal, Manage
    action, and Report evidence-pack handoff seams,
 8. `not_certified` supportability until downstream live contracts and product
@@ -101,7 +102,7 @@ The success response is intentionally aggregate and source-safe:
 | `conversionIntentCount` | Count of `lotus-idea` conversion intents in the active repository provider |
 | `conversionOutcomeCount` | Count of recorded downstream outcome records in `lotus-idea` |
 | `reportEvidencePackRequestCount` | Count of Report/Render/Archive request records in `lotus-idea` |
-| `downstreamAdapterFoundationPresent` | Whether the repo contains source-safe downstream adapter ports and HTTP adapter foundations |
+| `downstreamAdapterFoundationPresent` | Whether the repo contains source-safe downstream orchestration, adapter ports, and HTTP adapter foundations |
 | `capabilities` | Capability-level downstream readiness posture and blockers |
 | `downstreamContracts` | Planned downstream handoff contracts, owner repositories, target route posture, adapter status, evidence refs, and blockers |
 | `sourceOfTruth` | Implementation and RFC paths that define current behavior |
@@ -113,30 +114,34 @@ Implementation-backed evidence:
 
 1. application builder:
    `src/app/application/downstream_realization_readiness.py`,
-2. downstream adapter port:
+2. downstream realization orchestration:
+   `src/app/application/downstream_realization.py`,
+3. downstream adapter port:
    `src/app/ports/downstream_realization.py`,
-3. downstream adapter foundation:
+4. downstream adapter foundation:
    `src/app/infrastructure/downstream_realization.py`,
-4. governed contract plan:
+5. governed contract plan:
    `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-5. contract gate: `scripts/downstream_realization_contract_gate.py`,
-6. API route: `src/app/api/downstream_realization_readiness.py`,
-7. operation event: `downstream_realization_readiness_read`,
-8. endpoint ledger:
+6. contract gate: `scripts/downstream_realization_contract_gate.py`,
+7. API route: `src/app/api/downstream_realization_readiness.py`,
+8. operation event: `downstream_realization_readiness_read`,
+9. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-9. unit tests:
+10. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-10. adapter tests:
+11. application orchestration tests:
+   `tests/unit/test_downstream_realization_application.py`,
+12. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-11. gate tests:
+13. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-12. integration tests:
+14. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py`.
 
 Run:
 
 ```powershell
-python -m pytest tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_readiness_api.py -q
+python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_readiness_api.py -q
 make downstream-realization-contract-gate
 make endpoint-certification-gate
 make openapi-gate

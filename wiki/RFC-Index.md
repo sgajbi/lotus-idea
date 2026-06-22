@@ -89,7 +89,7 @@ Current RFC-0002 implementation-start baseline:
     downstream realization readiness diagnostic with planned Advise, Manage,
     and Report contract-readiness records backed by
     `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-    source-safe downstream adapter foundations, and
+    source-safe downstream application orchestration and adapter foundations, and
     `make downstream-realization-contract-gate`. It does not prove downstream
     route existence, create downstream records, execute downstream materialization,
     or promote a supported feature.
