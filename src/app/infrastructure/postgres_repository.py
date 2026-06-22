@@ -7,6 +7,7 @@ from typing import Any, Callable, Mapping, Protocol, Sequence, TypeVar
 
 from psycopg.types.json import Jsonb
 
+from app.domain.access_scope import ReviewAccessScope
 from app.domain.audit import AuditEvent
 from app.domain.conversion_governance import (
     ConversionBoundary,
@@ -787,6 +788,7 @@ def _candidate_to_json(candidate: IdeaCandidate) -> dict[str, Any]:
         "evidence_packet": _evidence_packet_to_json(candidate.evidence_packet),
         "source_signal_ids": list(candidate.source_signal_ids),
         "score": _score_to_json(candidate.score) if candidate.score is not None else None,
+        "access_scope": _access_scope_to_json(candidate.access_scope),
         "suppression_reason": (
             candidate.suppression_reason.value if candidate.suppression_reason is not None else None
         ),
@@ -804,6 +806,11 @@ def _candidate_from_json(payload: Mapping[str, Any]) -> IdeaCandidate:
         evidence_packet=_evidence_packet_from_json(payload["evidence_packet"]),
         source_signal_ids=tuple(payload["source_signal_ids"]),
         score=(_score_from_json(payload["score"]) if payload.get("score") is not None else None),
+        access_scope=(
+            _access_scope_from_json(payload["access_scope"])
+            if payload.get("access_scope") is not None
+            else None
+        ),
         suppression_reason=(
             SuppressionReason(payload["suppression_reason"])
             if payload.get("suppression_reason") is not None
@@ -811,6 +818,26 @@ def _candidate_from_json(payload: Mapping[str, Any]) -> IdeaCandidate:
         ),
         created_at_utc=_datetime(payload["created_at_utc"]),
         updated_at_utc=_datetime(payload["updated_at_utc"]),
+    )
+
+
+def _access_scope_to_json(scope: ReviewAccessScope | None) -> dict[str, Any] | None:
+    if scope is None:
+        return None
+    return {
+        "tenant_id": scope.tenant_id,
+        "book_id": scope.book_id,
+        "portfolio_id": scope.portfolio_id,
+        "client_id": scope.client_id,
+    }
+
+
+def _access_scope_from_json(payload: Mapping[str, Any]) -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id=str(payload["tenant_id"]),
+        book_id=str(payload["book_id"]),
+        portfolio_id=str(payload["portfolio_id"]),
+        client_id=str(payload["client_id"]),
     )
 
 

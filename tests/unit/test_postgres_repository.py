@@ -122,7 +122,7 @@ class FakePostgresConnection:
 def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    candidate = high_cash_candidate()
+    candidate = high_cash_candidate(candidate_scope=access_scope())
 
     accepted = repository.persist_candidate(
         candidate,
@@ -143,6 +143,15 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
     assert accepted.decision is CandidatePersistenceDecision.ACCEPTED
     assert replayed.decision is CandidatePersistenceDecision.REPLAYED
     assert snapshot.candidate_records[candidate.candidate_id] == accepted.record
+    assert (
+        snapshot.candidate_records[candidate.candidate_id].candidate.access_scope == access_scope()
+    )
+    assert connection.rows["idea_candidate_record"][0]["candidate_json"]["access_scope"] == {
+        "tenant_id": "tenant-001",
+        "book_id": "book-001",
+        "portfolio_id": "portfolio-001",
+        "client_id": "client-001",
+    }
     assert (
         snapshot.idempotency_candidates["signal-ingestion:high-cash:001"] == candidate.candidate_id
     )
@@ -393,7 +402,7 @@ def test_postgres_repository_rolls_back_when_flush_fails() -> None:
     assert connection.rollbacks == 1
 
 
-def high_cash_candidate() -> IdeaCandidate:
+def high_cash_candidate(candidate_scope: ReviewAccessScope | None = None) -> IdeaCandidate:
     refs = source_refs()
     result = evaluate_high_cash_signal(
         HighCashSignalInput(
@@ -404,6 +413,7 @@ def high_cash_candidate() -> IdeaCandidate:
             cash_movement_ref=refs[2],
             cashflow_projection_ref=refs[3],
             evaluated_at_utc=EVALUATED_AT,
+            access_scope=candidate_scope,
         ),
         HighCashSignalPolicy(
             policy_version="idle-liquidity-v1",

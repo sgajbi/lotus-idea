@@ -17,6 +17,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_high_cash_signal,
 )
+from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
@@ -36,6 +37,7 @@ class EvaluateHighCashSignalCommand:
     cashflow_projection_ref: SourceRef | None
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
+    access_scope: ReviewAccessScope | None = None
     duplicate_of_candidate_id: str | None = None
 
 
@@ -90,6 +92,7 @@ def evaluate_high_cash_signal_command(
         cashflow_projection_ref=command.cashflow_projection_ref,
         evaluated_at_utc=command.evaluated_at_utc,
         entitlement_allowed=command.entitlement_allowed,
+        access_scope=command.access_scope,
         duplicate_of_candidate_id=command.duplicate_of_candidate_id,
     )
     return evaluate_high_cash_signal(source_input, policy)
@@ -122,6 +125,7 @@ def evaluate_high_cash_signal_from_core(
                 cashflow_projection_ref=None,
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
+                access_scope=_portfolio_only_scope(command.portfolio_id),
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -144,6 +148,7 @@ def evaluate_high_cash_signal_from_core(
             cashflow_projection_ref=evidence.cashflow_projection_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
+            access_scope=_portfolio_only_scope(command.portfolio_id),
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
@@ -235,6 +240,7 @@ def _idempotency_payload_for_high_cash(
         "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
         "family": OpportunityFamily.HIGH_CASH.value,
         "policy_version": policy.policy_version,
+        "access_scope": _access_scope_payload(command.access_scope),
         "source_reported_cash_weight": (
             str(command.source_reported_cash_weight)
             if command.source_reported_cash_weight is not None
@@ -264,6 +270,26 @@ def _source_ref_payload(source_ref: SourceRef) -> dict[str, str]:
         "product_version": source_ref.product_version,
         "route": source_ref.route,
         "source_system": source_ref.source_system.value,
+    }
+
+
+def _portfolio_only_scope(portfolio_id: str) -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id="unknown",
+        book_id="unknown",
+        portfolio_id=portfolio_id,
+        client_id="unknown",
+    )
+
+
+def _access_scope_payload(scope: ReviewAccessScope | None) -> dict[str, str] | None:
+    if scope is None:
+        return None
+    return {
+        "tenant_id": scope.tenant_id,
+        "book_id": scope.book_id,
+        "portfolio_id": scope.portfolio_id,
+        "client_id": scope.client_id,
     }
 
 

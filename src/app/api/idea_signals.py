@@ -26,6 +26,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
 )
+from app.domain.access_scope import ReviewAccessScope
 from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
@@ -57,6 +58,28 @@ _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
 
 class CamelModel(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
+
+
+class ReviewAccessScopeRequest(CamelModel):
+    tenant_id: str = Field(..., alias="tenantId")
+    book_id: str = Field(..., alias="bookId")
+    portfolio_id: str = Field(..., alias="portfolioId")
+    client_id: str = Field(..., alias="clientId")
+
+    @field_validator("tenant_id", "book_id", "portfolio_id", "client_id")
+    @classmethod
+    def _scope_field_must_not_be_blank(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("scope fields cannot be blank")
+        return value
+
+    def to_domain(self) -> ReviewAccessScope:
+        return ReviewAccessScope(
+            tenant_id=self.tenant_id,
+            book_id=self.book_id,
+            portfolio_id=self.portfolio_id,
+            client_id=self.client_id,
+        )
 
 
 class SourceRefRequest(CamelModel):
@@ -174,6 +197,15 @@ class EvaluateHighCashSignalRequest(CamelModel):
         alias="sourceEvidence",
         description="Source-owned evidence references needed for high-cash evaluation.",
     )
+    access_scope: ReviewAccessScopeRequest | None = Field(
+        default=None,
+        alias="accessScope",
+        description=(
+            "Optional advisor access scope carried onto created candidates so queue "
+            "reads can filter by tenant, book, portfolio, and client before any "
+            "Workbench product promotion."
+        ),
+    )
     entitlement_allowed: bool = Field(
         default=True,
         alias="entitlementAllowed",
@@ -216,6 +248,7 @@ class EvaluateHighCashSignalRequest(CamelModel):
             ),
             evaluated_at_utc=self.evaluated_at_utc,
             entitlement_allowed=self.entitlement_allowed,
+            access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
             duplicate_of_candidate_id=self.duplicate_of_candidate_id,
         )
 

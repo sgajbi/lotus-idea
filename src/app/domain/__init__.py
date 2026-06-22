@@ -19,6 +19,7 @@ from app.domain.ai_governance import (
     deterministic_ai_fallback,
     evaluate_ai_workflow_output,
 )
+from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.domain.conversion_governance import (
     ConversionBoundary,
     ConversionIntentCommand,
@@ -98,7 +99,6 @@ from app.domain.review_governance import (
     GovernedFeedbackEvent,
     GovernedReviewDecision,
     InvalidReviewAction,
-    ReviewAccessScope,
     ReviewAction,
     ReviewActionPolicy,
     ReviewActionResult,
@@ -148,6 +148,8 @@ __all__ = [
     "AIWorkflowOutput",
     "AIWorkflowPackRef",
     "AIWorkflowPurpose",
+    "QueueAccessScopeFilter",
+    "ReviewAccessScope",
     "InvalidAIExplanationRequest",
     "InvalidAIWorkflowOutput",
     "RedactedIdeaEvidence",
@@ -230,7 +232,6 @@ __all__ = [
     "GovernedFeedbackEvent",
     "GovernedReviewDecision",
     "InvalidReviewAction",
-    "ReviewAccessScope",
     "ReviewAction",
     "ReviewActionPolicy",
     "ReviewActionResult",

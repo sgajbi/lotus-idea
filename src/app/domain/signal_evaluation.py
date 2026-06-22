@@ -7,6 +7,7 @@ from enum import StrEnum
 import hashlib
 import json
 
+from app.domain.access_scope import ReviewAccessScope
 from app.domain.ideas import (
     EvidenceFreshness,
     EvidenceSupportability,
@@ -56,6 +57,7 @@ class HighCashSignalInput:
     cashflow_projection_ref: SourceRef | None
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
+    access_scope: ReviewAccessScope | None = None
     duplicate_of_candidate_id: str | None = None
 
 
@@ -157,6 +159,7 @@ def evaluate_high_cash_signal(
             score=policy.candidate_score,
             reason_codes=(ReasonCode.HIGH_CASH_RATIO, ReasonCode.REVIEW_REQUIRED),
         ),
+        access_scope=source_input.access_scope,
         created_at_utc=source_input.evaluated_at_utc,
         updated_at_utc=source_input.evaluated_at_utc,
     )
@@ -212,6 +215,16 @@ def _stable_identity(
         "cash_weight": str(source_input.source_reported_cash_weight),
         "family": OpportunityFamily.HIGH_CASH.value,
         "policy_version": policy.policy_version,
+        "access_scope": (
+            {
+                "tenant_id": source_input.access_scope.tenant_id,
+                "book_id": source_input.access_scope.book_id,
+                "portfolio_id": source_input.access_scope.portfolio_id,
+                "client_id": source_input.access_scope.client_id,
+            }
+            if source_input.access_scope is not None
+            else None
+        ),
         "source_hashes": [source_ref.content_hash for source_ref in source_refs],
     }
     canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))

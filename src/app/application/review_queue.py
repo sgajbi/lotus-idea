@@ -6,6 +6,7 @@ from datetime import datetime
 from app.domain import (
     DEFAULT_SCORING_POLICY,
     IdeaScoringPolicy,
+    QueueAccessScopeFilter,
     QueueSnooze,
     ReviewQueueProjection,
     build_review_queue,
@@ -17,6 +18,7 @@ from app.ports.idea_repository import CandidateSnapshotRepository
 class BuildReviewQueueFromRepositoryCommand:
     evaluated_at_utc: datetime
     snoozes: tuple[QueueSnooze, ...] = ()
+    access_scope_filter: QueueAccessScopeFilter | None = None
 
     def __post_init__(self) -> None:
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
@@ -37,4 +39,5 @@ def build_review_queue_from_repository(
         policy=policy,
         evaluated_at_utc=command.evaluated_at_utc,
         snoozes=command.snoozes,
+        access_scope_filter=command.access_scope_filter,
     )
