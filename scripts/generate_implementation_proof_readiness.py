@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -12,6 +15,12 @@ from app.application.implementation_proof_readiness import (
     ImplementationProofReadinessSnapshot,
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.source_ingestion_readiness import (
+    CORE_BASE_URL_ENV,
+    LIVE_PROOF_ENV,
+    MANIFEST_ENV,
+    SCHEDULED_WORKER_PROOF_ENV,
+)
 from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 
 
@@ -20,12 +29,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         evaluated_at_utc = _parse_evaluated_at_utc(args.evaluated_at_utc)
-        repository = get_idea_repository()
-        snapshot = build_implementation_proof_readiness_snapshot(
-            evaluated_at_utc=evaluated_at_utc,
-            repository=repository,
-            durable_storage_backed=idea_repository_durable_storage_backed(repository),
-        )
+        with _temporary_environment(_readiness_environment_overrides(args)):
+            repository = get_idea_repository()
+            snapshot = build_implementation_proof_readiness_snapshot(
+                evaluated_at_utc=evaluated_at_utc,
+                repository=repository,
+                durable_storage_backed=idea_repository_durable_storage_backed(repository),
+            )
         payload = implementation_proof_readiness_payload(snapshot)
         rendered = json.dumps(payload, indent=2, sort_keys=True)
         if args.output:
@@ -89,6 +99,28 @@ def _parser() -> argparse.ArgumentParser:
         "--output",
         help="Optional JSON output path. Parent directories are created when needed.",
     )
+    parser.add_argument(
+        "--source-ingestion-manifest",
+        help=(
+            f"Optional manifest path to expose to readiness as {MANIFEST_ENV}. "
+            "Useful for deterministic CI proof snapshots."
+        ),
+    )
+    parser.add_argument(
+        "--core-base-url",
+        help=f"Optional Core base URL to expose to readiness as {CORE_BASE_URL_ENV}.",
+    )
+    parser.add_argument(
+        "--source-ingestion-live-proof",
+        help=f"Optional live Core proof artifact path to expose as {LIVE_PROOF_ENV}.",
+    )
+    parser.add_argument(
+        "--source-ingestion-scheduled-worker-proof",
+        help=(
+            "Optional scheduled source-ingestion worker proof artifact path to expose as "
+            f"{SCHEDULED_WORKER_PROOF_ENV}."
+        ),
+    )
     return parser
 
 
@@ -104,6 +136,31 @@ def _parse_evaluated_at_utc(value: str) -> datetime:
 
 def _format_utc(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str | None]:
+    return {
+        MANIFEST_ENV: args.source_ingestion_manifest,
+        CORE_BASE_URL_ENV: args.core_base_url,
+        LIVE_PROOF_ENV: args.source_ingestion_live_proof,
+        SCHEDULED_WORKER_PROOF_ENV: args.source_ingestion_scheduled_worker_proof,
+    }
+
+
+@contextmanager
+def _temporary_environment(overrides: dict[str, str | None]) -> Iterator[None]:
+    previous = {name: os.environ.get(name) for name in overrides}
+    try:
+        for name, value in overrides.items():
+            if value is not None:
+                os.environ[name] = value
+        yield
+    finally:
+        for name, value in previous.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
 
 
 if __name__ == "__main__":

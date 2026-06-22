@@ -2,12 +2,27 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import json
+import os
 from pathlib import Path
 
 import pytest
 import scripts.generate_implementation_proof_readiness as proof_report
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
+)
+from app.application.source_ingestion_readiness import (
+    CORE_BASE_URL_ENV,
+    MANIFEST_ENV,
+    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduled_worker import (
+    build_scheduled_worker_check_summary,
+    build_scheduled_worker_deploy_proof_payload,
+    source_ingestion_schedule_config_from_values,
+)
+from app.application.source_ingestion_worker import (
+    MANIFEST_SCHEMA_VERSION,
+    source_ingestion_worker_plan_from_manifest,
 )
 from app.domain import InMemoryIdeaRepository
 
@@ -65,6 +80,58 @@ def test_generate_implementation_proof_readiness_writes_output_file(
     assert payload["readinessStatus"] == "blocked"
 
 
+def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv(MANIFEST_ENV, "pre-existing-manifest.json")
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://pre-existing-core")
+    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, "pre-existing-proof.json")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    scheduled_proof = tmp_path / "scheduled-worker-proof.json"
+    scheduled_proof.write_text(json.dumps(_valid_scheduled_worker_proof()), encoding="utf-8")
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--source-ingestion-manifest",
+            str(manifest),
+            "--source-ingestion-scheduled-worker-proof",
+            str(scheduled_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    source_ingestion = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "source-ingestion"
+    )
+    assert "scheduled_worker_deploy_proof_missing" not in source_ingestion["blockers"]
+    assert "live_core_source_proof_missing" in source_ingestion["blockers"]
+    assert "durable_repository_not_configured" in source_ingestion["blockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+    assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
+    assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
+    assert os.environ[SCHEDULED_WORKER_PROOF_ENV] == "pre-existing-proof.json"
+
+
 def test_generate_implementation_proof_readiness_rejects_naive_timestamp(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -72,3 +139,27 @@ def test_generate_implementation_proof_readiness_rejects_naive_timestamp(
 
     assert result == 2
     assert "timezone-aware" in capsys.readouterr().err
+
+
+def _valid_scheduled_worker_proof() -> dict[str, object]:
+    plan = source_ingestion_worker_plan_from_manifest(
+        {
+            "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+        }
+    )
+    summary = build_scheduled_worker_check_summary(
+        plan=plan,
+        schedule=source_ingestion_schedule_config_from_values(
+            interval_seconds=300,
+            max_runs=1,
+        ),
+    )
+    return build_scheduled_worker_deploy_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        check_summary=summary,
+        scheduler_entrypoint_present=True,
+        run_once_worker_entrypoint_present=True,
+        docker_compose_service_present=True,
+    )

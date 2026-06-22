@@ -91,7 +91,8 @@ source-ingestion-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/source_ingestion_live_proof_contract_gate.py
 
 implementation-proof-readiness-check:
-	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z
+	$(VENV_PYTHON) scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --generated-at-utc 2026-06-21T10:10:00Z --output output/source-ingestion/scheduled-worker-proof.json
+	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json
 
 runtime-trust-telemetry-preview-check:
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z

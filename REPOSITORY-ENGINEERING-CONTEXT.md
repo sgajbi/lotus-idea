@@ -144,6 +144,10 @@ source-safe scheduled-worker deploy-proof contract. A valid artifact referenced
 through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` can clear only
 the `scheduled_worker_deploy_proof_missing` blocker in readiness; live Core,
 data-mesh, Gateway/Workbench, and support-promotion blockers remain.
+`make implementation-proof-readiness-check` now generates that deploy-proof
+artifact under ignored `output/source-ingestion/` and passes it explicitly into
+the aggregate proof-readiness generator, preventing stale scheduled-worker
+deploy-proof blockers in repo-native evidence.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -383,7 +387,9 @@ realization.
 `scripts/generate_implementation_proof_readiness.py` and
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
-and operator handoff.
+and operator handoff. The generator accepts explicit source-ingestion manifest,
+live-proof, and scheduled-worker proof paths for deterministic CI evidence
+without requiring ambient process environment mutation.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation plus bounded read-only Gateway publication for advisor queue and

@@ -23,7 +23,9 @@ Blocking scaffold commands:
 14. `make source-ingestion-worker-check`
 15. `make source-ingestion-scheduled-worker-check`
 16. `make source-ingestion-live-proof-contract-gate`
-17. `make implementation-proof-readiness-check`
+17. `make implementation-proof-readiness-check` generates the scheduled-worker
+    deploy-proof artifact and consumes it in aggregate RFC proof-readiness
+    evidence.
 18. `make supported-features-gate`
 19. `make endpoint-certification-gate`
 20. `make postgres-integration-gate`

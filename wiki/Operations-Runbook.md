@@ -340,9 +340,11 @@ expose event identifiers, aggregate identifiers, raw idempotency keys, or
 broker payloads. It is not live implementation proof, certified broker runtime,
 downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
-`make implementation-proof-readiness-check` generates the same source-safe
-readiness snapshot without running the HTTP service. Use it as CI or async
-operator evidence only; it is not a supported product claim.
+`make implementation-proof-readiness-check` generates the scheduled
+source-ingestion worker deploy-proof artifact and the same source-safe readiness
+snapshot without running the HTTP service. Use it as CI or async operator
+evidence only; it is not live scheduler certification or a supported product
+claim.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

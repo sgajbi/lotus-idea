@@ -73,7 +73,8 @@ OpenAPI quality, source-observability contract enforcement, implementation-truth
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest and source-safe output-contract validation,
-scheduled source-ingestion worker deploy-contract validation,
+scheduled source-ingestion worker deploy-contract validation and generated
+deploy-proof artifact consumption in aggregate implementation-proof readiness,
 source-ingestion live-proof artifact contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
