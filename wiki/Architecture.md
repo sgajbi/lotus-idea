@@ -301,6 +301,12 @@ product-safe failure reasons.
 that foundation without mutating records or publishing events.
 This is not certified live broker runtime, a Gateway event, platform mesh
 event, downstream delivery contract, or supported feature.
+`src/app/ports/downstream_realization.py` and
+`src/app/infrastructure/downstream_realization.py` also provide source-safe
+HTTP adapter foundations for Advise, Manage, and Report handoff envelopes. They
+preserve downstream source authority and bounded evidence posture, but they are
+not live downstream contract proof, route-existence proof, or materialization
+proof.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

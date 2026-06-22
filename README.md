@@ -6,9 +6,7 @@ into governed opportunity candidates, review queues, feedback records, and
 conversion intent for downstream advisory, management, reporting, and Workbench
 flows.
 
-Service profile: `domain-service`
-
-Repository context: [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
+Service profile: `domain-service`; repository context: [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
 
 ## Current Posture
 
@@ -30,9 +28,10 @@ Current implemented foundations include:
 - AI explanation governance diagnostics without provider execution,
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
-- governed downstream contract-readiness diagnostics for Advise, Manage, and
-  Report handoff seams, backed by a repo contract plan and blocking gate,
-  without downstream route-existence claims,
+- governed downstream contract-readiness diagnostics and source-safe HTTP
+  adapter foundations for Advise, Manage, and Report handoff seams, backed by a
+  repo contract plan and blocking gate, without downstream route-existence or
+  execution claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics, a source-safe HTTP broker-publisher adapter foundation, and
   readiness diagnostics for accepted internal mutations,

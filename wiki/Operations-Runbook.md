@@ -10,8 +10,9 @@ repository-backed API persistence is process-local by default and
 PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Accepted
 internal mutations also create source-safe outbox records with internal
 retry/dead-letter delivery state semantics and a source-safe HTTP
-broker-publisher adapter foundation, but there is no certified live broker
-runtime, downstream adapter, production recovery command, Workbench proof, or
+broker-publisher adapter foundation, and source-safe downstream adapter
+foundations, but there is no certified live broker runtime, downstream
+execution proof, production recovery command, Workbench proof, or
 supported business API yet. Bounded read-only Gateway
 publication exists for advisor queue and candidate detail only. A versioned
 migration/rollback schema contract exists for the durable repository and is
@@ -112,7 +113,7 @@ downstream services or create downstream records.
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, and aggregate readiness diagnostic for accepted internal mutations | Certified live broker runtime or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
-| Downstream realization | Readiness diagnostics over current workflow counts plus planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
+| Downstream realization | Readiness diagnostics over current workflow counts, source-safe adapter-foundation presence, and planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
 
 ```mermaid
 flowchart LR

@@ -19,3 +19,7 @@ Current implemented port:
    publish outcome used by the run-once outbox delivery orchestration.
    Infrastructure adapters must return product-safe failure reasons and must
    not expose raw broker responses to domain or application code.
+4. `downstream_realization.py` defines source-safe downstream handoff ports for
+   Advise proposal intents, Manage action intents, and Report evidence-pack
+   request materialization. These ports do not grant downstream authority or
+   certify live downstream execution.
