@@ -79,3 +79,19 @@ jobs:
         "main-releasability.yml:7: docker/setup-buildx-action SHA pin must carry "
         "`# v4.1.0` provenance"
     ]
+
+
+def test_ci_contract_gate_blocks_weakened_clean_target() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "python scripts/clean_generated_artifacts.py",
+            "python -c \"print('clean')\"",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile clean target must run `scripts/clean_generated_artifacts.py`" in errors

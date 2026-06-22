@@ -260,6 +260,9 @@ def validate_makefile(makefile: str) -> list[str]:
             "Makefile source-ingestion-worker-check target must run "
             "`scripts/source_ingestion_worker_contract_gate.py`"
         )
+    clean_block = _target_block(makefile, "clean")
+    if "scripts/clean_generated_artifacts.py" not in clean_block:
+        errors.append("Makefile clean target must run `scripts/clean_generated_artifacts.py`")
     return errors
 
 
