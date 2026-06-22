@@ -9,6 +9,7 @@ from types import MappingProxyType
 from typing import Any, Mapping
 
 from app.domain.audit import AuditEvent
+from app.domain.events import OutboxEventRecord, build_candidate_outbox_event
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
 from app.domain.ideas import (
     EvidenceFreshness,
@@ -170,6 +171,7 @@ class IdeaRepositorySnapshot:
     idempotency_candidates: Mapping[str, str]
     conversion_intent_candidates: Mapping[str, str] = field(default_factory=dict)
     report_evidence_pack_candidates: Mapping[str, str] = field(default_factory=dict)
+    outbox_events: Mapping[str, OutboxEventRecord] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -195,6 +197,11 @@ class IdeaRepositorySnapshot:
             "report_evidence_pack_candidates",
             MappingProxyType(dict(self.report_evidence_pack_candidates)),
         )
+        object.__setattr__(
+            self,
+            "outbox_events",
+            MappingProxyType(dict(self.outbox_events)),
+        )
 
 
 class InMemoryIdeaRepository:
@@ -206,12 +213,14 @@ class InMemoryIdeaRepository:
         self._idempotency_candidates: dict[str, str] = {}
         self._conversion_intent_candidates: dict[str, str] = {}
         self._report_evidence_pack_candidates: dict[str, str] = {}
+        self._outbox_events: dict[str, OutboxEventRecord] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
             self._idempotency_records.update(snapshot.idempotency_records)
             self._idempotency_candidates.update(snapshot.idempotency_candidates)
             self._conversion_intent_candidates.update(snapshot.conversion_intent_candidates)
             self._report_evidence_pack_candidates.update(snapshot.report_evidence_pack_candidates)
+            self._outbox_events.update(snapshot.outbox_events)
 
     def persist_candidate(
         self,
@@ -269,6 +278,17 @@ class InMemoryIdeaRepository:
         self._candidate_records[candidate.candidate_id] = record
         self._idempotency_records[idempotency_key] = idempotency_record
         self._idempotency_candidates[idempotency_key] = candidate.candidate_id
+        self._append_outbox_event(
+            event_type="idea.candidate.persisted.v1",
+            aggregate_id=candidate.candidate_id,
+            occurred_at_utc=event_time,
+            idempotency_key=idempotency_key,
+            payload={
+                "candidate_family": candidate.family.value,
+                "lifecycle_status": candidate.lifecycle_status.value,
+                "review_posture": candidate.review_posture.value,
+            },
+        )
         return CandidatePersistenceResult(
             decision=CandidatePersistenceDecision.ACCEPTED,
             record=record,
@@ -356,6 +376,16 @@ class InMemoryIdeaRepository:
         )
         self._idempotency_records[idempotency_key] = idempotency_record
         self._idempotency_candidates[idempotency_key] = candidate_id
+        self._append_outbox_event(
+            event_type="idea.lifecycle.transitioned.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=event_time,
+            idempotency_key=idempotency_key,
+            payload={
+                "source_status": record.candidate.lifecycle_status.value,
+                "target_status": target_status.value,
+            },
+        )
         return LifecyclePersistenceResult(
             decision=LifecyclePersistenceDecision.ACCEPTED,
             record=updated,
@@ -454,6 +484,16 @@ class InMemoryIdeaRepository:
         self._candidate_records[candidate_id] = updated
         self._idempotency_records[idempotency_key] = idempotency_record
         self._idempotency_candidates[idempotency_key] = candidate_id
+        self._append_outbox_event(
+            event_type="idea.review.decision_recorded.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=result.decision.decided_at_utc,
+            idempotency_key=idempotency_key,
+            payload={
+                "action": result.decision.action.value,
+                "resulting_posture": result.decision.resulting_posture.value,
+            },
+        )
         return ReviewPersistenceResult(
             decision=ReviewPersistenceDecision.ACCEPTED,
             record=updated,
@@ -527,6 +567,16 @@ class InMemoryIdeaRepository:
         self._candidate_records[candidate_id] = updated
         self._idempotency_records[idempotency_key] = idempotency_record
         self._idempotency_candidates[idempotency_key] = candidate_id
+        self._append_outbox_event(
+            event_type="idea.feedback.recorded.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=result.feedback_event.feedback.recorded_at_utc,
+            idempotency_key=idempotency_key,
+            payload={
+                "feedback_outcome": result.feedback_event.feedback.outcome.value,
+                "actor_role": result.feedback_event.actor_role.value,
+            },
+        )
         return ReviewPersistenceResult(
             decision=ReviewPersistenceDecision.ACCEPTED,
             record=updated,
@@ -617,6 +667,16 @@ class InMemoryIdeaRepository:
         self._conversion_intent_candidates[result.conversion_intent.intent.conversion_intent_id] = (
             candidate_id
         )
+        self._append_outbox_event(
+            event_type="idea.conversion.intent_requested.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=result.conversion_intent.intent.requested_at_utc,
+            idempotency_key=idempotency_key,
+            payload={
+                "target": result.conversion_intent.intent.target.value,
+                "target_source_authority": result.conversion_intent.target_source_authority.value,
+            },
+        )
         return ConversionPersistenceResult(
             decision=ConversionPersistenceDecision.ACCEPTED,
             record=updated,
@@ -687,6 +747,17 @@ class InMemoryIdeaRepository:
         self._candidate_records[candidate_id] = updated
         self._idempotency_records[idempotency_key] = idempotency_record
         self._idempotency_candidates[idempotency_key] = candidate_id
+        self._append_outbox_event(
+            event_type="idea.conversion.outcome_recorded.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=result.conversion_outcome.outcome.recorded_at_utc,
+            idempotency_key=idempotency_key,
+            payload={
+                "source_system": result.conversion_outcome.source_system.value,
+                "status": result.conversion_outcome.outcome.status.value,
+                "target": result.conversion_outcome.target.value,
+            },
+        )
         return ConversionPersistenceResult(
             decision=ConversionPersistenceDecision.ACCEPTED,
             record=updated,
@@ -773,6 +844,18 @@ class InMemoryIdeaRepository:
         self._report_evidence_pack_candidates[result.evidence_pack.report_evidence_pack_id] = (
             candidate_id
         )
+        self._append_outbox_event(
+            event_type="idea.report_evidence_pack.requested.v1",
+            aggregate_id=candidate_id,
+            occurred_at_utc=result.evidence_pack.requested_at_utc,
+            idempotency_key=idempotency_key,
+            payload={
+                "purpose": result.evidence_pack.purpose.value,
+                "report_source_authority": result.evidence_pack.report_source_authority.value,
+                "render_source_authority": result.evidence_pack.render_source_authority.value,
+                "archive_source_authority": result.evidence_pack.archive_source_authority.value,
+            },
+        )
         return EvidencePackPersistenceResult(
             decision=EvidencePackPersistenceDecision.ACCEPTED,
             record=updated,
@@ -786,6 +869,7 @@ class InMemoryIdeaRepository:
             idempotency_candidates=self._idempotency_candidates,
             conversion_intent_candidates=self._conversion_intent_candidates,
             report_evidence_pack_candidates=self._report_evidence_pack_candidates,
+            outbox_events=self._outbox_events,
         )
 
     def _record_for_idempotency_key(
@@ -838,6 +922,24 @@ class InMemoryIdeaRepository:
         )
         self._candidate_records[candidate_id] = updated
         return updated, audit_event
+
+    def _append_outbox_event(
+        self,
+        *,
+        event_type: str,
+        aggregate_id: str,
+        occurred_at_utc: datetime,
+        payload: Mapping[str, str],
+        idempotency_key: str,
+    ) -> None:
+        event = build_candidate_outbox_event(
+            event_type=event_type,
+            aggregate_id=aggregate_id,
+            occurred_at_utc=occurred_at_utc,
+            payload=payload,
+            idempotency_key=idempotency_key,
+        )
+        self._outbox_events[event.event_id] = event
 
 
 def evidence_hash_for_candidate(candidate: IdeaCandidate) -> str:

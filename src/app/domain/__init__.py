@@ -35,6 +35,11 @@ from app.domain.conversion_governance import (
     record_conversion_outcome,
     request_conversion_intent,
 )
+from app.domain.events import (
+    OutboxEventRecord,
+    OutboxEventStatus,
+    build_candidate_outbox_event,
+)
 from app.domain.ideas import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
     ConversionOutcomeStatus,
@@ -170,6 +175,9 @@ __all__ = [
     "TARGET_SOURCE_AUTHORITIES",
     "record_conversion_outcome",
     "request_conversion_intent",
+    "OutboxEventRecord",
+    "OutboxEventStatus",
+    "build_candidate_outbox_event",
     "ALLOWED_LIFECYCLE_TRANSITIONS",
     "ConversionOutcomeStatus",
     "ConversionTarget",
