@@ -20,6 +20,10 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
+from app.application.outbox_delivery_readiness import (
+    OutboxDeliveryReadinessSnapshot,
+    build_outbox_delivery_readiness_snapshot,
+)
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,
@@ -33,7 +37,7 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
-from app.ports.idea_repository import CandidateSnapshotRepository
+from app.ports.idea_repository import OutboxDeliveryRepository
 
 SUPPORTED_FEATURES_PATH = Path("supported-features/supported-features.json")
 
@@ -86,7 +90,7 @@ class ImplementationProofReadinessSnapshot:
 def build_implementation_proof_readiness_snapshot(
     *,
     evaluated_at_utc: datetime,
-    repository: CandidateSnapshotRepository,
+    repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
@@ -112,6 +116,10 @@ def build_implementation_proof_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
     )
+    outbox_delivery = build_outbox_delivery_readiness_snapshot(
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
     capabilities = (
@@ -120,6 +128,7 @@ def build_implementation_proof_readiness_snapshot(
         _ai_explanation_capability(ai_explanation),
         _data_mesh_capability(data_mesh),
         _runtime_trust_telemetry_capability(runtime_trust_telemetry),
+        _outbox_delivery_capability(outbox_delivery),
         _workbench_product_capability(),
         _downstream_realization_capability(downstream_realization),
         _supported_feature_capability(supported_feature_count),
@@ -267,6 +276,26 @@ def _runtime_trust_telemetry_capability(
             "make runtime-trust-telemetry-preview-check",
         ),
         blockers=snapshot.certification_blockers,
+    )
+
+
+def _outbox_delivery_capability(
+    snapshot: OutboxDeliveryReadinessSnapshot,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "outbox-delivery",
+        "Internal outbox delivery foundation",
+        readiness_status=snapshot.readiness_status,
+        supportability_status=snapshot.supportability_status,
+        evidence_refs=(
+            "src/app/application/outbox_delivery.py",
+            "src/app/application/outbox_delivery_readiness.py",
+            "GET /api/v1/outbox-delivery/readiness",
+        ),
+        blockers=(
+            *snapshot.configuration_blockers,
+            *snapshot.certification_blockers,
+        ),
     )
 
 

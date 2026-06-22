@@ -44,12 +44,14 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["certificationReady"] is False
-    assert payload["capabilityCount"] == 8
+    assert payload["capabilityCount"] == 9
     assert payload["certificationReadyCapabilityCount"] == 0
-    assert payload["blockedCapabilityCount"] == 8
+    assert payload["blockedCapabilityCount"] == 9
     assert payload["supportedFeatureCount"] == 0
     assert payload["supportedFeaturesPromoted"] is False
     assert payload["supportedFeaturePromoted"] is False
+    assert "outbox_broker_not_configured" in payload["overallBlockers"]
+    assert "external_broker_publisher_missing" in payload["overallBlockers"]
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
     assert payload["sourceOfTruth"]["endpoint_certification"] == (
@@ -61,6 +63,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "ai-explanation",
         "data-mesh-certification",
         "runtime-trust-telemetry-preview",
+        "outbox-delivery",
         "workbench-product-proof",
         "downstream-realization",
         "supported-feature-promotion",
