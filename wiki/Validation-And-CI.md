@@ -74,7 +74,12 @@ Persistence adapter validation:
    `make source-ingestion-worker-check` prove the versioned run-once worker
    manifest contract and product-safe check-only summary without calling Core
    or writing repository state.
-7. Runtime API database wiring is opt-in and still requires deploy migration
+7. `tests/unit/test_source_ingestion_readiness.py` and
+   `tests/integration/test_source_ingestion_readiness_api.py` prove the
+   operator readiness diagnostic for blocked/configured posture,
+   permission-denied behavior, relative manifest resolution, and bounded
+   `not_certified` operation events without calling Core.
+8. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -136,6 +141,12 @@ The internal data-mesh-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify the
 diagnostic route only; they do not certify the data products it reports as
 blocked.
+
+The internal source-ingestion-readiness endpoint is covered by OpenAPI,
+endpoint certification, unit tests, and integration tests. Its passing checks
+certify the diagnostic route only; they do not certify live Core ingestion,
+scheduled worker deployment, data-product promotion, Gateway/Workbench support,
+or supported-feature promotion.
 
 CI warning policy:
 

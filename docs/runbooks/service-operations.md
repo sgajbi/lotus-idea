@@ -28,6 +28,11 @@
 5. For source-ingestion worker contract changes, run
    `make source-ingestion-worker-check`. This validates the versioned worker
    manifest in check-only mode without calling Core or writing repository state.
+6. For runtime source-ingestion configuration checks, call
+   `GET /api/v1/source-ingestion/readiness` with the `operator` role and
+   `idea.source-ingestion.readiness.read` capability. This reports manifest,
+   Core base URL, durable repository configuration, and remaining certification
+   blockers without calling Core or exposing source payloads.
 
 ## Current Operation Event Diagnostics
 
@@ -42,7 +47,9 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 6. advisor feedback recording,
 7. conversion intent recording,
 8. conversion outcome recording,
-9. report evidence-pack request recording.
+9. report evidence-pack request recording,
+10. data-mesh readiness diagnostic reads,
+11. source-ingestion readiness diagnostic reads.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
@@ -55,6 +62,8 @@ Use the operation `outcome` before inspecting payload-level evidence:
 6. `permission_denied`: caller capability failed closed.
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
+9. `blocked`: data-mesh or source-ingestion readiness remains blocked by
+   explicit configuration or certification blockers.
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,
