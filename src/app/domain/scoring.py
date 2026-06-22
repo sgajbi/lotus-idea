@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, ROUND_HALF_UP
 from enum import StrEnum
 
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ideas import (
     EvidenceSupportability,
     IdeaCandidate,
@@ -61,6 +62,7 @@ class QueueExclusionReason(StrEnum):
     SNOOZED = "snoozed"
     UNSCORED = "unscored"
     NON_REVIEWABLE_STATUS = "non_reviewable_status"
+    ACCESS_SCOPE_MISMATCH = "access_scope_mismatch"
 
 
 @dataclass(frozen=True)
@@ -299,6 +301,7 @@ def build_review_queue(
     policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
     evaluated_at_utc: datetime | None = None,
     snoozes: tuple[QueueSnooze, ...] = (),
+    access_scope_filter: QueueAccessScopeFilter | None = None,
 ) -> ReviewQueueProjection:
     evaluated_at = evaluated_at_utc or datetime.now(UTC)
     _require_aware_utc(evaluated_at, "evaluated_at_utc")
@@ -308,7 +311,11 @@ def build_review_queue(
     exclusions: list[QueueExclusion] = []
     eligible_candidates: list[IdeaCandidate] = []
     for candidate in candidates:
-        exclusion = _queue_exclusion_for_candidate(candidate, active_snoozes)
+        exclusion = _queue_exclusion_for_candidate(
+            candidate,
+            active_snoozes,
+            access_scope_filter,
+        )
         if exclusion is None:
             eligible_candidates.append(candidate)
         else:
@@ -370,7 +377,14 @@ def priority_bucket_for_score(
 def _queue_exclusion_for_candidate(
     candidate: IdeaCandidate,
     active_snoozes: dict[str, QueueSnooze],
+    access_scope_filter: QueueAccessScopeFilter | None,
 ) -> QueueExclusion | None:
+    if access_scope_filter is not None and not access_scope_filter.matches(candidate.access_scope):
+        return QueueExclusion(
+            candidate_id=candidate.candidate_id,
+            reason=QueueExclusionReason.ACCESS_SCOPE_MISMATCH,
+            detail="candidate is outside the requested advisor access scope",
+        )
     if candidate.candidate_id in active_snoozes:
         snooze = active_snoozes[candidate.candidate_id]
         return QueueExclusion(

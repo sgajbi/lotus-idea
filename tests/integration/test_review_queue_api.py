@@ -22,7 +22,21 @@ def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
     }
 
 
-def high_cash_payload(*, cash_weight: str, suffix: str = "") -> dict[str, Any]:
+def access_scope(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> dict[str, str]:
+    return {
+        "tenantId": "tenant-private-bank-sg",
+        "bookId": "book-advisor-001",
+        "portfolioId": portfolio_id,
+        "clientId": "client-001",
+    }
+
+
+def high_cash_payload(
+    *,
+    cash_weight: str,
+    suffix: str = "",
+    candidate_scope: dict[str, str] | None = None,
+) -> dict[str, Any]:
     return {
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
@@ -35,6 +49,7 @@ def high_cash_payload(*, cash_weight: str, suffix: str = "") -> dict[str, Any]:
                 "lotus-core:PortfolioCashflowProjection:v1", suffix
             ),
         },
+        "accessScope": candidate_scope,
         "entitlementAllowed": True,
     }
 
@@ -62,10 +77,15 @@ def persist_candidate(
     cash_weight: str,
     suffix: str,
     idempotency_key: str,
+    candidate_scope: dict[str, str] | None = None,
 ) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(cash_weight=cash_weight, suffix=suffix),
+        json=high_cash_payload(
+            cash_weight=cash_weight,
+            suffix=suffix,
+            candidate_scope=candidate_scope,
+        ),
         headers=persist_headers(idempotency_key),
     )
     assert response.status_code == 200
@@ -104,6 +124,45 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     )
     assert [item["rank"] for item in payload["items"]] == [1, 2]
     assert payload["exclusions"] == []
+
+
+def test_advisor_review_queue_api_filters_candidates_by_access_scope() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    included = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-included",
+        idempotency_key="seed-review-queue-scope-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+    )
+    excluded = persist_candidate(
+        client,
+        cash_weight="0.20",
+        suffix="-excluded",
+        idempotency_key="seed-review-queue-scope-002",
+        candidate_scope=access_scope(portfolio_id="PB_SG_ALT_BAL_002"),
+    )
+
+    response = client.get(
+        (
+            "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
+            "&tenantId=tenant-private-bank-sg&bookId=book-advisor-001"
+            "&portfolioId=PB_SG_GLOBAL_BAL_001&clientId=client-001"
+        ),
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert [item["candidate"]["candidateId"] for item in payload["items"]] == [included]
+    assert payload["exclusions"] == [
+        {
+            "candidateId": excluded,
+            "reason": "access_scope_mismatch",
+            "detail": "candidate is outside the requested advisor access scope",
+        }
+    ]
 
 
 def test_advisor_review_queue_api_returns_empty_queue_without_candidates() -> None:
@@ -159,4 +218,23 @@ def test_advisor_review_queue_api_rejects_naive_evaluation_time_safely() -> None
         "code": "invalid_request",
         "title": "Invalid request",
         "detail": "evaluatedAtUtc must be timezone-aware.",
+    }
+
+
+def test_advisor_review_queue_api_rejects_blank_scope_filter_safely() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&portfolioId=",
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Scope query fields cannot be blank.",
     }

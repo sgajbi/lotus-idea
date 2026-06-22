@@ -5,6 +5,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
+from app.domain.access_scope import ReviewAccessScope
+
 
 class OpportunityFamily(StrEnum):
     HIGH_CASH = "high_cash"
@@ -319,6 +321,7 @@ class IdeaCandidate:
     evidence_packet: IdeaEvidencePacket
     source_signal_ids: tuple[str, ...]
     score: IdeaScore | None = None
+    access_scope: ReviewAccessScope | None = None
     suppression_reason: SuppressionReason | None = None
     created_at_utc: datetime = field(default_factory=lambda: datetime.now(UTC))
     updated_at_utc: datetime = field(default_factory=lambda: datetime.now(UTC))

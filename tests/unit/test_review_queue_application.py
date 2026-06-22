@@ -25,6 +25,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
 )
+from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -45,7 +46,12 @@ def source_ref(product_id: str, *, content_hash_suffix: str = "") -> SourceRef:
     )
 
 
-def high_cash_command(*, cash_weight: Decimal, suffix: str = "") -> EvaluateHighCashSignalCommand:
+def high_cash_command(
+    *,
+    cash_weight: Decimal,
+    suffix: str = "",
+    candidate_scope: ReviewAccessScope | None = None,
+) -> EvaluateHighCashSignalCommand:
     return EvaluateHighCashSignalCommand(
         as_of_date=AS_OF_DATE,
         source_reported_cash_weight=cash_weight,
@@ -60,6 +66,16 @@ def high_cash_command(*, cash_weight: Decimal, suffix: str = "") -> EvaluateHigh
             "lotus-core:PortfolioCashflowProjection:v1", content_hash_suffix=suffix
         ),
         evaluated_at_utc=EVALUATED_AT,
+        access_scope=candidate_scope,
+    )
+
+
+def access_scope(*, portfolio_id: str = "PB_SG_GLOBAL_BAL_001") -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id="tenant-private-bank-sg",
+        book_id="book-advisor-001",
+        portfolio_id=portfolio_id,
+        client_id="client-001",
     )
 
 
@@ -69,10 +85,15 @@ def persist_high_cash_candidate(
     cash_weight: Decimal = Decimal("0.18"),
     suffix: str = "",
     idempotency_key: str = "signal-ingestion:high-cash:001",
+    candidate_scope: ReviewAccessScope | None = None,
 ) -> str:
     result = evaluate_and_persist_high_cash_signal(
         EvaluateAndPersistHighCashSignalCommand(
-            evaluation=high_cash_command(cash_weight=cash_weight, suffix=suffix),
+            evaluation=high_cash_command(
+                cash_weight=cash_weight,
+                suffix=suffix,
+                candidate_scope=candidate_scope,
+            ),
             idempotency_key=idempotency_key,
             actor_subject="signal-ingestion-worker",
         ),
@@ -104,6 +125,39 @@ def test_build_review_queue_from_repository_projects_persisted_candidates() -> N
     )
     assert [item.rank for item in queue.items] == [1, 2]
     assert queue.exclusions == ()
+
+
+def test_build_review_queue_from_repository_filters_by_advisor_access_scope() -> None:
+    repository = InMemoryIdeaRepository()
+    included_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-included",
+        idempotency_key="signal-ingestion:high-cash:scope-included",
+        candidate_scope=access_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+    )
+    excluded_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-excluded",
+        idempotency_key="signal-ingestion:high-cash:scope-excluded",
+        candidate_scope=access_scope(portfolio_id="PB_SG_ALT_BAL_002"),
+    )
+
+    queue = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            access_scope_filter=QueueAccessScopeFilter(
+                tenant_id="tenant-private-bank-sg",
+                book_id="book-advisor-001",
+                portfolio_id="PB_SG_GLOBAL_BAL_001",
+                client_id="client-001",
+            ),
+        ),
+        repository=repository,
+    )
+
+    assert [item.candidate.candidate_id for item in queue.items] == [included_candidate_id]
+    assert queue.exclusions[0].candidate_id == excluded_candidate_id
+    assert queue.exclusions[0].reason is QueueExclusionReason.ACCESS_SCOPE_MISMATCH
 
 
 def test_build_review_queue_from_repository_excludes_expired_candidate_records() -> None:

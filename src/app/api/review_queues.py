@@ -15,6 +15,7 @@ from app.application.review_queue import (
     build_review_queue_from_repository,
 )
 from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
@@ -135,6 +136,10 @@ class AdvisorReviewQueueResponse(CamelModel):
 
 async def get_advisor_review_queue(
     evaluated_at_utc: datetime = Query(..., alias="evaluatedAtUtc"),
+    tenant_id: str | None = Query(default=None, alias="tenantId"),
+    book_id: str | None = Query(default=None, alias="bookId"),
+    portfolio_id: str | None = Query(default=None, alias="portfolioId"),
+    client_id: str | None = Query(default=None, alias="clientId"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
@@ -168,11 +173,32 @@ async def get_advisor_review_queue(
             title="Invalid request",
             detail="evaluatedAtUtc must be timezone-aware.",
         )
+    try:
+        scope_filter = QueueAccessScopeFilter(
+            tenant_id=tenant_id,
+            book_id=book_id,
+            portfolio_id=portfolio_id,
+            client_id=client_id,
+        )
+    except ValueError:
+        _emit_review_queue_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="Scope query fields cannot be blank.",
+        )
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     queue = build_review_queue_from_repository(
-        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=evaluated_at_utc,
+            access_scope_filter=(None if scope_filter.is_empty else scope_filter),
+        ),
         repository=repository,
     )
     _emit_review_queue_operation_event(
@@ -205,9 +231,12 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
     "summary": "Get the advisor idea review queue",
     "description": (
         "Returns the deterministic advisor review queue projection over persisted idea "
-        "candidate snapshots. This is a certified internal API foundation for RFC-0002 "
-        "Slice 07 and Slice 10; it does not expose a Workbench product surface, durable "
-        "queue store, Gateway route, data-product certification, or supported feature."
+        "candidate snapshots. Optional tenantId, bookId, portfolioId, and clientId "
+        "query filters constrain results to the requested advisor access scope. This "
+        "is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
+        "with bounded read-only Gateway publication; it does not expose a Workbench "
+        "product surface, durable queue store, data-product certification, or "
+        "supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": AdvisorReviewQueueResponse,

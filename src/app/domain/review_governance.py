@@ -5,6 +5,7 @@ from datetime import datetime
 from enum import StrEnum
 
 from app.domain.audit import AuditEvent
+from app.domain.access_scope import ReviewAccessScope
 from app.domain.ideas import (
     EvidenceSupportability,
     FeedbackOutcome,
@@ -59,20 +60,6 @@ class InvalidReviewAction(ValueError):
         )
         self.action = action
         self.lifecycle_status = lifecycle_status
-
-
-@dataclass(frozen=True)
-class ReviewAccessScope:
-    tenant_id: str
-    book_id: str
-    portfolio_id: str
-    client_id: str
-
-    def __post_init__(self) -> None:
-        _require_text(self.tenant_id, "tenant_id")
-        _require_text(self.book_id, "book_id")
-        _require_text(self.portfolio_id, "portfolio_id")
-        _require_text(self.client_id, "client_id")
 
 
 @dataclass(frozen=True)
