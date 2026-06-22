@@ -77,6 +77,7 @@ make check
 make ci
 make postgres-integration-gate
 make source-ingestion-worker-check
+make implementation-proof-readiness-check
 uvicorn app.main:app --reload --port 8330
 ```
 
@@ -192,3 +193,6 @@ exposing candidate identifiers, source payloads, portfolio identifiers, or
 client identifiers. It is not live implementation proof, data-product
 certification, Workbench proof, client-ready publication, or supported-feature
 promotion.
+`make implementation-proof-readiness-check` generates the same source-safe
+readiness snapshot without running the HTTP service. Use it as CI or async
+operator evidence only; it is not a supported product claim.

@@ -7,6 +7,7 @@
 - make ci
 - make postgres-integration-gate
 - make source-ingestion-worker-check
+- make implementation-proof-readiness-check
 - docker compose up --build
 
 ## Health and Readiness
@@ -41,6 +42,11 @@
    explanation, data mesh, Workbench, downstream realization, and
    supported-feature promotion. It is not live proof, Workbench proof,
    data-product certification, or supported-feature promotion.
+8. For CI or async evidence without running the service, run
+   `make implementation-proof-readiness-check` or
+   `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
+   The generated JSON is an operator proof-readiness artifact, not a supported
+   product claim.
 
 ## Current Operation Event Diagnostics
 

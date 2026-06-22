@@ -76,18 +76,23 @@ Implementation-backed evidence:
 
 1. application builder: `src/app/application/implementation_proof_readiness.py`,
 2. API route: `src/app/api/implementation_proof_readiness.py`,
-3. operation event: `implementation_proof_readiness_read`,
-4. endpoint ledger:
+3. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
+4. repo-native check: `make implementation-proof-readiness-check`,
+5. operation event: `implementation_proof_readiness_read`,
+6. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-5. unit tests:
+7. unit tests:
    `tests/unit/test_implementation_proof_readiness.py`,
-6. integration tests:
+8. generator tests:
+   `tests/unit/test_generate_implementation_proof_readiness.py`,
+9. integration tests:
    `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
 
 ```powershell
 python -m pytest tests/unit/test_implementation_proof_readiness.py tests/integration/test_implementation_proof_readiness_api.py -q
+make implementation-proof-readiness-check
 make endpoint-certification-gate
 make openapi-gate
 ```

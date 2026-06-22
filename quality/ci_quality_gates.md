@@ -20,13 +20,14 @@ Blocking scaffold commands:
 11. `make migration-contract-gate`
 12. `make migration-execution-gate`
 13. `make source-ingestion-worker-check`
-14. `make supported-features-gate`
-15. `make endpoint-certification-gate`
-16. `make postgres-integration-gate`
-17. `make openapi-gate`
-18. `make coverage-gate`
-19. `make security-audit`
-20. `make docker-build`
+14. `make implementation-proof-readiness-check`
+15. `make supported-features-gate`
+16. `make endpoint-certification-gate`
+17. `make postgres-integration-gate`
+18. `make openapi-gate`
+19. `make coverage-gate`
+20. `make security-audit`
+21. `make docker-build`
 
 Report-only scaffold commands:
 
@@ -41,7 +42,8 @@ the Makefile and GitHub workflow lanes still include architecture boundaries, ma
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
 migration contract validation, migration execution dry-run validation, source-ingestion worker
-manifest validation, source-observability contract validation, PostgreSQL runtime proof, coverage,
+manifest validation, implementation-proof readiness artifact generation,
+source-observability contract validation, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
