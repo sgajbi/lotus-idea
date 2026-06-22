@@ -14,6 +14,7 @@ class DocumentationSurface:
     relative_path: str
     min_non_empty_lines: int
     required_fragments: tuple[str, ...]
+    max_non_empty_lines: int | None = None
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ class PolishedDocumentationSurface:
     required_headings: tuple[str, ...]
     min_markdown_tables: int
     min_code_fences: int
+    min_mermaid_fences: int = 0
 
 
 REQUIRED_SURFACES = (
@@ -44,6 +46,7 @@ REQUIRED_SURFACES = (
             "make documentation-contract-gate",
             "LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md",
         ),
+        260,
     ),
     DocumentationSurface(
         "REPOSITORY-ENGINEERING-CONTEXT.md",
@@ -168,6 +171,31 @@ REQUIRED_SURFACES = (
 
 POLISHED_SURFACES = (
     PolishedDocumentationSurface(
+        "README.md",
+        (
+            "## Current Posture",
+            "## Product Boundary",
+            "## Architecture At A Glance",
+            "## Validation And CI Lanes",
+            "## Documentation Map",
+        ),
+        1,
+        4,
+        2,
+    ),
+    PolishedDocumentationSurface(
+        "docs/operations/observability.md",
+        (
+            "## Default Signals",
+            "## Sensitive-Content Rule",
+            "## Idea Operation Events",
+            "## Operator Interpretation",
+        ),
+        3,
+        1,
+        1,
+    ),
+    PolishedDocumentationSurface(
         "docs/operations/implementation-proof-readiness.md",
         (
             "## What It Proves",
@@ -192,6 +220,24 @@ POLISHED_SURFACES = (
         ),
         2,
         1,
+    ),
+    PolishedDocumentationSurface(
+        "wiki/Overview.md",
+        ("## Current posture",),
+        1,
+        1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "wiki/Architecture.md",
+        (
+            "## Source Authority",
+            "## Data Mesh Baseline",
+            "## Certified API Foundation",
+        ),
+        1,
+        2,
+        2,
     ),
 )
 
@@ -223,6 +269,10 @@ def _code_fence_count(content: str) -> int:
     return content.count("```") // 2
 
 
+def _mermaid_fence_count(content: str) -> int:
+    return content.count("```mermaid")
+
+
 def _has_heading(content: str, heading: str) -> bool:
     return content.startswith(f"{heading}\n") or f"\n{heading}\n" in content
 
@@ -245,6 +295,14 @@ def validate_documentation_contract(
             errors.append(
                 f"{surface.relative_path}: has {non_empty_count} non-empty lines; "
                 f"minimum is {surface.min_non_empty_lines}"
+            )
+        if (
+            surface.max_non_empty_lines is not None
+            and non_empty_count > surface.max_non_empty_lines
+        ):
+            errors.append(
+                f"{surface.relative_path}: has {non_empty_count} non-empty lines; "
+                f"maximum is {surface.max_non_empty_lines}"
             )
         for fragment in surface.required_fragments:
             if fragment not in content:
@@ -272,6 +330,12 @@ def validate_documentation_contract(
             errors.append(
                 f"{surface.relative_path}: has {code_fence_count} code fences; "
                 f"minimum is {surface.min_code_fences}"
+            )
+        mermaid_count = _mermaid_fence_count(content)
+        if mermaid_count < surface.min_mermaid_fences:
+            errors.append(
+                f"{surface.relative_path}: has {mermaid_count} Mermaid diagrams; "
+                f"minimum is {surface.min_mermaid_fences}"
             )
     return errors
 
