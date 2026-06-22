@@ -147,7 +147,9 @@ endpoint certification ledger synchronized, validates JSON-shaped examples, prov
 references resolve to real pytest functions, keeps health/metadata routes at `baseline_certified`,
 and requires certified business/operator endpoints to name an `idea.*` capability, document
 product-safe 403 behavior, cite the OpenAPI quality gate, and preserve Gateway, Workbench, and
-supported-feature-promotion boundaries.
+supported-feature-promotion boundaries. It also requires bounded operation-event test evidence for
+every certified business/operator endpoint, so API certification and operator telemetry proof stay
+coupled.
 
 Data-mesh foundation checks:
 

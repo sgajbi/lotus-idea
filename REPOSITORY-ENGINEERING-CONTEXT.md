@@ -636,8 +636,9 @@ examples must parse, test references must resolve to real pytest functions,
 baseline health/metadata routes must use `baseline_certified`, and certified
 business/operator endpoints must name an `idea.*` capability, document
 product-safe 403 behavior, preserve Gateway and Workbench boundaries, preserve
-the no-supported-feature-promotion boundary, and reference
-`scripts/openapi_quality_gate.py` evidence.
+the no-supported-feature-promotion boundary, reference
+`scripts/openapi_quality_gate.py` evidence, and cite bounded operation-event
+test evidence before remaining `certified`.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

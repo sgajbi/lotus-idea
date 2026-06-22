@@ -22,6 +22,8 @@ ids as metric labels.
 RFC-0002 Slice 15 adds the first business-operation observability foundation.
 `src/app/observability/logging.py` defines bounded operation, outcome, and supportability
 vocabulary plus the `lotus_idea_operation_events_total` Prometheus counter.
+`make endpoint-certification-gate` requires certified business/operator endpoints to cite bounded
+operation-event test evidence in `docs/operations/endpoint-certification-ledger.json`.
 
 Current instrumented operations:
 

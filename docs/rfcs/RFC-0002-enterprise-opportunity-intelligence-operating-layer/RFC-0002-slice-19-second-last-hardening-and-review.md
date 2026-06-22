@@ -56,10 +56,13 @@ This slice also hardens endpoint certification quality:
 2. The gate validates required evidence fields, JSON-shaped examples, real
    pytest evidence references, baseline endpoint status discipline, OpenAPI-gate
    evidence, certified endpoint capability posture, product-safe 403 behavior,
-   and explicit Gateway/Workbench/supported-feature-promotion boundary wording.
+   explicit Gateway/Workbench/supported-feature-promotion boundary wording, and
+   bounded operation-event test evidence for certified business/operator
+   endpoints.
 3. `tests/unit/test_endpoint_certification_gate.py` covers current pass behavior
    and failure cases for missing capabilities, weak unsupported-boundary text,
-   stale test references, and malformed JSON examples.
+   missing operation-event evidence, stale test references, and malformed JSON
+   examples.
 4. `docs/operations/api-certification.md`, README, repository context, quality
    scorecard, CI quality guide, and wiki source now describe the stronger gate.
 

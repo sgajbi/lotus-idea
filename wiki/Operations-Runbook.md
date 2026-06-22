@@ -118,6 +118,9 @@ supported business capability.
 The current certified foundation endpoint inventory is summarized in
 `docs/operations/api-certification.md` and backed by
 `docs/operations/endpoint-certification-ledger.json`.
+`make endpoint-certification-gate` now requires each certified business/operator
+endpoint to cite bounded operation-event test evidence, so endpoint
+certification cannot pass if supportability telemetry proof is missing.
 
 The inventory covers high-cash evaluation, high-cash persistence, candidate
 evidence replay, lifecycle transition, AI explanation evaluation, advisor
