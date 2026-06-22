@@ -45,6 +45,7 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     assert snapshot.certification_ready is False
     assert snapshot.durable_storage_backed is False
     assert snapshot.external_broker_configured is False
+    assert snapshot.external_broker_publisher_adapter_present is True
     assert snapshot.delivery_ready_count == 2
     assert snapshot.max_retry_count == DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT
     assert snapshot.status_counts.pending_count == 1
@@ -53,7 +54,7 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     assert snapshot.status_counts.dead_letter_count == 1
     assert snapshot.status_counts.total_count == 4
     assert snapshot.configuration_blockers == ("outbox_broker_not_configured",)
-    assert "external_broker_publisher_missing" in snapshot.certification_blockers
+    assert "external_broker_runtime_proof_missing" in snapshot.certification_blockers
     assert snapshot.supported_feature_promoted is False
 
 
@@ -69,12 +70,13 @@ def test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_confi
     )
 
     assert snapshot.external_broker_configured is True
+    assert snapshot.external_broker_publisher_adapter_present is True
     assert snapshot.durable_storage_backed is True
     assert snapshot.configuration_blockers == ()
     assert snapshot.certification_ready is False
     assert snapshot.readiness_status == "blocked"
     assert snapshot.certification_blockers == (
-        "external_broker_publisher_missing",
+        "external_broker_runtime_proof_missing",
         "downstream_consumer_contracts_missing",
         "platform_mesh_event_contract_missing",
         "gateway_workbench_proof_missing",

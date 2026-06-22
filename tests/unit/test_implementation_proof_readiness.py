@@ -35,7 +35,7 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert snapshot.supported_feature_count == 0
     assert snapshot.supported_features_promoted is False
     assert "outbox_broker_not_configured" in snapshot.overall_blockers
-    assert "external_broker_publisher_missing" in snapshot.overall_blockers
+    assert "external_broker_runtime_proof_missing" in snapshot.overall_blockers
     assert "source_ingestion_manifest_not_configured" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers
     assert "no_supported_features_promoted" in snapshot.overall_blockers
@@ -76,8 +76,9 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         if capability.capability_id == "outbox-delivery"
     )
     assert "GET /api/v1/outbox-delivery/readiness" in outbox_delivery.evidence_refs
+    assert "src/app/infrastructure/outbox_publisher.py" in outbox_delivery.evidence_refs
     assert "outbox_broker_not_configured" in outbox_delivery.blockers
-    assert "external_broker_publisher_missing" in outbox_delivery.blockers
+    assert "external_broker_runtime_proof_missing" in outbox_delivery.blockers
     downstream = next(
         capability
         for capability in snapshot.capabilities

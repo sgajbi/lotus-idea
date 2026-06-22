@@ -51,7 +51,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert payload["supportedFeaturesPromoted"] is False
     assert payload["supportedFeaturePromoted"] is False
     assert "outbox_broker_not_configured" in payload["overallBlockers"]
-    assert "external_broker_publisher_missing" in payload["overallBlockers"]
+    assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
     assert payload["sourceOfTruth"]["endpoint_certification"] == (
