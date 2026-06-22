@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified internal API foundations including source-safe candidate detail and AI explanation evaluator only
+Status: Partially implemented - certified internal API foundations including source-safe candidate detail, evidence replay, AI explanation evaluator, and operator diagnostics only
 
 ## Outcome
 
@@ -14,6 +14,7 @@ The first certified API foundations are:
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
 - `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`
 - `GET /api/v1/idea-candidates/{candidateId}`
+- `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
 - `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`
 - `GET /api/v1/review-queues/advisor`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
@@ -51,6 +52,14 @@ posture, and does not expose source-system routes, raw source content hashes,
 downstream authority, Gateway/Workbench proof, data-product certification, or
 supported-feature promotion. `durableStorageBacked` follows the active
 repository provider.
+
+The candidate evidence replay endpoint exposes internal operator replay posture
+over persisted evidence hashes. It requires `idea.candidate.evidence.replay`
+plus operator role, accepts caller-supplied current source refs, returns
+matched, stale-source, hash-mismatch, expired, or not-found posture, and never
+calls Core, exports raw source routes, grants downstream authority, certifies
+data products, proves Gateway/Workbench behavior, or promotes a supported
+feature. `durableStorageBacked` follows the active repository provider.
 
 The review-action and feedback endpoints expose the Slice 08 internal workflow
 foundation over persisted candidates. They require `Idempotency-Key`, a
@@ -117,27 +126,35 @@ Implementation files:
     OpenAPI examples, and route registration.
 13. `src/app/application/candidate_detail.py`: persisted candidate snapshot
     lookup through the governed repository port.
-14. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
+14. `src/app/api/candidate_evidence_replay.py`: evidence replay DTOs,
+    authorization mapping, product-safe errors, OpenAPI examples, operation
+    events, and route registration.
+15. `src/app/application/candidate_evidence_replay.py`: command validation and
+    replay orchestration through the governed repository port.
+16. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
     mapping, redacted response projection, product-safe errors, OpenAPI
     examples, and route registration.
-15. `src/app/application/ai_governance.py`: persisted candidate snapshot
+17. `src/app/application/ai_governance.py`: persisted candidate snapshot
     lookup plus deterministic fallback/verifier orchestration without provider
     execution or durable persistence claims.
-16. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
+18. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-17. `src/app/application/conversion_workflow.py`: application commands,
+19. `src/app/application/conversion_workflow.py`: application commands,
     idempotency payload construction, repository precheck, and domain
     invocation for conversion intent/outcome workflow.
-18. `tests/integration/test_review_workflow_api.py`: certified API behavior
+20. `tests/integration/test_review_workflow_api.py`: certified API behavior
    evidence for lifecycle transition, review action, feedback, and conversion
    foundations.
-19. `tests/integration/test_review_queue_api.py`: certified API behavior
+21. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
-20. `tests/integration/test_candidate_detail_api.py`: certified API behavior
+22. `tests/integration/test_candidate_detail_api.py`: certified API behavior
     evidence for source-safe detail projection, workflow summaries, permission,
     missing candidate, and no-authority promotion.
-21. `tests/integration/test_ai_governance_api.py`: certified API behavior
+23. `tests/integration/test_candidate_evidence_replay_api.py`: certified API
+    behavior evidence for matched, stale-source, hash-mismatch, permission,
+    missing candidate, invalid request, and no-authority replay posture.
+24. `tests/integration/test_ai_governance_api.py`: certified API behavior
     evidence for AI fallback, verifier acceptance, blocked output, permission,
     missing candidate, invalid state, and forbidden metadata.
 
@@ -174,6 +191,12 @@ Details for permission or validation failures.
 The candidate detail endpoint is permissioned by
 `idea.candidate.detail.read` capability or advisor/operator role. It returns
 source-safe details for an existing candidate and product-safe Problem Details
+for permission, validation, or missing-candidate failures.
+
+The candidate evidence replay endpoint is permissioned by
+`idea.candidate.evidence.replay` plus operator role. It requires non-empty
+`currentSourceRefs`, compares current source refs against persisted evidence
+hash posture, returns product-safe replay status, and returns Problem Details
 for permission, validation, or missing-candidate failures.
 
 The AI explanation endpoint is permissioned by
@@ -299,6 +322,10 @@ Focused validation passed for the current foundation:
     source-redaction assertions, workflow summary assertions,
     permission/not-found behavior, endpoint-ledger contract, and bounded
     operation-event coverage.
+23. `.venv\Scripts\python.exe -m pytest tests\integration\test_candidate_evidence_replay_api.py tests\integration\test_api_operation_events.py -q`
+    passed with `9 passed` after adding the evidence replay API foundation,
+    OpenAPI/ledger examples, matched/stale/hash-mismatch/not-found/permission
+    behavior, and bounded `candidate_evidence_replay` operation-event coverage.
 
 PR merge-gate evidence remains required before merge.
 

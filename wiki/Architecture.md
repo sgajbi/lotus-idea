@@ -86,11 +86,12 @@ concrete infrastructure wiring stays out of the API layer.
 
 Application use cases depend on repository workflow protocols from
 `src/app/ports/idea_repository.py`. Candidate snapshots, candidate persistence,
-lifecycle mutation, review and feedback mutation, conversion mutation, report
-evidence-pack requests, and AI explanation reads must use those central ports
-instead of declaring local repository protocols. This keeps durable storage
-behind one governed contract surface while default process-local and configured
-PostgreSQL-backed runtime postures remain truthful.
+lifecycle mutation, evidence replay, review and feedback mutation, conversion
+mutation, report evidence-pack requests, and AI explanation reads must use
+those central ports instead of declaring local repository protocols. This keeps
+durable storage behind one governed contract surface while default
+process-local and configured PostgreSQL-backed runtime postures remain
+truthful.
 
 `migrations/001_idea_repository_foundation.sql` and its rollback file define the
 first governed schema contract for future durable candidate, idempotency,
@@ -143,6 +144,14 @@ feedback, conversion, report-evidence, and audit summary posture without source
 route disclosure, raw evidence export, downstream authority, Gateway/Workbench
 proof, data-product certification, or supported-feature promotion.
 
+`POST /api/v1/idea-candidates/{candidateId}/evidence-replay` is the certified
+internal candidate evidence replay API foundation. It compares caller-supplied
+current source refs with persisted evidence hashes and returns matched,
+stale-source, hash-mismatch, expired, or missing-candidate posture without
+calling Core, exposing raw source routes, granting downstream authority,
+certifying data products, proving Gateway/Workbench behavior, or promoting a
+supported feature.
+
 `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate` is the
 certified internal AI explanation evaluator foundation. It evaluates
 deterministic fallback or supplied workflow output against persisted candidate
@@ -161,6 +170,11 @@ conflict, and blocked, suppressed, or not-eligible evaluations do not mutate
 state. The evaluate-and-persist API exposes this as an internal certified
 foundation and reports repository-backed storage posture from the active
 provider; it is not a supported product workflow.
+
+The internal application layer can now also replay persisted candidate evidence
+posture against caller-supplied current source refs. This is an operator
+diagnostic over repository state, not live source ingestion or downstream
+workflow authority.
 
 The internal application layer can now also record idempotent lifecycle
 transitions for persisted candidates. This closes the foundation gap between

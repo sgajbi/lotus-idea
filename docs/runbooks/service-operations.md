@@ -41,15 +41,16 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 
 1. high-cash signal evaluation,
 2. high-cash candidate persistence,
-3. candidate lifecycle transition recording,
-4. advisor review queue reads,
-5. human review decision recording,
-6. advisor feedback recording,
-7. conversion intent recording,
-8. conversion outcome recording,
-9. report evidence-pack request recording,
-10. data-mesh readiness diagnostic reads,
-11. source-ingestion readiness diagnostic reads.
+3. candidate evidence replay,
+4. candidate lifecycle transition recording,
+5. advisor review queue reads,
+6. human review decision recording,
+7. advisor feedback recording,
+8. conversion intent recording,
+9. conversion outcome recording,
+10. report evidence-pack request recording,
+11. data-mesh readiness diagnostic reads,
+12. source-ingestion readiness diagnostic reads.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
@@ -62,8 +63,9 @@ Use the operation `outcome` before inspecting payload-level evidence:
 6. `permission_denied`: caller capability failed closed.
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
-9. `blocked`: data-mesh or source-ingestion readiness remains blocked by
-   explicit configuration or certification blockers.
+9. `blocked`: candidate evidence replay found stale source posture, or
+   data-mesh/source-ingestion readiness remains blocked by explicit
+   configuration or certification blockers.
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,

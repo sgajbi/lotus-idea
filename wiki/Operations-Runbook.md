@@ -2,9 +2,10 @@
 
 Current posture: scaffold operations plus internal domain, persistence/replay,
 lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
-AI explanation, advisor queue, review-action, and feedback API foundations, and
-conversion governance plus certified internal conversion intent/outcome and
-report evidence-pack API foundations. The service remains internal foundation only:
+AI explanation, advisor queue, review-action, feedback, and candidate evidence
+replay API foundations, and conversion governance plus certified internal
+conversion intent/outcome and report evidence-pack API foundations. The service
+remains internal foundation only:
 repository-backed API persistence is process-local by default and
 PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. There is no
 downstream adapter, production recovery command, Gateway/Workbench proof, or
@@ -73,8 +74,9 @@ RFC-0002 will add support runbooks for:
 
 RFC-0002 Slice 15 now emits bounded operation-event logs and the
 `lotus_idea_operation_events_total` metric for high-cash signal evaluation,
-candidate persistence, lifecycle transitions, advisor queue reads, review
-actions, AI explanation fallback/verifier evaluation, feedback records,
+candidate persistence, candidate evidence replay, lifecycle transitions,
+advisor queue reads, review actions, AI explanation fallback/verifier
+evaluation, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, data-mesh-readiness
 diagnostic reads, and source-ingestion-readiness diagnostic reads.
@@ -93,10 +95,11 @@ Current outcomes:
 8. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 9. `invalid_state`: lifecycle, review, target authority, report intent, or AI
    explanation precondition failed.
-10. `blocked`: verifier rejected unsupported AI output, or expected current
-    data-mesh-readiness posture while runtime trust telemetry and platform
-    certification remain absent, or source-ingestion readiness is missing
-    run-once worker configuration/certification proof.
+10. `blocked`: verifier rejected unsupported AI output, candidate evidence
+    replay found stale source posture, expected current data-mesh-readiness
+    posture while runtime trust telemetry and platform certification remain
+    absent, or source-ingestion readiness is missing run-once worker
+    configuration/certification proof.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -116,9 +119,10 @@ The current certified foundation endpoint inventory is summarized in
 `docs/operations/api-certification.md` and backed by
 `docs/operations/endpoint-certification-ledger.json`.
 
-The inventory covers high-cash evaluation, high-cash persistence, lifecycle
-transition, AI explanation evaluation, advisor queue, review action, feedback,
-conversion intent, conversion outcome, report evidence-pack request, and
-data-mesh-readiness and source-ingestion-readiness diagnostic endpoints. These endpoints are certified as
+The inventory covers high-cash evaluation, high-cash persistence, candidate
+evidence replay, lifecycle transition, AI explanation evaluation, advisor
+queue, review action, feedback, conversion intent, conversion outcome, report
+evidence-pack request, and data-mesh-readiness and source-ingestion-readiness
+diagnostic endpoints. These endpoints are certified as
 internal foundations or operator diagnostics only; they are not supported
 business features.

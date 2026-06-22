@@ -3,8 +3,8 @@
 Current posture: no business feature is supported yet.
 
 Internal foundation exists for domain vocabulary, high-cash signal evaluation,
-candidate persistence/replay/idempotency/audit, deterministic scoring with
-review-queue projection, source-safe candidate detail projection, advisor
+candidate persistence/replay/idempotency/audit, candidate evidence replay,
+deterministic scoring with review-queue projection, source-safe candidate detail projection, advisor
 review/feedback governance, AI governance redaction/verifier/fallback controls,
 and a certified internal AI explanation evaluator API, plus the first certified
 internal high-cash API foundation.

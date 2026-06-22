@@ -31,10 +31,12 @@ foundation plus certified internal conversion intent/outcome API foundations
 for review-gated downstream intent/outcome tracking. It now also has an
 internal source-safe candidate detail API foundation, an internal report
 evidence-pack request foundation plus a certified internal API for reviewed
-report conversion intents, and the first bounded operation-event observability
-foundation across certified internal signal, persistence, candidate detail,
-lifecycle, AI explanation, queue, review, feedback, conversion, report evidence,
-and data-mesh-readiness APIs plus a certified internal source-ingestion readiness
+report conversion intents, a certified internal candidate evidence replay API
+foundation for source-ref hash replay posture, and the first bounded
+operation-event observability foundation across certified internal signal,
+persistence, candidate detail, evidence replay, lifecycle, AI explanation,
+queue, review, feedback, conversion, report evidence, and data-mesh-readiness
+APIs plus a certified internal source-ingestion readiness
 diagnostic for operator configuration and certification blockers. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
@@ -147,6 +149,10 @@ source-authority contracts only, not runtime certification.
   and returns source-safe detail projections with redacted source references,
   workflow summaries, audit summary posture, and no downstream authority or
   supported-feature promotion.
+  Internal candidate evidence replay orchestration compares caller-supplied
+  current source refs with persisted evidence hashes and returns matched,
+  stale-source, hash-mismatch, expired, or missing-candidate posture without
+  calling Core, exporting raw source routes, or granting downstream authority.
   Internal review-queue orchestration projects persisted candidate snapshots
   through the Slice 07 deterministic queue policy and certified internal advisor
   queue API foundation. Internal candidate lifecycle orchestration records
@@ -176,9 +182,9 @@ source-authority contracts only, not runtime certification.
   persistence records, replay posture, idempotency, and audit primitives.
 - `src/app/ports/`: source-owned service interfaces consumed by application
   logic. `idea_repository.py` centralizes the repository workflow protocols for
-  candidate snapshots, persistence, lifecycle, review, conversion, report
-  evidence, and AI explanation reads; `core_sources.py` defines the first Core
-  high-cash evidence port.
+  candidate snapshots, persistence, evidence replay, lifecycle, review,
+  conversion, report evidence, and AI explanation reads; `core_sources.py`
+  defines the first Core high-cash evidence port.
 - `src/app/infrastructure/`: adapters and clients behind ports, including a
   conservative Core high-cash source adapter that does not infer cash weight
   when Core omits a source-reported value, PostgreSQL migration execution
@@ -190,9 +196,10 @@ source-authority contracts only, not runtime certification.
   variable after the schema exists.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
-  persistence, candidate detail, lifecycle, AI explanation, advisor queue,
-  review, feedback, conversion, and report evidence-pack foundation APIs plus the
-  data-mesh-readiness and source-ingestion-readiness diagnostics emit
+  persistence, candidate detail, candidate evidence replay, lifecycle, AI
+  explanation, advisor queue, review, feedback, conversion, and report
+  evidence-pack foundation APIs plus the data-mesh-readiness and
+  source-ingestion-readiness diagnostics emit
   product-safe operation logs and the `lotus_idea_operation_events_total`
   metric without sensitive labels or supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.

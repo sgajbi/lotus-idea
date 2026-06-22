@@ -28,16 +28,18 @@ foundation:
    evidence-pack request accepted, replayed, conflict, not-found,
    permission-denied, invalid-request, and invalid-state outcomes.
 7. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
+   `src/app/api/candidate_evidence_replay.py`,
    `src/app/api/ai_governance.py`, `src/app/api/review_queues.py`, and
    `src/app/api/review_workflow.py` emit bounded operation events for
    high-cash evaluation, candidate persistence, lifecycle transitions,
-   AI explanation fallback/verifier evaluation, advisor queue reads, review
-   actions, and feedback.
+   candidate evidence replay, AI explanation fallback/verifier evaluation,
+   advisor queue reads, review actions, and feedback.
 8. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
    attribute and metric-label contract.
 9. `tests/integration/test_api_operation_events.py` proves the operation-event
    coverage for the certified internal high-cash, candidate persistence,
-   lifecycle, AI explanation, queue, review, and feedback API foundations.
+   lifecycle, candidate evidence replay, AI explanation, queue, review, and
+   feedback API foundations.
 10. `tests/integration/test_review_workflow_api.py` continues to prove the
     conversion and report evidence-pack API behavior while the event layer is
     active.
