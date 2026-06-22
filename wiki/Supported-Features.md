@@ -19,10 +19,12 @@ persistence/replay plus the first internal advisor queue, lifecycle, review,
 feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also
-exist, and `lotus-gateway` now publishes bounded read-only advisor queue and
-candidate detail routes, but they are not deployed scheduler daemon proof,
-live Core worker certification, Workbench proof, or supported-feature
-promotion. The AI explanation readiness diagnostic is an operator
+exist; the gate validates both manifest shape and source-safe check-only output
+shape. `lotus-gateway` now publishes bounded read-only advisor queue and
+candidate detail routes, but these foundations are not deployed scheduler
+daemon proof, live Core worker certification, Workbench proof, or
+supported-feature promotion. The AI explanation readiness diagnostic is an
+operator
 supportability check only; it does not invoke `lotus-ai`, certify durable AI
 lineage, prove model-risk dashboards, or promote AI explanation support. The
 downstream realization readiness diagnostic is an operator supportability

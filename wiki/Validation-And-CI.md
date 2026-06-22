@@ -11,6 +11,27 @@
    without that secret, the helper warns, skips auto-merge, and requires a
    human/release actor to rebase merge.
 
+## Gate Map
+
+| Lane | Main proof | What it protects |
+| --- | --- | --- |
+| Feature Lane | Fast lint, typecheck, unit, action lint | Branch feedback without write permissions |
+| PR Merge Gate | Integration, coverage, Docker, PostgreSQL, security | Merge readiness and runtime parity |
+| Main Releasability | Release evidence, SBOM, Docker, PostgreSQL | Post-merge truth on `main` |
+| Local contract gates | Makefile, docs, source safety, mesh, endpoint certification | Future-agent drift and unsupported claims |
+
+```mermaid
+flowchart LR
+    Local["Local contract gates"]
+    Feature["Feature Lane"]
+    PR["PR Merge Gate"]
+    Main["Main Releasability"]
+    Wiki["Wiki publication after merge"]
+
+    Local --> Feature --> PR --> Main --> Wiki
+    Local -->|"source-ingestion output contract"| PR
+```
+
 Repo-native validation commands:
 
 ```powershell
@@ -46,7 +67,7 @@ quality-scorecard truth, monetary precision guarding, no-sensitive-content evide
 OpenAPI quality, source-observability contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
-source-ingestion worker manifest validation,
+source-ingestion worker manifest and source-safe output-contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
@@ -97,8 +118,8 @@ Persistence adapter validation:
    item enforcement, and correlation propagation.
 6. `tests/unit/test_source_ingestion_worker.py` and
    `make source-ingestion-worker-check` prove the versioned run-once worker
-   manifest contract and product-safe check-only summary without calling Core
-   or writing repository state.
+   manifest contract plus source-safe check-only output contract without
+   calling Core or writing repository state.
 7. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact can be generated without starting
@@ -146,7 +167,7 @@ controls from the Makefile or GitHub lanes, including least-privilege workflow p
 verified immutable action SHA pins with version provenance, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, migration contract validation, migration execution dry-run
-validation, source-ingestion worker manifest validation, PostgreSQL runtime
+validation, source-ingestion worker manifest and output-contract validation, PostgreSQL runtime
 proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,

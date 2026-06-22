@@ -41,9 +41,10 @@ ignored by git unless an RFC explicitly promotes a specific evidence snapshot.
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
-migration contract validation, migration execution dry-run validation, source-ingestion worker
-manifest validation, implementation-proof readiness artifact generation,
-source-observability contract validation, PostgreSQL runtime proof, coverage,
+migration contract validation, migration execution dry-run validation,
+source-ingestion worker manifest and source-safe output-contract validation,
+implementation-proof readiness artifact generation, source-observability
+contract validation, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,

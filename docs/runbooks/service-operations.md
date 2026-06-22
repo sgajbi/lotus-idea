@@ -2,14 +2,16 @@
 
 ## Standard Commands
 
-- make lint
-- make typecheck
-- make ci
-- make postgres-integration-gate
-- make source-ingestion-worker-check
-- make implementation-proof-readiness-check
-- make runtime-trust-telemetry-preview-check
-- docker compose up --build
+| Command | Operator use |
+| --- | --- |
+| `make lint` | Fast local governance and contract gates. |
+| `make typecheck` | Static typing proof for service code. |
+| `make ci` | Broader CI-equivalent local suite. |
+| `make postgres-integration-gate` | Real PostgreSQL persistence/replay proof. |
+| `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
+| `make implementation-proof-readiness-check` | RFC-0002 aggregate proof-readiness evidence. |
+| `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
+| `docker compose up --build` | Local container entrypoint. |
 
 ## Health and Readiness
 
@@ -20,6 +22,20 @@
 
 ## Incident First Checks
 
+```mermaid
+flowchart TD
+    Alert["Operator signal or failed gate"]
+    Health["Check /health/ready and logs"]
+    Contract["Run repo-native contract gate"]
+    Runtime["Run runtime proof when persistence changed"]
+    Evidence["Capture source-safe evidence"]
+    Fix["Fix forward with tests and docs"]
+
+    Alert --> Health --> Contract
+    Contract --> Runtime
+    Runtime --> Evidence --> Fix
+```
+
 1. Check container logs for request failures and stack traces.
 2. Verify /health/ready and metrics endpoint.
 3. Run local parity check (`make ci`) before hotfix PR.
@@ -29,7 +45,8 @@
    API workflow persistence path and schema rollback/reapply recovery posture.
 5. For source-ingestion worker contract changes, run
    `make source-ingestion-worker-check`. This validates the versioned worker
-   manifest in check-only mode without calling Core or writing repository state.
+   manifest and the source-safe check-only output contract without calling Core
+   or writing repository state.
    Check-only and run-mode summaries must stay source-safe: manifest item
    indexes, decision counts, candidate ids when candidates are created, and
    idempotency-key presence are allowed, but raw source payloads, portfolio ids,

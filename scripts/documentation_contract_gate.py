@@ -196,6 +196,17 @@ POLISHED_SURFACES = (
         1,
     ),
     PolishedDocumentationSurface(
+        "docs/runbooks/service-operations.md",
+        (
+            "## Standard Commands",
+            "## Health and Readiness",
+            "## Incident First Checks",
+        ),
+        1,
+        0,
+        1,
+    ),
+    PolishedDocumentationSurface(
         "docs/operations/implementation-proof-readiness.md",
         (
             "## What It Proves",
@@ -238,6 +249,24 @@ POLISHED_SURFACES = (
         1,
         2,
         2,
+    ),
+    PolishedDocumentationSurface(
+        "wiki/Operations-Runbook.md",
+        (
+            "## Operator Map",
+            "## Current Operation Event Diagnostics",
+            "## API Certification Reference",
+        ),
+        1,
+        1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "wiki/Validation-And-CI.md",
+        ("## Gate Map",),
+        1,
+        1,
+        1,
     ),
 )
 

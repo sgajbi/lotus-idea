@@ -28,7 +28,8 @@ and it now includes a bounded run-once batch worker foundation with per-item
 idempotency, batch decision counts, and maximum item validation.
 `scripts/run_source_ingestion_worker.py` provides the versioned run-once worker
 CLI, and `make source-ingestion-worker-check` validates the manifest contract
-without calling Core or writing state. Check-only and run-mode summaries are
+and source-safe check-only output contract without calling Core or writing
+state. Check-only and run-mode summaries are
 source-safe: check-only reports manifest shape and item indexes, while run mode
 reports decision counts, candidate ids when candidates are created, and
 idempotency-key presence. Neither summary prints raw source payloads, portfolio
@@ -86,6 +87,29 @@ current `lotus-idea` workflow counts. It remains `not_certified` and `blocked`
 until downstream intake/materialization contracts, Gateway/Workbench product
 proof, runtime trust telemetry, and supported-feature evidence exist. It does
 not call downstream services or create downstream records.
+
+## Operator Map
+
+| Operating area | Current proof | Must not be inferred |
+| --- | --- | --- |
+| Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation | Deployed scheduler, live Core certification, or supported ingestion product |
+| Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
+| Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
+| Downstream realization | Readiness diagnostics over current workflow counts | Advise/Manage/Report/Render/Archive materialization |
+
+```mermaid
+flowchart LR
+    Checks["Repo-native checks"]
+    SourceGate["source-ingestion worker output contract"]
+    RuntimeProof["PostgreSQL runtime proof"]
+    Readiness["Readiness diagnostics"]
+    Promotion["Future supported-feature promotion"]
+
+    Checks --> SourceGate
+    Checks --> RuntimeProof
+    RuntimeProof --> Readiness
+    Readiness -. "blocked until live proof" .-> Promotion
+```
 
 Initial commands:
 

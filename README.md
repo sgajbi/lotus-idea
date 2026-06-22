@@ -190,7 +190,7 @@ docker compose up --build
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
 | `make migration-contract-gate` | Validate migration contract structure. |
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
-| `make source-ingestion-worker-check` | Validate the run-once source-ingestion manifest without calling Core. |
+| `make source-ingestion-worker-check` | Validate the run-once source-ingestion manifest and source-safe check-only output contract without calling Core. |
 | `make implementation-proof-readiness-check` | Generate source-safe RFC proof readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |

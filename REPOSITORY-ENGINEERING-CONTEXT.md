@@ -128,8 +128,9 @@ and `scripts/run_source_ingestion_worker.py` now add the versioned
 manifest-backed run-once worker entrypoint, product-safe check-only summary,
 and product-safe run summary that redact raw source payloads, portfolio ids,
 and raw idempotency keys. `make source-ingestion-worker-check` validates the
-example manifest in the local lint path so future agent changes cannot
-silently break the worker contract.
+example manifest and exact source-safe check-only output contract in the local
+lint path so future agent changes cannot silently break the worker contract or
+leak source-sensitive fields.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -620,7 +621,7 @@ owned by upstream services.
 22. data-mesh contract gate: `make data-mesh-contract-gate`
 23. migration contract gate: `make migration-contract-gate`
 24. migration execution dry-run gate: `make migration-execution-gate`
-25. run-once source-ingestion worker manifest gate:
+25. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
 26. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
@@ -648,7 +649,8 @@ guarding, no-sensitive-content evidence guarding, source-observability contract
 enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
-migration execution dry-run gate, source-ingestion worker manifest validation,
+migration execution dry-run gate, source-ingestion worker manifest and
+output-contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview artifact generation,
 unit tests, integration tests, e2e tests,
@@ -661,8 +663,8 @@ bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
-validation, no-sensitive-content evidence validation, source-observability
-contract validation, PostgreSQL runtime proof, coverage,
+and output-contract validation, no-sensitive-content evidence validation,
+source-observability contract validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded
 workflow timeouts, no `continue-on-error: true` in critical lanes,

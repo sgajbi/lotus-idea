@@ -80,6 +80,11 @@ Additional implemented source-adapter foundation:
    without calling Core or writing repository state, and both check-only and
    run mode emit product-safe summaries without source payloads, portfolio ids,
    raw idempotency keys, or supported-feature promotion.
+8. `scripts/source_ingestion_worker_contract_gate.py` and
+   `make source-ingestion-worker-check` now lock the check-only summary shape,
+   schema version, source authority, item indexes, and sensitive-field
+   exclusions so future worker changes cannot downgrade CI to manifest parsing
+   only.
 
 Not implemented yet:
 
@@ -142,4 +147,5 @@ Current source-ingestion orchestration validation:
    passed with `30 passed` after adding the manifest-backed worker CLI and CI
    gate coverage.
 4. `make source-ingestion-worker-check` passed, proving the example manifest
-   validates in check-only mode without Core or repository writes.
+   and source-safe check-only output contract validate without Core or
+   repository writes.
