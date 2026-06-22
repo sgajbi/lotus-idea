@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, certified API foundation, and governed downstream contract-plan gate only
+Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream adapter foundations, and governed downstream contract-plan gate
 
 ## Outcome
 
@@ -71,17 +71,24 @@ Implemented in this slice:
     source-authority drift, current-route claims, missing blockers, and
     premature route-existence, downstream-execution, or supported-feature
     claims.
-17. `src/app/application/downstream_realization_readiness.py` and
+17. `src/app/ports/downstream_realization.py` and
+    `src/app/infrastructure/downstream_realization.py` add source-safe HTTP
+    adapter foundations for Advise proposal intent and Manage action intent
+    handoff envelopes. They preserve downstream source authority, carry
+    bounded evidence and lifecycle fields, propagate correlation/trace
+    headers, and map downstream failures to product-safe reasons without
+    exposing raw downstream responses.
+18. `src/app/application/downstream_realization_readiness.py` and
     `GET /api/v1/downstream-realization/readiness` add a certified internal
     operator diagnostic over current conversion intent/outcome counts and
-    Advise/Manage realization blockers. The diagnostic also exposes planned
-    downstream contract-readiness records for the Advise proposal and Manage
-    action handoff seams, with owner repositories, planned target-route
-    posture, adapter status, evidence refs, and blockers. It requires both the
-    `operator` role and `idea.downstream-realization.readiness.read`
-    capability, emits `downstream_realization_readiness_read`, and keeps the
-    supportability posture `not_certified` until live downstream contract proof
-    exists.
+    Advise/Manage realization blockers. The diagnostic also exposes
+    adapter-foundation presence and planned downstream contract-readiness
+    records for the Advise proposal and Manage action handoff seams, with owner
+    repositories, planned target-route posture, adapter status, evidence refs,
+    and blockers. It requires both the `operator` role and
+    `idea.downstream-realization.readiness.read` capability, emits
+    `downstream_realization_readiness_read`, and keeps the supportability
+    posture `not_certified` until live downstream contract proof exists.
 
 ## Remaining Work
 
@@ -123,6 +130,7 @@ proof in the downstream repositories.
 4. No conversion path creates orders, client communications, or autonomous
    advice.
 
-The current implementation satisfies the internal domain governance and
-certified internal API foundation portions of this gate only. Cross-repository
-downstream realization remains planned.
+The current implementation satisfies the internal domain governance, certified
+internal API foundation, and source-safe adapter-foundation portions of this
+gate only. Cross-repository downstream realization remains planned until the
+owning services certify live contracts and acceptance proof.

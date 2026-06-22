@@ -76,8 +76,8 @@ First implementation program:
 6. extend the first bounded read-only Gateway publication into Workbench
    product surfaces only after live source adapters, durable state, and
    supportability proof exist,
-7. persist conversion intents/outcomes and add downstream adapter contracts only
-   after source ownership and idempotency guarantees are explicit,
+7. persist conversion intents/outcomes and harden downstream adapter contracts
+   only after source ownership and idempotency guarantees are explicit,
 8. realize Advise, Manage, Report, Render, Archive, and AI integration only
    where source-backed; current report evidence-pack support is request truth
    only and not downstream materialization,

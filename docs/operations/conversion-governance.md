@@ -29,7 +29,8 @@ report conversion intents. It does not create `lotus-report`, `lotus-render`, or
 
 Current non-supported scope:
 
-1. no downstream adapter is implemented,
+1. source-safe downstream adapter foundations exist, but no live downstream
+   contract is certified,
 2. no proposal, DPM action, downstream report package, rendered document, or
    archive record is created by `lotus-idea`,
 3. no conversion data product is certified,

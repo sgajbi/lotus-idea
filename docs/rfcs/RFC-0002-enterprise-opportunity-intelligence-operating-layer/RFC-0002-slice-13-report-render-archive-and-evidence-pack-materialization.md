@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Partially implemented - internal report evidence-pack request foundation and governed downstream contract-plan gate only
+Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream adapter foundation, and governed downstream contract-plan gate
 
 ## Outcome
 
@@ -51,6 +51,13 @@ Implemented in the first Slice 13 foundation:
    `make downstream-realization-contract-gate` keeps it planned,
    source-authority preserving, blocker-backed, and free of route-existence,
    downstream-execution, or supported-feature claims.
+9. `src/app/ports/downstream_realization.py` and
+   `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
+   adapter foundation for Report evidence-pack request handoff envelopes. The
+   envelope preserves Report/Render/Archive source authority, retention
+   posture, reason codes, and bounded source summaries, while omitting source
+   routes, raw source payloads, raw downstream responses, and client-ready
+   publication authority.
 
 Current endpoint behavior:
 
@@ -83,7 +90,8 @@ Partially satisfied:
 
 Not yet satisfied:
 
-1. No `lotus-report` package intake adapter or acceptance proof exists.
+1. No certified live `lotus-report` package intake contract or acceptance proof
+   exists.
 2. No dedicated `lotus-report` idea evidence-pack intake route or acceptance
    proof exists.
 3. No `lotus-render` deterministic output projection exists.
@@ -104,9 +112,10 @@ access-audit proof are implemented in the owning services.
 
 ## Boundary Decision
 
-This slice intentionally starts with `lotus-idea` source-owned request truth. It
-does not call downstream services yet because Report, Render, and Archive remain
-the authorities for package intake, deterministic rendering, archive records,
+This slice intentionally starts with `lotus-idea` source-owned request truth and
+a source-safe adapter foundation. Report, Render, and Archive remain the
+authorities for package intake, deterministic rendering, archive records,
 retention, legal hold, retrieval, and access audit. The next Slice 13 increment
-should add downstream adapter contracts only after the accepted request shape is
-stable and can be tested without moving downstream authority into `lotus-idea`.
+should certify a live downstream intake contract only after the owning service
+accepts the request shape and can test it without moving downstream authority
+into `lotus-idea`.

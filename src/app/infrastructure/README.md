@@ -10,4 +10,8 @@ Current adapters include:
    foundation. It is not certified live broker runtime until downstream
    consumers, platform mesh event contracts, Gateway/Workbench proof, and
    supported-feature evidence exist.
-3. `postgres_repository.py` for the opt-in durable repository path.
+3. `downstream_realization.py` for source-safe HTTP Advise, Manage, and Report
+   handoff adapter foundations. They are not live downstream realization proof
+   until owning repositories certify routes, acceptance behavior, and product
+   evidence.
+4. `postgres_repository.py` for the opt-in durable repository path.

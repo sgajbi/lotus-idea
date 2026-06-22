@@ -327,9 +327,9 @@ supported-feature promotion.
 operator diagnostic for downstream realization supportability. It requires the
 `operator` role and `idea.downstream-realization.readiness.read`, reports
 conversion intent, conversion outcome, and report evidence-pack request counts
-plus Advise, Manage, Report, Render, and Archive blockers and planned
-downstream contract-readiness records for Advise, Manage, and Report handoff
-seams from
+plus Advise, Manage, Report, Render, and Archive blockers, source-safe
+downstream adapter-foundation presence, and planned downstream
+contract-readiness records for Advise, Manage, and Report handoff seams from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
 `make downstream-realization-contract-gate` blocks premature route-existence,
 downstream-execution, supported-feature, and source-authority drift in that
@@ -417,13 +417,18 @@ events; idempotency-key validation at the domain command boundary; repository
 idempotency and snapshot lookup for conversion intents/outcomes; certified
 internal conversion intent/outcome APIs; and explicit no-authority semantics
 for execution, suitability, client communication, and downstream realization.
-`src/app/application/downstream_realization_readiness.py` adds the operator
-readiness diagnostic over current conversion intent/outcome/report evidence
-request counts and explicit downstream blockers. This is not yet a supported
-conversion product: PostgreSQL-backed internal
-conversion intent/outcome recording proof exists only inside the opt-in runtime
-proof; there are no downstream adapters, Gateway/Workbench proof,
-Advise/Manage/Report acceptance tests, data-product certification, runtime
+`src/app/ports/downstream_realization.py` and
+`src/app/infrastructure/downstream_realization.py` add source-safe HTTP adapter
+foundations for Advise proposal intent, Manage action intent, and Report
+evidence-pack materialization request handoff envelopes. The adapters preserve
+target source authority, omit source routes and raw downstream responses, and
+map failures to bounded product-safe reasons. The operator readiness diagnostic
+reports adapter-foundation presence, current conversion intent/outcome/report
+evidence request counts, and explicit downstream blockers. This is not yet a
+supported conversion product: PostgreSQL-backed internal conversion
+intent/outcome recording proof exists only inside the opt-in runtime proof;
+there is no certified live Advise/Manage/Report route contract, downstream
+acceptance proof, Gateway/Workbench proof, data-product certification, runtime
 trust telemetry, or supported-feature promotion.
 
 RFC-0002 Slice 13 is partially implemented as an internal report evidence-pack
@@ -434,7 +439,7 @@ policy references, idempotent repository persistence, safe audit events, and a
 certified internal API for report evidence-pack requests. This is not yet a
 supported report evidence product: PostgreSQL-backed internal request recording
 proof exists only inside the opt-in runtime proof; there is no `lotus-report`
-package intake adapter, no `lotus-render` deterministic output, no
+certified live `lotus-report` package intake proof, no `lotus-render` deterministic output, no
 `lotus-archive` metadata or access-audit record, no client-ready publication
 authority, no Gateway/Workbench proof, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.
@@ -558,9 +563,9 @@ logs; fix or document the owned warning source instead.
     intents and persists source-provenanced request packages without downstream
     Report/Render/Archive realization. Downstream-realization-readiness
     orchestration reports conversion intent/outcome/report evidence-pack request
-    counts, planned Advise/Manage/Report handoff contract posture, and
-    downstream blockers without calling downstream systems or claiming route
-    existence in owning services.
+    counts, source-safe adapter-foundation presence, planned Advise/Manage/Report
+    handoff contract posture, and downstream blockers without calling downstream
+    systems or claiming route existence in owning services.
     Source-ingestion-readiness orchestration
     reports manifest, Core base URL, durable repository configuration, and
     certification blockers for the high-cash run-once worker without executing
@@ -583,9 +588,11 @@ logs; fix or document the owned warning source instead.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
    current Core adapter preserves source-data product refs and requires Core to
    report cash weight explicitly rather than deriving it locally. The layer also
-   contains migration execution helpers, PostgreSQL codec helpers, and
-   `PostgresIdeaRepository`, which is tested as a durable repository adapter and
-   selected by API runtime wiring when `LOTUS_IDEA_DATABASE_URL` is configured.
+   contains source-safe downstream realization adapter foundations for
+   Advise/Manage/Report handoff envelopes, migration execution helpers,
+   PostgreSQL codec helpers, and `PostgresIdeaRepository`, which is tested as a
+   durable repository adapter and selected by API runtime wiring when
+   `LOTUS_IDEA_DATABASE_URL` is configured.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
    diagnostics, bounded idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement
