@@ -90,6 +90,16 @@ $env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high
 $env:LOTUS_CORE_BASE_URL = "http://localhost:8100"
 ```
 
+Core response requirement:
+
+- The high-cash adapter consumes Core `HoldingsAsOf:v1`
+  `totals.source_reported_cash_weight` when
+  `totals.source_reported_cash_weight_supportability` is `SUPPORTED`.
+- If Core omits the field or reports `BLOCKED_MISSING_DENOMINATOR`,
+  `BLOCKED_ZERO_DENOMINATOR`, or `BLOCKED_STALE_DENOMINATOR`, the source
+  evaluation remains blocked. `lotus-idea` must not reconstruct cash weight
+  from cash totals, market value, or AUM.
+
 ## Evidence
 
 Implementation-backed evidence:

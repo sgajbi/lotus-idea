@@ -53,9 +53,11 @@ Implemented first-wave internal scope:
    Created high-cash candidates are persisted with deterministic idempotency
    payloads, matching requests replay, changed payloads conflict, and blocked,
    suppressed, or not-eligible evaluations remain non-mutating.
-7. The same orchestration shape exists for the Core source-port flow, but it
-   still does not promote live source support while Core cash-weight authority
-   remains governed by `sgajbi/lotus-core#430`.
+7. The same orchestration shape exists for the Core source-port flow. Core
+   cash-weight authority is now implemented in Core PR #431 and consumed by
+   the `lotus-idea` adapter from `totals.source_reported_cash_weight`, but this
+   still does not promote live source support until live Core integration proof
+   is captured and merged.
 8. `src/app/application/source_ingestion.py` now adds an internal
    high-cash source-ingestion orchestration wrapper over the Core source port
    and repository port. It generates source-ingestion idempotency keys, maps

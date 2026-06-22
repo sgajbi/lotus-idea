@@ -105,13 +105,15 @@ high-cash / idle-liquidity evidence. The application can orchestrate through a
 `PortfolioStateSnapshot:v1`, `HoldingsAsOf:v1`,
 `PortfolioCashMovementSummary:v1`, and `PortfolioCashflowProjection:v1` routes.
 
-The adapter is intentionally conservative. It consumes a Core source-reported
-cash-weight value when present, but it does not reconstruct that value from
-cash totals, invested market value, or portfolio totals. Until Core publishes
-that field and live proof is captured, source-backed high-cash evaluation can
-only return blocked or caller-supplied foundation posture.
-The upstream Core source-contract dependency is tracked in
-`sgajbi/lotus-core#430`.
+The adapter is intentionally conservative. It consumes Core's
+`HoldingsAsOf:v1` cash-weight value from
+`totals.source_reported_cash_weight` when Core reports supported
+cash-weight posture, but it does not reconstruct that value from cash totals,
+invested market value, or portfolio totals. If Core omits the value or reports
+blocked denominator supportability, high-cash evaluation remains blocked.
+Core's source-contract dependency was closed in `sgajbi/lotus-core#430`; live
+Core proof is still required before source-ingestion support or product claims
+can be promoted.
 
 ## Conversion Boundaries
 

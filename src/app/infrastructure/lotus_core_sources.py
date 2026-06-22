@@ -90,17 +90,43 @@ class LotusCoreHighCashSourceAdapter:
 
 
 def _source_reported_cash_weight(payload: dict[str, Any]) -> Decimal | None:
-    for key in (
-        "source_reported_cash_weight",
-        "sourceReportedCashWeight",
-        "cash_weight",
-        "cashWeight",
-    ):
-        if key in payload:
+    for cash_weight_payload in _cash_weight_payloads(payload):
+        supportability = _cash_weight_supportability(cash_weight_payload)
+        if supportability is not None and supportability != "SUPPORTED":
+            return None
+        for key in (
+            "source_reported_cash_weight",
+            "sourceReportedCashWeight",
+            "cash_weight",
+            "cashWeight",
+        ):
+            if key not in cash_weight_payload:
+                continue
             try:
-                return Decimal(str(payload[key]))
+                value = cash_weight_payload[key]
+                return Decimal(str(value)) if value is not None else None
             except InvalidOperation as exc:
                 raise CoreSourceUnavailable(code="core_cash_weight_malformed") from exc
+    return None
+
+
+def _cash_weight_payloads(payload: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    totals = payload.get("totals")
+    if isinstance(totals, dict):
+        return (payload, totals)
+    return (payload,)
+
+
+def _cash_weight_supportability(payload: dict[str, Any]) -> str | None:
+    for key in (
+        "source_reported_cash_weight_supportability",
+        "sourceReportedCashWeightSupportability",
+        "cash_weight_supportability",
+        "cashWeightSupportability",
+    ):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().upper()
     return None
 
 

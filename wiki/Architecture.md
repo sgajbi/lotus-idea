@@ -117,10 +117,10 @@ RFC-0002 Slice 05 now includes the first Core source-port foundation.
 `src/app/application/high_cash_signal.py` orchestrates evaluation through that
 port, and `src/app/infrastructure/lotus_core_sources.py` provides a
 conservative HTTP adapter over Core source-data product routes. The adapter
-preserves Core source refs and does not infer cash weight from cash totals or
-portfolio market values. Positive high-cash generation from live Core remains
-blocked until Core reports an explicit source-owned cash-weight field and live
-integration proof exists.
+preserves Core source refs, consumes `totals.source_reported_cash_weight` only
+when Core reports supported cash-weight posture, and does not infer cash weight
+from cash totals or portfolio market values. Positive high-cash generation from
+live Core remains blocked until live integration proof exists.
 
 ## Certified API Foundation
 

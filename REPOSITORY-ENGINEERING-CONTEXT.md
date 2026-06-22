@@ -116,9 +116,11 @@ cases. `src/app/ports/core_sources.py`,
 `src/app/infrastructure/lotus_core_sources.py` now define a Core high-cash
 evidence port, source-backed application orchestration, and a conservative HTTP
 adapter over the declared Core source products. The adapter preserves source
-refs and fails closed when Core omits a source-reported cash-weight field; it
-does not calculate cash weight from cash totals or market values. This remains
-internal source-adapter foundation behavior. `src/app/application/source_ingestion.py`
+refs, consumes Core's `HoldingsAsOf:v1` cash-weight value from
+`totals.source_reported_cash_weight`, fails closed when Core omits the value or
+reports blocked cash-weight supportability, and does not calculate cash weight
+from cash totals or market values. This remains internal source-adapter
+foundation behavior. `src/app/application/source_ingestion.py`
 now adds an internal high-cash source-ingestion orchestration wrapper over the
 Core source port and repository port, including generated source-ingestion
 idempotency keys, a bounded run-once batch worker foundation, batch decision
@@ -139,11 +141,11 @@ blockers without calling Core or leaking source payloads. There is still no
 operator action for the same bounded source-ingestion batch foundation. It
 requires `idea.source-ingestion.run`, blocks before mutation unless durable
 repository, manifest, and Core configuration are present, and returns aggregate
-decision counts only. There is still no live Core integration proof, scheduled
-daemon/deploy source-ingestion worker, Workbench proof, data-product
-certification, or supported-feature promotion yet.
-The upstream Core cash-weight contract dependency is tracked in
-`sgajbi/lotus-core#430`.
+decision counts only. The upstream Core cash-weight contract dependency from
+`sgajbi/lotus-core#430` is closed in Core PR #431, and `lotus-idea` issue #22
+now tracks this adapter-consumption slice. There is still no live Core
+integration proof, scheduled daemon/deploy source-ingestion worker, Workbench
+proof, data-product certification, or supported-feature promotion yet.
 
 RFC-0002 Slice 06 is partially implemented as an internal persistence
 foundation in `src/app/domain/persistence.py`. The repository now has immutable
