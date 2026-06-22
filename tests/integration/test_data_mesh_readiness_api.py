@@ -36,7 +36,7 @@ def test_data_mesh_readiness_api_returns_not_certified_operator_posture() -> Non
     assert payload["blockers"] == [
         "data_mesh_not_certified",
         "producer_products_not_active",
-        "runtime_trust_telemetry_blocked",
+        "certified_runtime_trust_telemetry_missing",
     ]
     assert payload["runtimeTelemetryBacked"] is False
     assert payload["platformCertified"] is False

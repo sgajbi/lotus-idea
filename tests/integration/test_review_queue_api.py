@@ -308,7 +308,7 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
             "platform_caller_context_entitlement_proof_missing",
             "workbench_product_proof_missing",
             "data_product_certification_missing",
-            "runtime_trust_telemetry_missing",
+            "certified_runtime_trust_telemetry_missing",
         ],
         "supportedFeaturePromoted": False,
     }

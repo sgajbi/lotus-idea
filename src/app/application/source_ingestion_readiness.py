@@ -74,7 +74,7 @@ def build_source_ingestion_readiness_snapshot(
         certification_blockers=(
             "live_core_source_proof_missing",
             "scheduled_worker_deploy_proof_missing",
-            "data_mesh_runtime_telemetry_missing",
+            "data_mesh_runtime_telemetry_not_certified",
             "gateway_workbench_proof_missing",
         ),
         supported_feature_promoted=False,

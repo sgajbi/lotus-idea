@@ -459,7 +459,7 @@ ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
                             "platform_caller_context_entitlement_proof_missing",
                             "workbench_product_proof_missing",
                             "data_product_certification_missing",
-                            "runtime_trust_telemetry_missing",
+                            "certified_runtime_trust_telemetry_missing",
                         ],
                         "supportedFeaturePromoted": False,
                     }

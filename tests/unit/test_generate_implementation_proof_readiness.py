@@ -31,6 +31,7 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
         "advisor-review-queue",
         "ai-explanation",
         "data-mesh-certification",
+        "runtime-trust-telemetry-preview",
         "workbench-product-proof",
         "downstream-realization",
         "supported-feature-promotion",

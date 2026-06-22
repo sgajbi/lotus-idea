@@ -15,6 +15,7 @@ from app.api.implementation_proof_readiness import register_implementation_proof
 from app.api.report_evidence import register_report_evidence_routes
 from app.api.review_queues import register_review_queue_routes
 from app.api.review_workflow import register_review_workflow_routes
+from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_routes
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.errors import problem_response
 from app.middleware.correlation import CorrelationIdMiddleware
@@ -37,6 +38,7 @@ register_conversion_governance_routes(app)
 register_report_evidence_routes(app)
 register_downstream_realization_readiness_routes(app)
 register_data_mesh_readiness_routes(app)
+register_runtime_trust_telemetry_routes(app)
 register_source_ingestion_readiness_routes(app)
 register_implementation_proof_readiness_routes(app)
 Instrumentator().instrument(app).expose(app, include_in_schema=False)

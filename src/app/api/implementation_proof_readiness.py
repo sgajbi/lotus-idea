@@ -215,9 +215,10 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
         "Returns an aggregate, source-safe operator readiness snapshot for RFC-0002 "
         "implementation proof. The endpoint summarizes existing internal foundations "
         "and remaining blockers for source ingestion, review queue, AI explanation, "
-        "data mesh, Workbench realization, downstream realization, and supported-feature "
-        "promotion. It does not expose candidate identifiers, source payloads, Workbench "
-        "proof, data-product certification, client-ready publication, or a supported feature."
+        "data mesh, runtime trust telemetry preview, Workbench realization, downstream "
+        "realization, and supported-feature promotion. It does not expose candidate "
+        "identifiers, source payloads, Workbench proof, data-product certification, "
+        "client-ready publication, or a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ImplementationProofReadinessResponse,
@@ -233,9 +234,9 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
                         "readinessStatus": "blocked",
                         "supportabilityStatus": "not_certified",
                         "certificationReady": False,
-                        "capabilityCount": 7,
+                        "capabilityCount": 8,
                         "certificationReadyCapabilityCount": 0,
-                        "blockedCapabilityCount": 7,
+                        "blockedCapabilityCount": 8,
                         "supportedFeatureCount": 0,
                         "supportedFeaturesPromoted": False,
                         "overallBlockers": [
