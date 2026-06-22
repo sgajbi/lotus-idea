@@ -14,8 +14,9 @@ from app.observability import (
     configure_logging,
     emit_foundation_operation_event,
     emit_operation_event,
-    log_event,
+    emit_request_diagnostic_event,
 )
+from app.observability.logging import log_event
 
 
 def test_configure_logging_sets_product_safe_message_format() -> None:
@@ -33,6 +34,36 @@ def test_log_event_emits_structured_json(caplog: LogCaptureFixture) -> None:
         "service": "lotus-idea",
         "status": "ok",
     }
+
+
+def test_request_diagnostic_event_logs_route_template_only(caplog: LogCaptureFixture) -> None:
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        emit_request_diagnostic_event(
+            "request.http_error",
+            route="/api/v1/idea-candidates/{candidateId}",
+            method="GET",
+            status_code=404,
+        )
+
+    payload = json.loads(caplog.records[-1].message)
+    assert payload == {
+        "event": "request.http_error",
+        "method": "GET",
+        "route": "/api/v1/idea-candidates/{candidateId}",
+        "service": "lotus-idea",
+        "status_code": 404,
+    }
+
+
+def test_request_diagnostic_event_rejects_raw_or_unknown_diagnostics() -> None:
+    with pytest.raises(ValueError, match="unsupported request diagnostic event"):
+        emit_request_diagnostic_event("request.raw", route="/health", method="GET")
+    with pytest.raises(ValueError, match="route must be a route template"):
+        emit_request_diagnostic_event(
+            "request.http_error",
+            route="/api/v1/idea-candidates/abc?debug=true",
+            method="GET",
+        )
 
 
 def test_operation_event_metric_labels_are_bounded_and_product_safe() -> None:

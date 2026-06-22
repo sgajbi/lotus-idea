@@ -21,36 +21,45 @@ foundation:
 4. `OperationEvent` rejects sensitive attributes such as client, portfolio,
    account, holding, transaction, request body, response body, raw entitlement
    failure, trace id, and correlation id fields.
-5. `src/app/api/conversion_governance.py` emits bounded operation events for
+5. `src/app/observability/logging.py` also exposes a bounded request diagnostic
+   helper for validation, HTTP, and unhandled-error events. `src/app/main.py`
+   uses route templates rather than raw URL paths for those diagnostics.
+6. `scripts/source_observability_contract_gate.py` and
+   `make source-observability-contract-gate` block raw `print()`, direct Python
+   logging, and low-level `log_event` bypasses in application source.
+7. `src/app/api/conversion_governance.py` emits bounded operation events for
    conversion-intent and conversion-outcome accepted, replayed, conflict,
    not-found, permission-denied, invalid-request, and invalid-state outcomes.
-6. `src/app/api/report_evidence.py` emits bounded operation events for report
+8. `src/app/api/report_evidence.py` emits bounded operation events for report
    evidence-pack request accepted, replayed, conflict, not-found,
    permission-denied, invalid-request, and invalid-state outcomes.
-7. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
+9. `src/app/api/idea_signals.py`, `src/app/api/candidate_lifecycle.py`,
    `src/app/api/candidate_evidence_replay.py`,
    `src/app/api/ai_governance.py`, `src/app/api/review_queues.py`, and
    `src/app/api/review_workflow.py` emit bounded operation events for
    high-cash evaluation, candidate persistence, lifecycle transitions,
    candidate evidence replay, AI explanation fallback/verifier evaluation,
    advisor queue reads, review actions, and feedback.
-8. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
-   attribute and metric-label contract.
-9. `tests/integration/test_api_operation_events.py` proves the operation-event
+10. `tests/unit/test_observability_logging.py` locks the no-sensitive operation
+   attribute, metric-label, and route-template request diagnostic contract.
+11. `tests/unit/test_source_observability_contract_gate.py` covers the current
+    pass behavior and failure cases for raw prints, direct logging imports,
+    direct logging calls, and low-level `log_event` bypasses.
+12. `tests/integration/test_api_operation_events.py` proves the operation-event
    coverage for the certified internal high-cash, candidate persistence,
    lifecycle, candidate evidence replay, AI explanation, queue, review,
    feedback, conversion, and report evidence-pack API foundations.
-10. `tests/integration/test_review_workflow_api.py` continues to prove the
+13. `tests/integration/test_review_workflow_api.py` continues to prove the
     conversion and report evidence-pack API behavior while the event layer is
     active.
-11. `src/app/application/source_ingestion_readiness.py` adds a source-safe
+14. `src/app/application/source_ingestion_readiness.py` adds a source-safe
     readiness snapshot for the high-cash Core source-ingestion run-once worker
     configuration and certification blockers.
-12. `GET /api/v1/source-ingestion/readiness` exposes that snapshot to
+15. `GET /api/v1/source-ingestion/readiness` exposes that snapshot to
     operators with `idea.source-ingestion.readiness.read`, returns
     `not_certified` posture, and emits bounded
     `source_ingestion_readiness_read` operation events.
-13. `tests/unit/test_source_ingestion_readiness.py` and
+16. `tests/unit/test_source_ingestion_readiness.py` and
     `tests/integration/test_source_ingestion_readiness_api.py` prove blocked,
     configured, permission-denied, relative-manifest, and operation-event
     behavior without calling Core or writing repository state.

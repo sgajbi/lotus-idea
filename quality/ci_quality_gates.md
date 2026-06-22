@@ -14,18 +14,19 @@ Blocking scaffold commands:
 5. `make quality-scorecard-gate`
 6. `make monetary-float-guard`
 7. `make no-sensitive-content-guard`
-8. `make implementation-truth-gate`
-9. `make data-mesh-contract-gate`
-10. `make migration-contract-gate`
-11. `make migration-execution-gate`
-12. `make source-ingestion-worker-check`
-13. `make supported-features-gate`
-14. `make endpoint-certification-gate`
-15. `make postgres-integration-gate`
-16. `make openapi-gate`
-17. `make coverage-gate`
-18. `make security-audit`
-19. `make docker-build`
+8. `make source-observability-contract-gate`
+9. `make implementation-truth-gate`
+10. `make data-mesh-contract-gate`
+11. `make migration-contract-gate`
+12. `make migration-execution-gate`
+13. `make source-ingestion-worker-check`
+14. `make supported-features-gate`
+15. `make endpoint-certification-gate`
+16. `make postgres-integration-gate`
+17. `make openapi-gate`
+18. `make coverage-gate`
+19. `make security-audit`
+20. `make docker-build`
 
 Report-only scaffold commands:
 
@@ -40,10 +41,10 @@ the Makefile and GitHub workflow lanes still include architecture boundaries, ma
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
 migration contract validation, migration execution dry-run validation, source-ingestion worker
-manifest validation, PostgreSQL runtime proof, coverage, security audit, Docker build, release
-evidence, least-privilege workflow permissions, bounded job timeouts, no soft-failed critical jobs,
-implementation-truth enforcement, non-suppressed auto-merge dispatch posture, and approved
-action-runtime majors.
+manifest validation, source-observability contract validation, PostgreSQL runtime proof, coverage,
+security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
+timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
+auto-merge dispatch posture, and approved action-runtime majors.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also
@@ -71,6 +72,11 @@ production readiness, external support, certification, live source ingestion, Ga
 support, or client-ready publication while `supported-features/supported-features.json` has no
 implemented features. It prevents agent-written README/wiki/operations text from outpacing code,
 endpoint certification, data-mesh proof, and supported-feature evidence.
+
+`make source-observability-contract-gate` blocks ad hoc application logging in `src/app`. Feature
+code must use bounded operation-event emitters or the central request diagnostic helper instead of
+raw `print()`, direct Python logging, or low-level `log_event` calls. Request diagnostics log route
+templates rather than raw URL paths, keeping operator evidence product-safe.
 
 `make endpoint-certification-gate` blocks weak API certification. It requires every public OpenAPI
 operation to have a ledger entry; validates required evidence fields, valid JSON examples,

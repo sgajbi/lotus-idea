@@ -14,7 +14,7 @@ from app.api.review_workflow import register_review_workflow_routes
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.errors import problem_response
 from app.middleware.correlation import CorrelationIdMiddleware
-from app.observability import configure_logging, log_event
+from app.observability import configure_logging, emit_request_diagnostic_event
 
 SERVICE_NAME = "lotus-idea"
 SERVICE_VERSION = "0.1.0"
@@ -37,12 +37,17 @@ Instrumentator().instrument(app).expose(app, include_in_schema=False)
 configure_logging()
 
 
+def _route_template(request: Request) -> str:
+    route = request.scope.get("route")
+    path = getattr(route, "path", None)
+    return path if isinstance(path, str) and path.startswith("/") else "/unknown"
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> Response:
-    log_event(
+    emit_request_diagnostic_event(
         "request.validation_failed",
-        service=SERVICE_NAME,
-        path=str(request.url.path),
+        route=_route_template(request),
         method=request.method,
         error_category="validation",
     )
@@ -56,10 +61,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
-    log_event(
+    emit_request_diagnostic_event(
         "request.http_error",
-        service=SERVICE_NAME,
-        path=str(request.url.path),
+        route=_route_template(request),
         method=request.method,
         status_code=exc.status_code,
     )
@@ -73,11 +77,10 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> Respon
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> Response:
-    log_event(
+    emit_request_diagnostic_event(
         "request.unhandled_error",
-        service=SERVICE_NAME,
         level="ERROR",
-        path=str(request.url.path),
+        route=_route_template(request),
         method=request.method,
         error_category=exc.__class__.__name__,
     )
