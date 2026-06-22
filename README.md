@@ -189,9 +189,9 @@ docker compose up --build
 | `make install` | Create `.venv` and install runtime plus dev dependencies. |
 | `make lint` | Run formatting, linting, and fast governance gates. |
 | `make typecheck` | Run `mypy` over the service. |
-| `make test-unit` | Run unit tests. |
-| `make test-integration` | Run integration tests. |
-| `make test-e2e` | Run e2e tests. |
+| `make test-unit` | Run unit tests; override `UNIT_TESTS` for a focused path. |
+| `make test-integration` | Run integration tests; override `INTEGRATION_TESTS` for a focused path. |
+| `make test-e2e` | Run e2e tests; override `E2E_TESTS` for a focused path. |
 | `make openapi-gate` | Validate OpenAPI quality. |
 | `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
