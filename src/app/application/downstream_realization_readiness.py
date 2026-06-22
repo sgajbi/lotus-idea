@@ -127,6 +127,7 @@ def build_downstream_realization_readiness_snapshot(
             "downstream_realization_orchestration": (
                 "src/app/application/downstream_realization.py"
             ),
+            "downstream_realization_api": "src/app/api/downstream_realization.py",
             "downstream_adapter_port": "src/app/ports/downstream_realization.py",
             "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
             "downstream_contract_plan": (
@@ -175,6 +176,7 @@ def _advise_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
         "lotus-advise",
         evidence_refs=(
             "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+            "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
             "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
             "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
         ),
@@ -192,6 +194,7 @@ def _manage_conversion_capability() -> DownstreamRealizationCapabilityReadiness:
         "lotus-manage",
         evidence_refs=(
             "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+            "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
             "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
             "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
         ),
@@ -209,6 +212,7 @@ def _report_render_archive_capability() -> DownstreamRealizationCapabilityReadin
         "lotus-report",
         evidence_refs=(
             "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+            "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
             "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
             "lotus-render",
             "lotus-archive",

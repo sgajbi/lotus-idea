@@ -27,14 +27,17 @@ REQUIRED_CONTRACTS = {
 REQUIRED_EVIDENCE_REFS = {
     "lotus-idea-to-lotus-advise-proposal-intake:v1": {
         "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
         "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
     },
     "lotus-idea-to-lotus-manage-action-intake:v1": {
         "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
         "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
     },
     "lotus-idea-to-lotus-report-evidence-pack-intake:v1": {
         "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
         "lotus-render",
         "lotus-archive",
     },
@@ -97,6 +100,7 @@ def _validate_source_of_truth(
         "readiness_builder",
         "contract_loader",
         "downstream_realization_orchestration",
+        "downstream_realization_api",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
         "contract_gate",

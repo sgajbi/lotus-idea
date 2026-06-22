@@ -85,6 +85,14 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         if capability.capability_id == "downstream-realization"
     )
     assert "GET /api/v1/downstream-realization/readiness" in downstream.evidence_refs
+    assert (
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"
+        in downstream.evidence_refs
+    )
+    assert (
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
+        in downstream.evidence_refs
+    )
     assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
     serialized = repr(snapshot)
     assert "portfolio_id" not in serialized
