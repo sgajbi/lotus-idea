@@ -68,9 +68,9 @@ def test_request_diagnostic_event_rejects_raw_or_unknown_diagnostics() -> None:
 
 def test_operation_event_metric_labels_are_bounded_and_product_safe() -> None:
     event = OperationEvent(
-        operation=IdeaOperation.SOURCE_INGESTION_READINESS_READ,
+        operation=IdeaOperation.IMPLEMENTATION_PROOF_READINESS_READ,
         outcome=OperationOutcome.BLOCKED,
-        source_authority="lotus-core",
+        source_authority="lotus-idea",
         supportability_status=OperationSupportability.NOT_CERTIFIED,
     )
 
@@ -78,10 +78,10 @@ def test_operation_event_metric_labels_are_bounded_and_product_safe() -> None:
 
     assert tuple(labels) == OPERATION_METRIC_LABELS
     assert labels == {
-        "operation": "source_ingestion_readiness_read",
+        "operation": "implementation_proof_readiness_read",
         "outcome": "blocked",
         "supportability_status": "not_certified",
-        "source_authority": "lotus-core",
+        "source_authority": "lotus-idea",
         "durable_storage_backed": "false",
         "supported_feature_promoted": "false",
     }
