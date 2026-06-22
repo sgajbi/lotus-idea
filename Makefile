@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard data-mesh-contract-gate migration-contract-gate migration-execution-gate migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate monetary-float-guard no-sensitive-content-guard implementation-truth-gate data-mesh-contract-gate migration-contract-gate migration-execution-gate migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -19,6 +19,7 @@ lint:
 	$(MAKE) ci-contract-gate
 	$(MAKE) monetary-float-guard
 	$(MAKE) no-sensitive-content-guard
+	$(MAKE) implementation-truth-gate
 	$(MAKE) data-mesh-contract-gate
 	$(MAKE) migration-contract-gate
 	$(MAKE) migration-execution-gate
@@ -33,6 +34,9 @@ monetary-float-guard:
 
 no-sensitive-content-guard:
 	$(VENV_PYTHON) scripts/no_sensitive_content_guard.py
+
+implementation-truth-gate:
+	$(VENV_PYTHON) scripts/implementation_truth_gate.py
 
 data-mesh-contract-gate:
 	$(VENV_PYTHON) scripts/data_mesh_contract_gate.py

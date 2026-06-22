@@ -72,5 +72,5 @@ fields. Do not add identifiers or payload fragments to operation labels.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production
-recovery readiness, Gateway/Workbench route, downstream Report/Render/Archive realization, or
+recovery readiness, Gateway/Workbench route, downstream Report/Render/Archive realization, or any
 supported business feature.

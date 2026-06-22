@@ -181,6 +181,7 @@ source-authority contracts only, not runtime certification.
 make install
 make lint
 make ci-contract-gate
+make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
@@ -242,8 +243,8 @@ make postgres-integration-gate
 
 Repository-backed endpoints report `durableStorageBacked=true` only in this
 configured posture. This does not promote data-product certification,
-Gateway/Workbench support, live source ingestion, downstream realization, or a
-supported business feature.
+Gateway/Workbench support, live source ingestion, downstream realization, or
+any supported business feature.
 
 ## Docker
 
@@ -260,6 +261,11 @@ Day-one governing standard:
 `lotus-idea` must treat this as an active delivery contract from the first
 commit: supported claims require code, tests, CI, endpoint certification,
 security/dependency posture, documentation, wiki source, and operating evidence.
+`make implementation-truth-gate` blocks unqualified current-state README,
+operations, quality, and wiki claims that imply demo readiness, production
+support, certification, live source ingestion, Gateway/Workbench support, or
+client-ready publication while the supported-feature registry remains
+foundation-only.
 Rebase auto-merge is allowed only with `LOTUS_AUTOMERGE_TOKEN` plus merged-PR
 Main Releasability dispatch so post-merge release evidence is produced on
 `main` by a non-suppressed merge actor. GitHub workflow jobs must declare

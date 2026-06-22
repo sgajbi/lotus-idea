@@ -31,7 +31,7 @@ Planned capabilities:
 7. AI-assisted explanation through `lotus-ai`,
 8. advisory and manage conversion intents,
 9. reportable idea evidence,
-10. demo-ready opportunity journeys.
+10. any demo-ready opportunity journeys before full validation.
 
 Promotion rule: a capability is supported only after implementation, tests,
 endpoint certification, supported-feature registration, docs/wiki updates, and
