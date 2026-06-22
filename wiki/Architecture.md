@@ -104,8 +104,10 @@ feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service, including schema apply, provider reload,
 idempotency replay from database state, internal source-ingestion
 replay/conflict recovery, backing table validation, and schema rollback/reapply
-recovery. Production storage readiness still requires deploy migration evidence
-and scheduled/live source-worker evidence.
+recovery. The application layer also has a bounded run-once source-ingestion
+batch worker foundation. Production storage readiness still requires deploy
+migration evidence, scheduled daemon/deploy worker evidence, and live Core
+source-worker evidence.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -160,7 +162,8 @@ is process-local by default and PostgreSQL-backed only when
 `LOTUS_IDEA_DATABASE_URL` is configured. The real PostgreSQL runtime proof now
 covers high-cash evaluate-and-persist replay plus the first internal advisor
 queue, review, feedback, conversion, report evidence-pack workflow path, and
-internal source-ingestion replay/conflict recovery.
+internal source-ingestion replay/conflict recovery. Unit tests also prove the
+bounded run-once source-ingestion batch worker foundation.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

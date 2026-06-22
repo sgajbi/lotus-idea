@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from app.application.source_ingestion import (
     HighCashSourceIngestionDecision,
+    HighCashSourceIngestionWorkItem,
     IngestHighCashSourceSignalCommand,
+    RunHighCashSourceIngestionBatchCommand,
     default_high_cash_source_ingestion_key,
     ingest_high_cash_signal_from_core,
+    run_high_cash_source_ingestion_batch,
 )
 from app.domain import (
     CandidatePersistenceDecision,
@@ -146,6 +150,75 @@ def test_replays_same_source_ingestion_payload_without_duplicate_candidate() -> 
     assert len(repository.snapshot().candidate_records) == 1
 
 
+def test_run_once_batch_ingests_and_replays_duplicate_work_items() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(evidence=core_evidence())
+
+    result = run_high_cash_source_ingestion_batch(
+        RunHighCashSourceIngestionBatchCommand(
+            work_items=(
+                HighCashSourceIngestionWorkItem(
+                    portfolio_id=PORTFOLIO_ID,
+                    as_of_date=AS_OF_DATE,
+                ),
+                HighCashSourceIngestionWorkItem(
+                    portfolio_id=PORTFOLIO_ID,
+                    as_of_date=AS_OF_DATE,
+                ),
+            ),
+            evaluated_at_utc=EVALUATED_AT,
+            correlation_id="corr-source-worker",
+            trace_id="trace-source-worker",
+        ),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.total_count == 2
+    assert result.count(HighCashSourceIngestionDecision.ACCEPTED) == 1
+    assert result.count(HighCashSourceIngestionDecision.REPLAYED) == 1
+    assert result.decision_counts()["accepted"] == 1
+    assert result.decision_counts()["replayed"] == 1
+    assert result.item_results[0].idempotency_key == result.item_results[1].idempotency_key
+    assert len(repository.snapshot().candidate_records) == 1
+    assert source.seen_request is not None
+    assert source.seen_request.correlation_id == "corr-source-worker"
+    assert source.seen_request.trace_id == "trace-source-worker"
+
+
+def test_run_once_batch_reports_conflicts_without_duplicate_candidates() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(evidence=core_evidence())
+    explicit_key = "signal-ingestion:high-cash:lotus-core:batch-conflict"
+    work_item = HighCashSourceIngestionWorkItem(
+        portfolio_id=PORTFOLIO_ID,
+        as_of_date=AS_OF_DATE,
+        idempotency_key=explicit_key,
+    )
+
+    first = run_high_cash_source_ingestion_batch(
+        RunHighCashSourceIngestionBatchCommand(
+            work_items=(work_item,),
+            evaluated_at_utc=EVALUATED_AT,
+        ),
+        core_source=source,
+        repository=repository,
+    )
+    source.evidence = core_evidence(holdings_hash="sha256:changed-batch-holdings")
+    second = run_high_cash_source_ingestion_batch(
+        RunHighCashSourceIngestionBatchCommand(
+            work_items=(work_item,),
+            evaluated_at_utc=EVALUATED_AT,
+        ),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert first.count(HighCashSourceIngestionDecision.ACCEPTED) == 1
+    assert second.count(HighCashSourceIngestionDecision.CONFLICT) == 1
+    assert len(repository.snapshot().candidate_records) == 1
+
+
 def test_detects_source_ingestion_conflict_when_same_key_has_new_source_identity() -> None:
     repository = InMemoryIdeaRepository()
     source = RecordingCoreSource(evidence=core_evidence())
@@ -237,6 +310,72 @@ def test_suppresses_duplicate_source_candidate_without_persisting() -> None:
     assert result.signal_result.evaluation.outcome is SignalEvaluationOutcome.SUPPRESSED
     assert result.signal_result.persistence is None
     assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_validates_run_once_batch_boundaries() -> None:
+    valid_item = HighCashSourceIngestionWorkItem(
+        portfolio_id=PORTFOLIO_ID,
+        as_of_date=AS_OF_DATE,
+    )
+    mutable_work_items = [valid_item]
+    command = RunHighCashSourceIngestionBatchCommand(
+        work_items=mutable_work_items,
+        evaluated_at_utc=EVALUATED_AT,
+    )
+    mutable_work_items.append(valid_item)
+
+    assert command.work_items == (valid_item,)
+
+    invalid_cases: tuple[
+        tuple[Callable[[], RunHighCashSourceIngestionBatchCommand], str],
+        ...,
+    ] = (
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(),
+                evaluated_at_utc=EVALUATED_AT,
+            ),
+            "work_items must not be empty",
+        ),
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(valid_item,),
+                evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+            ),
+            "evaluated_at_utc must be timezone-aware",
+        ),
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(valid_item,),
+                evaluated_at_utc=EVALUATED_AT,
+                max_items=0,
+            ),
+            "max_items must be positive",
+        ),
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(valid_item, valid_item),
+                evaluated_at_utc=EVALUATED_AT,
+                max_items=1,
+            ),
+            "work_items exceeds max_items",
+        ),
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(valid_item,),
+                evaluated_at_utc=EVALUATED_AT,
+                actor_subject=" ",
+            ),
+            "actor_subject is required",
+        ),
+    )
+    for invalid_command_factory, message in invalid_cases:
+        try:
+            invalid_command_factory()
+        except ValueError as exc:
+            assert str(exc) == message
+        else:
+            raise AssertionError(f"expected {message}")
 
 
 def test_validates_source_ingestion_identity_fields() -> None:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections import Counter
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
@@ -21,6 +23,7 @@ from app.ports.idea_repository import CandidatePersistenceRepository
 
 
 SOURCE_INGESTION_ACTOR = "signal-ingestion-worker"
+DEFAULT_SOURCE_INGESTION_BATCH_LIMIT = 100
 
 
 class HighCashSourceIngestionDecision(StrEnum):
@@ -51,6 +54,61 @@ class HighCashSourceIngestionResult:
     signal_result: HighCashSignalPersistenceResult
     idempotency_key: str
     source_authority: str = "lotus-core"
+
+
+@dataclass(frozen=True)
+class HighCashSourceIngestionWorkItem:
+    portfolio_id: str
+    as_of_date: date
+    idempotency_key: str | None = None
+    duplicate_of_candidate_id: str | None = None
+
+    def __post_init__(self) -> None:
+        _require_text(self.portfolio_id, "portfolio_id")
+        if self.idempotency_key is not None:
+            _require_text(self.idempotency_key, "idempotency_key")
+
+
+@dataclass(frozen=True)
+class RunHighCashSourceIngestionBatchCommand:
+    work_items: Sequence[HighCashSourceIngestionWorkItem]
+    evaluated_at_utc: datetime
+    actor_subject: str = SOURCE_INGESTION_ACTOR
+    max_items: int = DEFAULT_SOURCE_INGESTION_BATCH_LIMIT
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        _require_text(self.actor_subject, "actor_subject")
+        work_items = tuple(self.work_items)
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+        if self.max_items < 1:
+            raise ValueError("max_items must be positive")
+        if not work_items:
+            raise ValueError("work_items must not be empty")
+        if len(work_items) > self.max_items:
+            raise ValueError("work_items exceeds max_items")
+        object.__setattr__(self, "work_items", work_items)
+
+
+@dataclass(frozen=True)
+class HighCashSourceIngestionBatchResult:
+    item_results: tuple[HighCashSourceIngestionResult, ...]
+    source_authority: str = "lotus-core"
+
+    @property
+    def total_count(self) -> int:
+        return len(self.item_results)
+
+    def count(self, decision: HighCashSourceIngestionDecision) -> int:
+        return sum(1 for result in self.item_results if result.decision is decision)
+
+    def decision_counts(self) -> dict[str, int]:
+        counts = Counter(result.decision.value for result in self.item_results)
+        return {
+            decision.value: counts[decision.value] for decision in HighCashSourceIngestionDecision
+        }
 
 
 def ingest_high_cash_signal_from_core(
@@ -91,6 +149,34 @@ def ingest_high_cash_signal_from_core(
         signal_result=signal_result,
         idempotency_key=idempotency_key,
     )
+
+
+def run_high_cash_source_ingestion_batch(
+    command: RunHighCashSourceIngestionBatchCommand,
+    *,
+    core_source: CoreOpportunitySourcePort,
+    repository: CandidatePersistenceRepository,
+    policy: HighCashSignalPolicy = DEFAULT_HIGH_CASH_POLICY,
+) -> HighCashSourceIngestionBatchResult:
+    item_results = tuple(
+        ingest_high_cash_signal_from_core(
+            IngestHighCashSourceSignalCommand(
+                portfolio_id=item.portfolio_id,
+                as_of_date=item.as_of_date,
+                evaluated_at_utc=command.evaluated_at_utc,
+                actor_subject=command.actor_subject,
+                idempotency_key=item.idempotency_key,
+                duplicate_of_candidate_id=item.duplicate_of_candidate_id,
+                correlation_id=command.correlation_id,
+                trace_id=command.trace_id,
+            ),
+            core_source=core_source,
+            repository=repository,
+            policy=policy,
+        )
+        for item in command.work_items
+    )
+    return HighCashSourceIngestionBatchResult(item_results=item_results)
 
 
 def default_high_cash_source_ingestion_key(*, portfolio_id: str, as_of_date: date) -> str:

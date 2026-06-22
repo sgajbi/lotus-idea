@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, bounded run-once ingestion worker foundation, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -60,7 +60,11 @@ Implemented first-wave internal scope:
    and keeps blocked, suppressed, and below-threshold evaluations non-mutating.
    Core-backed idempotency payloads now include generated candidate and
    source-signal identity, so same-key source changes conflict instead of being
-   treated as an equivalent replay.
+   treated as an equivalent replay. It also exposes a bounded run-once batch
+   worker foundation with maximum item validation, per-item replay/conflict
+   posture, batch decision counts, and correlation/trace propagation through
+   the Core source port. This is not a daemon, deploy-pipeline worker, live Core
+   certification, or supported ingestion product.
 9. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
@@ -137,7 +141,7 @@ Implemented first-wave internal scope:
 Not implemented yet:
 
 1. deploy-pipeline migration execution proof against a real PostgreSQL service,
-2. scheduled database-backed source-ingestion workers,
+2. scheduled daemon/deploy source-ingestion workers,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
 5. Gateway/Workbench/downstream proof,
@@ -156,10 +160,11 @@ shape, adapter behavior, runtime selection, and the first durable replay path
 become CI-visible before any supported database-backed product claim is made.
 The current proof now also exercises the first internal review, queue,
 conversion, report evidence-pack workflow, and internal source-ingestion
-replay/conflict recovery path against PostgreSQL. The next durable persistence
-slices must prove scheduled source-ingestion worker behavior, deploy-pipeline
-migration evidence, and live Core source-adapter behavior against that service,
-and keep API responses truthful:
+replay/conflict recovery path against PostgreSQL. The source-ingestion
+application layer now has a bounded run-once batch worker foundation, but the
+next durable persistence slices must still prove scheduled daemon/deploy worker
+behavior, deploy-pipeline migration evidence, and live Core source-adapter
+behavior against that service, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.
 
@@ -171,19 +176,23 @@ Current slice validation:
    passed with `19 passed` for the new orchestration and persistence replay
    coverage.
 2. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion.py tests\unit\test_high_cash_application.py -q`
-   passed with `21 passed` for the internal source-ingestion orchestration,
+   passed with `24 passed` for the internal source-ingestion orchestration,
    generated idempotency key, replay, conflict, blocked, suppressed, and
    skipped-not-eligible coverage.
-3. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
+3. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion.py -q`
+   passed with `11 passed` after adding bounded run-once batch worker coverage
+   for duplicate replay, changed-source conflict, batch decision counts,
+   timezone validation, maximum item enforcement, and correlation propagation.
+4. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
    skips locally when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not configured;
    the suite now includes internal source-ingestion replay/conflict recovery
    proof for GitHub PR/Main PostgreSQL lanes where `postgres:18-alpine` is
    configured.
-4. `make check` passed with lint, format, CI contract, maintainability,
+5. `make check` passed with lint, format, CI contract, maintainability,
    monetary/no-sensitive guards, implementation-truth, data-mesh,
    migration, supported-feature, endpoint-certification, typecheck,
    architecture, OpenAPI, and `257` unit tests.
-5. `make ci` passed with `60` integration tests, `4` local PostgreSQL skips,
+6. `make ci` passed with `60` integration tests, `4` local PostgreSQL skips,
    `2` e2e tests, `257` unit tests under coverage, coverage gate at
    `99.14%`, and dependency audit reporting no known vulnerabilities.
 

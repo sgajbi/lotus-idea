@@ -16,7 +16,7 @@ an internal persistence/replay/idempotency/audit foundation, an internal
 high-cash evaluate-and-persist orchestration foundation, an internal
 Core-backed source-ingestion orchestration foundation with generated
 idempotency keys and accepted/replayed/conflict/blocked/suppressed/not-eligible
-outcome classification,
+outcome classification plus a bounded run-once batch worker foundation,
 deterministic scoring/review-queue projection and repository-snapshot queue
 orchestration foundation, an internal advisor review/feedback governance and
 workflow persistence foundation, and an internal AI governance
@@ -126,8 +126,9 @@ source-authority contracts only, not runtime certification.
   Core source port that fetches governed Core evidence, and internally persist
   created candidates through the Slice 06 idempotency/audit repository contract.
   `source_ingestion.py` adds the first internal high-cash source-ingestion
-  orchestration wrapper over the same Core source port and repository port,
-  including generated source-ingestion idempotency keys and explicit
+  orchestration wrapper and bounded run-once batch worker foundation over the
+  same Core source port and repository port, including generated
+  source-ingestion idempotency keys, batch decision counts, and explicit
   accepted/replayed/conflict/blocked/suppressed/not-eligible decisions.
   Internal review-queue orchestration projects persisted candidate snapshots
   through the Slice 07 deterministic queue policy and certified internal advisor
@@ -244,7 +245,9 @@ replay from PostgreSQL, proves schema rollback/reapply restores a usable runtime
 contract, projects the advisor queue, records review approval and feedback,
 records report conversion intent/outcome state, records a report evidence-pack
 request, and proves internal Core-backed source-ingestion replay/conflict
-recovery through the PostgreSQL repository adapter:
+recovery through the PostgreSQL repository adapter. The run-once batch worker
+foundation is covered by unit tests; this command is still not live Core worker
+certification:
 
 ```powershell
 $env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
