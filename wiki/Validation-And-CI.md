@@ -51,6 +51,7 @@ make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
+make source-ingestion-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check
@@ -71,6 +72,7 @@ OpenAPI quality, source-observability contract enforcement, implementation-truth
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest and source-safe output-contract validation,
+source-ingestion live-proof artifact contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
@@ -123,7 +125,12 @@ Persistence adapter validation:
    `make source-ingestion-worker-check` prove the versioned run-once worker
    manifest contract plus source-safe check-only output contract without
    calling Core or writing repository state.
-7. `tests/unit/test_generate_implementation_proof_readiness.py` and
+7. `tests/unit/test_source_ingestion_live_proof.py`,
+   `tests/unit/test_source_ingestion_live_proof_contract_gate.py`, and
+   `make source-ingestion-live-proof-contract-gate` prove the live Core
+   source-ingestion proof artifact contract, source-sensitive-field blocking,
+   and readiness blocker behavior without calling Core in CI.
+8. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including the outbox-delivery proof
    family, can be generated without starting the service and without exposing
@@ -196,7 +203,8 @@ verified immutable action SHA pins with version provenance, 99% combined coverag
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, downstream realization contract validation,
 migration contract validation, migration execution dry-run
-validation, source-ingestion worker manifest and output-contract validation, PostgreSQL runtime
+validation, source-ingestion worker manifest and output-contract validation,
+source-ingestion live-proof contract validation, PostgreSQL runtime
 proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,
@@ -299,9 +307,10 @@ provider while remaining blocked and not certified.
 
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
-certify the diagnostic route only; they do not certify live Core ingestion,
-scheduled worker deployment, data-product promotion, Gateway/Workbench support,
-or supported-feature promotion.
+certify the diagnostic route only. A valid proof artifact can clear only the
+live-Core-source blocker; the route still does not certify scheduled worker
+deployment, data-product promotion, Gateway/Workbench support, or
+supported-feature promotion.
 The internal source-ingestion-run-once endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the bounded operator action only; they do not certify live Core

@@ -72,6 +72,12 @@ remaining certification blockers without calling Core or exposing source
 payloads. It remains `not_certified` until live Core source proof, scheduled
 worker deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof
 exist.
+`scripts/generate_source_ingestion_live_proof.py` captures a source-safe live
+Core proof artifact for release reviewers. Point
+`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a valid artifact to clear only the
+live-Core blocker in readiness; scheduled worker deployment, mesh
+certification, Gateway/Workbench proof, and supported-feature promotion remain
+blocked.
 The internal `POST /api/v1/source-ingestion/run-once` action is available for
 operators with `idea.source-ingestion.run` to run one bounded source-ingestion
 pass through the configured manifest, active repository provider, and Core
@@ -143,7 +149,7 @@ instead of producing a false support claim.
 
 | Operating area | Current proof | Must not be inferred |
 | --- | --- | --- |
-| Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation and aggregate-only operator route | Deployed scheduler, live Core certification, or supported ingestion product |
+| Source ingestion | Manifest plus source-safe check-only output gate; live-proof artifact contract; internal run-once foundation and aggregate-only operator route | Deployed scheduler, mesh certification, Gateway/Workbench support, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | Certified live broker runtime, platform mesh event certification, or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
@@ -173,6 +179,7 @@ make check
 make ci
 make postgres-integration-gate
 make source-ingestion-worker-check
+make source-ingestion-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check

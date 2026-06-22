@@ -89,6 +89,12 @@ routes for Advise/Manage conversion intents and Report evidence-pack requests,
 but those routes are submission posture only and do not clear live downstream
 proof blockers.
 
+Source-ingestion live proof is captured by
+`scripts/generate_source_ingestion_live_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
+`live_core_source_proof_missing`; it does not clear scheduled worker,
+data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -149,24 +155,29 @@ Implementation-backed evidence:
 9. source-ingestion run-once endpoint:
    `POST /api/v1/source-ingestion/run-once`,
 10. source-ingestion run-once runbook:
-   `docs/operations/source-ingestion-run-once.md`,
-11. outbox delivery run-once endpoint:
-   `POST /api/v1/outbox-delivery/run-once`,
-12. operation event: `implementation_proof_readiness_read`,
-13. endpoint ledger:
-   `docs/operations/endpoint-certification-ledger.json`,
-14. unit tests:
-   `tests/unit/test_implementation_proof_readiness.py`,
-15. generator tests:
-   `tests/unit/test_generate_implementation_proof_readiness.py`,
-16. integration tests:
-   `tests/integration/test_implementation_proof_readiness_api.py`.
+    `docs/operations/source-ingestion-run-once.md`,
+11. source-ingestion live-proof generator:
+    `scripts/generate_source_ingestion_live_proof.py`,
+12. source-ingestion live-proof contract gate:
+    `make source-ingestion-live-proof-contract-gate`,
+13. outbox delivery run-once endpoint:
+    `POST /api/v1/outbox-delivery/run-once`,
+14. operation event: `implementation_proof_readiness_read`,
+15. endpoint ledger:
+    `docs/operations/endpoint-certification-ledger.json`,
+16. unit tests:
+    `tests/unit/test_implementation_proof_readiness.py`,
+17. generator tests:
+    `tests/unit/test_generate_implementation_proof_readiness.py`,
+18. integration tests:
+    `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
 
 ```powershell
 python -m pytest tests/unit/test_implementation_proof_readiness.py tests/integration/test_implementation_proof_readiness_api.py -q
 make implementation-proof-readiness-check
+make source-ingestion-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check
 make endpoint-certification-gate

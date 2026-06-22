@@ -8,7 +8,7 @@
 | Required capability | `idea.source-ingestion.run` |
 | Source authority | `lotus-core` |
 | Supportability | `not_certified` |
-| Product claim | No live source certification or supported-feature promotion |
+| Product claim | No scheduled worker certification or supported-feature promotion |
 
 `POST /api/v1/source-ingestion/run-once` runs one bounded high-cash
 source-ingestion pass through the configured worker manifest, active repository
@@ -28,17 +28,22 @@ The endpoint proves the service can:
 5. return aggregate decision counts only,
 6. emit bounded `source_ingestion_run_once` operation events.
 
+`scripts/generate_source_ingestion_live_proof.py` wraps the same worker path
+and writes a source-safe proof artifact for release reviewers. When that
+artifact is valid and referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+readiness can clear only `live_core_source_proof_missing`; scheduled worker,
+data-mesh, Gateway/Workbench, and supported-feature blockers remain.
+
 ## What It Does Not Prove
 
 The endpoint does not:
 
-1. certify live Core source ingestion,
-2. prove scheduled worker deployment,
-3. certify data-mesh runtime telemetry,
-4. create Gateway or Workbench product support,
-5. expose portfolio identifiers, raw Core payloads, raw idempotency keys, or
+1. prove scheduled worker deployment,
+2. certify data-mesh runtime telemetry,
+3. create Gateway or Workbench product support,
+4. expose portfolio identifiers, raw Core payloads, raw idempotency keys, or
    candidate identifiers,
-6. promote support status or external publication authority.
+5. promote support status or external publication authority.
 
 ## Runtime Flow
 
@@ -90,6 +95,18 @@ $env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high
 $env:LOTUS_CORE_BASE_URL = "http://localhost:8100"
 ```
 
+Live-proof capture:
+
+```powershell
+python scripts/generate_source_ingestion_live_proof.py `
+  --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
+  --core-base-url http://localhost:8100 `
+  --generated-at-utc 2026-06-21T10:10:00Z `
+  --output output/source-ingestion/live-proof.json
+
+$env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+```
+
 Core response requirement:
 
 - The high-cash adapter consumes Core `HoldingsAsOf:v1`
@@ -106,13 +123,15 @@ Implementation-backed evidence:
 
 1. domain batch runner: `src/app/application/source_ingestion.py`,
 2. manifest planner: `src/app/application/source_ingestion_worker.py`,
-3. runtime builder: `src/app/source_ingestion_state.py`,
-4. API route: `src/app/api/source_ingestion_readiness.py`,
-5. endpoint ledger:
+3. live-proof builder: `src/app/application/source_ingestion_live_proof.py`,
+4. runtime builder: `src/app/source_ingestion_state.py`,
+5. API route: `src/app/api/source_ingestion_readiness.py`,
+6. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-6. integration tests:
+7. integration tests:
    `tests/integration/test_source_ingestion_readiness_api.py`,
-7. proof-readiness diagnostic:
+8. live-proof contract gate: `make source-ingestion-live-proof-contract-gate`,
+9. proof-readiness diagnostic:
    `GET /api/v1/implementation-proof/readiness`.
 
 Run:
@@ -120,6 +139,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_source_ingestion.py tests/unit/test_source_ingestion_worker.py tests/integration/test_source_ingestion_readiness_api.py -q
 make source-ingestion-worker-check
+make source-ingestion-live-proof-contract-gate
 make endpoint-certification-gate
 make openapi-gate
 ```
