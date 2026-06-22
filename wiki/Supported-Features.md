@@ -24,10 +24,14 @@ candidate detail routes, but they are not deployed scheduler daemon proof,
 live Core worker certification, Workbench proof, or supported-feature
 promotion. The AI explanation readiness diagnostic is an operator
 supportability check only; it does not invoke `lotus-ai`, certify durable AI
-lineage, prove model-risk dashboards, or promote AI explanation support. These
-are not externally supported features until live source adapters, scheduled
-daemon/deploy source-worker proof, Workbench proof, downstream acceptance,
-data-product certification, and supported-feature evidence are present.
+lineage, prove model-risk dashboards, or promote AI explanation support. The
+implementation-proof readiness diagnostic is also an operator supportability
+check only; it aggregates blockers and evidence refs but does not provide live
+implementation proof, Gateway/Workbench proof, data-product certification, or
+supported-feature promotion. These are not externally supported features until
+live source adapters, scheduled daemon/deploy source-worker proof, Workbench
+proof, downstream acceptance, data-product certification, and supported-feature
+evidence are present.
 
 Planned capabilities:
 

@@ -183,6 +183,14 @@ disclosing candidate or source-route identifiers, certifying durable AI
 lineage, exposing a Gateway/Workbench surface, or promoting a supported
 feature.
 
+`GET /api/v1/implementation-proof/readiness` is the certified internal
+aggregate RFC-0002 proof-readiness diagnostic. It reports source-safe
+capability blockers across source ingestion, advisor queue, AI explanation,
+data mesh, Workbench realization, downstream realization, and supported-feature
+promotion. It is not live implementation proof, data-product certification,
+Gateway/Workbench proof, client-ready publication, or supported-feature
+promotion.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist

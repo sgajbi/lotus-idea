@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification documentation synchronized and documentation contract gate enforced
+Status: Partially implemented - API certification and implementation-proof documentation synchronized
 
 ## Outcome
 
@@ -17,7 +17,8 @@ durable operating-context enforcement:
    evaluation, high-cash persistence, candidate evidence replay, lifecycle
    transition, AI explanation evaluation, advisor queue, review action,
    feedback, conversion intent, conversion outcome, report evidence-pack
-   request, and data-mesh-readiness diagnostic endpoints.
+   request, data-mesh-readiness, and implementation-proof-readiness diagnostic
+   endpoints.
 2. The certification guide records each endpoint's current foundation scope,
    required capability, and unsupported boundary so future agents do not
    promote internal API foundations as business-supported product features.
@@ -37,6 +38,10 @@ durable operating-context enforcement:
 7. Focused unit coverage proves the documentation contract gate passes current
    repository truth and fails missing, thin, missing-anchor, and placeholder
    documentation surfaces.
+8. `docs/operations/implementation-proof-readiness.md`, README, repository
+   context, demo claims, operations runbooks, and wiki source now describe the
+   certified internal implementation-proof readiness diagnostic and preserve
+   its no-supported-feature-promotion boundary.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,

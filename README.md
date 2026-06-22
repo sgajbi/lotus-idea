@@ -38,8 +38,8 @@ operation-event observability foundation across certified internal signal,
 persistence, candidate detail, evidence replay, lifecycle, AI explanation,
 AI explanation readiness, queue, queue-readiness, review, feedback, conversion,
 report evidence, and data-mesh-readiness APIs plus certified internal source-ingestion and advisor
-queue readiness diagnostics for operator configuration and certification
-blockers. The first versioned persistence schema, rollback
+queue readiness diagnostics and an aggregate implementation-proof readiness
+diagnostic for operator configuration, proof, and certification blockers. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
 high-cash persistence plus the first internal review, feedback, conversion,
@@ -145,6 +145,15 @@ prompts or provider payloads, certify durable AI lineage, provide
 Gateway/Workbench support, certify a data product, or promote a supported
 feature.
 
+`GET /api/v1/implementation-proof/readiness` is a certified internal operator
+diagnostic for RFC-0002 implementation proof posture. It requires
+`idea.implementation-proof.readiness.read` plus the `operator` role and a
+timezone-aware `evaluatedAtUtc` query parameter. It aggregates source
+ingestion, advisor queue, AI explanation, data mesh, Workbench, downstream
+realization, and supported-feature promotion blockers. It does not expose
+candidate identifiers, source payloads, Gateway/Workbench proof, data-product
+certification, client-ready publication, or supported-feature promotion.
+
 The first consumer dependency set is aligned to the RFC-0002 source map:
 `lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
 projection, and benchmark assignment; `lotus-performance` returns and mandate
@@ -203,7 +212,11 @@ source-authority contracts only, not runtime certification.
   Core or promoting live source support. Internal review-queue-readiness
   orchestration returns source-safe aggregate queue counts, exclusion counts,
   durable-storage posture, and certification blockers without exposing
-  candidate identifiers, access scope, or supported queue posture.
+  candidate identifiers, access scope, or supported queue posture. Internal
+  implementation-proof-readiness orchestration aggregates current RFC-0002
+  capability proof blockers across source ingestion, queue, AI, data mesh,
+  Workbench, downstream realization, and supported-feature promotion without
+  exposing source payloads or promoting support.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, report evidence-pack request governance, internal
@@ -383,6 +396,13 @@ routes:
 curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.ai-explanation.readiness.read" http://localhost:8330/api/v1/ai-explanations/readiness
 ```
 
+To inspect aggregate RFC-0002 implementation proof blockers without exposing
+candidate identifiers or source payloads:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.implementation-proof.readiness.read" "http://localhost:8330/api/v1/implementation-proof/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
+```
+
 Repository-backed endpoints report `durableStorageBacked=true` only in this
 configured posture. This does not promote data-product certification,
 Gateway/Workbench support, live source ingestion, downstream realization, or
@@ -459,6 +479,8 @@ evidence anchors, and stale scaffold-era underclaim detection.
 - API certification guide: `docs/operations/api-certification.md`
 - Observability guide: `docs/operations/observability.md`
 - AI governance guide: `docs/operations/ai-governance.md`
+- Implementation proof readiness guide:
+  `docs/operations/implementation-proof-readiness.md`
 - Conversion governance guide: `docs/operations/conversion-governance.md`
 - Report evidence-pack guide: `docs/operations/report-evidence-packs.md`
 - Data mesh readiness guide: `docs/operations/mesh-readiness.md`
