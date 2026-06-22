@@ -50,13 +50,16 @@ flowchart TD
     Contracts["Repo-owned mesh contracts"]
     Readiness["/api/v1/data-mesh/readiness"]
     Preview["/api/v1/data-mesh/trust-telemetry/runtime-preview"]
+    SnapshotEndpoint["/api/v1/data-mesh/trust-telemetry/runtime-snapshot"]
     Snapshot["output/trust-telemetry/runtime<br/>IdeaCandidate snapshot"]
     Platform["Platform mesh certification"]
     Promotion["Supported-feature promotion"]
 
     Contracts --> Readiness
     Contracts --> Preview
+    Contracts --> SnapshotEndpoint
     Preview --> Snapshot
+    SnapshotEndpoint --> Snapshot
     Readiness -->|"not_certified blockers"| Platform
     Preview -->|"aggregate runtime counts"| Platform
     Snapshot -->|"contract-shaped runtime evidence"| Platform
@@ -88,8 +91,15 @@ identifiers, source routes, evidence hashes, portfolio identifiers, and client
 identifiers. It is pre-certification runtime evidence only; platform mesh
 certification and product promotion remain planned.
 
-`make runtime-trust-telemetry-snapshot-check` writes the corresponding
-contract-shaped runtime snapshot to
+The internal
+`GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` endpoint returns the
+corresponding contract-shaped runtime snapshot for operators with
+`idea.mesh.trust-telemetry.snapshot.read`. It uses aggregate active-repository
+state only and does not expose candidate identifiers, source routes, evidence
+hashes, portfolio identifiers, or client identifiers.
+
+`make runtime-trust-telemetry-snapshot-check` writes the same contract-shaped
+runtime snapshot to
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
 is source-safe generated evidence and remains blocked until platform
 source-manifest inclusion, mesh certification, Gateway/Workbench discovery, and

@@ -70,6 +70,7 @@ Current instrumented operations:
 | `downstream_realization_readiness_read` | Internal downstream realization readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_trust_telemetry_preview_read` | Internal runtime trust telemetry preview diagnostic read | `lotus-idea` | `not_certified` |
+| `mesh_trust_telemetry_snapshot_read` | Internal runtime trust telemetry snapshot diagnostic read | `lotus-idea` | `not_certified` |
 | `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
 | `implementation_proof_readiness_read` | Internal aggregate RFC-0002 proof-readiness diagnostic read | `lotus-idea` | `not_certified` |
 
@@ -116,10 +117,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
    Advise, Manage, Report, Render, Archive, Gateway/Workbench, and mesh proof
    remain absent, and downstream submission while adapters are missing or a
    downstream adapter returns a bounded rejection. It also covers the runtime
-   trust telemetry preview while the
-   preview is not yet platform-certified or published through Gateway/Workbench
-   discovery, and the aggregate implementation-proof readiness diagnostic when
-   any RFC-0002 proof family remains uncertified. It also covers outbox
+   trust telemetry preview and snapshot diagnostics while they are not yet
+   platform-certified or published through Gateway/Workbench discovery, and the
+   aggregate implementation-proof readiness diagnostic when any RFC-0002 proof
+   family remains uncertified. It also covers outbox
    delivery readiness while broker configuration, live broker runtime proof,
    downstream consumer contracts, platform mesh event certification, and
    supported-feature evidence are absent.

@@ -61,6 +61,13 @@ runtime telemetry preview counts from the active repository provider. This
 preview is not platform mesh certification, product discovery, Gateway or
 Workbench proof, or supported-feature promotion.
 
+Internal operators can call
+`GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` with
+`idea.mesh.trust-telemetry.snapshot.read` to inspect the source-safe,
+contract-shaped runtime snapshot over the same active repository provider.
+This endpoint is diagnostic evidence only and remains blocked until platform
+mesh certification and downstream discovery proof exist.
+
 `make runtime-trust-telemetry-snapshot-check` generates the corresponding
 contract-shaped runtime evidence under ignored
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The artifact

@@ -50,8 +50,9 @@ support:
    Advise/Manage/Report handoff contract posture,
 10. certified internal aggregate implementation-proof readiness diagnostic for
     RFC-0002 blocker visibility,
-11. certified internal runtime trust telemetry preview diagnostic and generated
-    source-safe runtime snapshot evidence for aggregate data-mesh posture.
+11. certified internal runtime trust telemetry preview and snapshot diagnostics
+    plus generated source-safe runtime snapshot evidence for aggregate
+    data-mesh posture.
 
 No external business feature is supported yet. The high-cash, advisor queue,
 lifecycle, AI explanation, AI explanation readiness, review-action, and
@@ -63,7 +64,8 @@ realization readiness diagnostic reports blockers, workflow counts,
 source-safe orchestration/adapter-foundation presence, submission route
 posture, and planned contract posture only. The
 runtime trust telemetry preview reports aggregate active-repository counts
-only, and the generated runtime snapshot remains blocked. None of these
+only, and the runtime snapshot endpoint/generated artifact remain blocked.
+None of these
 diagnostics is Workbench proof,
 data-product certification, AI runtime proof, certified live broker runtime,
 downstream route-existence proof, downstream execution proof, live

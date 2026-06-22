@@ -19,7 +19,7 @@ It aggregates current evidence and blockers across:
 2. deterministic advisor review queue,
 3. AI-assisted explanation governance,
 4. data-mesh producer and consumer certification,
-5. source-safe runtime trust telemetry preview and snapshot generation,
+5. source-safe runtime trust telemetry preview, snapshot endpoint, and snapshot generation,
 6. internal outbox delivery foundation,
 7. Workbench product realization,
 8. downstream Advise, Manage, Report, Render, and Archive realization,
@@ -38,7 +38,7 @@ It returns:
 3. advisor queue readiness posture,
 4. AI explanation readiness posture,
 5. data-mesh readiness posture,
-6. runtime trust telemetry preview and generated snapshot posture,
+6. runtime trust telemetry preview, snapshot endpoint, and generated snapshot posture,
 7. outbox delivery readiness posture,
 8. Workbench realization blockers,
 9. downstream realization blockers and internal submission route evidence,
@@ -142,16 +142,18 @@ Implementation-backed evidence:
 5. downstream contract check: `make downstream-realization-contract-gate`,
 6. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
-7. generated runtime telemetry evidence:
+7. runtime trust telemetry snapshot endpoint:
+   `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
+8. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-8. operation event: `implementation_proof_readiness_read`,
-9. endpoint ledger:
+9. operation event: `implementation_proof_readiness_read`,
+10. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-10. unit tests:
+11. unit tests:
    `tests/unit/test_implementation_proof_readiness.py`,
-11. generator tests:
+12. generator tests:
    `tests/unit/test_generate_implementation_proof_readiness.py`,
-12. integration tests:
+13. integration tests:
    `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
