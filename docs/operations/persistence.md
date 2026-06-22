@@ -14,8 +14,9 @@ has a bounded run-once batch worker foundation with per-item idempotency and
 batch decision counts for scheduling-ready internal execution.
 `scripts/run_source_ingestion_worker.py` now provides a versioned
 manifest-backed run-once CLI, and `make source-ingestion-worker-check`
-validates the example manifest without calling Core or writing repository
-state. The PostgreSQL runtime proof also covers internal source-ingestion
+validates the example manifest and source-safe check-only output contract
+without calling Core or writing repository state. The PostgreSQL runtime proof
+also covers internal source-ingestion
 replay after repository reload and same-key changed-source conflict recovery.
 Runtime API state remains process-local by default and reports
 `durableStorageBacked=false` unless the database URL is configured. When
@@ -32,6 +33,27 @@ exporting raw source routes, granting downstream authority, or promoting a
 supported feature.
 
 ## Current Contract
+
+| Area | Current implementation truth | Boundary |
+| --- | --- | --- |
+| Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
+| Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
+| Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
+
+```mermaid
+flowchart LR
+    Manifest["Versioned worker manifest"]
+    Gate["make source-ingestion-worker-check"]
+    Summary["Source-safe check-only summary"]
+    Runner["run-once worker run mode"]
+    Core["lotus-core"]
+    Repo["Active idea repository"]
+
+    Manifest --> Gate --> Summary
+    Manifest --> Runner
+    Runner -->|"configured runtime only"| Core
+    Runner -->|"accepted/replayed/conflict decisions"| Repo
+```
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
    idempotency, lifecycle, audit, review, feedback, conversion, and report
@@ -79,7 +101,8 @@ supported feature.
 11. `src/app/application/source_ingestion_worker.py` and
     `scripts/run_source_ingestion_worker.py` add a versioned manifest-backed
     run-once worker entrypoint. Check-only mode returns a product-safe
-    validation summary and is enforced by `make source-ingestion-worker-check`;
+    validation summary, and `make source-ingestion-worker-check` enforces both
+    manifest parseability and the exact source-safe check-only output contract;
     run mode requires a configured Core base URL and active repository
     provider. Both check-only and run summaries redact raw source payloads,
     portfolio ids, and raw idempotency keys. It is not a daemon,

@@ -147,10 +147,10 @@ against a real PostgreSQL 18 service, including schema apply, provider reload,
 idempotency replay from database state, internal source-ingestion
 replay/conflict recovery, backing table validation, and schema rollback/reapply
 recovery. The application layer also has a manifest-backed run-once
-source-ingestion worker CLI with check-only validation through
-`make source-ingestion-worker-check`. Production storage readiness still
-requires deploy migration evidence, scheduled daemon/deploy worker evidence,
-and live Core source-worker evidence.
+source-ingestion worker CLI with manifest and source-safe check-only output
+validation through `make source-ingestion-worker-check`. Production storage
+readiness still requires deploy migration evidence, scheduled daemon/deploy
+worker evidence, and live Core source-worker evidence.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
