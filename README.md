@@ -22,26 +22,20 @@ downstream realization proof, supported-feature registration, and evidence on
 
 Current implemented foundations include:
 
-- high-cash signal evaluation over caller-supplied Core evidence,
-- Core-backed high-cash source ingestion orchestration, run-once worker CLI,
-  deployable scheduled-worker entrypoint, readiness diagnostic, and
-  aggregate-only operator run-once API,
+- high-cash evaluation and Core-backed source-ingestion orchestration, including
+  run-once and scheduled workers, readiness, and aggregate-only operator APIs,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection and queue readiness diagnostics,
-- AI explanation governance diagnostics and source-safe lineage persistence with PostgreSQL runtime proof, without provider execution,
-- conversion intent, conversion outcome, and report evidence-pack request
-  foundations,
-- governed downstream contract-readiness diagnostics, source-safe application
-  orchestration, certified internal downstream submission APIs, and HTTP
-  adapter foundations for Advise, Manage, and Report handoff seams, backed by
-  a repo contract plan and blocking gate, without downstream route-existence
-  or execution claims,
+- AI explanation governance diagnostics and source-safe lineage persistence with
+  PostgreSQL runtime proof, without provider execution,
+- conversion/report foundations plus governed downstream contract-readiness,
+  submission APIs, and HTTP adapter foundations for Advise, Manage, and Report,
+  without downstream route-existence or execution claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics, a source-safe HTTP broker-publisher adapter foundation, and
   readiness diagnostics for accepted internal mutations,
-- runtime trust telemetry preview, contract-shaped runtime snapshot generation,
-  and data-mesh readiness diagnostics,
-- PostgreSQL schema, migration, rollback, and repository adapter proof,
+- runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
+  proof, and durable repository proof consumed by aggregate readiness evidence,
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
   detail.
 
@@ -198,8 +192,9 @@ docker compose up --build
 | `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
 | `make migration-contract-gate` | Validate migration contract structure. |
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
+| `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, and live-proof artifact contract without calling Core. |
-| `make implementation-proof-readiness-check` | Generate the scheduled-worker deploy proof artifact and source-safe RFC proof-readiness evidence. |
+| `make implementation-proof-readiness-check` | Generate the scheduled-worker deploy proof artifact, durable repository proof artifact, and source-safe RFC proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
@@ -295,6 +290,9 @@ Local controls keep implementation claims grounded:
   direct Python logging, and unsafe observability bypasses.
 - `make no-sensitive-content-guard` keeps local evidence and output artifacts
   free of sensitive marker names.
+- `make durable-repository-proof-contract-gate` keeps the aggregate
+  proof-readiness storage evidence source-safe and explicit about remaining
+  production, mesh, live-source, Workbench, and supported-feature blockers.
 - `make repository-hygiene-gate` blocks generated cache, build, dependency,
   environment, and database artifacts.
 - `make clean` removes ignored local byproducts through the governed cleanup

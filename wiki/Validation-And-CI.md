@@ -50,6 +50,7 @@ make data-mesh-contract-gate
 make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
+make durable-repository-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -72,6 +73,7 @@ quality-scorecard truth, monetary precision guarding, no-sensitive-content evide
 OpenAPI quality, source-observability contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
+durable repository proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption in aggregate implementation-proof readiness,
@@ -142,8 +144,9 @@ Persistence adapter validation:
    and readiness blocker behavior without calling Core in CI.
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
-   implementation-proof readiness artifact, including the outbox-delivery proof
-   family, can be generated without starting the service and without exposing
+   implementation-proof readiness artifact, including durable repository proof
+   consumption and the outbox-delivery proof family, can be generated without
+   starting the service and without exposing
    candidate, portfolio, client, prompt, outbox event, raw idempotency, broker,
    or source payload identifiers.
 8. `tests/unit/test_runtime_trust_telemetry.py`,
@@ -219,7 +222,7 @@ data-mesh contract validation, downstream realization contract validation,
 migration contract validation, migration execution dry-run
 validation, source-ingestion worker manifest and output-contract validation,
 source-ingestion live-proof contract validation, PostgreSQL runtime
-proof, workflow-dispatch access, non-suppressed auto-merge token
+proof, durable repository proof contract validation, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,
 repository-hygiene enforcement, no-sensitive-content evidence guarding,

@@ -150,6 +150,12 @@ data-mesh, Gateway/Workbench, and support-promotion blockers remain.
 artifact under ignored `output/source-ingestion/` and passes it explicitly into
 the aggregate proof-readiness generator, preventing stale scheduled-worker
 deploy-proof blockers in repo-native evidence.
+It also generates a source-safe durable repository proof artifact under ignored
+`output/persistence/` and passes it into aggregate proof-readiness generation.
+That artifact cites migration contracts, the PostgreSQL adapter, and the
+GitHub PostgreSQL runtime proof lane; it clears only aggregate stale
+durable-repository proof blockers and does not configure runtime storage,
+certify production storage operations, or promote support.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -262,6 +268,13 @@ snapshots, and rolls back on database flush failure.
 `src/app/infrastructure/postgres_codecs.py` isolates PostgreSQL JSON
 serialization/deserialization helpers so adapter growth preserves the
 maintainability gate instead of normalizing an oversized infrastructure module.
+`src/app/application/durable_repository_proof.py`,
+`scripts/generate_durable_repository_proof.py`, and
+`make durable-repository-proof-contract-gate` now define and enforce a
+source-safe durable repository proof contract for aggregate RFC proof-readiness
+evidence. This proof references the migration, adapter, and CI runtime-proof
+surface only; runtime endpoints still report durable storage from the active
+repository provider and `LOTUS_IDEA_DATABASE_URL`.
 `src/app/runtime/repository_state.py` now wires the adapter into API runtime
 selection when `LOTUS_IDEA_DATABASE_URL` is configured, while keeping
 process-local state as the default. Repository-backed routes derive
@@ -390,8 +403,9 @@ realization.
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
 and operator handoff. The generator accepts explicit source-ingestion manifest,
-live-proof, and scheduled-worker proof paths for deterministic CI evidence
-without requiring ambient process environment mutation.
+live-proof, scheduled-worker proof, and durable repository proof paths for
+deterministic CI evidence without requiring ambient process environment
+mutation.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation plus bounded read-only Gateway publication for advisor queue and
@@ -773,23 +787,25 @@ owned by upstream services.
     `make downstream-realization-contract-gate`
 24. migration contract gate: `make migration-contract-gate`
 25. migration execution dry-run gate: `make migration-execution-gate`
-26. run-once source-ingestion worker manifest and output-contract gate:
+26. durable repository proof contract gate:
+    `make durable-repository-proof-contract-gate`
+27. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-27. scheduled source-ingestion worker deploy-contract gate:
+28. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-28. source-ingestion live-proof artifact contract gate:
+29. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-29. implementation proof readiness generator:
+30. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-30. runtime trust telemetry preview generator:
+31. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-31. runtime trust telemetry snapshot generator:
+32. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-32. PostgreSQL runtime proof with configured integration URL:
+33. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-33. apply migrations with configured PostgreSQL URL: `make migrate`
-34. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-35. remove ignored generated local artifacts: `make clean`
+34. apply migrations with configured PostgreSQL URL: `make migrate`
+35. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+36. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -811,6 +827,7 @@ endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest and
 output-contract validation, scheduled source-ingestion worker deploy-contract
 validation, source-ingestion live-proof contract validation,
+durable repository proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,
@@ -825,7 +842,8 @@ data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
 and output-contract validation, scheduled source-ingestion worker
 deploy-contract validation, no-sensitive-content evidence validation,
-source-observability contract validation, PostgreSQL runtime proof, coverage,
+durable repository proof contract validation, source-observability contract
+validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded
 workflow timeouts, no `continue-on-error: true` in critical lanes,

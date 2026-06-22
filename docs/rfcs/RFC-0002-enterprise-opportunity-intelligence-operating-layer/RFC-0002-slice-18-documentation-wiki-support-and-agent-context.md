@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -95,6 +95,14 @@ durable operating-context enforcement:
     `make source-ingestion-scheduled-worker-check`, while preserving the
     boundary that a valid artifact clears only the scheduled-worker deploy-proof
     blocker and does not promote source ingestion as a supported feature.
+16. README, repository context, `docs/operations/persistence.md`,
+    `docs/operations/implementation-proof-readiness.md`, quality gate docs,
+    RFC evidence, and wiki source now describe the durable repository proof
+    artifact contract and `make durable-repository-proof-contract-gate`, while
+    preserving the boundary that a valid artifact clears only aggregate
+    proof-readiness storage blockers and does not configure runtime storage,
+    replace PostgreSQL runtime proof, certify production storage, or promote a
+    supported feature.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, data-product certification, downstream

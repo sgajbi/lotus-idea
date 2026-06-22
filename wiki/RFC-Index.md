@@ -80,8 +80,9 @@ Current RFC-0002 implementation-start baseline:
    runtime trust telemetry preview/snapshot evidence, outbox delivery, Workbench, downstream
    realization, and supported-feature promotion.
    `make implementation-proof-readiness-check` generates and consumes the
-   scheduled source-ingestion worker deploy-proof artifact before producing the
-   same source-safe posture as repo-native automation evidence.
+   scheduled source-ingestion worker deploy-proof artifact and durable
+   repository proof artifact before producing the same source-safe posture as
+   repo-native automation evidence.
    Bounded read-only Gateway publication exists for advisor queue and
    candidate detail; Workbench, live source adapters, data-product
    certification, and supported-feature promotion remain planned.

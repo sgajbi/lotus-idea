@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, and scheduled-worker deploy-contract proof available; full live proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, and durable repository proof artifact available; full live proof remains pending
 
 ## Outcome
 
@@ -15,11 +15,12 @@ Prove the complete supported opportunity journey end to end.
    certified internal operator endpoint with
    `idea.implementation-proof.readiness.read` capability enforcement.
 3. `scripts/generate_implementation_proof_readiness.py` accepts explicit
-   source-ingestion manifest, live-proof, and scheduled-worker proof paths, and
-   `make implementation-proof-readiness-check` now generates the scheduled
-   source-ingestion worker deploy-proof artifact before producing the same
-   source-safe readiness snapshot as repo-native automation evidence without
-   requiring the HTTP service to run.
+   source-ingestion manifest, live-proof, scheduled-worker proof, and durable
+   repository proof paths. `make implementation-proof-readiness-check` now
+   generates the scheduled source-ingestion worker deploy-proof artifact and
+   durable repository proof artifact before producing the same source-safe
+   readiness snapshot as repo-native automation evidence without requiring the
+   HTTP service to run.
 4. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal operator diagnostic and preserves the no-live-proof,
    no-Gateway, no-Workbench, no-client-ready-publication, and
@@ -79,6 +80,14 @@ Prove the complete supported opportunity journey end to end.
     passes it explicitly into aggregate proof-readiness generation, so repo-native
     evidence no longer reports a stale scheduled-worker deploy-proof blocker
     after the deploy contract is validated.
+14. `src/app/application/durable_repository_proof.py`,
+    `scripts/generate_durable_repository_proof.py`, and
+    `make durable-repository-proof-contract-gate` now define and enforce a
+    source-safe durable repository proof artifact. The aggregate
+    implementation-readiness generator can consume that artifact to clear only
+    the stale aggregate `durable_repository_not_configured` proof blocker while
+    preserving live Core, production storage, data-mesh, Gateway/Workbench,
+    downstream, and supported-feature blockers.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -106,6 +115,9 @@ without relying on chat memory.
    certification remain pending.
 4. Supported-feature promotion remains blocked until the readiness diagnostic
    reports no blockers and evidence is merged to `main`.
+5. Durable repository proof is now explicit in aggregate readiness evidence, but
+   deploy migration evidence, backup/restore, recovery operations, and
+   production storage certification remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

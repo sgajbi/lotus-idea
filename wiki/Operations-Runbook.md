@@ -163,7 +163,7 @@ instead of producing a false support claim.
 | Operating area | Current proof | Must not be inferred |
 | --- | --- | --- |
 | Source ingestion | Manifest plus source-safe check-only output gate, scheduled-worker deploy-contract gate, live-proof artifact contract, internal run-once foundation, and aggregate-only operator route | Live source certification, mesh certification, Gateway/Workbench support, downstream proof, or supported ingestion product |
-| Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
+| Persistence | PostgreSQL integration proof for internal persistence/replay paths plus source-safe durable repository proof artifact for aggregate readiness evidence | Runtime database configuration, production storage certification, or production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | Certified live broker runtime, platform mesh event certification, or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
 | Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, and planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
@@ -173,14 +173,17 @@ flowchart LR
     Checks["Repo-native checks"]
     SourceGate["source-ingestion worker output contract"]
     RuntimeProof["PostgreSQL runtime proof"]
+    DurableProof["Durable repository proof artifact"]
     Outbox["Outbox retry/dead-letter foundation"]
     Readiness["Readiness diagnostics"]
     Promotion["Future supported-feature promotion"]
 
     Checks --> SourceGate
     Checks --> RuntimeProof
+    Checks --> DurableProof
     RuntimeProof --> Outbox
     RuntimeProof --> Readiness
+    DurableProof --> Readiness
     Readiness -. "blocked until live proof" .-> Promotion
 ```
 
@@ -191,6 +194,7 @@ make install
 make check
 make ci
 make postgres-integration-gate
+make durable-repository-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -341,10 +345,11 @@ broker payloads. It is not live implementation proof, certified broker runtime,
 downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
-source-ingestion worker deploy-proof artifact and the same source-safe readiness
-snapshot without running the HTTP service. Use it as CI or async operator
-evidence only; it is not live scheduler certification or a supported product
-claim.
+source-ingestion worker deploy-proof artifact, durable repository proof
+artifact, and the same source-safe readiness snapshot without running the HTTP
+service. Use it as CI or async operator evidence only; it is not live scheduler
+certification, runtime database configuration, production storage
+certification, production recovery readiness, or a supported product claim.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

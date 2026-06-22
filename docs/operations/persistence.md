@@ -43,6 +43,13 @@ configured, repository-backed API responses and operation events report
 certification, data-product certification, live source integration proof,
 downstream realization proof, certified live broker runtime, or supported-feature
 promotion.
+`scripts/generate_durable_repository_proof.py` and
+`make durable-repository-proof-contract-gate` now provide a source-safe proof
+artifact for aggregate RFC implementation-readiness evidence. The artifact
+cites migration contracts, the PostgreSQL adapter, and the GitHub PostgreSQL
+runtime proof lane; it does not connect to a database, replace
+`make postgres-integration-gate`, or make runtime endpoints report durable
+storage unless `LOTUS_IDEA_DATABASE_URL` is actually configured.
 `GET /api/v1/outbox-delivery/readiness` now exposes the outbox delivery
 foundation as a certified internal operator diagnostic. It reports aggregate
 outbox status counts, delivery-ready backlog, durable repository posture,
@@ -73,6 +80,7 @@ supported feature.
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, model-risk dashboard certification, or supported product claim |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay and AI explanation lineage accepted/replayed/conflict behavior | Not supported-feature promotion |
+| Durable repository proof artifact | Source-safe aggregate readiness artifact citing migration, adapter, and CI runtime proof evidence | Not live runtime configuration or production storage certification |
 
 ```mermaid
 flowchart LR
