@@ -193,8 +193,14 @@ limit, maps publisher exceptions to bounded source-safe failure reasons, and
 returns aggregate counts only. `InMemoryIdeaRepository` and
 `PostgresIdeaRepository` expose the same delivery-ready query and status update
 contract through `src/app/ports/idea_repository.py`, with unit coverage for
-PostgreSQL persistence of delivery status. This is not external event
-publication, broker integration, downstream delivery, or mesh certification.
+PostgreSQL persistence of delivery status. `src/app/application/outbox_delivery_readiness.py`
+and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
+operator diagnostic over aggregate outbox status counts, delivery-ready backlog,
+durable repository posture, broker configuration posture, and certification
+blockers without exposing event identifiers, aggregate identifiers, raw
+idempotency keys, broker payloads, or downstream claims. This is not external
+event publication, broker integration, downstream delivery, or mesh
+certification.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report

@@ -31,7 +31,7 @@ Current implemented foundations include:
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
 - source-safe outbox records plus internal retry/dead-letter delivery
-  semantics for accepted internal mutations,
+  semantics and readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry preview and data-mesh readiness diagnostics,
 - PostgreSQL schema, migration, rollback, and repository adapter proof,
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
@@ -257,6 +257,7 @@ Operational entrypoints:
 - metrics: `/metrics`
 - API docs: `/docs` when running the local service
 - source ingestion readiness: `/api/v1/source-ingestion/readiness`
+- outbox delivery readiness: `/api/v1/outbox-delivery/readiness`
 - advisor queue readiness: `/api/v1/review-queues/advisor/readiness`
 - AI explanation readiness: `/api/v1/ai-explanations/readiness`
 - downstream realization readiness: `/api/v1/downstream-realization/readiness`

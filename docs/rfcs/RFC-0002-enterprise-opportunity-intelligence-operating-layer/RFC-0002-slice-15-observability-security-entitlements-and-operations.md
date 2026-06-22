@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, outbox delivery, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
 
 ## Outcome
 
@@ -116,6 +116,19 @@ foundation:
     blocked/not-certified posture, source-authority boundaries, role plus
     capability enforcement, product-safe payloads, and operation-event behavior
     for the downstream realization readiness diagnostic.
+27. `src/app/application/outbox_delivery_readiness.py` and
+    `GET /api/v1/outbox-delivery/readiness` expose certified internal outbox
+    delivery readiness for aggregate backlog, status counts, durable repository
+    posture, broker configuration posture, source-of-truth paths, and
+    certification blockers. The route requires both the `operator` role and
+    `idea.outbox-delivery.readiness.read`, returns source-safe aggregate counts
+    only, and emits bounded `outbox_delivery_readiness_read` operation events.
+28. `tests/unit/test_outbox_delivery_readiness.py` and
+    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
+    blocked/not-certified posture, broker-configured still-blocked posture,
+    invalid retry-limit guard, role plus capability enforcement, product-safe
+    payloads, and operation-event behavior for the outbox delivery readiness
+    diagnostic.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -138,6 +151,9 @@ The downstream realization readiness diagnostic is explicitly `not_certified`
 until Advise proposal/suitability intake, Manage action realization,
 Report/Render/Archive materialization, Gateway/Workbench product proof,
 runtime trust telemetry, and supported-feature evidence exist.
+The outbox delivery readiness diagnostic is explicitly `not_certified` until an
+external publisher, downstream consumer contracts, platform mesh event
+certification, Gateway/Workbench proof, and supported-feature evidence exist.
 
 ## Required Work
 
