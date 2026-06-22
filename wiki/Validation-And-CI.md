@@ -8,7 +8,8 @@
 4. Merged PR Main Releasability Dispatch so rebase auto-merged PRs still
    generate post-merge release evidence on `main`.
 5. Non-suppressed auto-merge token enforcement through `LOTUS_AUTOMERGE_TOKEN`;
-   without that secret, use a human/release actor to rebase merge.
+   without that secret, the helper warns, skips auto-merge, and requires a
+   human/release actor to rebase merge.
 
 Repo-native validation commands:
 

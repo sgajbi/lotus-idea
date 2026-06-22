@@ -340,8 +340,10 @@ architecture-boundary enforcement is still report-only after implementation and
 CI evidence prove otherwise.
 Rebase auto-merge is allowed only with `LOTUS_AUTOMERGE_TOKEN` plus merged-PR
 Main Releasability dispatch so post-merge release evidence is produced on
-`main` by a non-suppressed merge actor. GitHub workflow jobs must declare
-bounded `timeout-minutes` values, and critical lanes must not use
+`main` by a non-suppressed merge actor. When the token is absent, the
+auto-merge helper emits an explicit warning and skips queuing auto-merge; use
+an authorized human or release actor for a manual rebase merge. GitHub workflow
+jobs must declare bounded `timeout-minutes` values, and critical lanes must not use
 `continue-on-error: true`; `make ci-contract-gate` blocks drift in those
 controls. `make maintainability-gate` is also blocking through `make lint`;
 it prevents future agentic changes from adding oversized source, test, or
