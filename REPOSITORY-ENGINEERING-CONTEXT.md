@@ -380,7 +380,9 @@ without promoting any supported business feature.
 RFC, workflow, scaffold, or implementation commits; keep small commits linear
 and let branch protection require the PR merge gate before `main` updates.
 Rebase auto-merge is allowed only when `LOTUS_AUTOMERGE_TOKEN` is configured so
-the merge actor is not the suppressed workflow `GITHUB_TOKEN`. Merged PRs must
+the merge actor is not the suppressed workflow `GITHUB_TOKEN`. When that token
+is absent, the auto-merge helper warns and exits cleanly so an authorized human
+or release actor can perform the required rebase merge. Merged PRs must
 explicitly dispatch the Main Releasability Gate so post-merge truth does not
 depend only on a push-triggered workflow. After every merge, delete the remote
 feature branch and the matching local feature branch, then re-run branch hygiene
