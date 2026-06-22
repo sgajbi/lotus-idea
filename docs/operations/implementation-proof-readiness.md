@@ -52,7 +52,7 @@ The diagnostic is deliberately not live journey proof. It does not:
 5. prove Gateway or Workbench product behavior,
 6. create downstream proposals, manage actions, reports, rendered output, or
    archive records,
-7. authorize client-ready publication,
+7. authorize external publication of client-facing material,
 8. promote any supported feature.
 
 ## Current Blockers
