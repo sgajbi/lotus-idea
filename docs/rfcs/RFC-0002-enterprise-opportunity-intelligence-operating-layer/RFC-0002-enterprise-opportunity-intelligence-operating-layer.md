@@ -802,8 +802,9 @@ The decisions are:
    0 source-authority map and governed by the platform domain-product catalog;
 2. first opportunity family is high cash / idle liquidity;
 3. implementation starts with pure domain models, then synchronous database
-   persistence in Slice 6; event publication follows durable replay and
-   idempotency proof;
+   persistence in Slice 6; Slice 6 now has source-safe pending outbox records,
+   while external event publication still follows durable replay, idempotency,
+   publisher, retry, and consumer proof;
 4. first supported review audience is advisor only;
 5. initial rank policy is deterministic and policy-versioned, based on source
    supportability, materiality, freshness, review urgency,

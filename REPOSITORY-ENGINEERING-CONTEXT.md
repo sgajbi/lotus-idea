@@ -148,7 +148,8 @@ idempotent candidate persistence decisions, duplicate candidate suppression,
 evidence replay posture for matched, stale, mismatched, expired, and missing
 records, idempotent lifecycle-transition recording, lifecycle-transition
 history, conversion intent/outcome records, conversion intent lookup, report
-evidence-pack request records, safe audit events for mutating actions, snapshot
+evidence-pack request records, safe audit events for mutating actions,
+source-safe pending outbox records for accepted internal mutations, snapshot
 recovery for internal replay tests,
 application-level high-cash evaluate-and-persist orchestration in
 `src/app/application/high_cash_signal.py`, internal high-cash source-ingestion
@@ -178,9 +179,17 @@ explanation reads. Application
 use cases must depend on that port instead of defining local repository
 protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
 so the future durable adapter has one governed contract surface.
+`src/app/domain/events.py` defines the internal outbox envelope, pending status
+vocabulary, deterministic event identity, hashed idempotency fingerprint, and
+forbidden payload-key guard for source/client-sensitive fields. Accepted
+candidate persistence, lifecycle, review, feedback, conversion, and report
+evidence-pack mutations append pending outbox records; replay, conflict,
+not-found, blocked, suppressed, and not-eligible paths do not create duplicate
+outbox work. This is not external event publication, downstream delivery, or
+mesh certification.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
-idempotency, lifecycle, audit, review, feedback, conversion, and report
+idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report
 evidence-pack state. `make migration-contract-gate` blocks missing schema
 objects, missing indexes, missing rollback posture, or placeholder SQL.
 `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now add
@@ -189,9 +198,12 @@ dry-running apply and rollback plans in CI, and `make migrate` /
 `make migrate-rollback` requiring `LOTUS_IDEA_DATABASE_URL` for real execution.
 `src/app/infrastructure/postgres_repository.py` now adds the first tested
 PostgreSQL repository adapter over the governed repository port surface. It
-round-trips candidate, idempotency, lifecycle, audit, review, feedback,
+round-trips candidate, idempotency, lifecycle, audit, outbox, review, feedback,
 conversion, and report evidence-pack state through typed tables and JSONB
 snapshots, and rolls back on database flush failure.
+`src/app/infrastructure/postgres_codecs.py` isolates PostgreSQL JSON
+serialization/deserialization helpers so adapter growth preserves the
+maintainability gate instead of normalizing an oversized infrastructure module.
 `src/app/repository_state.py` now wires the adapter into API runtime
 selection when `LOTUS_IDEA_DATABASE_URL` is configured, while keeping
 process-local state as the default. Repository-backed routes derive
@@ -208,10 +220,10 @@ validating the backing workflow tables, and proving schema rollback/reapply
 restores a usable API persistence contract. This is still not production
 storage certification: deploy migration evidence, scheduled daemon/deploy
 source-ingestion worker proof, live Core source adapter proof, data-product
-certification, downstream workflow proof, and supported-feature promotion
-remain planned. The current run-once worker CLI is developer/operator
-foundation only and is validated in check-only mode by
-`make source-ingestion-worker-check`.
+certification, outbox publisher semantics, retry/dead-letter handling,
+downstream workflow proof, and supported-feature promotion remain planned. The
+current run-once worker CLI is developer/operator foundation only and is
+validated in check-only mode by `make source-ingestion-worker-check`.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -531,7 +543,8 @@ logs; fix or document the owned warning source instead.
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence
    policy, deterministic governance checks, internal persistence records,
-   replay posture, idempotency, and audit primitives.
+   replay posture, idempotency, audit primitives, and source-safe pending
+   outbox records.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
    `idea_repository.py` owns the central repository workflow protocols used by
@@ -540,9 +553,9 @@ logs; fix or document the owned warning source instead.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
    current Core adapter preserves source-data product refs and requires Core to
    report cash weight explicitly rather than deriving it locally. The layer also
-   contains migration execution helpers and `PostgresIdeaRepository`, which is
-   tested as a durable repository adapter and selected by API runtime wiring
-   when `LOTUS_IDEA_DATABASE_URL` is configured.
+   contains migration execution helpers, PostgreSQL codec helpers, and
+   `PostgresIdeaRepository`, which is tested as a durable repository adapter and
+   selected by API runtime wiring when `LOTUS_IDEA_DATABASE_URL` is configured.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
    diagnostics, bounded idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement
