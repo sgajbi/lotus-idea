@@ -55,6 +55,13 @@ durable persistence and migration behavior cannot become an implicit or forgotte
 `scripts`. The thresholds are set above the current measured baseline so the gate prevents new
 agent-generated bloat without forcing unrelated refactors into every feature slice.
 
+`make monetary-float-guard` blocks money-like `float` usage in application
+source. The guard is AST-backed and fails monetary `float` annotations,
+money-like float literals, and money-like `float(...)` conversions while
+allowing operational floats such as timeout seconds. This protects private
+banking precision without forcing unrelated runtime configuration code into
+Decimal types.
+
 `make documentation-contract-gate` blocks removal, thinning, or placeholder
 erosion of the required durable documentation and wiki surfaces. It is scoped to
 operator and agent context, not RFC target-state prose, so it remains fast and

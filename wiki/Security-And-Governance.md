@@ -19,7 +19,9 @@ Required posture:
 8. proposed data-product declarations, repo-native data-mesh contract gate,
    blocked static trust telemetry, and planned SLO/access/evidence policies
    before mesh promotion,
-9. branch protection and CI lane governance.
+9. AST-backed monetary-float guard enforcement for money-like application
+   fields and conversions,
+10. branch protection and CI lane governance.
 
 Mesh certification rule:
 

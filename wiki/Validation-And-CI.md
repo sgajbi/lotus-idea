@@ -122,6 +122,11 @@ The maintainability gate blocks oversized Python files/functions in source, test
 trees. It is calibrated above the current baseline so new agentic work must split or refactor
 large additions instead of normalizing hard-to-review modules.
 
+The monetary-float guard blocks money-like `float` annotations, literals, and
+conversions in application source. It is AST-backed and intentionally allows
+non-monetary operational floats, such as timeout seconds, so the guard protects
+private-banking precision without creating noisy exceptions.
+
 The documentation contract gate blocks deletion, thinning, missing anchors, and
 placeholder text across the required README, repository context, standards,
 runbooks, quality, evidence, and wiki surfaces. It keeps enterprise operating
