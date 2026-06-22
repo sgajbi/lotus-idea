@@ -2,11 +2,22 @@ services:
   lotus-idea:
     build: .
     ports:
-      - \"8330:8330\"
+      - "8330:8330"
     env_file:
       - .env
     healthcheck:
-      test: [\"CMD\", \"python\", \"-c\", \"import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')\"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')"]
       interval: 15s
       timeout: 3s
       retries: 10
+  lotus-idea-source-ingestion-worker:
+    build: .
+    profiles:
+      - worker
+    env_file:
+      - .env
+    command:
+      - python
+      - scripts/run_scheduled_source_ingestion_worker.py
+      - --max-runs
+      - "1"

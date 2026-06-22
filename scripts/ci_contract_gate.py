@@ -37,6 +37,7 @@ REQUIRED_TARGETS = (
     "migration-contract-gate",
     "migration-execution-gate",
     "source-ingestion-worker-check",
+    "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
     "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
@@ -69,6 +70,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) migration-contract-gate",
     "$(MAKE) migration-execution-gate",
     "$(MAKE) source-ingestion-worker-check",
+    "$(MAKE) source-ingestion-scheduled-worker-check",
     "$(MAKE) source-ingestion-live-proof-contract-gate",
     "$(MAKE) runtime-trust-telemetry-snapshot-check",
     "$(MAKE) supported-features-gate",
@@ -265,6 +267,16 @@ def validate_makefile(makefile: str) -> list[str]:
         errors.append(
             "Makefile source-ingestion-worker-check target must run "
             "`scripts/source_ingestion_worker_contract_gate.py`"
+        )
+    source_ingestion_scheduled_worker_check = _target_block(
+        makefile, "source-ingestion-scheduled-worker-check"
+    )
+    if "scripts/source_ingestion_scheduled_worker_contract_gate.py" not in (
+        source_ingestion_scheduled_worker_check
+    ):
+        errors.append(
+            "Makefile source-ingestion-scheduled-worker-check target must run "
+            "`scripts/source_ingestion_scheduled_worker_contract_gate.py`"
         )
     source_ingestion_live_proof_check = _target_block(
         makefile, "source-ingestion-live-proof-contract-gate"

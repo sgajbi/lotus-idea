@@ -73,6 +73,10 @@ class SourceIngestionReadinessResponse(CamelModel):
     configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
     configured_live_proof_available: bool = Field(..., alias="configuredLiveProofAvailable")
     live_core_source_proof_valid: bool = Field(..., alias="liveCoreSourceProofValid")
+    configured_scheduled_worker_proof_available: bool = Field(
+        ..., alias="configuredScheduledWorkerProofAvailable"
+    )
+    scheduled_worker_deploy_proof_valid: bool = Field(..., alias="scheduledWorkerDeployProofValid")
     core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
     durable_repository_configured: bool = Field(..., alias="durableRepositoryConfigured")
     run_once_configuration_status: str = Field(..., alias="runOnceConfigurationStatus")
@@ -98,6 +102,10 @@ class SourceIngestionReadinessResponse(CamelModel):
             configuredManifestAvailable=snapshot.configured_manifest_available,
             configuredLiveProofAvailable=snapshot.configured_live_proof_available,
             liveCoreSourceProofValid=snapshot.live_core_source_proof_valid,
+            configuredScheduledWorkerProofAvailable=(
+                snapshot.configured_scheduled_worker_proof_available
+            ),
+            scheduledWorkerDeployProofValid=snapshot.scheduled_worker_deploy_proof_valid,
             coreBaseUrlConfigured=snapshot.core_base_url_configured,
             durableRepositoryConfigured=snapshot.durable_repository_configured,
             runOnceConfigurationStatus=snapshot.run_once_configuration_status,
@@ -338,13 +346,8 @@ def _empty_decision_counts() -> dict[str, int]:
 
 
 def _source_ingestion_certification_blockers() -> tuple[str, ...]:
-    return (
-        "live_core_source_proof_missing",
-        "scheduled_worker_deploy_proof_missing",
-        "data_mesh_runtime_telemetry_not_certified",
-        "gateway_workbench_proof_missing",
-        "supported_feature_promotion_missing",
-    )
+    snapshot = build_source_ingestion_readiness_snapshot()
+    return (*snapshot.certification_blockers, "supported_feature_promotion_missing")
 
 
 def _count_bucket(value: int) -> str:
@@ -389,6 +392,8 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
                         "configuredManifestAvailable": False,
                         "configuredLiveProofAvailable": False,
                         "liveCoreSourceProofValid": False,
+                        "configuredScheduledWorkerProofAvailable": False,
+                        "scheduledWorkerDeployProofValid": False,
                         "coreBaseUrlConfigured": False,
                         "durableRepositoryConfigured": False,
                         "runOnceConfigurationStatus": "blocked",

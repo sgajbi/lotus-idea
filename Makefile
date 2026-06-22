@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -30,6 +30,7 @@ lint:
 	$(MAKE) migration-contract-gate
 	$(MAKE) migration-execution-gate
 	$(MAKE) source-ingestion-worker-check
+	$(MAKE) source-ingestion-scheduled-worker-check
 	$(MAKE) source-ingestion-live-proof-contract-gate
 	$(MAKE) implementation-proof-readiness-check
 	$(MAKE) runtime-trust-telemetry-preview-check
@@ -79,6 +80,9 @@ migration-execution-gate:
 
 source-ingestion-worker-check:
 	$(VENV_PYTHON) scripts/source_ingestion_worker_contract_gate.py
+
+source-ingestion-scheduled-worker-check:
+	$(VENV_PYTHON) scripts/source_ingestion_scheduled_worker_contract_gate.py
 
 source-ingestion-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/source_ingestion_live_proof_contract_gate.py
