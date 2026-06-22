@@ -12,6 +12,7 @@ WORKFLOWS_DIR = ROOT / ".github" / "workflows"
 
 REQUIRED_TARGETS = (
     "ci-contract-gate",
+    "maintainability-gate",
     "monetary-float-guard",
     "no-sensitive-content-guard",
     "implementation-truth-gate",
@@ -35,6 +36,7 @@ REQUIRED_TARGETS = (
 
 REQUIRED_LINT_CALLS = (
     "$(MAKE) ci-contract-gate",
+    "$(MAKE) maintainability-gate",
     "$(MAKE) monetary-float-guard",
     "$(MAKE) no-sensitive-content-guard",
     "$(MAKE) implementation-truth-gate",
