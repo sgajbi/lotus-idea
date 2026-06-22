@@ -16,6 +16,10 @@ from app.application.data_mesh_readiness import (
     REPOSITORY_ROOT,
     build_data_mesh_readiness_snapshot,
 )
+from app.application.downstream_realization_readiness import (
+    DownstreamRealizationReadinessSnapshot,
+    build_downstream_realization_readiness_snapshot,
+)
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,
@@ -95,6 +99,10 @@ def build_implementation_proof_readiness_snapshot(
     )
     ai_explanation = build_ai_explanation_readiness_snapshot()
     data_mesh = build_data_mesh_readiness_snapshot(repository_root=repository_root)
+    downstream_realization = build_downstream_realization_readiness_snapshot(
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+    )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
     capabilities = (
@@ -103,7 +111,7 @@ def build_implementation_proof_readiness_snapshot(
         _ai_explanation_capability(ai_explanation),
         _data_mesh_capability(data_mesh),
         _workbench_product_capability(),
-        _downstream_realization_capability(),
+        _downstream_realization_capability(downstream_realization),
         _supported_feature_capability(supported_feature_count),
     )
 
@@ -252,23 +260,21 @@ def _workbench_product_capability() -> ImplementationProofCapabilityReadiness:
     )
 
 
-def _downstream_realization_capability() -> ImplementationProofCapabilityReadiness:
+def _downstream_realization_capability(
+    snapshot: DownstreamRealizationReadinessSnapshot,
+) -> ImplementationProofCapabilityReadiness:
     return _capability(
         "downstream-realization",
         "Advise, Manage, Report, Render, and Archive realization",
-        readiness_status="planned",
-        supportability_status="not_certified",
+        readiness_status=snapshot.readiness_status,
+        supportability_status=snapshot.supportability_status,
         evidence_refs=(
+            "GET /api/v1/downstream-realization/readiness",
             "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
             "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
             "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
         ),
-        blockers=(
-            "advise_proposal_creation_adapter_missing",
-            "manage_action_register_adapter_missing",
-            "report_render_archive_materialization_missing",
-            "downstream_live_contract_proof_missing",
-        ),
+        blockers=snapshot.blockers,
     )
 
 
