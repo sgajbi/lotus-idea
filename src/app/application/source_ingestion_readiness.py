@@ -6,6 +6,9 @@ import os
 from pathlib import Path
 
 from app.application.source_ingestion_live_proof import live_core_source_proof_is_valid
+from app.application.source_ingestion_scheduled_worker import (
+    scheduled_worker_deploy_proof_is_valid,
+)
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.repository_state import DATABASE_URL_ENV
 
@@ -14,6 +17,7 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
 LIVE_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF"
+SCHEDULED_WORKER_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS"
 EXAMPLE_MANIFEST_PATH = Path(
     "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
@@ -31,6 +35,8 @@ class SourceIngestionReadinessSnapshot:
     configured_manifest_available: bool
     configured_live_proof_available: bool
     live_core_source_proof_valid: bool
+    configured_scheduled_worker_proof_available: bool
+    scheduled_worker_deploy_proof_valid: bool
     core_base_url_configured: bool
     durable_repository_configured: bool
     run_once_configuration_status: str
@@ -62,13 +68,21 @@ def build_source_ingestion_readiness_snapshot(
         os.getenv(LIVE_PROOF_ENV, "").strip(),
         repository_root=repository_root,
     )
+    configured_scheduled_worker_proof_path = resolve_source_ingestion_manifest_path(
+        os.getenv(SCHEDULED_WORKER_PROOF_ENV, "").strip(),
+        repository_root=repository_root,
+    )
     live_core_source_proof_valid = _live_core_source_proof_valid(configured_live_proof_path)
+    scheduled_worker_deploy_proof_valid = _scheduled_worker_deploy_proof_valid(
+        configured_scheduled_worker_proof_path
+    )
     configuration_blockers = _configuration_blockers(
         example_manifest=example_manifest,
         configured_manifest_path=configured_manifest_path,
     )
     certification_blockers = _certification_blockers(
         live_core_source_proof_valid=live_core_source_proof_valid,
+        scheduled_worker_deploy_proof_valid=scheduled_worker_deploy_proof_valid,
     )
     return SourceIngestionReadinessSnapshot(
         repository="lotus-idea",
@@ -84,6 +98,11 @@ def build_source_ingestion_readiness_snapshot(
             configured_live_proof_path and configured_live_proof_path.is_file()
         ),
         live_core_source_proof_valid=live_core_source_proof_valid,
+        configured_scheduled_worker_proof_available=bool(
+            configured_scheduled_worker_proof_path
+            and configured_scheduled_worker_proof_path.is_file()
+        ),
+        scheduled_worker_deploy_proof_valid=scheduled_worker_deploy_proof_valid,
         core_base_url_configured=bool(os.getenv(CORE_BASE_URL_ENV, "").strip()),
         durable_repository_configured=bool(os.getenv(DATABASE_URL_ENV, "").strip()),
         run_once_configuration_status=("configured" if not configuration_blockers else "blocked"),
@@ -113,13 +132,18 @@ def _configuration_blockers(
     return tuple(blockers)
 
 
-def _certification_blockers(*, live_core_source_proof_valid: bool) -> tuple[str, ...]:
+def _certification_blockers(
+    *,
+    live_core_source_proof_valid: bool,
+    scheduled_worker_deploy_proof_valid: bool,
+) -> tuple[str, ...]:
     blockers: list[str] = []
     if not live_core_source_proof_valid:
         blockers.append("live_core_source_proof_missing")
+    if not scheduled_worker_deploy_proof_valid:
+        blockers.append("scheduled_worker_deploy_proof_missing")
     blockers.extend(
         (
-            "scheduled_worker_deploy_proof_missing",
             "data_mesh_runtime_telemetry_not_certified",
             "gateway_workbench_proof_missing",
         )
@@ -135,6 +159,21 @@ def _live_core_source_proof_valid(configured_live_proof_path: Path | None) -> bo
     except (OSError, json.JSONDecodeError):
         return False
     return isinstance(payload, dict) and live_core_source_proof_is_valid(payload)
+
+
+def _scheduled_worker_deploy_proof_valid(
+    configured_scheduled_worker_proof_path: Path | None,
+) -> bool:
+    if (
+        configured_scheduled_worker_proof_path is None
+        or not configured_scheduled_worker_proof_path.is_file()
+    ):
+        return False
+    try:
+        payload = json.loads(configured_scheduled_worker_proof_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return isinstance(payload, dict) and scheduled_worker_deploy_proof_is_valid(payload)
 
 
 def resolve_source_ingestion_manifest_path(

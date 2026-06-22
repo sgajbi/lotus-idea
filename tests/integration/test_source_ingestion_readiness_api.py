@@ -16,6 +16,7 @@ from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     LIVE_PROOF_ENV,
     MANIFEST_ENV,
+    SCHEDULED_WORKER_PROOF_ENV,
 )
 from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
@@ -89,6 +90,7 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(MANIFEST_ENV, raising=False)
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     client = TestClient(app)
 
@@ -106,6 +108,8 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
     assert payload["configuredManifestAvailable"] is False
     assert payload["configuredLiveProofAvailable"] is False
     assert payload["liveCoreSourceProofValid"] is False
+    assert payload["configuredScheduledWorkerProofAvailable"] is False
+    assert payload["scheduledWorkerDeployProofValid"] is False
     assert payload["coreBaseUrlConfigured"] is False
     assert payload["durableRepositoryConfigured"] is False
     assert payload["runOnceConfigurationStatus"] == "blocked"
@@ -157,6 +161,7 @@ def test_source_ingestion_readiness_api_emits_not_certified_operation_event(
     monkeypatch.delenv(MANIFEST_ENV, raising=False)
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     events: list[tuple[str, str, str, bool, bool, str | None]] = []
 
@@ -201,6 +206,7 @@ def test_source_ingestion_readiness_api_emits_configured_run_once_event(
     manifest.write_text("{}", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
     events: list[tuple[str, str, str, bool, bool, str | None]] = []
