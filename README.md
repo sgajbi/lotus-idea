@@ -267,7 +267,10 @@ security/dependency posture, documentation, wiki source, and operating evidence.
 operations, quality, and wiki claims that imply demo readiness, production
 support, certification, live source ingestion, Gateway/Workbench support, or
 client-ready publication while the supported-feature registry remains
-foundation-only.
+foundation-only. It also blocks stale scaffold-era underclaims in current-state
+demo documentation, such as saying no business workflow exists or that
+architecture-boundary enforcement is still report-only after implementation and
+CI evidence prove otherwise.
 Rebase auto-merge is allowed only with `LOTUS_AUTOMERGE_TOKEN` plus merged-PR
 Main Releasability dispatch so post-merge release evidence is produced on
 `main` by a non-suppressed merge actor. GitHub workflow jobs must declare

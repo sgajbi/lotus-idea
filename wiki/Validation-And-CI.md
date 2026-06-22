@@ -80,7 +80,10 @@ The implementation-truth gate scans README, repository context, operations/demo 
 and wiki source for unqualified current-state claims that imply demo readiness, production support,
 certification, live source ingestion, Gateway/Workbench support, or client-ready publication while
 no supported feature is implemented. RFC target-state planning text is excluded; current-state
-surfaces must describe unsupported, planned, blocked, or evidence-required posture explicitly.
+surfaces must describe unsupported, planned, blocked, or evidence-required posture explicitly. The
+gate also blocks stale scaffold-era underclaims in demo documentation when current implementation
+and CI evidence prove a stronger foundation, so future agent work cannot leave outdated scaffold
+truth behind while adding real APIs or gates.
 
 Data-mesh foundation checks:
 

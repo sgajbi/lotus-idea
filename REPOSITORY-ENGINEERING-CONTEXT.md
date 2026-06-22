@@ -534,6 +534,11 @@ ingestion, Gateway/Workbench support, or client-ready publication while the
 supported-feature registry has no implemented features. RFC target-state
 planning text is intentionally excluded; current-state surfaces must use
 explicit blocked, planned, unsupported, not-yet, or evidence-required wording.
+The same gate also fails stale scaffold-era underclaims in current-state demo
+documentation when they conflict with repository evidence, including claims
+that no business workflow exists after internal APIs are certified or that
+architecture-boundary enforcement remains report-only after the
+`architecture-boundary-gate` target is blocking.
 
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression

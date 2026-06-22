@@ -54,6 +54,43 @@ def test_implementation_truth_gate_allows_explicitly_blocked_claim(tmp_path: Pat
     )
 
 
+def test_implementation_truth_gate_blocks_stale_scaffold_underclaim(tmp_path: Path) -> None:
+    module = _load_gate()
+    current_state = tmp_path / "demo-claims.md"
+    current_state.write_text("No business workflow is implemented by the scaffold.\n")
+
+    errors = module.validate_implementation_truth(
+        implemented_features_count=0,
+        scan_paths=(current_state,),
+    )
+
+    assert errors == [
+        f"{current_state}:1: stale scaffold current-state claim "
+        "`scaffold_no_business_workflow` no longer matches repository evidence"
+    ]
+
+
+def test_implementation_truth_gate_blocks_stale_report_only_architecture_claim(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    current_state = tmp_path / "demo-claims.md"
+    current_state.write_text(
+        "Architecture boundary reporting remains report-only. "
+        "Keep report-only until low-noise policy is proven.\n"
+    )
+
+    errors = module.validate_implementation_truth(
+        implemented_features_count=1,
+        scan_paths=(current_state,),
+    )
+
+    assert errors == [
+        f"{current_state}:1: stale scaffold current-state claim "
+        "`keep_architecture_report_only` no longer matches repository evidence"
+    ]
+
+
 def test_implementation_truth_gate_skips_after_supported_feature_promotion(
     tmp_path: Path,
 ) -> None:
