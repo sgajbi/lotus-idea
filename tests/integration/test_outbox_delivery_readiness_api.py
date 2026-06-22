@@ -13,11 +13,13 @@ from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     OutboxEventRecord,
+    OutboxEventStatus,
     build_candidate_outbox_event,
     mark_outbox_event_failed,
 )
 from app.main import app
-from app.repository_state import reset_idea_repository_for_tests
+from app.ports.outbox_publisher import OutboxPublishOutcome
+from app.repository_state import get_idea_repository, reset_idea_repository_for_tests
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -40,6 +42,19 @@ def outbox_delivery_readiness_headers(
         "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-outbox-delivery-readiness-api",
+    }
+
+
+def outbox_delivery_run_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.outbox-delivery.run",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-outbox-delivery-run-api",
     }
 
 
@@ -153,6 +168,194 @@ def test_outbox_delivery_readiness_api_emits_not_certified_operation_event(
     ]
 
 
+def test_outbox_delivery_run_once_api_blocks_without_broker_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(OUTBOX_BROKER_URL_ENV, raising=False)
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "blocked"
+    assert payload["attemptedCount"] == 0
+    assert payload["publishedCount"] == 0
+    assert payload["externalBrokerConfigured"] is False
+    assert "outbox_broker_not_configured" in payload["certificationBlockers"]
+    assert "eventId" not in response.text
+    assert "idea_high_cash_001" not in response.text
+    assert "idea.candidate.persisted.v1:idempotency" not in response.text
+    assert (
+        resettable_repository_snapshot().outbox_events[event.event_id].status
+        is OutboxEventStatus.PENDING
+    )
+
+
+def test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(OUTBOX_BROKER_URL_ENV, "not-a-url")
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "blocked"
+    assert payload["attemptedCount"] == 0
+    assert payload["publishedCount"] == 0
+    assert payload["externalBrokerConfigured"] is False
+    assert "outbox_broker_configuration_invalid" in payload["certificationBlockers"]
+    assert (
+        resettable_repository_snapshot().outbox_events[event.event_id].status
+        is OutboxEventStatus.PENDING
+    )
+
+
+def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    publisher = AcceptingPublisher()
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "_build_outbox_publisher_from_environment",
+        lambda: publisher,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"deliveredAtUtc": "2026-06-21T10:05:00Z", "limit": 10},
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "completed"
+    assert payload["supportabilityStatus"] == "not_certified"
+    assert payload["attemptedCount"] == 1
+    assert payload["publishedCount"] == 1
+    assert payload["failedCount"] == 0
+    assert payload["deadLetteredCount"] == 0
+    assert payload["skippedCount"] == 0
+    assert payload["externalBrokerConfigured"] is True
+    assert payload["supportedFeaturePromoted"] is False
+    assert "external_broker_runtime_proof_missing" in payload["certificationBlockers"]
+    assert publisher.events == [event]
+    assert (
+        resettable_repository_snapshot().outbox_events[event.event_id].status
+        is OutboxEventStatus.PUBLISHED
+    )
+    assert "eventId" not in response.text
+    assert "idea_high_cash_001" not in response.text
+
+
+def test_outbox_delivery_run_once_api_requires_operator_permission() -> None:
+    client = TestClient(app)
+
+    response = client.post("/api/v1/outbox-delivery/run-once")
+    role_denied = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(roles="advisor"),
+    )
+    capability_denied = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(
+            capabilities="idea.outbox-delivery.readiness.read",
+        ),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
+
+
+def test_outbox_delivery_run_once_api_rejects_non_utc_delivery_time() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"deliveredAtUtc": "2026-06-21T18:05:00+08:00"},
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+
+
+def test_outbox_delivery_run_once_api_emits_not_certified_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    publisher = AcceptingPublisher()
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "_build_outbox_publisher_from_environment",
+        lambda: publisher,
+    )
+    events: list[tuple[str, str, str, bool, bool, str | None, dict[str, str]]] = []
+
+    def capture(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.supportability_status.value,
+                event.durable_storage_backed,
+                event.supported_feature_promoted,
+                event.error_code,
+                dict(event.attributes),
+            )
+        )
+
+    monkeypatch.setattr(outbox_delivery_readiness_api, "emit_operation_event", capture)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [
+        (
+            "outbox_delivery_run_once",
+            "accepted",
+            "not_certified",
+            False,
+            False,
+            None,
+            {"attempted_count_bucket": "1-10"},
+        )
+    ]
+
+
+class AcceptingPublisher:
+    def __init__(self) -> None:
+        self.events: list[OutboxEventRecord] = []
+
+    def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
+        self.events.append(event)
+        return OutboxPublishOutcome.accepted_by_publisher()
+
+
 def pending_event(event_type: str) -> OutboxEventRecord:
     return build_candidate_outbox_event(
         event_type=event_type,
@@ -180,3 +383,8 @@ def repository_with_events(*events: OutboxEventRecord) -> InMemoryIdeaRepository
             outbox_events={event.event_id: event for event in events},
         )
     )
+
+
+def resettable_repository_snapshot() -> IdeaRepositorySnapshot:
+    repository = get_idea_repository()
+    return repository.snapshot()
