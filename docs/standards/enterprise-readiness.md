@@ -8,7 +8,8 @@ lanes protect architecture boundaries, maintainability thresholds, documentation
 contracts, quality-scorecard truth, OpenAPI quality, data-mesh
 contract posture, migration safety, supported-feature promotion control, endpoint certification,
 security audit, coverage, PostgreSQL runtime proof, workflow timeout posture, no soft-failed
-critical CI jobs, and implementation-truth claims in README/docs/wiki current-state surfaces.
+critical CI jobs, repository hygiene, and implementation-truth claims in README/docs/wiki
+current-state surfaces.
 Protected `main` requires the strict PR Merge Gate status set, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before merge.
 
@@ -22,6 +23,12 @@ scorecard, evidence guide, and repo-local wiki source.
 The maintainability gate is intentionally conservative and measured against the current baseline:
 source files/functions, test files/functions, and script files/functions have explicit maximum
 line-count thresholds. New work should refactor or split modules before exceeding those thresholds.
+
+`make repository-hygiene-gate` is blocking through `make lint`. It prevents
+committed generated Python cache files, local coverage artifacts, build outputs,
+dependency directories, local environment files, logs, and local databases so
+the repository remains a durable source, contract, test, evidence, and
+documentation surface rather than a dump of runtime byproducts.
 
 `make quality-scorecard-gate` protects the local bank-buyable scorecard from
 becoming stale as implementation lands. The scorecard must retain the required
