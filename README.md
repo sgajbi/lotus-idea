@@ -267,7 +267,7 @@ Operational entrypoints:
 - implementation proof readiness: `/api/v1/implementation-proof/readiness`
 - data-mesh readiness: `/api/v1/data-mesh/readiness`
 - runtime trust telemetry preview: `/api/v1/data-mesh/trust-telemetry/runtime-preview`
-- runtime trust telemetry snapshot evidence: `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`
+- runtime trust telemetry snapshot: `/api/v1/data-mesh/trust-telemetry/runtime-snapshot` and `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`
 
 Operator details live in:
 

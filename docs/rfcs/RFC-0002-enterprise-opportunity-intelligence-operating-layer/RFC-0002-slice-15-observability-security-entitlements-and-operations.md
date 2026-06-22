@@ -135,6 +135,15 @@ foundation:
     invalid retry-limit guard, role plus capability enforcement, product-safe
     payloads, and operation-event behavior for the outbox delivery readiness
     diagnostic.
+29. `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the
+    contract-shaped runtime trust telemetry diagnostic for callers with the
+    `operator` role and `idea.mesh.trust-telemetry.snapshot.read`, returning
+    source-safe platform trust fields while emitting bounded
+    `mesh_trust_telemetry_snapshot_read` operation events.
+30. `tests/integration/test_runtime_trust_telemetry_api.py` proves source-safe
+    payloads, role plus capability enforcement, timezone validation, and
+    not-certified operation-event behavior for the runtime trust telemetry
+    snapshot diagnostic.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -160,6 +169,9 @@ runtime trust telemetry, and supported-feature evidence exist.
 The outbox delivery readiness diagnostic is explicitly `not_certified` until
 live broker runtime proof, downstream consumer contracts, platform mesh event
 certification, Gateway/Workbench proof, and supported-feature evidence exist.
+The runtime trust telemetry preview and snapshot diagnostics are explicitly
+`not_certified` until platform mesh certification, Gateway/Workbench
+discovery, and supported-feature evidence exist.
 
 ## Required Work
 

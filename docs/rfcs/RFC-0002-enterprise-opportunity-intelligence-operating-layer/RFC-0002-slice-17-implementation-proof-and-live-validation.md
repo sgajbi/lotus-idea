@@ -39,6 +39,11 @@ Prove the complete supported opportunity journey end to end.
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
    rewritten as route-existence or downstream-execution claims.
+9. `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` now supplies the
+   contract-shaped runtime trust telemetry proof family used by operators and
+   certification reviewers before platform mesh promotion. It remains blocked
+   and not certified, omits source-sensitive identifiers, and does not replace
+   platform certification or supported-feature promotion.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -75,6 +80,10 @@ proof gap.
 The outbox-delivery readiness diagnostic does the same for broker and event
 delivery posture; it does not close the external publication or downstream
 consumer proof gap.
+The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
+gap from "generated artifact only" to "API-certified diagnostic plus generated
+artifact"; it does not close platform mesh certification, Gateway/Workbench
+discovery, or supported-feature proof gaps.
 
 ## Acceptance Gate
 

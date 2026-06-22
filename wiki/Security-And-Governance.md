@@ -52,6 +52,12 @@ or product certification.
 snapshot for `IdeaCandidate:v1` under ignored `output/trust-telemetry/runtime/`.
 It is contract-shaped evidence for operators and CI, not product certification
 or supported-feature promotion.
+`GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the same
+contract-shaped posture as a certified internal operator diagnostic. It
+requires the `operator` role and `idea.mesh.trust-telemetry.snapshot.read`,
+reports blocked/not-certified posture, and must not expose candidate
+identifiers, source routes, evidence hashes, portfolio identifiers, or client
+identifiers.
 
 `GET /api/v1/ai-explanations/readiness` is the current internal operator
 diagnostic for AI explanation model-risk supportability. It requires both the

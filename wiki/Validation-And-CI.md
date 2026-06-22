@@ -134,7 +134,8 @@ Persistence adapter validation:
    `tests/integration/test_runtime_trust_telemetry_api.py`,
    `make runtime-trust-telemetry-preview-check`, and
    `make runtime-trust-telemetry-snapshot-check` prove the source-safe runtime
-   trust telemetry preview and contract-shaped generated snapshot can be
+   trust telemetry preview, API-certified contract-shaped snapshot diagnostic,
+   and contract-shaped generated snapshot can be
    produced without exposing candidate identifiers, source routes, evidence
    hashes, portfolio identifiers, or client identifiers, and without promoting
    mesh certification.
@@ -284,10 +285,11 @@ telemetry preview only; they do not certify data products, platform
 source-manifest inclusion, Gateway/Workbench discovery, or supported-feature
 promotion.
 
-The runtime trust telemetry snapshot generator is covered by unit tests and
-`make runtime-trust-telemetry-snapshot-check`. Its passing checks certify only
-that a source-safe, contract-shaped generated artifact can be emitted from the
-active repository provider while remaining blocked and not certified.
+The internal runtime trust telemetry snapshot endpoint is covered by OpenAPI,
+endpoint certification, unit tests, integration tests, and a repo-native
+generator check. Its passing checks certify only that source-safe,
+contract-shaped snapshot evidence can be emitted from the active repository
+provider while remaining blocked and not certified.
 
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks

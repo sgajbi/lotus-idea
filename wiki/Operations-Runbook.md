@@ -59,6 +59,12 @@ source-safe runtime snapshot under
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
 is contract-shaped runtime evidence only; it does not promote producer products
 or replace platform mesh certification.
+The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`
+diagnostic returns the same contract-shaped snapshot for operators with
+`idea.mesh.trust-telemetry.snapshot.read`. It remains source-safe and
+`not_certified`; it is not platform source-manifest inclusion, mesh
+certification, Gateway/Workbench discovery, client-ready publication, or
+supported-feature promotion.
 The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
 for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
 run-once worker manifest, Core base URL, durable repository configuration, and
@@ -193,8 +199,9 @@ evaluation, AI explanation readiness diagnostic reads, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, downstream realization
 submission, data-mesh-readiness
-diagnostic reads, source-ingestion-readiness diagnostic reads, advisor
-queue-readiness diagnostic reads, outbox-delivery-readiness diagnostic reads,
+diagnostic reads, runtime-trust-telemetry-preview and snapshot diagnostic
+reads, source-ingestion-readiness diagnostic reads, advisor queue-readiness
+diagnostic reads, outbox-delivery-readiness diagnostic reads,
 downstream-realization-readiness diagnostic reads, plus aggregate
 implementation-proof-readiness diagnostic reads.
 
@@ -217,7 +224,9 @@ Current outcomes:
     `lotus-ai` runtime execution, durable lineage, model-risk dashboard,
     runtime trust telemetry, or Workbench proof, expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
-    certification remain absent, source-ingestion readiness is missing run-once
+    certification remain absent, runtime trust telemetry snapshot generation
+    is blocked by platform certification and discovery proof gaps,
+    source-ingestion readiness is missing run-once
     worker configuration/certification proof, advisor queue readiness is
     missing durable queue posture, entitlement proof, Workbench proof,
     data-product certification, or runtime trust telemetry, outbox delivery
@@ -261,9 +270,9 @@ The inventory covers high-cash evaluation, high-cash persistence, candidate
 evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
-source-ingestion-readiness, downstream-realization-readiness, downstream
-submission, advisor-queue-readiness, and outbox-delivery-readiness diagnostic
-endpoints.
+runtime-trust-telemetry-preview/snapshot, source-ingestion-readiness,
+downstream-realization-readiness, downstream submission,
+advisor-queue-readiness, and outbox-delivery-readiness diagnostic endpoints.
 These endpoints are certified as internal foundations or operator diagnostics
 only; they are not supported business features.
 

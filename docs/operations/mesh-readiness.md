@@ -87,19 +87,32 @@ client identifiers, raw source routes, evidence hashes, request payloads, and
 response payloads. It is endpoint-certified as an internal operator diagnostic,
 not as data-product certification or product discovery.
 
-`make runtime-trust-telemetry-snapshot-check` writes a contract-shaped runtime
+`GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` returns the same
+contract-shaped runtime snapshot as an internal operator diagnostic. It
+requires:
+
+1. `X-Caller-Roles: operator`
+2. `X-Caller-Capabilities: idea.mesh.trust-telemetry.snapshot.read`
+
+The response preserves the platform trust-telemetry contract field names,
+reports `blocking.blocked: true`, and uses aggregate active-repository state
+only. It deliberately omits candidate identifiers, portfolio identifiers,
+client identifiers, raw source routes, evidence hashes, request payloads, and
+response payloads.
+
+`make runtime-trust-telemetry-snapshot-check` writes the contract-shaped runtime
 snapshot to:
 
 ```text
 output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json
 ```
 
-This generated snapshot uses the same active repository provider as the preview
-and emits platform-compatible trust telemetry fields for
-`lotus-idea:IdeaCandidate:v1`. It is source-safe, ignored by Git, and remains
-blocked with explicit certification blockers. It does not replace the checked-in
-static fallback contract, promote producer products, or include `lotus-idea` in
-the platform source manifest.
+The endpoint and generated artifact use the same active repository provider as
+the preview and emit platform-compatible trust telemetry fields for
+`lotus-idea:IdeaCandidate:v1`. They are source-safe and remain blocked with
+explicit certification blockers. The generated file is ignored by Git. Neither
+surface replaces the checked-in static fallback contract, promotes producer
+products, or includes `lotus-idea` in the platform source manifest.
 
 The Docker image copies `contracts/` into `/app/contracts` so containerized
 diagnostics read the same contract truth as local validation.
@@ -128,8 +141,8 @@ The gate validates:
    source-product drift or premature `lotus-idea` source-manifest inclusion.
 7. the runtime telemetry preview generator still emits source-safe
    not-certified evidence from the active repository provider.
-8. the runtime telemetry snapshot generator still emits a contract-shaped,
-   source-safe, blocked runtime snapshot under ignored `output/` evidence.
+8. the runtime telemetry snapshot endpoint and generator still emit
+   contract-shaped, source-safe, blocked runtime snapshot evidence.
 
 This gate is not mesh certification. It is a pre-certification guardrail so
 future implementation slices cannot accidentally promote proposed contracts or

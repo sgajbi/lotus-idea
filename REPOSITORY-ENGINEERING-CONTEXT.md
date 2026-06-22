@@ -475,10 +475,14 @@ emits a bounded `mesh_trust_telemetry_preview_read` operation event, reports
 `certificationStatus=not_certified`, `platformCertified=false`, and
 `supportedFeaturePromoted=false`, and is also available through
 `make runtime-trust-telemetry-preview-check`. The same application service now
-builds a contract-shaped runtime trust telemetry snapshot through
+builds a contract-shaped runtime trust telemetry snapshot exposed through
+`GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` for callers with
+`idea.mesh.trust-telemetry.snapshot.read` plus the `operator` role. The
+snapshot diagnostic emits a bounded `mesh_trust_telemetry_snapshot_read`
+operation event and preserves the same not-certified/no-promotion posture.
 `scripts/generate_runtime_trust_telemetry_snapshot.py` and
-`make runtime-trust-telemetry-snapshot-check`, writing source-safe generated
-evidence to
+`make runtime-trust-telemetry-snapshot-check` write the same source-safe
+generated evidence to
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`.
 These endpoints and generated artifacts are diagnostic evidence only; they are
 not data-product certification, platform source-manifest inclusion,
