@@ -77,8 +77,9 @@ Additional implemented source-adapter foundation:
    `scripts/run_source_ingestion_worker.py` now add the versioned
    manifest-backed run-once worker entrypoint. Check-only mode validates
    `docs/examples/source-ingestion/high-cash-worker-manifest.example.json`
-   without calling Core or writing repository state, and run mode emits a
-   product-safe summary without source payloads or supported-feature promotion.
+   without calling Core or writing repository state, and both check-only and
+   run mode emit product-safe summaries without source payloads, portfolio ids,
+   raw idempotency keys, or supported-feature promotion.
 
 Not implemented yet:
 

@@ -28,8 +28,12 @@ and it now includes a bounded run-once batch worker foundation with per-item
 idempotency, batch decision counts, and maximum item validation.
 `scripts/run_source_ingestion_worker.py` provides the versioned run-once worker
 CLI, and `make source-ingestion-worker-check` validates the manifest contract
-without calling Core or writing state. The PostgreSQL runtime proof covers
-replay after repository reload plus same-key
+without calling Core or writing state. Check-only and run-mode summaries are
+source-safe: check-only reports manifest shape and item indexes, while run mode
+reports decision counts, candidate ids when candidates are created, and
+idempotency-key presence. Neither summary prints raw source payloads, portfolio
+ids, or raw idempotency keys. The PostgreSQL runtime proof covers replay after
+repository reload plus same-key
 changed-source conflict recovery. This is not a deployed scheduler daemon, live
 Core source-worker certification, production storage certification,
 data-product certification, Gateway route, Workbench proof, or supported

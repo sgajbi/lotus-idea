@@ -126,8 +126,9 @@ counts, and explicit accepted, replayed, conflict, blocked, suppressed, and
 skipped-not-eligible decisions. `src/app/application/source_ingestion_worker.py`
 and `scripts/run_source_ingestion_worker.py` now add the versioned
 manifest-backed run-once worker entrypoint, product-safe check-only summary,
-and product-safe run summary. `make source-ingestion-worker-check` validates
-the example manifest in the local lint path so future agent changes cannot
+and product-safe run summary that redact raw source payloads, portfolio ids,
+and raw idempotency keys. `make source-ingestion-worker-check` validates the
+example manifest in the local lint path so future agent changes cannot
 silently break the worker contract.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
