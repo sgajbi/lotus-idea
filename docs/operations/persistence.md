@@ -81,8 +81,9 @@ supported feature.
     run-once worker entrypoint. Check-only mode returns a product-safe
     validation summary and is enforced by `make source-ingestion-worker-check`;
     run mode requires a configured Core base URL and active repository
-    provider. It is not a daemon, deploy-pipeline worker, or live Core
-    certification.
+    provider. Both check-only and run summaries redact raw source payloads,
+    portfolio ids, and raw idempotency keys. It is not a daemon,
+    deploy-pipeline worker, or live Core certification.
 
 ## Validation
 

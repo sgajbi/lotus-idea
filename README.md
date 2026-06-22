@@ -201,8 +201,9 @@ source-authority contracts only, not runtime certification.
   including generated source-ingestion idempotency keys, batch decision counts,
   and explicit accepted/replayed/conflict/blocked/suppressed/not-eligible
   decisions. `source_ingestion_worker.py` adds a manifest-backed run-once
-  worker plan and product-safe run summary for operator execution without
-  source payload leakage or supported-feature promotion.
+  worker plan plus product-safe check-only and run summaries for operator
+  execution without source payload, portfolio id, raw idempotency-key, or
+  supported-feature leakage.
   Internal candidate detail orchestration reads persisted repository snapshots
   and returns source-safe detail projections with redacted source references,
   workflow summaries, audit summary posture, and no downstream authority or
@@ -404,6 +405,10 @@ $env:LOTUS_CORE_BASE_URL = "http://localhost:8310"
 Run mode is an internal run-once operator entrypoint only. It is not a scheduled
 daemon, deploy-pipeline worker proof, live Core certification, Gateway/Workbench
 support, data-product certification, or supported-feature promotion.
+Check-only and run summaries are intentionally bounded. Check-only reports
+manifest shape and item indexes only. Run mode reports decision counts,
+candidate ids when candidates are created, and idempotency-key presence. Neither
+summary prints raw source payloads, portfolio ids, or raw idempotency keys.
 
 To inspect source-ingestion run-once configuration and certification blockers
 without calling Core or writing repository state:

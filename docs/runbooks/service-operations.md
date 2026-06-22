@@ -30,6 +30,10 @@
 5. For source-ingestion worker contract changes, run
    `make source-ingestion-worker-check`. This validates the versioned worker
    manifest in check-only mode without calling Core or writing repository state.
+   Check-only and run-mode summaries must stay source-safe: manifest item
+   indexes, decision counts, candidate ids when candidates are created, and
+   idempotency-key presence are allowed, but raw source payloads, portfolio ids,
+   and raw idempotency keys are not.
 6. For runtime source-ingestion configuration checks, call
    `GET /api/v1/source-ingestion/readiness` with the `operator` role and
    `idea.source-ingestion.readiness.read` capability. This reports manifest,
