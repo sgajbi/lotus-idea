@@ -12,3 +12,8 @@ implementation-truth claims in README/docs/wiki current-state surfaces.
 The maintainability gate is intentionally conservative and measured against the current baseline:
 source files/functions, test files/functions, and script files/functions have explicit maximum
 line-count thresholds. New work should refactor or split modules before exceeding those thresholds.
+
+`make implementation-truth-gate` also protects against stale scaffold-era underclaims in
+current-state demo documentation. As internal APIs, architecture gates, persistence, and other
+foundations become real, the demo ledger must move from generic scaffold wording to
+implementation-backed evidence plus explicit unsupported boundaries.

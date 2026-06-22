@@ -38,6 +38,21 @@ PROMOTION_PATTERNS: dict[str, re.Pattern[str]] = {
     "supported_feature_promoted_true": re.compile(r"\bsupportedFeaturePromoted\s*=\s*true\b"),
 }
 
+STALE_SCAFFOLD_PATTERNS: dict[str, re.Pattern[str]] = {
+    "scaffold_no_business_workflow": re.compile(
+        r"\bNo business workflow is implemented by the scaffold\b",
+        re.IGNORECASE,
+    ),
+    "architecture_report_only": re.compile(
+        r"\bReport-only until governance promotes it\b",
+        re.IGNORECASE,
+    ),
+    "keep_architecture_report_only": re.compile(
+        r"\bKeep report-only until low-noise policy is proven\b",
+        re.IGNORECASE,
+    ),
+}
+
 QUALIFIED_CONTEXT_PATTERNS = (
     re.compile(r"\bnot\b", re.IGNORECASE),
     re.compile(r"\bno\b", re.IGNORECASE),
@@ -98,9 +113,6 @@ def validate_implementation_truth(
 ) -> list[str]:
     if implemented_features_count is None:
         implemented_features_count = _implemented_features_count()
-    if implemented_features_count > 0:
-        return []
-
     errors: list[str] = []
     for path in _scan_files(scan_paths):
         try:
@@ -108,9 +120,17 @@ def validate_implementation_truth(
         except UnicodeDecodeError:
             continue
         for index, line in enumerate(lines):
+            relative_path = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
+            for name, pattern in STALE_SCAFFOLD_PATTERNS.items():
+                if pattern.search(line):
+                    errors.append(
+                        f"{relative_path}:{index + 1}: stale scaffold current-state "
+                        f"claim `{name}` no longer matches repository evidence"
+                    )
+            if implemented_features_count > 0:
+                continue
             for name, pattern in PROMOTION_PATTERNS.items():
                 if pattern.search(line) and not _is_qualified(lines, index):
-                    relative_path = path.relative_to(ROOT) if path.is_relative_to(ROOT) else path
                     errors.append(
                         f"{relative_path}:{index + 1}: unqualified current-state "
                         f"promotion claim `{name}` while no supported feature is implemented"
