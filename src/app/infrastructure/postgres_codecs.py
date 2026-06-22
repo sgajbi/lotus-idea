@@ -1,0 +1,450 @@
+from __future__ import annotations
+
+from datetime import date, datetime
+from decimal import Decimal
+from typing import Any, Mapping
+
+from app.domain.access_scope import ReviewAccessScope
+from app.domain.conversion_governance import (
+    ConversionBoundary,
+    GovernedConversionIntent,
+    GovernedConversionOutcome,
+)
+from app.domain.ideas import (
+    ConversionOutcomeStatus,
+    ConversionTarget,
+    EvidenceFreshness,
+    EvidenceSupportability,
+    IdeaCandidate,
+    IdeaConversionIntent,
+    IdeaConversionOutcome,
+    IdeaEvidencePacket,
+    IdeaLifecycleStatus,
+    IdeaScore,
+    LineageRef,
+    OpportunityFamily,
+    ReasonCode,
+    ReviewPosture,
+    SourceRef,
+    SourceSystem,
+    SuppressionReason,
+    UnsupportedEvidenceReason,
+)
+from app.domain.report_evidence import (
+    GovernedReportEvidencePack,
+    ReportEvidencePackBoundary,
+    ReportEvidencePackPurpose,
+    ReportEvidenceSourceSummary,
+)
+from app.domain.review_governance import (
+    GovernedFeedbackEvent,
+    GovernedReviewDecision,
+    ReviewAction,
+    ReviewActorRole,
+)
+
+
+def _row(row: Any, key: str) -> Any:
+    if isinstance(row, Mapping):
+        return row[key]
+    raise TypeError("PostgresIdeaRepository requires mapping rows")
+
+
+def _json(row: Any, key: str) -> dict[str, Any]:
+    value = _row(row, key)
+    if hasattr(value, "obj"):
+        value = value.obj
+    if not isinstance(value, dict):
+        raise TypeError(f"{key} must be a JSON object")
+    return value
+
+
+def _candidate_to_json(candidate: IdeaCandidate) -> dict[str, Any]:
+    return {
+        "candidate_id": candidate.candidate_id,
+        "family": candidate.family.value,
+        "lifecycle_status": candidate.lifecycle_status.value,
+        "review_posture": candidate.review_posture.value,
+        "evidence_packet": _evidence_packet_to_json(candidate.evidence_packet),
+        "source_signal_ids": list(candidate.source_signal_ids),
+        "score": _score_to_json(candidate.score) if candidate.score is not None else None,
+        "access_scope": _access_scope_to_json(candidate.access_scope),
+        "suppression_reason": (
+            candidate.suppression_reason.value if candidate.suppression_reason is not None else None
+        ),
+        "created_at_utc": candidate.created_at_utc.isoformat(),
+        "updated_at_utc": candidate.updated_at_utc.isoformat(),
+    }
+
+
+def _candidate_from_json(payload: Mapping[str, Any]) -> IdeaCandidate:
+    return IdeaCandidate(
+        candidate_id=str(payload["candidate_id"]),
+        family=OpportunityFamily(payload["family"]),
+        lifecycle_status=IdeaLifecycleStatus(payload["lifecycle_status"]),
+        review_posture=ReviewPosture(payload["review_posture"]),
+        evidence_packet=_evidence_packet_from_json(payload["evidence_packet"]),
+        source_signal_ids=tuple(payload["source_signal_ids"]),
+        score=(_score_from_json(payload["score"]) if payload.get("score") is not None else None),
+        access_scope=(
+            _access_scope_from_json(payload["access_scope"])
+            if payload.get("access_scope") is not None
+            else None
+        ),
+        suppression_reason=(
+            SuppressionReason(payload["suppression_reason"])
+            if payload.get("suppression_reason") is not None
+            else None
+        ),
+        created_at_utc=_datetime(payload["created_at_utc"]),
+        updated_at_utc=_datetime(payload["updated_at_utc"]),
+    )
+
+
+def _review_decision_to_json(decision: GovernedReviewDecision) -> dict[str, Any]:
+    return {
+        "review_id": decision.review_id,
+        "candidate_id": decision.candidate_id,
+        "evidence_packet_id": decision.evidence_packet_id,
+        "evidence_content_hash": decision.evidence_content_hash,
+        "action": decision.action.value,
+        "resulting_posture": decision.resulting_posture.value,
+        "actor_subject": decision.actor_subject,
+        "actor_role": decision.actor_role.value,
+        "reason_codes": [reason.value for reason in decision.reason_codes],
+        "decided_at_utc": decision.decided_at_utc.isoformat(),
+        "suppression_reason": (
+            decision.suppression_reason.value if decision.suppression_reason is not None else None
+        ),
+        "snoozed_until_utc": (
+            decision.snoozed_until_utc.isoformat()
+            if decision.snoozed_until_utc is not None
+            else None
+        ),
+    }
+
+
+def _review_decision_from_json(payload: Mapping[str, Any]) -> GovernedReviewDecision:
+    return GovernedReviewDecision(
+        review_id=str(payload["review_id"]),
+        candidate_id=str(payload["candidate_id"]),
+        evidence_packet_id=str(payload["evidence_packet_id"]),
+        evidence_content_hash=str(payload["evidence_content_hash"]),
+        action=ReviewAction(payload["action"]),
+        resulting_posture=ReviewPosture(payload["resulting_posture"]),
+        actor_subject=str(payload["actor_subject"]),
+        actor_role=ReviewActorRole(payload["actor_role"]),
+        reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
+        decided_at_utc=_datetime(payload["decided_at_utc"]),
+        suppression_reason=(
+            SuppressionReason(payload["suppression_reason"])
+            if payload.get("suppression_reason") is not None
+            else None
+        ),
+        snoozed_until_utc=(
+            _datetime(payload["snoozed_until_utc"])
+            if payload.get("snoozed_until_utc") is not None
+            else None
+        ),
+    )
+
+
+def _feedback_event_to_json(feedback: GovernedFeedbackEvent) -> dict[str, Any]:
+    return {
+        "feedback": {
+            "feedback_id": feedback.feedback.feedback_id,
+            "outcome": feedback.feedback.outcome.value,
+            "actor_role": feedback.feedback.actor_role,
+            "reason_codes": [reason.value for reason in feedback.feedback.reason_codes],
+            "recorded_at_utc": feedback.feedback.recorded_at_utc.isoformat(),
+        },
+        "candidate_id": feedback.candidate_id,
+        "evidence_packet_id": feedback.evidence_packet_id,
+        "evidence_content_hash": feedback.evidence_content_hash,
+        "source_signal_ids": list(feedback.source_signal_ids),
+        "actor_subject": feedback.actor_subject,
+        "actor_role": feedback.actor_role.value,
+    }
+
+
+def _feedback_event_from_json(payload: Mapping[str, Any]) -> GovernedFeedbackEvent:
+    from app.domain.ideas import FeedbackOutcome, IdeaFeedback
+
+    feedback = payload["feedback"]
+    return GovernedFeedbackEvent(
+        feedback=IdeaFeedback(
+            feedback_id=str(feedback["feedback_id"]),
+            outcome=FeedbackOutcome(feedback["outcome"]),
+            actor_role=str(feedback["actor_role"]),
+            reason_codes=tuple(ReasonCode(value) for value in feedback["reason_codes"]),
+            recorded_at_utc=_datetime(feedback["recorded_at_utc"]),
+        ),
+        candidate_id=str(payload["candidate_id"]),
+        evidence_packet_id=str(payload["evidence_packet_id"]),
+        evidence_content_hash=str(payload["evidence_content_hash"]),
+        source_signal_ids=tuple(payload["source_signal_ids"]),
+        actor_subject=str(payload["actor_subject"]),
+        actor_role=ReviewActorRole(payload["actor_role"]),
+    )
+
+
+def _conversion_intent_to_json(intent: GovernedConversionIntent) -> dict[str, Any]:
+    return {
+        "intent": {
+            "conversion_intent_id": intent.intent.conversion_intent_id,
+            "candidate_id": intent.intent.candidate_id,
+            "target": intent.intent.target.value,
+            "source_status": intent.intent.source_status.value,
+            "requested_at_utc": intent.intent.requested_at_utc.isoformat(),
+        },
+        "evidence_packet_id": intent.evidence_packet_id,
+        "evidence_content_hash": intent.evidence_content_hash,
+        "source_signal_ids": list(intent.source_signal_ids),
+        "actor_subject": intent.actor_subject,
+        "idempotency_key": intent.idempotency_key,
+        "reason_codes": [reason.value for reason in intent.reason_codes],
+        "target_source_authority": intent.target_source_authority.value,
+        "boundary": intent.boundary.value,
+    }
+
+
+def _conversion_intent_from_json(payload: Mapping[str, Any]) -> GovernedConversionIntent:
+    intent = payload["intent"]
+    return GovernedConversionIntent(
+        intent=IdeaConversionIntent(
+            conversion_intent_id=str(intent["conversion_intent_id"]),
+            candidate_id=str(intent["candidate_id"]),
+            target=ConversionTarget(intent["target"]),
+            source_status=IdeaLifecycleStatus(intent["source_status"]),
+            requested_at_utc=_datetime(intent["requested_at_utc"]),
+        ),
+        evidence_packet_id=str(payload["evidence_packet_id"]),
+        evidence_content_hash=str(payload["evidence_content_hash"]),
+        source_signal_ids=tuple(payload["source_signal_ids"]),
+        actor_subject=str(payload["actor_subject"]),
+        idempotency_key=str(payload["idempotency_key"]),
+        reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
+        target_source_authority=SourceSystem(payload["target_source_authority"]),
+        boundary=ConversionBoundary(payload["boundary"]),
+    )
+
+
+def _conversion_outcome_to_json(outcome: GovernedConversionOutcome) -> dict[str, Any]:
+    return {
+        "outcome": {
+            "conversion_outcome_id": outcome.outcome.conversion_outcome_id,
+            "conversion_intent_id": outcome.outcome.conversion_intent_id,
+            "status": outcome.outcome.status.value,
+            "downstream_reference": outcome.outcome.downstream_reference,
+            "recorded_at_utc": outcome.outcome.recorded_at_utc.isoformat(),
+        },
+        "conversion_intent_id": outcome.conversion_intent_id,
+        "target": outcome.target.value,
+        "source_system": outcome.source_system.value,
+        "boundary": outcome.boundary.value,
+    }
+
+
+def _conversion_outcome_from_json(payload: Mapping[str, Any]) -> GovernedConversionOutcome:
+    outcome = payload["outcome"]
+    return GovernedConversionOutcome(
+        outcome=IdeaConversionOutcome(
+            conversion_outcome_id=str(outcome["conversion_outcome_id"]),
+            conversion_intent_id=str(outcome["conversion_intent_id"]),
+            status=ConversionOutcomeStatus(outcome["status"]),
+            downstream_reference=outcome.get("downstream_reference"),
+            recorded_at_utc=_datetime(outcome["recorded_at_utc"]),
+        ),
+        conversion_intent_id=str(payload["conversion_intent_id"]),
+        target=ConversionTarget(payload["target"]),
+        source_system=SourceSystem(payload["source_system"]),
+        boundary=ConversionBoundary(payload["boundary"]),
+    )
+
+
+def _report_evidence_pack_to_json(pack: GovernedReportEvidencePack) -> dict[str, Any]:
+    return {
+        "report_evidence_pack_id": pack.report_evidence_pack_id,
+        "conversion_intent_id": pack.conversion_intent_id,
+        "candidate_id": pack.candidate_id,
+        "evidence_packet_id": pack.evidence_packet_id,
+        "evidence_content_hash": pack.evidence_content_hash,
+        "source_signal_ids": list(pack.source_signal_ids),
+        "source_summaries": [
+            _report_source_summary_to_json(summary) for summary in pack.source_summaries
+        ],
+        "purpose": pack.purpose.value,
+        "actor_subject": pack.actor_subject,
+        "idempotency_key": pack.idempotency_key,
+        "reason_codes": [reason.value for reason in pack.reason_codes],
+        "requested_at_utc": pack.requested_at_utc.isoformat(),
+        "retention_policy_ref": pack.retention_policy_ref,
+        "report_source_authority": pack.report_source_authority.value,
+        "render_source_authority": pack.render_source_authority.value,
+        "archive_source_authority": pack.archive_source_authority.value,
+        "boundary": pack.boundary.value,
+    }
+
+
+def _report_evidence_pack_from_json(payload: Mapping[str, Any]) -> GovernedReportEvidencePack:
+    return GovernedReportEvidencePack(
+        report_evidence_pack_id=str(payload["report_evidence_pack_id"]),
+        conversion_intent_id=str(payload["conversion_intent_id"]),
+        candidate_id=str(payload["candidate_id"]),
+        evidence_packet_id=str(payload["evidence_packet_id"]),
+        evidence_content_hash=str(payload["evidence_content_hash"]),
+        source_signal_ids=tuple(payload["source_signal_ids"]),
+        source_summaries=tuple(
+            _report_source_summary_from_json(summary) for summary in payload["source_summaries"]
+        ),
+        purpose=ReportEvidencePackPurpose(payload["purpose"]),
+        actor_subject=str(payload["actor_subject"]),
+        idempotency_key=str(payload["idempotency_key"]),
+        reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
+        requested_at_utc=_datetime(payload["requested_at_utc"]),
+        retention_policy_ref=str(payload["retention_policy_ref"]),
+        report_source_authority=SourceSystem(payload["report_source_authority"]),
+        render_source_authority=SourceSystem(payload["render_source_authority"]),
+        archive_source_authority=SourceSystem(payload["archive_source_authority"]),
+        boundary=ReportEvidencePackBoundary(payload["boundary"]),
+    )
+
+
+def _access_scope_to_json(scope: ReviewAccessScope | None) -> dict[str, Any] | None:
+    if scope is None:
+        return None
+    return {
+        "tenant_id": scope.tenant_id,
+        "book_id": scope.book_id,
+        "portfolio_id": scope.portfolio_id,
+        "client_id": scope.client_id,
+    }
+
+
+def _access_scope_from_json(payload: Mapping[str, Any]) -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id=str(payload["tenant_id"]),
+        book_id=str(payload["book_id"]),
+        portfolio_id=str(payload["portfolio_id"]),
+        client_id=str(payload["client_id"]),
+    )
+
+
+def _evidence_packet_to_json(packet: IdeaEvidencePacket) -> dict[str, Any]:
+    return {
+        "evidence_packet_id": packet.evidence_packet_id,
+        "supportability": packet.supportability.value,
+        "source_refs": [_source_ref_to_json(source_ref) for source_ref in packet.source_refs],
+        "lineage_ref": _lineage_ref_to_json(packet.lineage_ref),
+        "reason_codes": [reason.value for reason in packet.reason_codes],
+        "unsupported_reasons": [reason.value for reason in packet.unsupported_reasons],
+        "created_at_utc": packet.created_at_utc.isoformat(),
+    }
+
+
+def _evidence_packet_from_json(payload: Mapping[str, Any]) -> IdeaEvidencePacket:
+    return IdeaEvidencePacket(
+        evidence_packet_id=str(payload["evidence_packet_id"]),
+        supportability=EvidenceSupportability(payload["supportability"]),
+        source_refs=tuple(_source_ref_from_json(item) for item in payload["source_refs"]),
+        lineage_ref=_lineage_ref_from_json(payload["lineage_ref"]),
+        reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
+        unsupported_reasons=tuple(
+            UnsupportedEvidenceReason(value) for value in payload["unsupported_reasons"]
+        ),
+        created_at_utc=_datetime(payload["created_at_utc"]),
+    )
+
+
+def _lineage_ref_to_json(lineage_ref: LineageRef) -> dict[str, Any]:
+    return {
+        "lineage_id": lineage_ref.lineage_id,
+        "source_refs": [_source_ref_to_json(source_ref) for source_ref in lineage_ref.source_refs],
+        "content_hash": lineage_ref.content_hash,
+    }
+
+
+def _lineage_ref_from_json(payload: Mapping[str, Any]) -> LineageRef:
+    return LineageRef(
+        lineage_id=str(payload["lineage_id"]),
+        source_refs=tuple(_source_ref_from_json(item) for item in payload["source_refs"]),
+        content_hash=str(payload["content_hash"]),
+    )
+
+
+def _source_ref_to_json(source_ref: SourceRef) -> dict[str, Any]:
+    return {
+        "product_id": source_ref.product_id,
+        "source_system": source_ref.source_system.value,
+        "product_version": source_ref.product_version,
+        "route": source_ref.route,
+        "as_of_date": source_ref.as_of_date.isoformat(),
+        "generated_at_utc": source_ref.generated_at_utc.isoformat(),
+        "content_hash": source_ref.content_hash,
+        "data_quality_status": source_ref.data_quality_status,
+        "freshness": source_ref.freshness.value,
+    }
+
+
+def _source_ref_from_json(payload: Mapping[str, Any]) -> SourceRef:
+    return SourceRef(
+        product_id=str(payload["product_id"]),
+        source_system=SourceSystem(payload["source_system"]),
+        product_version=str(payload["product_version"]),
+        route=str(payload["route"]),
+        as_of_date=date.fromisoformat(str(payload["as_of_date"])),
+        generated_at_utc=_datetime(payload["generated_at_utc"]),
+        content_hash=str(payload["content_hash"]),
+        data_quality_status=str(payload["data_quality_status"]),
+        freshness=EvidenceFreshness(payload["freshness"]),
+    )
+
+
+def _score_to_json(score: IdeaScore) -> dict[str, Any]:
+    return {
+        "policy_version": score.policy_version,
+        "score": str(score.score),
+        "reason_codes": [reason.value for reason in score.reason_codes],
+    }
+
+
+def _score_from_json(payload: Mapping[str, Any]) -> IdeaScore:
+    return IdeaScore(
+        policy_version=str(payload["policy_version"]),
+        score=Decimal(str(payload["score"])),
+        reason_codes=tuple(ReasonCode(value) for value in payload["reason_codes"]),
+    )
+
+
+def _report_source_summary_to_json(summary: ReportEvidenceSourceSummary) -> dict[str, Any]:
+    return {
+        "product_id": summary.product_id,
+        "source_system": summary.source_system.value,
+        "product_version": summary.product_version,
+        "as_of_date": summary.as_of_date,
+        "generated_at_utc": summary.generated_at_utc.isoformat(),
+        "content_hash": summary.content_hash,
+        "data_quality_status": summary.data_quality_status,
+        "freshness": summary.freshness,
+    }
+
+
+def _report_source_summary_from_json(
+    payload: Mapping[str, Any],
+) -> ReportEvidenceSourceSummary:
+    return ReportEvidenceSourceSummary(
+        product_id=str(payload["product_id"]),
+        source_system=SourceSystem(payload["source_system"]),
+        product_version=str(payload["product_version"]),
+        as_of_date=str(payload["as_of_date"]),
+        generated_at_utc=_datetime(payload["generated_at_utc"]),
+        content_hash=str(payload["content_hash"]),
+        data_quality_status=str(payload["data_quality_status"]),
+        freshness=str(payload["freshness"]),
+    )
+
+
+def _datetime(value: Any) -> datetime:
+    if isinstance(value, datetime):
+        return value
+    return datetime.fromisoformat(str(value))

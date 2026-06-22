@@ -49,8 +49,10 @@ from app.domain.persistence import (
 )
 from app.infrastructure.postgres_repository import (
     PostgresIdeaRepository,
-    _datetime,
     _idempotency_created_at,
+)
+from app.infrastructure.postgres_codecs import (
+    _datetime,
     _json,
     _row,
 )
