@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness and runtime telemetry preview diagnostics
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, and source-safe runtime snapshot diagnostics
 
 ## Outcome
 
@@ -41,6 +41,13 @@ This slice now has internal operator diagnostic foundations only:
     artifact while preserving `certificationStatus=not_certified`,
     `platformCertified=false`, `certificationReady=false`, and
     `supportedFeaturePromoted=false`.
+12. `scripts/generate_runtime_trust_telemetry_snapshot.py` and
+    `make runtime-trust-telemetry-snapshot-check` generate a contract-shaped
+    runtime trust telemetry snapshot under ignored
+    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`.
+13. The generated snapshot uses platform trust telemetry fields for
+    `lotus-idea:IdeaCandidate:v1`, remains blocked, and omits candidate ids,
+    portfolio ids, client ids, raw source routes, and raw evidence hashes.
 
 Evidence:
 
@@ -49,15 +56,17 @@ Evidence:
 3. `tests/unit/test_runtime_trust_telemetry.py`
 4. `tests/integration/test_runtime_trust_telemetry_api.py`
 5. `scripts/generate_runtime_trust_telemetry_preview.py`
-6. `scripts/endpoint_certification_gate.py`
-7. `scripts/openapi_quality_gate.py`
+6. `scripts/generate_runtime_trust_telemetry_snapshot.py`
+7. `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`
+8. `scripts/endpoint_certification_gate.py`
+9. `scripts/openapi_quality_gate.py`
 
 ## Current Non-Goals
 
 1. No producer product is promoted from `proposed`.
 2. No platform source-manifest inclusion is claimed.
-3. No runtime trust telemetry preview replaces the blocked static fallback for
-   platform certification.
+3. No runtime trust telemetry preview or generated runtime snapshot replaces
+   the blocked static fallback for platform certification.
 4. No Gateway or Workbench discovery contract is created.
 5. No supported feature is promoted.
 
@@ -86,15 +95,15 @@ Evidence:
 ## Remaining Gap
 
 The diagnostic endpoints deliberately report blocked / not-certified posture.
-The runtime telemetry preview is implementation-backed pre-certification
-evidence, but it does not activate producer declarations or replace the blocked
-static fallback for platform mesh certification. Full Slice 14 completion still
-requires implementation-backed active product declarations, platform
-catalog/source-manifest inclusion, Gateway/Workbench discovery proof, certified
-consumer contracts, platform mesh certification, and supported-feature
+The runtime telemetry preview and generated snapshot are implementation-backed
+pre-certification evidence, but they do not activate producer declarations or
+replace the blocked static fallback for platform mesh certification. Full Slice
+14 completion still requires implementation-backed active product declarations,
+platform catalog/source-manifest inclusion, Gateway/Workbench discovery proof,
+certified consumer contracts, platform mesh certification, and supported-feature
 evidence. Until those exist, `lotus-idea` remains a planned data-mesh
 producer/consumer with repo-native anti-drift controls and source-safe runtime
-preview evidence only.
+telemetry evidence only.
 
 ## Acceptance Gate
 
@@ -117,7 +126,7 @@ preview evidence only.
 1. Gate 1 is preserved: no proposed product is marked active.
 2. Gates 2 through 5 remain blocked pending platform and runtime mesh
    certification.
-3. Gate 6 is partially satisfied for the diagnostic endpoints through OpenAPI,
-   endpoint-certification, runtime-preview generator, and unit/integration
-   evidence.
+3. Gate 6 is partially satisfied for the diagnostic endpoints and generated
+   runtime evidence through OpenAPI, endpoint-certification, runtime-preview
+   generator, runtime-snapshot generator, and unit/integration evidence.
 4. Gate 7 has no new platform/scaffold blocker from this diagnostic slice.

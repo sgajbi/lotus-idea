@@ -54,6 +54,11 @@ diagnostic is available for operators with
 preview counts from the active repository provider. It remains
 `not_certified` until platform source-manifest inclusion, mesh certification,
 Gateway/Workbench discovery, and supported-feature evidence exist.
+`make runtime-trust-telemetry-snapshot-check` generates the corresponding
+source-safe runtime snapshot under
+`output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
+is contract-shaped runtime evidence only; it does not promote producer products
+or replace platform mesh certification.
 The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
 for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
 run-once worker manifest, Core base URL, durable repository configuration, and
@@ -89,8 +94,8 @@ Workbench proof exist.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
-queue, AI explanation, data mesh, runtime trust telemetry preview, outbox
-delivery, Workbench realization, downstream realization, and
+queue, AI explanation, data mesh, runtime trust telemetry preview/snapshot
+evidence, outbox delivery, Workbench realization, downstream realization, and
 supported-feature promotion. It remains `not_certified` and `blocked` while
 any proof family lacks live evidence, and it must not be used as live implementation proof,
 live broker runtime, downstream delivery, Gateway/Workbench proof,
@@ -153,6 +158,7 @@ make postgres-integration-gate
 make source-ingestion-worker-check
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
+make runtime-trust-telemetry-snapshot-check
 make clean
 uvicorn app.main:app --reload --port 8330
 ```

@@ -316,8 +316,9 @@ supported-feature promotion exists.
 operator diagnostic for aggregate RFC-0002 proof posture. It requires the
 `operator` role and `idea.implementation-proof.readiness.read`, returns
 source-safe blockers across source ingestion, advisor queue, AI explanation,
-data mesh, runtime trust telemetry preview, outbox delivery, Workbench
-realization, downstream realization, and supported-feature promotion, emits bounded
+data mesh, runtime trust telemetry preview/snapshot evidence, outbox delivery,
+Workbench realization, downstream realization, and supported-feature promotion,
+emits bounded
 `implementation_proof_readiness_read` operation events, and does not expose
 candidate identifiers, source payloads, outbox event identifiers, broker
 payloads, Gateway/Workbench proof, data-product certification, certified
@@ -461,7 +462,7 @@ authority, no Gateway/Workbench proof, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.
 
 RFC-0002 Slice 14 is partially implemented as internal data-mesh-readiness and
-runtime trust telemetry preview diagnostics. `src/app/application/data_mesh_readiness.py`
+runtime trust telemetry preview/snapshot diagnostics. `src/app/application/data_mesh_readiness.py`
 reads repo-owned producer, mesh-readiness, and trust-telemetry contracts, and
 `GET /api/v1/data-mesh/readiness` exposes the current operator-facing
 `planned` / `not_certified` posture with explicit blockers. `src/app/application/runtime_trust_telemetry.py`
@@ -473,10 +474,15 @@ feedback, conversion, and report evidence-pack counts for callers with
 emits a bounded `mesh_trust_telemetry_preview_read` operation event, reports
 `certificationStatus=not_certified`, `platformCertified=false`, and
 `supportedFeaturePromoted=false`, and is also available through
-`make runtime-trust-telemetry-preview-check`. These endpoints are
-endpoint-certified diagnostic evidence only; they are not data-product
-certification, platform source-manifest inclusion, Gateway/Workbench discovery,
-raw lineage export, or supported mesh promotion.
+`make runtime-trust-telemetry-preview-check`. The same application service now
+builds a contract-shaped runtime trust telemetry snapshot through
+`scripts/generate_runtime_trust_telemetry_snapshot.py` and
+`make runtime-trust-telemetry-snapshot-check`, writing source-safe generated
+evidence to
+`output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`.
+These endpoints and generated artifacts are diagnostic evidence only; they are
+not data-product certification, platform source-manifest inclusion,
+Gateway/Workbench discovery, raw lineage export, or supported mesh promotion.
 
 RFC-0002 Slice 15 is partially implemented as a bounded operation observability
 foundation. `src/app/observability/logging.py` now defines the
@@ -595,10 +601,13 @@ logs; fix or document the owned warning source instead.
    Source-ingestion-readiness orchestration reports manifest, Core base URL,
    durable repository configuration, and certification blockers for the
    high-cash run-once worker without executing Core source reads.
+   Runtime-trust-telemetry orchestration emits both the internal preview and a
+   contract-shaped, source-safe runtime snapshot while keeping platform
+   certification blockers explicit.
    Implementation-proof-readiness orchestration aggregates current RFC-0002
    capability proof blockers across source ingestion, queue, AI, data mesh,
-   runtime trust telemetry preview, outbox delivery, Workbench, downstream
-   realization, and supported-feature promotion without leaking source
+   runtime trust telemetry preview/snapshot evidence, outbox delivery,
+   Workbench, downstream realization, and supported-feature promotion without leaking source
    payloads, event identifiers, broker payloads, or promoting support.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
@@ -705,11 +714,13 @@ owned by upstream services.
     `make implementation-proof-readiness-check`
 28. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-29. PostgreSQL runtime proof with configured integration URL:
+29. runtime trust telemetry snapshot generator:
+    `make runtime-trust-telemetry-snapshot-check`
+30. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-30. apply migrations with configured PostgreSQL URL: `make migrate`
-31. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-32. remove ignored generated local artifacts: `make clean`
+31. apply migrations with configured PostgreSQL URL: `make migrate`
+32. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+33. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -731,7 +742,7 @@ endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest and
 output-contract validation,
 implementation-proof readiness artifact generation,
-runtime trust telemetry preview artifact generation,
+runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
 Docker build validation, bounded GitHub job timeouts, and no soft-failed

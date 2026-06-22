@@ -50,8 +50,8 @@ support:
    Advise/Manage/Report handoff contract posture,
 10. certified internal aggregate implementation-proof readiness diagnostic for
     RFC-0002 blocker visibility,
-11. certified internal runtime trust telemetry preview diagnostic for aggregate
-    data-mesh evidence posture.
+11. certified internal runtime trust telemetry preview diagnostic and generated
+    source-safe runtime snapshot evidence for aggregate data-mesh posture.
 
 No external business feature is supported yet. The high-cash, advisor queue,
 lifecycle, AI explanation, AI explanation readiness, review-action, and
@@ -63,7 +63,8 @@ realization readiness diagnostic reports blockers, workflow counts,
 source-safe orchestration/adapter-foundation presence, submission route
 posture, and planned contract posture only. The
 runtime trust telemetry preview reports aggregate active-repository counts
-only. None of these diagnostics is Workbench proof,
+only, and the generated runtime snapshot remains blocked. None of these
+diagnostics is Workbench proof,
 data-product certification, AI runtime proof, certified live broker runtime,
 downstream route-existence proof, downstream execution proof, live
 implementation proof, or a client-demo feature claim.
@@ -73,6 +74,6 @@ implementation proof, or a client-demo feature claim.
 | Signal evaluation | Certified internal foundation | Not a supported product workflow |
 | Candidate lifecycle and review | Certified internal foundation | Requires Workbench proof and entitlement proof |
 | Source ingestion | Run-once internal foundation | Requires live Core and scheduled worker proof |
-| Data mesh | Proposed contracts and readiness diagnostics | Requires platform certification and runtime telemetry |
+| Data mesh | Proposed contracts, readiness diagnostics, and blocked runtime snapshot evidence | Requires platform certification and runtime telemetry promotion |
 | Gateway publication | Bounded read-only foundation | Requires Workbench and supported-feature evidence |
 | Downstream realization | Intent/outcome tracking foundation plus source-safe submission routes, adapter, and planned contract posture | Requires Advise, Manage, Report, Render, and Archive route-existence and execution proof |

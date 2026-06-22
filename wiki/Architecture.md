@@ -50,13 +50,16 @@ flowchart TD
     Contracts["Repo-owned mesh contracts"]
     Readiness["/api/v1/data-mesh/readiness"]
     Preview["/api/v1/data-mesh/trust-telemetry/runtime-preview"]
+    Snapshot["output/trust-telemetry/runtime<br/>IdeaCandidate snapshot"]
     Platform["Platform mesh certification"]
     Promotion["Supported-feature promotion"]
 
     Contracts --> Readiness
     Contracts --> Preview
+    Preview --> Snapshot
     Readiness -->|"not_certified blockers"| Platform
     Preview -->|"aggregate runtime counts"| Platform
+    Snapshot -->|"contract-shaped runtime evidence"| Platform
     Platform --> Promotion
 ```
 
@@ -84,6 +87,13 @@ counts for the proposed `IdeaCandidate:v1` product. It omits candidate
 identifiers, source routes, evidence hashes, portfolio identifiers, and client
 identifiers. It is pre-certification runtime evidence only; platform mesh
 certification and product promotion remain planned.
+
+`make runtime-trust-telemetry-snapshot-check` writes the corresponding
+contract-shaped runtime snapshot to
+`output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
+is source-safe generated evidence and remains blocked until platform
+source-manifest inclusion, mesh certification, Gateway/Workbench discovery, and
+supported-feature promotion are implemented.
 
 The first consumer contract expansion is source-authority only. It prepares the
 high-cash / idle-liquidity path around Core-owned cash and holdings products,
@@ -236,9 +246,9 @@ feature.
 `GET /api/v1/implementation-proof/readiness` is the certified internal
 aggregate RFC-0002 proof-readiness diagnostic. It reports source-safe
 capability blockers across source ingestion, advisor queue, AI explanation,
-data mesh, runtime trust telemetry preview, outbox delivery, Workbench
-realization, downstream realization, and supported-feature promotion. It is
-not live implementation proof, certified live broker runtime, downstream
+data mesh, runtime trust telemetry preview/snapshot evidence, outbox delivery,
+Workbench realization, downstream realization, and supported-feature
+promotion. It is not live implementation proof, certified live broker runtime, downstream
 delivery, data-product certification, certified runtime trust telemetry,
 Gateway/Workbench proof, client-ready publication, or supported-feature
 promotion.

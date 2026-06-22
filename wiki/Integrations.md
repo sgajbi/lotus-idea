@@ -61,6 +61,12 @@ runtime telemetry preview counts from the active repository provider. This
 preview is not platform mesh certification, product discovery, Gateway or
 Workbench proof, or supported-feature promotion.
 
+`make runtime-trust-telemetry-snapshot-check` generates the corresponding
+contract-shaped runtime evidence under ignored
+`output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The artifact
+is useful for CI/operator review and remains blocked until platform mesh
+certification and downstream discovery proof exist.
+
 The current planned consumer declaration names source-authority products for
 the RFC-0002 first-wave map:
 

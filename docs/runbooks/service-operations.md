@@ -11,6 +11,7 @@
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
 | `make implementation-proof-readiness-check` | RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
+| `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `docker compose up --build` | Local container entrypoint. |
 
 ## Health and Readiness
@@ -61,7 +62,8 @@ flowchart TD
    with the `operator` role and
    `idea.implementation-proof.readiness.read` capability. This reports
    source-safe blockers across source ingestion, advisor queue, AI
-   explanation, data mesh, runtime trust telemetry preview, outbox delivery,
+   explanation, data mesh, runtime trust telemetry preview/snapshot evidence,
+   outbox delivery,
    Workbench, downstream realization, and supported-feature promotion. It is
    not live proof, certified live broker runtime, downstream delivery,
    Workbench proof, data-product certification, or supported-feature
@@ -86,6 +88,11 @@ flowchart TD
 11. For source-safe runtime trust telemetry preview evidence without running
     the service, run `make runtime-trust-telemetry-preview-check` or
     `scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc <timestamp>`.
+12. For contract-shaped runtime trust telemetry snapshot evidence without
+    running the service, run `make runtime-trust-telemetry-snapshot-check` or
+    `scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc <timestamp>`.
+    The generated file is ignored under `output/trust-telemetry/runtime/` and
+    remains blocked until platform mesh certification is complete.
 
 ## Current Operation Event Diagnostics
 
@@ -120,8 +127,8 @@ Use the operation `outcome` before inspecting payload-level evidence:
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 9. `blocked`: candidate evidence replay found stale source posture, or
-   data-mesh, runtime trust telemetry preview, source-ingestion, AI
-   explanation, review queue, outbox delivery, downstream realization, or
+   data-mesh, runtime trust telemetry preview/snapshot evidence,
+   source-ingestion, AI explanation, review queue, outbox delivery, downstream realization, or
    aggregate implementation-proof readiness remains blocked by explicit
    configuration or certification blockers.
 

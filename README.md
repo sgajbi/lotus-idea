@@ -36,18 +36,16 @@ Current implemented foundations include:
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics, a source-safe HTTP broker-publisher adapter foundation, and
   readiness diagnostics for accepted internal mutations,
-- runtime trust telemetry preview and data-mesh readiness diagnostics,
+- runtime trust telemetry preview, contract-shaped runtime snapshot generation,
+  and data-mesh readiness diagnostics,
 - PostgreSQL schema, migration, rollback, and repository adapter proof,
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
   detail.
 
-The detailed current-state inventory lives in:
-
-- [docs/rfcs/README.md](docs/rfcs/README.md)
-- [docs/operations/api-certification.md](docs/operations/api-certification.md)
-- [docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md)
-- [wiki/Overview.md](wiki/Overview.md)
-- [wiki/Roadmap.md](wiki/Roadmap.md)
+Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md),
+[docs/operations/api-certification.md](docs/operations/api-certification.md),
+[docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md),
+and [wiki/Overview.md](wiki/Overview.md).
 
 ## Product Boundary
 
@@ -203,6 +201,7 @@ docker compose up --build
 | `make source-ingestion-worker-check` | Validate the run-once source-ingestion manifest and source-safe check-only output contract without calling Core. |
 | `make implementation-proof-readiness-check` | Generate source-safe RFC proof readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
+| `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
 | `make check` | Run the local PR-grade gate set. |
 | `make ci` | Run the broader CI-equivalent local suite. |
@@ -267,8 +266,8 @@ Operational entrypoints:
 - downstream realization readiness: `/api/v1/downstream-realization/readiness`
 - implementation proof readiness: `/api/v1/implementation-proof/readiness`
 - data-mesh readiness: `/api/v1/data-mesh/readiness`
-- runtime trust telemetry preview:
-  `/api/v1/data-mesh/trust-telemetry/runtime-preview`
+- runtime trust telemetry preview: `/api/v1/data-mesh/trust-telemetry/runtime-preview`
+- runtime trust telemetry snapshot evidence: `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`
 
 Operator details live in:
 

@@ -53,6 +53,7 @@ make migration-execution-gate
 make source-ingestion-worker-check
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
+make runtime-trust-telemetry-snapshot-check
 make supported-features-gate
 make endpoint-certification-gate
 make postgres-integration-gate
@@ -71,7 +72,7 @@ unit tests, integration tests, e2e tests, data-mesh contract validation, migrati
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest and source-safe output-contract validation,
 implementation-proof readiness artifact generation,
-runtime trust telemetry preview artifact generation,
+runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
 jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint.
 
@@ -129,11 +130,14 @@ Persistence adapter validation:
    candidate, portfolio, client, prompt, outbox event, raw idempotency, broker,
    or source payload identifiers.
 8. `tests/unit/test_runtime_trust_telemetry.py`,
-   `tests/integration/test_runtime_trust_telemetry_api.py`, and
-   `make runtime-trust-telemetry-preview-check` prove the source-safe runtime
-   trust telemetry preview can be generated and read without exposing candidate
-   identifiers, source routes, evidence hashes, portfolio identifiers, or
-   client identifiers.
+   `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
+   `tests/integration/test_runtime_trust_telemetry_api.py`,
+   `make runtime-trust-telemetry-preview-check`, and
+   `make runtime-trust-telemetry-snapshot-check` prove the source-safe runtime
+   trust telemetry preview and contract-shaped generated snapshot can be
+   produced without exposing candidate identifiers, source routes, evidence
+   hashes, portfolio identifiers, or client identifiers, and without promoting
+   mesh certification.
 9. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,
@@ -279,6 +283,11 @@ generator check. Its passing checks certify source-safe pre-certification
 telemetry preview only; they do not certify data products, platform
 source-manifest inclusion, Gateway/Workbench discovery, or supported-feature
 promotion.
+
+The runtime trust telemetry snapshot generator is covered by unit tests and
+`make runtime-trust-telemetry-snapshot-check`. Its passing checks certify only
+that a source-safe, contract-shaped generated artifact can be emitted from the
+active repository provider while remaining blocked and not certified.
 
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
