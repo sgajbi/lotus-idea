@@ -57,8 +57,9 @@ Implemented in this slice:
     model-risk diagnostics. The route requires both the `operator` role and
     `idea.ai-explanation.readiness.read`, reports `readinessStatus=blocked`,
     `supportabilityStatus=not_certified`, `lotusAiRuntimeExecuted=false`,
-    `durableAiLineageStoreBacked=false`, and `supportedFeaturePromoted=false`,
-    and returns only guardrail availability plus certification blockers.
+    `durableAiLineageStoreBacked` from the active repository provider, and
+    `supportedFeaturePromoted=false`, and returns only guardrail availability
+    plus certification blockers.
 12. `src/app/domain/persistence.py` adds `AIExplanationLineageRecord` and
     idempotent lineage persistence decisions. `InMemoryIdeaRepository` records
     exactly one lineage record per AI request id, replays identical lineage,
@@ -97,6 +98,11 @@ Implemented in this slice:
     prompts, provider payloads, raw source routes, trace ids, correlation ids,
     portfolio ids, client ids, and free-form source payloads out of the stored
     lineage JSON.
+19. `tests/unit/test_ai_explanation_readiness.py` and
+    `tests/integration/test_ai_governance_api.py` prove the readiness
+    diagnostic reports durable AI lineage-store backing from the active
+    repository while keeping supportability `not_certified`, blockers present,
+    no `lotus-ai` runtime execution, and no supported-feature promotion.
 
 Validation evidence from the implementation slice:
 
@@ -119,6 +125,9 @@ Validation evidence from the implementation slice:
     passed locally against a disposable `postgres:18-alpine` container with
     `5 passed`, including durable AI explanation lineage accepted/replayed/
     conflict behavior through the API.
+11. `python -m pytest tests/unit/test_ai_explanation_readiness.py tests/integration/test_ai_governance_api.py`
+    is the focused readiness-posture proof for repository-aware durable lineage
+    reporting.
 
 ## Current Governance References
 

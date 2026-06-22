@@ -26,3 +26,17 @@ def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> Non
         "certified_runtime_trust_telemetry_missing",
         "workbench_product_proof_missing",
     )
+
+
+def test_ai_explanation_readiness_reports_durable_lineage_store_without_certification() -> None:
+    snapshot = build_ai_explanation_readiness_snapshot(
+        durable_ai_lineage_store_backed=True,
+    )
+
+    assert snapshot.durable_ai_lineage_store_backed is True
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.certification_ready is False
+    assert "lotus_ai_runtime_execution_missing" in snapshot.certification_blockers
+    assert "certified_ai_lineage_store_missing" in snapshot.certification_blockers
+    assert snapshot.supported_feature_promoted is False

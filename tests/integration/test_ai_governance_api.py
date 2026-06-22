@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
 from app.api.repository_state import reset_idea_repository_for_tests
-from app.domain import InvalidAIWorkflowOutput
+from app.domain import InMemoryIdeaRepository, InvalidAIWorkflowOutput
 from app.main import app
 
 
@@ -76,6 +76,10 @@ def ai_readiness_headers(
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-ai-readiness-api",
     }
+
+
+class DurableInMemoryIdeaRepository(InMemoryIdeaRepository):
+    durable_storage_backed = True
 
 
 def lifecycle_payload(target_status: str, minute: int) -> dict[str, Any]:
@@ -363,6 +367,7 @@ def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_m
 
 
 def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> None:
+    reset_idea_repository_for_tests()
     client = TestClient(app)
 
     response = client.get(
@@ -403,7 +408,59 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
     assert "portfolioId" not in response.text
 
 
+def test_ai_explanation_readiness_api_reports_durable_repository_lineage_posture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    try:
+        reset_idea_repository_for_tests(repository=DurableInMemoryIdeaRepository())
+        events: list[tuple[str, str, str, bool, bool, str | None]] = []
+
+        def capture(event: Any) -> None:
+            events.append(
+                (
+                    event.operation.value,
+                    event.outcome.value,
+                    event.supportability_status.value,
+                    event.durable_storage_backed,
+                    event.supported_feature_promoted,
+                    event.error_code,
+                )
+            )
+
+        monkeypatch.setattr(ai_governance_api, "emit_operation_event", capture)
+        client = TestClient(app)
+
+        response = client.get(
+            "/api/v1/ai-explanations/readiness",
+            headers=ai_readiness_headers(),
+        )
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["durableAiLineageStoreBacked"] is True
+        assert payload["readinessStatus"] == "blocked"
+        assert payload["supportabilityStatus"] == "not_certified"
+        assert payload["lotusAiRuntimeExecuted"] is False
+        assert payload["supportedFeaturePromoted"] is False
+        assert "certified_ai_lineage_store_missing" in payload["certificationBlockers"]
+        assert events == [
+            (
+                "ai_explanation_readiness_read",
+                "blocked",
+                "not_certified",
+                True,
+                False,
+                None,
+            )
+        ]
+        assert "prompt" not in response.text.lower()
+        assert "provider" not in response.text.lower()
+    finally:
+        reset_idea_repository_for_tests()
+
+
 def test_ai_explanation_readiness_api_requires_operator_role_and_capability() -> None:
+    reset_idea_repository_for_tests()
     client = TestClient(app)
 
     missing_role = client.get(

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
 from app.api.repository_state import get_idea_repository
+from app.repository_state import idea_repository_durable_storage_backed
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
     AIExplanationReadinessSnapshot,
@@ -467,8 +468,14 @@ async def get_ai_explanation_readiness(
             detail="The caller is not permitted to read idea AI explanation readiness.",
         )
 
-    snapshot = build_ai_explanation_readiness_snapshot()
-    _emit_ai_explanation_readiness_operation_event(OperationOutcome.BLOCKED)
+    repository = get_idea_repository()
+    snapshot = build_ai_explanation_readiness_snapshot(
+        durable_ai_lineage_store_backed=idea_repository_durable_storage_backed(repository)
+    )
+    _emit_ai_explanation_readiness_operation_event(
+        OperationOutcome.BLOCKED,
+        durable_storage_backed=snapshot.durable_ai_lineage_store_backed,
+    )
     return AIExplanationReadinessResponse.from_domain(snapshot)
 
 
@@ -639,6 +646,8 @@ def _emit_ai_explanation_operation_event(
 def _emit_ai_explanation_readiness_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
+    *,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_operation_event(
         OperationEvent(
@@ -646,7 +655,7 @@ def _emit_ai_explanation_readiness_operation_event(
             outcome=outcome,
             source_authority="lotus-ai",
             supportability_status=OperationSupportability.NOT_CERTIFIED,
-            durable_storage_backed=False,
+            durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
             error_code=error_code,
         )
