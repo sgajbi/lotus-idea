@@ -86,8 +86,10 @@ Current RFC-0002 implementation-start baseline:
     review-gated conversion intent and downstream outcome tracking, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
     `lotus-report`, plus certified internal API foundations and an internal
-    downstream realization readiness diagnostic. It does not invoke downstream
-    adapters, create downstream records, or promote a supported feature.
+    downstream realization readiness diagnostic with planned Advise, Manage,
+    and Report contract-readiness records. It does not invoke downstream
+    adapters, prove downstream route existence, create downstream records, or
+    promote a supported feature.
 12. Slice 18 is partially implemented for API certification and
     implementation-proof documentation truth. `docs/operations/api-certification.md`
     and `docs/operations/implementation-proof-readiness.md` now mirror the

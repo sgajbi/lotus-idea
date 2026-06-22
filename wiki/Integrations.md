@@ -135,6 +135,8 @@ Operators can inspect the current downstream blocker posture through:
 1. `GET /api/v1/downstream-realization/readiness`.
 
 That route reports conversion intent/outcome counts, report evidence-pack
-request counts, source-of-truth paths, and blocker groups for Advise, Manage,
-Report, Render, and Archive realization. It is diagnostic only; it does not
-call downstream services or promote any integration claim.
+request counts, source-of-truth paths, planned downstream contract readiness
+for Advise, Manage, and Report handoffs, and blocker groups for Advise,
+Manage, Report, Render, and Archive realization. It is diagnostic only; the
+planned contract records are not downstream route-existence proof and the
+endpoint does not call downstream services or promote any integration claim.

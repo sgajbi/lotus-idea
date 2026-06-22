@@ -35,8 +35,10 @@ operator
 supportability check only; it does not invoke `lotus-ai`, certify durable AI
 lineage, prove model-risk dashboards, or promote AI explanation support. The
 downstream realization readiness diagnostic is an operator supportability
-check only; it reports workflow counts and Advise/Manage/Report/Render/Archive
-blockers without calling downstream services or creating downstream records.
+check only; it reports workflow counts, planned Advise/Manage/Report contract
+posture, and Advise/Manage/Report/Render/Archive blockers without calling
+downstream services, proving downstream route existence, or creating
+downstream records.
 The implementation-proof readiness diagnostic is also an operator supportability
 check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry preview,

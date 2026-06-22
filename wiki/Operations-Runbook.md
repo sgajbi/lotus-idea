@@ -95,10 +95,12 @@ publication, or supported-feature promotion.
 The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
 available for operators with `idea.downstream-realization.readiness.read` to
 inspect Advise, Manage, Report, Render, and Archive realization blockers over
-current `lotus-idea` workflow counts. It remains `not_certified` and `blocked`
-until downstream intake/materialization contracts, Gateway/Workbench product
-proof, runtime trust telemetry, and supported-feature evidence exist. It does
-not call downstream services or create downstream records.
+current `lotus-idea` workflow counts and planned Advise/Manage/Report handoff
+contract posture. It remains `not_certified` and `blocked` until downstream
+intake/materialization contracts, Gateway/Workbench product proof, runtime
+trust telemetry, and supported-feature evidence exist. Planned contract
+records are not downstream route-existence proof; the endpoint does not call
+downstream services or create downstream records.
 
 ## Operator Map
 
@@ -108,7 +110,7 @@ not call downstream services or create downstream records.
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, and aggregate readiness diagnostic for accepted internal mutations | External broker publication or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
-| Downstream realization | Readiness diagnostics over current workflow counts | Advise/Manage/Report/Render/Archive materialization |
+| Downstream realization | Readiness diagnostics over current workflow counts plus planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
 
 ```mermaid
 flowchart LR
@@ -273,12 +275,14 @@ operator evidence only; it is not a supported product claim.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,
-capability-level blockers, source-of-truth paths, and downstream
-source-authority refs without exposing candidate identifiers, source payloads,
-portfolio identifiers, or client identifiers. It is not Advise proposal proof,
-Manage action proof, Report/Render/Archive materialization proof,
-Gateway/Workbench proof, client-ready publication, or supported-feature
-promotion.
+capability-level blockers, planned downstream contract-readiness records,
+source-of-truth paths, and downstream source-authority refs without exposing
+candidate identifiers, source payloads, portfolio identifiers, or client
+identifiers. The planned contract records identify owner repositories and
+adapter posture for Advise, Manage, and Report handoffs; they are not
+route-existence proof. The endpoint is not Advise proposal proof, Manage action
+proof, Report/Render/Archive materialization proof, Gateway/Workbench proof,
+client-ready publication, or supported-feature promotion.
 
 `GET /api/v1/outbox-delivery/readiness` is the certified internal outbox
 delivery readiness diagnostic. It returns aggregate backlog and status posture,

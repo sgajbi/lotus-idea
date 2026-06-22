@@ -30,6 +30,8 @@ Current implemented foundations include:
 - AI explanation governance diagnostics without provider execution,
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
+- planned downstream contract-readiness diagnostics for Advise, Manage, and
+  Report handoff seams without downstream route-existence claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
   semantics and readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry preview and data-mesh readiness diagnostics,

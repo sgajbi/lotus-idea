@@ -69,9 +69,10 @@ flowchart TD
 8. For downstream realization blocker checks, call
    `GET /api/v1/downstream-realization/readiness` with the `operator` role and
    `idea.downstream-realization.readiness.read` capability. This reports
-   source-safe workflow counts and blockers for Advise, Manage, Report, Render,
-   and Archive without calling downstream services or creating downstream
-   records.
+   source-safe workflow counts, planned Advise/Manage/Report handoff contract
+   posture, and blockers for Advise, Manage, Report, Render, and Archive
+   without calling downstream services, proving downstream route existence, or
+   creating downstream records.
 9. For runtime trust telemetry preview checks, call
    `GET /api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=<timestamp>`
    with the `operator` role and
