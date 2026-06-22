@@ -82,13 +82,21 @@ telemetry, and Gateway/Workbench proof exist.
 4. Write runbooks for source failures, stale evidence, duplicate bursts, AI
    unavailable, conversion failure, entitlement denial, and replay mismatch.
 
+The first bounded read-only Gateway publication routes now have caller-context
+forwarding and unsupported-feature blocking proof in `lotus-gateway`, and
+`make endpoint-certification-gate` requires the `lotus-idea` endpoint ledger to
+name the exact Gateway route without implying Workbench proof, data-product
+certification, client-ready publication, or supported-feature promotion.
+
 ## Remaining Gap
 
 1. Add dashboard and alert references only after metric families are stable and
    implemented.
 2. Add live runtime source-readiness proof after Core source adapters and
    deployable worker runtime exist.
-3. Add Gateway path entitlement proof when Gateway routes are implemented.
+3. Add product-scope entitlement proof for Workbench and any broader Gateway
+   route set after those surfaces are implemented; the first read-only Gateway
+   routes remain bounded publication proof only.
 4. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
    and container reviews for the full supported service surface before any
    supported-feature promotion.

@@ -120,6 +120,89 @@ def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
     assert errors == []
 
 
+def test_endpoint_certification_gate_accepts_bounded_gateway_publication_boundary() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = {
+        "method": "GET",
+        "path": "/api/v1/review-queues/advisor",
+        "certification_status": "certified",
+        "when_to_use": "Use with idea.review.queue.read capability.",
+        "when_not_to_use": (
+            "Read-only Gateway publication exists through lotus-gateway "
+            "GET /api/v1/ideas/review-queues/advisor. Do not use as a durable "
+            "queue store, Workbench product proof, data-product certification proof, "
+            "PM/compliance/operator queue surface, client-ready publication, or "
+            "supported-feature promotion."
+        ),
+        "error_examples": ["403 returns product-safe Problem Details."],
+        "test_evidence": [
+            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        ],
+        "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint)
+
+    assert errors == []
+
+
+def test_endpoint_certification_gate_blocks_stale_gateway_contract_denial() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = {
+        "method": "GET",
+        "path": "/api/v1/review-queues/advisor",
+        "certification_status": "certified",
+        "when_to_use": "Use with idea.review.queue.read capability.",
+        "when_not_to_use": (
+            "Do not use as a durable queue store, scoped Workbench product surface, "
+            "Gateway contract, data-product certification proof, or "
+            "supported-feature promotion."
+        ),
+        "error_examples": ["403 returns product-safe Problem Details."],
+        "test_evidence": [
+            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        ],
+        "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint)
+
+    assert (
+        "('GET', '/api/v1/review-queues/advisor'): when_not_to_use must name the "
+        "bounded read-only Gateway publication route instead of a generic Gateway "
+        "contract denial"
+    ) in errors
+
+
+def test_endpoint_certification_gate_blocks_unimplemented_gateway_publication_claim() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
+        "certification_status": "certified",
+        "when_to_use": "Use with idea.review.record capability.",
+        "when_not_to_use": (
+            "Read-only Gateway publication exists through lotus-gateway "
+            "GET /api/v1/ideas/review-actions. Do not use as Workbench product proof, "
+            "data-product certification proof, client-ready publication, or "
+            "supported-feature promotion."
+        ),
+        "error_examples": ["403 returns product-safe Problem Details."],
+        "test_evidence": [
+            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        ],
+        "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint)
+
+    assert (
+        "('POST', '/api/v1/idea-candidates/{candidateId}/review-actions'): only "
+        "endpoints with implemented bounded Gateway publication may cite "
+        "lotus-gateway publication"
+    ) in errors
+
+
 def test_endpoint_certification_gate_validates_test_references() -> None:
     module = _load_endpoint_certification_gate()
 

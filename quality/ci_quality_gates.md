@@ -92,3 +92,6 @@ evidence, certified endpoint capability posture, product-safe 403 behavior, and 
 Gateway/Workbench/supported-feature boundary wording before an endpoint can remain `certified`.
 Certified business/operator endpoints must also reference bounded operation-event test evidence so
 API certification cannot drift away from supportability telemetry proof.
+When bounded read-only Gateway publication exists, the gate requires the endpoint ledger to cite the
+exact `lotus-gateway` route and still preserve Workbench, data-product, client-ready publication,
+and supported-feature boundaries.
