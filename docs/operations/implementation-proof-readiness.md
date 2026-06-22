@@ -73,7 +73,7 @@ validated through the owning repositories and platform gates:
 1. live Core source-ingestion proof,
 2. scheduled worker deployment proof,
 3. certified runtime trust telemetry and platform mesh certification,
-4. external broker publication and downstream consumer contracts,
+4. live broker runtime proof and downstream consumer contracts,
 5. platform mesh event certification for outbox publication,
 6. Workbench panel and browser proof,
 7. downstream Advise, Manage, Report, Render, and Archive realization,

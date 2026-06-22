@@ -143,8 +143,9 @@ client-ready publication.
 2. First opportunity family: high cash / idle liquidity.
 3. First persistence posture: pure domain model first, then synchronous
    database-backed records in Slice 6; internal outbox retry/dead-letter state
-   now exists, while external event publication remains after broker adapter,
-   live publication, and downstream consumer proof.
+   and a source-safe HTTP publisher adapter foundation now exist, while
+   certified event publication still requires live broker runtime and
+   downstream consumer proof.
 4. First review audience: advisor only.
 5. Initial rank policy: deterministic scorecard by source supportability,
    materiality, freshness, review urgency, duplication/suppression posture, and

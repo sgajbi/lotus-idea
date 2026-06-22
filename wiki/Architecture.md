@@ -151,9 +151,9 @@ recovery. The application layer also has a manifest-backed run-once
 source-ingestion worker CLI with manifest and source-safe check-only output
 validation through `make source-ingestion-worker-check`. Production storage
 readiness still requires deploy migration evidence, scheduled daemon/deploy
-worker evidence, live Core source-worker evidence, broker adapter proof,
+worker evidence, live Core source-worker evidence, live broker runtime proof,
 downstream consumer proof, and live event-publication evidence beyond the
-internal outbox retry/dead-letter foundation.
+internal outbox retry/dead-letter and publisher-adapter foundation.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
@@ -161,9 +161,9 @@ supported feature.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, delivery-ready backlog, durable repository posture, broker
-configuration posture, and certification blockers without exposing event ids,
-aggregate ids, raw idempotency keys, broker payloads, downstream delivery
-contracts, or a supported-feature claim.
+configuration posture, publisher-adapter presence, and certification blockers
+without exposing event ids, aggregate ids, raw idempotency keys, broker
+payloads, downstream delivery contracts, or a supported-feature claim.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -238,7 +238,7 @@ aggregate RFC-0002 proof-readiness diagnostic. It reports source-safe
 capability blockers across source ingestion, advisor queue, AI explanation,
 data mesh, runtime trust telemetry preview, outbox delivery, Workbench
 realization, downstream realization, and supported-feature promotion. It is
-not live implementation proof, external broker publication, downstream
+not live implementation proof, certified live broker runtime, downstream
 delivery, data-product certification, certified runtime trust telemetry,
 Gateway/Workbench proof, client-ready publication, or supported-feature
 promotion.
@@ -292,11 +292,15 @@ the same repository snapshot contract. The repository port and PostgreSQL
 adapter support delivery-ready reads, published status, failed retry status,
 and dead-letter status, while `src/app/application/outbox_delivery.py`
 orchestrates a run-once publisher-port pass with aggregate source-safe counts.
+`src/app/ports/outbox_publisher.py` owns the publisher port, and
+`src/app/infrastructure/outbox_publisher.py` provides the source-safe HTTP
+publisher adapter foundation with bounded envelopes, trace headers, and
+product-safe failure reasons.
 `src/app/application/outbox_delivery_readiness.py` and
 `GET /api/v1/outbox-delivery/readiness` add aggregate operator visibility over
 that foundation without mutating records or publishing events.
-This is not a broker publisher, Gateway event, platform mesh event, downstream
-delivery contract, or supported feature.
+This is not certified live broker runtime, a Gateway event, platform mesh
+event, downstream delivery contract, or supported feature.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

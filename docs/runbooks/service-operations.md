@@ -63,7 +63,7 @@ flowchart TD
    source-safe blockers across source ingestion, advisor queue, AI
    explanation, data mesh, runtime trust telemetry preview, outbox delivery,
    Workbench, downstream realization, and supported-feature promotion. It is
-   not live proof, external broker publication, downstream delivery,
+   not live proof, certified live broker runtime, downstream delivery,
    Workbench proof, data-product certification, or supported-feature
    promotion.
 8. For downstream realization blocker checks, call

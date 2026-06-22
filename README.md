@@ -34,7 +34,8 @@ Current implemented foundations include:
   Report handoff seams, backed by a repo contract plan and blocking gate,
   without downstream route-existence claims,
 - source-safe outbox records plus internal retry/dead-letter delivery
-  semantics and readiness diagnostics for accepted internal mutations,
+  semantics, a source-safe HTTP broker-publisher adapter foundation, and
+  readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry preview and data-mesh readiness diagnostics,
 - PostgreSQL schema, migration, rollback, and repository adapter proof,
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
@@ -140,9 +141,11 @@ flowchart LR
   lifecycle, review, AI governance, conversion, report evidence, persistence
   records, idempotency, replay, audit primitives, outbox records, and
   retry/dead-letter state semantics.
-- `src/app/ports/`: source-owned service and repository protocols.
+- `src/app/ports/`: source-owned service, outbox publisher, and repository
+  protocols.
 - `src/app/infrastructure/`: Core source adapter, migration helpers,
-  PostgreSQL codecs, and PostgreSQL repository adapter.
+  outbox publisher adapter, PostgreSQL codecs, and PostgreSQL repository
+  adapter.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded operation events.
 - `src/app/security/`: caller context and fail-closed authorization policy.
@@ -244,11 +247,9 @@ make downstream-realization-contract-gate
 make supported-features-gate
 ```
 
-The same controls are explained in:
-
-- [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md)
-- [quality/ci_quality_gates.md](quality/ci_quality_gates.md)
-- [quality/quality_scorecard.md](quality/quality_scorecard.md)
+The same controls are explained in [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md),
+[quality/ci_quality_gates.md](quality/ci_quality_gates.md), and
+[quality/quality_scorecard.md](quality/quality_scorecard.md).
 
 ## Runtime And Operations
 
@@ -258,9 +259,7 @@ been applied.
 
 Operational entrypoints:
 
-- health: `/health`, `/health/live`, `/health/ready`
-- metrics: `/metrics`
-- API docs: `/docs` when running the local service
+- local diagnostics: `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
 - source ingestion readiness: `/api/v1/source-ingestion/readiness`
 - outbox delivery readiness: `/api/v1/outbox-delivery/readiness`
 - advisor queue readiness: `/api/v1/review-queues/advisor/readiness`

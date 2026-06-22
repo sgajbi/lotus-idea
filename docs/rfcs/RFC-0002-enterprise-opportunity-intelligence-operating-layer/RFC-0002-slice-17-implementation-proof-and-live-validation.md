@@ -60,7 +60,7 @@ without relying on chat memory.
 
 1. No canonical live proof run has been captured for the full opportunity
    journey.
-2. Workbench, external broker publication, and downstream realization proof
+2. Workbench, live broker runtime, and downstream realization proof
    remain pending.
 3. Platform data-mesh certification, runtime trust telemetry, and mesh event
    certification remain pending.

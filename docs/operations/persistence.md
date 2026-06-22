@@ -6,7 +6,8 @@ tested PostgreSQL repository adapter foundation, and opt-in API repository
 wiring through `LOTUS_IDEA_DATABASE_URL`. Accepted internal repository
 mutations now also create source-safe pending outbox records in the active
 repository snapshot, with internal retry/dead-letter delivery state semantics
-over a publisher port. It also has real PostgreSQL runtime
+over a publisher port and a source-safe HTTP broker-publisher adapter
+foundation. It also has real PostgreSQL runtime
 proof for high-cash API persistence/replay and the first internal review,
 feedback, conversion, report evidence-pack, advisor queue, and migration
 rollback/reapply recovery workflow path. Internal high-cash source-ingestion
@@ -26,14 +27,14 @@ Runtime API state remains process-local by default and reports
 configured, repository-backed API responses and operation events report
 `durableStorageBacked=true`, but this is still not production storage
 certification, data-product certification, live source integration proof,
-downstream realization proof, external broker publication, or supported-feature
+downstream realization proof, certified live broker runtime, or supported-feature
 promotion.
 `GET /api/v1/outbox-delivery/readiness` now exposes the outbox delivery
 foundation as a certified internal operator diagnostic. It reports aggregate
 outbox status counts, delivery-ready backlog, durable repository posture,
-broker configuration posture, and certification blockers. It does not expose
-event identifiers, aggregate identifiers, raw idempotency keys, broker payloads,
-or downstream claims.
+broker configuration posture, publisher-adapter presence, and certification
+blockers. It does not expose event identifiers, aggregate identifiers, raw
+idempotency keys, broker payloads, or downstream claims.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
 active repository provider. It compares caller-supplied current source refs with
@@ -47,7 +48,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, and aggregate readiness diagnostic for accepted internal mutations | No external broker publication or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, and aggregate readiness diagnostic for accepted internal mutations | No certified live broker runtime or downstream delivery |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
 
@@ -132,15 +133,19 @@ flowchart LR
     events at the configured retry limit, maps publisher exceptions to bounded
     `publisher_unavailable` failure reasons, and returns aggregate counts only.
     `InMemoryIdeaRepository` and `PostgresIdeaRepository` expose the same
-    delivery-ready query and status-update contract. This is internal
-    recoverability foundation only; no broker adapter, downstream consumer, or
-    event-publication support is implemented.
+    delivery-ready query and status-update contract. `src/app/ports/outbox_publisher.py`
+    now owns the publisher protocol, and `src/app/infrastructure/outbox_publisher.py`
+    implements a source-safe HTTP adapter that posts bounded event envelopes,
+    propagates correlation/causation headers, and maps broker failures to
+    bounded publisher reasons. This is internal recoverability and adapter
+    foundation only; certified live broker runtime, downstream consumers, and
+    event-publication support remain unimplemented.
 14. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
     delivery readiness for operators. The diagnostic reports aggregate status
-    counts and blockers only, so operators can see backlog posture without
-    accessing event ids, aggregate ids, raw idempotency keys, source payloads,
-    broker payloads, or downstream event contracts.
+    counts, adapter presence, and blockers only, so operators can see backlog
+    posture without accessing event ids, aggregate ids, raw idempotency keys,
+    source payloads, broker payloads, or downstream event contracts.
 
 ## Validation
 
@@ -203,14 +208,14 @@ as durable storage.
 
 ## Unsupported Until Proven
 
-Do not claim production storage readiness, production recovery,
-external event publication, data-product promotion, or supported business workflows
-until later slices add:
+Do not claim production storage readiness, production recovery, certified event
+publication, data-product promotion, or supported business workflows until
+later slices add:
 
 1. deploy-pipeline migration evidence,
 2. scheduled daemon/deploy source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
-4. broker adapter behavior, downstream consumer contract proof, and live
+4. live broker runtime behavior, downstream consumer contract proof, and live
    event-publication evidence beyond the internal retry/dead-letter foundation,
 5. data-product telemetry and platform mesh certification,
 6. Gateway/Workbench/downstream proof for supported workflows,

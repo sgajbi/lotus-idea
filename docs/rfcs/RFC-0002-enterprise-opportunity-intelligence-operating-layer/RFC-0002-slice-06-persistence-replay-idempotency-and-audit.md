@@ -121,7 +121,8 @@ Implemented first-wave internal scope:
     internal outbox foundation only; no external broker, Gateway event, platform
     mesh event, or downstream publication is claimed.
 17. `src/app/domain/events.py`, `src/app/domain/persistence.py`,
-    `src/app/application/outbox_delivery.py`, and
+    `src/app/application/outbox_delivery.py`,
+    `src/app/ports/outbox_publisher.py`, and
     `src/app/ports/idea_repository.py` now add the first internal outbox
     delivery semantics. Delivery-ready reads include pending events and
     retryable failed events below the configured retry limit. Status updates can
@@ -129,18 +130,21 @@ Implemented first-wave internal scope:
     limit is reached. Publisher exceptions are mapped to bounded
     `publisher_unavailable` failure reason codes, failure reasons reject
     source/client-sensitive marker names, and run summaries expose aggregate
-    counts only. `PostgresIdeaRepository` persists the same status transitions
-    through the existing `idea_outbox_event` table. This is not external broker
-    publication, downstream delivery, Gateway event publication, data-product
-    certification, or supported-feature promotion.
+    counts only. `src/app/infrastructure/outbox_publisher.py` adds a
+    source-safe HTTP broker-publisher adapter foundation with bounded envelopes,
+    trace headers, and product-safe failure reasons. `PostgresIdeaRepository`
+    persists the same status transitions through the existing
+    `idea_outbox_event` table. This is not certified live broker runtime,
+    downstream delivery, Gateway event publication, data-product certification,
+    or supported-feature promotion.
 18. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
     requires the `operator` role and `idea.outbox-delivery.readiness.read`,
     returns aggregate status counts, delivery-ready backlog, durable repository
-    posture, broker configuration posture, source-of-truth paths, and
-    certification blockers, and emits bounded `outbox_delivery_readiness_read`
-    operation events. It does not expose event identifiers, aggregate
+    posture, broker configuration posture, publisher-adapter presence,
+    source-of-truth paths, and certification blockers, and emits bounded
+    `outbox_delivery_readiness_read` operation events. It does not expose event identifiers, aggregate
     identifiers, raw idempotency keys, broker payloads, downstream contracts,
     Gateway/Workbench support, or supported-feature promotion.
 19. `migrations/001_idea_repository_foundation.sql` and
@@ -206,8 +210,8 @@ Not implemented yet:
 2. scheduled daemon/deploy source-ingestion workers,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
-5. external broker/downstream consumer proof beyond the aggregate outbox
-   readiness diagnostic,
+5. certified live broker runtime/downstream consumer proof beyond the aggregate
+   outbox readiness diagnostic and HTTP publisher adapter foundation,
 6. Gateway/Workbench/downstream proof,
 7. supported-feature promotion.
 
@@ -228,12 +232,13 @@ internal source-ingestion replay/conflict recovery path against PostgreSQL. The
 source-ingestion application layer now has a bounded run-once batch primitive
 plus a versioned manifest-backed run-once CLI and check-only gate. The outbox
 foundation now includes internal retry and dead-letter status semantics through
-the repository port, but external broker publication and downstream consumer
-contracts remain unimplemented. The next durable persistence slices must still
-prove scheduled daemon/deploy worker behavior, deploy-pipeline migration
-evidence, live Core source-adapter behavior against that service, broker
-adapter behavior, downstream consumer contracts, and event-publication proof
-before any event publication claim, and keep API responses truthful:
+the repository port plus a source-safe HTTP publisher adapter foundation, but
+certified live broker runtime and downstream consumer contracts remain
+unimplemented. The next durable persistence slices must still prove scheduled
+daemon/deploy worker behavior, deploy-pipeline migration evidence, live Core
+source-adapter behavior against that service, live broker behavior, downstream
+consumer contracts, and event-publication proof before any event publication
+claim, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.
 

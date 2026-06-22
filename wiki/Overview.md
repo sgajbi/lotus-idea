@@ -61,7 +61,7 @@ reports blockers, including outbox-delivery blockers. The downstream
 realization readiness diagnostic reports blockers, workflow counts, and planned
 contract posture only. The runtime trust telemetry preview reports aggregate
 active-repository counts only. None of these diagnostics is Workbench proof,
-data-product certification, AI runtime proof, external broker publication,
+data-product certification, AI runtime proof, certified live broker runtime,
 downstream route-existence proof, downstream execution proof, live
 implementation proof, or a client-demo feature claim.
 
