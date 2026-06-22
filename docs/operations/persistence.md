@@ -116,10 +116,10 @@ flowchart LR
    evidence-pack state, AI explanation lineage records, plus pending outbox
    records through typed table columns plus JSONB snapshots, and rolls back the
    database transaction on flush failure.
-8. `src/app/repository_state.py` selects the process-local in-memory repository
-   by default, or a `PostgresIdeaRepository` backed by a psycopg connection with
-   mapping rows when `LOTUS_IDEA_DATABASE_URL` is set. `src/app/api/repository_state.py`
-   is only a compatibility shim and must not own concrete infrastructure wiring.
+8. `src/app/runtime/repository_state.py` selects the process-local in-memory
+   repository by default, or a `PostgresIdeaRepository` backed by a psycopg
+   connection with mapping rows when `LOTUS_IDEA_DATABASE_URL` is set. Runtime
+   composition stays outside the API layer and app root.
 9. Repository-backed endpoints derive `durableStorageBacked` and
    `durable_storage_backed` operation-event labels from the active repository
    instead of hardcoding storage posture.

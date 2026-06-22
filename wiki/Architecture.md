@@ -139,12 +139,13 @@ certify a data product, expose a Gateway route, or promote a supported business
 feature.
 
 API modules share the active repository provider through
-`src/app/repository_state.py`. Signal, review, feedback, queue, and lifecycle
-routes must use that provider so API modules do not create duplicate candidate
-stores. The provider defaults to an in-memory repository and selects
-`PostgresIdeaRepository` when `LOTUS_IDEA_DATABASE_URL` is configured. The
-`src/app/api/repository_state.py` module is only a compatibility shim so
-concrete infrastructure wiring stays out of the API layer.
+`src/app/runtime/repository_state.py`. Signal, review, feedback, queue, and
+lifecycle routes must use that provider so API modules do not create duplicate
+candidate stores. The provider defaults to an in-memory repository and selects
+`PostgresIdeaRepository` when `LOTUS_IDEA_DATABASE_URL` is configured. Runtime
+composition for repositories, source-ingestion adapters, outbox publishers, and
+downstream realization clients belongs in `src/app/runtime/`, outside the API
+layer and app root.
 
 Application use cases depend on repository workflow protocols from
 `src/app/ports/idea_repository.py`. Candidate snapshots, candidate persistence,

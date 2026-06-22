@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.downstream_realization_state import (
+from app.runtime.downstream_realization_state import (
     ADVISE_BASE_URL_ENV,
     ADVISE_SUBMIT_PATH_ENV,
     MANAGE_BASE_URL_ENV,

@@ -21,7 +21,10 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
-from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 
 
 def main(argv: list[str] | None = None) -> int:

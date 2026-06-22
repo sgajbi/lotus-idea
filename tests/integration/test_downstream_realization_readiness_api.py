@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.downstream_realization_readiness as downstream_readiness_api
-from app.api.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
 

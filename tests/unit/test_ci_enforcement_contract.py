@@ -73,6 +73,16 @@ def test_architecture_boundary_gate_runs_in_github_lanes() -> None:
         assert "make architecture-boundary-gate" in content
 
 
+def test_architecture_boundary_gate_protects_runtime_composition_layer() -> None:
+    module = _load_architecture_boundary_gate()
+
+    runtime_rule = module.LAYER_RULES["runtime"]
+
+    assert "app.api" in runtime_rule["forbidden_prefixes"]
+    assert "fastapi" in runtime_rule["forbidden_prefixes"]
+    assert "framework" in runtime_rule["description"]
+
+
 def _load_ci_contract_gate() -> ModuleType:
     script_path = ROOT / "scripts" / "ci_contract_gate.py"
     spec = importlib.util.spec_from_file_location("ci_contract_gate", script_path)

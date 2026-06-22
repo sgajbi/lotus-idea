@@ -10,7 +10,7 @@ from app.application.source_ingestion_scheduled_worker import (
     scheduled_worker_deploy_proof_is_valid,
 )
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
-from app.repository_state import DATABASE_URL_ENV
+from app.runtime.repository_state import DATABASE_URL_ENV
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]

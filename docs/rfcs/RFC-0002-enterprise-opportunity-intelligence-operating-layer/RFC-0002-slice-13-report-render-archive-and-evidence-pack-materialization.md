@@ -73,7 +73,7 @@ Implemented in the first Slice 13 foundation:
     `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
     route for existing report evidence-pack requests. The route requires
     `idea.downstream-realization.submit` and `Idempotency-Key`, obtains the
-    configured Report client from `src/app/downstream_realization_state.py`,
+    configured Report client from `src/app/runtime/downstream_realization_state.py`,
     propagates correlation, trace, and idempotency headers through the
     application layer, and fails closed with
     `503 downstream_realization_not_configured` when adapter configuration is

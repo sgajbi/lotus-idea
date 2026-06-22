@@ -32,6 +32,10 @@ LAYER_RULES = {
         "forbidden_prefixes": ("app.infrastructure",),
         "description": "API routes should call application services rather than concrete infrastructure.",
     },
+    "runtime": {
+        "forbidden_prefixes": ("fastapi", "starlette", "app.api"),
+        "description": "Runtime composition may wire concrete adapters but must not depend on HTTP routes, DTOs, or framework modules.",
+    },
 }
 
 

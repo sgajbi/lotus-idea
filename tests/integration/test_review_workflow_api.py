@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.api.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
 

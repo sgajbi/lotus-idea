@@ -107,7 +107,8 @@ Implemented in this slice:
     `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
     route for existing Advise and Manage conversion intents. The route requires
     `idea.downstream-realization.submit` and `Idempotency-Key`, obtains
-    configured Advise/Manage clients from `src/app/downstream_realization_state.py`,
+    configured Advise/Manage clients from
+    `src/app/runtime/downstream_realization_state.py`,
     propagates correlation, trace, and idempotency headers through the
     application layer, and fails closed with
     `503 downstream_realization_not_configured` when adapter configuration is

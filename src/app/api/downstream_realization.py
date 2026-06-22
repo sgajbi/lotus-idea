@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.downstream_realization import (
     DownstreamRealizationStatus,
     DownstreamRealizationSubmissionResult,
@@ -18,7 +18,7 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import ConversionTarget, SourceSystem
-from app.downstream_realization_state import (
+from app.runtime.downstream_realization_state import (
     DownstreamRealizationClientsUnavailableError,
     get_conversion_realization_clients,
     get_report_evidence_pack_realization_client,

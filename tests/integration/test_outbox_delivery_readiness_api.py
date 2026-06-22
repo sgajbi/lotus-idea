@@ -19,7 +19,7 @@ from app.domain import (
 )
 from app.main import app
 from app.ports.outbox_publisher import OutboxPublishOutcome
-from app.repository_state import get_idea_repository, reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)

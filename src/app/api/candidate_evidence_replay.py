@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idea_signals import SourceRefRequest
-from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.candidate_evidence_replay import (
     ReplayCandidateEvidenceCommand,
     replay_candidate_evidence,

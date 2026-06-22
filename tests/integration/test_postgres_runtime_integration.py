@@ -16,7 +16,7 @@ from app.application.source_ingestion import (
     IngestHighCashSourceSignalCommand,
     ingest_high_cash_signal_from_core,
 )
-from app.api.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.migrations import (
     MigrationConnection,
@@ -30,7 +30,7 @@ from app.ports.core_sources import (
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
 )
-from app.repository_state import get_idea_repository
+from app.runtime.repository_state import get_idea_repository
 
 
 ROOT = Path(__file__).resolve().parents[2]

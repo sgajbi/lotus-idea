@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
-from app.api.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import InMemoryIdeaRepository, InvalidAIWorkflowOutput
 from app.main import app
 

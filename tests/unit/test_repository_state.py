@@ -6,7 +6,7 @@ from psycopg.rows import dict_row
 
 from app.domain import InMemoryIdeaRepository
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from app import repository_state
+from app.runtime import repository_state
 
 
 class FakeConnection:
@@ -42,7 +42,7 @@ def test_repository_state_uses_postgres_repository_when_database_url_is_configur
         repository_state.DATABASE_URL_ENV,
         "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea",
     )
-    monkeypatch.setattr("app.repository_state.psycopg.connect", fake_connect)
+    monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
     repository_state.reset_idea_repository_for_tests(reload_from_environment=True)
 
     repository = repository_state.get_idea_repository()
@@ -68,7 +68,7 @@ def test_repository_state_reset_closes_configured_connection(monkeypatch: Any) -
         repository_state.DATABASE_URL_ENV,
         "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea",
     )
-    monkeypatch.setattr("app.repository_state.psycopg.connect", fake_connect)
+    monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
     repository_state.reset_idea_repository_for_tests(reload_from_environment=True)
     assert isinstance(repository_state.get_idea_repository(), PostgresIdeaRepository)
 

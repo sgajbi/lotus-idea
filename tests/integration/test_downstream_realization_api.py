@@ -7,8 +7,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.downstream_realization as downstream_realization_api
-from app.api.repository_state import reset_idea_repository_for_tests
-from app.downstream_realization_state import (
+from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.runtime.downstream_realization_state import (
     ADVISE_BASE_URL_ENV,
     ADVISE_SUBMIT_PATH_ENV,
     MANAGE_BASE_URL_ENV,

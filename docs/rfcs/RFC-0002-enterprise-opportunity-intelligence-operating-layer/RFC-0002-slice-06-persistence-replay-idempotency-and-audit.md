@@ -189,12 +189,11 @@ Implemented first-wave internal scope:
 24. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
     serialization/deserialization helpers from the repository adapter so future
     persistence growth does not erode source-file maintainability gates.
-25. `src/app/repository_state.py` now selects the process-local
+25. `src/app/runtime/repository_state.py` now selects the process-local
     `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
     when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
-    mapping rows so the adapter receives the row shape it enforces. The
-    `src/app/api/repository_state.py` module remains a compatibility shim so
-    concrete infrastructure wiring stays out of the API layer.
+    mapping rows so the adapter receives the row shape it enforces. Runtime
+    composition stays outside the API layer and app root.
 26. Repository-backed API routes now derive `durableStorageBacked` responses and
     `durable_storage_backed` operation-event labels from the active repository
     instead of hardcoding storage posture. Default local/test runtime remains

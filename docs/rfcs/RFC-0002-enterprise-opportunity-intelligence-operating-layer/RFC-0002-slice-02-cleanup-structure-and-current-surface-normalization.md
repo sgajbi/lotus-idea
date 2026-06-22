@@ -6,12 +6,12 @@ Status: Partially implemented - API repository state normalized for shared route
 
 Implemented in this slice:
 
-1. `src/app/api/repository_state.py` now owns the process-local idea repository
-   provider and test reset hook for the current in-memory persistence
+1. `src/app/runtime/repository_state.py` now owns the process-local idea
+   repository provider and test reset hook for the current in-memory persistence
    foundation.
 2. `src/app/api/idea_signals.py` no longer owns mutable repository state
    directly; the high-cash evaluate-and-persist route resolves the shared
-   repository through the API state module.
+   repository through the runtime composition module.
 3. API DTOs and route handlers remain mapping and authorization surfaces only;
    domain evaluation, persistence, review, and queue behavior stay in
    application/domain modules.

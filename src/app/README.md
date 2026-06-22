@@ -9,8 +9,11 @@ Expected dependency flow:
 2. `application` depends on `domain` and `ports`.
 3. `domain` is framework-free and must not import FastAPI, API DTOs, infrastructure, or persistence.
 4. `infrastructure` implements `ports`.
-5. `security` provides caller-context and authorization policy primitives.
-6. `resilience` provides retry, backoff, timeout, and circuit-breaker policy primitives.
-7. `observability` provides structured logging, correlation, tracing, and metrics helpers.
+5. `runtime` owns process-local composition of repositories, source adapters, publishers, and
+   downstream clients for API routes, workers, and proof generators.
+6. `security` provides caller-context and authorization policy primitives.
+7. `resilience` provides retry, backoff, timeout, and circuit-breaker policy primitives.
+8. `observability` provides structured logging, correlation, tracing, and metrics helpers.
 
-Run `make architecture-boundary-report` for the report-only architecture boundary check.
+Run `make architecture-boundary-gate` for the blocking architecture boundary check and
+`make architecture-boundary-report` when a report artifact is needed.
