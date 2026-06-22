@@ -13,12 +13,14 @@ Required workflow:
 5. keep durable docs passing `make documentation-contract-gate` so required
    README, repository context, quality, evidence, and wiki surfaces remain
    substantive,
-6. keep current-state docs passing `make implementation-truth-gate` so demo or production claims
+6. keep the bank-buyable control matrix passing `make quality-scorecard-gate`
+   so scorecard evidence, gaps, and next slices match current implementation,
+7. keep current-state docs passing `make implementation-truth-gate` so demo or production claims
    never outrun supported-feature evidence,
-7. use rebase-only PR completion,
-8. do not squash RFC or implementation commits,
-9. publish wiki source after merge when wiki truth changes,
-10. delete completed local and remote feature branches after merge.
+8. use rebase-only PR completion,
+9. do not squash RFC or implementation commits,
+10. publish wiki source after merge when wiki truth changes,
+11. delete completed local and remote feature branches after merge.
 
 RFC-0002 implementation slices must record branch, PR, commit, CI, proof directory, wiki decision,
 and branch-cleanup evidence before closure. No supported product claim may depend on a side branch,

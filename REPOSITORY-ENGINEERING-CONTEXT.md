@@ -499,16 +499,17 @@ owned by upstream services.
 13. CI contract gate: `make ci-contract-gate`
 14. maintainability gate: `make maintainability-gate`
 15. documentation contract gate: `make documentation-contract-gate`
-16. implementation-truth gate: `make implementation-truth-gate`
-17. data-mesh contract gate: `make data-mesh-contract-gate`
-18. migration contract gate: `make migration-contract-gate`
-19. migration execution dry-run gate: `make migration-execution-gate`
-20. run-once source-ingestion worker manifest gate:
+16. quality scorecard gate: `make quality-scorecard-gate`
+17. implementation-truth gate: `make implementation-truth-gate`
+18. data-mesh contract gate: `make data-mesh-contract-gate`
+19. migration contract gate: `make migration-contract-gate`
+20. migration execution dry-run gate: `make migration-execution-gate`
+21. run-once source-ingestion worker manifest gate:
     `make source-ingestion-worker-check`
-21. PostgreSQL runtime proof with configured integration URL:
+22. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-22. apply migrations with configured PostgreSQL URL: `make migrate`
-23. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+23. apply migrations with configured PostgreSQL URL: `make migrate`
+24. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -522,7 +523,7 @@ owned by upstream services.
 
 Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, maintainability thresholds, documentation contract enforcement,
-OpenAPI quality, implementation-truth gate,
+quality-scorecard truth, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest validation,
@@ -560,6 +561,13 @@ must remain present, substantive, and anchored to validation and governance
 commands. This gate complements implementation-truth enforcement: it prevents
 deletion or hollowing-out of context, while implementation-truth prevents
 overclaiming unsupported product posture.
+
+`make quality-scorecard-gate` is blocking through `make lint`. It protects the
+bank-buyable control matrix from drift by requiring the standard control rows,
+approved readiness statuses, non-empty evidence/gap/next-slice cells,
+implementation-backed evidence anchors, and stale scaffold-era underclaim
+detection after internal API, persistence, observability, and test foundations
+land.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and

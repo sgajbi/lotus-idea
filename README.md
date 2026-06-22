@@ -199,6 +199,7 @@ make lint
 make ci-contract-gate
 make maintainability-gate
 make documentation-contract-gate
+make quality-scorecard-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
@@ -327,6 +328,10 @@ it prevents future agentic work from deleting, thinning, or hollowing out the
 README, repository context, standards, runbooks, RFC index, quality scorecard,
 evidence guide, and wiki pages that operators and implementation agents need
 to follow the bank-buyable contract.
+`make quality-scorecard-gate` is also blocking through `make lint`; it keeps
+the bank-buyable control matrix aligned with implementation truth by enforcing
+approved status vocabulary, non-empty evidence/gap/next-slice cells, required
+evidence anchors, and stale scaffold-era underclaim detection.
 
 - Bank-buyable contract:
   `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
