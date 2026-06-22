@@ -338,8 +338,10 @@ operation events, and always reports `durableStorageBacked=false`,
 `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false` in the
 default process-local runtime. It now records source-safe AI explanation
 lineage through the repository port; PostgreSQL-backed runs persist that
-lineage durably without prompts, provider payloads, raw source routes, trace
-ids, correlation ids, portfolio ids, client ids, or free-form source payloads.
+lineage durably and the runtime proof now covers accepted, replayed, and
+changed-request conflict behavior through the API without prompts, provider
+payloads, raw source routes, trace ids, correlation ids, portfolio ids, client
+ids, or free-form source payloads.
 `GET /api/v1/ai-explanations/readiness` now exposes a certified internal
 operator diagnostic for AI explanation supportability. It requires both the
 `operator` role and `idea.ai-explanation.readiness.read`, returns guardrail

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 09: Governed AI Explanation And Model-Risk Controls
 
-Status: Partially implemented - internal AI governance, certified API foundation, and source-safe lineage persistence foundation
+Status: Partially implemented - internal AI governance, certified API foundation, and source-safe lineage persistence with PostgreSQL runtime proof
 
 ## Outcome
 
@@ -89,6 +89,14 @@ Implemented in this slice:
     `tests/unit/test_postgres_repository.py` prove in-memory and PostgreSQL
     lineage acceptance, replay, conflict handling, snapshot recovery, and
     source-safe JSON persistence.
+18. `tests/integration/test_postgres_runtime_integration.py` proves the
+    FastAPI runtime path records AI explanation lineage through the configured
+    PostgreSQL repository, replays the same AI request id after repository
+    reload, rejects changed lineage with a source-safe `409`, includes
+    `idea_ai_explanation_lineage` in rollback/reapply schema proof, and keeps
+    prompts, provider payloads, raw source routes, trace ids, correlation ids,
+    portfolio ids, client ids, and free-form source payloads out of the stored
+    lineage JSON.
 
 Validation evidence from the implementation slice:
 
@@ -107,6 +115,10 @@ Validation evidence from the implementation slice:
 9. `python scripts/migration_contract_gate.py` and
    `python scripts/run_migrations.py --direction apply --dry-run` passed after
    adding migration `002_ai_explanation_lineage`.
+10. `LOTUS_IDEA_POSTGRES_INTEGRATION_URL=postgresql://... make postgres-integration-gate`
+    passed locally against a disposable `postgres:18-alpine` container with
+    `5 passed`, including durable AI explanation lineage accepted/replayed/
+    conflict behavior through the API.
 
 ## Current Governance References
 
@@ -131,7 +143,8 @@ includes:
 1. `lotus-ai` workflow-pack registration and runtime execution,
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
-3. certified runtime AI lineage-store evidence and model-risk operating proof,
+3. certified runtime AI lineage-store evidence and model-risk operating proof
+   beyond the current PostgreSQL persistence proof,
 4. Gateway/Workbench proof,
 5. model-risk operations dashboards, trust telemetry, and support runbooks,
 6. supported-feature promotion after runtime proof.

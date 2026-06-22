@@ -92,8 +92,9 @@ Protected `main` uses strict branch protection. Required PR Merge Gate status ch
 8. `PR Merge Gate / Validate Docker Build`
 
 The PostgreSQL runtime proof is required explicitly, not only as a Docker-build dependency, because
-it proves durable repository behavior, migration rollback/reapply, idempotency replay, and
-source-ingestion recovery against real `postgres:18-alpine` state.
+it proves durable repository behavior, migration rollback/reapply, idempotency replay,
+source-ingestion recovery, and source-safe AI explanation lineage persistence against real
+`postgres:18-alpine` state.
 
 Persistence adapter validation:
 
@@ -117,8 +118,9 @@ Persistence adapter validation:
    `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured. The proof covers
    high-cash persistence/replay plus the first advisor queue, lifecycle,
    review, feedback, conversion intent/outcome, report evidence-pack request,
-   and internal source-ingestion replay/conflict recovery workflow paths against
-   real PostgreSQL state, plus schema rollback/reapply recovery.
+   internal source-ingestion replay/conflict recovery, and AI explanation
+   lineage accepted/replayed/conflict workflow paths against real PostgreSQL
+   state, plus schema rollback/reapply recovery.
 5. `tests/unit/test_source_ingestion.py` now also proves the bounded run-once
    source-ingestion batch worker foundation: duplicate work-item replay,
    changed-source conflict, batch decision counts, timezone validation, maximum
@@ -188,7 +190,10 @@ Persistence adapter validation:
    enforcement, product-safe payloads, and bounded `not_certified` operation
    events without invoking `lotus-ai` or exposing prompts, provider payloads,
    candidate identifiers, source routes, portfolio identifiers, or client
-   identifiers.
+   identifiers. `tests/integration/test_postgres_runtime_integration.py` proves
+   the configured PostgreSQL runtime records, replays, and conflict-checks
+   source-safe AI explanation lineage through the API without promoting
+   `lotus-ai` runtime execution or AI explanation support.
 14. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
    outbox delivery readiness diagnostic and run-once operator action for

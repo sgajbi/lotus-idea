@@ -47,6 +47,7 @@ POSTGRES_SCHEMA_TABLES = (
     "idea_conversion_intent",
     "idea_conversion_outcome",
     "idea_report_evidence_pack_request",
+    "idea_ai_explanation_lineage",
 )
 
 
@@ -308,6 +309,78 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert _table_count(postgres_database_url, "idea_report_evidence_pack_request") == 1
 
 
+def test_postgres_runtime_provider_persists_ai_explanation_lineage(
+    postgres_database_url: str,
+) -> None:
+    client = TestClient(app)
+    persisted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=_high_cash_payload(),
+        headers=_persistence_headers("postgres-runtime-proof-ai-lineage-seed-001"),
+    )
+    assert persisted.status_code == 200
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+
+    request_payload = _ai_explanation_payload(request_id="postgres-runtime-proof-ai-lineage-001")
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    accepted = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=request_payload,
+        headers=_ai_explanation_headers(),
+    )
+
+    assert accepted.status_code == 200
+    accepted_payload = accepted.json()
+    assert accepted_payload["durableStorageBacked"] is True
+    assert accepted_payload["aiLineageRecorded"] is True
+    assert accepted_payload["aiLineagePersistenceDecision"] == "accepted"
+    assert accepted_payload["lotusAiRuntimeExecuted"] is False
+    assert accepted_payload["supportedFeaturePromoted"] is False
+    assert _table_count(postgres_database_url, "idea_ai_explanation_lineage") == 1
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=request_payload,
+        headers=_ai_explanation_headers(),
+    )
+
+    assert replayed.status_code == 200
+    replayed_payload = replayed.json()
+    assert replayed_payload["durableStorageBacked"] is True
+    assert replayed_payload["aiLineageRecorded"] is True
+    assert replayed_payload["aiLineagePersistenceDecision"] == "replayed"
+    assert _table_count(postgres_database_url, "idea_ai_explanation_lineage") == 1
+
+    changed_payload = dict(request_payload)
+    changed_payload["fallbackReason"] = "workflow_not_approved"
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=changed_payload,
+        headers=_ai_explanation_headers(),
+    )
+
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "ai_explanation_lineage_conflict"
+    assert "workflow_not_approved" not in conflict.text
+    assert _table_count(postgres_database_url, "idea_ai_explanation_lineage") == 1
+
+    lineage_row = _ai_lineage_row(postgres_database_url)
+    assert lineage_row["ai_explanation_request_id"] == "postgres-runtime-proof-ai-lineage-001"
+    assert lineage_row["candidate_id"] == candidate_id
+    lineage_json = lineage_row["lineage_json"]
+    assert lineage_json["request_id"] == "postgres-runtime-proof-ai-lineage-001"
+    assert lineage_json["candidate_id"] == candidate_id
+    assert lineage_json["fallback_used"] is True
+    assert lineage_json["fallback_reason"] == "ai_unavailable"
+    assert lineage_json["grants_downstream_authority"] is False
+    assert "portfolio_id" not in lineage_json
+    assert "client_id" not in lineage_json
+    assert "prompt" not in lineage_json
+    assert "provider_payload" not in lineage_json
+
+
 def _execute_migrations(database_url: str, direction: MigrationDirection) -> None:
     plan = build_migration_plan(MIGRATIONS_DIR, direction)
     with psycopg.connect(database_url) as connection:
@@ -324,6 +397,25 @@ def _table_count(database_url: str, table_name: str) -> int:
     if row is None:
         raise AssertionError(f"No count returned for {table_name}")
     return int(row[0])
+
+
+def _ai_lineage_row(database_url: str) -> dict[str, Any]:
+    with psycopg.connect(database_url) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT ai_explanation_request_id, candidate_id, lineage_json
+                FROM idea_ai_explanation_lineage
+                """
+            )
+            row = cursor.fetchone()
+    if row is None:
+        raise AssertionError("No AI explanation lineage row returned")
+    return {
+        "ai_explanation_request_id": str(row[0]),
+        "candidate_id": str(row[1]),
+        "lineage_json": row[2],
+    }
 
 
 def _schema_tables_exist(database_url: str) -> bool:
@@ -492,6 +584,30 @@ def _report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Capabilities": "idea.report-evidence-pack.request",
         "X-Correlation-Id": "corr-postgres-runtime-proof-report-pack",
         "Idempotency-Key": idempotency_key,
+    }
+
+
+def _ai_explanation_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
+        "X-Correlation-Id": "corr-postgres-runtime-proof-ai-lineage",
+    }
+
+
+def _ai_explanation_payload(*, request_id: str) -> dict[str, Any]:
+    return {
+        "requestId": request_id,
+        "workflowPack": {
+            "workflowPackId": "lotus-ai:idea-explanation:v1",
+            "workflowPackVersion": "v1",
+            "purpose": "missing_evidence_check",
+            "evaluationRef": "lotus-ai:governed-verifier:v1",
+        },
+        "approvedMetadata": {"channel": "advisor-workbench"},
+        "requestedAtUtc": "2026-06-21T10:12:00Z",
+        "fallbackReason": "ai_unavailable",
     }
 
 
