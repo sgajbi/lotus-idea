@@ -1,6 +1,9 @@
 .PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
+UNIT_TESTS ?= tests/unit
+INTEGRATION_TESTS ?= tests/integration
+E2E_TESTS ?= tests/e2e
 
 ifeq ($(OS),Windows_NT)
 VENV_PYTHON := $(VENV_DIR)/Scripts/python.exe
@@ -130,18 +133,18 @@ test:
 	$(MAKE) test-unit
 
 test-unit:
-	$(VENV_PYTHON) -m pytest tests/unit
+	$(VENV_PYTHON) -m pytest $(UNIT_TESTS)
 
 test-integration:
-	$(VENV_PYTHON) -m pytest tests/integration
+	$(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS)
 
 test-e2e:
-	$(VENV_PYTHON) -m pytest tests/e2e
+	$(VENV_PYTHON) -m pytest $(E2E_TESTS)
 
 test-coverage:
-	COVERAGE_FILE=.coverage.unit $(VENV_PYTHON) -m pytest tests/unit --cov=src --cov-report=
-	COVERAGE_FILE=.coverage.integration $(VENV_PYTHON) -m pytest tests/integration --cov=src --cov-report=
-	COVERAGE_FILE=.coverage.e2e $(VENV_PYTHON) -m pytest tests/e2e --cov=src --cov-report=
+	COVERAGE_FILE=.coverage.unit $(VENV_PYTHON) -m pytest $(UNIT_TESTS) --cov=src --cov-report=
+	COVERAGE_FILE=.coverage.integration $(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS) --cov=src --cov-report=
+	COVERAGE_FILE=.coverage.e2e $(VENV_PYTHON) -m pytest $(E2E_TESTS) --cov=src --cov-report=
 	$(MAKE) coverage-gate
 
 coverage-gate:

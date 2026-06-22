@@ -104,6 +104,14 @@ REQUIRED_CI_DEPS = (
     "security-audit",
 )
 
+REQUIRED_TEST_SELECTORS = {
+    "UNIT_TESTS ?= tests/unit": "Makefile must define UNIT_TESTS for scoped unit validation",
+    "INTEGRATION_TESTS ?= tests/integration": (
+        "Makefile must define INTEGRATION_TESTS for scoped integration validation"
+    ),
+    "E2E_TESTS ?= tests/e2e": "Makefile must define E2E_TESTS for scoped e2e validation",
+}
+
 WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "feature-lane.yml": (
         "permissions:\n  contents: read",
@@ -239,6 +247,10 @@ def validate_makefile(makefile: str) -> list[str]:
         if not re.search(rf"^{re.escape(target)}:", makefile, re.MULTILINE):
             errors.append(f"Makefile missing required target `{target}`")
 
+    for selector, error in REQUIRED_TEST_SELECTORS.items():
+        if selector not in makefile:
+            errors.append(error)
+
     lint_block = _target_block(makefile, "lint")
     for call in REQUIRED_LINT_CALLS:
         if call not in lint_block:
@@ -253,6 +265,20 @@ def validate_makefile(makefile: str) -> list[str]:
     for dependency in REQUIRED_CI_DEPS:
         if dependency not in ci_deps:
             errors.append(f"Makefile ci target missing `{dependency}`")
+
+    test_target_expectations = {
+        "test-unit": "$(VENV_PYTHON) -m pytest $(UNIT_TESTS)",
+        "test-integration": "$(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS)",
+        "test-e2e": "$(VENV_PYTHON) -m pytest $(E2E_TESTS)",
+    }
+    for target, expected_command in test_target_expectations.items():
+        if expected_command not in _target_block(makefile, target):
+            errors.append(f"Makefile {target} target must run `{expected_command}`")
+
+    coverage_block = _target_block(makefile, "test-coverage")
+    for selector in ("$(UNIT_TESTS)", "$(INTEGRATION_TESTS)", "$(E2E_TESTS)"):
+        if selector not in coverage_block:
+            errors.append(f"Makefile test-coverage target must use `{selector}`")
 
     security_audit = _target_block(makefile, "security-audit")
     if "-m pip_audit" not in security_audit:
