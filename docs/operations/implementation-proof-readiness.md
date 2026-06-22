@@ -101,6 +101,11 @@ Scheduled source-ingestion worker deploy proof is captured by
 referenced through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears
 only `scheduled_worker_deploy_proof_missing`; it does not clear live Core,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
+`make implementation-proof-readiness-check` now generates that deploy-proof
+artifact under ignored `output/source-ingestion/` and passes it explicitly into
+the aggregate readiness generator, so the repo-native proof snapshot does not
+report a stale scheduled-worker deploy-proof blocker. This remains deploy
+topology proof only; it is not live long-running scheduler certification.
 
 ## Response Shape
 
@@ -151,7 +156,8 @@ Implementation-backed evidence:
 1. application builder: `src/app/application/implementation_proof_readiness.py`,
 2. API route: `src/app/api/implementation_proof_readiness.py`,
 3. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
-4. repo-native check: `make implementation-proof-readiness-check`,
+4. repo-native check that generates and consumes the scheduled-worker
+   deploy-proof artifact: `make implementation-proof-readiness-check`,
 5. downstream contract check: `make downstream-realization-contract-gate`,
 6. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,

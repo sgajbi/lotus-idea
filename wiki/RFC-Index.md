@@ -79,8 +79,9 @@ Current RFC-0002 implementation-start baseline:
    posture across source ingestion, advisor queue, AI explanation, data mesh,
    runtime trust telemetry preview/snapshot evidence, outbox delivery, Workbench, downstream
    realization, and supported-feature promotion.
-   `make implementation-proof-readiness-check` generates the same source-safe
-   posture as repo-native automation evidence.
+   `make implementation-proof-readiness-check` generates and consumes the
+   scheduled source-ingestion worker deploy-proof artifact before producing the
+   same source-safe posture as repo-native automation evidence.
    Bounded read-only Gateway publication exists for advisor queue and
    candidate detail; Workbench, live source adapters, data-product
    certification, and supported-feature promotion remain planned.

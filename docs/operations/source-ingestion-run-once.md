@@ -43,6 +43,10 @@ source-safe deploy-proof artifact. When that artifact is valid and referenced
 through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, readiness can
 clear only `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
 Gateway/Workbench, downstream, and supported-feature blockers remain.
+`make implementation-proof-readiness-check` also generates this deploy-proof
+artifact under ignored `output/source-ingestion/` and passes it into the
+aggregate RFC proof-readiness generator so CI evidence does not keep a stale
+scheduled-worker deploy-proof blocker after the contract has been validated.
 
 ## What It Does Not Prove
 

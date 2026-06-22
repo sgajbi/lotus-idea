@@ -11,7 +11,7 @@
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
 | `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
-| `make implementation-proof-readiness-check` | RFC-0002 aggregate proof-readiness evidence. |
+| `make implementation-proof-readiness-check` | Scheduled-worker deploy proof plus RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `docker compose up --build` | Local container entrypoint. |
@@ -101,10 +101,12 @@ flowchart TD
    `idea.mesh.trust-telemetry.preview.read` capability. This reports aggregate
    active-repository counts only and is not data-product certification.
 13. For CI or async evidence without running the service, run
-   `make implementation-proof-readiness-check` or
-   `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
-   The generated JSON is an operator proof-readiness artifact, not a supported
-   product claim.
+    `make implementation-proof-readiness-check` or
+    `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
+    The Make target generates and consumes the scheduled-worker deploy-proof
+    artifact before producing the aggregate snapshot. The generated JSON is an
+    operator proof-readiness artifact, not live scheduler certification or a
+    supported product claim.
 14. For source-safe runtime trust telemetry preview evidence without running
     the service, run `make runtime-trust-telemetry-preview-check` or
     `scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc <timestamp>`.

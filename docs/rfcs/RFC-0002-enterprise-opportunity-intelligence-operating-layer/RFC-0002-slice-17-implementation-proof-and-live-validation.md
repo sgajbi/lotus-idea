@@ -14,10 +14,12 @@ Prove the complete supported opportunity journey end to end.
 2. `GET /api/v1/implementation-proof/readiness` exposes the snapshot as a
    certified internal operator endpoint with
    `idea.implementation-proof.readiness.read` capability enforcement.
-3. `scripts/generate_implementation_proof_readiness.py` and
-   `make implementation-proof-readiness-check` generate the same source-safe
-   readiness snapshot as repo-native automation evidence without requiring the
-   HTTP service to run.
+3. `scripts/generate_implementation_proof_readiness.py` accepts explicit
+   source-ingestion manifest, live-proof, and scheduled-worker proof paths, and
+   `make implementation-proof-readiness-check` now generates the scheduled
+   source-ingestion worker deploy-proof artifact before producing the same
+   source-safe readiness snapshot as repo-native automation evidence without
+   requiring the HTTP service to run.
 4. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal operator diagnostic and preserves the no-live-proof,
    no-Gateway, no-Workbench, no-client-ready-publication, and
@@ -69,9 +71,14 @@ Prove the complete supported opportunity journey end to end.
     source-safe scheduled worker deploy-contract proof shape. When a valid
     artifact is referenced through
     `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, the
-    source-ingestion readiness diagnostic can clear only
-    `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
-    Gateway/Workbench, and supported-feature blockers remain.
+     source-ingestion readiness diagnostic can clear only
+     `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
+     Gateway/Workbench, and supported-feature blockers remain.
+13. `make implementation-proof-readiness-check` now generates that scheduled
+    worker deploy-proof artifact under ignored `output/source-ingestion/` and
+    passes it explicitly into aggregate proof-readiness generation, so repo-native
+    evidence no longer reports a stale scheduled-worker deploy-proof blocker
+    after the deploy contract is validated.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -115,9 +122,10 @@ readiness"; it does not close certified scheduled daemon runtime, platform mesh,
 Gateway/Workbench, downstream, or supported-feature proof.
 The scheduled-worker deploy-contract artifact narrows the scheduling proof gap
 from "no deployable worker contract" to "bounded scheduler entrypoint, Compose
-worker service, and source-safe proof are CI-enforced"; it does not close
-long-running scheduler operations, live Core source certification, platform
-mesh certification, Gateway/Workbench, downstream, or supported-feature proof.
+worker service, source-safe proof, and aggregate readiness consumption are
+CI-enforced"; it does not close long-running scheduler operations, live Core
+source certification, platform mesh certification, Gateway/Workbench,
+downstream, or supported-feature proof.
 The outbox-delivery readiness diagnostic and run-once operator action do the
 same for broker and event delivery posture; they do not close the external
 publication, platform mesh event certification, or downstream consumer proof

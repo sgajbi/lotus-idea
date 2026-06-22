@@ -314,6 +314,26 @@ def validate_makefile(makefile: str) -> list[str]:
             "Makefile source-ingestion-live-proof-contract-gate target must run "
             "`scripts/source_ingestion_live_proof_contract_gate.py`"
         )
+    implementation_proof_readiness_check = _target_block(
+        makefile, "implementation-proof-readiness-check"
+    )
+    if "scripts/generate_scheduled_source_ingestion_worker_proof.py" not in (
+        implementation_proof_readiness_check
+    ):
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must generate "
+            "a scheduled source-ingestion worker proof artifact"
+        )
+    if "--source-ingestion-scheduled-worker-proof" not in implementation_proof_readiness_check:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "scheduled source-ingestion worker proof artifact into readiness generation"
+        )
+    if "--source-ingestion-manifest" not in implementation_proof_readiness_check:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "source-ingestion manifest into readiness generation"
+        )
     runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
     if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
         errors.append(

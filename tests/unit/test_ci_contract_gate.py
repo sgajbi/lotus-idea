@@ -108,3 +108,22 @@ def test_ci_contract_gate_blocks_unscoped_unit_test_target() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile test-unit target must run `$(VENV_PYTHON) -m pytest $(UNIT_TESTS)`" in errors
+
+
+def test_ci_contract_gate_blocks_stale_implementation_proof_readiness_target() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the scheduled "
+        "source-ingestion worker proof artifact into readiness generation"
+    ) in errors

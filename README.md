@@ -199,7 +199,7 @@ docker compose up --build
 | `make migration-contract-gate` | Validate migration contract structure. |
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, and live-proof artifact contract without calling Core. |
-| `make implementation-proof-readiness-check` | Generate source-safe RFC proof readiness evidence. |
+| `make implementation-proof-readiness-check` | Generate the scheduled-worker deploy proof artifact and source-safe RFC proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
