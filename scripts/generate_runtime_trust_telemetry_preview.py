@@ -11,7 +11,10 @@ from app.application.runtime_trust_telemetry import (
     RuntimeTrustTelemetryPreview,
     build_runtime_trust_telemetry_preview,
 )
-from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 
 
 def main(argv: list[str] | None = None) -> int:

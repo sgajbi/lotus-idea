@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.outbox_delivery import OutboxDeliveryRunSummary, run_outbox_delivery_once
 from app.application.outbox_delivery_readiness import (
     DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
@@ -25,7 +25,7 @@ from app.observability import (
     OperationSupportability,
     emit_operation_event,
 )
-from app.outbox_publisher_state import (
+from app.runtime.outbox_publisher_state import (
     build_outbox_publisher_from_environment as _build_outbox_publisher_from_environment,
 )
 from app.security.caller_context import (

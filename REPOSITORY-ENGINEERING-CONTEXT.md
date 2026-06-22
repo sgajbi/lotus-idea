@@ -84,9 +84,11 @@ supported-feature promotion.
 RFC-0002 Slice 02 is partially implemented as cleanup and current-surface
 normalization. API repository state was first isolated out of the high-cash
 route module; the current composition provider now lives in
-`src/app/repository_state.py`, with `src/app/api/repository_state.py` retained
-as a compatibility shim. This is structural cleanup only and does not promote a
-supported business feature.
+`src/app/runtime/repository_state.py`. Runtime composition providers for the
+repository, source ingestion, outbox publisher, and downstream realization
+clients now live under `src/app/runtime/` instead of the app root or API layer.
+This is structural cleanup only and does not promote a supported business
+feature.
 
 RFC-0002 Slice 04 data-mesh baseline now declares the current source-authority
 consumer set from the Slice 00 map, including Core portfolio state,
@@ -260,7 +262,7 @@ snapshots, and rolls back on database flush failure.
 `src/app/infrastructure/postgres_codecs.py` isolates PostgreSQL JSON
 serialization/deserialization helpers so adapter growth preserves the
 maintainability gate instead of normalizing an oversized infrastructure module.
-`src/app/repository_state.py` now wires the adapter into API runtime
+`src/app/runtime/repository_state.py` now wires the adapter into API runtime
 selection when `LOTUS_IDEA_DATABASE_URL` is configured, while keeping
 process-local state as the default. Repository-backed routes derive
 `durableStorageBacked` responses and operation-event labels from the active
@@ -620,16 +622,17 @@ logs; fix or document the owned warning source instead.
 
 1. `src/app/main.py`: application entrypoint, health, readiness, metadata, and
    OpenAPI surface.
-2. `src/app/api/`: route modules, DTO mapping, and API-facing process state
-   providers. Routes must expose explicit idea contracts and must not embed
-   domain logic. Current business routes are registered directly on the FastAPI
-   app before Prometheus instrumentation so endpoint certification and metrics
-   instrumentation remain compatible. `app.repository_state` owns the API
-   repository provider at the composition root: process-local in-memory by
-   default, PostgreSQL-backed when `LOTUS_IDEA_DATABASE_URL` is configured. The
-   `app.api.repository_state` shim preserves existing route/test imports without
-   importing concrete infrastructure into the API layer.
-3. `src/app/application/`: use-case orchestration, source aggregation, and
+2. `src/app/api/`: route modules and DTO mapping. Routes must expose explicit
+   idea contracts and must not embed domain logic. Current business routes are
+   registered directly on the FastAPI app before Prometheus instrumentation so
+   endpoint certification and metrics instrumentation remain compatible.
+3. `src/app/runtime/`: process-local dependency composition for repositories,
+   source adapters, outbox publishers, and downstream realization clients. The
+   repository provider is process-local in-memory by default and
+   PostgreSQL-backed when `LOTUS_IDEA_DATABASE_URL` is configured. API routes,
+   workers, and proof generators depend on this package for runtime wiring
+   instead of placing state providers in the API layer or app root.
+4. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows. Current use cases map the certified high-cash API
    requests into framework-free domain signal evaluation, fetch Core high-cash
    evidence through a source port, and internally persist created high-cash

@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 import app.api.runtime_trust_telemetry as runtime_trust_telemetry_api
 from app.domain import InMemoryIdeaRepository
 from app.main import app
-from app.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 
 
 def telemetry_headers(

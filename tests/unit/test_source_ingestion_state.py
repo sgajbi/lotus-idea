@@ -12,7 +12,7 @@ from app.application.source_ingestion_readiness import (
 )
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
-from app.source_ingestion_state import (
+from app.runtime.source_ingestion_state import (
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
     build_source_ingestion_runtime_from_environment,

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.testclient import TestClient
 
 from app.api.candidate_detail import get_idea_candidate_detail
-from app.api.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.application.candidate_detail import GetCandidateDetailCommand
 from app.main import app
 

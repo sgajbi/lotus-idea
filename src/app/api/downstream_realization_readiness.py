@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.downstream_realization_readiness import (
     DownstreamRealizationCapabilityReadiness,
     DownstreamRealizationContractReadiness,

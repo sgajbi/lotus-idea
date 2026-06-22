@@ -26,7 +26,10 @@ from app.infrastructure.downstream_client import (
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
-from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 
 
 def main(argv: list[str] | None = None) -> int:

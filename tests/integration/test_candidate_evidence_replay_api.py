@@ -6,7 +6,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.api.repository_state import get_idea_repository, reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.domain import IdeaLifecycleStatus
 from app.main import app
 

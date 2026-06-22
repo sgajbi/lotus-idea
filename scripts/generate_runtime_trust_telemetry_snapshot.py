@@ -11,7 +11,10 @@ from app.application.runtime_trust_telemetry import (
     RUNTIME_TELEMETRY_OUTPUT_PATH,
     build_runtime_trust_telemetry_snapshot,
 )
-from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 
 
 REQUIRED_CONTRACT_FIELDS = {

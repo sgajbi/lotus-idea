@@ -157,7 +157,7 @@ Implementation-backed evidence:
 3. scheduled-worker planner:
    `src/app/application/source_ingestion_scheduled_worker.py`,
 4. live-proof builder: `src/app/application/source_ingestion_live_proof.py`,
-5. runtime builder: `src/app/source_ingestion_state.py`,
+5. runtime builder: `src/app/runtime/source_ingestion_state.py`,
 6. API route: `src/app/api/source_ingestion_readiness.py`,
 7. scheduled worker entrypoint:
    `scripts/run_scheduled_source_ingestion_worker.py`,

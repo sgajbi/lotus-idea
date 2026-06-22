@@ -25,7 +25,7 @@ from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
 )
-from app.repository_state import DATABASE_URL_ENV
+from app.runtime.repository_state import DATABASE_URL_ENV
 
 
 def test_source_ingestion_readiness_reports_blocked_default_posture(

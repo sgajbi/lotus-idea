@@ -9,8 +9,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository
-from app.repository_state import idea_repository_durable_storage_backed
+from app.runtime.repository_state import get_idea_repository
+from app.runtime.repository_state import idea_repository_durable_storage_backed
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
     AIExplanationReadinessSnapshot,

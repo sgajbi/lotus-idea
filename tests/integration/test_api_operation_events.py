@@ -14,7 +14,7 @@ import app.api.idea_signals as idea_signals_api
 import app.api.report_evidence as report_evidence_api
 import app.api.review_queues as review_queues_api
 import app.api.review_workflow as review_workflow_api
-from app.api.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
 

@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
     apply_candidate_lifecycle_transition_to_repository,
