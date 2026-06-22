@@ -93,8 +93,9 @@ foundation:
     diagnostic.
 22. `src/app/application/implementation_proof_readiness.py` adds an aggregate
     RFC-0002 proof-readiness snapshot over existing source-ingestion,
-    review-queue, AI-explanation, data-mesh, runtime trust telemetry preview,
-    outbox-delivery, Workbench, downstream, and supported-feature proof
+    review-queue, AI-explanation, data-mesh, runtime trust telemetry
+    preview/snapshot evidence, outbox-delivery, Workbench, downstream, and
+    supported-feature proof
     families without exposing source payloads, outbox event identifiers, raw
     idempotency keys, or broker payloads.
 23. `GET /api/v1/implementation-proof/readiness` exposes that snapshot to

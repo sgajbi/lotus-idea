@@ -17,8 +17,9 @@ Required posture:
 6. AI through `lotus-ai` workflow packs only,
 7. endpoint certification and OpenAPI quality gates,
 8. proposed data-product declarations, repo-native data-mesh contract gate,
-   blocked static trust telemetry, source-safe runtime trust telemetry preview,
-   and planned SLO/access/evidence policies before mesh promotion,
+   blocked static trust telemetry, source-safe runtime trust telemetry preview
+   and snapshot evidence, and planned SLO/access/evidence policies before mesh
+   promotion,
 9. AST-backed monetary-float guard enforcement for money-like application
    fields and conversions,
 10. branch protection and CI lane governance.
@@ -29,7 +30,8 @@ Mesh certification rule:
 2. static trust telemetry must remain blocked until runtime implementation
    exists,
 3. the repo-native data-mesh contract gate is pre-certification evidence only,
-4. platform source-manifest inclusion and certification gates are required
+4. generated runtime telemetry snapshots are pre-certification evidence only,
+5. platform source-manifest inclusion and certification gates are required
    before Gateway or Workbench expose the product as supported.
 
 `GET /api/v1/data-mesh/readiness` is the current internal operator diagnostic
@@ -45,6 +47,11 @@ requires the `operator` role and
 does not expose candidate identifiers, source routes, evidence hashes,
 portfolio identifiers, client identifiers, platform source-manifest inclusion,
 or product certification.
+
+`make runtime-trust-telemetry-snapshot-check` emits the source-safe runtime
+snapshot for `IdeaCandidate:v1` under ignored `output/trust-telemetry/runtime/`.
+It is contract-shaped evidence for operators and CI, not product certification
+or supported-feature promotion.
 
 `GET /api/v1/ai-explanations/readiness` is the current internal operator
 diagnostic for AI explanation model-risk supportability. It requires both the

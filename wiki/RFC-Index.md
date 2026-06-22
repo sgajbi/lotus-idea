@@ -68,14 +68,14 @@ Current RFC-0002 implementation-start baseline:
    AI explanation evaluation, advisor queues, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
    AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics,
-   runtime trust telemetry preview diagnostics, and
+   runtime trust telemetry preview/snapshot diagnostics, and
    source-ingestion-readiness diagnostics. A certified internal
    downstream-realization-readiness diagnostic now reports Advise, Manage,
    Report, Render, and Archive blockers without calling downstream services.
    The certified internal
    implementation-proof-readiness diagnostic now aggregates RFC-0002 blocker
    posture across source ingestion, advisor queue, AI explanation, data mesh,
-   runtime trust telemetry preview, outbox delivery, Workbench, downstream
+   runtime trust telemetry preview/snapshot evidence, outbox delivery, Workbench, downstream
    realization, and supported-feature promotion.
    `make implementation-proof-readiness-check` generates the same source-safe
    posture as repo-native automation evidence.
