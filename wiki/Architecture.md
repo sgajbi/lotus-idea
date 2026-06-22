@@ -246,11 +246,13 @@ promotion.
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 operator diagnostic for downstream realization supportability. It reports
 current conversion intent/outcome counts, report evidence-pack request counts,
-source-of-truth paths, and blocker groups for `lotus-advise`,
-`lotus-manage`, `lotus-report`, `lotus-render`, and `lotus-archive`. It does
-not call downstream services, create proposals, create manage actions,
-materialize reports, render output, archive records, authorize client-ready
-publication, or promote a supported feature.
+source-of-truth paths, planned Advise/Manage/Report downstream contract
+readiness, and blocker groups for `lotus-advise`, `lotus-manage`,
+`lotus-report`, `lotus-render`, and `lotus-archive`. Planned contract records
+name the owning repository and adapter posture, but they are not downstream
+route-existence proof. The endpoint does not call downstream services, create
+proposals, create manage actions, materialize reports, render output, archive
+records, authorize client-ready publication, or promote a supported feature.
 
 ## Persistence Orchestration Foundation
 

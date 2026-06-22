@@ -322,9 +322,11 @@ supported-feature promotion.
 operator diagnostic for downstream realization supportability. It requires the
 `operator` role and `idea.downstream-realization.readiness.read`, reports
 conversion intent, conversion outcome, and report evidence-pack request counts
-plus Advise, Manage, Report, Render, and Archive blockers, emits bounded
-`downstream_realization_readiness_read` operation events, and does not call
-downstream services or promote downstream realization.
+plus Advise, Manage, Report, Render, and Archive blockers and planned
+downstream contract-readiness records for Advise, Manage, and Report handoff
+seams. It emits bounded `downstream_realization_readiness_read` operation
+events and does not call downstream services, prove downstream route
+existence, or promote downstream realization.
 `scripts/generate_implementation_proof_readiness.py` and
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
@@ -546,7 +548,9 @@ logs; fix or document the owned warning source instead.
     intents and persists source-provenanced request packages without downstream
     Report/Render/Archive realization. Downstream-realization-readiness
     orchestration reports conversion intent/outcome/report evidence-pack request
-    counts and downstream blockers without calling downstream systems.
+    counts, planned Advise/Manage/Report handoff contract posture, and
+    downstream blockers without calling downstream systems or claiming route
+    existence in owning services.
     Source-ingestion-readiness orchestration
     reports manifest, Core base URL, durable repository configuration, and
     certification blockers for the high-cash run-once worker without executing

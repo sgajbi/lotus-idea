@@ -42,7 +42,10 @@ Implemented in the first Slice 13 foundation:
 7. `GET /api/v1/downstream-realization/readiness` now reports the current
    report evidence-pack request count and the explicit Report/Render/Archive
    blockers for operators without calling `lotus-report`, `lotus-render`, or
-   `lotus-archive`.
+   `lotus-archive`. It also exposes the planned
+   `lotus-idea-to-lotus-report-evidence-pack-intake:v1` contract readiness
+   record with `lotus-report` ownership, planned route posture, adapter status,
+   and the dedicated report idea evidence intake blocker.
 
 Current endpoint behavior:
 
@@ -76,21 +79,23 @@ Partially satisfied:
 Not yet satisfied:
 
 1. No `lotus-report` package intake adapter or acceptance proof exists.
-2. No `lotus-render` deterministic output projection exists.
-3. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
+2. No dedicated `lotus-report` idea evidence-pack intake route or acceptance
+   proof exists.
+3. No `lotus-render` deterministic output projection exists.
+4. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
    record exists.
-4. No rendered-output equivalence proof exists.
-5. No Gateway/Workbench product surface, data-product certification, runtime
+5. No rendered-output equivalence proof exists.
+6. No Gateway/Workbench product surface, data-product certification, runtime
    trust telemetry, downstream materialization proof, or supported-feature
    promotion exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
 
 The downstream-realization readiness diagnostic is certified as an internal
-operator endpoint, but it is not materialization proof. It keeps
-Report/Render/Archive ownership outside `lotus-idea` and remains
-`not_certified` until downstream intake, deterministic rendering, archive
-metadata, retention/legal-hold, retrieval, and access-audit proof are
-implemented in the owning services.
+operator endpoint, but it is not materialization proof or downstream
+route-existence proof. It keeps Report/Render/Archive ownership outside
+`lotus-idea` and remains `not_certified` until downstream intake,
+deterministic rendering, archive metadata, retention/legal-hold, retrieval, and
+access-audit proof are implemented in the owning services.
 
 ## Boundary Decision
 

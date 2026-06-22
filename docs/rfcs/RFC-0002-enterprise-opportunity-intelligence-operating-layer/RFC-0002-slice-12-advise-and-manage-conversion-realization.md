@@ -66,7 +66,10 @@ Implemented in this slice:
 15. `src/app/application/downstream_realization_readiness.py` and
     `GET /api/v1/downstream-realization/readiness` add a certified internal
     operator diagnostic over current conversion intent/outcome counts and
-    Advise/Manage realization blockers. The diagnostic requires both the
+    Advise/Manage realization blockers. The diagnostic also exposes planned
+    downstream contract-readiness records for the Advise proposal and Manage
+    action handoff seams, with owner repositories, planned target-route
+    posture, adapter status, evidence refs, and blockers. It requires both the
     `operator` role and `idea.downstream-realization.readiness.read`
     capability, emits `downstream_realization_readiness_read`, and keeps the
     supportability posture `not_certified` until live downstream contract proof
@@ -89,7 +92,8 @@ This slice is not yet a supported conversion product. Remaining work includes:
 The downstream-realization readiness diagnostic is a blocker index only. It
 does not create proposals, suitability records, manage action-register records,
 rebalance records, orders, client communications, reports, rendered output, or
-archive records.
+archive records. Planned contract-readiness records are not route-existence
+proof in the downstream repositories.
 
 ## Required Work
 

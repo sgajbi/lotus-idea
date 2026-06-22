@@ -137,8 +137,9 @@ Persistence adapter validation:
    `tests/integration/test_downstream_realization_readiness_api.py` prove the
    downstream realization readiness diagnostic for blocked supportability,
    role plus capability enforcement, product-safe payloads, source-authority
-   boundaries, and bounded `not_certified` operation events without calling
-   Advise, Manage, Report, Render, or Archive.
+   boundaries, planned downstream contract-readiness records, and bounded
+   `not_certified` operation events without calling Advise, Manage, Report,
+   Render, or Archive.
 10. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
@@ -299,8 +300,9 @@ or supported-feature promotion.
 
 The internal downstream-realization-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
-certify the diagnostic route only; they do not certify Advise proposal
-creation, Manage action realization, Report/Render/Archive materialization,
+certify the diagnostic route only; planned contract records are not downstream
+route-existence proof. These checks do not certify Advise proposal creation,
+Manage action realization, Report/Render/Archive materialization,
 Gateway/Workbench support, data-product promotion, client-ready publication,
 or supported-feature promotion.
 

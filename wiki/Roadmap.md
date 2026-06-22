@@ -48,7 +48,7 @@ Current state:
 14. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
     outcome recording, no-authority conversion boundaries, and a certified
-    downstream realization readiness blocker diagnostic,
+    downstream realization readiness contract-plan diagnostic,
 15. RFC-0002 Slice 13 partially implements internal report evidence-pack
     request governance for reviewed report conversion intents, source summaries,
     retention refs, Report/Render/Archive authority refs, idempotency, audit,
