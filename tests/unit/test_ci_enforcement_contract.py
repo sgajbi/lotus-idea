@@ -49,7 +49,7 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "scripts/run_migrations.py --direction rollback --dry-run" in makefile
     assert "source-ingestion-worker-check:" in makefile
     assert "$(MAKE) source-ingestion-worker-check" in makefile
-    assert "scripts/run_source_ingestion_worker.py" in makefile
+    assert "scripts/source_ingestion_worker_contract_gate.py" in makefile
     assert "postgres-integration-gate:" in makefile
     assert "tests/integration/test_postgres_runtime_integration.py" in makefile
     assert (
@@ -115,6 +115,21 @@ def test_ci_contract_gate_blocks_missing_source_observability_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) source-observability-contract-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_downgraded_source_ingestion_worker_check() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace(
+        "scripts/source_ingestion_worker_contract_gate.py",
+        "scripts/run_source_ingestion_worker.py",
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile source-ingestion-worker-check target must run "
+        "`scripts/source_ingestion_worker_contract_gate.py`"
+    ) in errors
 
 
 def test_ci_contract_gate_blocks_write_permissions_in_read_only_lanes(tmp_path: Path) -> None:

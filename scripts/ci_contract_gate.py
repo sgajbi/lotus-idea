@@ -253,6 +253,13 @@ def validate_makefile(makefile: str) -> list[str]:
         errors.append("Makefile security-audit target must audit shared runtime lock")
     if "requirements/ci-tooling.lock.txt" not in security_audit:
         errors.append("Makefile security-audit target must audit CI tooling lock")
+
+    source_ingestion_worker_check = _target_block(makefile, "source-ingestion-worker-check")
+    if "scripts/source_ingestion_worker_contract_gate.py" not in source_ingestion_worker_check:
+        errors.append(
+            "Makefile source-ingestion-worker-check target must run "
+            "`scripts/source_ingestion_worker_contract_gate.py`"
+        )
     return errors
 
 
