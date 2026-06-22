@@ -23,6 +23,13 @@ configured, repository-backed API responses and operation events report
 `durableStorageBacked=true`, but this is still not production storage
 certification, data-product certification, live source integration proof,
 downstream realization proof, or supported-feature promotion.
+`POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
+same evidence-hash replay posture as a certified internal operator API over the
+active repository provider. It compares caller-supplied current source refs with
+persisted source-ref evidence hashes and returns matched, stale-source,
+hash-mismatch, expired, or missing-candidate posture without calling Core,
+exporting raw source routes, granting downstream authority, or promoting a
+supported feature.
 
 ## Current Contract
 
@@ -50,7 +57,10 @@ downstream realization proof, or supported-feature promotion.
 7. Repository-backed endpoints derive `durableStorageBacked` and
    `durable_storage_backed` operation-event labels from the active repository
    instead of hardcoding storage posture.
-8. `tests/integration/test_postgres_runtime_integration.py` applies the schema
+8. The evidence replay endpoint derives matched, stale-source, hash-mismatch,
+   expired, and not-found posture from the active repository provider and emits
+   bounded `candidate_evidence_replay` operation events.
+9. `tests/integration/test_postgres_runtime_integration.py` applies the schema
    to a real PostgreSQL service, persists through the FastAPI
    evaluate-and-persist endpoint, reloads the repository provider, proves
    idempotency replay from database state, projects the advisor queue, records
@@ -61,12 +71,12 @@ downstream realization proof, or supported-feature promotion.
    reapplies it, and proves the recovered API persistence contract is usable.
    GitHub PR Merge Gate and Main Releasability run this proof against
    `postgres:18-alpine`.
-9. `src/app/application/source_ingestion.py` is the internal high-cash
+10. `src/app/application/source_ingestion.py` is the internal high-cash
    source-ingestion orchestration and bounded run-once batch worker foundation.
    It standardizes the future scheduler's generated idempotency key shape,
    per-item replay/conflict posture, batch decision counts, and non-mutating
    behavior for blocked, suppressed, and below-threshold Core source evidence.
-10. `src/app/application/source_ingestion_worker.py` and
+11. `src/app/application/source_ingestion_worker.py` and
     `scripts/run_source_ingestion_worker.py` add a versioned manifest-backed
     run-once worker entrypoint. Check-only mode returns a product-safe
     validation summary and is enforced by `make source-ingestion-worker-check`;

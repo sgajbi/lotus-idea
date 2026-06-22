@@ -29,6 +29,7 @@ Current instrumented operations:
 | --- | --- | --- | --- |
 | `signal_evaluation` | Internal high-cash signal evaluation | `lotus-core` | `foundation_only` |
 | `candidate_persistence` | Internal high-cash candidate persistence and replay | `lotus-core` | `foundation_only` |
+| `candidate_evidence_replay` | Internal candidate evidence hash replay posture | `lotus-idea` | `foundation_only` |
 | `lifecycle_transition` | Internal candidate lifecycle transition recording | `lotus-idea` | `foundation_only` |
 | `ai_explanation` | Internal AI explanation fallback/verifier evaluation | `lotus-idea` | `foundation_only` |
 | `review_queue_read` | Internal advisor review queue read projection | `lotus-idea` | `foundation_only` |
@@ -68,9 +69,11 @@ fields. Do not add identifiers or payload fragments to operation labels.
 7. `permission_denied` means fail-closed capability policy blocked the caller.
 8. `invalid_request` and `invalid_state` are product-safe failures; inspect API validation and
    lifecycle/review/conversion preconditions before retrying.
-9. `blocked` means the verifier rejected unsupported AI output, the mesh-readiness diagnostic
-   remains blocked until runtime trust telemetry and platform mesh certification exist, or the
-   source-ingestion readiness diagnostic is missing run-once worker configuration inputs.
+9. `blocked` means the verifier rejected unsupported AI output, evidence
+   replay found stale source posture, the mesh-readiness diagnostic remains
+   blocked until runtime trust telemetry and platform mesh certification exist,
+   or the source-ingestion readiness diagnostic is missing run-once worker
+   configuration inputs.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

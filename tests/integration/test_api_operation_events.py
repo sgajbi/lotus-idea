@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
 import app.api.candidate_detail as candidate_detail_api
+import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.idea_signals as idea_signals_api
 import app.api.review_queues as review_queues_api
@@ -121,6 +122,27 @@ def detail_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.candidate.detail.read",
         "X-Correlation-Id": "corr-operation-detail-api",
+    }
+
+
+def evidence_replay_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "ops-001",
+        "X-Caller-Roles": "operator",
+        "X-Caller-Capabilities": "idea.candidate.evidence.replay",
+        "X-Correlation-Id": "corr-operation-evidence-replay-api",
+    }
+
+
+def evidence_replay_payload(*, suffix: str) -> dict[str, Any]:
+    return {
+        "evaluatedAtUtc": "2026-06-21T10:30:00Z",
+        "currentSourceRefs": [
+            source_ref("lotus-core:PortfolioStateSnapshot:v1", suffix),
+            source_ref("lotus-core:HoldingsAsOf:v1", suffix),
+            source_ref("lotus-core:PortfolioCashMovementSummary:v1", suffix),
+            source_ref("lotus-core:PortfolioCashflowProjection:v1", suffix),
+        ],
     }
 
 
@@ -346,3 +368,25 @@ def test_candidate_detail_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("candidate_detail_read", "accepted", "lotus-idea", False, None)]
+
+
+def test_candidate_evidence_replay_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, candidate_evidence_replay_api)
+    candidate_id = persist_candidate(
+        client,
+        suffix="-candidate-evidence-replay",
+        idempotency_key="operation-persist-evidence-replay-001",
+    )
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/evidence-replay",
+        json=evidence_replay_payload(suffix="-candidate-evidence-replay"),
+        headers=evidence_replay_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("candidate_evidence_replay", "accepted", "lotus-idea", False, None)]
