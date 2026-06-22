@@ -179,6 +179,31 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "GET",
+      "path": "/api/v1/ai-explanations/readiness",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return source-safe operator readiness for the internal AI explanation foundation, including guardrail availability, supportability posture, and certification blockers.",
+      "when_to_use": "Use as the RFC-0002 Slice 09 and Slice 15 operator diagnostic when a platform operator has the operator role and idea.ai-explanation.readiness.read capability and needs to confirm AI explanation supportability before runtime proof, Workbench proof, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as lotus-ai runtime proof, AI provider execution proof, durable AI lineage storage, model-risk dashboard certification, autonomous advice, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/ai-explanations/readiness with X-Caller-Roles: operator and X-Caller-Capabilities: idea.ai-explanation.readiness.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"sourceAuthority\":\"lotus-idea\",\"workflowAuthority\":\"lotus-ai\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"deterministicFallbackAvailable\":true,\"verifierAvailable\":true,\"redactedEvidenceEnvelopeAvailable\":true,\"unsupportedClaimBlockingAvailable\":true,\"forbiddenActionBlockingAvailable\":true,\"durableAiLineageStoreBacked\":false,\"lotusAiRuntimeExecuted\":false,\"certificationBlockers\":[\"lotus_ai_runtime_execution_missing\",\"durable_ai_lineage_store_missing\",\"workflow_pack_runtime_contract_not_certified\",\"model_risk_operations_dashboard_missing\",\"runtime_trust_telemetry_missing\",\"workbench_product_proof_missing\"],\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.ai-explanation.readiness.read capability."
+      ],
+      "test_evidence": [
+        "tests/unit/test_ai_explanation_readiness.py::test_ai_explanation_readiness_reports_blocked_not_certified_posture",
+        "tests/integration/test_ai_governance_api.py::test_ai_explanation_readiness_api_returns_source_safe_blocked_posture",
+        "tests/integration/test_ai_governance_api.py::test_ai_explanation_readiness_api_requires_operator_role_and_capability",
+        "tests/integration/test_api_operation_events.py::test_ai_explanation_readiness_api_emits_not_certified_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "POST",
       "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
       "certification_status": "certified",

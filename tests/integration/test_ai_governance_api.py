@@ -65,6 +65,19 @@ def ai_headers(capabilities: str = "idea.ai-explanation.evaluate") -> dict[str, 
     }
 
 
+def ai_readiness_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.ai-explanation.readiness.read",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-ai-readiness-api",
+    }
+
+
 def lifecycle_payload(target_status: str, minute: int) -> dict[str, Any]:
     return {
         "transitionId": f"ai-lifecycle-{target_status}-001",
@@ -310,3 +323,62 @@ def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_m
     assert "request_id" not in invalid_output.text
     assert blank_metadata_value.status_code == 400
     assert blank_metadata_value.json()["code"] == "invalid_request"
+
+
+def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> None:
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/ai-explanations/readiness",
+        headers=ai_readiness_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"] == "corr-ai-readiness-api"
+    payload = response.json()
+    assert payload == {
+        "repository": "lotus-idea",
+        "sourceAuthority": "lotus-idea",
+        "workflowAuthority": "lotus-ai",
+        "readinessStatus": "blocked",
+        "supportabilityStatus": "not_certified",
+        "certificationReady": False,
+        "deterministicFallbackAvailable": True,
+        "verifierAvailable": True,
+        "redactedEvidenceEnvelopeAvailable": True,
+        "unsupportedClaimBlockingAvailable": True,
+        "forbiddenActionBlockingAvailable": True,
+        "durableAiLineageStoreBacked": False,
+        "lotusAiRuntimeExecuted": False,
+        "certificationBlockers": [
+            "lotus_ai_runtime_execution_missing",
+            "durable_ai_lineage_store_missing",
+            "workflow_pack_runtime_contract_not_certified",
+            "model_risk_operations_dashboard_missing",
+            "runtime_trust_telemetry_missing",
+            "workbench_product_proof_missing",
+        ],
+        "supportedFeaturePromoted": False,
+    }
+    assert "prompt" not in response.text.lower()
+    assert "provider" not in response.text.lower()
+    assert "candidateId" not in response.text
+    assert "portfolioId" not in response.text
+
+
+def test_ai_explanation_readiness_api_requires_operator_role_and_capability() -> None:
+    client = TestClient(app)
+
+    missing_role = client.get(
+        "/api/v1/ai-explanations/readiness",
+        headers=ai_readiness_headers(roles="advisor"),
+    )
+    missing_capability = client.get(
+        "/api/v1/ai-explanations/readiness",
+        headers=ai_readiness_headers(capabilities="idea.ai-explanation.evaluate"),
+    )
+
+    assert missing_role.status_code == 403
+    assert missing_role.json()["code"] == "permission_denied"
+    assert missing_capability.status_code == 403
+    assert missing_capability.json()["code"] == "permission_denied"

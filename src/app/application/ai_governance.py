@@ -21,6 +21,25 @@ class AIExplanationEvaluationDecision(StrEnum):
 
 
 @dataclass(frozen=True)
+class AIExplanationReadinessSnapshot:
+    repository: str
+    source_authority: str
+    workflow_authority: str
+    readiness_status: str
+    supportability_status: str
+    certification_ready: bool
+    deterministic_fallback_available: bool
+    verifier_available: bool
+    redacted_evidence_envelope_available: bool
+    unsupported_claim_blocking_available: bool
+    forbidden_action_blocking_available: bool
+    durable_ai_lineage_store_backed: bool
+    lotus_ai_runtime_executed: bool
+    certification_blockers: tuple[str, ...]
+    supported_feature_promoted: bool
+
+
+@dataclass(frozen=True)
 class EvaluateAIExplanationToRepositoryCommand:
     candidate_id: str
     explanation: AIExplanationCommand
@@ -36,6 +55,33 @@ class EvaluateAIExplanationToRepositoryCommand:
 class AIExplanationWorkflowResult:
     decision: AIExplanationEvaluationDecision
     explanation_result: AIExplanationResult | None
+
+
+def build_ai_explanation_readiness_snapshot() -> AIExplanationReadinessSnapshot:
+    return AIExplanationReadinessSnapshot(
+        repository="lotus-idea",
+        source_authority="lotus-idea",
+        workflow_authority="lotus-ai",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        certification_ready=False,
+        deterministic_fallback_available=True,
+        verifier_available=True,
+        redacted_evidence_envelope_available=True,
+        unsupported_claim_blocking_available=True,
+        forbidden_action_blocking_available=True,
+        durable_ai_lineage_store_backed=False,
+        lotus_ai_runtime_executed=False,
+        certification_blockers=(
+            "lotus_ai_runtime_execution_missing",
+            "durable_ai_lineage_store_missing",
+            "workflow_pack_runtime_contract_not_certified",
+            "model_risk_operations_dashboard_missing",
+            "runtime_trust_telemetry_missing",
+            "workbench_product_proof_missing",
+        ),
+        supported_feature_promoted=False,
+    )
 
 
 def evaluate_ai_explanation_to_repository(

@@ -12,7 +12,9 @@ from app.api.caller_headers import caller_context_from_headers
 from app.api.repository_state import get_idea_repository
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
+    AIExplanationReadinessSnapshot,
     EvaluateAIExplanationToRepositoryCommand,
+    build_ai_explanation_readiness_snapshot,
     evaluate_ai_explanation_to_repository,
 )
 from app.domain import (
@@ -34,7 +36,14 @@ from app.domain import (
     SourceSystem,
 )
 from app.errors import ProblemDetails, problem_response
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.observability import (
+    IdeaOperation,
+    OperationEvent,
+    OperationOutcome,
+    OperationSupportability,
+    emit_foundation_operation_event,
+    emit_operation_event,
+)
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 
@@ -50,6 +59,7 @@ class RouteMetadata(TypedDict):
 
 
 _AI_EXPLANATION_CAPABILITY = "idea.ai-explanation.evaluate"
+_AI_EXPLANATION_READINESS_CAPABILITY = "idea.ai-explanation.readiness.read"
 
 
 class CamelModel(BaseModel):
@@ -371,6 +381,85 @@ class AIExplanationEvaluationResponse(CamelModel):
         )
 
 
+class AIExplanationReadinessResponse(CamelModel):
+    repository: str
+    source_authority: str = Field(..., alias="sourceAuthority")
+    workflow_authority: str = Field(..., alias="workflowAuthority")
+    readiness_status: str = Field(..., alias="readinessStatus")
+    supportability_status: str = Field(..., alias="supportabilityStatus")
+    certification_ready: bool = Field(..., alias="certificationReady")
+    deterministic_fallback_available: bool = Field(..., alias="deterministicFallbackAvailable")
+    verifier_available: bool = Field(..., alias="verifierAvailable")
+    redacted_evidence_envelope_available: bool = Field(
+        ...,
+        alias="redactedEvidenceEnvelopeAvailable",
+    )
+    unsupported_claim_blocking_available: bool = Field(
+        ...,
+        alias="unsupportedClaimBlockingAvailable",
+    )
+    forbidden_action_blocking_available: bool = Field(
+        ...,
+        alias="forbiddenActionBlockingAvailable",
+    )
+    durable_ai_lineage_store_backed: bool = Field(..., alias="durableAiLineageStoreBacked")
+    lotus_ai_runtime_executed: bool = Field(..., alias="lotusAiRuntimeExecuted")
+    certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
+    supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
+
+    @classmethod
+    def from_domain(
+        cls,
+        snapshot: AIExplanationReadinessSnapshot,
+    ) -> "AIExplanationReadinessResponse":
+        return cls(
+            repository=snapshot.repository,
+            sourceAuthority=snapshot.source_authority,
+            workflowAuthority=snapshot.workflow_authority,
+            readinessStatus=snapshot.readiness_status,
+            supportabilityStatus=snapshot.supportability_status,
+            certificationReady=snapshot.certification_ready,
+            deterministicFallbackAvailable=snapshot.deterministic_fallback_available,
+            verifierAvailable=snapshot.verifier_available,
+            redactedEvidenceEnvelopeAvailable=snapshot.redacted_evidence_envelope_available,
+            unsupportedClaimBlockingAvailable=snapshot.unsupported_claim_blocking_available,
+            forbiddenActionBlockingAvailable=snapshot.forbidden_action_blocking_available,
+            durableAiLineageStoreBacked=snapshot.durable_ai_lineage_store_backed,
+            lotusAiRuntimeExecuted=snapshot.lotus_ai_runtime_executed,
+            certificationBlockers=snapshot.certification_blockers,
+            supportedFeaturePromoted=snapshot.supported_feature_promoted,
+        )
+
+
+async def get_ai_explanation_readiness(
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> AIExplanationReadinessResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        _require_ai_explanation_readiness_caller(caller)
+    except PermissionDeniedError:
+        _emit_ai_explanation_readiness_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to read idea AI explanation readiness.",
+        )
+
+    snapshot = build_ai_explanation_readiness_snapshot()
+    _emit_ai_explanation_readiness_operation_event(OperationOutcome.BLOCKED)
+    return AIExplanationReadinessResponse.from_domain(snapshot)
+
+
 async def evaluate_ai_explanation(
     request: AIExplanationEvaluationRequest,
     candidate_id: str = Path(..., alias="candidateId"),
@@ -448,6 +537,13 @@ def _require_ai_explanation_caller(caller: CallerContext) -> None:
         raise PermissionDeniedError(_AI_EXPLANATION_CAPABILITY)
 
 
+def _require_ai_explanation_readiness_caller(caller: CallerContext) -> None:
+    if not caller.has_role("operator") or not caller.has_capability(
+        _AI_EXPLANATION_READINESS_CAPABILITY
+    ):
+        raise PermissionDeniedError(_AI_EXPLANATION_READINESS_CAPABILITY)
+
+
 def _invalid_ai_explanation_request_response(exc: InvalidAIExplanationRequest) -> JSONResponse:
     message = str(exc)
     if message.startswith("rationale drafting requires"):
@@ -491,6 +587,76 @@ def _emit_ai_explanation_operation_event(
         source_authority="lotus-idea",
         error_code=error_code,
     )
+
+
+def _emit_ai_explanation_readiness_operation_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+) -> None:
+    emit_operation_event(
+        OperationEvent(
+            operation=IdeaOperation.AI_EXPLANATION_READINESS_READ,
+            outcome=outcome,
+            source_authority="lotus-ai",
+            supportability_status=OperationSupportability.NOT_CERTIFIED,
+            durable_storage_backed=False,
+            supported_feature_promoted=False,
+            error_code=error_code,
+        )
+    )
+
+
+AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
+    "path": "/api/v1/ai-explanations/readiness",
+    "operation_id": "getIdeaAIExplanationReadiness",
+    "summary": "Get AI explanation readiness",
+    "description": (
+        "Returns source-safe operator readiness for the internal AI explanation foundation. "
+        "The endpoint reports guardrail availability and certification blockers only; it does "
+        "not invoke lotus-ai runtime workflows, expose prompts or provider payloads, disclose "
+        "candidate evidence, grant downstream authority, or promote a supported feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": AIExplanationReadinessResponse,
+    "tags": ["Operations", "Idea AI Governance"],
+    "responses": {
+        200: {
+            "description": "AI explanation readiness posture returned.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "repository": "lotus-idea",
+                        "sourceAuthority": "lotus-idea",
+                        "workflowAuthority": "lotus-ai",
+                        "readinessStatus": "blocked",
+                        "supportabilityStatus": "not_certified",
+                        "certificationReady": False,
+                        "deterministicFallbackAvailable": True,
+                        "verifierAvailable": True,
+                        "redactedEvidenceEnvelopeAvailable": True,
+                        "unsupportedClaimBlockingAvailable": True,
+                        "forbiddenActionBlockingAvailable": True,
+                        "durableAiLineageStoreBacked": False,
+                        "lotusAiRuntimeExecuted": False,
+                        "certificationBlockers": [
+                            "lotus_ai_runtime_execution_missing",
+                            "durable_ai_lineage_store_missing",
+                            "workflow_pack_runtime_contract_not_certified",
+                            "model_risk_operations_dashboard_missing",
+                            "runtime_trust_telemetry_missing",
+                            "workbench_product_proof_missing",
+                        ],
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        403: {
+            "model": ProblemDetails,
+            "description": "Caller lacks AI explanation readiness permission.",
+        },
+    },
+}
 
 
 AI_EXPLANATION_ROUTE: RouteMetadata = {
@@ -583,6 +749,16 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
 
 
 def register_ai_governance_routes(app: FastAPI) -> None:
+    app.get(
+        path=AI_EXPLANATION_READINESS_ROUTE["path"],
+        operation_id=AI_EXPLANATION_READINESS_ROUTE["operation_id"],
+        summary=AI_EXPLANATION_READINESS_ROUTE["summary"],
+        description=AI_EXPLANATION_READINESS_ROUTE["description"],
+        status_code=AI_EXPLANATION_READINESS_ROUTE["status_code"],
+        response_model=AI_EXPLANATION_READINESS_ROUTE["response_model"],
+        tags=AI_EXPLANATION_READINESS_ROUTE["tags"],
+        responses=AI_EXPLANATION_READINESS_ROUTE["responses"],
+    )(get_ai_explanation_readiness)
     app.post(
         path=AI_EXPLANATION_ROUTE["path"],
         operation_id=AI_EXPLANATION_ROUTE["operation_id"],

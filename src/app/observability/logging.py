@@ -49,6 +49,7 @@ OPERATION_METRIC_LABELS = (
 
 class IdeaOperation(StrEnum):
     AI_EXPLANATION = "ai_explanation"
+    AI_EXPLANATION_READINESS_READ = "ai_explanation_readiness_read"
     SIGNAL_EVALUATION = "signal_evaluation"
     CANDIDATE_PERSISTENCE = "candidate_persistence"
     CANDIDATE_DETAIL_READ = "candidate_detail_read"
