@@ -43,6 +43,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
         "conversion_workflow",
         "report_evidence_workflow",
         "downstream_realization_orchestration",
+        "downstream_realization_api",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
         "downstream_contract_plan",
@@ -103,6 +104,19 @@ def test_downstream_realization_readiness_capabilities_preserve_source_authority
         and capability.supportability_status != "supported"
         and not capability.certification_ready
         for capability in snapshot.capabilities
+    )
+    capabilities = {capability.capability_id: capability for capability in snapshot.capabilities}
+    assert (
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"
+        in capabilities["advise-proposal-realization"].evidence_refs
+    )
+    assert (
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"
+        in capabilities["manage-action-realization"].evidence_refs
+    )
+    assert (
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
+        in capabilities["report-render-archive-realization"].evidence_refs
     )
 
 

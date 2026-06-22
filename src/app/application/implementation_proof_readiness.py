@@ -332,8 +332,10 @@ def _downstream_realization_capability(
         evidence_refs=(
             "GET /api/v1/downstream-realization/readiness",
             "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+            "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
             "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
             "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+            "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
         ),
         blockers=snapshot.blockers,
     )

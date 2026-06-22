@@ -14,6 +14,7 @@
     "readiness_builder": "src/app/application/downstream_realization_readiness.py",
     "contract_loader": "src/app/application/downstream_realization_contracts.py",
     "downstream_realization_orchestration": "src/app/application/downstream_realization.py",
+    "downstream_realization_api": "src/app/api/downstream_realization.py",
     "downstream_adapter_port": "src/app/ports/downstream_realization.py",
     "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
     "contract_gate": "scripts/downstream_realization_contract_gate.py",
@@ -31,6 +32,7 @@
       "adapter_status": "adapter_foundation_present",
       "evidence_refs": [
         "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
         "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
       ],
@@ -48,6 +50,7 @@
       "adapter_status": "adapter_foundation_present",
       "evidence_refs": [
         "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
         "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
       ],
@@ -65,6 +68,7 @@
       "adapter_status": "adapter_foundation_present",
       "evidence_refs": [
         "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
         "lotus-render",
         "lotus-archive"
