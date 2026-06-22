@@ -53,6 +53,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
     assert operations == {
         ("GET", "/api/v1/ai-explanations/readiness"),
         ("GET", "/api/v1/data-mesh/readiness"),
+        ("GET", "/api/v1/downstream-realization/readiness"),
         ("GET", "/api/v1/implementation-proof/readiness"),
         ("GET", "/api/v1/source-ingestion/readiness"),
         ("GET", "/api/v1/review-queues/advisor"),

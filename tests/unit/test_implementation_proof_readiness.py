@@ -57,6 +57,13 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "downstream-realization",
         "supported-feature-promotion",
     }
+    downstream = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "downstream-realization"
+    )
+    assert "GET /api/v1/downstream-realization/readiness" in downstream.evidence_refs
+    assert "report_evidence_pack_materialization_missing" in downstream.blockers
     serialized = repr(snapshot)
     assert "portfolio_id" not in serialized
     assert "client_id" not in serialized
