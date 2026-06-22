@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from pathlib import Path
 
 import pytest
 
 from app.application.implementation_proof_readiness import (
+    _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
 from app.domain import InMemoryIdeaRepository
@@ -27,11 +29,13 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.certification_ready is False
-    assert snapshot.capability_count == 8
+    assert snapshot.capability_count == 9
     assert snapshot.certification_ready_capability_count == 0
-    assert snapshot.blocked_capability_count == 8
+    assert snapshot.blocked_capability_count == 9
     assert snapshot.supported_feature_count == 0
     assert snapshot.supported_features_promoted is False
+    assert "outbox_broker_not_configured" in snapshot.overall_blockers
+    assert "external_broker_publisher_missing" in snapshot.overall_blockers
     assert "source_ingestion_manifest_not_configured" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers
     assert "no_supported_features_promoted" in snapshot.overall_blockers
@@ -54,6 +58,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "ai-explanation",
         "data-mesh-certification",
         "runtime-trust-telemetry-preview",
+        "outbox-delivery",
         "workbench-product-proof",
         "downstream-realization",
         "supported-feature-promotion",
@@ -65,6 +70,14 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "make runtime-trust-telemetry-preview-check" in runtime_telemetry.evidence_refs
     assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
+    outbox_delivery = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "outbox-delivery"
+    )
+    assert "GET /api/v1/outbox-delivery/readiness" in outbox_delivery.evidence_refs
+    assert "outbox_broker_not_configured" in outbox_delivery.blockers
+    assert "external_broker_publisher_missing" in outbox_delivery.blockers
     downstream = next(
         capability
         for capability in snapshot.capabilities
@@ -86,3 +99,18 @@ def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:
             repository=InMemoryIdeaRepository(),
             durable_storage_backed=False,
         )
+
+
+def test_implementation_proof_readiness_rejects_invalid_supported_features_shape(
+    tmp_path: Path,
+) -> None:
+    supported_features_path = tmp_path / "supported-features"
+    supported_features_path.mkdir()
+    registry_path = supported_features_path / "supported-features.json"
+    registry_path.write_text(
+        '{"features": {}}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="supported features must be a list"):
+        _supported_feature_count(registry_path)
