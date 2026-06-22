@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import os
 from pathlib import Path
 
+from app.application.source_ingestion_live_proof import live_core_source_proof_is_valid
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.repository_state import DATABASE_URL_ENV
 
@@ -11,6 +13,7 @@ from app.repository_state import DATABASE_URL_ENV
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
+LIVE_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS"
 EXAMPLE_MANIFEST_PATH = Path(
     "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
@@ -26,6 +29,8 @@ class SourceIngestionReadinessSnapshot:
     example_manifest_path: str
     example_manifest_available: bool
     configured_manifest_available: bool
+    configured_live_proof_available: bool
+    live_core_source_proof_valid: bool
     core_base_url_configured: bool
     durable_repository_configured: bool
     run_once_configuration_status: str
@@ -53,9 +58,17 @@ def build_source_ingestion_readiness_snapshot(
         configured_manifest,
         repository_root=repository_root,
     )
+    configured_live_proof_path = resolve_source_ingestion_manifest_path(
+        os.getenv(LIVE_PROOF_ENV, "").strip(),
+        repository_root=repository_root,
+    )
+    live_core_source_proof_valid = _live_core_source_proof_valid(configured_live_proof_path)
     configuration_blockers = _configuration_blockers(
         example_manifest=example_manifest,
         configured_manifest_path=configured_manifest_path,
+    )
+    certification_blockers = _certification_blockers(
+        live_core_source_proof_valid=live_core_source_proof_valid,
     )
     return SourceIngestionReadinessSnapshot(
         repository="lotus-idea",
@@ -67,17 +80,16 @@ def build_source_ingestion_readiness_snapshot(
         configured_manifest_available=bool(
             configured_manifest_path and configured_manifest_path.is_file()
         ),
+        configured_live_proof_available=bool(
+            configured_live_proof_path and configured_live_proof_path.is_file()
+        ),
+        live_core_source_proof_valid=live_core_source_proof_valid,
         core_base_url_configured=bool(os.getenv(CORE_BASE_URL_ENV, "").strip()),
         durable_repository_configured=bool(os.getenv(DATABASE_URL_ENV, "").strip()),
         run_once_configuration_status=("configured" if not configuration_blockers else "blocked"),
         certification_status="not_certified",
         configuration_blockers=configuration_blockers,
-        certification_blockers=(
-            "live_core_source_proof_missing",
-            "scheduled_worker_deploy_proof_missing",
-            "data_mesh_runtime_telemetry_not_certified",
-            "gateway_workbench_proof_missing",
-        ),
+        certification_blockers=certification_blockers,
         supported_feature_promoted=False,
     )
 
@@ -99,6 +111,30 @@ def _configuration_blockers(
     if not os.getenv(DATABASE_URL_ENV, "").strip():
         blockers.append("durable_repository_not_configured")
     return tuple(blockers)
+
+
+def _certification_blockers(*, live_core_source_proof_valid: bool) -> tuple[str, ...]:
+    blockers: list[str] = []
+    if not live_core_source_proof_valid:
+        blockers.append("live_core_source_proof_missing")
+    blockers.extend(
+        (
+            "scheduled_worker_deploy_proof_missing",
+            "data_mesh_runtime_telemetry_not_certified",
+            "gateway_workbench_proof_missing",
+        )
+    )
+    return tuple(blockers)
+
+
+def _live_core_source_proof_valid(configured_live_proof_path: Path | None) -> bool:
+    if configured_live_proof_path is None or not configured_live_proof_path.is_file():
+        return False
+    try:
+        payload = json.loads(configured_live_proof_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return isinstance(payload, dict) and live_core_source_proof_is_valid(payload)
 
 
 def resolve_source_ingestion_manifest_path(

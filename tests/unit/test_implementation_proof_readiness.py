@@ -93,6 +93,8 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "GET /api/v1/source-ingestion/readiness" in source_ingestion.evidence_refs
     assert "POST /api/v1/source-ingestion/run-once" in source_ingestion.evidence_refs
     assert "make source-ingestion-worker-check" in source_ingestion.evidence_refs
+    assert "make source-ingestion-live-proof-contract-gate" in source_ingestion.evidence_refs
+    assert "scripts/generate_source_ingestion_live_proof.py" in source_ingestion.evidence_refs
     assert "live_core_source_proof_missing" in source_ingestion.blockers
     downstream = next(
         capability

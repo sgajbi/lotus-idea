@@ -196,8 +196,10 @@ def _source_ingestion_capability(
         evidence_refs=(
             "src/app/application/source_ingestion.py",
             "scripts/run_source_ingestion_worker.py",
+            "scripts/generate_source_ingestion_live_proof.py",
             "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
             "make source-ingestion-worker-check",
+            "make source-ingestion-live-proof-contract-gate",
             "GET /api/v1/source-ingestion/readiness",
             "POST /api/v1/source-ingestion/run-once",
         ),

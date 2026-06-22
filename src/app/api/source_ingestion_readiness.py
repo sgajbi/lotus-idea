@@ -71,6 +71,8 @@ class SourceIngestionReadinessResponse(CamelModel):
     example_manifest_path: str = Field(..., alias="exampleManifestPath")
     example_manifest_available: bool = Field(..., alias="exampleManifestAvailable")
     configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
+    configured_live_proof_available: bool = Field(..., alias="configuredLiveProofAvailable")
+    live_core_source_proof_valid: bool = Field(..., alias="liveCoreSourceProofValid")
     core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
     durable_repository_configured: bool = Field(..., alias="durableRepositoryConfigured")
     run_once_configuration_status: str = Field(..., alias="runOnceConfigurationStatus")
@@ -94,6 +96,8 @@ class SourceIngestionReadinessResponse(CamelModel):
             exampleManifestPath=snapshot.example_manifest_path,
             exampleManifestAvailable=snapshot.example_manifest_available,
             configuredManifestAvailable=snapshot.configured_manifest_available,
+            configuredLiveProofAvailable=snapshot.configured_live_proof_available,
+            liveCoreSourceProofValid=snapshot.live_core_source_proof_valid,
             coreBaseUrlConfigured=snapshot.core_base_url_configured,
             durableRepositoryConfigured=snapshot.durable_repository_configured,
             runOnceConfigurationStatus=snapshot.run_once_configuration_status,
@@ -383,6 +387,8 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
                         ),
                         "exampleManifestAvailable": True,
                         "configuredManifestAvailable": False,
+                        "configuredLiveProofAvailable": False,
+                        "liveCoreSourceProofValid": False,
                         "coreBaseUrlConfigured": False,
                         "durableRepositoryConfigured": False,
                         "runOnceConfigurationStatus": "blocked",
