@@ -104,6 +104,18 @@ foundation:
     blocked aggregate proof posture, source-safe payloads, permission-denied
     behavior, timezone validation, unavailable-contract safe errors, and
     not-certified operation-event behavior.
+25. `src/app/application/downstream_realization_readiness.py` and
+    `GET /api/v1/downstream-realization/readiness` expose certified internal
+    downstream realization readiness for Advise, Manage, Report, Render, and
+    Archive blockers. The route requires both the `operator` role and
+    `idea.downstream-realization.readiness.read`, returns source-safe workflow
+    counts only, and emits bounded `downstream_realization_readiness_read`
+    operation events.
+26. `tests/unit/test_downstream_realization_readiness.py` and
+    `tests/integration/test_downstream_realization_readiness_api.py` prove the
+    blocked/not-certified posture, source-authority boundaries, role plus
+    capability enforcement, product-safe payloads, and operation-event behavior
+    for the downstream realization readiness diagnostic.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -122,6 +134,10 @@ trust telemetry, and Workbench proof exist.
 The implementation-proof readiness diagnostic is explicitly `not_certified`
 until every reported proof family has implementation-backed live evidence and
 supported-feature promotion evidence where applicable.
+The downstream realization readiness diagnostic is explicitly `not_certified`
+until Advise proposal/suitability intake, Manage action realization,
+Report/Render/Archive materialization, Gateway/Workbench product proof,
+runtime trust telemetry, and supported-feature evidence exist.
 
 ## Required Work
 

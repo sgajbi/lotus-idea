@@ -65,7 +65,10 @@ Current RFC-0002 implementation-start baseline:
    AI explanation evaluation, advisor queues, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
    AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics, and
-   source-ingestion-readiness diagnostics. The certified internal
+   source-ingestion-readiness diagnostics. A certified internal
+   downstream-realization-readiness diagnostic now reports Advise, Manage,
+   Report, Render, and Archive blockers without calling downstream services.
+   The certified internal
    implementation-proof-readiness diagnostic now aggregates RFC-0002 blocker
    posture across source ingestion, advisor queue, AI explanation, data mesh,
    Workbench, downstream realization, and supported-feature promotion.
@@ -77,22 +80,24 @@ Current RFC-0002 implementation-start baseline:
 11. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
-    `lotus-report`, plus certified internal API foundations. It does not invoke
-    downstream adapters, create downstream records, or promote a supported
-    feature.
+    `lotus-report`, plus certified internal API foundations and an internal
+    downstream realization readiness diagnostic. It does not invoke downstream
+    adapters, create downstream records, or promote a supported feature.
 12. Slice 18 is partially implemented for API certification and
     implementation-proof documentation truth. `docs/operations/api-certification.md`
     and `docs/operations/implementation-proof-readiness.md` now mirror the
     certified foundation endpoint inventory, current capabilities,
     implementation proof blockers, and unsupported boundaries.
 13. Slice 15 partially implements evidence replay, AI explanation readiness,
-    source-ingestion readiness, and aggregate implementation-proof readiness
-    supportability: operators can replay
+    source-ingestion readiness, downstream realization readiness, and aggregate
+    implementation-proof readiness supportability: operators can replay
     candidate evidence posture over current source refs, inspect model-risk
     blockers without invoking `lotus-ai`, and inspect run-once worker
-    configuration and certification blockers without calling Core, and inspect
-    aggregate proof blockers without promoting live ingestion, Workbench,
-    downstream, data-mesh, or supported-feature support.
+    configuration and certification blockers without calling Core, inspect
+    downstream realization blockers without calling Advise, Manage, Report,
+    Render, or Archive, and inspect aggregate proof blockers without promoting
+    live ingestion, Workbench, downstream, data-mesh, or supported-feature
+    support.
 14. The first opportunity journey is high cash / idle liquidity for
     `PB_SG_GLOBAL_BAL_001`.
 15. The first review audience is advisor only.

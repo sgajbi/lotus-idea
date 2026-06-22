@@ -289,6 +289,13 @@ supported-feature promotion, emits bounded
 candidate identifiers, source payloads, Gateway/Workbench proof,
 data-product certification, client-ready publication, or supported-feature
 promotion.
+`GET /api/v1/downstream-realization/readiness` now exposes a certified internal
+operator diagnostic for downstream realization supportability. It requires the
+`operator` role and `idea.downstream-realization.readiness.read`, reports
+conversion intent, conversion outcome, and report evidence-pack request counts
+plus Advise, Manage, Report, Render, and Archive blockers, emits bounded
+`downstream_realization_readiness_read` operation events, and does not call
+downstream services or promote downstream realization.
 `scripts/generate_implementation_proof_readiness.py` and
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
@@ -369,7 +376,10 @@ events; idempotency-key validation at the domain command boundary; repository
 idempotency and snapshot lookup for conversion intents/outcomes; certified
 internal conversion intent/outcome APIs; and explicit no-authority semantics
 for execution, suitability, client communication, and downstream realization.
-This is not yet a supported conversion product: PostgreSQL-backed internal
+`src/app/application/downstream_realization_readiness.py` adds the operator
+readiness diagnostic over current conversion intent/outcome/report evidence
+request counts and explicit downstream blockers. This is not yet a supported
+conversion product: PostgreSQL-backed internal
 conversion intent/outcome recording proof exists only inside the opt-in runtime
 proof; there are no downstream adapters, Gateway/Workbench proof,
 Advise/Manage/Report acceptance tests, data-product certification, runtime
@@ -423,6 +433,11 @@ The advisor-queue-readiness diagnostic emits
 `review_queue_readiness_read` events with `not_certified` supportability,
 aggregate-only queue counts, blocked certification posture, and no candidate or
 access-scope identifiers.
+The downstream-realization-readiness diagnostic emits
+`downstream_realization_readiness_read` events with `not_certified`
+supportability, blocked certification posture, source-authority labels for the
+owning downstream systems, and no candidate, portfolio, client, request-body, or
+response-body identifiers.
 All operation events are emitted without
 portfolio/client/account/holding/transaction identifiers, request/response
 bodies, trace ids, or correlation ids as metric labels. This is not yet full
@@ -493,9 +508,12 @@ logs; fix or document the owned warning source instead.
    governance to repository snapshots and persists accepted intents/outcomes
    through the same idempotency/audit posture. Report evidence-pack
    orchestration applies Slice 13 evidence-pack governance to report conversion
-   intents and persists source-provenanced request packages without downstream
-   Report/Render/Archive realization. Source-ingestion-readiness orchestration
-   reports manifest, Core base URL, durable repository configuration, and
+    intents and persists source-provenanced request packages without downstream
+    Report/Render/Archive realization. Downstream-realization-readiness
+    orchestration reports conversion intent/outcome/report evidence-pack request
+    counts and downstream blockers without calling downstream systems.
+    Source-ingestion-readiness orchestration
+    reports manifest, Core base URL, durable repository configuration, and
     certification blockers for the high-cash run-once worker without executing
     Core source reads. Implementation-proof-readiness orchestration aggregates
     current RFC-0002 capability proof blockers across source ingestion, queue,

@@ -122,3 +122,12 @@ not call downstream services, create proposals, create manage actions, create
 downstream report packages, render documents, archive material, authorize
 any client-ready publication without downstream approval, or grant suitability, execution, compliance, mandate,
 or client-communication authority.
+
+Operators can inspect the current downstream blocker posture through:
+
+1. `GET /api/v1/downstream-realization/readiness`.
+
+That route reports conversion intent/outcome counts, report evidence-pack
+request counts, source-of-truth paths, and blocker groups for Advise, Manage,
+Report, Render, and Archive realization. It is diagnostic only; it does not
+call downstream services or promote any integration claim.

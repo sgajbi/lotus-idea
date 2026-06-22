@@ -68,6 +68,13 @@ realization, and supported-feature promotion. It remains `not_certified` and
 `blocked` while any proof family lacks live evidence, and it must not be used
 as live implementation proof, Gateway/Workbench proof, data-product
 certification, client-ready publication, or supported-feature promotion.
+The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
+available for operators with `idea.downstream-realization.readiness.read` to
+inspect Advise, Manage, Report, Render, and Archive realization blockers over
+current `lotus-idea` workflow counts. It remains `not_certified` and `blocked`
+until downstream intake/materialization contracts, Gateway/Workbench product
+proof, runtime trust telemetry, and supported-feature evidence exist. It does
+not call downstream services or create downstream records.
 
 Initial commands:
 
@@ -105,9 +112,9 @@ advisor queue reads, review actions, AI explanation fallback/verifier
 evaluation, AI explanation readiness diagnostic reads, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, data-mesh-readiness
-diagnostic reads, source-ingestion-readiness diagnostic reads, and advisor
-queue-readiness diagnostic reads, plus aggregate implementation-proof-readiness
-diagnostic reads.
+diagnostic reads, source-ingestion-readiness diagnostic reads, advisor
+queue-readiness diagnostic reads, downstream-realization-readiness diagnostic
+reads, plus aggregate implementation-proof-readiness diagnostic reads.
 
 Current outcomes:
 
@@ -129,11 +136,14 @@ Current outcomes:
     runtime trust telemetry, or Workbench proof, expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
     certification remain absent, source-ingestion readiness is missing run-once
-    worker configuration/certification proof, or advisor queue readiness is
+    worker configuration/certification proof, advisor queue readiness is
     missing durable queue posture, entitlement proof, Workbench proof,
-    data-product certification, or runtime trust telemetry. Aggregate
-    implementation-proof readiness reports `blocked` whenever any RFC-0002
-    proof family still lacks certification evidence.
+    data-product certification, or runtime trust telemetry, or downstream
+    realization readiness is missing Advise proposal/suitability intake,
+    Manage action realization, Report/Render/Archive materialization,
+    Gateway/Workbench proof, runtime trust telemetry, and supported-feature
+    evidence. Aggregate implementation-proof readiness reports `blocked`
+    whenever any RFC-0002 proof family still lacks certification evidence.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -165,7 +175,8 @@ The inventory covers high-cash evaluation, high-cash persistence, candidate
 evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
-source-ingestion-readiness, and advisor-queue-readiness diagnostic endpoints.
+source-ingestion-readiness, downstream-realization-readiness, and
+advisor-queue-readiness diagnostic endpoints.
 These endpoints are certified as internal foundations or operator diagnostics
 only; they are not supported business features.
 
@@ -196,3 +207,12 @@ promotion.
 `make implementation-proof-readiness-check` generates the same source-safe
 readiness snapshot without running the HTTP service. Use it as CI or async
 operator evidence only; it is not a supported product claim.
+
+`GET /api/v1/downstream-realization/readiness` is the certified internal
+downstream realization readiness diagnostic. It returns workflow counts,
+capability-level blockers, source-of-truth paths, and downstream
+source-authority refs without exposing candidate identifiers, source payloads,
+portfolio identifiers, or client identifiers. It is not Advise proposal proof,
+Manage action proof, Report/Render/Archive materialization proof,
+Gateway/Workbench proof, client-ready publication, or supported-feature
+promotion.

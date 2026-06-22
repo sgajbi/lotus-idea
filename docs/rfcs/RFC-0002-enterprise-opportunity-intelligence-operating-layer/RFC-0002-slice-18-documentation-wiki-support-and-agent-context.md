@@ -42,6 +42,12 @@ durable operating-context enforcement:
    context, demo claims, operations runbooks, and wiki source now describe the
    certified internal implementation-proof readiness diagnostic and preserve
    its no-supported-feature-promotion boundary.
+9. `docs/operations/downstream-realization-readiness.md`, README, repository
+   context, API certification docs, demo claims, operations runbooks, RFC
+   index, quality scorecard, and wiki source now describe the certified
+   internal downstream realization readiness diagnostic with a polished
+   operator-facing structure: current truth, proof boundary, blockers,
+   response shape, evidence, and executable example.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,

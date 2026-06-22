@@ -48,6 +48,7 @@ Current instrumented operations:
 | `conversion_intent` | Internal review-gated conversion intent recording | `lotus-idea` | `foundation_only` |
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
+| `downstream_realization_readiness_read` | Internal downstream realization readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
 | `implementation_proof_readiness_read` | Internal aggregate RFC-0002 proof-readiness diagnostic read | `lotus-idea` | `not_certified` |
@@ -89,7 +90,9 @@ fields. Do not add identifiers or payload fragments to operation labels.
    diagnostic is missing run-once worker configuration inputs, or the advisor
    queue readiness diagnostic still lacks durable repository posture,
    entitlement proof, Workbench proof, data-product certification, or runtime
-   trust telemetry. It also covers the aggregate implementation-proof
+   trust telemetry. It also covers downstream realization readiness while
+   Advise, Manage, Report, Render, Archive, Gateway/Workbench, and mesh proof
+   remain absent. It also covers the aggregate implementation-proof
    readiness diagnostic when any RFC-0002 proof family remains uncertified.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
