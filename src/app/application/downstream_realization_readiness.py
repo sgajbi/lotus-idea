@@ -4,6 +4,10 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Mapping
 
+from app.application.downstream_realization_contracts import (
+    DownstreamRealizationContractPlanRecord,
+    load_downstream_realization_contract_plan,
+)
 from app.ports.idea_repository import CandidateSnapshotRepository
 
 
@@ -94,7 +98,10 @@ def build_downstream_realization_readiness_snapshot(
         _manage_conversion_capability(),
         _report_render_archive_capability(),
     )
-    downstream_contracts = _downstream_contracts()
+    contract_plan = load_downstream_realization_contract_plan()
+    downstream_contracts = tuple(
+        _downstream_contract_from_plan(record) for record in contract_plan.contracts
+    )
     capability_blockers = tuple(
         blocker for capability in capabilities for blocker in capability.blockers
     )
@@ -115,7 +122,10 @@ def build_downstream_realization_readiness_snapshot(
         source_of_truth={
             "conversion_workflow": "src/app/application/conversion_workflow.py",
             "report_evidence_workflow": "src/app/application/report_evidence.py",
-            "downstream_contract_plan": ("src/app/application/downstream_realization_readiness.py"),
+            "downstream_contract_plan": (
+                "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json"
+            ),
+            "downstream_contract_gate": "scripts/downstream_realization_contract_gate.py",
             "rfc_slice_12": (
                 "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
                 "RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
@@ -207,63 +217,16 @@ def _report_render_archive_capability() -> DownstreamRealizationCapabilityReadin
     )
 
 
-def _downstream_contracts() -> tuple[DownstreamRealizationContractReadiness, ...]:
-    return (
-        DownstreamRealizationContractReadiness(
-            contract_id="lotus-idea-to-lotus-advise-proposal-intake:v1",
-            owner_repository="lotus-advise",
-            source_authority="lotus-advise",
-            target_route="planned:lotus-advise-proposal-intake",
-            route_fit_status="not_certified",
-            adapter_status="planned",
-            evidence_refs=(
-                "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
-                "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
-            ),
-            blockers=(
-                "advise_proposal_creation_adapter_missing",
-                "suitability_policy_authority_remains_lotus_advise",
-                "advise_live_contract_proof_missing",
-            ),
-        ),
-        DownstreamRealizationContractReadiness(
-            contract_id="lotus-idea-to-lotus-manage-action-intake:v1",
-            owner_repository="lotus-manage",
-            source_authority="lotus-manage",
-            target_route="planned:lotus-manage-action-intake",
-            route_fit_status="not_certified",
-            adapter_status="planned",
-            evidence_refs=(
-                "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
-                "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
-            ),
-            blockers=(
-                "manage_action_register_adapter_missing",
-                "rebalance_execution_authority_remains_lotus_manage",
-                "manage_live_contract_proof_missing",
-            ),
-        ),
-        DownstreamRealizationContractReadiness(
-            contract_id="lotus-idea-to-lotus-report-evidence-pack-intake:v1",
-            owner_repository="lotus-report",
-            source_authority="lotus-report",
-            target_route="planned:lotus-report-idea-evidence-pack-intake",
-            route_fit_status="not_certified",
-            adapter_status="planned",
-            evidence_refs=(
-                "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
-                "lotus-render",
-                "lotus-archive",
-            ),
-            blockers=(
-                "dedicated_report_idea_evidence_intake_contract_missing",
-                "report_evidence_pack_materialization_missing",
-                "rendered_output_creation_missing",
-                "archive_record_creation_missing",
-                "client_publication_authority_blocked",
-            ),
-        ),
+def _downstream_contract_from_plan(
+    record: DownstreamRealizationContractPlanRecord,
+) -> DownstreamRealizationContractReadiness:
+    return DownstreamRealizationContractReadiness(
+        contract_id=record.contract_id,
+        owner_repository=record.owner_repository,
+        source_authority=record.source_authority,
+        target_route=record.target_route,
+        route_fit_status=record.route_fit_status,
+        adapter_status=record.adapter_status,
+        evidence_refs=record.evidence_refs,
+        blockers=record.blockers,
     )
