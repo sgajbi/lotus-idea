@@ -121,8 +121,14 @@ make postgres-integration-gate
 make source-ingestion-worker-check
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
+make clean
 uvicorn app.main:app --reload --port 8330
 ```
+
+Use `make clean` after local test or coverage runs when ignored cache and
+coverage residue should be removed before branch hygiene checks. The command
+uses the governed cleanup utility and does not remove `.git`, `.venv`, or
+dependency cache directories.
 
 RFC-0002 will add support runbooks for:
 

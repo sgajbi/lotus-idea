@@ -29,6 +29,10 @@ Blocking scaffold commands:
 20. `make security-audit`
 21. `make docker-build`
 
+Cleanup support command:
+
+1. `make clean`
+
 Report-only scaffold commands:
 
 1. `make architecture-boundary-report`
@@ -44,7 +48,7 @@ supported-feature promotion control, endpoint certification, data-mesh contract 
 migration contract validation, migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 implementation-proof readiness artifact generation, source-observability
-contract validation, PostgreSQL runtime proof, coverage,
+contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
@@ -93,6 +97,13 @@ evidence, log, and output artifacts before those artifacts can become PR or
 wiki evidence. The guard has focused pass/fail unit coverage for clean
 artifacts, forbidden marker detection, allowlisted documentation, and binary
 artifact handling.
+
+`make clean` removes ignored local Python bytecode cache directories, coverage
+files, build output, distribution output, and HTML coverage output through
+`scripts/clean_generated_artifacts.py`. The cleanup utility prunes `.git`,
+`.venv`, and dependency cache directories, and the CI contract gate blocks
+weakening the Makefile cleanup target so local hygiene remains test-backed
+instead of becoming another unreviewed shell one-liner.
 
 `make source-observability-contract-gate` blocks ad hoc application logging in `src/app`. Feature
 code must use bounded operation-event emitters or the central request diagnostic helper instead of

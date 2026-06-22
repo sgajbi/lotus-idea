@@ -196,6 +196,7 @@ docker compose up --build
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
 | `make check` | Run the local PR-grade gate set. |
 | `make ci` | Run the broader CI-equivalent local suite. |
+| `make clean` | Remove ignored generated test, coverage, build, and Python cache artifacts without touching `.venv`, `.git`, or dependency caches. |
 
 ## Validation And CI Lanes
 
@@ -288,6 +289,8 @@ Local controls keep implementation claims grounded:
   free of sensitive marker names.
 - `make repository-hygiene-gate` blocks generated cache, build, dependency,
   environment, and database artifacts.
+- `make clean` removes ignored local byproducts through the governed cleanup
+  utility that the CI contract gate protects.
 - `make maintainability-gate` blocks oversized source, test, and script files
   or functions beyond measured thresholds.
 

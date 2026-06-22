@@ -30,6 +30,12 @@ dependency directories, local environment files, logs, and local databases so
 the repository remains a durable source, contract, test, evidence, and
 documentation surface rather than a dump of runtime byproducts.
 
+`make clean` is the repo-native cleanup command for ignored generated residue.
+It removes local Python cache directories, coverage files, build outputs, and
+HTML coverage output while pruning `.git`, `.venv`, and dependency cache
+directories. `make ci-contract-gate` protects this wiring so future agentic
+changes cannot replace cleanup with an untested one-liner.
+
 `make quality-scorecard-gate` protects the local bank-buyable scorecard from
 becoming stale as implementation lands. The scorecard must retain the required
 control rows, use approved readiness statuses, name implementation-backed
