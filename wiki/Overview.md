@@ -13,7 +13,8 @@ The target operating model is:
    Workbench workflows,
 6. use AI only for bounded explanation assistance through `lotus-ai`.
 
-Current support:
+Current posture: opportunity intelligence foundation implementation is in
+progress. Current support:
 
 1. repository scaffold,
 2. service boundary ADRs,

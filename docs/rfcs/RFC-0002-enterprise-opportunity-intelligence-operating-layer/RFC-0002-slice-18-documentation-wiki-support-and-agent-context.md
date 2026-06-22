@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification documentation synchronized
+Status: Partially implemented - API certification documentation synchronized and documentation contract gate enforced
 
 ## Outcome
 
@@ -8,7 +8,8 @@ Update durable documentation and agent guidance to match implemented truth.
 
 ## Current Implementation Evidence
 
-This slice is partially implemented for API certification documentation truth:
+This slice is partially implemented for API certification documentation truth and
+durable operating-context enforcement:
 
 1. `docs/operations/api-certification.md` now lists the full certified internal
    foundation endpoint inventory from
@@ -28,6 +29,14 @@ This slice is partially implemented for API certification documentation truth:
    evaluator API while preserving the unsupported boundary around provider
    execution, durable AI lineage, Gateway/Workbench proof, and supported
    feature promotion.
+6. `make documentation-contract-gate` now runs through `make lint` and blocks
+   removal, thinning, missing anchors, or placeholder erosion across the
+   required README, repository context, enterprise standard, runbook, RFC
+   index, quality, evidence, and wiki surfaces future implementation agents
+   depend on.
+7. Focused unit coverage proves the documentation contract gate passes current
+   repository truth and fails missing, thin, missing-anchor, and placeholder
+   documentation surfaces.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,
@@ -38,8 +47,8 @@ downstream realization, or live source ingestion.
 1. Update README, repository context, API docs, operations docs, data-product
    docs, model-risk docs, demo docs, supported features, and wiki source.
 2. Run wiki check-only validation.
-3. Update `lotus-platform` context or skill routing only if reusable Lotus
-   guidance changed.
+3. Update `lotus-platform` scaffold/context or skill routing only if reusable
+   Lotus guidance changed.
 4. Record explicit no-change decisions for platform context, wiki, or skills
    where no update is required.
 

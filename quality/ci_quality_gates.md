@@ -10,7 +10,8 @@ Blocking scaffold commands:
 1. `make architecture-boundary-gate`
 2. `make ci-contract-gate`
 3. `make maintainability-gate`
-4. `make implementation-truth-gate`
+4. `make documentation-contract-gate`
+5. `make implementation-truth-gate`
 
 Report-only scaffold commands:
 
@@ -30,6 +31,12 @@ critical jobs, implementation-truth enforcement, and approved action-runtime maj
 `make maintainability-gate` blocks oversized Python files/functions across `src`, `tests`, and
 `scripts`. The thresholds are set above the current measured baseline so the gate prevents new
 agent-generated bloat without forcing unrelated refactors into every feature slice.
+
+`make documentation-contract-gate` blocks removal, thinning, or placeholder
+erosion of the required durable documentation and wiki surfaces. It is scoped to
+operator and agent context, not RFC target-state prose, so it remains fast and
+deterministic while preserving the context needed to apply the bank-buyable
+contract across future implementation slices.
 
 `make implementation-truth-gate` blocks unqualified current-state claims of demo readiness,
 production readiness, external support, certification, live source ingestion, Gateway/Workbench

@@ -25,6 +25,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) ci-contract-gate" in makefile
     assert "maintainability-gate:" in makefile
     assert "$(MAKE) maintainability-gate" in makefile
+    assert "documentation-contract-gate:" in makefile
+    assert "$(MAKE) documentation-contract-gate" in makefile
     assert "implementation-truth-gate:" in makefile
     assert "$(MAKE) implementation-truth-gate" in makefile
     assert "data-mesh-contract-gate:" in makefile

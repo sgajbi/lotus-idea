@@ -498,16 +498,17 @@ owned by upstream services.
 12. quality scorecard refresh: `make quality-baseline`
 13. CI contract gate: `make ci-contract-gate`
 14. maintainability gate: `make maintainability-gate`
-15. implementation-truth gate: `make implementation-truth-gate`
-16. data-mesh contract gate: `make data-mesh-contract-gate`
-17. migration contract gate: `make migration-contract-gate`
-18. migration execution dry-run gate: `make migration-execution-gate`
-19. run-once source-ingestion worker manifest gate:
+15. documentation contract gate: `make documentation-contract-gate`
+16. implementation-truth gate: `make implementation-truth-gate`
+17. data-mesh contract gate: `make data-mesh-contract-gate`
+18. migration contract gate: `make migration-contract-gate`
+19. migration execution dry-run gate: `make migration-execution-gate`
+20. run-once source-ingestion worker manifest gate:
     `make source-ingestion-worker-check`
-20. PostgreSQL runtime proof with configured integration URL:
+21. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-21. apply migrations with configured PostgreSQL URL: `make migrate`
-22. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+22. apply migrations with configured PostgreSQL URL: `make migrate`
+23. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -520,7 +521,8 @@ owned by upstream services.
    `main`.
 
 Required baseline checks include lint, format check, typecheck, architecture
-boundary enforcement, maintainability thresholds, OpenAPI quality, implementation-truth gate,
+boundary enforcement, maintainability thresholds, documentation contract enforcement,
+OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest validation,
@@ -549,6 +551,15 @@ lines, script files at or below 500 lines, and script functions at or below
 120 lines. These limits are intentionally conservative against the current
 baseline and prevent future agentic changes from normalizing large, hard-to-review
 modules.
+
+`make documentation-contract-gate` is blocking through `make lint`. It protects
+the durable agent and operator context surface: `AGENTS.md`, `README.md`,
+`REPOSITORY-ENGINEERING-CONTEXT.md`, RFC index, enterprise standard, operations
+runbooks, quality evidence, RFC implementation evidence guide, and wiki source
+must remain present, substantive, and anchored to validation and governance
+commands. This gate complements implementation-truth enforcement: it prevents
+deletion or hollowing-out of context, while implementation-truth prevents
+overclaiming unsupported product posture.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and
