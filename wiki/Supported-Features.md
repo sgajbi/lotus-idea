@@ -6,7 +6,7 @@ Internal foundation exists for domain vocabulary, high-cash signal evaluation,
 candidate persistence/replay/idempotency/audit, candidate evidence replay,
 deterministic scoring with review-queue projection, source-safe candidate detail projection, advisor
 review/feedback governance, AI governance redaction/verifier/fallback controls,
-and a certified internal AI explanation evaluator API, plus the first certified
+and certified internal AI explanation evaluator and readiness APIs, plus the first certified
 internal high-cash API foundation.
 Internal conversion governance and certified internal
 conversion intent/outcome API foundations also exist for review-gated
@@ -22,9 +22,11 @@ source-ingestion worker CLI and `make source-ingestion-worker-check` also
 exist, and `lotus-gateway` now publishes bounded read-only advisor queue and
 candidate detail routes, but they are not deployed scheduler daemon proof,
 live Core worker certification, Workbench proof, or supported-feature
-promotion. These are not externally supported features until live source
-adapters, scheduled daemon/deploy source-worker proof, Workbench proof,
-downstream acceptance,
+promotion. The AI explanation readiness diagnostic is an operator
+supportability check only; it does not invoke `lotus-ai`, certify durable AI
+lineage, prove model-risk dashboards, or promote AI explanation support. These
+are not externally supported features until live source adapters, scheduled
+daemon/deploy source-worker proof, Workbench proof, downstream acceptance,
 data-product certification, and supported-feature evidence are present.
 
 Planned capabilities:

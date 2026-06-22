@@ -56,14 +56,16 @@ Current RFC-0002 implementation-start baseline:
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,
    no AI downstream authority, and a certified internal AI explanation
-   evaluator API without `lotus-ai` runtime execution, Gateway, Workbench, or
+   evaluator API plus a not-certified AI explanation readiness diagnostic
+   without `lotus-ai` runtime execution, Gateway, Workbench, or
    supported-feature promotion.
 10. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,
    AI explanation evaluation, advisor queues, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
-   data-mesh-readiness diagnostics, and source-ingestion-readiness diagnostics.
+   AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics, and
+   source-ingestion-readiness diagnostics.
    Bounded read-only Gateway publication exists for advisor queue and
    candidate detail; Workbench, live source adapters, data-product
    certification, and supported-feature promotion remain planned.
@@ -77,11 +79,12 @@ Current RFC-0002 implementation-start baseline:
     truth. `docs/operations/api-certification.md` now mirrors the certified
     foundation endpoint inventory, current capabilities, and unsupported
     boundaries from the machine-readable endpoint certification ledger.
-13. Slice 15 partially implements evidence replay and source-ingestion
-    readiness supportability: operators can replay candidate evidence posture
-    over current source refs and inspect run-once worker configuration and
-    certification blockers without calling Core or promoting live ingestion
-    support.
+13. Slice 15 partially implements evidence replay, AI explanation readiness,
+    and source-ingestion readiness supportability: operators can replay
+    candidate evidence posture over current source refs, inspect model-risk
+    blockers without invoking `lotus-ai`, and inspect run-once worker
+    configuration and certification blockers without calling Core or promoting
+    live ingestion support.
 14. The first opportunity journey is high cash / idle liquidity for
     `PB_SG_GLOBAL_BAL_001`.
 15. The first review audience is advisor only.

@@ -107,7 +107,15 @@ Persistence adapter validation:
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-9. Runtime API database wiring is opt-in and still requires deploy migration
+9. `tests/unit/test_ai_explanation_readiness.py`,
+   `tests/integration/test_ai_governance_api.py`, and
+   `tests/integration/test_api_operation_events.py` prove the AI explanation
+   readiness diagnostic for blocked model-risk posture, operator/capability
+   enforcement, product-safe payloads, and bounded `not_certified` operation
+   events without invoking `lotus-ai` or exposing prompts, provider payloads,
+   candidate identifiers, source routes, portfolio identifiers, or client
+   identifiers.
+10. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -210,6 +218,13 @@ certification, unit tests, and integration tests. Its passing checks certify
 the diagnostic route only; they do not certify a durable queue store,
 Gateway/Workbench support, data-product promotion, PM/compliance queue support,
 client-ready publication, or supported-feature promotion.
+
+The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint
+certification, unit tests, and integration tests. Its passing checks certify
+the diagnostic route only; they do not certify `lotus-ai` runtime execution,
+provider invocation, durable AI lineage, model-risk dashboard readiness,
+Gateway/Workbench support, data-product promotion, client-ready publication, or
+supported-feature promotion.
 
 CI warning policy:
 

@@ -24,13 +24,14 @@ progress. Current support:
 6. certified internal high-cash signal evaluation API foundation over
    caller-supplied, source-owned Core evidence,
 7. certified internal candidate lifecycle, AI explanation evaluator, advisor
-   queue, review-action, and feedback API foundations over persisted
+   explanation readiness, advisor queue, review-action, and feedback API foundations over persisted
    candidates,
 8. bounded read-only Gateway publication for advisor queue and candidate
    detail.
 
 No external business feature is supported yet. The high-cash, advisor queue,
-lifecycle, AI explanation, review-action, and feedback API foundations are
-certified for internal contract evolution, and the first Gateway publication is
+lifecycle, AI explanation, AI explanation readiness, review-action, and
+feedback API foundations are certified for internal contract evolution and
+operator supportability diagnostics, and the first Gateway publication is
 read-only integration foundation. This is not Workbench proof, data-product
-certification, or a client-demo feature claim.
+certification, AI runtime proof, or a client-demo feature claim.

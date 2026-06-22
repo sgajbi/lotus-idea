@@ -175,6 +175,14 @@ execute `lotus-ai` runtime workflows, persist durable AI lineage, grant
 downstream authority, expose a Gateway/Workbench surface, or promote a
 supported feature.
 
+`GET /api/v1/ai-explanations/readiness` is the certified internal AI
+explanation readiness diagnostic. It returns guardrail availability,
+`not_certified` model-risk supportability, and certification blockers for
+operators without invoking `lotus-ai`, exposing prompts/provider payloads,
+disclosing candidate or source-route identifiers, certifying durable AI
+lineage, exposing a Gateway/Workbench surface, or promoting a supported
+feature.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist
