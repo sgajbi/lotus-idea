@@ -9,11 +9,15 @@ import app.api.data_mesh_readiness as data_mesh_readiness_api
 from app.main import app
 
 
-def mesh_readiness_headers() -> dict[str, str]:
+def mesh_readiness_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.mesh.readiness.read",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "platform-operator",
-        "X-Caller-Roles": "operator",
-        "X-Caller-Capabilities": "idea.mesh.readiness.read",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-data-mesh-readiness-api",
     }
 
@@ -50,9 +54,21 @@ def test_data_mesh_readiness_api_requires_operator_permission() -> None:
     client = TestClient(app)
 
     response = client.get("/api/v1/data-mesh/readiness")
+    role_denied = client.get(
+        "/api/v1/data-mesh/readiness",
+        headers=mesh_readiness_headers(roles="advisor"),
+    )
+    capability_denied = client.get(
+        "/api/v1/data-mesh/readiness",
+        headers=mesh_readiness_headers(capabilities="idea.review.queue.read"),
+    )
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
     assert "portfolio" not in response.text.lower()
 
 

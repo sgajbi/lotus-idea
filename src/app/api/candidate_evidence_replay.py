@@ -21,7 +21,7 @@ from app.observability import IdeaOperation, OperationOutcome, emit_foundation_o
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
-    require_capability,
+    require_role_and_capability,
 )
 
 
@@ -116,7 +116,7 @@ async def replay_idea_candidate_evidence(
         capabilities=x_caller_capabilities,
     )
     try:
-        require_capability(caller, _REPLAY_CANDIDATE_EVIDENCE_POLICY)
+        require_role_and_capability(caller, _REPLAY_CANDIDATE_EVIDENCE_POLICY)
         command = ReplayCandidateEvidenceCommand(
             candidate_id=candidate_id,
             current_source_refs=tuple(

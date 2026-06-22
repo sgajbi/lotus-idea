@@ -23,7 +23,7 @@ from app.observability import (
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
-    require_capability,
+    require_role_and_capability,
 )
 
 
@@ -102,7 +102,7 @@ async def get_source_ingestion_readiness(
         capabilities=x_caller_capabilities,
     )
     try:
-        require_capability(caller, _READ_SOURCE_INGESTION_READINESS_POLICY)
+        require_role_and_capability(caller, _READ_SOURCE_INGESTION_READINESS_POLICY)
     except PermissionDeniedError:
         _emit_source_ingestion_readiness_event(
             OperationOutcome.PERMISSION_DENIED,

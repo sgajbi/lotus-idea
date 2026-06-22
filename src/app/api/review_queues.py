@@ -31,6 +31,7 @@ from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
     require_capability,
+    require_role_and_capability,
 )
 
 
@@ -280,7 +281,7 @@ async def get_advisor_review_queue_readiness(
         capabilities=x_caller_capabilities,
     )
     try:
-        require_capability(caller, _READ_QUEUE_READINESS_POLICY)
+        require_role_and_capability(caller, _READ_QUEUE_READINESS_POLICY)
     except PermissionDeniedError:
         _emit_review_queue_readiness_operation_event(
             OperationOutcome.PERMISSION_DENIED,

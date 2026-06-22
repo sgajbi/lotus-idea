@@ -132,7 +132,7 @@
         "{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"replayStatus\":\"hash_mismatch\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"recordedEvidenceHash\":\"sha256:evidence-lineage\",\"currentEvidenceHash\":\"sha256:changed-evidence-lineage\",\"sourceRefCount\":1,\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false,\"grantsDownstreamAuthority\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.candidate.evidence.replay capability or operator role.",
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.candidate.evidence.replay capability.",
         "404 returns product-safe Problem Details when the candidate is not found for evidence replay.",
         "400 returns product-safe Problem Details when currentSourceRefs is empty or request validation fails."
       ],
@@ -396,7 +396,7 @@
         "{\"repository\":\"lotus-idea\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"queueProjectionAvailable\":true,\"candidateSnapshotCount\":2,\"reviewableItemCount\":2,\"excludedCandidateCount\":0,\"exclusionCounts\":{\"suppressed\":0,\"duplicate\":0,\"expired\":0,\"closed\":0,\"rejected\":0,\"unsupported_evidence\":0,\"snoozed\":0,\"unscored\":0,\"non_reviewable_status\":0,\"access_scope_mismatch\":0},\"scoredCandidateCount\":2,\"unscoredCandidateCount\":0,\"durableStorageBacked\":false,\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"certificationBlockers\":[\"durable_repository_not_configured\",\"platform_caller_context_entitlement_proof_missing\",\"workbench_product_proof_missing\",\"data_product_certification_missing\",\"runtime_trust_telemetry_missing\"],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.review.queue.readiness.read capability or operator role.",
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.review.queue.readiness.read capability.",
         "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware."
       ],
       "test_evidence": [
@@ -424,7 +424,7 @@
         "{\"repository\":\"lotus-idea\",\"sourceAuthority\":\"lotus-core\",\"opportunityFamily\":\"high_cash\",\"manifestSchemaVersion\":\"lotus-idea.source-ingestion.high-cash.run-once.v1\",\"exampleManifestPath\":\"docs/examples/source-ingestion/high-cash-worker-manifest.example.json\",\"exampleManifestAvailable\":true,\"configuredManifestAvailable\":false,\"coreBaseUrlConfigured\":false,\"durableRepositoryConfigured\":false,\"runOnceConfigurationStatus\":\"blocked\",\"runOnceConfigured\":false,\"certificationStatus\":\"not_certified\",\"liveSourceCertified\":false,\"configurationBlockers\":[\"source_ingestion_manifest_not_configured\",\"lotus_core_base_url_not_configured\",\"durable_repository_not_configured\"],\"certificationBlockers\":[\"live_core_source_proof_missing\",\"scheduled_worker_deploy_proof_missing\",\"data_mesh_runtime_telemetry_missing\",\"gateway_workbench_proof_missing\"],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.source-ingestion.readiness.read capability or operator role."
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.source-ingestion.readiness.read capability."
       ],
       "test_evidence": [
         "tests/unit/test_source_ingestion_readiness.py::test_source_ingestion_readiness_reports_blocked_default_posture",
@@ -453,7 +453,7 @@
         "{\"repository\":\"lotus-idea\",\"lifecycleStatus\":\"planned\",\"certificationStatus\":\"not_certified\",\"meshRole\":\"planned_producer_and_consumer\",\"sourceOfTruth\":{\"producer_declaration\":\"contracts/domain-data-products/lotus-idea-products.v1.json\",\"trust_telemetry\":\"contracts/trust-telemetry/idea-candidate.telemetry.v1.json\"},\"products\":[{\"productId\":\"lotus-idea:IdeaCandidate:v1\",\"lifecycleStatus\":\"proposed\",\"approvedConsumers\":[\"lotus-gateway\"]}],\"blockers\":[\"data_mesh_not_certified\",\"producer_products_not_active\",\"runtime_trust_telemetry_blocked\"],\"certificationGatesBeforePromotion\":[\"business capability implemented with source-owned evidence and endpoint certification\"],\"runtimeTelemetryBacked\":false,\"platformCertified\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.mesh.readiness.read capability or operator role.",
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.mesh.readiness.read capability.",
         "503 returns product-safe Problem Details when repo-authored data-mesh readiness contracts cannot be read."
       ],
       "test_evidence": [
@@ -481,7 +481,7 @@
         "{\"repository\":\"lotus-idea\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"durableStorageBacked\":false,\"conversionIntentCount\":0,\"conversionOutcomeCount\":0,\"reportEvidencePackRequestCount\":0,\"sourceOfTruth\":{\"conversion_workflow\":\"src/app/application/conversion_workflow.py\",\"report_evidence_workflow\":\"src/app/application/report_evidence.py\"},\"blockers\":[\"advise_proposal_creation_adapter_missing\",\"manage_action_register_adapter_missing\",\"report_evidence_pack_materialization_missing\"],\"capabilities\":[{\"capabilityId\":\"advise-proposal-realization\",\"name\":\"Advise proposal and suitability realization\",\"sourceAuthority\":\"lotus-advise\",\"readinessStatus\":\"planned\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"evidenceRefs\":[\"POST /api/v1/idea-candidates/{candidateId}/conversion-intents\"],\"blockers\":[\"advise_proposal_creation_adapter_missing\"]}],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.readiness.read capability or operator role."
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.downstream-realization.readiness.read capability."
       ],
       "test_evidence": [
         "tests/unit/test_downstream_realization_readiness.py::test_downstream_realization_readiness_reports_blocked_foundation_posture",
@@ -508,7 +508,7 @@
         "{\"repository\":\"lotus-idea\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"capabilityCount\":7,\"certificationReadyCapabilityCount\":0,\"blockedCapabilityCount\":7,\"supportedFeatureCount\":0,\"supportedFeaturesPromoted\":false,\"overallBlockers\":[\"source_ingestion_manifest_not_configured\",\"workbench_panel_missing\",\"no_supported_features_promoted\"],\"sourceOfTruth\":{\"rfc\":\"docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md\",\"supported_features\":\"supported-features/supported-features.json\"},\"capabilities\":[{\"capabilityId\":\"advisor-review-queue\",\"name\":\"Deterministic advisor review queue\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"evidenceRefs\":[\"GET /api/v1/review-queues/advisor\"],\"blockers\":[\"workbench_product_proof_missing\"],\"supportedFeaturePromoted\":false}],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.implementation-proof.readiness.read capability or operator role.",
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.implementation-proof.readiness.read capability.",
         "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware.",
         "503 returns product-safe Problem Details when implementation proof readiness source contracts cannot be read."
       ],

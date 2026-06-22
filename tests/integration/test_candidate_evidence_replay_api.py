@@ -66,10 +66,14 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def replay_headers(capabilities: str = "idea.candidate.evidence.replay") -> dict[str, str]:
+def replay_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.candidate.evidence.replay",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "ops-001",
-        "X-Caller-Roles": "operator",
+        "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-candidate-evidence-replay-api",
     }
@@ -197,6 +201,16 @@ def test_candidate_evidence_replay_api_requires_operator_permission_and_existing
             "X-Caller-Capabilities": "idea.candidate.detail.read",
         },
     )
+    role_denied = client.post(
+        "/api/v1/idea-candidates/missing-candidate/evidence-replay",
+        json=replay_payload(),
+        headers=replay_headers(roles="advisor"),
+    )
+    capability_denied = client.post(
+        "/api/v1/idea-candidates/missing-candidate/evidence-replay",
+        json=replay_payload(),
+        headers=replay_headers(capabilities="idea.candidate.detail.read"),
+    )
     missing = client.post(
         "/api/v1/idea-candidates/missing-candidate/evidence-replay",
         json=replay_payload(),
@@ -211,6 +225,10 @@ def test_candidate_evidence_replay_api_requires_operator_permission_and_existing
         "title": "Permission denied",
         "detail": "The caller is not permitted to replay idea candidate evidence.",
     }
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
     assert missing.status_code == 404
     assert missing.json() == {
         "type": "about:blank",
