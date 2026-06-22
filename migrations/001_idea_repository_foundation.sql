@@ -41,6 +41,23 @@ CREATE TABLE IF NOT EXISTS idea_audit_event (
     occurred_at_utc TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS idea_outbox_event (
+    outbox_event_id TEXT PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    aggregate_type TEXT NOT NULL,
+    aggregate_id TEXT NOT NULL,
+    schema_version TEXT NOT NULL,
+    payload_json JSONB NOT NULL,
+    status TEXT NOT NULL,
+    occurred_at_utc TIMESTAMPTZ NOT NULL,
+    idempotency_fingerprint TEXT,
+    correlation_id TEXT,
+    causation_id TEXT,
+    published_at_utc TIMESTAMPTZ,
+    failure_reason TEXT,
+    retry_count INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS idea_review_decision (
     review_decision_id TEXT PRIMARY KEY,
     candidate_id TEXT NOT NULL REFERENCES idea_candidate_record(candidate_id),
@@ -103,6 +120,12 @@ CREATE INDEX IF NOT EXISTS idx_idea_lifecycle_history_candidate_time
 
 CREATE INDEX IF NOT EXISTS idx_idea_audit_event_candidate_time
     ON idea_audit_event (candidate_id, occurred_at_utc);
+
+CREATE INDEX IF NOT EXISTS idx_idea_outbox_event_status_time
+    ON idea_outbox_event (status, occurred_at_utc);
+
+CREATE INDEX IF NOT EXISTS idx_idea_outbox_event_aggregate_time
+    ON idea_outbox_event (aggregate_type, aggregate_id, occurred_at_utc);
 
 CREATE INDEX IF NOT EXISTS idx_idea_review_decision_candidate_time
     ON idea_review_decision (candidate_id, decided_at_utc);

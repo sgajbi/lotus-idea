@@ -7,6 +7,7 @@ from typing import Any, Callable, Mapping, Protocol, Sequence, TypeVar
 from psycopg.types.json import Jsonb
 
 from app.domain.audit import AuditEvent
+from app.domain.events import OutboxEventRecord, OutboxEventStatus
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
@@ -273,6 +274,7 @@ class PostgresIdeaRepository:
             idempotency_records, idempotency_candidates = self._load_idempotency(cursor)
             self._attach_lifecycle_history(cursor, candidate_records)
             self._attach_audit_events(cursor, candidate_records)
+            outbox_events = self._load_outbox_events(cursor)
             self._attach_review_decisions(cursor, candidate_records)
             self._attach_feedback_events(cursor, candidate_records)
             conversion_intent_candidates = self._attach_conversion_intents(
@@ -290,6 +292,7 @@ class PostgresIdeaRepository:
             idempotency_candidates=idempotency_candidates,
             conversion_intent_candidates=conversion_intent_candidates,
             report_evidence_pack_candidates=report_evidence_pack_candidates,
+            outbox_events=outbox_events,
         )
 
     def replace_snapshot(self, snapshot: IdeaRepositorySnapshot) -> None:
@@ -300,6 +303,7 @@ class PostgresIdeaRepository:
                 "idea_conversion_intent",
                 "idea_feedback_event",
                 "idea_review_decision",
+                "idea_outbox_event",
                 "idea_audit_event",
                 "idea_lifecycle_history",
                 "idea_idempotency_record",
@@ -317,6 +321,8 @@ class PostgresIdeaRepository:
                 )
             for candidate_record in snapshot.candidate_records.values():
                 self._insert_record_details(cursor, candidate_record)
+            for outbox_event in snapshot.outbox_events.values():
+                self._insert_outbox_event(cursor, outbox_event)
 
     def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
         try:
@@ -432,6 +438,38 @@ class PostgresIdeaRepository:
                 record,
                 audit_events=(*record.audit_events, event),
             )
+
+    def _load_outbox_events(self, cursor: PostgresCursor) -> dict[str, OutboxEventRecord]:
+        cursor.execute(
+            """
+            SELECT outbox_event_id, event_type, aggregate_type, aggregate_id,
+                   schema_version, payload_json, status, occurred_at_utc,
+                   idempotency_fingerprint, correlation_id, causation_id,
+                   published_at_utc, failure_reason, retry_count
+            FROM idea_outbox_event
+            ORDER BY occurred_at_utc, outbox_event_id
+            """
+        )
+        events: dict[str, OutboxEventRecord] = {}
+        for row in cursor.fetchall():
+            event = OutboxEventRecord(
+                event_id=_row(row, "outbox_event_id"),
+                event_type=_row(row, "event_type"),
+                aggregate_type=_row(row, "aggregate_type"),
+                aggregate_id=_row(row, "aggregate_id"),
+                schema_version=_row(row, "schema_version"),
+                payload=_json(row, "payload_json"),
+                status=OutboxEventStatus(_row(row, "status")),
+                occurred_at_utc=_row(row, "occurred_at_utc"),
+                idempotency_fingerprint=_row(row, "idempotency_fingerprint"),
+                correlation_id=_row(row, "correlation_id"),
+                causation_id=_row(row, "causation_id"),
+                published_at_utc=_row(row, "published_at_utc"),
+                failure_reason=_row(row, "failure_reason"),
+                retry_count=_row(row, "retry_count"),
+            )
+            events[event.event_id] = event
+        return events
 
     def _attach_review_decisions(
         self,
@@ -739,6 +777,38 @@ class PostgresIdeaRepository:
                 ),
             )
 
+    def _insert_outbox_event(
+        self,
+        cursor: PostgresCursor,
+        event: OutboxEventRecord,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_outbox_event (
+                outbox_event_id, event_type, aggregate_type, aggregate_id,
+                schema_version, payload_json, status, occurred_at_utc,
+                idempotency_fingerprint, correlation_id, causation_id,
+                published_at_utc, failure_reason, retry_count
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                event.event_id,
+                event.event_type,
+                event.aggregate_type,
+                event.aggregate_id,
+                event.schema_version,
+                Jsonb(dict(event.payload)),
+                event.status.value,
+                event.occurred_at_utc,
+                event.idempotency_fingerprint,
+                event.correlation_id,
+                event.causation_id,
+                event.published_at_utc,
+                event.failure_reason,
+                event.retry_count,
+            ),
+        )
+
 
 def _operation_name(idempotency_key: str) -> str:
     return idempotency_key.split(":", 1)[0]
@@ -751,4 +821,3 @@ def _idempotency_created_at(
     if candidate_id is not None and candidate_id in snapshot.candidate_records:
         return snapshot.candidate_records[candidate_id].persisted_at_utc
     return datetime.now().astimezone()
-

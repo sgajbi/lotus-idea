@@ -21,6 +21,7 @@ from app.domain import (
     HighCashSignalPolicy,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    OutboxEventStatus,
     ReasonCode,
     ReportEvidencePackCommand,
     ReportEvidencePackPurpose,
@@ -101,6 +102,7 @@ class FakePostgresConnection:
             "idea_idempotency_record": [],
             "idea_lifecycle_history": [],
             "idea_audit_event": [],
+            "idea_outbox_event": [],
             "idea_review_decision": [],
             "idea_feedback_event": [],
             "idea_conversion_intent": [],
@@ -154,9 +156,14 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
         "portfolio_id": "portfolio-001",
         "client_id": "client-001",
     }
+    assert connection.rows["idea_outbox_event"][0]["event_type"] == (
+        "idea.candidate.persisted.v1"
+    )
+    assert connection.rows["idea_outbox_event"][0]["status"] == OutboxEventStatus.PENDING.value
     assert (
         snapshot.idempotency_candidates["signal-ingestion:high-cash:001"] == candidate.candidate_id
     )
+    assert tuple(snapshot.outbox_events.values())[0].event_type == "idea.candidate.persisted.v1"
     assert connection.commits == 2
 
 
@@ -305,6 +312,16 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
     assert len(converted_record.conversion_intents) == 1
     assert len(converted_record.conversion_outcomes) == 1
     assert len(converted_record.report_evidence_packs) == 1
+    assert [event.event_type for event in recovered.outbox_events.values()] == [
+        "idea.candidate.persisted.v1",
+        "idea.candidate.persisted.v1",
+        "idea.lifecycle.transitioned.v1",
+        "idea.review.decision_recorded.v1",
+        "idea.feedback.recorded.v1",
+        "idea.conversion.intent_requested.v1",
+        "idea.conversion.outcome_recorded.v1",
+        "idea.report_evidence_pack.requested.v1",
+    ]
     assert recovered.conversion_intent_candidates["conversion-report-001"] == approved.candidate_id
     assert (
         recovered.report_evidence_pack_candidates["report-evidence-pack-001"]
@@ -538,6 +555,7 @@ def _table_from_select(query: str) -> str:
         "idea_idempotency_record",
         "idea_lifecycle_history",
         "idea_audit_event",
+        "idea_outbox_event",
         "idea_review_decision",
         "idea_feedback_event",
         "idea_conversion_intent",
@@ -605,6 +623,22 @@ def _row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "outcome",
             "attributes_json",
             "occurred_at_utc",
+        ),
+        "idea_outbox_event": (
+            "outbox_event_id",
+            "event_type",
+            "aggregate_type",
+            "aggregate_id",
+            "schema_version",
+            "payload_json",
+            "status",
+            "occurred_at_utc",
+            "idempotency_fingerprint",
+            "correlation_id",
+            "causation_id",
+            "published_at_utc",
+            "failure_reason",
+            "retry_count",
         ),
         "idea_review_decision": (
             "review_decision_id",
