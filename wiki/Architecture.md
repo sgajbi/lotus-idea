@@ -136,9 +136,10 @@ truthful.
 
 `migrations/001_idea_repository_foundation.sql` and its rollback file define the
 first governed schema contract for future durable candidate, idempotency,
-lifecycle, audit, review, feedback, conversion, and report evidence-pack state.
-The migration contract and execution dry-run are CI-blocking, and real execution
-uses `make migrate` / `make migrate-rollback` with `LOTUS_IDEA_DATABASE_URL`.
+lifecycle, audit, outbox, review, feedback, conversion, and report
+evidence-pack state. The migration contract and execution dry-run are
+CI-blocking, and real execution uses `make migrate` / `make migrate-rollback`
+with `LOTUS_IDEA_DATABASE_URL`.
 Runtime API repository wiring uses this adapter when `LOTUS_IDEA_DATABASE_URL`
 is configured after migrations are applied. `make postgres-integration-gate`
 now proves high-cash API persistence/replay and the first internal review,
@@ -150,7 +151,8 @@ recovery. The application layer also has a manifest-backed run-once
 source-ingestion worker CLI with manifest and source-safe check-only output
 validation through `make source-ingestion-worker-check`. Production storage
 readiness still requires deploy migration evidence, scheduled daemon/deploy
-worker evidence, and live Core source-worker evidence.
+worker evidence, live Core source-worker evidence, and event publication
+semantics beyond the pending outbox foundation.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
@@ -272,6 +274,10 @@ queue, review, feedback, conversion, report evidence-pack workflow path, and
 internal source-ingestion replay/conflict recovery. Unit tests also prove the
 bounded run-once source-ingestion batch worker foundation and the
 manifest-backed worker CLI check-only contract.
+Accepted internal mutations now also append source-safe pending outbox records
+through the same repository snapshot contract. This is not a broker publisher,
+Gateway event, platform mesh event, downstream delivery contract, or supported
+feature.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

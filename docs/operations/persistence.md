@@ -3,7 +3,9 @@
 Current posture: `lotus-idea` has internal in-memory repository behavior, a
 versioned SQL schema, rollback contract, PostgreSQL migration execution CLI, a
 tested PostgreSQL repository adapter foundation, and opt-in API repository
-wiring through `LOTUS_IDEA_DATABASE_URL`. It also has real PostgreSQL runtime
+wiring through `LOTUS_IDEA_DATABASE_URL`. Accepted internal repository
+mutations now also create source-safe pending outbox records in the active
+repository snapshot. It also has real PostgreSQL runtime
 proof for high-cash API persistence/replay and the first internal review,
 feedback, conversion, report evidence-pack, advisor queue, and migration
 rollback/reapply recovery workflow path. Internal high-cash source-ingestion
@@ -23,7 +25,8 @@ Runtime API state remains process-local by default and reports
 configured, repository-backed API responses and operation events report
 `durableStorageBacked=true`, but this is still not production storage
 certification, data-product certification, live source integration proof,
-downstream realization proof, or supported-feature promotion.
+downstream realization proof, event publication, or supported-feature
+promotion.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
 active repository provider. It compares caller-supplied current source refs with
@@ -37,6 +40,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
+| Pending outbox | Source-safe pending records for accepted internal mutations | No external event publication |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
 
@@ -56,8 +60,8 @@ flowchart LR
 ```
 
 1. `migrations/001_idea_repository_foundation.sql` defines the future candidate,
-   idempotency, lifecycle, audit, review, feedback, conversion, and report
-   evidence-pack tables.
+   idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
+   report evidence-pack tables.
 2. `migrations/001_idea_repository_foundation.rollback.sql` drops the same
    indexes and tables in dependency-safe reverse order.
 3. `scripts/migration_contract_gate.py` blocks missing migration files, missing
@@ -67,22 +71,28 @@ flowchart LR
 4. `scripts/run_migrations.py` executes the migration plan against PostgreSQL
    when `LOTUS_IDEA_DATABASE_URL` is set, and dry-runs the apply/rollback plan
    for CI without requiring a database.
-5. `src/app/infrastructure/postgres_repository.py` implements the governed
+5. `src/app/domain/events.py` defines the pending outbox event envelope,
+   deterministic event identity, status vocabulary, hashed idempotency
+   fingerprint, and forbidden payload-key guard. Accepted internal mutations
+   append pending events; replay, conflict, not-found, blocked, suppressed, and
+   not-eligible paths do not create duplicate outbox work.
+6. `src/app/infrastructure/postgres_repository.py` implements the governed
    repository port surface over the schema. It materializes candidate,
    idempotency, lifecycle, audit, review, feedback, conversion, and report
-   evidence-pack state through typed table columns plus JSONB snapshots, and
-   rolls back the database transaction on flush failure.
-6. `src/app/repository_state.py` selects the process-local in-memory repository
+   evidence-pack state plus pending outbox records through typed table columns
+   plus JSONB snapshots, and rolls back the database transaction on flush
+   failure.
+7. `src/app/repository_state.py` selects the process-local in-memory repository
    by default, or a `PostgresIdeaRepository` backed by a psycopg connection with
    mapping rows when `LOTUS_IDEA_DATABASE_URL` is set. `src/app/api/repository_state.py`
    is only a compatibility shim and must not own concrete infrastructure wiring.
-7. Repository-backed endpoints derive `durableStorageBacked` and
+8. Repository-backed endpoints derive `durableStorageBacked` and
    `durable_storage_backed` operation-event labels from the active repository
    instead of hardcoding storage posture.
-8. The evidence replay endpoint derives matched, stale-source, hash-mismatch,
+9. The evidence replay endpoint derives matched, stale-source, hash-mismatch,
    expired, and not-found posture from the active repository provider and emits
    bounded `candidate_evidence_replay` operation events.
-9. `tests/integration/test_postgres_runtime_integration.py` applies the schema
+10. `tests/integration/test_postgres_runtime_integration.py` applies the schema
    to a real PostgreSQL service, persists through the FastAPI
    evaluate-and-persist endpoint, reloads the repository provider, proves
    idempotency replay from database state, projects the advisor queue, records
@@ -93,12 +103,12 @@ flowchart LR
    reapplies it, and proves the recovered API persistence contract is usable.
    GitHub PR Merge Gate and Main Releasability run this proof against
    `postgres:18-alpine`.
-10. `src/app/application/source_ingestion.py` is the internal high-cash
+11. `src/app/application/source_ingestion.py` is the internal high-cash
    source-ingestion orchestration and bounded run-once batch worker foundation.
    It standardizes the future scheduler's generated idempotency key shape,
    per-item replay/conflict posture, batch decision counts, and non-mutating
    behavior for blocked, suppressed, and below-threshold Core source evidence.
-11. `src/app/application/source_ingestion_worker.py` and
+12. `src/app/application/source_ingestion_worker.py` and
     `scripts/run_source_ingestion_worker.py` add a versioned manifest-backed
     run-once worker entrypoint. Check-only mode returns a product-safe
     validation summary, and `make source-ingestion-worker-check` enforces both
@@ -170,12 +180,15 @@ as durable storage.
 ## Unsupported Until Proven
 
 Do not claim production storage readiness, production recovery,
-data-product promotion, or supported business workflows until later slices add:
+event publication, data-product promotion, or supported business workflows
+until later slices add:
 
 1. deploy-pipeline migration evidence,
 2. scheduled daemon/deploy source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
-4. data-product telemetry and platform mesh certification,
-5. Gateway/Workbench/downstream proof for supported workflows,
-6. updated endpoint certification, supported-feature, docs, wiki, and mesh
+4. outbox publisher semantics, retry/dead-letter handling, and downstream
+   consumer contract proof,
+5. data-product telemetry and platform mesh certification,
+6. Gateway/Workbench/downstream proof for supported workflows,
+7. updated endpoint certification, supported-feature, docs, wiki, and mesh
    posture.

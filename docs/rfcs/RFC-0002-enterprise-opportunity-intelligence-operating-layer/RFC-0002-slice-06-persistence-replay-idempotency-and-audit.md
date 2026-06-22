@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe pending outbox foundation, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -29,8 +29,12 @@ Implemented first-wave internal scope:
 
 1. `src/app/domain/persistence.py` defines immutable candidate persistence
    records, lifecycle history entries, idempotent candidate persistence
-   decisions, replay status vocabulary, evidence hash helpers, repository
-   snapshots, and an `InMemoryIdeaRepository` internal adapter.
+   decisions, replay status vocabulary, evidence hash helpers, source-safe
+   pending outbox snapshots, repository snapshots, and an
+   `InMemoryIdeaRepository` internal adapter. `src/app/domain/events.py`
+   defines the typed outbox event envelope, status vocabulary, deterministic
+   event identity, hashed idempotency fingerprint, and forbidden payload-key
+   guard for source/client-sensitive fields.
 2. Candidate persistence now evaluates idempotency keys and payload hashes
    before writing. Matching keys and matching payloads replay the existing
    candidate record; matching keys with different payloads return conflict; a
@@ -109,43 +113,54 @@ Implemented first-wave internal scope:
     per-use-case repository protocols. `tests/unit/test_repository_port_boundary.py`
     prevents future application modules from reintroducing scattered repository
     protocol declarations outside the governed runtime provider.
-16. `migrations/001_idea_repository_foundation.sql` and
+16. Accepted internal repository mutations now append pending outbox records for
+    candidate persistence, lifecycle transitions, review decisions, feedback,
+    conversion intents, conversion outcomes, and report evidence-pack requests.
+    Replayed, conflict, not-found, blocked, suppressed, and not-eligible paths
+    remain non-publishing and do not create duplicate outbox work. This is an
+    internal outbox foundation only; no external broker, Gateway event, platform
+    mesh event, or downstream publication is claimed.
+17. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,
-    idempotency, lifecycle, audit, review, feedback, conversion, and report
-    evidence-pack repository state. `scripts/migration_contract_gate.py`
+    idempotency, lifecycle, audit, outbox, review, feedback, conversion, and
+    report evidence-pack repository state. `scripts/migration_contract_gate.py`
     validates required tables, indexes, JSONB payload columns, UTC timestamp
     columns, source relationships, and rollback statements so future agents
     cannot add persistence-shaped work without governed reversibility evidence.
-17. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
+18. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
     provide a PostgreSQL migration execution path. `make migration-execution-gate`
     dry-runs apply and rollback plans in CI without needing a database, while
     `make migrate` and `make migrate-rollback` execute the same plans when
     `LOTUS_IDEA_DATABASE_URL` points to a PostgreSQL database. The Docker image
     now includes `migrations/` so runtime migration commands have the same SQL
     contract as local development.
-18. `src/app/infrastructure/postgres_repository.py` now implements the first
+19. `src/app/infrastructure/postgres_repository.py` now implements the first
     PostgreSQL repository adapter behind the governed port surface. The adapter
     hydrates repository snapshots from the schema, delegates domain decisions to
     the same in-memory repository contract, flushes typed table rows and JSONB
-    snapshots transactionally, and rolls back when a database flush fails.
+    snapshots transactionally, persists pending outbox records across reload,
+    and rolls back when a database flush fails.
     `tests/unit/test_postgres_repository.py` proves candidate persistence,
     idempotency replay, lifecycle history, audit events, review decisions,
-    feedback, conversion intent/outcome, report evidence-pack requests, snapshot
-    hydration, and rollback behavior with a fake Postgres cursor.
-19. `src/app/repository_state.py` now selects the process-local
+    feedback, conversion intent/outcome, report evidence-pack requests, pending
+    outbox hydration, and rollback behavior with a fake Postgres cursor.
+20. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
+    serialization/deserialization helpers from the repository adapter so future
+    persistence growth does not erode source-file maintainability gates.
+21. `src/app/repository_state.py` now selects the process-local
     `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
     when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
     mapping rows so the adapter receives the row shape it enforces. The
     `src/app/api/repository_state.py` module remains a compatibility shim so
     concrete infrastructure wiring stays out of the API layer.
-20. Repository-backed API routes now derive `durableStorageBacked` responses and
+22. Repository-backed API routes now derive `durableStorageBacked` responses and
     `durable_storage_backed` operation-event labels from the active repository
     instead of hardcoding storage posture. Default local/test runtime remains
     process-local and continues to report `durableStorageBacked=false`; a
     configured PostgreSQL runtime reports `durableStorageBacked=true` for the
     repository-backed foundation routes.
-21. `tests/integration/test_postgres_runtime_integration.py` now runs the
+23. `tests/integration/test_postgres_runtime_integration.py` now runs the
     first real PostgreSQL runtime proof. It applies the governed schema,
     persists a high-cash candidate through
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, reloads the
@@ -183,13 +198,14 @@ promotion so schema, rollback, indexing, relationship posture, execution command
 shape, adapter behavior, runtime selection, and the first durable replay path
 become CI-visible before any supported database-backed product claim is made.
 The current proof now also exercises the first internal review, queue,
-conversion, report evidence-pack workflow, and internal source-ingestion
-replay/conflict recovery path against PostgreSQL. The source-ingestion
-application layer now has a bounded run-once batch primitive plus a versioned
-manifest-backed run-once CLI and check-only gate. The next durable persistence
-slices must still prove scheduled daemon/deploy worker behavior,
-deploy-pipeline migration evidence, and live Core source-adapter behavior
-against that service, and keep API responses truthful:
+conversion, report evidence-pack workflow, pending outbox persistence, and
+internal source-ingestion replay/conflict recovery path against PostgreSQL. The
+source-ingestion application layer now has a bounded run-once batch primitive
+plus a versioned manifest-backed run-once CLI and check-only gate. The next
+durable persistence slices must still prove scheduled daemon/deploy worker
+behavior, deploy-pipeline migration evidence, live Core source-adapter behavior
+against that service, and eventual outbox publishing semantics before any event
+publication claim, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.
 
@@ -234,6 +250,18 @@ Current slice validation:
     passed with `9 passed` after adding the certified evidence replay API,
     matched/stale/hash-mismatch/not-found/permission/validation coverage, and
     bounded operation-event proof.
+11. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py -q`
+    passed with `17 passed` after adding source-safe pending outbox records,
+    replay/conflict non-publication coverage, snapshot recovery proof, and
+    forbidden payload-key coverage.
+12. `.venv\Scripts\python.exe -m pytest tests\unit\test_postgres_repository.py tests\unit\test_migration_contract_gate.py -q`
+    passed with `9 passed` after adding outbox schema enforcement and
+    PostgreSQL outbox round-trip coverage.
+13. `.venv\Scripts\python.exe scripts\migration_contract_gate.py`,
+    `.venv\Scripts\python.exe scripts\run_migrations.py --direction apply --dry-run`,
+    and `.venv\Scripts\python.exe scripts\run_migrations.py --direction rollback --dry-run`
+    passed with the outbox table/index contract included in the baseline
+    migration.
 
 Prior Slice 06 validation:
 
