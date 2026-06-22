@@ -59,10 +59,11 @@ Current RFC-0002 implementation-start baseline:
    supported-feature promotion.
 10. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
-   transitions, AI explanation evaluation, advisor queues, review actions,
-   feedback, conversion intent, conversion outcome, report evidence-pack
-   request, data-mesh-readiness diagnostics, and source-ingestion-readiness
-   diagnostics. Gateway, Workbench, live source adapters, data-product
+   transitions, source-safe candidate detail, AI explanation evaluation,
+   advisor queues, review actions, feedback, conversion intent, conversion
+   outcome, report evidence-pack request, data-mesh-readiness diagnostics, and
+   source-ingestion-readiness diagnostics. Gateway, Workbench, live source
+   adapters, data-product
    certification, and supported-feature promotion remain planned.
 11. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with

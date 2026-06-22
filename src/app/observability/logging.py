@@ -44,6 +44,7 @@ class IdeaOperation(StrEnum):
     AI_EXPLANATION = "ai_explanation"
     SIGNAL_EVALUATION = "signal_evaluation"
     CANDIDATE_PERSISTENCE = "candidate_persistence"
+    CANDIDATE_DETAIL_READ = "candidate_detail_read"
     LIFECYCLE_TRANSITION = "lifecycle_transition"
     REVIEW_QUEUE_READ = "review_queue_read"
     REVIEW_ACTION = "review_action"

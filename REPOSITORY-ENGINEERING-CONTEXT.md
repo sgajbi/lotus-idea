@@ -270,7 +270,11 @@ deterministic candidate, blocked, suppressed, or not-eligible posture.
 evidence contract, requires `idea.candidate.persist` plus `Idempotency-Key`,
 and persists created candidates through the internal in-memory
 idempotency/audit repository foundation with accepted, replayed, duplicate, or
-conflict posture. `GET /api/v1/review-queues/advisor` exposes deterministic
+conflict posture. `GET /api/v1/idea-candidates/{candidateId}` exposes a
+source-safe candidate detail projection over persisted snapshots, redacted
+evidence, lifecycle history, review/feedback/conversion/report summaries, and
+audit summary posture without exposing source routes, raw evidence hashes, or
+downstream authority. `GET /api/v1/review-queues/advisor` exposes deterministic
 advisor queue projection over persisted candidate snapshots. The review-action
 and feedback APIs expose internal review workflow persistence over the same
 repository provider and return accepted, replayed, not-found, conflict,
@@ -298,7 +302,7 @@ fallback/verifier evaluation over persisted candidate evidence:
 requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
 runtime workflows, persist durable AI lineage, or grant downstream authority.
-All ten business routes plus the data-mesh-readiness and
+All eleven business routes plus the data-mesh-readiness and
 source-ingestion-readiness operator diagnostics are covered by OpenAPI and
 endpoint certification evidence. The PostgreSQL runtime
 proof now covers the high-cash persist, advisor queue, lifecycle, review,
@@ -353,8 +357,8 @@ foundation. `src/app/observability/logging.py` now defines the
 `lotus_idea_operation_events_total` metric, bounded operation/outcome/
 supportability vocabulary, product-safe structured operation logs, and
 sensitive operation-attribute rejection. High-cash evaluation, candidate
-persistence, lifecycle transition, advisor review queue, review action,
-AI explanation, feedback, conversion intent, conversion outcome, report
+persistence, candidate detail read, lifecycle transition, advisor review queue,
+review action, AI explanation, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and data-mesh-readiness diagnostic APIs emit bounded
 operation events. The source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,

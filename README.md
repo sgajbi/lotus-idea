@@ -29,11 +29,12 @@ internal candidate lifecycle, advisor queue, review-action, and feedback API
 foundations over persisted candidates, and an internal conversion-governance
 foundation plus certified internal conversion intent/outcome API foundations
 for review-gated downstream intent/outcome tracking. It now also has an
-internal report evidence-pack request foundation plus a certified internal API
-for reviewed report conversion intents, and the first bounded operation-event
-observability foundation across certified internal signal, persistence,
-lifecycle, AI explanation, queue, review, feedback, conversion, report evidence, and
-data-mesh-readiness APIs plus a certified internal source-ingestion readiness
+internal source-safe candidate detail API foundation, an internal report
+evidence-pack request foundation plus a certified internal API for reviewed
+report conversion intents, and the first bounded operation-event observability
+foundation across certified internal signal, persistence, candidate detail,
+lifecycle, AI explanation, queue, review, feedback, conversion, report evidence,
+and data-mesh-readiness APIs plus a certified internal source-ingestion readiness
 diagnostic for operator configuration and certification blockers. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
@@ -142,6 +143,10 @@ source-authority contracts only, not runtime certification.
   decisions. `source_ingestion_worker.py` adds a manifest-backed run-once
   worker plan and product-safe run summary for operator execution without
   source payload leakage or supported-feature promotion.
+  Internal candidate detail orchestration reads persisted repository snapshots
+  and returns source-safe detail projections with redacted source references,
+  workflow summaries, audit summary posture, and no downstream authority or
+  supported-feature promotion.
   Internal review-queue orchestration projects persisted candidate snapshots
   through the Slice 07 deterministic queue policy and certified internal advisor
   queue API foundation. Internal candidate lifecycle orchestration records
@@ -185,8 +190,8 @@ source-authority contracts only, not runtime certification.
   variable after the schema exists.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
-  persistence, lifecycle, AI explanation, advisor queue, review, feedback,
-  conversion, and report evidence-pack foundation APIs plus the
+  persistence, candidate detail, lifecycle, AI explanation, advisor queue,
+  review, feedback, conversion, and report evidence-pack foundation APIs plus the
   data-mesh-readiness and source-ingestion-readiness diagnostics emit
   product-safe operation logs and the `lotus_idea_operation_events_total`
   metric without sensitive labels or supported-feature promotion.
