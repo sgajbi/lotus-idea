@@ -19,6 +19,12 @@ from app.domain.ai_governance import (
     deterministic_ai_fallback,
     evaluate_ai_workflow_output,
 )
+from app.domain.ai_lineage_persistence import (
+    AIExplanationLineagePersistenceDecision,
+    AIExplanationLineagePersistenceResult,
+    AIExplanationLineageRecord,
+    ai_explanation_lineage_record_from_result,
+)
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.domain.conversion_governance import (
     ConversionBoundary,
@@ -157,6 +163,9 @@ __all__ = [
     "AIWorkflowOutput",
     "AIWorkflowPackRef",
     "AIWorkflowPurpose",
+    "AIExplanationLineagePersistenceDecision",
+    "AIExplanationLineagePersistenceResult",
+    "AIExplanationLineageRecord",
     "QueueAccessScopeFilter",
     "ReviewAccessScope",
     "InvalidAIExplanationRequest",
@@ -233,6 +242,7 @@ __all__ = [
     "SignalEvaluationResult",
     "evidence_hash_for_candidate",
     "evidence_hash_for_source_refs",
+    "ai_explanation_lineage_record_from_result",
     "GovernedReportEvidencePack",
     "InvalidReportEvidencePack",
     "ReportEvidencePackBoundary",

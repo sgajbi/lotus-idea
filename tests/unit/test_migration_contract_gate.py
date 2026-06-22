@@ -18,6 +18,17 @@ def _load_migration_contract_gate() -> ModuleType:
     return module
 
 
+def _foundation_contract(module: ModuleType, forward: Path, rollback: Path) -> object:
+    return module.MigrationContract(
+        version="001",
+        forward_path=forward,
+        rollback_path=rollback,
+        required_tables=module.REQUIRED_TABLES,
+        required_indexes=module.REQUIRED_INDEXES,
+        required_forward_fragments=module.REQUIRED_FORWARD_FRAGMENTS,
+    )
+
+
 def test_migration_contract_gate_passes_current_repository_contract() -> None:
     module = _load_migration_contract_gate()
 
@@ -33,7 +44,7 @@ def test_migration_contract_gate_blocks_missing_rollback(tmp_path: Path) -> None
         encoding="utf-8",
     )
 
-    migration = module.MigrationContract("001", forward, rollback)
+    migration = _foundation_contract(module, forward, rollback)
 
     assert module.validate_migration_contracts((migration,)) == [
         f"Migration 001 missing rollback {rollback.as_posix()}"
@@ -60,7 +71,7 @@ def test_migration_contract_gate_blocks_missing_required_table(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    migration = module.MigrationContract("001", forward, rollback)
+    migration = _foundation_contract(module, forward, rollback)
     errors = module.validate_migration_contracts((migration,))
 
     assert "Migration 001 missing table `idea_audit_event`" in errors
@@ -81,7 +92,7 @@ def test_migration_contract_gate_blocks_missing_rollback_table(tmp_path: Path) -
         encoding="utf-8",
     )
 
-    migration = module.MigrationContract("001", forward, rollback)
+    migration = _foundation_contract(module, forward, rollback)
     errors = module.validate_migration_contracts((migration,))
 
     assert "Migration 001 rollback missing table `idea_candidate_record`" in errors

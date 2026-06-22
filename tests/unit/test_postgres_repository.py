@@ -9,6 +9,12 @@ import pytest
 from psycopg.types.json import Jsonb
 
 from app.domain import (
+    AIFallbackReason,
+    AIExplanationCommand,
+    AIExplanationLineagePersistenceDecision,
+    AIExplanationResult,
+    AIWorkflowPackRef,
+    AIWorkflowPurpose,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
@@ -34,6 +40,8 @@ from app.domain import (
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    build_ai_explanation_request,
+    deterministic_ai_fallback,
     evaluate_high_cash_signal,
     record_conversion_outcome,
     record_feedback,
@@ -109,6 +117,7 @@ class FakePostgresConnection:
             "idea_conversion_intent": [],
             "idea_conversion_outcome": [],
             "idea_report_evidence_pack_request": [],
+            "idea_ai_explanation_lineage": [],
         }
         self.fail_on_insert = fail_on_insert
         self.commits = 0
@@ -366,6 +375,43 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     assert reloaded.failure_reason is None
 
 
+def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:ai-lineage",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    explanation_result = ai_explanation_result_for_candidate(candidate)
+
+    accepted = repository.record_ai_explanation_lineage(explanation_result)
+    recovered = PostgresIdeaRepository(connection).snapshot()
+    replayed = PostgresIdeaRepository(connection).record_ai_explanation_lineage(explanation_result)
+
+    assert accepted.decision is AIExplanationLineagePersistenceDecision.ACCEPTED
+    assert replayed.decision is AIExplanationLineagePersistenceDecision.REPLAYED
+    assert accepted.lineage_record is not None
+    assert recovered.ai_explanation_lineage_candidates == {
+        "ai-lineage-request-001": candidate.candidate_id,
+    }
+    recovered_record = recovered.candidate_records[candidate.candidate_id]
+    assert recovered_record.ai_explanation_lineage_records == (accepted.lineage_record,)
+    assert (
+        connection.rows["idea_ai_explanation_lineage"][0]["lineage_json"][
+            "grants_downstream_authority"
+        ]
+        is False
+    )
+    assert "portfolio_id" not in connection.rows["idea_ai_explanation_lineage"][0]["lineage_json"]
+
+
 def test_postgres_repository_ignores_orphan_detail_rows_during_hydration() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
@@ -586,6 +632,29 @@ def report_pack_command() -> ReportEvidencePackCommand:
     )
 
 
+def ai_explanation_result_for_candidate(candidate: IdeaCandidate) -> AIExplanationResult:
+    request = build_ai_explanation_request(
+        candidate,
+        AIExplanationCommand(
+            request_id="ai-lineage-request-001",
+            actor_subject="advisor-001",
+            workflow_pack=AIWorkflowPackRef(
+                workflow_pack_id="lotus-ai:idea-explanation:v1",
+                workflow_pack_version="v1",
+                purpose=AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
+                evaluation_ref="lotus-ai:governed-verifier:v1",
+            ),
+            approved_metadata={"audience": "internal_advisor_review"},
+            requested_at_utc=EVALUATED_AT + timedelta(minutes=10),
+        ),
+    )
+    return deterministic_ai_fallback(
+        request,
+        fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+        occurred_at_utc=EVALUATED_AT + timedelta(minutes=10),
+    )
+
+
 def _table_from_select(query: str) -> str:
     for table_name in (
         "idea_candidate_record",
@@ -598,6 +667,7 @@ def _table_from_select(query: str) -> str:
         "idea_conversion_intent",
         "idea_conversion_outcome",
         "idea_report_evidence_pack_request",
+        "idea_ai_explanation_lineage",
     ):
         if f" from {table_name}" in query:
             return table_name
@@ -716,6 +786,23 @@ def _row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "evidence_hash",
             "evidence_pack_json",
             "requested_at_utc",
+        ),
+        "idea_ai_explanation_lineage": (
+            "ai_explanation_request_id",
+            "candidate_id",
+            "evidence_packet_id",
+            "evidence_content_hash",
+            "workflow_pack_id",
+            "workflow_pack_version",
+            "purpose",
+            "posture",
+            "verifier_outcome",
+            "fallback_used",
+            "fallback_reason",
+            "lineage_hash",
+            "lineage_json",
+            "requested_at_utc",
+            "evaluated_at_utc",
         ),
     }
     return dict(zip(columns_by_table[table_name], values, strict=True))

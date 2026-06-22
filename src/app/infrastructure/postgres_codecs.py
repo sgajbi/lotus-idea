@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Any, Mapping
 
 from app.domain.access_scope import ReviewAccessScope
+from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.conversion_governance import (
     ConversionBoundary,
     GovernedConversionIntent,
@@ -307,6 +308,62 @@ def _report_evidence_pack_from_json(payload: Mapping[str, Any]) -> GovernedRepor
         render_source_authority=SourceSystem(payload["render_source_authority"]),
         archive_source_authority=SourceSystem(payload["archive_source_authority"]),
         boundary=ReportEvidencePackBoundary(payload["boundary"]),
+    )
+
+
+def _ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[str, Any]:
+    return {
+        "request_id": record.request_id,
+        "candidate_id": record.candidate_id,
+        "evidence_packet_id": record.evidence_packet_id,
+        "evidence_content_hash": record.evidence_content_hash,
+        "workflow_pack_id": record.workflow_pack_id,
+        "workflow_pack_version": record.workflow_pack_version,
+        "purpose": record.purpose,
+        "posture": record.posture,
+        "verifier_outcome": record.verifier_outcome,
+        "fallback_used": record.fallback_used,
+        "fallback_reason": record.fallback_reason,
+        "reason_codes": list(record.reason_codes),
+        "output_id": record.output_id,
+        "claim_ids": list(record.claim_ids),
+        "proposed_action_types": list(record.proposed_action_types),
+        "actor_subject": record.actor_subject,
+        "requested_at_utc": record.requested_at_utc.isoformat(),
+        "evaluated_at_utc": record.evaluated_at_utc.isoformat(),
+        "grants_downstream_authority": record.grants_downstream_authority,
+        "lineage_hash": record.lineage_hash,
+    }
+
+
+def _ai_explanation_lineage_from_json(
+    payload: Mapping[str, Any],
+) -> AIExplanationLineageRecord:
+    return AIExplanationLineageRecord(
+        request_id=str(payload["request_id"]),
+        candidate_id=str(payload["candidate_id"]),
+        evidence_packet_id=str(payload["evidence_packet_id"]),
+        evidence_content_hash=str(payload["evidence_content_hash"]),
+        workflow_pack_id=str(payload["workflow_pack_id"]),
+        workflow_pack_version=str(payload["workflow_pack_version"]),
+        purpose=str(payload["purpose"]),
+        posture=str(payload["posture"]),
+        verifier_outcome=str(payload["verifier_outcome"]),
+        fallback_used=bool(payload["fallback_used"]),
+        fallback_reason=(
+            str(payload["fallback_reason"]) if payload.get("fallback_reason") is not None else None
+        ),
+        reason_codes=tuple(str(value) for value in payload["reason_codes"]),
+        output_id=str(payload["output_id"]) if payload.get("output_id") is not None else None,
+        claim_ids=tuple(str(value) for value in payload.get("claim_ids", ())),
+        proposed_action_types=tuple(
+            str(value) for value in payload.get("proposed_action_types", ())
+        ),
+        actor_subject=str(payload["actor_subject"]),
+        requested_at_utc=_datetime(payload["requested_at_utc"]),
+        evaluated_at_utc=_datetime(payload["evaluated_at_utc"]),
+        grants_downstream_authority=bool(payload["grants_downstream_authority"]),
+        lineage_hash=str(payload["lineage_hash"]),
     )
 
 

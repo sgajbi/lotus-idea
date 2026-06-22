@@ -6,6 +6,7 @@ from enum import StrEnum
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
+    AIExplanationLineagePersistenceResult,
     AIExplanationResult,
     AIWorkflowOutput,
     build_ai_explanation_request,
@@ -55,6 +56,7 @@ class EvaluateAIExplanationToRepositoryCommand:
 class AIExplanationWorkflowResult:
     decision: AIExplanationEvaluationDecision
     explanation_result: AIExplanationResult | None
+    lineage_persistence_result: AIExplanationLineagePersistenceResult | None = None
 
 
 def build_ai_explanation_readiness_snapshot() -> AIExplanationReadinessSnapshot:
@@ -74,7 +76,7 @@ def build_ai_explanation_readiness_snapshot() -> AIExplanationReadinessSnapshot:
         lotus_ai_runtime_executed=False,
         certification_blockers=(
             "lotus_ai_runtime_execution_missing",
-            "durable_ai_lineage_store_missing",
+            "certified_ai_lineage_store_missing",
             "workflow_pack_runtime_contract_not_certified",
             "model_risk_operations_dashboard_missing",
             "certified_runtime_trust_telemetry_missing",
@@ -110,7 +112,10 @@ def evaluate_ai_explanation_to_repository(
             command.workflow_output,
         )
 
+    lineage_persistence_result = repository.record_ai_explanation_lineage(explanation_result)
+
     return AIExplanationWorkflowResult(
         decision=AIExplanationEvaluationDecision.ACCEPTED,
         explanation_result=explanation_result,
+        lineage_persistence_result=lineage_persistence_result,
     )

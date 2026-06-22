@@ -6,6 +6,7 @@ from typing import Any, Callable, Mapping, Protocol, Sequence, TypeVar
 
 from psycopg.types.json import Jsonb
 
+from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
 from app.domain.events import OutboxEventRecord, OutboxEventStatus
 from app.domain.conversion_governance import (
@@ -18,6 +19,7 @@ from app.domain.ideas import (
     IdeaLifecycleStatus,
     SourceRef,
 )
+from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.persistence import (
     CandidatePersistenceRecord,
@@ -40,6 +42,8 @@ from app.domain.review_governance import (
     ReviewActionResult,
 )
 from app.infrastructure.postgres_codecs import (
+    _ai_explanation_lineage_from_json,
+    _ai_explanation_lineage_to_json,
     _candidate_from_json,
     _candidate_to_json,
     _conversion_intent_from_json,
@@ -309,6 +313,12 @@ class PostgresIdeaRepository:
             )
         )
 
+    def record_ai_explanation_lineage(
+        self,
+        result: AIExplanationResult,
+    ) -> AIExplanationLineagePersistenceResult:
+        return self._mutate(lambda repository: repository.record_ai_explanation_lineage(result))
+
     def snapshot(self) -> IdeaRepositorySnapshot:
         with self._connection.cursor() as cursor:
             candidate_records = self._load_candidate_records(cursor)
@@ -327,18 +337,24 @@ class PostgresIdeaRepository:
                 cursor,
                 candidate_records,
             )
+            ai_explanation_lineage_candidates = self._attach_ai_explanation_lineage_records(
+                cursor,
+                candidate_records,
+            )
         return IdeaRepositorySnapshot(
             candidate_records=candidate_records,
             idempotency_records=idempotency_records,
             idempotency_candidates=idempotency_candidates,
             conversion_intent_candidates=conversion_intent_candidates,
             report_evidence_pack_candidates=report_evidence_pack_candidates,
+            ai_explanation_lineage_candidates=ai_explanation_lineage_candidates,
             outbox_events=outbox_events,
         )
 
     def replace_snapshot(self, snapshot: IdeaRepositorySnapshot) -> None:
         with self._connection.cursor() as cursor:
             for table_name in (
+                "idea_ai_explanation_lineage",
                 "idea_report_evidence_pack_request",
                 "idea_conversion_outcome",
                 "idea_conversion_intent",
@@ -585,6 +601,36 @@ class PostgresIdeaRepository:
             candidates[intent_id] = candidate_id
         return candidates
 
+    def _attach_ai_explanation_lineage_records(
+        self,
+        cursor: PostgresCursor,
+        records: dict[str, CandidatePersistenceRecord],
+    ) -> dict[str, str]:
+        cursor.execute(
+            """
+            SELECT ai_explanation_request_id, candidate_id, lineage_json
+            FROM idea_ai_explanation_lineage
+            ORDER BY evaluated_at_utc, ai_explanation_request_id
+            """
+        )
+        candidates: dict[str, str] = {}
+        for row in cursor.fetchall():
+            candidate_id = _row(row, "candidate_id")
+            record = records.get(candidate_id)
+            if record is None:
+                continue
+            request_id = _row(row, "ai_explanation_request_id")
+            lineage_record = _ai_explanation_lineage_from_json(_json(row, "lineage_json"))
+            records[candidate_id] = replace(
+                record,
+                ai_explanation_lineage_records=(
+                    *record.ai_explanation_lineage_records,
+                    lineage_record,
+                ),
+            )
+            candidates[request_id] = candidate_id
+        return candidates
+
     def _attach_conversion_outcomes(
         self,
         cursor: PostgresCursor,
@@ -696,6 +742,20 @@ class PostgresIdeaRepository:
         cursor: PostgresCursor,
         record: CandidatePersistenceRecord,
     ) -> None:
+        self._insert_lifecycle_history(cursor, record)
+        self._insert_audit_events(cursor, record)
+        self._insert_review_decisions(cursor, record)
+        self._insert_feedback_events(cursor, record)
+        self._insert_conversion_intents(cursor, record)
+        self._insert_conversion_outcomes(cursor, record)
+        self._insert_report_evidence_packs(cursor, record)
+        self._insert_ai_explanation_lineage_records(cursor, record)
+
+    def _insert_lifecycle_history(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
         candidate_id = record.candidate.candidate_id
         for index, entry in enumerate(record.lifecycle_history, start=1):
             cursor.execute(
@@ -714,6 +774,13 @@ class PostgresIdeaRepository:
                     entry.changed_at_utc,
                 ),
             )
+
+    def _insert_audit_events(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
         for index, event in enumerate(record.audit_events, start=1):
             cursor.execute(
                 """
@@ -732,6 +799,13 @@ class PostgresIdeaRepository:
                     event.occurred_at_utc,
                 ),
             )
+
+    def _insert_review_decisions(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
         for decision in record.review_decisions:
             cursor.execute(
                 """
@@ -749,6 +823,13 @@ class PostgresIdeaRepository:
                     decision.decided_at_utc,
                 ),
             )
+
+    def _insert_feedback_events(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
         for feedback in record.feedback_events:
             cursor.execute(
                 """
@@ -765,6 +846,13 @@ class PostgresIdeaRepository:
                     feedback.feedback.recorded_at_utc,
                 ),
             )
+
+    def _insert_conversion_intents(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
         for intent in record.conversion_intents:
             cursor.execute(
                 """
@@ -782,6 +870,12 @@ class PostgresIdeaRepository:
                     intent.intent.requested_at_utc,
                 ),
             )
+
+    def _insert_conversion_outcomes(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
         for outcome in record.conversion_outcomes:
             cursor.execute(
                 """
@@ -799,6 +893,13 @@ class PostgresIdeaRepository:
                     outcome.outcome.recorded_at_utc,
                 ),
             )
+
+    def _insert_report_evidence_packs(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
         for evidence_pack in record.report_evidence_packs:
             cursor.execute(
                 """
@@ -815,6 +916,41 @@ class PostgresIdeaRepository:
                     evidence_pack.evidence_content_hash,
                     Jsonb(_report_evidence_pack_to_json(evidence_pack)),
                     evidence_pack.requested_at_utc,
+                ),
+            )
+
+    def _insert_ai_explanation_lineage_records(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        candidate_id = record.candidate.candidate_id
+        for lineage_record in record.ai_explanation_lineage_records:
+            cursor.execute(
+                """
+                INSERT INTO idea_ai_explanation_lineage (
+                    ai_explanation_request_id, candidate_id, evidence_packet_id,
+                    evidence_content_hash, workflow_pack_id, workflow_pack_version,
+                    purpose, posture, verifier_outcome, fallback_used, fallback_reason,
+                    lineage_hash, lineage_json, requested_at_utc, evaluated_at_utc
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    lineage_record.request_id,
+                    candidate_id,
+                    lineage_record.evidence_packet_id,
+                    lineage_record.evidence_content_hash,
+                    lineage_record.workflow_pack_id,
+                    lineage_record.workflow_pack_version,
+                    lineage_record.purpose,
+                    lineage_record.posture,
+                    lineage_record.verifier_outcome,
+                    lineage_record.fallback_used,
+                    lineage_record.fallback_reason,
+                    lineage_record.lineage_hash,
+                    Jsonb(_ai_explanation_lineage_to_json(lineage_record)),
+                    lineage_record.requested_at_utc,
+                    lineage_record.evaluated_at_utc,
                 ),
             )
 
