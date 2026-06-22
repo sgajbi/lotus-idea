@@ -11,6 +11,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.source_ingestion_readiness as source_ingestion_readiness_api
+from app.application.source_ingestion import HighCashSourceIngestionBatchResult
 from app.application.source_ingestion_readiness import CORE_BASE_URL_ENV, MANIFEST_ENV
 from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
@@ -18,6 +19,7 @@ from app.application.source_ingestion_worker import (
 )
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
+from app.observability import OperationOutcome
 from app.ports.core_sources import (
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
@@ -456,6 +458,42 @@ def test_source_ingestion_run_once_api_emits_not_certified_operation_event(
             None,
             {"work_item_count_bucket": "1-10"},
         )
+    ]
+
+
+def test_source_ingestion_run_once_operation_events_use_bounded_count_buckets(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[tuple[str, str | None, dict[str, str]]] = []
+
+    def capture(event: Any) -> None:
+        events.append((event.outcome.value, event.error_code, dict(event.attributes)))
+
+    monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
+
+    assert (
+        source_ingestion_readiness_api._source_ingestion_operation_outcome(
+            HighCashSourceIngestionBatchResult(item_results=())
+        ).value
+        == "blocked"
+    )
+    source_ingestion_readiness_api._emit_source_ingestion_run_event(
+        OperationOutcome.BLOCKED,
+        total_count=0,
+    )
+    source_ingestion_readiness_api._emit_source_ingestion_run_event(
+        OperationOutcome.ACCEPTED,
+        total_count=42,
+    )
+    source_ingestion_readiness_api._emit_source_ingestion_run_event(
+        OperationOutcome.ACCEPTED,
+        total_count=101,
+    )
+
+    assert events == [
+        ("blocked", None, {"work_item_count_bucket": "0"}),
+        ("accepted", None, {"work_item_count_bucket": "11-100"}),
+        ("accepted", None, {"work_item_count_bucket": "100+"}),
     ]
 
 

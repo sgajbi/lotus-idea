@@ -6,8 +6,11 @@ from decimal import Decimal
 import importlib.util
 import json
 from pathlib import Path
+import re
 from types import ModuleType
 from typing import Any
+
+import pytest
 
 from app.application.source_ingestion import run_high_cash_source_ingestion_batch
 from app.application.source_ingestion_worker import (
@@ -109,6 +112,35 @@ def test_rejects_unsupported_schema_version() -> None:
         raise AssertionError("expected unsupported schema version to be rejected")
 
 
+@pytest.mark.parametrize(
+    ("manifest_update", "expected_error"),
+    [
+        ({"workItems": "not-a-list"}, "workItems must be a non-empty list"),
+        ({"workItems": ["not-an-object"]}, "workItems[0] must be an object"),
+        (
+            {"workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21", "extra": "x"}]},
+            "workItems[0] contains unsupported keys: extra",
+        ),
+        ({"actorSubject": " "}, "optional text fields must be non-empty strings when supplied"),
+        ({"evaluatedAtUtc": "2026-06-21T10:00:00"}, "evaluatedAtUtc must be timezone-aware"),
+        ({"maxItems": 0}, "maxItems must be a positive integer"),
+    ],
+)
+def test_rejects_malformed_worker_manifest_fields(
+    manifest_update: dict[str, object],
+    expected_error: str,
+) -> None:
+    manifest: dict[str, object] = {
+        "schemaVersion": MANIFEST_SCHEMA_VERSION,
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+    }
+    manifest.update(manifest_update)
+
+    with pytest.raises(ValueError, match=re.escape(expected_error)):
+        source_ingestion_worker_plan_from_manifest(manifest)
+
+
 def test_summarizes_worker_run_without_source_payloads_or_supported_claims() -> None:
     repository = InMemoryIdeaRepository()
     source = RecordingCoreSource()
@@ -182,6 +214,25 @@ def test_summarizes_worker_source_failure_without_source_payloads() -> None:
     assert "workItems" not in summary
     assert "portfolioId" not in json.dumps(summary)
     assert "idempotencyKey" not in json.dumps(summary)
+
+
+def test_summarizes_worker_failure_with_default_safe_error_code() -> None:
+    plan = source_ingestion_worker_plan_from_manifest(
+        {
+            "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+        }
+    )
+
+    summary = summarize_source_ingestion_worker_failure(
+        plan=plan,
+        error_code=" ",
+        durable_storage_backed=False,
+    )
+
+    assert summary["errorCode"] == "core_source_unavailable"
+    assert summary["decisionCounts"]["blocked"] == 0
 
 
 def test_cli_check_only_validates_example_manifest(capsys: Any) -> None:
