@@ -16,6 +16,8 @@ from app.domain import (
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
     LifecyclePersistenceResult,
+    OutboxDeliveryResult,
+    OutboxEventRecord,
     ReportEvidencePackResult,
     ReviewActionResult,
     ReviewPersistenceResult,
@@ -151,6 +153,30 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
     pass
 
 
+class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
+    def outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+    ) -> tuple[OutboxEventRecord, ...]: ...
+
+    def mark_outbox_event_published(
+        self,
+        event_id: str,
+        *,
+        published_at_utc: datetime,
+    ) -> OutboxDeliveryResult: ...
+
+    def mark_outbox_event_failed(
+        self,
+        event_id: str,
+        *,
+        failure_reason: str,
+        max_retry_count: int = 3,
+    ) -> OutboxDeliveryResult: ...
+
+
 class IdeaRepository(
     CandidatePersistenceRepository,
     CandidateLifecycleRepository,
@@ -159,6 +185,7 @@ class IdeaRepository(
     ConversionWorkflowRepository,
     ReportEvidenceWorkflowRepository,
     AIExplanationRepository,
+    OutboxDeliveryRepository,
     Protocol,
 ):
     """Complete repository port surface used by API runtime wiring."""

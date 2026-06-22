@@ -24,6 +24,7 @@ from app.domain import (
     InMemoryIdeaRepository,
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
+    OutboxDeliveryDecision,
     OutboxEventStatus,
     ReasonCode,
     ReportEvidencePackCommand,
@@ -453,6 +454,97 @@ def test_outbox_event_payload_rejects_sensitive_source_and_client_keys() -> None
             occurred_at_utc=EVALUATED_AT,
             payload={"portfolio_id": "PB_SG_GLOBAL_BAL_001"},
             idempotency_key="signal-ingestion:high-cash:001",
+        )
+
+
+def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:outbox-delivery:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+
+    failed = repository.mark_outbox_event_failed(
+        event.event_id,
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
+    retryable = repository.outbox_events_for_delivery(limit=10, max_retry_count=2)
+    dead_lettered = repository.mark_outbox_event_failed(
+        event.event_id,
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
+    delivered = repository.outbox_events_for_delivery(limit=10, max_retry_count=2)
+    published_after_dead_letter = repository.mark_outbox_event_published(
+        event.event_id,
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+
+    assert failed.decision is OutboxDeliveryDecision.ACCEPTED
+    assert failed.event is not None
+    assert failed.event.status is OutboxEventStatus.FAILED
+    assert failed.event.retry_count == 1
+    assert retryable == (failed.event,)
+    assert dead_lettered.decision is OutboxDeliveryDecision.DEAD_LETTERED
+    assert dead_lettered.event is not None
+    assert dead_lettered.event.status is OutboxEventStatus.DEAD_LETTER
+    assert dead_lettered.event.retry_count == 2
+    assert delivered == ()
+    assert published_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED
+
+
+def test_outbox_delivery_marks_event_published_once() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:outbox-published:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+
+    published = repository.mark_outbox_event_published(
+        event.event_id,
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    second = repository.mark_outbox_event_published(
+        event.event_id,
+        published_at_utc=datetime(2026, 6, 21, 10, 2, tzinfo=UTC),
+    )
+
+    assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert published.event is not None
+    assert published.event.status is OutboxEventStatus.PUBLISHED
+    assert published.event.published_at_utc == datetime(2026, 6, 21, 10, 1, tzinfo=UTC)
+    assert published.event.failure_reason is None
+    assert second.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
+    assert repository.outbox_events_for_delivery() == ()
+
+
+def test_outbox_failure_reason_rejects_sensitive_identifiers() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:outbox-sensitive:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+
+    with pytest.raises(ValueError, match="sensitive keys"):
+        repository.mark_outbox_event_failed(
+            event.event_id,
+            failure_reason="portfolio_id leaked in downstream error",
         )
 
 

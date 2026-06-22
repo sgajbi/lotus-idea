@@ -21,6 +21,7 @@ from app.domain import (
     HighCashSignalPolicy,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    OutboxDeliveryDecision,
     OutboxEventStatus,
     ReasonCode,
     ReportEvidencePackCommand,
@@ -325,6 +326,44 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
         recovered.report_evidence_pack_candidates["report-evidence-pack-001"]
         == approved.candidate_id
     )
+
+
+def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:outbox-delivery",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(PostgresIdeaRepository(connection).snapshot().outbox_events.values()))
+
+    failed = repository.mark_outbox_event_failed(
+        event.event_id,
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
+    retryable = PostgresIdeaRepository(connection).outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+    )
+    published = PostgresIdeaRepository(connection).mark_outbox_event_published(
+        event.event_id,
+        published_at_utc=EVALUATED_AT + timedelta(minutes=1),
+    )
+    reloaded = PostgresIdeaRepository(connection).snapshot().outbox_events[event.event_id]
+
+    assert failed.decision is OutboxDeliveryDecision.ACCEPTED
+    assert failed.event is not None
+    assert failed.event.status is OutboxEventStatus.FAILED
+    assert retryable == (failed.event,)
+    assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert reloaded.status is OutboxEventStatus.PUBLISHED
+    assert reloaded.published_at_utc == EVALUATED_AT + timedelta(minutes=1)
+    assert reloaded.failure_reason is None
 
 
 def test_postgres_repository_ignores_orphan_detail_rows_during_hydration() -> None:

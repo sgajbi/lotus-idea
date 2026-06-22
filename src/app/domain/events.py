@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 import hashlib
@@ -30,8 +30,9 @@ FORBIDDEN_OUTBOX_PAYLOAD_KEYS = frozenset(
 
 class OutboxEventStatus(StrEnum):
     PENDING = "pending"
-    PUBLISHED = "published"
     FAILED = "failed"
+    DEAD_LETTER = "dead_letter"
+    PUBLISHED = "published"
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,10 @@ class OutboxEventRecord:
             _require_aware_utc(self.published_at_utc, "published_at_utc")
         if self.retry_count < 0:
             raise ValueError("retry_count cannot be negative")
+        if self.status is OutboxEventStatus.PUBLISHED and self.published_at_utc is None:
+            raise ValueError("published_at_utc is required for published outbox events")
+        if self.status in {OutboxEventStatus.FAILED, OutboxEventStatus.DEAD_LETTER}:
+            _require_text(self.failure_reason or "", "failure_reason")
         leaked = FORBIDDEN_OUTBOX_PAYLOAD_KEYS.intersection(self.payload)
         if leaked:
             raise ValueError(
@@ -102,6 +107,44 @@ def build_candidate_outbox_event(
     )
 
 
+def mark_outbox_event_published(
+    event: OutboxEventRecord,
+    *,
+    published_at_utc: datetime,
+) -> OutboxEventRecord:
+    _require_aware_utc(published_at_utc, "published_at_utc")
+    return replace(
+        event,
+        status=OutboxEventStatus.PUBLISHED,
+        published_at_utc=published_at_utc,
+        failure_reason=None,
+    )
+
+
+def mark_outbox_event_failed(
+    event: OutboxEventRecord,
+    *,
+    failure_reason: str,
+    max_retry_count: int,
+) -> OutboxEventRecord:
+    _require_text(failure_reason, "failure_reason")
+    _require_positive(max_retry_count, "max_retry_count")
+    _reject_sensitive_failure_reason(failure_reason)
+    retry_count = event.retry_count + 1
+    status = (
+        OutboxEventStatus.DEAD_LETTER
+        if retry_count >= max_retry_count
+        else OutboxEventStatus.FAILED
+    )
+    return replace(
+        event,
+        status=status,
+        published_at_utc=None,
+        failure_reason=failure_reason,
+        retry_count=retry_count,
+    )
+
+
 def _event_id(
     *,
     event_type: str,
@@ -129,8 +172,20 @@ def _require_text(value: str, field_name: str) -> None:
         raise ValueError(f"{field_name} is required")
 
 
+def _require_positive(value: int, field_name: str) -> None:
+    if value <= 0:
+        raise ValueError(f"{field_name} must be positive")
+
+
 def _require_aware_utc(value: datetime, field_name: str) -> None:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must be timezone-aware")
     if value.utcoffset() != UTC.utcoffset(value):
         raise ValueError(f"{field_name} must be UTC")
+
+
+def _reject_sensitive_failure_reason(failure_reason: str) -> None:
+    normalized = failure_reason.lower()
+    leaked = sorted(key for key in FORBIDDEN_OUTBOX_PAYLOAD_KEYS if key in normalized)
+    if leaked:
+        raise ValueError(f"Outbox failure reason contains sensitive keys: {', '.join(leaked)}")

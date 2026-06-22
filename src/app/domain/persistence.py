@@ -9,7 +9,13 @@ from types import MappingProxyType
 from typing import Any, Mapping
 
 from app.domain.audit import AuditEvent
-from app.domain.events import OutboxEventRecord, build_candidate_outbox_event
+from app.domain.events import (
+    OutboxEventRecord,
+    OutboxEventStatus,
+    build_candidate_outbox_event,
+    mark_outbox_event_failed,
+    mark_outbox_event_published,
+)
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
 from app.domain.ideas import (
     EvidenceFreshness,
@@ -77,6 +83,19 @@ class EvidencePackPersistenceDecision(StrEnum):
     REPLAYED = "replayed"
     CONFLICT = "conflict"
     NOT_FOUND = "not_found"
+
+
+class OutboxDeliveryDecision(StrEnum):
+    ACCEPTED = "accepted"
+    NOT_FOUND = "not_found"
+    ALREADY_PUBLISHED = "already_published"
+    DEAD_LETTERED = "dead_lettered"
+
+
+@dataclass(frozen=True)
+class OutboxDeliveryResult:
+    decision: OutboxDeliveryDecision
+    event: OutboxEventRecord | None
 
 
 @dataclass(frozen=True)
@@ -862,6 +881,94 @@ class InMemoryIdeaRepository:
             audit_event=result.audit_event,
         )
 
+    def outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+    ) -> tuple[OutboxEventRecord, ...]:
+        _require_positive(limit, "limit")
+        _require_positive(max_retry_count, "max_retry_count")
+        delivery_ready = [
+            event
+            for event in self._outbox_events.values()
+            if event.status is OutboxEventStatus.PENDING
+            or (event.status is OutboxEventStatus.FAILED and event.retry_count < max_retry_count)
+        ]
+        return tuple(
+            sorted(delivery_ready, key=lambda event: (event.occurred_at_utc, event.event_id))[
+                :limit
+            ]
+        )
+
+    def mark_outbox_event_published(
+        self,
+        event_id: str,
+        *,
+        published_at_utc: datetime,
+    ) -> OutboxDeliveryResult:
+        _require_text(event_id, "event_id")
+        _require_aware_utc(published_at_utc, "published_at_utc")
+        event = self._outbox_events.get(event_id)
+        if event is None:
+            return OutboxDeliveryResult(
+                decision=OutboxDeliveryDecision.NOT_FOUND,
+                event=None,
+            )
+        if event.status is OutboxEventStatus.PUBLISHED:
+            return OutboxDeliveryResult(
+                decision=OutboxDeliveryDecision.ALREADY_PUBLISHED,
+                event=event,
+            )
+        if event.status is OutboxEventStatus.DEAD_LETTER:
+            return OutboxDeliveryResult(
+                decision=OutboxDeliveryDecision.DEAD_LETTERED,
+                event=event,
+            )
+        updated = mark_outbox_event_published(event, published_at_utc=published_at_utc)
+        self._outbox_events[event_id] = updated
+        return OutboxDeliveryResult(
+            decision=OutboxDeliveryDecision.ACCEPTED,
+            event=updated,
+        )
+
+    def mark_outbox_event_failed(
+        self,
+        event_id: str,
+        *,
+        failure_reason: str,
+        max_retry_count: int = 3,
+    ) -> OutboxDeliveryResult:
+        _require_text(event_id, "event_id")
+        event = self._outbox_events.get(event_id)
+        if event is None:
+            return OutboxDeliveryResult(
+                decision=OutboxDeliveryDecision.NOT_FOUND,
+                event=None,
+            )
+        if event.status is OutboxEventStatus.PUBLISHED:
+            return OutboxDeliveryResult(
+                decision=OutboxDeliveryDecision.ALREADY_PUBLISHED,
+                event=event,
+            )
+        if event.status is OutboxEventStatus.DEAD_LETTER:
+            return OutboxDeliveryResult(
+                decision=OutboxDeliveryDecision.DEAD_LETTERED,
+                event=event,
+            )
+        updated = mark_outbox_event_failed(
+            event,
+            failure_reason=failure_reason,
+            max_retry_count=max_retry_count,
+        )
+        self._outbox_events[event_id] = updated
+        decision = (
+            OutboxDeliveryDecision.DEAD_LETTERED
+            if updated.status is OutboxEventStatus.DEAD_LETTER
+            else OutboxDeliveryDecision.ACCEPTED
+        )
+        return OutboxDeliveryResult(decision=decision, event=updated)
+
     def snapshot(self) -> IdeaRepositorySnapshot:
         return IdeaRepositorySnapshot(
             candidate_records=self._candidate_records,
@@ -982,6 +1089,11 @@ def _audit_event(
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_positive(value: int, field_name: str) -> None:
+    if value <= 0:
+        raise ValueError(f"{field_name} must be positive")
 
 
 def _require_aware_utc(value: datetime, field_name: str) -> None:

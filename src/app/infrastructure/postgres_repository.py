@@ -29,6 +29,7 @@ from app.domain.persistence import (
     IdeaRepositorySnapshot,
     LifecycleHistoryEntry,
     LifecyclePersistenceResult,
+    OutboxDeliveryResult,
     ReviewPersistenceResult,
 )
 from app.domain.report_evidence import (
@@ -265,6 +266,46 @@ class PostgresIdeaRepository:
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
+            )
+        )
+
+    def outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+    ) -> tuple[OutboxEventRecord, ...]:
+        repository = InMemoryIdeaRepository(self.snapshot())
+        return repository.outbox_events_for_delivery(
+            limit=limit,
+            max_retry_count=max_retry_count,
+        )
+
+    def mark_outbox_event_published(
+        self,
+        event_id: str,
+        *,
+        published_at_utc: datetime,
+    ) -> OutboxDeliveryResult:
+        return self._mutate(
+            lambda repository: repository.mark_outbox_event_published(
+                event_id,
+                published_at_utc=published_at_utc,
+            )
+        )
+
+    def mark_outbox_event_failed(
+        self,
+        event_id: str,
+        *,
+        failure_reason: str,
+        max_retry_count: int = 3,
+    ) -> OutboxDeliveryResult:
+        return self._mutate(
+            lambda repository: repository.mark_outbox_event_failed(
+                event_id,
+                failure_reason=failure_reason,
+                max_retry_count=max_retry_count,
             )
         )
 
