@@ -56,10 +56,11 @@ lifecycle, AI explanation, AI explanation readiness, review-action, and
 feedback API foundations are certified for internal contract evolution and
 operator supportability diagnostics, and the first Gateway publication is
 read-only integration foundation. The implementation-proof readiness diagnostic
-reports blockers. The downstream realization readiness diagnostic reports
-blockers and workflow counts only. The runtime trust telemetry preview reports
-aggregate active-repository counts only. None of these diagnostics is
-Workbench proof, data-product certification, AI runtime proof, downstream
+reports blockers, including outbox-delivery blockers. The downstream
+realization readiness diagnostic reports blockers and workflow counts only. The
+runtime trust telemetry preview reports aggregate active-repository counts
+only. None of these diagnostics is Workbench proof, data-product
+certification, AI runtime proof, external broker publication, downstream
 execution proof, live implementation proof, or a client-demo feature claim.
 
 | Capability area | Current posture | Promotion boundary |

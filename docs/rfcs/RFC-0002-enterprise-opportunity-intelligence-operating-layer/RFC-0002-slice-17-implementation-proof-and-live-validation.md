@@ -30,6 +30,11 @@ Prove the complete supported opportunity journey end to end.
    Advise, Manage, Report, Render, and Archive blockers with current
    conversion/report workflow counts, while preserving the no-downstream-call
    and no-supported-feature boundary.
+7. `GET /api/v1/outbox-delivery/readiness` now supplies the outbox-delivery
+   proof family used by the aggregate diagnostic. It reports broker,
+   downstream-consumer, platform mesh-event, Gateway/Workbench, and
+   supported-feature blockers without publishing events, exposing event
+   identifiers, exposing raw idempotency keys, or exposing broker payloads.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -51,14 +56,19 @@ without relying on chat memory.
 
 1. No canonical live proof run has been captured for the full opportunity
    journey.
-2. Workbench and downstream realization proof remain pending.
-3. Platform data-mesh certification and runtime trust telemetry remain pending.
+2. Workbench, external broker publication, and downstream realization proof
+   remain pending.
+3. Platform data-mesh certification, runtime trust telemetry, and mesh event
+   certification remain pending.
 4. Supported-feature promotion remains blocked until the readiness diagnostic
    reports no blockers and evidence is merged to `main`.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close
 the downstream proof gap.
+The outbox-delivery readiness diagnostic does the same for broker and event
+delivery posture; it does not close the external publication or downstream
+consumer proof gap.
 
 ## Acceptance Gate
 

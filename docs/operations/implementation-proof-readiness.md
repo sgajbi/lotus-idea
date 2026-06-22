@@ -20,9 +20,10 @@ It aggregates current evidence and blockers across:
 3. AI-assisted explanation governance,
 4. data-mesh producer and consumer certification,
 5. source-safe runtime trust telemetry preview,
-6. Workbench product realization,
-7. downstream Advise, Manage, Report, Render, and Archive realization,
-8. supported-feature promotion.
+6. internal outbox delivery foundation,
+7. Workbench product realization,
+8. downstream Advise, Manage, Report, Render, and Archive realization,
+9. supported-feature promotion.
 
 ## What It Proves
 
@@ -38,10 +39,11 @@ It returns:
 4. AI explanation readiness posture,
 5. data-mesh readiness posture,
 6. runtime trust telemetry preview posture,
-7. Workbench realization blockers,
-8. downstream realization blockers,
-9. supported-feature promotion blockers,
-10. source-of-truth implementation paths.
+7. outbox delivery readiness posture,
+8. Workbench realization blockers,
+9. downstream realization blockers,
+10. supported-feature promotion blockers,
+11. source-of-truth implementation paths.
 
 ## What It Does Not Prove
 
@@ -71,9 +73,11 @@ validated through the owning repositories and platform gates:
 1. live Core source-ingestion proof,
 2. scheduled worker deployment proof,
 3. certified runtime trust telemetry and platform mesh certification,
-4. Workbench panel and browser proof,
-5. downstream Advise, Manage, Report, Render, and Archive realization,
-6. supported-feature promotion evidence.
+4. external broker publication and downstream consumer contracts,
+5. platform mesh event certification for outbox publication,
+6. Workbench panel and browser proof,
+7. downstream Advise, Manage, Report, Render, and Archive realization,
+8. supported-feature promotion evidence.
 
 ## Response Shape
 
@@ -81,16 +85,16 @@ The success response is intentionally aggregate and source-safe:
 
 | Field | Meaning |
 | --- | --- |
-| `proofPosture` | Aggregate RFC-0002 proof state |
-| `sourceIngestion` | Source-ingestion configuration and certification blockers |
-| `advisorQueue` | Advisor queue supportability blockers |
-| `aiExplanation` | AI explanation guardrail and runtime blockers |
-| `dataMesh` | Data-product and mesh certification blockers |
-| `runtimeTrustTelemetryPreview` | Source-safe aggregate runtime telemetry preview and certification blockers |
-| `workbenchRealization` | Gateway/Workbench product proof blockers |
-| `downstreamRealization` | Advise, Manage, Report, Render, and Archive blockers |
-| `supportedFeaturePromotion` | Supported-feature promotion blockers |
-| `sourceOfTruth` | Implementation and RFC paths that define current behavior |
+| `readinessStatus` | Aggregate RFC-0002 proof state, currently `blocked` |
+| `supportabilityStatus` | Aggregate certification posture, currently `not_certified` |
+| `capabilityCount` | Number of proof families represented in `capabilities` |
+| `blockedCapabilityCount` | Number of proof families still blocked by evidence gaps |
+| `overallBlockers` | Source-safe blocker codes across all proof families |
+| `sourceOfTruth` | Implementation, RFC, supported-feature, demo-claim, and endpoint-ledger paths |
+| `capabilities[]` | Capability-level readiness records for each proof family |
+| `capabilities[].capabilityId` | Stable proof-family identifier such as `source-ingestion`, `outbox-delivery`, or `downstream-realization` |
+| `capabilities[].evidenceRefs` | Source-safe implementation and endpoint references |
+| `capabilities[].blockers` | Source-safe blocker codes for that capability family |
 
 ## Example
 
@@ -109,9 +113,13 @@ The endpoint returns aggregate capability posture only. It does not expose:
 3. client identifiers,
 4. source routes,
 5. source payloads,
-6. request or response bodies,
-7. raw entitlement failures,
-8. trace or correlation identifiers.
+6. outbox event identifiers,
+7. aggregate identifiers,
+8. raw idempotency keys,
+9. broker payloads,
+10. request or response bodies,
+11. raw entitlement failures,
+12. trace or correlation identifiers.
 
 ## Evidence
 
