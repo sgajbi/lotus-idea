@@ -62,6 +62,7 @@ class IdeaOperation(StrEnum):
     CONVERSION_INTENT = "conversion_intent"
     CONVERSION_OUTCOME = "conversion_outcome"
     REPORT_EVIDENCE_PACK = "report_evidence_pack"
+    OUTBOX_DELIVERY_READINESS_READ = "outbox_delivery_readiness_read"
     DOWNSTREAM_REALIZATION_READINESS_READ = "downstream_realization_readiness_read"
     MESH_READINESS_READ = "mesh_readiness_read"
     MESH_TRUST_TELEMETRY_PREVIEW_READ = "mesh_trust_telemetry_preview_read"

@@ -440,6 +440,33 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/outbox-delivery/readiness",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return source-safe operator readiness for the internal outbox delivery foundation, including aggregate outbox status counts and broker/downstream certification blockers.",
+      "when_to_use": "Use for internal platform/operator validation when a caller has idea.outbox-delivery.readiness.read capability and needs aggregate outbox backlog posture before any broker adapter or downstream consumer proof exists.",
+      "when_not_to_use": "Do not use as external broker publication proof, downstream delivery proof, platform mesh event certification, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/outbox-delivery/readiness with X-Caller-Roles: operator and X-Caller-Capabilities: idea.outbox-delivery.readiness.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"durableStorageBacked\":false,\"externalBrokerConfigured\":false,\"deliveryReadyCount\":0,\"maxRetryCount\":3,\"statusCounts\":{\"pendingCount\":0,\"failedCount\":0,\"publishedCount\":0,\"deadLetterCount\":0,\"totalCount\":0},\"sourceOfTruth\":{\"outbox_delivery\":\"src/app/application/outbox_delivery.py\",\"outbox_readiness\":\"src/app/application/outbox_delivery_readiness.py\",\"repository_port\":\"src/app/ports/idea_repository.py\"},\"configurationBlockers\":[\"outbox_broker_not_configured\"],\"certificationBlockers\":[\"external_broker_publisher_missing\",\"downstream_consumer_contracts_missing\",\"platform_mesh_event_contract_missing\",\"gateway_workbench_proof_missing\",\"supported_feature_promotion_missing\"],\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.outbox-delivery.readiness.read capability."
+      ],
+      "test_evidence": [
+        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_reports_blocked_foundation_posture",
+        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_config",
+        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_rejects_invalid_retry_limit",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_requires_operator_permission",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_emits_not_certified_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/data-mesh/readiness",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
