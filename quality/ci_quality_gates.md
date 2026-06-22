@@ -21,14 +21,15 @@ Blocking scaffold commands:
 12. `make migration-contract-gate`
 13. `make migration-execution-gate`
 14. `make source-ingestion-worker-check`
-15. `make implementation-proof-readiness-check`
-16. `make supported-features-gate`
-17. `make endpoint-certification-gate`
-18. `make postgres-integration-gate`
-19. `make openapi-gate`
-20. `make coverage-gate`
-21. `make security-audit`
-22. `make docker-build`
+15. `make source-ingestion-live-proof-contract-gate`
+16. `make implementation-proof-readiness-check`
+17. `make supported-features-gate`
+18. `make endpoint-certification-gate`
+19. `make postgres-integration-gate`
+20. `make openapi-gate`
+21. `make coverage-gate`
+22. `make security-audit`
+23. `make docker-build`
 
 Cleanup support command:
 
@@ -49,6 +50,7 @@ supported-feature promotion control, endpoint certification, data-mesh contract 
 downstream realization contract validation, migration contract validation,
 migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,
+source-ingestion live-proof contract validation,
 implementation-proof readiness artifact generation, source-observability
 contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job

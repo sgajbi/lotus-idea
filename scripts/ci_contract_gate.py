@@ -37,6 +37,7 @@ REQUIRED_TARGETS = (
     "migration-contract-gate",
     "migration-execution-gate",
     "source-ingestion-worker-check",
+    "source-ingestion-live-proof-contract-gate",
     "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
     "endpoint-certification-gate",
@@ -68,6 +69,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) migration-contract-gate",
     "$(MAKE) migration-execution-gate",
     "$(MAKE) source-ingestion-worker-check",
+    "$(MAKE) source-ingestion-live-proof-contract-gate",
     "$(MAKE) runtime-trust-telemetry-snapshot-check",
     "$(MAKE) supported-features-gate",
     "$(MAKE) endpoint-certification-gate",
@@ -263,6 +265,16 @@ def validate_makefile(makefile: str) -> list[str]:
         errors.append(
             "Makefile source-ingestion-worker-check target must run "
             "`scripts/source_ingestion_worker_contract_gate.py`"
+        )
+    source_ingestion_live_proof_check = _target_block(
+        makefile, "source-ingestion-live-proof-contract-gate"
+    )
+    if "scripts/source_ingestion_live_proof_contract_gate.py" not in (
+        source_ingestion_live_proof_check
+    ):
+        errors.append(
+            "Makefile source-ingestion-live-proof-contract-gate target must run "
+            "`scripts/source_ingestion_live_proof_contract_gate.py`"
         )
     runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
     if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
