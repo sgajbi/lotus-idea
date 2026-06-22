@@ -631,6 +631,7 @@ owned by upstream services.
     `make postgres-integration-gate`
 29. apply migrations with configured PostgreSQL URL: `make migrate`
 30. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+31. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -680,6 +681,11 @@ artifacts, build outputs, dependency directories, local environment files, log
 files, or local database files are committed. This preserves a clean
 bank-buyable source boundary: durable implementation, contract, test, evidence,
 and documentation truth belongs in Git; local runtime byproducts do not.
+`make clean` removes ignored local test, coverage, build, HTML coverage, and
+Python bytecode cache residue through `scripts/clean_generated_artifacts.py`
+without traversing `.git`, `.venv`, or dependency cache directories.
+`make ci-contract-gate` requires the Makefile cleanup target to use that script
+so future agentic cleanup changes remain reviewable and test-backed.
 
 `make maintainability-gate` is blocking through `make lint`. It enforces the
 current measured enterprise-quality thresholds for Python size hotspots:

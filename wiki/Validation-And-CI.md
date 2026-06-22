@@ -59,6 +59,7 @@ make openapi-gate
 make architecture-boundary-gate
 make architecture-boundary-report
 make quality-baseline
+make clean
 ```
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
@@ -180,6 +181,9 @@ The repository-hygiene gate blocks tracked generated artifacts and local runtime
 Python cache files, coverage outputs, build/dist outputs, dependency directories, local
 environment files, logs, and local databases. It is intentionally based on `git ls-files` so
 developers can keep ignored local working files while CI protects the durable source tree.
+Use `make clean` to remove ignored local residue from tests, coverage, build output, and Python
+bytecode caches. The cleanup utility prunes `.git`, `.venv`, and dependency cache directories, and
+the CI contract gate fails if the Makefile cleanup path is weakened or removed.
 
 The maintainability gate blocks oversized Python files/functions in source, test, and script
 trees. It is calibrated above the current baseline so new agentic work must split or refactor

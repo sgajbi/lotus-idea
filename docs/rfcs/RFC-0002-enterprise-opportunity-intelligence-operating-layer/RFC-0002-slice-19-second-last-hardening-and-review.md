@@ -86,6 +86,23 @@ This slice also hardens repository hygiene:
 5. README, repository context, enterprise-readiness guidance, quality
    scorecard, and wiki source now describe the new source-tree hygiene control.
 
+This slice also hardens generated-artifact cleanup:
+
+1. `scripts/clean_generated_artifacts.py` provides a testable cleanup utility
+   for ignored Python bytecode caches, local coverage files, build/dist output,
+   and HTML coverage output while pruning `.git`, `.venv`, and dependency
+   cache directories.
+2. `make clean` now calls the utility instead of an inline one-off command, so
+   future cleanup behavior can be unit-tested and reviewed.
+3. `scripts/ci_contract_gate.py` requires the Makefile cleanup target to call
+   the governed utility, preventing future agents from weakening local cleanup
+   ergonomics while leaving repository hygiene claims in place.
+4. `tests/unit/test_clean_generated_artifacts.py` covers cleanup planning,
+   deletion behavior, and pruned-directory safety.
+5. README, repository context, enterprise-readiness guidance, CI quality guide,
+   quality scorecard, and wiki source now describe the cleanup path without
+   promoting any product capability.
+
 This slice also hardens no-sensitive-content evidence guarding:
 
 1. `scripts/no_sensitive_content_guard.py` now exposes a testable
