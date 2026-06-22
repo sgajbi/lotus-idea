@@ -250,7 +250,13 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "sourceOfTruth": {
                             "conversion_workflow": "src/app/application/conversion_workflow.py",
                             "report_evidence_workflow": "src/app/application/report_evidence.py",
-                            "downstream_contract_plan": "src/app/application/downstream_realization_readiness.py",
+                            "downstream_contract_plan": (
+                                "contracts/downstream-realization/"
+                                "lotus-idea-downstream-contracts.v1.json"
+                            ),
+                            "downstream_contract_gate": (
+                                "scripts/downstream_realization_contract_gate.py"
+                            ),
                         },
                         "blockers": [
                             "advise_proposal_creation_adapter_missing",

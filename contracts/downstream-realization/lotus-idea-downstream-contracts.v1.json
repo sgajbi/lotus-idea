@@ -1,0 +1,80 @@
+{
+  "contract_id": "lotus-idea-downstream-realization-contract-plan",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "governed_by_rfcs": [
+    "RFC-0002"
+  ],
+  "lifecycle_status": "planned",
+  "supportability_status": "not_certified",
+  "route_existence_proven": false,
+  "downstream_execution_proven": false,
+  "supported_feature_promoted": false,
+  "source_of_truth": {
+    "readiness_builder": "src/app/application/downstream_realization_readiness.py",
+    "contract_loader": "src/app/application/downstream_realization_contracts.py",
+    "contract_gate": "scripts/downstream_realization_contract_gate.py",
+    "operations_runbook": "docs/operations/downstream-realization-readiness.md",
+    "rfc_slice_12": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
+    "rfc_slice_13": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md"
+  },
+  "contracts": [
+    {
+      "contract_id": "lotus-idea-to-lotus-advise-proposal-intake:v1",
+      "owner_repository": "lotus-advise",
+      "source_authority": "lotus-advise",
+      "target_route": "planned:lotus-advise-proposal-intake",
+      "route_fit_status": "not_certified",
+      "adapter_status": "planned",
+      "evidence_refs": [
+        "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
+      ],
+      "blockers": [
+        "advise_proposal_creation_adapter_missing",
+        "suitability_policy_authority_remains_lotus_advise",
+        "advise_live_contract_proof_missing"
+      ]
+    },
+    {
+      "contract_id": "lotus-idea-to-lotus-manage-action-intake:v1",
+      "owner_repository": "lotus-manage",
+      "source_authority": "lotus-manage",
+      "target_route": "planned:lotus-manage-action-intake",
+      "route_fit_status": "not_certified",
+      "adapter_status": "planned",
+      "evidence_refs": [
+        "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md"
+      ],
+      "blockers": [
+        "manage_action_register_adapter_missing",
+        "rebalance_execution_authority_remains_lotus_manage",
+        "manage_live_contract_proof_missing"
+      ]
+    },
+    {
+      "contract_id": "lotus-idea-to-lotus-report-evidence-pack-intake:v1",
+      "owner_repository": "lotus-report",
+      "source_authority": "lotus-report",
+      "target_route": "planned:lotus-report-idea-evidence-pack-intake",
+      "route_fit_status": "not_certified",
+      "adapter_status": "planned",
+      "evidence_refs": [
+        "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
+        "lotus-render",
+        "lotus-archive"
+      ],
+      "blockers": [
+        "dedicated_report_idea_evidence_intake_contract_missing",
+        "report_evidence_pack_materialization_missing",
+        "rendered_output_creation_missing",
+        "archive_record_creation_missing",
+        "client_publication_authority_blocked"
+      ]
+    }
+  ]
+}

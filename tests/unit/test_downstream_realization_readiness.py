@@ -39,6 +39,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
         "conversion_workflow",
         "report_evidence_workflow",
         "downstream_contract_plan",
+        "downstream_contract_gate",
         "rfc_slice_12",
         "rfc_slice_13",
     }

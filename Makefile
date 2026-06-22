@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check implementation-proof-readiness-check runtime-trust-telemetry-preview-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate implementation-truth-gate data-mesh-contract-gate downstream-realization-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check implementation-proof-readiness-check runtime-trust-telemetry-preview-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -26,6 +26,7 @@ lint:
 	$(MAKE) source-observability-contract-gate
 	$(MAKE) implementation-truth-gate
 	$(MAKE) data-mesh-contract-gate
+	$(MAKE) downstream-realization-contract-gate
 	$(MAKE) migration-contract-gate
 	$(MAKE) migration-execution-gate
 	$(MAKE) source-ingestion-worker-check
@@ -63,6 +64,9 @@ implementation-truth-gate:
 
 data-mesh-contract-gate:
 	$(VENV_PYTHON) scripts/data_mesh_contract_gate.py
+
+downstream-realization-contract-gate:
+	$(VENV_PYTHON) scripts/downstream_realization_contract_gate.py
 
 migration-contract-gate:
 	$(VENV_PYTHON) scripts/migration_contract_gate.py
