@@ -69,6 +69,8 @@ Current RFC-0002 implementation-start baseline:
    implementation-proof-readiness diagnostic now aggregates RFC-0002 blocker
    posture across source ingestion, advisor queue, AI explanation, data mesh,
    Workbench, downstream realization, and supported-feature promotion.
+   `make implementation-proof-readiness-check` generates the same source-safe
+   posture as repo-native automation evidence.
    Bounded read-only Gateway publication exists for advisor queue and
    candidate detail; Workbench, live source adapters, data-product
    certification, and supported-feature promotion remain planned.

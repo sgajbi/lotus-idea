@@ -14,11 +14,15 @@ Prove the complete supported opportunity journey end to end.
 2. `GET /api/v1/implementation-proof/readiness` exposes the snapshot as a
    certified internal operator endpoint with
    `idea.implementation-proof.readiness.read` capability enforcement.
-3. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
+3. `scripts/generate_implementation_proof_readiness.py` and
+   `make implementation-proof-readiness-check` generate the same source-safe
+   readiness snapshot as repo-native automation evidence without requiring the
+   HTTP service to run.
+4. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal operator diagnostic and preserves the no-live-proof,
    no-Gateway, no-Workbench, no-client-ready-publication, and
    no-supported-feature-promotion boundary.
-4. Unit and integration tests prove blocked posture, source-safe output,
+5. Unit and integration tests prove blocked posture, source-safe output,
    permission denial, timezone validation, unavailable-contract handling, and
    bounded `implementation_proof_readiness_read` operation events.
 

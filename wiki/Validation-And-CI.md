@@ -29,6 +29,7 @@ make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
+make implementation-proof-readiness-check
 make supported-features-gate
 make endpoint-certification-gate
 make postgres-integration-gate
@@ -45,6 +46,7 @@ OpenAPI quality, source-observability contract enforcement, implementation-truth
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest validation,
+implementation-proof readiness artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
 jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint.
 
@@ -95,19 +97,24 @@ Persistence adapter validation:
    `make source-ingestion-worker-check` prove the versioned run-once worker
    manifest contract and product-safe check-only summary without calling Core
    or writing repository state.
-7. `tests/unit/test_source_ingestion_readiness.py` and
+7. `tests/unit/test_generate_implementation_proof_readiness.py` and
+   `make implementation-proof-readiness-check` prove the aggregate RFC-0002
+   implementation-proof readiness artifact can be generated without starting
+   the service and without exposing candidate, portfolio, client, prompt, or
+   source payload identifiers.
+8. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
    `not_certified` operation events without calling Core.
-8. `tests/unit/test_review_queue_application.py`,
+9. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-9. `tests/unit/test_ai_explanation_readiness.py`,
+10. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
    readiness diagnostic for blocked model-risk posture, operator/capability
@@ -115,7 +122,7 @@ Persistence adapter validation:
    events without invoking `lotus-ai` or exposing prompts, provider payloads,
    candidate identifiers, source routes, portfolio identifiers, or client
    identifiers.
-10. Runtime API database wiring is opt-in and still requires deploy migration
+11. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.

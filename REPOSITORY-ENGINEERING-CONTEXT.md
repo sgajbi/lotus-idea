@@ -289,6 +289,10 @@ supported-feature promotion, emits bounded
 candidate identifiers, source payloads, Gateway/Workbench proof,
 data-product certification, client-ready publication, or supported-feature
 promotion.
+`scripts/generate_implementation_proof_readiness.py` and
+`make implementation-proof-readiness-check` now provide the same source-safe
+proof-readiness snapshot as repo-native automation evidence for CI, async runs,
+and operator handoff.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation plus bounded read-only Gateway publication for advisor queue and
@@ -593,10 +597,12 @@ owned by upstream services.
 24. migration execution dry-run gate: `make migration-execution-gate`
 25. run-once source-ingestion worker manifest gate:
     `make source-ingestion-worker-check`
-26. PostgreSQL runtime proof with configured integration URL:
+26. implementation proof readiness generator:
+    `make implementation-proof-readiness-check`
+27. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-27. apply migrations with configured PostgreSQL URL: `make migrate`
-28. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+28. apply migrations with configured PostgreSQL URL: `make migrate`
+29. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -616,6 +622,7 @@ enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest validation,
+implementation-proof readiness artifact generation,
 unit tests, integration tests, e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
 Docker build validation, bounded GitHub job timeouts, and no soft-failed
