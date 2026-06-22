@@ -1,367 +1,167 @@
 # lotus-idea
 
-`lotus-idea` is the Lotus wealth opportunity intelligence and idea lifecycle
-service. It detects governed private-banking opportunities from source-owned
-Lotus facts, ranks and explains candidate ideas, records review evidence, and
-orchestrates conversion into advisory, portfolio-management, reporting, and
-Workbench workflows.
+`lotus-idea` is the Lotus opportunity intelligence and idea lifecycle domain
+service for private-banking workflows. It turns source-owned Lotus evidence
+into governed opportunity candidates, review queues, feedback records, and
+conversion intent for downstream advisory, management, reporting, and Workbench
+flows.
 
 Service profile: `domain-service`
 
-Current status: scaffolded foundation, governance RFCs, the first pure domain
-model/lifecycle foundation, verified platform scaffold/wiki baseline evidence,
-an internal high-cash deterministic signal policy, the first Core source-port
-and conservative HTTP adapter foundation for high-cash evidence,
-an internal persistence/replay/idempotency/audit foundation, an internal
-high-cash evaluate-and-persist orchestration foundation, an internal
-Core-backed source-ingestion orchestration foundation with a manifest-backed
-run-once CLI, generated
-idempotency keys and accepted/replayed/conflict/blocked/suppressed/not-eligible
-outcome classification plus a bounded run-once batch worker foundation,
-deterministic scoring/review-queue projection and repository-snapshot queue
-orchestration foundation, an internal advisor review/feedback governance and
-workflow persistence foundation, and an internal AI governance
-foundation for redaction, verifier, fallback controls, and a certified internal
-AI explanation evaluator API plus a certified internal AI explanation
-readiness diagnostic for operator model-risk supportability checks. It also exposes the
-first certified internal high-cash signal evaluation and evaluate-and-persist
-API foundations for caller-supplied, source-owned Core evidence, certified
-internal candidate lifecycle, advisor queue, review-action, and feedback API
-foundations over persisted candidates, and an internal conversion-governance
-foundation plus certified internal conversion intent/outcome API foundations
-for review-gated downstream intent/outcome tracking. It now also has an
-internal source-safe candidate detail API foundation, an internal report
-evidence-pack request foundation plus a certified internal API for reviewed
-report conversion intents, a certified internal candidate evidence replay API
-foundation for source-ref hash replay posture, and the first bounded
-operation-event observability foundation across certified internal signal,
-persistence, candidate detail, evidence replay, lifecycle, AI explanation,
-AI explanation readiness, queue, queue-readiness, review, feedback, conversion,
-report evidence, and data-mesh-readiness APIs plus certified internal source-ingestion and advisor
-queue readiness diagnostics and an aggregate implementation-proof readiness
-diagnostic for operator configuration, proof, and certification blockers. It
-also exposes an internal source-safe runtime trust telemetry preview diagnostic
-for the proposed `IdeaCandidate:v1` data product, reporting aggregate active
-repository counts and certification blockers without data-product
-certification or supported-feature promotion. The first versioned persistence schema, rollback
-contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
-adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
-high-cash persistence plus the first internal review, feedback, conversion,
-report evidence-pack, advisor queue, source-ingestion replay/conflict recovery,
-and migration rollback/reapply recovery workflow now exist behind blocking
-gates. `lotus-gateway` now publishes bounded read-only routes for advisor
-queue and candidate detail while preserving `lotus-idea` source authority and
-blocking unsupported-feature promotion.
-Advisor queue reads are scope-aware through optional tenant, book, portfolio,
-and client filters over persisted candidate scope, but platform caller-context
-entitlement proof and Workbench product proof remain future slices.
-Runtime API state is process-local by default and becomes repository-durable
-only when `LOTUS_IDEA_DATABASE_URL` is configured after migrations are applied.
-No business feature is supported until the relevant
-RFC slice has full runtime evidence, tests, data-mesh posture, downstream
-proof, Workbench proof, and supported-feature registration.
+Repository context: [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
+
+## Current Posture
+
+`lotus-idea` is in RFC-0002 foundation implementation. The repository has
+certified internal API foundations, persistence and migration support,
+operator readiness diagnostics, source-safe observability, and CI guardrails.
+
+No external business feature is supported yet. Feature promotion still requires
+live source proof, certified runtime trust telemetry, data-mesh certification,
+Gateway and Workbench proof, downstream realization proof, supported-feature
+registration, and evidence on `main`.
+
+Current implemented foundations include:
+
+- high-cash signal evaluation over caller-supplied Core evidence,
+- Core-backed high-cash source ingestion orchestration and run-once worker CLI,
+- candidate persistence, replay, idempotency, lifecycle, review, and feedback,
+- advisor queue projection and queue readiness diagnostics,
+- AI explanation governance diagnostics without provider execution,
+- conversion intent, conversion outcome, and report evidence-pack request
+  foundations,
+- runtime trust telemetry preview and data-mesh readiness diagnostics,
+- PostgreSQL schema, migration, rollback, and repository adapter proof,
+- bounded `lotus-gateway` read-only routes for advisor queue and candidate
+  detail.
+
+The detailed current-state inventory lives in:
+
+- [docs/rfcs/README.md](docs/rfcs/README.md)
+- [docs/operations/api-certification.md](docs/operations/api-certification.md)
+- [docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md)
+- [wiki/Overview.md](wiki/Overview.md)
+- [wiki/Roadmap.md](wiki/Roadmap.md)
 
 ## Product Boundary
 
 `lotus-idea` owns:
 
-- idea detection policy, candidate lifecycle, scoring, ranking, and review state,
-- governed idea evidence, rationale, advisor feedback, and conversion intent,
-- source-authority mapping for idea inputs and downstream realization,
-- orchestration contracts for `lotus-advise`, `lotus-manage`, `lotus-report`,
-  `lotus-workbench`, and `lotus-gateway`.
+- idea detection policy, candidate lifecycle, scoring, ranking, review state,
+  and feedback,
+- governed idea evidence, rationale, source references, and replay posture,
+- conversion intent and outcome tracking for reviewed opportunities,
+- data-product declarations and readiness posture for idea candidates,
+- internal orchestration contracts for Advise, Manage, Report, Workbench,
+  Gateway, Render, Archive, and AI-adjacent workflows.
 
 `lotus-idea` does not own:
 
-- portfolio accounting, positions, transactions, or client/product master data,
-- official performance, risk, suitability, mandate, or compliance calculations,
-- trade execution, order routing, report rendering, document lifecycle, or AI
-  model infrastructure.
+- portfolio accounting, holdings, transactions, product master, or client master
+  records,
+- official performance, risk, suitability, mandate, or compliance
+  calculations,
+- trade execution, order routing, report rendering, document archiving, or AI
+  provider infrastructure,
+- client-ready publication or supported product claims before explicit
+  promotion evidence exists.
 
 ## Ecosystem Role
 
-Primary upstream services:
+Primary upstream source authorities:
 
-- `lotus-core`: portfolio, holding, instrument, mandate, client, and product facts.
-- `lotus-performance`: official return, attribution, benchmark, and performance
-  health analytics.
-- `lotus-risk`: official risk measures, stress/scenario outputs, risk flags, and
-  risk evidence.
-- `lotus-advise`: suitability, proposal, and advisory journey context.
-- `lotus-manage`: model portfolio, rebalance, mandate, and implementation context.
-- `lotus-report`: report pack and commentary context when idea evidence must be
-  reportable.
-- `lotus-ai`: provider-neutral AI workflows, prompt governance, model evaluation,
+- `lotus-core`: portfolio, holding, instrument, mandate, client, and product
+  facts.
+- `lotus-performance`: returns, attribution, benchmark, and performance-health
+  evidence.
+- `lotus-risk`: risk measures, scenario results, risk flags, and mandate risk
+  posture.
+- `lotus-advise`: suitability, proposal, policy, and advisory journey context.
+- `lotus-manage`: model portfolio, rebalance, mandate, and action-register
+  context.
+- `lotus-report`: report-pack and commentary context when reviewed idea
+  evidence must be reportable.
+- `lotus-ai`: provider-neutral AI workflow, prompt governance, model evaluation,
   RAG, and explanation assistance.
 
 Primary downstream consumers:
 
-- `lotus-gateway`: BFF/API composition for product surfaces.
+- `lotus-gateway`: API composition and BFF publication.
 - `lotus-workbench`: advisor and portfolio-manager idea review surfaces.
-- `lotus-advise`: conversion into proposals and suitability workflows.
-- `lotus-manage`: conversion into portfolio action, rebalance, and review flows.
-- `lotus-report`: inclusion of reviewed idea evidence in report packs.
+- `lotus-advise`: proposal and suitability workflow conversion.
+- `lotus-manage`: portfolio action, rebalance, and mandate review conversion.
+- `lotus-report`, `lotus-render`, and `lotus-archive`: report evidence,
+  rendering, and archive realization after review-gated publication.
 
 ## Data Mesh Posture
 
-`lotus-idea` is a planned data-mesh producer and consumer from day one.
-Repo-owned source truth starts in:
+`lotus-idea` is designed as a first-class data-mesh producer and consumer from
+day one. Repo-owned source truth starts in:
 
-- `contracts/domain-data-products/lotus-idea-products.v1.json`
-- `contracts/domain-data-products/lotus-idea-consumers.v1.json`
-- `contracts/domain-data-products/mesh-readiness.v1.json`
-- `docs/operations/mesh-readiness.md`
+- [contracts/domain-data-products/lotus-idea-products.v1.json](contracts/domain-data-products/lotus-idea-products.v1.json)
+- [contracts/domain-data-products/lotus-idea-consumers.v1.json](contracts/domain-data-products/lotus-idea-consumers.v1.json)
+- [contracts/domain-data-products/mesh-readiness.v1.json](contracts/domain-data-products/mesh-readiness.v1.json)
+- [docs/operations/mesh-readiness.md](docs/operations/mesh-readiness.md)
 
-All `lotus-idea` products remain proposed and not certified until runtime
-implementation, live trust telemetry, platform source-manifest inclusion,
-Gateway/Workbench discovery, and platform mesh certification pass.
+All products remain proposed and not certified until runtime behavior,
+telemetry, platform catalog inclusion, Gateway and Workbench discovery,
+certification evidence, and supported-feature promotion are complete.
 
-`GET /api/v1/data-mesh/readiness` is a certified internal operator diagnostic
-for that posture. It requires `idea.mesh.readiness.read` plus the `operator`
-role, reads the repo-owned contract files above, and returns the current
-`not_certified` status, explicit blockers, source-of-truth paths, proposed
-products, and `supportedFeaturePromoted=false`. It is not data-product
-certification and must not be exposed as Gateway/Workbench product discovery.
+## Architecture At A Glance
 
-`GET /api/v1/source-ingestion/readiness` is a certified internal operator
-diagnostic for the high-cash Core source-ingestion run-once worker posture. It
-requires `idea.source-ingestion.readiness.read` plus the `operator` role and
-reports manifest, Core base URL, durable repository configuration, and
-certification blockers. It does not call Core, certify live source ingestion,
-prove a scheduled worker deployment, certify a data product, expose
-Gateway/Workbench support, or promote a supported feature.
+```mermaid
+flowchart LR
+    Core["Source authorities<br/>Core / Performance / Risk / Advise / Manage / Report"]
+    Idea["lotus-idea<br/>candidate policy, lifecycle, evidence, review, conversion intent"]
+    Store["Active repository<br/>process-local or PostgreSQL"]
+    Gateway["lotus-gateway<br/>bounded read-only publication"]
+    Workbench["lotus-workbench<br/>planned product proof"]
+    Downstream["Advise / Manage / Report / Render / Archive<br/>planned realization proof"]
 
-`GET /api/v1/review-queues/advisor/readiness` is a certified internal operator
-diagnostic for advisor queue supportability. It requires
-`idea.review.queue.readiness.read` plus the `operator` role and reports only
-aggregate candidate counts, queue exclusion counts, durable-storage posture,
-and certification blockers. It does not expose candidate identifiers, inspect
-access-scope identifiers, certify a durable queue store, provide a
-Gateway/Workbench surface, certify a data product, or promote a supported
-feature.
+    Core -->|"source refs, freshness, evidence"| Idea
+    Idea -->|"idempotent records"| Store
+    Idea -->|"source-safe diagnostics"| Gateway
+    Gateway --> Workbench
+    Idea -->|"review-gated intent/outcome"| Downstream
+```
 
-`GET /api/v1/ai-explanations/readiness` is a certified internal operator
-diagnostic for AI explanation supportability. It requires
-`idea.ai-explanation.readiness.read` plus the `operator` role and reports
-guardrail availability, model-risk supportability posture, and certification
-blockers. It does not call `lotus-ai`, execute provider workflows, expose
-prompts or provider payloads, certify durable AI lineage, provide
-Gateway/Workbench support, certify a data product, or promote a supported
-feature.
-
-`GET /api/v1/downstream-realization/readiness` is a certified internal
-operator diagnostic for downstream realization supportability. It requires
-`idea.downstream-realization.readiness.read` plus the `operator` role and
-reports `lotus-idea` conversion intent, conversion outcome, and report
-evidence-pack request counts plus Advise, Manage, Report, Render, and Archive
-blockers. It does not call downstream services, create proposals, create manage
-actions, render or archive documents, authorize client-ready publication, or
-promote a supported feature.
-
-`GET /api/v1/implementation-proof/readiness` is a certified internal operator
-diagnostic for RFC-0002 implementation proof posture. It requires
-`idea.implementation-proof.readiness.read` plus the `operator` role and a
-timezone-aware `evaluatedAtUtc` query parameter. It aggregates source
-ingestion, advisor queue, AI explanation, data mesh, runtime trust telemetry
-preview, Workbench, downstream realization, and supported-feature promotion
-blockers. It does not expose candidate identifiers, source payloads,
-Gateway/Workbench proof, data-product certification, certified runtime trust
-telemetry, client-ready publication, or supported-feature promotion.
-
-`GET /api/v1/data-mesh/trust-telemetry/runtime-preview` is a certified
-internal operator diagnostic for pre-certification runtime trust telemetry. It
-requires `idea.mesh.trust-telemetry.preview.read` plus the `operator` role and
-reports aggregate candidate, source-authority, freshness, supportability,
-lifecycle, review, feedback, conversion, and report evidence-pack counts from
-the active repository provider. It does not expose candidate identifiers,
-source routes, evidence hashes, portfolio identifiers, client identifiers,
-platform source-manifest inclusion, Gateway/Workbench discovery, data-product
-certification, or supported-feature promotion.
-
-The first consumer dependency set is aligned to the RFC-0002 source map:
-`lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
-projection, and benchmark assignment; `lotus-performance` returns and mandate
-performance health; `lotus-risk` risk metrics and mandate/scenario context;
-`lotus-advise` proposal, policy, and copilot evidence; `lotus-manage` action
-register; and `lotus-report` client report evidence. These declarations are
-source-authority contracts only, not runtime certification.
-
-## Repository Map
-
-- `src/app/api/`: HTTP route modules, API DTO mapping, shared caller-header
-  parsing, and the repository provider used by certified internal API
-  foundations. The provider defaults to a process-local repository and selects
-  `PostgresIdeaRepository` when `LOTUS_IDEA_DATABASE_URL` is configured.
-- `src/app/application/`: use-case orchestration. The current first use cases
-  evaluate high-cash signals over caller-supplied Core evidence and over a
-  Core source port that fetches governed Core evidence, and internally persist
-  created candidates through the Slice 06 idempotency/audit repository contract.
-  `source_ingestion.py` adds the first internal high-cash source-ingestion
-  orchestration wrapper over the same Core source port and repository port,
-  including generated source-ingestion idempotency keys, batch decision counts,
-  and explicit accepted/replayed/conflict/blocked/suppressed/not-eligible
-  decisions. `source_ingestion_worker.py` adds a manifest-backed run-once
-  worker plan plus product-safe check-only and run summaries for operator
-  execution without source payload, portfolio id, raw idempotency-key, or
-  supported-feature leakage.
-  Internal candidate detail orchestration reads persisted repository snapshots
-  and returns source-safe detail projections with redacted source references,
-  workflow summaries, audit summary posture, and no downstream authority or
-  supported-feature promotion.
-  Internal candidate evidence replay orchestration compares caller-supplied
-  current source refs with persisted evidence hashes and returns matched,
-  stale-source, hash-mismatch, expired, or missing-candidate posture without
-  calling Core, exporting raw source routes, or granting downstream authority.
-  Internal review-queue orchestration projects persisted candidate snapshots
-  through the Slice 07 deterministic queue policy and certified internal advisor
-  queue API foundation. Internal candidate lifecycle orchestration records
-  idempotent lifecycle transitions through the Slice 06 repository
-  history/audit contract and certified internal lifecycle API foundation.
-  Internal review/feedback workflow orchestration records
-  governed decisions and feedback through the repository idempotency/audit
-  contract and certified internal review/feedback API foundations.
-  Internal AI governance orchestration evaluates deterministic fallback or
-  supplied workflow output against persisted candidate evidence without calling
-  providers, executing `lotus-ai` runtime workflows, persisting durable AI
-  lineage, or granting downstream authority.
-  Internal conversion workflow orchestration records review-gated conversion
-  intents and source-authorized outcomes through the repository
-  idempotency/audit contract and certified internal conversion API foundations.
-  Internal report evidence-pack orchestration records source-provenanced request
-  packages for reviewed report conversion intents without creating Report,
-  Render, or Archive records. Internal data-mesh-readiness orchestration reads
-  repo-owned contract truth and returns operator-facing planned/not-certified
-  posture without promoting products. Internal source-ingestion-readiness
-  orchestration returns source-safe operator posture for the high-cash
-  run-once worker configuration and certification blockers without calling
-  Core or promoting live source support. Internal review-queue-readiness
-  orchestration returns source-safe aggregate queue counts, exclusion counts,
-  durable-storage posture, and certification blockers without exposing
-  candidate identifiers, access scope, or supported queue posture. Internal
-  downstream-realization-readiness orchestration returns source-safe workflow
-  counts and downstream blockers without calling Advise, Manage, Report, Render,
-  or Archive or promoting support. Internal
-  implementation-proof-readiness orchestration aggregates current RFC-0002
-  capability proof blockers across source ingestion, queue, AI, data mesh,
-  Workbench, downstream realization, and supported-feature promotion without
-  exposing source payloads or promoting support.
-- `src/app/domain/`: framework-free idea domain models, policies, scoring,
-  lifecycle rules, review-queue projection, review governance, AI governance,
-  conversion governance, report evidence-pack request governance, internal
-  persistence records, replay posture, idempotency, and audit primitives.
-- `src/app/ports/`: source-owned service interfaces consumed by application
-  logic. `idea_repository.py` centralizes the repository workflow protocols for
-  candidate snapshots, persistence, evidence replay, lifecycle, review,
-  conversion, report evidence, and AI explanation reads; `core_sources.py`
-  defines the first Core high-cash evidence port.
-- `src/app/infrastructure/`: adapters and clients behind ports, including a
-  conservative Core high-cash source adapter that does not infer cash weight
-  when Core omits a source-reported value, PostgreSQL migration execution
-  helpers, and the tested `PostgresIdeaRepository` adapter.
-- `migrations/`: versioned SQL migration and rollback contracts. The first
-  contract defines the future durable idea repository schema; it can be applied
-  or rolled back with `make migrate` / `make migrate-rollback` when
-  `LOTUS_IDEA_DATABASE_URL` is set. Runtime API repository wiring uses the same
-  variable after the schema exists.
+- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, repository
+  provider selection, and certified internal API foundations.
+- `src/app/application/`: use-case orchestration for signal evaluation,
+  source ingestion, candidate detail, evidence replay, review queues,
+  lifecycle, feedback, AI diagnostics, conversion, report evidence, and
+  readiness views.
+- `src/app/domain/`: framework-free domain models, policies, scoring,
+  lifecycle, review, AI governance, conversion, report evidence, persistence
+  records, idempotency, replay, and audit primitives.
+- `src/app/ports/`: source-owned service and repository protocols.
+- `src/app/infrastructure/`: Core source adapter, migration helpers, and
+  PostgreSQL repository adapter.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
-  and bounded idea operation events. Certified internal high-cash, candidate
-  persistence, candidate detail, candidate evidence replay, lifecycle, AI
-  explanation, advisor queue, queue-readiness, review, feedback, conversion,
-  and report evidence-pack foundation APIs plus downstream-realization,
-  data-mesh, source-ingestion, and implementation-proof readiness diagnostics emit
-  product-safe operation logs and the `lotus_idea_operation_events_total`
-  metric without sensitive labels or supported-feature promotion.
-- `src/app/security/`: caller context and authorization policy.
-- `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.
-- `scripts/run_source_ingestion_worker.py`: run-once high-cash source-ingestion
-  worker CLI. `--check-only` validates a versioned manifest and is enforced by
-  `make source-ingestion-worker-check`; run mode requires
-  `LOTUS_CORE_BASE_URL` or `--core-base-url` and the active repository provider.
-- `contracts/`: proposed data-product declarations, consumer dependencies,
-  trust telemetry, access, SLO, and evidence-policy contracts.
-- `docs/architecture/adr/`: durable architecture decisions.
-- `docs/rfcs/`: governed implementation roadmap.
-- `supported-features/`: implementation-backed feature registry.
-- `wiki/`: in-repo GitHub wiki source.
+  and bounded operation events.
+- `src/app/security/`: caller context and fail-closed authorization policy.
+- `migrations/`: versioned SQL migration and rollback contracts.
+- `contracts/`: data-mesh, trust telemetry, SLO, access, and evidence-policy
+  contracts.
+- `docs/`: RFCs, standards, operations, architecture decisions, and runbooks.
+- `wiki/`: authored GitHub wiki source.
 
 ## Quick Start
 
 ```powershell
 make install
 make lint
-make ci-contract-gate
-make repository-hygiene-gate
-make maintainability-gate
-make documentation-contract-gate
-make quality-scorecard-gate
-make monetary-float-guard
-make no-sensitive-content-guard
-make source-observability-contract-gate
-make implementation-truth-gate
-make data-mesh-contract-gate
-make migration-contract-gate
-make migration-execution-gate
-make source-ingestion-worker-check
-make implementation-proof-readiness-check
-make runtime-trust-telemetry-preview-check
-make supported-features-gate
-make endpoint-certification-gate
-make postgres-integration-gate
 make typecheck
-make architecture-boundary-gate
-make architecture-boundary-report
-make quality-baseline
-make openapi-gate
 make check
-make ci
 ```
 
-`make endpoint-certification-gate` now requires certified business/operator
-endpoints to cite bounded operation-event test evidence in addition to
-OpenAPI, capability, 403, test-reference, and unsupported-boundary evidence.
-For the first bounded read-only Gateway publication routes, the same gate
-requires the endpoint ledger to cite the exact `lotus-gateway` route and keep
-Workbench proof, data-product certification, client-ready publication, and
-supported-feature promotion explicitly out of scope.
-
-Equivalent explicit commands:
-
-```powershell
-.venv\Scripts\python.exe -m pip install -e '.[dev]'
-.venv\Scripts\python.exe -m ruff check .
-.venv\Scripts\python.exe -m ruff format --check .
-.venv\Scripts\python.exe scripts/ci_contract_gate.py
-.venv\Scripts\python.exe scripts/repository_hygiene_gate.py
-.venv\Scripts\python.exe scripts/maintainability_gate.py
-.venv\Scripts\python.exe scripts/documentation_contract_gate.py
-.venv\Scripts\python.exe scripts/quality_scorecard_gate.py
-.venv\Scripts\python.exe scripts/check_monetary_float_usage.py
-.venv\Scripts\python.exe scripts/no_sensitive_content_guard.py
-.venv\Scripts\python.exe scripts/source_observability_contract_gate.py
-.venv\Scripts\python.exe scripts/implementation_truth_gate.py
-.venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
-.venv\Scripts\python.exe scripts/migration_contract_gate.py
-.venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
-.venv\Scripts\python.exe scripts/run_source_ingestion_worker.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --check-only
-.venv\Scripts\python.exe scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z
-.venv\Scripts\python.exe scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z
-.venv\Scripts\python.exe scripts/supported_features_gate.py
-.venv\Scripts\python.exe scripts/endpoint_certification_gate.py
-.venv\Scripts\python.exe -m pytest tests/integration/test_postgres_runtime_integration.py
-.venv\Scripts\python.exe -m mypy --config-file mypy.ini
-.venv\Scripts\python.exe scripts/openapi_quality_gate.py
-.venv\Scripts\python.exe -m pytest tests/unit tests/integration tests/e2e
-.venv\Scripts\python.exe scripts/coverage_gate.py
-```
-
-## Run Locally
+Run the service locally:
 
 ```powershell
 uvicorn app.main:app --reload --port 8330
 ```
 
-To run the API against PostgreSQL, apply migrations first and keep the database
-URL configured:
+Run with PostgreSQL after applying migrations:
 
 ```powershell
 $env:LOTUS_IDEA_DATABASE_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
@@ -369,101 +169,105 @@ make migrate
 uvicorn app.main:app --reload --port 8330
 ```
 
-To run the PostgreSQL runtime proof locally, provide an integration database URL.
-The test applies and rolls back the repository schema, persists a high-cash
-candidate through the API, resets the repository provider, proves idempotent
-replay from PostgreSQL, proves schema rollback/reapply restores a usable runtime
-contract, projects the advisor queue, records review approval and feedback,
-records report conversion intent/outcome state, records a report evidence-pack
-request, and proves internal Core-backed source-ingestion replay/conflict
-recovery through the PostgreSQL repository adapter. The run-once batch worker
-foundation is covered by unit tests; this command is still not live Core worker
-certification:
-
-```powershell
-$env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"
-$env:LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED = "1"
-make postgres-integration-gate
-```
-
-To validate the run-once source-ingestion worker manifest contract without
-calling Core or writing repository state:
-
-```powershell
-make source-ingestion-worker-check
-```
-
-To execute the worker against a configured Core service and active repository
-provider, provide a versioned manifest and Core base URL:
-
-```powershell
-$env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
-$env:LOTUS_CORE_BASE_URL = "http://localhost:8310"
-.venv\Scripts\python.exe scripts/run_source_ingestion_worker.py
-```
-
-Run mode is an internal run-once operator entrypoint only. It is not a scheduled
-daemon, deploy-pipeline worker proof, live Core certification, Gateway/Workbench
-support, data-product certification, or supported-feature promotion.
-Check-only and run summaries are intentionally bounded. Check-only reports
-manifest shape and item indexes only. Run mode reports decision counts,
-candidate ids when candidates are created, and idempotency-key presence. Neither
-summary prints raw source payloads, portfolio ids, or raw idempotency keys.
-
-To inspect source-ingestion run-once configuration and certification blockers
-without calling Core or writing repository state:
-
-```powershell
-curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.source-ingestion.readiness.read" http://localhost:8330/api/v1/source-ingestion/readiness
-```
-
-To inspect advisor queue supportability without exposing candidate identifiers
-or access scope:
-
-```powershell
-curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.review.queue.readiness.read" "http://localhost:8330/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
-```
-
-To inspect AI explanation model-risk supportability without invoking `lotus-ai`
-or exposing prompts, provider payloads, candidate identifiers, or source
-routes:
-
-```powershell
-curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.ai-explanation.readiness.read" http://localhost:8330/api/v1/ai-explanations/readiness
-```
-
-To inspect aggregate RFC-0002 implementation proof blockers without exposing
-candidate identifiers or source payloads:
-
-```powershell
-curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.implementation-proof.readiness.read" "http://localhost:8330/api/v1/implementation-proof/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
-```
-
-To inspect pre-certification runtime trust telemetry without exposing
-candidate identifiers, source routes, evidence hashes, or client/portfolio
-scope:
-
-```powershell
-curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.mesh.trust-telemetry.preview.read" "http://localhost:8330/api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=2026-06-21T10:10:00Z"
-```
-
-To inspect downstream realization blockers without calling Advise, Manage,
-Report, Render, or Archive:
-
-```powershell
-curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.downstream-realization.readiness.read" http://localhost:8330/api/v1/downstream-realization/readiness
-```
-
-Repository-backed endpoints report `durableStorageBacked=true` only in this
-configured posture. This does not promote data-product certification,
-Gateway/Workbench support, live source ingestion, downstream realization, or
-any supported business feature.
-
-## Docker
+Run the Docker entrypoint:
 
 ```powershell
 docker compose up --build
 ```
+
+## Common Commands
+
+| Command | Purpose |
+| --- | --- |
+| `make install` | Create `.venv` and install runtime plus dev dependencies. |
+| `make lint` | Run formatting, linting, and fast governance gates. |
+| `make typecheck` | Run `mypy` over the service. |
+| `make test-unit` | Run unit tests. |
+| `make test-integration` | Run integration tests. |
+| `make test-e2e` | Run e2e tests. |
+| `make openapi-gate` | Validate OpenAPI quality. |
+| `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
+| `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
+| `make migration-contract-gate` | Validate migration contract structure. |
+| `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
+| `make source-ingestion-worker-check` | Validate the run-once source-ingestion manifest without calling Core. |
+| `make implementation-proof-readiness-check` | Generate source-safe RFC proof readiness evidence. |
+| `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
+| `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
+| `make check` | Run the local PR-grade gate set. |
+| `make ci` | Run the broader CI-equivalent local suite. |
+
+## Validation And CI Lanes
+
+```mermaid
+flowchart LR
+    Feature["Feature Lane<br/>lint, typecheck, unit, fast gates"]
+    PR["PR Merge Gate<br/>integration, coverage, Docker, Postgres proof"]
+    Main["Main Releasability<br/>post-merge release truth"]
+    Publish["Wiki and evidence publication<br/>after merge to main"]
+
+    Feature --> PR --> Main --> Publish
+```
+
+Feature-lane checks:
+
+```powershell
+make lint
+make typecheck
+make test-unit
+```
+
+PR-grade local checks:
+
+```powershell
+make check
+make postgres-integration-gate
+make security-audit
+make docker-build
+```
+
+Documentation and governance checks:
+
+```powershell
+make documentation-contract-gate
+make implementation-truth-gate
+make quality-scorecard-gate
+make supported-features-gate
+```
+
+The same controls are explained in:
+
+- [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md)
+- [quality/ci_quality_gates.md](quality/ci_quality_gates.md)
+- [quality/quality_scorecard.md](quality/quality_scorecard.md)
+
+## Runtime And Operations
+
+Process-local repository state is the default. Repository-durable API behavior
+is enabled only when `LOTUS_IDEA_DATABASE_URL` is configured and migrations have
+been applied.
+
+Operational entrypoints:
+
+- health: `/health`, `/health/live`, `/health/ready`
+- metrics: `/metrics`
+- API docs: `/docs` when running the local service
+- source ingestion readiness: `/api/v1/source-ingestion/readiness`
+- advisor queue readiness: `/api/v1/review-queues/advisor/readiness`
+- AI explanation readiness: `/api/v1/ai-explanations/readiness`
+- downstream realization readiness: `/api/v1/downstream-realization/readiness`
+- implementation proof readiness: `/api/v1/implementation-proof/readiness`
+- data-mesh readiness: `/api/v1/data-mesh/readiness`
+- runtime trust telemetry preview:
+  `/api/v1/data-mesh/trust-telemetry/runtime-preview`
+
+Operator details live in:
+
+- [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md)
+- [docs/operations/observability.md](docs/operations/observability.md)
+- [docs/operations/persistence.md](docs/operations/persistence.md)
+- [docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md)
+- [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md)
 
 ## Governance
 
@@ -471,85 +275,37 @@ Day-one governing standard:
 
 - `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
 
-`lotus-idea` must treat this as an active delivery contract from the first
-commit: supported claims require code, tests, CI, endpoint certification,
-security/dependency posture, documentation, wiki source, and operating evidence.
-`make implementation-truth-gate` blocks unqualified current-state README,
-operations, quality, and wiki claims that imply demo readiness, production
-support, certification, live source ingestion, Gateway/Workbench support, or
-client-ready publication while the supported-feature registry remains
-foundation-only. It also blocks stale scaffold-era underclaims in current-state
-demo documentation, such as saying no business workflow exists or that
-architecture-boundary enforcement is still report-only after implementation and
-CI evidence prove otherwise.
-Rebase auto-merge is allowed only with `LOTUS_AUTOMERGE_TOKEN` plus merged-PR
-Main Releasability dispatch so post-merge release evidence is produced on
-`main` by a non-suppressed merge actor. When the token is absent, the
-auto-merge helper emits an explicit warning and skips queuing auto-merge; use
-an authorized human or release actor for a manual rebase merge. GitHub workflow
-jobs must declare bounded `timeout-minutes` values, and critical lanes must not use
-`continue-on-error: true`; `make ci-contract-gate` blocks drift in those
-controls and rejects floating GitHub Action tags in favor of verified immutable
-action SHAs with version provenance comments. `make repository-hygiene-gate` is
-blocking through `make lint`;
-it prevents future agentic changes from committing generated Python cache,
-coverage, build, dependency, local environment, or local database artifacts.
-`make maintainability-gate` is also blocking through `make lint`;
-it prevents future agentic changes from adding oversized source, test, or
-script files/functions beyond the measured enterprise-quality thresholds.
-`make monetary-float-guard` is blocking through `make lint` with AST-backed
-precision checks; it fails money-like `float` annotations, literals, and
-conversions so private-banking amounts, prices, balances, rates, valuations,
-and P&L fields continue to use explicit decimal/domain types.
-`make no-sensitive-content-guard` is blocking through `make lint` and has
-focused pass/fail unit coverage; it scans local evidence, log, and output
-artifacts for sensitive marker names so future CI evidence cannot accidentally
-publish portfolio, client, account, holding, transaction, request-body, response-body,
-or raw-entitlement-failure material.
-`make source-observability-contract-gate` is also blocking through
-`make lint`; it prevents future application code from adding raw `print()`,
-direct Python logging, or low-level `log_event` bypasses outside the central
-observability module. Request diagnostics use route templates rather than raw
-URL paths.
-`make documentation-contract-gate` is blocking through `make lint` as well;
-it prevents future agentic work from deleting, thinning, or hollowing out the
-README, repository context, standards, runbooks, RFC index, quality scorecard,
-evidence guide, and wiki pages that operators and implementation agents need
-to follow the bank-buyable contract. It also enforces a polished operator-doc
-profile for proof and readiness guides, including current-truth tables,
-explicit proof and non-proof boundaries, blocker sections, response-shape
-tables, evidence links, and executable examples.
-`make quality-scorecard-gate` is also blocking through `make lint`; it keeps
-the bank-buyable control matrix aligned with implementation truth by enforcing
-approved status vocabulary, non-empty evidence/gap/next-slice cells, required
-evidence anchors, and stale scaffold-era underclaim detection.
+Local controls keep implementation claims grounded:
 
-- Bank-buyable contract:
-  `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
-- Backend refactoring and delivery playbook:
-  `lotus-platform/context/playbooks/ENTERPRISE-BACKEND-REFACTORING-INSTRUCTIONS.md`
-- Repository context: `REPOSITORY-ENGINEERING-CONTEXT.md`
-- Demo claim ledger: `docs/demo/demo-claims.md`
-- API certification guide: `docs/operations/api-certification.md`
-- Observability guide: `docs/operations/observability.md`
-- AI governance guide: `docs/operations/ai-governance.md`
-- Downstream realization readiness guide:
-  `docs/operations/downstream-realization-readiness.md`
-- Implementation proof readiness guide:
-  `docs/operations/implementation-proof-readiness.md`
-- Conversion governance guide: `docs/operations/conversion-governance.md`
-- Report evidence-pack guide: `docs/operations/report-evidence-packs.md`
-- Data mesh readiness guide: `docs/operations/mesh-readiness.md`
-- Persistence and migration guide: `docs/operations/persistence.md`
-- Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
-- Migration contract gate: `scripts/migration_contract_gate.py`
-- Migration execution CLI: `scripts/run_migrations.py`
-- Source-ingestion worker CLI: `scripts/run_source_ingestion_worker.py`
-- Implementation proof readiness generator:
-  `scripts/generate_implementation_proof_readiness.py`
-- RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
-- RFC index: `docs/rfcs/README.md`
+- `make implementation-truth-gate` blocks unqualified claims that imply support,
+  certification, live source ingestion, Gateway or Workbench support, or
+  client-ready publication while no supported feature is promoted.
+- `make documentation-contract-gate` protects the README, repo context, docs,
+  quality pages, evidence guide, and wiki pages that operators and agents need.
+- `make source-observability-contract-gate` prevents raw logs, raw `print()`,
+  direct Python logging, and unsafe observability bypasses.
+- `make no-sensitive-content-guard` keeps local evidence and output artifacts
+  free of sensitive marker names.
+- `make repository-hygiene-gate` blocks generated cache, build, dependency,
+  environment, and database artifacts.
+- `make maintainability-gate` blocks oversized source, test, and script files
+  or functions beyond measured thresholds.
 
-The API certification guide mirrors the machine-readable endpoint certification
-ledger and must keep current foundation endpoints, required capabilities, and
-unsupported boundaries synchronized with implementation truth.
+## Documentation Map
+
+- [wiki/Home.md](wiki/Home.md): authored source for the GitHub wiki.
+- [wiki/Overview.md](wiki/Overview.md): product and current-state summary.
+- [wiki/Architecture.md](wiki/Architecture.md): architecture and flow summary.
+- [wiki/Integrations.md](wiki/Integrations.md): upstream and downstream map.
+- [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md): CI lane model and
+  branch hygiene policy.
+- [wiki/Supported-Features.md](wiki/Supported-Features.md): promotion status.
+- [docs/rfcs/README.md](docs/rfcs/README.md): RFC index and slice evidence.
+- [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md):
+  local enterprise-readiness posture.
+- [docs/operations/api-certification.md](docs/operations/api-certification.md):
+  certified internal endpoint inventory.
+
+Repo-local `wiki/` is the authored source of truth. The GitHub wiki is a
+publication target and should be updated through the platform wiki sync flow
+after merge to `main`.
