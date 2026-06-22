@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified internal API foundations including AI explanation evaluator only
+Status: Partially implemented - certified internal API foundations including source-safe candidate detail and AI explanation evaluator only
 
 ## Outcome
 
@@ -13,6 +13,7 @@ The first certified API foundations are:
 - `POST /api/v1/idea-signals/high-cash/evaluate`
 - `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`
 - `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`
+- `GET /api/v1/idea-candidates/{candidateId}`
 - `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`
 - `GET /api/v1/review-queues/advisor`
 - `POST /api/v1/idea-candidates/{candidateId}/review-actions`
@@ -39,6 +40,16 @@ requires `Idempotency-Key` and `idea.candidate.lifecycle.transition`, applies
 the canonical domain lifecycle transition graph, returns replay/conflict,
 not-found, and invalid-transition posture, and keeps
 `supportedFeaturePromoted=false`. `durableStorageBacked` follows the active
+repository provider.
+
+The candidate detail endpoint exposes a source-safe internal read projection
+over persisted candidate snapshots. It requires
+`idea.candidate.detail.read` capability or advisor/operator role, returns
+redacted source evidence, lifecycle history, review decisions, feedback,
+conversion intents/outcomes, report evidence-pack summaries, and audit summary
+posture, and does not expose source-system routes, raw source content hashes,
+downstream authority, Gateway/Workbench proof, data-product certification, or
+supported-feature promotion. `durableStorageBacked` follows the active
 repository provider.
 
 The review-action and feedback endpoints expose the Slice 08 internal workflow
@@ -101,24 +112,32 @@ Implementation files:
     OpenAPI examples, and route registration.
 11. `src/app/application/candidate_lifecycle.py`: application command and
     idempotency payload construction for lifecycle transitions.
-12. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
+12. `src/app/api/candidate_detail.py`: source-safe candidate detail DTOs,
+    authorization mapping, redacted source projection, product-safe errors,
+    OpenAPI examples, and route registration.
+13. `src/app/application/candidate_detail.py`: persisted candidate snapshot
+    lookup through the governed repository port.
+14. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
     mapping, redacted response projection, product-safe errors, OpenAPI
     examples, and route registration.
-13. `src/app/application/ai_governance.py`: persisted candidate snapshot
+15. `src/app/application/ai_governance.py`: persisted candidate snapshot
     lookup plus deterministic fallback/verifier orchestration without provider
     execution or durable persistence claims.
-14. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
+16. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-15. `src/app/application/conversion_workflow.py`: application commands,
+17. `src/app/application/conversion_workflow.py`: application commands,
     idempotency payload construction, repository precheck, and domain
     invocation for conversion intent/outcome workflow.
-16. `tests/integration/test_review_workflow_api.py`: certified API behavior
+18. `tests/integration/test_review_workflow_api.py`: certified API behavior
    evidence for lifecycle transition, review action, feedback, and conversion
    foundations.
-17. `tests/integration/test_review_queue_api.py`: certified API behavior
+19. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
-18. `tests/integration/test_ai_governance_api.py`: certified API behavior
+20. `tests/integration/test_candidate_detail_api.py`: certified API behavior
+    evidence for source-safe detail projection, workflow summaries, permission,
+    missing candidate, and no-authority promotion.
+21. `tests/integration/test_ai_governance_api.py`: certified API behavior
     evidence for AI fallback, verifier acceptance, blocked output, permission,
     missing candidate, invalid state, and forbidden metadata.
 
@@ -151,6 +170,11 @@ The advisor review queue endpoint is permissioned by
 `idea.review.queue.read` capability or advisor role. It requires a
 timezone-aware `evaluatedAtUtc` query parameter and returns product-safe Problem
 Details for permission or validation failures.
+
+The candidate detail endpoint is permissioned by
+`idea.candidate.detail.read` capability or advisor/operator role. It returns
+source-safe details for an existing candidate and product-safe Problem Details
+for permission, validation, or missing-candidate failures.
 
 The AI explanation endpoint is permissioned by
 `idea.ai-explanation.evaluate`. It accepts a governed workflow-pack reference,
@@ -270,6 +294,11 @@ Focused validation passed for the current foundation:
 21. `make ci` passed after adding the AI explanation API foundation with `59`
     integration tests, `2` e2e tests, `218` unit tests, coverage gate at
     `99.17%`, and dependency audit reporting no known vulnerabilities.
+22. `python -m pytest tests/integration/test_candidate_detail_api.py tests/integration/test_api_operation_events.py tests/unit/test_service_contract.py -q`
+    passed with `12 passed` after adding the candidate detail API foundation,
+    source-redaction assertions, workflow summary assertions,
+    permission/not-found behavior, endpoint-ledger contract, and bounded
+    operation-event coverage.
 
 PR merge-gate evidence remains required before merge.
 

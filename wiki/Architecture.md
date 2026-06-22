@@ -136,6 +136,13 @@ foundation. It projects persisted candidate snapshots through the deterministic
 Slice 07 queue policy and returns ranked items plus exclusions without a durable
 queue store, Gateway route, Workbench surface, or supported-feature promotion.
 
+`GET /api/v1/idea-candidates/{candidateId}` is the certified internal
+source-safe candidate detail API foundation. It reads persisted candidate
+snapshots and returns redacted source evidence, lifecycle history, review,
+feedback, conversion, report-evidence, and audit summary posture without source
+route disclosure, raw evidence export, downstream authority, Gateway/Workbench
+proof, data-product certification, or supported-feature promotion.
+
 `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate` is the
 certified internal AI explanation evaluator foundation. It evaluates
 deterministic fallback or supplied workflow output against persisted candidate

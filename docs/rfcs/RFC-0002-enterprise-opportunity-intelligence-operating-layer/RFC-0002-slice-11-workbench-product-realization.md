@@ -2,6 +2,13 @@
 
 Status: Planned
 
+Current implementation note: RFC-0002 Slice 10 now provides
+`GET /api/v1/idea-candidates/{candidateId}` as a certified internal,
+source-safe candidate detail API foundation for a future Workbench evidence
+drawer. This does not implement Gateway composition, Workbench UI, browser
+proof, accessibility proof, entitlement-denied panel proof, demo screenshots,
+or supported-feature promotion.
+
 ## Outcome
 
 Make supported opportunity intelligence visible in `lotus-workbench` through

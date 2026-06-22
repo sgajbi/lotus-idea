@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
+import app.api.candidate_detail as candidate_detail_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.idea_signals as idea_signals_api
 import app.api.review_queues as review_queues_api
@@ -111,6 +112,15 @@ def ai_headers() -> dict[str, str]:
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
         "X-Correlation-Id": "corr-operation-ai-api",
+    }
+
+
+def detail_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.candidate.detail.read",
+        "X-Correlation-Id": "corr-operation-detail-api",
     }
 
 
@@ -315,3 +325,24 @@ def test_ai_explanation_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("ai_explanation", "fallback", "lotus-idea", False, None)]
+
+
+def test_candidate_detail_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, candidate_detail_api)
+    candidate_id = persist_candidate(
+        client,
+        suffix="-candidate-detail",
+        idempotency_key="operation-persist-detail-001",
+    )
+
+    response = client.get(
+        f"/api/v1/idea-candidates/{candidate_id}",
+        headers=detail_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("candidate_detail_read", "accepted", "lotus-idea", False, None)]
