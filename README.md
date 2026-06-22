@@ -35,9 +35,10 @@ report conversion intents, a certified internal candidate evidence replay API
 foundation for source-ref hash replay posture, and the first bounded
 operation-event observability foundation across certified internal signal,
 persistence, candidate detail, evidence replay, lifecycle, AI explanation,
-queue, review, feedback, conversion, report evidence, and data-mesh-readiness
-APIs plus a certified internal source-ingestion readiness
-diagnostic for operator configuration and certification blockers. The first versioned persistence schema, rollback
+queue, queue-readiness, review, feedback, conversion, report evidence, and
+data-mesh-readiness APIs plus certified internal source-ingestion and advisor
+queue readiness diagnostics for operator configuration and certification
+blockers. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
 high-cash persistence plus the first internal review, feedback, conversion,
@@ -125,6 +126,15 @@ certification blockers. It does not call Core, certify live source ingestion,
 prove a scheduled worker deployment, certify a data product, expose
 Gateway/Workbench support, or promote a supported feature.
 
+`GET /api/v1/review-queues/advisor/readiness` is a certified internal operator
+diagnostic for advisor queue supportability. It requires
+`idea.review.queue.readiness.read` plus the `operator` role and reports only
+aggregate candidate counts, queue exclusion counts, durable-storage posture,
+and certification blockers. It does not expose candidate identifiers, inspect
+access-scope identifiers, certify a durable queue store, provide a
+Gateway/Workbench surface, certify a data product, or promote a supported
+feature.
+
 The first consumer dependency set is aligned to the RFC-0002 source map:
 `lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
 projection, and benchmark assignment; `lotus-performance` returns and mandate
@@ -180,7 +190,10 @@ source-authority contracts only, not runtime certification.
   posture without promoting products. Internal source-ingestion-readiness
   orchestration returns source-safe operator posture for the high-cash
   run-once worker configuration and certification blockers without calling
-  Core or promoting live source support.
+  Core or promoting live source support. Internal review-queue-readiness
+  orchestration returns source-safe aggregate queue counts, exclusion counts,
+  durable-storage posture, and certification blockers without exposing
+  candidate identifiers, access scope, or supported queue posture.
 - `src/app/domain/`: framework-free idea domain models, policies, scoring,
   lifecycle rules, review-queue projection, review governance, AI governance,
   conversion governance, report evidence-pack request governance, internal
@@ -202,8 +215,8 @@ source-authority contracts only, not runtime certification.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, candidate detail, candidate evidence replay, lifecycle, AI
-  explanation, advisor queue, review, feedback, conversion, and report
-  evidence-pack foundation APIs plus the data-mesh-readiness and
+  explanation, advisor queue, queue-readiness, review, feedback, conversion,
+  and report evidence-pack foundation APIs plus the data-mesh-readiness and
   source-ingestion-readiness diagnostics emit
   product-safe operation logs and the `lotus_idea_operation_events_total`
   metric without sensitive labels or supported-feature promotion.
@@ -336,6 +349,13 @@ without calling Core or writing repository state:
 
 ```powershell
 curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.source-ingestion.readiness.read" http://localhost:8330/api/v1/source-ingestion/readiness
+```
+
+To inspect advisor queue supportability without exposing candidate identifiers
+or access scope:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.review.queue.readiness.read" "http://localhost:8330/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
 ```
 
 Repository-backed endpoints report `durableStorageBacked=true` only in this

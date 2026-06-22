@@ -140,6 +140,14 @@ store, Workbench surface, or supported-feature promotion. `lotus-gateway`
 publishes this as a bounded read-only route at
 `GET /api/v1/ideas/review-queues/advisor` without generating or ranking ideas.
 
+`GET /api/v1/review-queues/advisor/readiness` is the certified internal
+operator diagnostic for queue supportability. It reuses the same Slice 07
+queue projection path but returns only aggregate candidate counts, exclusion
+counts, durable-storage posture, and certification blockers. It does not expose
+candidate identifiers or access-scope identifiers, and it is not a Gateway
+route, Workbench proof, data-product certification, PM/compliance queue
+surface, client-ready publication, or supported-feature promotion.
+
 `GET /api/v1/idea-candidates/{candidateId}` is the certified internal
 source-safe candidate detail API foundation. It reads persisted candidate
 snapshots and returns redacted source evidence, lifecycle history, review,

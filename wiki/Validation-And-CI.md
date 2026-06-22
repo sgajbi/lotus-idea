@@ -97,7 +97,14 @@ Persistence adapter validation:
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
    `not_certified` operation events without calling Core.
-8. Runtime API database wiring is opt-in and still requires deploy migration
+8. `tests/unit/test_review_queue_application.py`,
+   `tests/integration/test_review_queue_api.py`, and
+   `tests/integration/test_api_operation_events.py` prove the advisor queue
+   readiness diagnostic for aggregate queue posture, permission-denied
+   behavior, timestamp validation, product-safe payloads, and bounded
+   `not_certified` operation events without exposing candidate identifiers or
+   access-scope identifiers.
+9. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -187,6 +194,12 @@ endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only; they do not certify live Core ingestion,
 scheduled worker deployment, data-product promotion, Gateway/Workbench support,
 or supported-feature promotion.
+
+The internal advisor-queue-readiness endpoint is covered by OpenAPI, endpoint
+certification, unit tests, and integration tests. Its passing checks certify
+the diagnostic route only; they do not certify a durable queue store,
+Gateway/Workbench support, data-product promotion, PM/compliance queue support,
+client-ready publication, or supported-feature promotion.
 
 CI warning policy:
 
