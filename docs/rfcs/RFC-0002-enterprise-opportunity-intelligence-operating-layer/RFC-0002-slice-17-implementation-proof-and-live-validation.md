@@ -47,6 +47,11 @@ Prove the complete supported opportunity journey end to end.
    certification reviewers before platform mesh promotion. It remains blocked
    and not certified, omits source-sensitive identifiers, and does not replace
    platform certification or supported-feature promotion.
+10. `POST /api/v1/source-ingestion/run-once` now supplies the bounded internal
+    source-ingestion operator proof surface. It can exercise the configured
+    manifest and Core source adapter only when durable repository posture is
+    active, returns aggregate decision counts only, and remains not certified
+    until live Core source proof and scheduled worker deployment proof exist.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -80,6 +85,10 @@ The new downstream realization readiness diagnostic narrows the proof gap from
 the downstream proof gap. The downstream realization contract gate makes those
 blockers durable and machine-readable; it also does not close the downstream
 proof gap.
+The source-ingestion run-once operator action narrows the source proof gap from
+"worker exists only as a CLI" to "service-boundary execution exists when
+durable storage and runtime configuration are present"; it does not close live
+Core source certification or scheduled worker deployment proof.
 The outbox-delivery readiness diagnostic and run-once operator action do the
 same for broker and event delivery posture; they do not close the external
 publication, platform mesh event certification, or downstream consumer proof

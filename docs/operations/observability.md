@@ -72,6 +72,7 @@ Current instrumented operations:
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_trust_telemetry_preview_read` | Internal runtime trust telemetry preview diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_trust_telemetry_snapshot_read` | Internal runtime trust telemetry snapshot diagnostic read | `lotus-idea` | `not_certified` |
+| `source_ingestion_run_once` | Internal source-ingestion run-once operator action | `lotus-core` | `not_certified` |
 | `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
 | `implementation_proof_readiness_read` | Internal aggregate RFC-0002 proof-readiness diagnostic read | `lotus-idea` | `not_certified` |
 
@@ -111,8 +112,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
    model-risk dashboard, runtime trust telemetry, and Workbench proof exist,
    the mesh-readiness diagnostic remains blocked until runtime trust telemetry
    and platform mesh certification exist, the source-ingestion readiness
-   diagnostic is missing run-once worker configuration inputs, or the advisor
-   queue readiness diagnostic still lacks durable repository posture,
+   diagnostic is missing run-once worker configuration inputs, the
+   source-ingestion run-once operator action is blocked by missing durable
+   storage, manifest, or Core configuration, or the advisor queue readiness
+   diagnostic still lacks durable repository posture,
    entitlement proof, Workbench proof, data-product certification, or runtime
    trust telemetry. It also covers downstream realization readiness while
    Advise, Manage, Report, Render, Archive, Gateway/Workbench, and mesh proof
@@ -133,6 +136,8 @@ supported business feature.
 
 The source-ingestion readiness diagnostic reports `accepted` only when the
 configured manifest, Core base URL, and durable repository environment are
-present. It still reports `not_certified` until live Core source proof,
-scheduled worker deploy proof, runtime data-mesh telemetry, and
-Gateway/Workbench proof exist.
+present. The run-once operator action emits `source_ingestion_run_once` with
+aggregate work-item count buckets only and fails closed before mutation when
+durable storage, manifest, or Core configuration is absent. Both remain
+`not_certified` until live Core source proof, scheduled worker deploy proof,
+runtime data-mesh telemetry, and Gateway/Workbench proof exist.

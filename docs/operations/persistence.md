@@ -22,6 +22,11 @@ validates the example manifest and source-safe check-only output contract
 without calling Core or writing repository state. The PostgreSQL runtime proof
 also covers internal source-ingestion
 replay after repository reload and same-key changed-source conflict recovery.
+`POST /api/v1/source-ingestion/run-once` now exposes that bounded
+source-ingestion orchestration as a protected internal operator action. It
+requires `idea.source-ingestion.run`, requires durable repository posture,
+fails closed before mutation when manifest or Core configuration is absent or
+invalid, and returns aggregate decision counts only.
 Runtime API state remains process-local by default and reports
 `durableStorageBacked=false` unless the database URL is configured. When
 configured, repository-backed API responses and operation events report
@@ -56,6 +61,7 @@ supported feature.
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | No certified live broker runtime or downstream delivery |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
+| Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
 
 ```mermaid
@@ -132,7 +138,11 @@ flowchart LR
     provider. Both check-only and run summaries redact raw source payloads,
     portfolio ids, and raw idempotency keys. It is not a daemon,
     deploy-pipeline worker, or live Core certification.
-13. `src/app/application/outbox_delivery.py` adds the first run-once delivery
+13. `POST /api/v1/source-ingestion/run-once` adds the protected service
+    boundary for the same source-ingestion batch foundation. It requires
+    durable repository configuration and blocks before mutation when runtime
+    inputs are missing or invalid.
+14. `src/app/application/outbox_delivery.py` adds the first run-once delivery
     orchestration over a publisher port and the governed repository port. It
     reads pending and retryable failed events, marks accepted publications as
     published, marks rejected publications as failed for retry, dead-letters
@@ -146,13 +156,13 @@ flowchart LR
     bounded publisher reasons. This is internal recoverability and adapter
     foundation only; certified live broker runtime, downstream consumers, and
     event-publication support remain unimplemented.
-14. `src/app/application/outbox_delivery_readiness.py` and
+15. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
     delivery readiness for operators. The diagnostic reports aggregate status
     counts, adapter presence, and blockers only, so operators can see backlog
     posture without accessing event ids, aggregate ids, raw idempotency keys,
     source payloads, broker payloads, or downstream event contracts.
-15. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
+16. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
     through the service boundary for operators. It does not mutate pending
     records when broker configuration is absent or invalid, and successful runs
     return only aggregate attempted, published, failed, dead-lettered, and

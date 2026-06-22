@@ -243,6 +243,13 @@ conversion target source authority and returns product-safe Problem Details for
 validation, permission, missing intent, idempotency conflict, or wrong-source
 failures.
 
+The source-ingestion run-once endpoint is permissioned by
+`idea.source-ingestion.run` and operator role. It executes the bounded
+high-cash source-ingestion batch foundation only when durable repository,
+manifest, and Core source configuration are present. It returns aggregate
+decision counts only and returns blocked posture without mutation when runtime
+configuration is absent or invalid.
+
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
 `durableStorageBacked` follows the active repository provider for
 repository-backed foundation endpoints: process-local runtime reports `false`,

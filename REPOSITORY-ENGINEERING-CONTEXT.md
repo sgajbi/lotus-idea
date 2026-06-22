@@ -135,9 +135,13 @@ leak source-sensitive fields.
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
 blockers without calling Core or leaking source payloads. There is still no
-live Core integration proof, scheduled daemon/deploy source-ingestion worker,
-Workbench proof, data-product certification, or
-supported-feature promotion yet.
+`POST /api/v1/source-ingestion/run-once` now exposes a certified internal
+operator action for the same bounded source-ingestion batch foundation. It
+requires `idea.source-ingestion.run`, blocks before mutation unless durable
+repository, manifest, and Core configuration are present, and returns aggregate
+decision counts only. There is still no live Core integration proof, scheduled
+daemon/deploy source-ingestion worker, Workbench proof, data-product
+certification, or supported-feature promotion yet.
 The upstream Core cash-weight contract dependency is tracked in
 `sgajbi/lotus-core#430`.
 
@@ -516,6 +520,10 @@ The
 source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,
 blocked/accepted configuration posture, and no source payloads.
+The source-ingestion run-once operator action emits
+`source_ingestion_run_once` events with `not_certified` supportability,
+aggregate work-item count buckets, fail-closed configuration posture, and no
+source payloads, portfolio ids, candidate ids, or raw idempotency keys.
 The AI-explanation-readiness diagnostic emits
 `ai_explanation_readiness_read` events with `not_certified` supportability,
 blocked certification posture, `lotus-ai` source authority, and no prompt,
@@ -611,7 +619,10 @@ logs; fix or document the owned warning source instead.
    existence in owning services.
    Source-ingestion-readiness orchestration reports manifest, Core base URL,
    durable repository configuration, and certification blockers for the
-   high-cash run-once worker without executing Core source reads.
+   high-cash run-once worker without executing Core source reads. The
+   source-ingestion run-once route executes the same bounded domain batch only
+   when durable repository and runtime configuration are present, returning
+   aggregate decision counts only.
    Runtime-trust-telemetry orchestration emits both the internal preview and a
    contract-shaped, source-safe runtime snapshot while keeping platform
    certification blockers explicit.

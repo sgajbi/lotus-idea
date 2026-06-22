@@ -69,8 +69,9 @@ Current RFC-0002 implementation-start baseline:
    AI explanation evaluation, advisor queues, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
    AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics,
-   runtime trust telemetry preview/snapshot diagnostics, and
-   source-ingestion-readiness diagnostics. A certified internal
+   runtime trust telemetry preview/snapshot diagnostics,
+   source-ingestion-readiness diagnostics, and source-ingestion run-once
+   operator action. A certified internal
    downstream-realization-readiness diagnostic now reports Advise, Manage,
    Report, Render, and Archive blockers without calling downstream services.
    The certified internal
@@ -102,12 +103,14 @@ Current RFC-0002 implementation-start baseline:
     certified foundation endpoint inventory, current capabilities,
     implementation proof blockers, and unsupported boundaries.
 13. Slice 15 partially implements evidence replay, AI explanation readiness,
-    source-ingestion readiness, outbox delivery readiness/run-once, downstream
+    source-ingestion readiness/run-once, outbox delivery readiness/run-once, downstream
     realization readiness, and aggregate implementation-proof readiness
     supportability: operators can replay candidate evidence posture over
     current source refs, inspect model-risk blockers without invoking
     `lotus-ai`, inspect run-once worker configuration and certification
-    blockers without calling Core, inspect aggregate outbox delivery blockers
+    blockers without calling Core, execute a bounded aggregate-only
+    source-ingestion run-once action when durable storage and runtime
+    configuration are present, inspect aggregate outbox delivery blockers
     without publishing broker events, inspect downstream realization blockers
     without calling Advise, Manage, Report, Render, or Archive, and inspect
     aggregate proof blockers without promoting live ingestion, Workbench,
