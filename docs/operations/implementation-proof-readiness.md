@@ -20,7 +20,7 @@ It aggregates current evidence and blockers across:
 3. AI-assisted explanation governance,
 4. data-mesh producer and consumer certification,
 5. source-safe runtime trust telemetry preview, snapshot endpoint, and snapshot generation,
-6. internal outbox delivery foundation,
+6. internal outbox delivery foundation and bounded run-once operator action,
 7. Workbench product realization,
 8. downstream Advise, Manage, Report, Render, and Archive realization,
 9. supported-feature promotion.
@@ -39,7 +39,7 @@ It returns:
 4. AI explanation readiness posture,
 5. data-mesh readiness posture,
 6. runtime trust telemetry preview, snapshot endpoint, and generated snapshot posture,
-7. outbox delivery readiness posture,
+7. outbox delivery readiness and run-once posture,
 8. Workbench realization blockers,
 9. downstream realization blockers and internal submission route evidence,
 10. supported-feature promotion blockers,
@@ -146,14 +146,16 @@ Implementation-backed evidence:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
 8. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-9. operation event: `implementation_proof_readiness_read`,
-10. endpoint ledger:
+9. outbox delivery run-once endpoint:
+   `POST /api/v1/outbox-delivery/run-once`,
+10. operation event: `implementation_proof_readiness_read`,
+11. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-11. unit tests:
+12. unit tests:
    `tests/unit/test_implementation_proof_readiness.py`,
-12. generator tests:
+13. generator tests:
    `tests/unit/test_generate_implementation_proof_readiness.py`,
-13. integration tests:
+14. integration tests:
    `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:

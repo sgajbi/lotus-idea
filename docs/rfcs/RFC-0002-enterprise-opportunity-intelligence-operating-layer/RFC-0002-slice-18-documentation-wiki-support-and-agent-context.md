@@ -62,10 +62,11 @@ durable operating-context enforcement:
 11. README, repository context, `docs/operations/api-certification.md`,
     `docs/operations/persistence.md`, `docs/operations/observability.md`, RFC
     index, quality scorecard, and wiki source now describe the certified
-    internal outbox delivery readiness diagnostic and HTTP publisher adapter
-    foundation while preserving the boundary that no certified live broker
-    runtime, downstream delivery, platform mesh event certification,
-    Gateway/Workbench proof, or supported-feature promotion exists.
+    internal outbox delivery readiness diagnostic, bounded run-once operator
+    action, and HTTP publisher adapter foundation while preserving the boundary
+    that no certified live broker runtime, downstream delivery, platform mesh
+    event certification, Gateway/Workbench proof, or supported-feature
+    promotion exists.
 12. README, repository context, `docs/operations/downstream-realization-readiness.md`,
     `docs/operations/api-certification.md`, quality guides, RFC evidence, and
     wiki source now describe the governed downstream contract plan and

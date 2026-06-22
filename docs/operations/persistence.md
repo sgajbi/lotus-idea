@@ -35,6 +35,12 @@ outbox status counts, delivery-ready backlog, durable repository posture,
 broker configuration posture, publisher-adapter presence, and certification
 blockers. It does not expose event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims.
+`POST /api/v1/outbox-delivery/run-once` now exposes the bounded run-once
+delivery orchestration as a certified internal operator action. It requires
+`idea.outbox-delivery.run`, fails closed without valid broker configuration,
+returns aggregate counts only, and remains `not_certified` until live broker
+runtime, downstream consumer contracts, platform mesh event certification,
+Gateway/Workbench proof, and supported-feature promotion exist.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
 active repository provider. It compares caller-supplied current source refs with
@@ -48,7 +54,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, and aggregate readiness diagnostic for accepted internal mutations | No certified live broker runtime or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | No certified live broker runtime or downstream delivery |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
 
@@ -146,6 +152,11 @@ flowchart LR
     counts, adapter presence, and blockers only, so operators can see backlog
     posture without accessing event ids, aggregate ids, raw idempotency keys,
     source payloads, broker payloads, or downstream event contracts.
+15. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
+    through the service boundary for operators. It does not mutate pending
+    records when broker configuration is absent or invalid, and successful runs
+    return only aggregate attempted, published, failed, dead-lettered, and
+    skipped counts.
 
 ## Validation
 

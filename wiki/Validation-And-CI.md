@@ -173,12 +173,14 @@ Persistence adapter validation:
    identifiers.
 14. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
-   outbox delivery readiness diagnostic for aggregate backlog/status posture,
-   durable repository posture, broker configuration posture, publisher-adapter
-   presence, operator plus capability enforcement, product-safe payloads, and
-   bounded `not_certified` operation events without exposing event identifiers,
-   raw idempotency keys, source payloads, broker payloads, or downstream
-   contract details.
+   outbox delivery readiness diagnostic and run-once operator action for
+   aggregate backlog/status posture, durable repository posture, broker
+   configuration posture, publisher-adapter presence, blocked-without-broker
+   behavior, configured-publisher delivery path, operator plus capability
+   enforcement, product-safe payloads, UTC request validation, and bounded
+   `not_certified` operation events without exposing event identifiers, raw
+   idempotency keys, source payloads, broker payloads, or downstream contract
+   details.
 15. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
@@ -310,12 +312,12 @@ provider invocation, durable AI lineage, model-risk dashboard readiness,
 Gateway/Workbench support, data-product promotion, client-ready publication, or
 supported-feature promotion.
 
-The internal outbox-delivery-readiness endpoint is covered by OpenAPI, endpoint
-certification, unit tests, and integration tests. Its passing checks certify
-the diagnostic route only; they do not certify live broker runtime, downstream
-consumer delivery, platform mesh event certification,
-Gateway/Workbench support, data-product promotion, client-ready publication,
-or supported-feature promotion.
+The internal outbox-delivery-readiness and outbox-delivery-run-once endpoints
+are covered by OpenAPI, endpoint certification, unit tests, and integration
+tests. Passing checks certify the diagnostic route and bounded operator action
+only; they do not certify live broker runtime, downstream consumer delivery,
+platform mesh event certification, Gateway/Workbench support, data-product
+promotion, client-ready publication, or supported-feature promotion.
 
 The internal downstream-realization-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks

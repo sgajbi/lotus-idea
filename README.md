@@ -260,7 +260,7 @@ Operational entrypoints:
 
 - local diagnostics: `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
 - source ingestion readiness: `/api/v1/source-ingestion/readiness`
-- outbox delivery readiness: `/api/v1/outbox-delivery/readiness`
+- outbox delivery readiness/run-once: `/api/v1/outbox-delivery/readiness`, `/api/v1/outbox-delivery/run-once`
 - advisor queue readiness: `/api/v1/review-queues/advisor/readiness`
 - AI explanation readiness: `/api/v1/ai-explanations/readiness`
 - downstream realization readiness: `/api/v1/downstream-realization/readiness`

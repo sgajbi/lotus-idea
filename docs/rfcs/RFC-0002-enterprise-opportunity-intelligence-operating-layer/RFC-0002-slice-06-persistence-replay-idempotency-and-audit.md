@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -232,13 +232,19 @@ internal source-ingestion replay/conflict recovery path against PostgreSQL. The
 source-ingestion application layer now has a bounded run-once batch primitive
 plus a versioned manifest-backed run-once CLI and check-only gate. The outbox
 foundation now includes internal retry and dead-letter status semantics through
-the repository port plus a source-safe HTTP publisher adapter foundation, but
-certified live broker runtime and downstream consumer contracts remain
-unimplemented. The next durable persistence slices must still prove scheduled
-daemon/deploy worker behavior, deploy-pipeline migration evidence, live Core
-source-adapter behavior against that service, live broker behavior, downstream
-consumer contracts, and event-publication proof before any event publication
-claim, and keep API responses truthful:
+the repository port, a source-safe HTTP publisher adapter foundation, a
+certified aggregate readiness diagnostic, and a certified internal
+`POST /api/v1/outbox-delivery/run-once` operator action. The operator action
+requires the `operator` role plus `idea.outbox-delivery.run`, fails closed
+without valid broker configuration, leaves records untouched when blocked, and
+returns aggregate delivery counts without event identifiers, aggregate ids, raw
+idempotency keys, source payloads, broker payloads, or downstream claims. This
+does not certify live broker runtime or downstream consumer contracts. The next
+durable persistence slices must still prove scheduled daemon/deploy worker
+behavior, deploy-pipeline migration evidence, live Core source-adapter behavior
+against that service, live broker behavior, downstream consumer contracts,
+platform mesh event certification, and event-publication proof before any
+supported event publication claim, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.
 
@@ -311,6 +317,11 @@ Current slice validation:
     `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` passed
     after adding the outbox delivery readiness OpenAPI route and endpoint
     certification ledger entry.
+19. `.venv\Scripts\python.exe -m pytest tests\integration\test_outbox_delivery_readiness_api.py tests\unit\test_outbox_delivery.py -q`
+    passed with `19 passed` after adding the certified aggregate-only outbox
+    delivery run-once operator action, blocked-without-broker proof,
+    configured-publisher proof, permission proof, UTC request validation, and
+    bounded `outbox_delivery_run_once` operation-event proof.
 
 Prior Slice 06 validation:
 

@@ -181,9 +181,13 @@ supported feature.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, delivery-ready backlog, durable repository posture, broker
-configuration posture, publisher-adapter presence, and certification blockers
-without exposing event ids, aggregate ids, raw idempotency keys, broker
-payloads, downstream delivery contracts, or a supported-feature claim.
+configuration posture, publisher-adapter presence, and certification blockers.
+`POST /api/v1/outbox-delivery/run-once` exposes the bounded internal operator
+action for one delivery pass through the active repository and configured
+publisher adapter. It fails closed when broker configuration is absent or
+invalid, and both endpoints avoid event ids, aggregate ids, raw idempotency
+keys, source payloads, broker payloads, downstream delivery contracts, or a
+supported-feature claim.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -331,6 +335,8 @@ product-safe failure reasons.
 `src/app/application/outbox_delivery_readiness.py` and
 `GET /api/v1/outbox-delivery/readiness` add aggregate operator visibility over
 that foundation without mutating records or publishing events.
+`POST /api/v1/outbox-delivery/run-once` adds the protected internal operator
+surface for a single bounded delivery pass and returns aggregate counts only.
 This is not certified live broker runtime, a Gateway event, platform mesh
 event, downstream delivery contract, or supported feature.
 `src/app/application/downstream_realization.py` adds source-safe submission

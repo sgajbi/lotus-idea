@@ -76,10 +76,14 @@ The internal `GET /api/v1/outbox-delivery/readiness` diagnostic is available
 for operators with `idea.outbox-delivery.readiness.read` to inspect aggregate
 outbox backlog, retry/dead-letter posture, durable repository posture, broker
 configuration posture, publisher-adapter presence, and remaining certification
-blockers. It does not expose event identifiers, aggregate identifiers, raw
-idempotency keys, broker payloads, or downstream claims. It remains
-`not_certified` until live broker runtime proof, downstream consumer contracts,
-platform mesh event certification,
+blockers. The internal `POST /api/v1/outbox-delivery/run-once` action is
+available for operators with `idea.outbox-delivery.run` to run one bounded
+delivery pass through the active repository and configured publisher adapter.
+It fails closed and leaves records untouched when broker configuration is
+missing or invalid. Neither endpoint exposes event identifiers, aggregate
+identifiers, raw idempotency keys, broker payloads, source payloads, or
+downstream claims. Both remain `not_certified` until live broker runtime proof,
+downstream consumer contracts, platform mesh event certification,
 Gateway/Workbench proof, and supported-feature evidence exist.
 The internal `GET /api/v1/review-queues/advisor/readiness` diagnostic is
 available for operators with `idea.review.queue.readiness.read` to inspect
@@ -134,7 +138,7 @@ instead of producing a false support claim.
 | --- | --- | --- |
 | Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation | Deployed scheduler, live Core certification, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, and aggregate readiness diagnostic for accepted internal mutations | Certified live broker runtime or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | Certified live broker runtime, platform mesh event certification, or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
 | Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, and planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
 
@@ -201,7 +205,8 @@ recording, report evidence-pack request recording, downstream realization
 submission, data-mesh-readiness
 diagnostic reads, runtime-trust-telemetry-preview and snapshot diagnostic
 reads, source-ingestion-readiness diagnostic reads, advisor queue-readiness
-diagnostic reads, outbox-delivery-readiness diagnostic reads,
+diagnostic reads, outbox-delivery-readiness diagnostic reads, outbox-delivery
+run-once operator actions,
 downstream-realization-readiness diagnostic reads, plus aggregate
 implementation-proof-readiness diagnostic reads.
 
@@ -272,7 +277,8 @@ queue, review action, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
 runtime-trust-telemetry-preview/snapshot, source-ingestion-readiness,
 downstream-realization-readiness, downstream submission,
-advisor-queue-readiness, and outbox-delivery-readiness diagnostic endpoints.
+advisor-queue-readiness, outbox-delivery-readiness diagnostic, and
+outbox-delivery-run-once operator endpoints.
 These endpoints are certified as internal foundations or operator diagnostics
 only; they are not supported business features.
 
@@ -327,7 +333,13 @@ delivery readiness diagnostic. It returns aggregate backlog and status posture,
 durable-storage posture, publisher-adapter presence, source-of-truth paths, and
 certification blockers for operators without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, or broker
-payloads. It is not certified live broker runtime, downstream delivery proof,
-platform mesh event
-certification, Gateway/Workbench proof, client-ready publication, or
+payloads.
+
+`POST /api/v1/outbox-delivery/run-once` is the certified internal outbox
+delivery operator action. It runs one bounded delivery pass through the active
+repository and configured publisher adapter, requires
+`idea.outbox-delivery.run`, returns aggregate counts only, and fails closed
+without mutating records when broker configuration is missing or invalid. It is
+not certified live broker runtime, downstream delivery proof, platform mesh
+event certification, Gateway/Workbench proof, client-ready publication, or
 supported-feature promotion.
