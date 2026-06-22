@@ -328,7 +328,7 @@ operator diagnostic for downstream realization supportability. It requires the
 `operator` role and `idea.downstream-realization.readiness.read`, reports
 conversion intent, conversion outcome, and report evidence-pack request counts
 plus Advise, Manage, Report, Render, and Archive blockers, source-safe
-downstream adapter-foundation presence, and planned downstream
+downstream application-orchestration and adapter-foundation presence, and planned downstream
 contract-readiness records for Advise, Manage, and Report handoff seams from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
 `make downstream-realization-contract-gate` blocks premature route-existence,
@@ -417,7 +417,12 @@ events; idempotency-key validation at the domain command boundary; repository
 idempotency and snapshot lookup for conversion intents/outcomes; certified
 internal conversion intent/outcome APIs; and explicit no-authority semantics
 for execution, suitability, client communication, and downstream realization.
-`src/app/ports/downstream_realization.py` and
+`src/app/application/downstream_realization.py` adds source-safe application
+orchestration for submitting Advise and Manage conversion intents and Report
+evidence-pack requests through downstream ports. It deliberately does not
+record authoritative downstream outcomes, because downstream services remain
+the source of acceptance, rejection, completion, materialization, and failure
+truth. `src/app/ports/downstream_realization.py` and
 `src/app/infrastructure/downstream_realization.py` add source-safe HTTP adapter
 foundations for Advise proposal intent, Manage action intent, and Report
 evidence-pack materialization request handoff envelopes. The adapters preserve
@@ -560,20 +565,24 @@ logs; fix or document the owned warning source instead.
    governance to repository snapshots and persists accepted intents/outcomes
    through the same idempotency/audit posture. Report evidence-pack
    orchestration applies Slice 13 evidence-pack governance to report conversion
-    intents and persists source-provenanced request packages without downstream
-    Report/Render/Archive realization. Downstream-realization-readiness
-    orchestration reports conversion intent/outcome/report evidence-pack request
-    counts, source-safe adapter-foundation presence, planned Advise/Manage/Report
-    handoff contract posture, and downstream blockers without calling downstream
-    systems or claiming route existence in owning services.
-    Source-ingestion-readiness orchestration
-    reports manifest, Core base URL, durable repository configuration, and
-    certification blockers for the high-cash run-once worker without executing
-    Core source reads. Implementation-proof-readiness orchestration aggregates
-    current RFC-0002 capability proof blockers across source ingestion, queue,
-    AI, data mesh, runtime trust telemetry preview, outbox delivery, Workbench,
-    downstream realization, and supported-feature promotion without leaking
-    source payloads, event identifiers, broker payloads, or promoting support.
+   intents and persists source-provenanced request packages without downstream
+   Report/Render/Archive realization. Downstream realization orchestration
+   submits existing Advise/Manage conversion intents and Report evidence-pack
+   requests through downstream ports while leaving authoritative outcome
+   recording to downstream services. Downstream-realization-readiness
+   orchestration reports conversion intent/outcome/report evidence-pack request
+   counts, source-safe application-orchestration and adapter-foundation
+   presence, planned Advise/Manage/Report handoff contract posture, and
+   downstream blockers without calling downstream systems or claiming route
+   existence in owning services.
+   Source-ingestion-readiness orchestration reports manifest, Core base URL,
+   durable repository configuration, and certification blockers for the
+   high-cash run-once worker without executing Core source reads.
+   Implementation-proof-readiness orchestration aggregates current RFC-0002
+   capability proof blockers across source ingestion, queue, AI, data mesh,
+   runtime trust telemetry preview, outbox delivery, Workbench, downstream
+   realization, and supported-feature promotion without leaking source
+   payloads, event identifiers, broker payloads, or promoting support.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence

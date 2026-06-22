@@ -15,7 +15,10 @@ Current implemented scope:
 4. downstream outcomes must come from the target source authority,
 5. outcomes do not grant execution, suitability, compliance, mandate, or
    client-communication authority,
-6. certified internal API foundations expose:
+6. source-safe downstream application orchestration can submit existing
+   Advise/Manage conversion intents and Report evidence-pack requests through
+   downstream ports without recording authoritative downstream outcomes,
+7. certified internal API foundations expose:
    - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
    - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
 
@@ -29,8 +32,8 @@ report conversion intents. It does not create `lotus-report`, `lotus-render`, or
 
 Current non-supported scope:
 
-1. source-safe downstream adapter foundations exist, but no live downstream
-   contract is certified,
+1. source-safe downstream orchestration and adapter foundations exist, but no
+   live downstream contract is certified,
 2. no proposal, DPM action, downstream report package, rendered document, or
    archive record is created by `lotus-idea`,
 3. no conversion data product is certified,
@@ -46,6 +49,7 @@ Implementation source:
 
 - `src/app/domain/conversion_governance.py`
 - `src/app/application/conversion_workflow.py`
+- `src/app/application/downstream_realization.py`
 - `src/app/api/conversion_governance.py`
 - `src/app/domain/report_evidence.py`
 - `src/app/application/report_evidence.py`

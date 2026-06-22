@@ -11,10 +11,11 @@ PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Accepted
 internal mutations also create source-safe outbox records with internal
 retry/dead-letter delivery state semantics and a source-safe HTTP
 broker-publisher adapter foundation, and source-safe downstream adapter
-foundations, but there is no certified live broker runtime, downstream
-execution proof, production recovery command, Workbench proof, or
-supported business API yet. Bounded read-only Gateway
-publication exists for advisor queue and candidate detail only. A versioned
+foundations plus internal downstream submission orchestration. There is still
+no certified live broker runtime, downstream execution proof, production
+recovery command, Workbench proof, or supported business API. Bounded
+read-only Gateway publication exists for advisor queue and candidate detail
+only. A versioned
 migration/rollback schema contract exists for the durable repository and is
 enforced by `make migration-contract-gate`.
 `make migration-execution-gate` dry-runs apply and rollback execution plans, and
@@ -279,9 +280,10 @@ operator evidence only; it is not a supported product claim.
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,
 capability-level blockers, planned downstream contract-readiness records,
-source-of-truth paths, and downstream source-authority refs without exposing
-candidate identifiers, source payloads, portfolio identifiers, or client
-identifiers. The planned contract records identify owner repositories and
+source-of-truth paths, downstream source-authority refs, and
+orchestration/adapter posture without exposing candidate identifiers, source
+payloads, portfolio identifiers, or client identifiers. The planned contract
+records identify owner repositories and
 adapter posture for Advise, Manage, and Report handoffs; they are not
 route-existence proof. The records are governed by
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`, and

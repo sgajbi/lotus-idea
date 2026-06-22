@@ -301,7 +301,10 @@ product-safe failure reasons.
 that foundation without mutating records or publishing events.
 This is not certified live broker runtime, a Gateway event, platform mesh
 event, downstream delivery contract, or supported feature.
-`src/app/ports/downstream_realization.py` and
+`src/app/application/downstream_realization.py` adds source-safe submission
+orchestration for existing Advise/Manage conversion intents and Report
+evidence-pack requests while leaving authoritative downstream outcome truth in
+the owning services. `src/app/ports/downstream_realization.py` and
 `src/app/infrastructure/downstream_realization.py` also provide source-safe
 HTTP adapter foundations for Advise, Manage, and Report handoff envelopes. They
 preserve downstream source authority and bounded evidence posture, but they are

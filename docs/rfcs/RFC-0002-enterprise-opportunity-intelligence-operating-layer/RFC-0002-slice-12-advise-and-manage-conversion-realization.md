@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream adapter foundations, and governed downstream contract-plan gate
+Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream application orchestration and adapter foundations, and governed downstream contract-plan gate
 
 ## Outcome
 
@@ -89,6 +89,20 @@ Implemented in this slice:
     `idea.downstream-realization.readiness.read` capability, emits
     `downstream_realization_readiness_read`, and keeps the supportability
     posture `not_certified` until live downstream contract proof exists.
+19. `src/app/application/downstream_realization.py` now adds source-safe
+    application orchestration for submitting existing Advise proposal and
+    Manage action conversion intents through the downstream realization ports.
+    The orchestration selects the correct downstream client from the conversion
+    target, propagates correlation and trace identifiers, returns accepted,
+    rejected, unsupported-target, and not-found posture, and deliberately does
+    not record authoritative downstream outcomes. Downstream acceptance,
+    rejection, completion, suitability, action-register, materialization, and
+    failure truth remains owned by the downstream service and by the existing
+    conversion-outcome recording API.
+20. `tests/unit/test_downstream_realization_application.py` proves Advise
+    routing, Manage failure mapping, report-target rejection through the
+    conversion-intent submission path, not-found behavior, no outcome recording,
+    no downstream-authority grant, and no supported-feature promotion.
 
 ## Remaining Work
 
