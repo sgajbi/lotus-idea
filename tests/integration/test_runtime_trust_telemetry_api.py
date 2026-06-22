@@ -24,6 +24,19 @@ def telemetry_headers(
     }
 
 
+def telemetry_snapshot_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.mesh.trust-telemetry.snapshot.read",
+) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "platform-operator",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
+        "X-Correlation-Id": "corr-runtime-trust-telemetry-snapshot",
+    }
+
+
 def high_cash_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -136,6 +149,115 @@ def test_runtime_trust_telemetry_preview_api_emits_not_certified_operation_event
     assert events == [
         (
             "mesh_trust_telemetry_preview_read",
+            "blocked",
+            "not_certified",
+            False,
+            False,
+            {"candidate_snapshot_count_bucket": "0"},
+        )
+    ]
+
+
+def test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state() -> None:
+    client = TestClient(app)
+    persist_response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        headers=high_cash_headers(),
+        json=high_cash_payload(),
+    )
+    assert persist_response.status_code == 200
+
+    response = client.get(
+        "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",
+        params={"generatedAtUtc": "2026-06-21T10:10:00Z"},
+        headers=telemetry_snapshot_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["contract_id"] == "lotus-domain-product-trust-telemetry-snapshot"
+    assert payload["product_id"] == "lotus-idea:IdeaCandidate:v1"
+    assert payload["emitted_at_utc"] == "2026-06-21T10:10:00Z"
+    assert payload["freshness"]["freshness_state"] == "current"
+    assert payload["freshness"]["age_seconds"] == 600
+    assert payload["completeness_status"] == "partial"
+    assert payload["data_quality_status"] == "quality_passed"
+    assert payload["lineage"]["lineage_materialized"] is True
+    assert payload["lineage"]["evidence_access_class"] == "operator_only"
+    assert payload["blocking"]["blocked"] is True
+    assert "platform_mesh_certification_missing" in payload["blocking"]["blocked_reason"]
+    assert payload["evidence"]["source_artifact_uri"].endswith(
+        "output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json"
+    )
+    assert "candidateId" not in response.text
+    assert "portfolio_id" not in response.text
+    assert "contentHash" not in response.text
+    assert "/portfolios/" not in response.text
+
+
+def test_runtime_trust_telemetry_snapshot_api_requires_operator_permission() -> None:
+    client = TestClient(app)
+
+    response = client.get("/api/v1/data-mesh/trust-telemetry/runtime-snapshot")
+    role_denied = client.get(
+        "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",
+        headers=telemetry_snapshot_headers(roles="advisor"),
+    )
+    capability_denied = client.get(
+        "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",
+        headers=telemetry_snapshot_headers(capabilities="idea.mesh.trust-telemetry.preview.read"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
+
+
+def test_runtime_trust_telemetry_snapshot_api_rejects_naive_generation_time() -> None:
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",
+        params={"generatedAtUtc": "2026-06-21T10:10:00"},
+        headers=telemetry_snapshot_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+
+
+def test_runtime_trust_telemetry_snapshot_api_emits_not_certified_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events: list[tuple[str, str, str, bool, bool, dict[str, str]]] = []
+
+    def capture(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.supportability_status.value,
+                event.durable_storage_backed,
+                event.supported_feature_promoted,
+                dict(event.attributes),
+            )
+        )
+
+    monkeypatch.setattr(runtime_trust_telemetry_api, "emit_operation_event", capture)
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/data-mesh/trust-telemetry/runtime-snapshot",
+        headers=telemetry_snapshot_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [
+        (
+            "mesh_trust_telemetry_snapshot_read",
             "blocked",
             "not_certified",
             False,
