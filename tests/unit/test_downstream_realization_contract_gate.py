@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -111,28 +112,94 @@ def test_downstream_realization_contract_gate_blocks_missing_source_truth() -> N
     )
 
 
+def test_downstream_realization_contract_loader_rejects_non_object_file(tmp_path: Path) -> None:
+    module = _load_downstream_realization_contract_gate()
+    contract_path = tmp_path / "contract.json"
+    contract_path.write_text("[]", encoding="utf-8")
+
+    try:
+        module.load_downstream_realization_contract_plan(
+            repository_root=tmp_path,
+            contract_path=Path("contract.json"),
+        )
+    except ValueError as exc:
+        assert str(exc) == "downstream realization contract plan must be a JSON object"
+    else:
+        raise AssertionError("expected non-object contract file to fail")
+
+
+def test_downstream_realization_contract_loader_rejects_malformed_sections() -> None:
+    module = _load_downstream_realization_contract_gate()
+    payload = _plan_payload(module.load_downstream_realization_contract_plan())
+
+    source_truth_payload = dict(payload)
+    source_truth_payload["source_of_truth"] = []
+    try:
+        module._parse_payload(source_truth_payload)
+    except ValueError as exc:
+        assert str(exc) == "downstream realization source_of_truth must be an object"
+    else:
+        raise AssertionError("expected malformed source_of_truth to fail")
+
+    contracts_payload = dict(payload)
+    contracts_payload["contracts"] = {}
+    try:
+        module._parse_payload(contracts_payload)
+    except ValueError as exc:
+        assert str(exc) == "downstream realization contracts must be a list"
+    else:
+        raise AssertionError("expected malformed contracts to fail")
+
+    contract_entries_payload = dict(payload)
+    contract_entries_payload["contracts"] = ["not-object"]
+    try:
+        module._parse_payload(contract_entries_payload)
+    except ValueError as exc:
+        assert str(exc) == "downstream realization contract entries must be objects"
+    else:
+        raise AssertionError("expected malformed contract entry to fail")
+
+
+def test_downstream_realization_contract_loader_coerces_non_list_contract_fields() -> None:
+    module = _load_downstream_realization_contract_gate()
+    payload = _plan_payload(module.load_downstream_realization_contract_plan())
+    contract = dict(payload["contracts"][0])
+    contract["evidence_refs"] = "not-list"
+    contract["blockers"] = "not-list"
+    payload["contracts"] = [contract]
+
+    plan = module._parse_payload(payload)
+
+    assert plan.contracts[0].evidence_refs == ()
+    assert plan.contracts[0].blockers == ()
+
+
 def _plan_payload(plan: Any) -> dict[str, Any]:
-    return {
-        "contract_id": plan.contract_id,
-        "contract_version": plan.contract_version,
-        "repository": plan.repository,
-        "lifecycle_status": plan.lifecycle_status,
-        "supportability_status": plan.supportability_status,
-        "route_existence_proven": plan.route_existence_proven,
-        "downstream_execution_proven": plan.downstream_execution_proven,
-        "supported_feature_promoted": plan.supported_feature_promoted,
-        "source_of_truth": dict(plan.source_of_truth),
-        "contracts": [
+    return json.loads(
+        json.dumps(
             {
-                "contract_id": contract.contract_id,
-                "owner_repository": contract.owner_repository,
-                "source_authority": contract.source_authority,
-                "target_route": contract.target_route,
-                "route_fit_status": contract.route_fit_status,
-                "adapter_status": contract.adapter_status,
-                "evidence_refs": list(contract.evidence_refs),
-                "blockers": list(contract.blockers),
+                "contract_id": plan.contract_id,
+                "contract_version": plan.contract_version,
+                "repository": plan.repository,
+                "lifecycle_status": plan.lifecycle_status,
+                "supportability_status": plan.supportability_status,
+                "route_existence_proven": plan.route_existence_proven,
+                "downstream_execution_proven": plan.downstream_execution_proven,
+                "supported_feature_promoted": plan.supported_feature_promoted,
+                "source_of_truth": dict(plan.source_of_truth),
+                "contracts": [
+                    {
+                        "contract_id": contract.contract_id,
+                        "owner_repository": contract.owner_repository,
+                        "source_authority": contract.source_authority,
+                        "target_route": contract.target_route,
+                        "route_fit_status": contract.route_fit_status,
+                        "adapter_status": contract.adapter_status,
+                        "evidence_refs": list(contract.evidence_refs),
+                        "blockers": list(contract.blockers),
+                    }
+                    for contract in plan.contracts
+                ],
             }
-            for contract in plan.contracts
-        ],
-    }
+        )
+    )
