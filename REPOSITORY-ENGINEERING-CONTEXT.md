@@ -149,8 +149,8 @@ evidence replay posture for matched, stale, mismatched, expired, and missing
 records, idempotent lifecycle-transition recording, lifecycle-transition
 history, conversion intent/outcome records, conversion intent lookup, report
 evidence-pack request records, safe audit events for mutating actions,
-source-safe pending outbox records for accepted internal mutations, snapshot
-recovery for internal replay tests,
+source-safe outbox records plus retry/dead-letter delivery state for accepted
+internal mutations, snapshot recovery for internal replay tests,
 application-level high-cash evaluate-and-persist orchestration in
 `src/app/application/high_cash_signal.py`, internal high-cash source-ingestion
 orchestration in `src/app/application/source_ingestion.py`, and candidate
@@ -179,14 +179,22 @@ explanation reads. Application
 use cases must depend on that port instead of defining local repository
 protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
 so the future durable adapter has one governed contract surface.
-`src/app/domain/events.py` defines the internal outbox envelope, pending status
-vocabulary, deterministic event identity, hashed idempotency fingerprint, and
-forbidden payload-key guard for source/client-sensitive fields. Accepted
-candidate persistence, lifecycle, review, feedback, conversion, and report
-evidence-pack mutations append pending outbox records; replay, conflict,
-not-found, blocked, suppressed, and not-eligible paths do not create duplicate
-outbox work. This is not external event publication, downstream delivery, or
-mesh certification.
+`src/app/domain/events.py` defines the internal outbox envelope, status
+vocabulary, deterministic event identity, hashed idempotency fingerprint,
+source/client-sensitive payload-key guard, published transition, failed retry
+transition, and dead-letter transition. Accepted candidate persistence,
+lifecycle, review, feedback, conversion, and report evidence-pack mutations
+append pending outbox records; replay, conflict, not-found, blocked,
+suppressed, and not-eligible paths do not create duplicate outbox work.
+`src/app/application/outbox_delivery.py` adds a framework-free run-once
+delivery orchestration over a publisher port and repository port. It can mark
+events published, failed for retry, or dead-lettered after the configured retry
+limit, maps publisher exceptions to bounded source-safe failure reasons, and
+returns aggregate counts only. `InMemoryIdeaRepository` and
+`PostgresIdeaRepository` expose the same delivery-ready query and status update
+contract through `src/app/ports/idea_repository.py`, with unit coverage for
+PostgreSQL persistence of delivery status. This is not external event
+publication, broker integration, downstream delivery, or mesh certification.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report
@@ -220,7 +228,7 @@ validating the backing workflow tables, and proving schema rollback/reapply
 restores a usable API persistence contract. This is still not production
 storage certification: deploy migration evidence, scheduled daemon/deploy
 source-ingestion worker proof, live Core source adapter proof, data-product
-certification, outbox publisher semantics, retry/dead-letter handling,
+certification, external broker publication, downstream consumer proof,
 downstream workflow proof, and supported-feature promotion remain planned. The
 current run-once worker CLI is developer/operator foundation only and is
 validated in check-only mode by `make source-ingestion-worker-check`.
@@ -543,8 +551,8 @@ logs; fix or document the owned warning source instead.
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence
    policy, deterministic governance checks, internal persistence records,
-   replay posture, idempotency, audit primitives, and source-safe pending
-   outbox records.
+   replay posture, idempotency, audit primitives, source-safe outbox records,
+   and retry/dead-letter delivery state semantics.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
    `idea_repository.py` owns the central repository workflow protocols used by

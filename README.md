@@ -30,7 +30,8 @@ Current implemented foundations include:
 - AI explanation governance diagnostics without provider execution,
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
-- source-safe pending outbox records for accepted internal mutations,
+- source-safe outbox records plus internal retry/dead-letter delivery
+  semantics for accepted internal mutations,
 - runtime trust telemetry preview and data-mesh readiness diagnostics,
 - PostgreSQL schema, migration, rollback, and repository adapter proof,
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
@@ -134,7 +135,8 @@ flowchart LR
   readiness views.
 - `src/app/domain/`: framework-free domain models, policies, scoring,
   lifecycle, review, AI governance, conversion, report evidence, persistence
-  records, idempotency, replay, audit primitives, and pending outbox records.
+  records, idempotency, replay, audit primitives, outbox records, and
+  retry/dead-letter state semantics.
 - `src/app/ports/`: source-owned service and repository protocols.
 - `src/app/infrastructure/`: Core source adapter, migration helpers,
   PostgreSQL codecs, and PostgreSQL repository adapter.

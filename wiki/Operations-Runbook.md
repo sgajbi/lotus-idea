@@ -8,9 +8,10 @@ conversion intent/outcome and report evidence-pack API foundations. The service
 remains internal foundation only:
 repository-backed API persistence is process-local by default and
 PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Accepted
-internal mutations also create source-safe pending outbox records, but there is
-no external event publication, downstream adapter, production recovery command,
-Workbench proof, or supported business API yet. Bounded read-only Gateway
+internal mutations also create source-safe outbox records with internal
+retry/dead-letter delivery state semantics, but there is no external broker
+publication, downstream adapter, production recovery command, Workbench proof,
+or supported business API yet. Bounded read-only Gateway
 publication exists for advisor queue and candidate detail only. A versioned
 migration/rollback schema contract exists for the durable repository and is
 enforced by `make migration-contract-gate`.
@@ -96,7 +97,7 @@ not call downstream services or create downstream records.
 | --- | --- | --- |
 | Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation | Deployed scheduler, live Core certification, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
-| Pending outbox | Source-safe pending records for accepted internal mutations | Published domain events or downstream delivery |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, and dead-letter status for accepted internal mutations | External broker publication or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
 | Downstream realization | Readiness diagnostics over current workflow counts | Advise/Manage/Report/Render/Archive materialization |
 
@@ -105,7 +106,7 @@ flowchart LR
     Checks["Repo-native checks"]
     SourceGate["source-ingestion worker output contract"]
     RuntimeProof["PostgreSQL runtime proof"]
-    Outbox["Pending outbox records"]
+    Outbox["Outbox retry/dead-letter foundation"]
     Readiness["Readiness diagnostics"]
     Promotion["Future supported-feature promotion"]
 

@@ -151,8 +151,9 @@ recovery. The application layer also has a manifest-backed run-once
 source-ingestion worker CLI with manifest and source-safe check-only output
 validation through `make source-ingestion-worker-check`. Production storage
 readiness still requires deploy migration evidence, scheduled daemon/deploy
-worker evidence, live Core source-worker evidence, and event publication
-semantics beyond the pending outbox foundation.
+worker evidence, live Core source-worker evidence, broker adapter proof,
+downstream consumer proof, and live event-publication evidence beyond the
+internal outbox retry/dead-letter foundation.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
@@ -274,10 +275,13 @@ queue, review, feedback, conversion, report evidence-pack workflow path, and
 internal source-ingestion replay/conflict recovery. Unit tests also prove the
 bounded run-once source-ingestion batch worker foundation and the
 manifest-backed worker CLI check-only contract.
-Accepted internal mutations now also append source-safe pending outbox records
-through the same repository snapshot contract. This is not a broker publisher,
-Gateway event, platform mesh event, downstream delivery contract, or supported
-feature.
+Accepted internal mutations now also append source-safe outbox records through
+the same repository snapshot contract. The repository port and PostgreSQL
+adapter support delivery-ready reads, published status, failed retry status,
+and dead-letter status, while `src/app/application/outbox_delivery.py`
+orchestrates a run-once publisher-port pass with aggregate source-safe counts.
+This is not a broker publisher, Gateway event, platform mesh event, downstream
+delivery contract, or supported feature.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

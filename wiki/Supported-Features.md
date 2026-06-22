@@ -20,9 +20,13 @@ feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also
 exist; the gate validates both manifest shape and source-safe check-only output
-shape. `lotus-gateway` now publishes bounded read-only advisor queue and
-candidate detail routes, but these foundations are not deployed scheduler
-daemon proof, live Core worker certification, Workbench proof, or
+shape. Accepted internal mutations now create source-safe outbox records with
+retryable failed status, published status, and dead-letter status through the
+repository port. That is recoverability foundation only; no broker adapter,
+downstream consumer, Gateway event, platform mesh event, or supported event
+publication exists. `lotus-gateway` now publishes bounded read-only advisor
+queue and candidate detail routes, but these foundations are not deployed
+scheduler daemon proof, live Core worker certification, Workbench proof, or
 supported-feature promotion. The AI explanation readiness diagnostic is an
 operator
 supportability check only; it does not invoke `lotus-ai`, certify durable AI
