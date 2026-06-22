@@ -124,14 +124,16 @@ This slice also hardens CI runtime provenance:
 1. GitHub workflow actions are pinned to verified immutable upstream tag SHAs
    while retaining readable version comments for operator review.
 2. `scripts/ci_contract_gate.py` now rejects floating action tags or branches,
-   wrong verified SHAs for approved actions, and missing version provenance
-   comments.
+   wrong verified SHAs for approved actions, missing version provenance
+   comments, and weakened Makefile test targets that ignore scoped
+   `UNIT_TESTS`, `INTEGRATION_TESTS`, or `E2E_TESTS` overrides.
 3. `tests/unit/test_ci_contract_gate.py` covers current repository pass
-   behavior plus failure cases for floating tags, unverified SHAs, and missing
-   provenance comments.
+   behavior plus failure cases for floating tags, unverified SHAs, missing
+   provenance comments, weakened cleanup wiring, and unscoped test target
+   regression.
 4. The CI quality guide, enterprise-readiness standard, README, repository
    context, quality scorecard, and wiki source now describe the immutable
-   action-pin expectation for future agentic work.
+   action-pin and scoped test-target expectations for future agentic work.
 
 This slice also hardens downstream realization contract governance:
 

@@ -731,8 +731,11 @@ owned by upstream services.
 2. lint: `make lint`
 3. typecheck: `make typecheck`
 4. unit tests: `make test-unit`
+   Use `UNIT_TESTS=<path>` for focused unit validation.
 5. integration tests: `make test-integration`
+   Use `INTEGRATION_TESTS=<path>` for focused integration validation.
 6. end-to-end tests: `make test-e2e`
+   Use `E2E_TESTS=<path>` for focused e2e validation.
 7. repo-native CI parity: `make check`
 8. full CI parity: `make ci`
 9. OpenAPI gate: `make openapi-gate`
