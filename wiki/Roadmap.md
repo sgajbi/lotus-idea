@@ -64,9 +64,10 @@ First implementation program:
 4. extend the current Core source-port foundation into live high-cash /
    idle-liquidity source proof after Core exposes explicit source-reported cash
    weight,
-5. extend the current PostgreSQL source-ingestion replay/conflict recovery
-   proof into scheduled source-ingestion workers, deploy migration evidence,
-   live Core source-adapter proof, and durable operational procedures,
+5. extend the current bounded run-once source-ingestion batch worker and
+   PostgreSQL replay/conflict recovery proof into scheduled daemon/deploy
+   source-ingestion workers, deploy migration evidence, live Core
+   source-adapter proof, and durable operational procedures,
 6. extend certified APIs into Gateway/Workbench product surfaces after live
    source adapters and durable state exist,
 7. persist conversion intents/outcomes and add downstream adapter contracts only

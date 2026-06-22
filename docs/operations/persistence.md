@@ -9,7 +9,9 @@ feedback, conversion, report evidence-pack, advisor queue, and migration
 rollback/reapply recovery workflow path. Internal high-cash source-ingestion
 orchestration now uses generated source-ingestion idempotency keys when needed
 and classifies accepted, replayed, conflict, blocked, suppressed, and
-not-eligible outcomes over the Core source port and repository port. The
+not-eligible outcomes over the Core source port and repository port. It also
+has a bounded run-once batch worker foundation with per-item idempotency and
+batch decision counts for scheduling-ready internal execution. The
 PostgreSQL runtime proof also covers internal source-ingestion replay after
 repository reload and same-key changed-source conflict recovery.
 Runtime API state remains process-local by default and reports
@@ -57,10 +59,11 @@ downstream realization proof, or supported-feature promotion.
    GitHub PR Merge Gate and Main Releasability run this proof against
    `postgres:18-alpine`.
 9. `src/app/application/source_ingestion.py` is the internal high-cash
-   source-ingestion orchestration foundation. It does not run a background
-   worker yet; it standardizes the future worker's generated idempotency key
-   shape and non-mutating behavior for blocked, suppressed, and below-threshold
-   Core source evidence.
+   source-ingestion orchestration and bounded run-once batch worker foundation.
+   It standardizes the future scheduler's generated idempotency key shape,
+   per-item replay/conflict posture, batch decision counts, and non-mutating
+   behavior for blocked, suppressed, and below-threshold Core source evidence.
+   It is not a daemon, deploy-pipeline worker, or live Core certification.
 
 ## Validation
 
@@ -111,7 +114,7 @@ Do not claim production storage readiness, production recovery,
 data-product promotion, or supported business workflows until later slices add:
 
 1. deploy-pipeline migration evidence,
-2. scheduled source-ingestion worker proof against the real service,
+2. scheduled daemon/deploy source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
 4. data-product telemetry and platform mesh certification,
 5. Gateway/Workbench/downstream proof for supported workflows,
