@@ -35,6 +35,7 @@ class OutboxDeliveryReadinessSnapshot:
     certification_ready: bool
     durable_storage_backed: bool
     external_broker_configured: bool
+    external_broker_publisher_adapter_present: bool
     delivery_ready_count: int
     max_retry_count: int
     status_counts: OutboxDeliveryStatusCounts
@@ -68,7 +69,7 @@ def build_outbox_delivery_readiness_snapshot(
     )
     configuration_blockers = _configuration_blockers()
     certification_blockers = (
-        "external_broker_publisher_missing",
+        "external_broker_runtime_proof_missing",
         "downstream_consumer_contracts_missing",
         "platform_mesh_event_contract_missing",
         "gateway_workbench_proof_missing",
@@ -83,12 +84,15 @@ def build_outbox_delivery_readiness_snapshot(
         certification_ready=certification_ready,
         durable_storage_backed=durable_storage_backed,
         external_broker_configured=bool(os.getenv(OUTBOX_BROKER_URL_ENV, "").strip()),
+        external_broker_publisher_adapter_present=True,
         delivery_ready_count=delivery_ready_count,
         max_retry_count=max_retry_count,
         status_counts=status_counts,
         source_of_truth={
             "outbox_delivery": "src/app/application/outbox_delivery.py",
             "outbox_readiness": "src/app/application/outbox_delivery_readiness.py",
+            "publisher_port": "src/app/ports/outbox_publisher.py",
+            "publisher_adapter": "src/app/infrastructure/outbox_publisher.py",
             "repository_port": "src/app/ports/idea_repository.py",
             "rfc_slice_06": (
                 "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"

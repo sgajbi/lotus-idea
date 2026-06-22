@@ -79,6 +79,9 @@ class OutboxDeliveryReadinessResponse(CamelModel):
     certification_ready: bool = Field(..., alias="certificationReady")
     durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
     external_broker_configured: bool = Field(..., alias="externalBrokerConfigured")
+    external_broker_publisher_adapter_present: bool = Field(
+        ..., alias="externalBrokerPublisherAdapterPresent"
+    )
     delivery_ready_count: int = Field(..., alias="deliveryReadyCount")
     max_retry_count: int = Field(..., alias="maxRetryCount")
     status_counts: OutboxDeliveryStatusCountsResponse = Field(..., alias="statusCounts")
@@ -99,6 +102,9 @@ class OutboxDeliveryReadinessResponse(CamelModel):
             certificationReady=snapshot.certification_ready,
             durableStorageBacked=snapshot.durable_storage_backed,
             externalBrokerConfigured=snapshot.external_broker_configured,
+            externalBrokerPublisherAdapterPresent=(
+                snapshot.external_broker_publisher_adapter_present
+            ),
             deliveryReadyCount=snapshot.delivery_ready_count,
             maxRetryCount=snapshot.max_retry_count,
             statusCounts=OutboxDeliveryStatusCountsResponse.from_domain(snapshot.status_counts),
@@ -177,8 +183,9 @@ OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {
         "Returns source-safe operator readiness for the internal outbox delivery foundation. "
         "The endpoint reports aggregate outbox status counts, delivery-ready count, durable "
         "repository posture, broker configuration posture, and explicit certification blockers. "
-        "It does not publish events, expose event identifiers, call a broker, certify downstream "
-        "delivery, create Gateway or Workbench support, or promote a supported feature."
+        "It does not publish events, expose event identifiers, certify live broker runtime, "
+        "certify downstream delivery, create Gateway or Workbench support, or promote a "
+        "supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": OutboxDeliveryReadinessResponse,
@@ -195,6 +202,7 @@ OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {
                         "certificationReady": False,
                         "durableStorageBacked": False,
                         "externalBrokerConfigured": False,
+                        "externalBrokerPublisherAdapterPresent": True,
                         "deliveryReadyCount": 0,
                         "maxRetryCount": 3,
                         "statusCounts": {
@@ -206,11 +214,13 @@ OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {
                         },
                         "sourceOfTruth": {
                             "outbox_delivery": "src/app/application/outbox_delivery.py",
+                            "publisher_port": "src/app/ports/outbox_publisher.py",
+                            "publisher_adapter": "src/app/infrastructure/outbox_publisher.py",
                             "repository_port": "src/app/ports/idea_repository.py",
                         },
                         "configurationBlockers": ["outbox_broker_not_configured"],
                         "certificationBlockers": [
-                            "external_broker_publisher_missing",
+                            "external_broker_runtime_proof_missing",
                             "downstream_consumer_contracts_missing",
                             "platform_mesh_event_contract_missing",
                         ],

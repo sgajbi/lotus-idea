@@ -68,6 +68,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
     assert payload["certificationReady"] is False
     assert payload["durableStorageBacked"] is False
     assert payload["externalBrokerConfigured"] is False
+    assert payload["externalBrokerPublisherAdapterPresent"] is True
     assert payload["deliveryReadyCount"] == 2
     assert payload["statusCounts"] == {
         "pendingCount": 1,
@@ -77,7 +78,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
         "totalCount": 2,
     }
     assert payload["configurationBlockers"] == ["outbox_broker_not_configured"]
-    assert "external_broker_publisher_missing" in payload["certificationBlockers"]
+    assert "external_broker_runtime_proof_missing" in payload["certificationBlockers"]
     assert payload["supportedFeaturePromoted"] is False
     assert "idea_high_cash_001" not in response.text
     assert "eventId" not in response.text
