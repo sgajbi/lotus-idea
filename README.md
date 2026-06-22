@@ -46,6 +46,9 @@ and migration rollback/reapply recovery workflow now exist behind blocking
 gates. `lotus-gateway` now publishes bounded read-only routes for advisor
 queue and candidate detail while preserving `lotus-idea` source authority and
 blocking unsupported-feature promotion.
+Advisor queue reads are scope-aware through optional tenant, book, portfolio,
+and client filters over persisted candidate scope, but platform caller-context
+entitlement proof and Workbench product proof remain future slices.
 Runtime API state is process-local by default and becomes repository-durable
 only when `LOTUS_IDEA_DATABASE_URL` is configured after migrations are applied.
 No business feature is supported until the relevant
