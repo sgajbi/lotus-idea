@@ -64,6 +64,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/outcomes"),
         ("POST", "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"),
+        ("POST", "/api/v1/outbox-delivery/run-once"),
         ("GET", "/api/v1/idea-candidates/{candidateId}"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/conversion-intents"),

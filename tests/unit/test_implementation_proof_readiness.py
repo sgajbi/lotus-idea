@@ -81,6 +81,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         if capability.capability_id == "outbox-delivery"
     )
     assert "GET /api/v1/outbox-delivery/readiness" in outbox_delivery.evidence_refs
+    assert "POST /api/v1/outbox-delivery/run-once" in outbox_delivery.evidence_refs
     assert "src/app/infrastructure/outbox_publisher.py" in outbox_delivery.evidence_refs
     assert "outbox_broker_not_configured" in outbox_delivery.blockers
     assert "external_broker_runtime_proof_missing" in outbox_delivery.blockers

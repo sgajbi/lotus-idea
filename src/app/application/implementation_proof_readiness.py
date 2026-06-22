@@ -298,6 +298,7 @@ def _outbox_delivery_capability(
             "src/app/ports/outbox_publisher.py",
             "src/app/infrastructure/outbox_publisher.py",
             "GET /api/v1/outbox-delivery/readiness",
+            "POST /api/v1/outbox-delivery/run-once",
         ),
         blockers=(
             *snapshot.configuration_blockers,
