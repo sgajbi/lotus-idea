@@ -370,6 +370,10 @@ coverage, build, dependency, local environment, or local database artifacts.
 `make maintainability-gate` is also blocking through `make lint`;
 it prevents future agentic changes from adding oversized source, test, or
 script files/functions beyond the measured enterprise-quality thresholds.
+`make monetary-float-guard` is blocking through `make lint` with AST-backed
+precision checks; it fails money-like `float` annotations, literals, and
+conversions so private-banking amounts, prices, balances, rates, valuations,
+and P&L fields continue to use explicit decimal/domain types.
 `make source-observability-contract-gate` is also blocking through
 `make lint`; it prevents future application code from adding raw `print()`,
 direct Python logging, or low-level `log_event` bypasses outside the central

@@ -620,6 +620,12 @@ implementation-backed evidence anchors, and stale scaffold-era underclaim
 detection after internal API, persistence, observability, and test foundations
 land.
 
+`make monetary-float-guard` is blocking through `make lint`. It uses AST-backed
+checks to fail money-like `float` annotations, literals, and conversions across
+`src` while allowing non-monetary operational float usage such as timeout
+seconds. This keeps Lotus Idea aligned to the financial precision posture from
+the first implementation slices.
+
 `make source-observability-contract-gate` is blocking through `make lint`. It
 scans application source and fails raw `print()`, direct Python logging imports
 or calls, and low-level `log_event` bypasses outside the central observability
