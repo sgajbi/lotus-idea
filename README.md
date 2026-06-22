@@ -205,6 +205,8 @@ make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
+make supported-features-gate
+make endpoint-certification-gate
 make postgres-integration-gate
 make typecheck
 make architecture-boundary-gate
@@ -228,6 +230,8 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
 .venv\Scripts\python.exe scripts/run_source_ingestion_worker.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --check-only
+.venv\Scripts\python.exe scripts/supported_features_gate.py
+.venv\Scripts\python.exe scripts/endpoint_certification_gate.py
 .venv\Scripts\python.exe -m pytest tests/integration/test_postgres_runtime_integration.py
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py

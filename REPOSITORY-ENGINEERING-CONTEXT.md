@@ -583,6 +583,16 @@ that no business workflow exists after internal APIs are certified or that
 architecture-boundary enforcement remains report-only after the
 `architecture-boundary-gate` target is blocking.
 
+`make endpoint-certification-gate` is blocking through `make lint`. It now
+validates more than ledger presence: public OpenAPI operations must stay
+synchronized with `docs/operations/endpoint-certification-ledger.json`, JSON
+examples must parse, test references must resolve to real pytest functions,
+baseline health/metadata routes must use `baseline_certified`, and certified
+business/operator endpoints must name an `idea.*` capability, document
+product-safe 403 behavior, preserve Gateway and Workbench boundaries, preserve
+the no-supported-feature-promotion boundary, and reference
+`scripts/openapi_quality_gate.py` evidence.
+
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression
 tests in the same change.

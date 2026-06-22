@@ -13,6 +13,7 @@ Blocking scaffold commands:
 4. `make documentation-contract-gate`
 5. `make quality-scorecard-gate`
 6. `make implementation-truth-gate`
+7. `make endpoint-certification-gate`
 
 Report-only scaffold commands:
 
@@ -50,3 +51,9 @@ production readiness, external support, certification, live source ingestion, Ga
 support, or client-ready publication while `supported-features/supported-features.json` has no
 implemented features. It prevents agent-written README/wiki/operations text from outpacing code,
 endpoint certification, data-mesh proof, and supported-feature evidence.
+
+`make endpoint-certification-gate` blocks weak API certification. It requires every public OpenAPI
+operation to have a ledger entry; validates required evidence fields, valid JSON examples,
+real `tests/path.py::test_name` references, baseline endpoint status discipline, OpenAPI-gate
+evidence, certified endpoint capability posture, product-safe 403 behavior, and explicit
+Gateway/Workbench/supported-feature boundary wording before an endpoint can remain `certified`.

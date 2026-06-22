@@ -24,6 +24,8 @@ make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
+make supported-features-gate
+make endpoint-certification-gate
 make postgres-integration-gate
 make openapi-gate
 make architecture-boundary-gate
@@ -112,6 +114,13 @@ surfaces must describe unsupported, planned, blocked, or evidence-required postu
 gate also blocks stale scaffold-era underclaims in demo documentation when current implementation
 and CI evidence prove a stronger foundation, so future agent work cannot leave outdated scaffold
 truth behind while adding real APIs or gates.
+
+The endpoint-certification gate blocks weak certified API posture. It keeps the OpenAPI surface and
+endpoint certification ledger synchronized, validates JSON-shaped examples, proves test evidence
+references resolve to real pytest functions, keeps health/metadata routes at `baseline_certified`,
+and requires certified business/operator endpoints to name an `idea.*` capability, document
+product-safe 403 behavior, cite the OpenAPI quality gate, and preserve Gateway, Workbench, and
+supported-feature-promotion boundaries.
 
 Data-mesh foundation checks:
 

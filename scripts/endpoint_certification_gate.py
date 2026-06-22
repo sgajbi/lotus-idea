@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import ast
 import json
+import re
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -22,6 +26,15 @@ REQUIRED_FIELDS = (
     "test_evidence",
     "openapi_evidence",
 )
+BASELINE_OPERATIONS = {
+    ("GET", "/health"),
+    ("GET", "/health/live"),
+    ("GET", "/health/ready"),
+    ("GET", "/metadata"),
+}
+BOUNDARY_TERMS = ("Gateway", "Workbench", "supported-feature promotion")
+CAPABILITY_PATTERN = re.compile(r"\bidea\.[a-z0-9.-]+\b")
+TEST_REFERENCE_PATTERN = re.compile(r"^(?P<path>tests/.+\.py)::(?P<test>[A-Za-z_][A-Za-z0-9_]*)$")
 
 
 def _openapi_operations_from_app() -> set[tuple[str, str]]:
@@ -66,6 +79,85 @@ def _openapi_operations() -> set[tuple[str, str]]:
         if APP_MAIN_PATH.exists():
             return _openapi_operations_from_source()
         raise exc
+
+
+def _parse_json_examples(
+    *,
+    operation: tuple[str, str],
+    field: str,
+    examples: Any,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(examples, list) or not examples:
+        return [f"{operation}: {field} must be a non-empty list"]
+    for index, example in enumerate(examples):
+        if not isinstance(example, str) or not example.strip():
+            errors.append(f"{operation}: {field}[{index}] must be a non-empty string")
+            continue
+        stripped = example.strip()
+        if stripped[0] not in "{[":
+            continue
+        try:
+            json.loads(stripped)
+        except json.JSONDecodeError as exc:
+            errors.append(f"{operation}: {field}[{index}] must be valid JSON: {exc.msg}")
+    return errors
+
+
+def _validate_test_reference(operation: tuple[str, str], reference: str) -> list[str]:
+    match = TEST_REFERENCE_PATTERN.match(reference)
+    if not match:
+        return [f"{operation}: test_evidence reference must use tests/path.py::test_name"]
+    test_path = Path(match.group("path"))
+    full_path = ROOT / test_path
+    if not full_path.exists():
+        return [f"{operation}: test_evidence file does not exist: {test_path.as_posix()}"]
+    test_name = match.group("test")
+    try:
+        tree = ast.parse(full_path.read_text(encoding="utf-8"), filename=str(full_path))
+    except SyntaxError:
+        return [f"{operation}: test_evidence file is not parseable: {test_path.as_posix()}"]
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == test_name:
+            return []
+    return [f"{operation}: test_evidence test does not exist: {reference}"]
+
+
+def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
+    operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
+    if endpoint["certification_status"] != "certified":
+        return []
+
+    errors: list[str] = []
+    if operation in BASELINE_OPERATIONS:
+        errors.append(f"{operation}: baseline operation must not use certified status")
+
+    combined_evidence_text = " ".join(
+        [
+            str(endpoint.get("when_to_use", "")),
+            str(endpoint.get("when_not_to_use", "")),
+            " ".join(str(example) for example in endpoint.get("error_examples", [])),
+        ]
+    )
+    if not CAPABILITY_PATTERN.search(combined_evidence_text):
+        errors.append(f"{operation}: certified endpoint must name at least one idea.* capability")
+
+    unsupported_boundary = str(endpoint.get("when_not_to_use", ""))
+    for boundary_term in BOUNDARY_TERMS:
+        if boundary_term not in unsupported_boundary:
+            errors.append(
+                f"{operation}: when_not_to_use must explicitly preserve `{boundary_term}` boundary"
+            )
+
+    if "scripts/openapi_quality_gate.py" not in str(endpoint.get("openapi_evidence", "")):
+        errors.append(
+            f"{operation}: openapi_evidence must reference scripts/openapi_quality_gate.py"
+        )
+
+    if not any("403" in str(example) for example in endpoint.get("error_examples", [])):
+        errors.append(f"{operation}: certified endpoint must document product-safe 403 behavior")
+
+    return errors
 
 
 def main() -> int:
@@ -113,10 +205,36 @@ def main() -> int:
             if not str(endpoint.get(field, "")).strip():
                 errors.append(f"{operation}: {field} is required")
 
-        for field in ("request_examples", "response_examples", "error_examples", "test_evidence"):
+        errors.extend(
+            _parse_json_examples(
+                operation=operation,
+                field="request_examples",
+                examples=endpoint.get("request_examples"),
+            )
+        )
+        errors.extend(
+            _parse_json_examples(
+                operation=operation,
+                field="response_examples",
+                examples=endpoint.get("response_examples"),
+            )
+        )
+        for field in ("error_examples", "test_evidence"):
             value = endpoint.get(field)
             if not isinstance(value, list) or not value:
                 errors.append(f"{operation}: {field} must be a non-empty list")
+
+        for reference in endpoint.get("test_evidence", []):
+            if isinstance(reference, str):
+                errors.extend(_validate_test_reference(operation, reference))
+
+        if (
+            operation in BASELINE_OPERATIONS
+            and endpoint["certification_status"] != "baseline_certified"
+        ):
+            errors.append(f"{operation}: baseline endpoint must use baseline_certified status")
+
+        errors.extend(_validate_certified_endpoint_posture(endpoint))
 
     missing_from_ledger = sorted(openapi_operations - ledger_operations)
     stale_in_ledger = sorted(ledger_operations - openapi_operations)
