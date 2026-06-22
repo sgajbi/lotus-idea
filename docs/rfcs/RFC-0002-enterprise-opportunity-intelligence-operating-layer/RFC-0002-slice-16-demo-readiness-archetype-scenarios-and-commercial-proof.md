@@ -15,8 +15,8 @@ capabilities exist.
    supported-feature evidence exist.
 2. `GET /api/v1/implementation-proof/readiness` gives operators and demo leads
    a source-safe blocker view across source ingestion, advisor queue, AI
-   explanation, data mesh, Workbench, downstream realization, and
-   supported-feature promotion.
+   explanation, data mesh, runtime trust telemetry preview, outbox delivery,
+   Workbench, downstream realization, and supported-feature promotion.
 3. `docs/operations/implementation-proof-readiness.md` documents how to call
    and interpret the diagnostic as a readiness aid, not as demo evidence.
 

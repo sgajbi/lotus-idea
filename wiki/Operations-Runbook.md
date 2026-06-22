@@ -85,12 +85,13 @@ Workbench proof exist.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
-queue, AI explanation, data mesh, runtime trust telemetry preview, Workbench
-realization, downstream realization, and supported-feature promotion. It
-remains `not_certified` and `blocked` while any proof family lacks live
-evidence, and it must not be used as live implementation proof,
-Gateway/Workbench proof, data-product certification, certified runtime trust
-telemetry, client-ready publication, or supported-feature promotion.
+queue, AI explanation, data mesh, runtime trust telemetry preview, outbox
+delivery, Workbench realization, downstream realization, and
+supported-feature promotion. It remains `not_certified` and `blocked` while
+any proof family lacks live evidence, and it must not be used as live implementation proof,
+external broker publication, downstream delivery, Gateway/Workbench proof,
+data-product certification, certified runtime trust telemetry, client-ready
+publication, or supported-feature promotion.
 The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
 available for operators with `idea.downstream-realization.readiness.read` to
 inspect Advise, Manage, Report, Render, and Archive realization blockers over
@@ -261,9 +262,11 @@ promotion.
 aggregate proof-readiness diagnostic. It returns capability-level blockers,
 source-of-truth paths, and current supportability posture for operators without
 exposing candidate identifiers, source payloads, portfolio identifiers, or
-client identifiers. It is not live implementation proof, data-product
-certification, Workbench proof, client-ready publication, or supported-feature
-promotion.
+client identifiers. It includes the outbox-delivery proof family but does not
+expose event identifiers, aggregate identifiers, raw idempotency keys, or
+broker payloads. It is not live implementation proof, external broker
+publication, downstream delivery, data-product certification, Workbench proof,
+client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the same source-safe
 readiness snapshot without running the HTTP service. Use it as CI or async
 operator evidence only; it is not a supported product claim.

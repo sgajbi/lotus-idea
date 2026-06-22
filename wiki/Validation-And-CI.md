@@ -123,9 +123,10 @@ Persistence adapter validation:
    calling Core or writing repository state.
 7. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
-   implementation-proof readiness artifact can be generated without starting
-   the service and without exposing candidate, portfolio, client, prompt, or
-   source payload identifiers.
+   implementation-proof readiness artifact, including the outbox-delivery proof
+   family, can be generated without starting the service and without exposing
+   candidate, portfolio, client, prompt, outbox event, raw idempotency, broker,
+   or source payload identifiers.
 8. `tests/unit/test_runtime_trust_telemetry.py`,
    `tests/integration/test_runtime_trust_telemetry_api.py`, and
    `make runtime-trust-telemetry-preview-check` prove the source-safe runtime

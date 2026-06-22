@@ -17,8 +17,8 @@ durable operating-context enforcement:
    evaluation, high-cash persistence, candidate evidence replay, lifecycle
    transition, AI explanation evaluation, advisor queue, review action,
    feedback, conversion intent, conversion outcome, report evidence-pack
-   request, data-mesh-readiness, and implementation-proof-readiness diagnostic
-   endpoints.
+   request, data-mesh-readiness, outbox-delivery-readiness, and
+   implementation-proof-readiness diagnostic endpoints.
 2. The certification guide records each endpoint's current foundation scope,
    required capability, and unsupported boundary so future agents do not
    promote internal API foundations as business-supported product features.
@@ -44,8 +44,9 @@ durable operating-context enforcement:
    required headings, tables, or command examples.
 8. `docs/operations/implementation-proof-readiness.md`, README, repository
    context, demo claims, operations runbooks, and wiki source now describe the
-   certified internal implementation-proof readiness diagnostic and preserve
-   its no-supported-feature-promotion boundary.
+   certified internal implementation-proof readiness diagnostic, including the
+   outbox-delivery proof family, and preserve its no-external-publication and
+   no-supported-feature-promotion boundaries.
 9. `docs/operations/downstream-realization-readiness.md`, README, repository
    context, API certification docs, demo claims, operations runbooks, RFC
    index, quality scorecard, and wiki source now describe the certified
@@ -56,7 +57,8 @@ durable operating-context enforcement:
     polished operator-facing structure and is protected by the documentation
     contract gate, making implementation proof posture readable for business,
     engineering, operations, release, and demo reviewers without overclaiming
-    live proof or supported-feature promotion.
+    live proof, external broker publication, downstream delivery, or
+    supported-feature promotion.
 11. README, repository context, `docs/operations/api-certification.md`,
     `docs/operations/persistence.md`, `docs/operations/observability.md`, RFC
     index, quality scorecard, and wiki source now describe the certified

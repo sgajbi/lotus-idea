@@ -311,12 +311,13 @@ supported-feature promotion exists.
 operator diagnostic for aggregate RFC-0002 proof posture. It requires the
 `operator` role and `idea.implementation-proof.readiness.read`, returns
 source-safe blockers across source ingestion, advisor queue, AI explanation,
-data mesh, runtime trust telemetry preview, Workbench realization, downstream
-realization, and supported-feature promotion, emits bounded
+data mesh, runtime trust telemetry preview, outbox delivery, Workbench
+realization, downstream realization, and supported-feature promotion, emits bounded
 `implementation_proof_readiness_read` operation events, and does not expose
-candidate identifiers, source payloads, Gateway/Workbench proof,
-data-product certification, certified runtime trust telemetry, client-ready
-publication, or supported-feature promotion.
+candidate identifiers, source payloads, outbox event identifiers, broker
+payloads, Gateway/Workbench proof, data-product certification, certified
+runtime trust telemetry, or blocked client-ready publication or
+supported-feature promotion.
 `GET /api/v1/downstream-realization/readiness` now exposes a certified internal
 operator diagnostic for downstream realization supportability. It requires the
 `operator` role and `idea.downstream-realization.readiness.read`, reports
@@ -551,8 +552,9 @@ logs; fix or document the owned warning source instead.
     certification blockers for the high-cash run-once worker without executing
     Core source reads. Implementation-proof-readiness orchestration aggregates
     current RFC-0002 capability proof blockers across source ingestion, queue,
-    AI, data mesh, Workbench, downstream realization, and supported-feature
-    promotion without leaking source payloads or promoting support.
+    AI, data mesh, runtime trust telemetry preview, outbox delivery, Workbench,
+    downstream realization, and supported-feature promotion without leaking
+    source payloads, event identifiers, broker payloads, or promoting support.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence

@@ -93,17 +93,21 @@ foundation:
     diagnostic.
 22. `src/app/application/implementation_proof_readiness.py` adds an aggregate
     RFC-0002 proof-readiness snapshot over existing source-ingestion,
-    review-queue, AI-explanation, data-mesh, Workbench, downstream, and
-    supported-feature proof families without exposing source payloads.
+    review-queue, AI-explanation, data-mesh, runtime trust telemetry preview,
+    outbox-delivery, Workbench, downstream, and supported-feature proof
+    families without exposing source payloads, outbox event identifiers, raw
+    idempotency keys, or broker payloads.
 23. `GET /api/v1/implementation-proof/readiness` exposes that snapshot to
     operators with `idea.implementation-proof.readiness.read`, returns
     `not_certified` posture, and emits bounded
     `implementation_proof_readiness_read` operation events.
-24. `tests/unit/test_implementation_proof_readiness.py` and
+24. `tests/unit/test_implementation_proof_readiness.py`,
+    `tests/unit/test_generate_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove
-    blocked aggregate proof posture, source-safe payloads, permission-denied
-    behavior, timezone validation, unavailable-contract safe errors, and
-    not-certified operation-event behavior.
+    blocked aggregate proof posture, outbox-delivery proof-family inclusion,
+    source-safe payloads, permission-denied behavior, timezone validation,
+    unavailable-contract safe errors, and not-certified operation-event
+    behavior.
 25. `src/app/application/downstream_realization_readiness.py` and
     `GET /api/v1/downstream-realization/readiness` expose certified internal
     downstream realization readiness for Advise, Manage, Report, Render, and
