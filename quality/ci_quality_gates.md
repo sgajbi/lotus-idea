@@ -44,7 +44,8 @@ migration contract validation, migration execution dry-run validation, source-in
 manifest validation, source-observability contract validation, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
-auto-merge dispatch posture, and approved action-runtime majors.
+auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
+and pass/fail unit coverage for the CI contract gate itself.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also
