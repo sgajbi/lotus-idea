@@ -40,6 +40,7 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
         captured["path"] = request.url.path
         captured["correlation_id"] = request.headers["X-Correlation-Id"]
         captured["trace_id"] = request.headers["X-Trace-Id"]
+        captured["idempotency_key"] = request.headers["Idempotency-Key"]
         captured["payload"] = request.read()
         return httpx.Response(202, json={"accepted": True})
 
@@ -56,12 +57,14 @@ def test_advise_adapter_posts_source_safe_conversion_intent_envelope() -> None:
         conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
         correlation_id="corr-downstream",
         trace_id="trace-downstream",
+        idempotency_key="submission-idempotency-001",
     )
 
     assert outcome.accepted is True
     assert captured["path"] == "/advisory/idea-intake"
     assert captured["correlation_id"] == "corr-downstream"
     assert captured["trace_id"] == "trace-downstream"
+    assert captured["idempotency_key"] == "submission-idempotency-001"
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
         "conversionIntentId": "conversion-001",

@@ -1,0 +1,458 @@
+from __future__ import annotations
+
+from enum import Enum
+from typing import Any, TypedDict
+
+from fastapi import FastAPI, Header, Path, Request, status
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.api.caller_headers import caller_context_from_headers
+from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.application.downstream_realization import (
+    DownstreamRealizationStatus,
+    DownstreamRealizationSubmissionResult,
+    RealizeConversionIntentCommand,
+    RealizeReportEvidencePackCommand,
+    submit_conversion_intent_to_downstream,
+    submit_report_evidence_pack_to_downstream,
+)
+from app.domain import ConversionTarget, SourceSystem
+from app.downstream_realization_state import (
+    DownstreamRealizationClientsUnavailableError,
+    get_conversion_realization_clients,
+    get_report_evidence_pack_realization_client,
+)
+from app.errors import ProblemDetails, problem_response
+from app.observability import (
+    IdeaOperation,
+    OperationEvent,
+    OperationOutcome,
+    OperationSupportability,
+    emit_operation_event,
+)
+from app.security.caller_context import CallerContext, PermissionDeniedError
+
+
+class RouteMetadata(TypedDict):
+    path: str
+    operation_id: str
+    summary: str
+    description: str
+    status_code: int
+    response_model: type[BaseModel]
+    tags: list[str | Enum]
+    responses: dict[int | str, dict[str, Any]]
+
+
+_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY = "idea.downstream-realization.submit"
+
+
+class CamelModel(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class DownstreamSubmissionResultResponse(CamelModel):
+    submission_status: DownstreamRealizationStatus = Field(..., alias="submissionStatus")
+    source_authority: SourceSystem | None = Field(default=None, alias="sourceAuthority")
+    target: ConversionTarget | None = None
+    downstream_failure_reason: str | None = Field(default=None, alias="downstreamFailureReason")
+    records_downstream_outcome: bool = Field(False, alias="recordsDownstreamOutcome")
+    grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
+    supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
+
+    @classmethod
+    def from_domain(
+        cls,
+        result: DownstreamRealizationSubmissionResult,
+    ) -> "DownstreamSubmissionResultResponse":
+        return cls(
+            submissionStatus=result.status,
+            sourceAuthority=result.source_authority,
+            target=result.target,
+            downstreamFailureReason=result.downstream_failure_reason,
+            recordsDownstreamOutcome=result.records_downstream_outcome,
+            grantsDownstreamAuthority=result.grants_downstream_authority,
+            supportedFeaturePromoted=result.supported_feature_promoted,
+        )
+
+
+class DownstreamSubmissionApiResponse(CamelModel):
+    downstream_submission: DownstreamSubmissionResultResponse = Field(
+        ...,
+        alias="downstreamSubmission",
+    )
+    durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
+    supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
+
+
+async def submit_conversion_intent_downstream(
+    request: Request,
+    conversion_intent_id: str = Path(..., alias="conversionIntentId"),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> DownstreamSubmissionApiResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        _require_submission_caller(caller)
+        _validate_idempotency_key(idempotency_key)
+        clients = get_conversion_realization_clients()
+    except PermissionDeniedError:
+        _emit_downstream_submission_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return _permission_denied()
+    except ValueError:
+        _emit_downstream_submission_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
+        return _invalid_request()
+    except DownstreamRealizationClientsUnavailableError:
+        _emit_downstream_submission_event(
+            OperationOutcome.BLOCKED,
+            "downstream_realization_not_configured",
+        )
+        return _downstream_not_configured()
+
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    result = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id=conversion_intent_id,
+            idempotency_key=idempotency_key,
+            correlation_id=_request_correlation_id(request),
+            trace_id=_request_trace_id(request),
+        ),
+        repository=repository,
+        advise_client=clients.advise_client,
+        manage_client=clients.manage_client,
+    )
+    problem = _problem_for_submission_result(result)
+    if problem is not None:
+        _emit_downstream_submission_event(
+            _operation_outcome_from_submission_status(result.status),
+            _error_code_from_submission_status(result.status),
+            durable_storage_backed=durable_storage_backed,
+        )
+        return problem
+    _emit_downstream_submission_event(
+        _operation_outcome_from_submission_status(result.status),
+        result.downstream_failure_reason,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return DownstreamSubmissionApiResponse(
+        downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
+        durableStorageBacked=durable_storage_backed,
+        supportedFeaturePromoted=False,
+    )
+
+
+async def submit_report_evidence_pack_downstream(
+    request: Request,
+    report_evidence_pack_id: str = Path(..., alias="reportEvidencePackId"),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> DownstreamSubmissionApiResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    try:
+        _require_submission_caller(caller)
+        _validate_idempotency_key(idempotency_key)
+        report_client = get_report_evidence_pack_realization_client()
+    except PermissionDeniedError:
+        _emit_downstream_submission_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return _permission_denied()
+    except ValueError:
+        _emit_downstream_submission_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
+        return _invalid_request()
+    except DownstreamRealizationClientsUnavailableError:
+        _emit_downstream_submission_event(
+            OperationOutcome.BLOCKED,
+            "downstream_realization_not_configured",
+        )
+        return _downstream_not_configured()
+
+    repository = get_idea_repository()
+    durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    result = submit_report_evidence_pack_to_downstream(
+        RealizeReportEvidencePackCommand(
+            report_evidence_pack_id=report_evidence_pack_id,
+            idempotency_key=idempotency_key,
+            correlation_id=_request_correlation_id(request),
+            trace_id=_request_trace_id(request),
+        ),
+        repository=repository,
+        report_client=report_client,
+    )
+    problem = _problem_for_submission_result(result)
+    if problem is not None:
+        _emit_downstream_submission_event(
+            _operation_outcome_from_submission_status(result.status),
+            _error_code_from_submission_status(result.status),
+            durable_storage_backed=durable_storage_backed,
+        )
+        return problem
+    _emit_downstream_submission_event(
+        _operation_outcome_from_submission_status(result.status),
+        result.downstream_failure_reason,
+        durable_storage_backed=durable_storage_backed,
+    )
+    return DownstreamSubmissionApiResponse(
+        downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
+        durableStorageBacked=durable_storage_backed,
+        supportedFeaturePromoted=False,
+    )
+
+
+def _require_submission_caller(caller: CallerContext) -> None:
+    if not caller.has_capability(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY):
+        raise PermissionDeniedError(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY)
+
+
+def _validate_idempotency_key(idempotency_key: str) -> None:
+    if not idempotency_key.strip():
+        raise ValueError("idempotency key is required")
+
+
+def _request_correlation_id(request: Request) -> str | None:
+    correlation_id = getattr(request.state, "correlation_id", None)
+    return str(correlation_id) if correlation_id else None
+
+
+def _request_trace_id(request: Request) -> str | None:
+    trace_id = getattr(request.state, "trace_id", None)
+    return str(trace_id) if trace_id else None
+
+
+def _problem_for_submission_result(
+    result: DownstreamRealizationSubmissionResult,
+) -> JSONResponse | None:
+    if result.status is DownstreamRealizationStatus.NOT_FOUND:
+        return problem_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            code="downstream_realization_resource_not_found",
+            title="Downstream realization resource not found",
+            detail="The requested idea downstream realization resource was not found.",
+        )
+    if result.status is DownstreamRealizationStatus.UNSUPPORTED_TARGET:
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="unsupported_downstream_realization_target",
+            title="Unsupported downstream realization target",
+            detail=(
+                "The requested conversion target cannot be submitted through this "
+                "downstream realization route."
+            ),
+        )
+    return None
+
+
+def _permission_denied() -> JSONResponse:
+    return problem_response(
+        status_code=status.HTTP_403_FORBIDDEN,
+        code="permission_denied",
+        title="Permission denied",
+        detail="The caller is not permitted to submit idea downstream realization requests.",
+    )
+
+
+def _invalid_request() -> JSONResponse:
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="Correct the downstream realization request and retry.",
+    )
+
+
+def _downstream_not_configured() -> JSONResponse:
+    return problem_response(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        code="downstream_realization_not_configured",
+        title="Downstream realization not configured",
+        detail=(
+            "The service is not configured to submit this downstream realization "
+            "request. Configure the owning downstream service adapter before retrying."
+        ),
+    )
+
+
+def _operation_outcome_from_submission_status(
+    submission_status: DownstreamRealizationStatus,
+) -> OperationOutcome:
+    if submission_status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM:
+        return OperationOutcome.ACCEPTED
+    if submission_status is DownstreamRealizationStatus.REJECTED_BY_DOWNSTREAM:
+        return OperationOutcome.BLOCKED
+    if submission_status is DownstreamRealizationStatus.NOT_FOUND:
+        return OperationOutcome.NOT_FOUND
+    return OperationOutcome.INVALID_STATE
+
+
+def _error_code_from_submission_status(
+    submission_status: DownstreamRealizationStatus,
+) -> str | None:
+    if submission_status is DownstreamRealizationStatus.NOT_FOUND:
+        return "downstream_realization_resource_not_found"
+    if submission_status is DownstreamRealizationStatus.UNSUPPORTED_TARGET:
+        return "unsupported_downstream_realization_target"
+    return None
+
+
+def _emit_downstream_submission_event(
+    outcome: OperationOutcome,
+    error_code: str | None = None,
+    *,
+    durable_storage_backed: bool = False,
+) -> None:
+    emit_operation_event(
+        OperationEvent(
+            operation=IdeaOperation.DOWNSTREAM_REALIZATION_SUBMISSION,
+            outcome=outcome,
+            source_authority="lotus-idea",
+            supportability_status=OperationSupportability.NOT_CERTIFIED,
+            durable_storage_backed=durable_storage_backed,
+            supported_feature_promoted=False,
+            error_code=error_code,
+        )
+    )
+
+
+CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
+    "path": "/api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
+    "operation_id": "submitIdeaConversionIntentDownstream",
+    "summary": "Submit an idea conversion intent downstream",
+    "description": (
+        "Submits an existing Advise or Manage conversion intent through the source-safe "
+        "downstream realization adapter foundation. The route requires the "
+        "idea.downstream-realization.submit capability and Idempotency-Key, propagates "
+        "correlation and trace identifiers, and returns only submission posture. It does "
+        "not record authoritative downstream outcomes, grant suitability or execution "
+        "authority, prove downstream route certification, or promote a supported feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": DownstreamSubmissionApiResponse,
+    "tags": ["Idea Downstream Realization"],
+    "responses": {
+        200: {
+            "description": "Downstream submission accepted or source-safely rejected.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "downstreamSubmission": {
+                            "submissionStatus": "accepted_by_downstream",
+                            "sourceAuthority": "lotus-advise",
+                            "target": "advise_proposal",
+                            "downstreamFailureReason": None,
+                            "recordsDownstreamOutcome": False,
+                            "grantsDownstreamAuthority": False,
+                            "supportedFeaturePromoted": False,
+                        },
+                        "durableStorageBacked": False,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        400: {"model": ProblemDetails, "description": "Request validation failed."},
+        403: {"model": ProblemDetails, "description": "Caller lacks submission permission."},
+        404: {"model": ProblemDetails, "description": "Conversion intent was not found."},
+        409: {
+            "model": ProblemDetails,
+            "description": "Conversion intent target is not supported by this submission route.",
+        },
+        503: {
+            "model": ProblemDetails,
+            "description": "Downstream realization adapters are not configured.",
+        },
+    },
+}
+
+
+REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
+    "path": "/api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
+    "operation_id": "submitIdeaReportEvidencePackDownstream",
+    "summary": "Submit an idea report evidence pack downstream",
+    "description": (
+        "Submits an existing governed report evidence-pack request through the source-safe "
+        "Report downstream realization adapter foundation. The route requires the "
+        "idea.downstream-realization.submit capability and Idempotency-Key, propagates "
+        "correlation and trace identifiers, and returns only submission posture. It does "
+        "not create Report packages, Render outputs, Archive records, client-ready "
+        "publication authority, downstream outcome records, or a supported feature claim."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": DownstreamSubmissionApiResponse,
+    "tags": ["Idea Downstream Realization"],
+    "responses": {
+        200: {
+            "description": "Report evidence-pack downstream submission accepted or rejected.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "downstreamSubmission": {
+                            "submissionStatus": "accepted_by_downstream",
+                            "sourceAuthority": "lotus-report",
+                            "target": "report_evidence",
+                            "downstreamFailureReason": None,
+                            "recordsDownstreamOutcome": False,
+                            "grantsDownstreamAuthority": False,
+                            "supportedFeaturePromoted": False,
+                        },
+                        "durableStorageBacked": False,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        400: {"model": ProblemDetails, "description": "Request validation failed."},
+        403: {"model": ProblemDetails, "description": "Caller lacks submission permission."},
+        404: {"model": ProblemDetails, "description": "Report evidence-pack was not found."},
+        503: {
+            "model": ProblemDetails,
+            "description": "Downstream realization adapters are not configured.",
+        },
+    },
+}
+
+
+def register_downstream_realization_routes(app: FastAPI) -> None:
+    app.post(
+        path=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["path"],
+        operation_id=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["operation_id"],
+        summary=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["summary"],
+        description=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["description"],
+        status_code=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["status_code"],
+        response_model=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["response_model"],
+        tags=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["tags"],
+        responses=CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE["responses"],
+    )(submit_conversion_intent_downstream)
+    app.post(
+        path=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["path"],
+        operation_id=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["operation_id"],
+        summary=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["summary"],
+        description=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["description"],
+        status_code=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["status_code"],
+        response_model=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["response_model"],
+        tags=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["tags"],
+        responses=REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE["responses"],
+    )(submit_report_evidence_pack_downstream)
