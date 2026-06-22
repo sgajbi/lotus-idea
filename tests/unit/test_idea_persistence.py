@@ -24,6 +24,7 @@ from app.domain import (
     InMemoryIdeaRepository,
     InvalidLifecycleTransition,
     LifecyclePersistenceDecision,
+    OutboxEventStatus,
     ReasonCode,
     ReportEvidencePackCommand,
     ReportEvidencePackPurpose,
@@ -31,6 +32,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     evaluate_high_cash_signal,
+    build_candidate_outbox_event,
     record_conversion_outcome,
     request_conversion_intent,
     request_report_evidence_pack,
@@ -168,6 +170,18 @@ def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -
     assert first.record is not None
     assert len(first.record.audit_events) == 1
     assert first.record.audit_events[0].event_type == "idea.candidate.persisted"
+    assert len(repository.snapshot().outbox_events) == 1
+    event = next(iter(repository.snapshot().outbox_events.values()))
+    assert event.event_type == "idea.candidate.persisted.v1"
+    assert event.status is OutboxEventStatus.PENDING
+    assert event.aggregate_id == candidate.candidate_id
+    assert event.payload == {
+        "candidate_family": "high_cash",
+        "lifecycle_status": "generated",
+        "review_posture": "advisor_review_required",
+    }
+    assert event.idempotency_fingerprint is not None
+    assert "signal-ingestion:high-cash:001" not in event.idempotency_fingerprint
 
 
 def test_persist_candidate_rejects_idempotency_conflict_without_extra_audit_event() -> None:
@@ -193,6 +207,7 @@ def test_persist_candidate_rejects_idempotency_conflict_without_extra_audit_even
     assert conflict.audit_event is None
     assert conflict.record is not None
     assert len(conflict.record.audit_events) == 1
+    assert len(repository.snapshot().outbox_events) == 1
 
 
 def test_duplicate_candidate_identity_is_not_persisted_twice() -> None:
@@ -347,6 +362,16 @@ def test_lifecycle_transition_records_idempotent_audit_history() -> None:
     assert first.record.candidate.lifecycle_status is IdeaLifecycleStatus.ENRICHED
     assert first.record.lifecycle_history[-1].actor_subject == "idea-lifecycle-worker"
     assert first.record.audit_events[-1].attributes["transition_id"] == "transition-enriched-001"
+    assert [event.event_type for event in repository.snapshot().outbox_events.values()] == [
+        "idea.candidate.persisted.v1",
+        "idea.lifecycle.transitioned.v1",
+    ]
+    lifecycle_event = tuple(repository.snapshot().outbox_events.values())[-1]
+    assert lifecycle_event.payload == {
+        "source_status": "generated",
+        "target_status": "enriched",
+    }
+    assert lifecycle_event.status is OutboxEventStatus.PENDING
 
 
 def test_lifecycle_transition_returns_not_found_and_blocks_invalid_transition() -> None:
@@ -417,6 +442,18 @@ def test_repository_snapshot_recovers_candidate_idempotency_and_replay_state() -
 
     assert replayed.decision is CandidatePersistenceDecision.REPLAYED
     assert replay.status is EvidenceReplayStatus.MATCHED
+    assert recovered.snapshot().outbox_events == repository.snapshot().outbox_events
+
+
+def test_outbox_event_payload_rejects_sensitive_source_and_client_keys() -> None:
+    with pytest.raises(ValueError, match="sensitive keys"):
+        build_candidate_outbox_event(
+            event_type="idea.candidate.persisted.v1",
+            aggregate_id="idea_high_cash_001",
+            occurred_at_utc=EVALUATED_AT,
+            payload={"portfolio_id": "PB_SG_GLOBAL_BAL_001"},
+            idempotency_key="signal-ingestion:high-cash:001",
+        )
 
 
 def test_conversion_intent_persistence_records_lifecycle_audit_and_idempotency() -> None:
