@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, bounded run-once ingestion worker foundation, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -65,11 +65,21 @@ Implemented first-wave internal scope:
    posture, batch decision counts, and correlation/trace propagation through
    the Core source port. This is not a daemon, deploy-pipeline worker, live Core
    certification, or supported ingestion product.
-9. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
+9. `src/app/application/source_ingestion_worker.py` and
+   `scripts/run_source_ingestion_worker.py` now provide a versioned
+   manifest-backed run-once worker entrypoint. `--check-only` validates the
+   manifest and returns a product-safe summary without Core calls or repository
+   writes. Run mode requires an explicit Core base URL or `LOTUS_CORE_BASE_URL`
+   and emits decision counts plus candidate ids only, without source payloads,
+   portfolio ids in result items, or supported-feature promotion.
+10. `make source-ingestion-worker-check` now validates the example manifest in
+    the lint path, and `scripts/ci_contract_gate.py` blocks future removal of
+    that target from local quality enforcement.
+11. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
    conflict errors, and repository-derived `durableStorageBacked` posture.
-10. `src/app/application/candidate_lifecycle.py` and
+12. `src/app/application/candidate_lifecycle.py` and
    `src/app/api/candidate_lifecycle.py` now expose certified internal candidate
    lifecycle transition orchestration over the same repository contract.
    `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` requires
@@ -77,7 +87,7 @@ Implemented first-wave internal scope:
    canonical domain lifecycle transition graph, writes lifecycle history and
    audit evidence, returns accepted/replayed/not-found/conflict/invalid-state
    posture, and keeps `supportedFeaturePromoted=false`.
-11. `src/app/ports/idea_repository.py` now centralizes the repository workflow
+13. `src/app/ports/idea_repository.py` now centralizes the repository workflow
     protocols used by application orchestration. Candidate persistence,
     candidate snapshots, lifecycle mutation, review and feedback mutation,
     conversion mutation, report evidence-pack requests, and AI explanation
@@ -85,7 +95,7 @@ Implemented first-wave internal scope:
     repository protocols. `tests/unit/test_repository_port_boundary.py`
     prevents future application modules from reintroducing scattered
     repository protocol declarations outside the governed runtime provider.
-12. `migrations/001_idea_repository_foundation.sql` and
+14. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,
     idempotency, lifecycle, audit, review, feedback, conversion, and report
@@ -93,14 +103,14 @@ Implemented first-wave internal scope:
     validates required tables, indexes, JSONB payload columns, UTC timestamp
     columns, source relationships, and rollback statements so future agents
     cannot add persistence-shaped work without governed reversibility evidence.
-13. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
+15. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
     provide a PostgreSQL migration execution path. `make migration-execution-gate`
     dry-runs apply and rollback plans in CI without needing a database, while
     `make migrate` and `make migrate-rollback` execute the same plans when
     `LOTUS_IDEA_DATABASE_URL` points to a PostgreSQL database. The Docker image
     now includes `migrations/` so runtime migration commands have the same SQL
     contract as local development.
-14. `src/app/infrastructure/postgres_repository.py` now implements the first
+16. `src/app/infrastructure/postgres_repository.py` now implements the first
     PostgreSQL repository adapter behind the governed port surface. The adapter
     hydrates repository snapshots from the schema, delegates domain decisions to
     the same in-memory repository contract, flushes typed table rows and JSONB
@@ -109,19 +119,19 @@ Implemented first-wave internal scope:
     idempotency replay, lifecycle history, audit events, review decisions,
     feedback, conversion intent/outcome, report evidence-pack requests, snapshot
     hydration, and rollback behavior with a fake Postgres cursor.
-15. `src/app/repository_state.py` now selects the process-local
+17. `src/app/repository_state.py` now selects the process-local
     `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
     when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
     mapping rows so the adapter receives the row shape it enforces. The
     `src/app/api/repository_state.py` module remains a compatibility shim so
     concrete infrastructure wiring stays out of the API layer.
-16. Repository-backed API routes now derive `durableStorageBacked` responses and
+18. Repository-backed API routes now derive `durableStorageBacked` responses and
     `durable_storage_backed` operation-event labels from the active repository
     instead of hardcoding storage posture. Default local/test runtime remains
     process-local and continues to report `durableStorageBacked=false`; a
     configured PostgreSQL runtime reports `durableStorageBacked=true` for the
     repository-backed foundation routes.
-17. `tests/integration/test_postgres_runtime_integration.py` now runs the
+19. `tests/integration/test_postgres_runtime_integration.py` now runs the
     first real PostgreSQL runtime proof. It applies the governed schema,
     persists a high-cash candidate through
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, reloads the
@@ -161,10 +171,11 @@ become CI-visible before any supported database-backed product claim is made.
 The current proof now also exercises the first internal review, queue,
 conversion, report evidence-pack workflow, and internal source-ingestion
 replay/conflict recovery path against PostgreSQL. The source-ingestion
-application layer now has a bounded run-once batch worker foundation, but the
-next durable persistence slices must still prove scheduled daemon/deploy worker
-behavior, deploy-pipeline migration evidence, and live Core source-adapter
-behavior against that service, and keep API responses truthful:
+application layer now has a bounded run-once batch primitive plus a versioned
+manifest-backed run-once CLI and check-only gate. The next durable persistence
+slices must still prove scheduled daemon/deploy worker behavior,
+deploy-pipeline migration evidence, and live Core source-adapter behavior
+against that service, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.
 
@@ -183,18 +194,27 @@ Current slice validation:
    passed with `11 passed` after adding bounded run-once batch worker coverage
    for duplicate replay, changed-source conflict, batch decision counts,
    timezone validation, maximum item enforcement, and correlation propagation.
-4. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
+4. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_worker.py tests\unit\test_source_ingestion.py tests\unit\test_ci_enforcement_contract.py -q`
+   passed with `30 passed` after adding manifest parsing, unknown-key
+   rejection, product-safe summary, CLI check-only, and CI-contract coverage.
+5. `make source-ingestion-worker-check` passed, validating
+   `docs/examples/source-ingestion/high-cash-worker-manifest.example.json` in
+   check-only mode without Core calls or repository writes.
+6. `.venv\Scripts\python.exe scripts\ci_contract_gate.py` passed after adding
+   the source-ingestion worker check target to the required local lint
+   contract.
+7. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
    skips locally when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not configured;
    the suite now includes internal source-ingestion replay/conflict recovery
    proof for GitHub PR/Main PostgreSQL lanes where `postgres:18-alpine` is
    configured.
-5. `make check` passed with lint, format, CI contract, maintainability,
+8. `make check` passed with lint, format, CI contract, maintainability,
    monetary/no-sensitive guards, implementation-truth, data-mesh,
    migration, supported-feature, endpoint-certification, typecheck,
-   architecture, OpenAPI, and `257` unit tests.
-6. `make ci` passed with `60` integration tests, `4` local PostgreSQL skips,
-   `2` e2e tests, `257` unit tests under coverage, coverage gate at
-   `99.14%`, and dependency audit reporting no known vulnerabilities.
+   architecture, OpenAPI, and `265` unit tests.
+9. `make ci` passed with `60` integration tests, `4` local PostgreSQL skips,
+   `2` e2e tests, `265` unit tests under coverage, coverage gate at `99.00%`,
+   and dependency audit reporting no known vulnerabilities.
 
 Prior Slice 06 validation:
 

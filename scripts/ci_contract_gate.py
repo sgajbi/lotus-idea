@@ -19,6 +19,7 @@ REQUIRED_TARGETS = (
     "data-mesh-contract-gate",
     "migration-contract-gate",
     "migration-execution-gate",
+    "source-ingestion-worker-check",
     "supported-features-gate",
     "endpoint-certification-gate",
     "postgres-integration-gate",
@@ -43,6 +44,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) data-mesh-contract-gate",
     "$(MAKE) migration-contract-gate",
     "$(MAKE) migration-execution-gate",
+    "$(MAKE) source-ingestion-worker-check",
     "$(MAKE) supported-features-gate",
     "$(MAKE) endpoint-certification-gate",
 )

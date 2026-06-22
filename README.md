@@ -14,7 +14,8 @@ an internal high-cash deterministic signal policy, the first Core source-port
 and conservative HTTP adapter foundation for high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
 high-cash evaluate-and-persist orchestration foundation, an internal
-Core-backed source-ingestion orchestration foundation with generated
+Core-backed source-ingestion orchestration foundation with a manifest-backed
+run-once CLI, generated
 idempotency keys and accepted/replayed/conflict/blocked/suppressed/not-eligible
 outcome classification plus a bounded run-once batch worker foundation,
 deterministic scoring/review-queue projection and repository-snapshot queue
@@ -126,10 +127,12 @@ source-authority contracts only, not runtime certification.
   Core source port that fetches governed Core evidence, and internally persist
   created candidates through the Slice 06 idempotency/audit repository contract.
   `source_ingestion.py` adds the first internal high-cash source-ingestion
-  orchestration wrapper and bounded run-once batch worker foundation over the
-  same Core source port and repository port, including generated
-  source-ingestion idempotency keys, batch decision counts, and explicit
-  accepted/replayed/conflict/blocked/suppressed/not-eligible decisions.
+  orchestration wrapper over the same Core source port and repository port,
+  including generated source-ingestion idempotency keys, batch decision counts,
+  and explicit accepted/replayed/conflict/blocked/suppressed/not-eligible
+  decisions. `source_ingestion_worker.py` adds a manifest-backed run-once
+  worker plan and product-safe run summary for operator execution without
+  source payload leakage or supported-feature promotion.
   Internal review-queue orchestration projects persisted candidate snapshots
   through the Slice 07 deterministic queue policy and certified internal advisor
   queue API foundation. Internal candidate lifecycle orchestration records
@@ -177,6 +180,10 @@ source-authority contracts only, not runtime certification.
   supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.
 - `src/app/resilience/`: timeout, retry, and circuit-breaker primitives.
+- `scripts/run_source_ingestion_worker.py`: run-once high-cash source-ingestion
+  worker CLI. `--check-only` validates a versioned manifest and is enforced by
+  `make source-ingestion-worker-check`; run mode requires
+  `LOTUS_CORE_BASE_URL` or `--core-base-url` and the active repository provider.
 - `contracts/`: proposed data-product declarations, consumer dependencies,
   trust telemetry, access, SLO, and evidence-policy contracts.
 - `docs/architecture/adr/`: durable architecture decisions.
@@ -195,6 +202,7 @@ make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
+make source-ingestion-worker-check
 make postgres-integration-gate
 make typecheck
 make architecture-boundary-gate
@@ -216,6 +224,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
+.venv\Scripts\python.exe scripts/run_source_ingestion_worker.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --check-only
 .venv\Scripts\python.exe -m pytest tests/integration/test_postgres_runtime_integration.py
 .venv\Scripts\python.exe -m mypy --config-file mypy.ini
 .venv\Scripts\python.exe scripts/openapi_quality_gate.py
@@ -254,6 +263,26 @@ $env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL = "postgresql://lotus_idea:lotus_idea@l
 $env:LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED = "1"
 make postgres-integration-gate
 ```
+
+To validate the run-once source-ingestion worker manifest contract without
+calling Core or writing repository state:
+
+```powershell
+make source-ingestion-worker-check
+```
+
+To execute the worker against a configured Core service and active repository
+provider, provide a versioned manifest and Core base URL:
+
+```powershell
+$env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
+$env:LOTUS_CORE_BASE_URL = "http://localhost:8310"
+.venv\Scripts\python.exe scripts/run_source_ingestion_worker.py
+```
+
+Run mode is an internal run-once operator entrypoint only. It is not a scheduled
+daemon, deploy-pipeline worker proof, live Core certification, Gateway/Workbench
+support, data-product certification, or supported-feature promotion.
 
 Repository-backed endpoints report `durableStorageBacked=true` only in this
 configured posture. This does not promote data-product certification,
@@ -308,6 +337,7 @@ script files/functions beyond the measured enterprise-quality thresholds.
 - Data mesh contract gate: `scripts/data_mesh_contract_gate.py`
 - Migration contract gate: `scripts/migration_contract_gate.py`
 - Migration execution CLI: `scripts/run_migrations.py`
+- Source-ingestion worker CLI: `scripts/run_source_ingestion_worker.py`
 - RFC implementation evidence guide: `evidence/rfc-implementation/README.md`
 - RFC index: `docs/rfcs/README.md`
 

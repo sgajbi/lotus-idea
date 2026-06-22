@@ -123,10 +123,15 @@ now adds an internal high-cash source-ingestion orchestration wrapper over the
 Core source port and repository port, including generated source-ingestion
 idempotency keys, a bounded run-once batch worker foundation, batch decision
 counts, and explicit accepted, replayed, conflict, blocked, suppressed, and
-skipped-not-eligible decisions. There is still no live Core integration proof,
-scheduled daemon/deploy source-ingestion worker, Gateway
-route, Workbench proof, data-product certification, or supported-feature
-promotion yet.
+skipped-not-eligible decisions. `src/app/application/source_ingestion_worker.py`
+and `scripts/run_source_ingestion_worker.py` now add the versioned
+manifest-backed run-once worker entrypoint, product-safe check-only summary,
+and product-safe run summary. `make source-ingestion-worker-check` validates
+the example manifest in the local lint path so future agent changes cannot
+silently break the worker contract. There is still no live Core integration
+proof, scheduled daemon/deploy source-ingestion worker, Gateway route,
+Workbench proof, data-product certification, or supported-feature promotion
+yet.
 The upstream Core cash-weight contract dependency is tracked in
 `sgajbi/lotus-core#430`.
 
@@ -189,7 +194,9 @@ restores a usable API persistence contract. This is still not production
 storage certification: deploy migration evidence, scheduled daemon/deploy
 source-ingestion worker proof, live Core source adapter proof, data-product
 certification, downstream workflow proof, and supported-feature promotion
-remain planned.
+remain planned. The current run-once worker CLI is developer/operator
+foundation only and is validated in check-only mode by
+`make source-ingestion-worker-check`.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -495,10 +502,12 @@ owned by upstream services.
 16. data-mesh contract gate: `make data-mesh-contract-gate`
 17. migration contract gate: `make migration-contract-gate`
 18. migration execution dry-run gate: `make migration-execution-gate`
-19. PostgreSQL runtime proof with configured integration URL:
+19. run-once source-ingestion worker manifest gate:
+    `make source-ingestion-worker-check`
+20. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-20. apply migrations with configured PostgreSQL URL: `make migrate`
-21. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+21. apply migrations with configured PostgreSQL URL: `make migrate`
+22. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -514,7 +523,8 @@ Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, maintainability thresholds, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
-migration execution dry-run gate, unit tests, integration tests, e2e tests,
+migration execution dry-run gate, source-ingestion worker manifest validation,
+unit tests, integration tests, e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
 Docker build validation, bounded GitHub job timeouts, and no soft-failed
 critical workflow jobs.
@@ -523,7 +533,8 @@ critical workflow jobs.
 bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
-safe migration execution dry-run validation, PostgreSQL runtime proof, coverage,
+safe migration execution dry-run validation, source-ingestion worker manifest
+validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, action-version, least-privilege workflow
 controls, bounded workflow timeouts, no `continue-on-error: true` in critical
 lanes, implementation-truth enforcement, non-suppressed auto-merge token usage,

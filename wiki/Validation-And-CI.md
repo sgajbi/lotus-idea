@@ -21,6 +21,7 @@ make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
 make migration-execution-gate
+make source-ingestion-worker-check
 make postgres-integration-gate
 make openapi-gate
 make architecture-boundary-gate
@@ -32,6 +33,7 @@ Baseline required checks include lint, format check, typecheck, architecture bou
 maintainability thresholds, OpenAPI quality, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
+source-ingestion worker manifest validation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
 jobs, and workflow lint.
 
@@ -63,7 +65,11 @@ Persistence adapter validation:
    source-ingestion batch worker foundation: duplicate work-item replay,
    changed-source conflict, batch decision counts, timezone validation, maximum
    item enforcement, and correlation propagation.
-6. Runtime API database wiring is opt-in and still requires deploy migration
+6. `tests/unit/test_source_ingestion_worker.py` and
+   `make source-ingestion-worker-check` prove the versioned run-once worker
+   manifest contract and product-safe check-only summary without calling Core
+   or writing repository state.
+7. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -73,7 +79,8 @@ controls from the Makefile or GitHub lanes, including least-privilege workflow p
 approved action-runtime majors, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, migration contract validation, migration execution dry-run
-validation, PostgreSQL runtime proof, workflow-dispatch access, non-suppressed auto-merge token
+validation, source-ingestion worker manifest validation, PostgreSQL runtime
+proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, implementation-truth enforcement, and source-safe local quality gates.
 

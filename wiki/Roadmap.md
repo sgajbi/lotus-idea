@@ -23,7 +23,8 @@ Current state:
    foundation,
 9. RFC-0002 Slice 06 partially implements internal persistence, replay,
    idempotency, lifecycle audit history, recovery primitives, and high-cash
-   evaluate-and-persist orchestration,
+   evaluate-and-persist orchestration plus the manifest-backed run-once
+   source-ingestion worker CLI and check-only gate,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
@@ -64,10 +65,10 @@ First implementation program:
 4. extend the current Core source-port foundation into live high-cash /
    idle-liquidity source proof after Core exposes explicit source-reported cash
    weight,
-5. extend the current bounded run-once source-ingestion batch worker and
-   PostgreSQL replay/conflict recovery proof into scheduled daemon/deploy
-   source-ingestion workers, deploy migration evidence, live Core
-   source-adapter proof, and durable operational procedures,
+5. extend the current manifest-backed run-once source-ingestion worker,
+   check-only gate, and PostgreSQL replay/conflict recovery proof into
+   scheduled daemon/deploy source-ingestion workers, deploy migration evidence,
+   live Core source-adapter proof, and durable operational procedures,
 6. extend certified APIs into Gateway/Workbench product surfaces after live
    source adapters and durable state exist,
 7. persist conversion intents/outcomes and add downstream adapter contracts only
