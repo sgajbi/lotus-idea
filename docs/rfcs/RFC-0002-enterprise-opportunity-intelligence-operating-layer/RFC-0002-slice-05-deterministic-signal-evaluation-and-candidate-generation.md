@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -88,11 +88,25 @@ Additional implemented source-adapter foundation:
    schema version, source authority, item indexes, and sensitive-field
    exclusions so future worker changes cannot downgrade CI to manifest parsing
    only.
+9. `src/app/application/source_ingestion_scheduled_worker.py`,
+   `scripts/run_scheduled_source_ingestion_worker.py`,
+   `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
+   `scripts/source_ingestion_scheduled_worker_contract_gate.py`, and the
+   `lotus-idea-source-ingestion-worker` Compose profile now add the first
+   deploy-contract foundation for scheduled high-cash source ingestion. The
+   scheduled worker runs the existing run-once worker on a bounded interval,
+   supports a source-safe `--check-only` mode, fails closed when Core runtime
+   configuration is missing in run mode, and emits a proof artifact that can
+   clear only the scheduled-worker deploy-proof blocker.
+10. `make source-ingestion-scheduled-worker-check` now locks the scheduled
+    worker schema, entrypoints, Compose service, proof artifact, and
+    sensitive-field exclusions so future changes cannot replace deployment
+    proof with route-existence or manifest-only claims.
 
 Not implemented yet:
 
 1. live Core integration proof against a running Core service,
-2. scheduled daemon/deploy source-ingestion worker and live-service recovery proof,
+2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
 4. Gateway/Workbench proof,
 5. supported-feature promotion,
@@ -152,6 +166,12 @@ Current source-ingestion orchestration validation:
 4. `make source-ingestion-worker-check` passed, proving the example manifest
    and source-safe check-only output contract validate without Core or
    repository writes.
+5. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_scheduled_worker.py tests\unit\test_source_ingestion_scheduled_worker_contract_gate.py -q`
+   passed after adding scheduled worker check-only, proof artifact, missing
+   Core runtime guard, and sensitive-output contract coverage.
+6. `.venv\Scripts\python.exe scripts\source_ingestion_scheduled_worker_contract_gate.py`
+   passed, proving the scheduled worker deploy-contract artifact remains
+   source-safe and wired to the Compose worker profile.
 
 Current Core cash-weight adapter validation:
 
@@ -160,5 +180,5 @@ Current Core cash-weight adapter validation:
    blocked supportability states, malformed cash-weight values, source refs,
    and trace/correlation propagation.
 2. This closes the adapter-shape gap only. It does not certify live Core
-   source ingestion, scheduled worker deployment, data-product certification,
+   source ingestion, certified scheduled daemon runtime, data-product certification,
    Gateway/Workbench support, or supported-feature promotion.

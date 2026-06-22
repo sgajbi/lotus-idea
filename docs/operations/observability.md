@@ -139,5 +139,7 @@ configured manifest, Core base URL, and durable repository environment are
 present. The run-once operator action emits `source_ingestion_run_once` with
 aggregate work-item count buckets only and fails closed before mutation when
 durable storage, manifest, or Core configuration is absent. Both remain
-`not_certified` until live Core source proof, scheduled worker deploy proof,
-runtime data-mesh telemetry, and Gateway/Workbench proof exist.
+`not_certified` until live Core source proof, runtime data-mesh telemetry,
+Gateway/Workbench proof, downstream proof, and supported-feature evidence
+exist. A valid scheduled-worker deploy-proof artifact can clear only the
+scheduled-worker blocker; it is not live source or product support proof.

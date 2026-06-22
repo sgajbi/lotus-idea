@@ -20,7 +20,9 @@ feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also
 exist; the gate validates both manifest shape and source-safe check-only output
-shape. `POST /api/v1/source-ingestion/run-once` adds a certified internal
+shape. A bounded scheduled-worker entrypoint, opt-in Docker Compose worker
+profile, and `make source-ingestion-scheduled-worker-check` also exist for
+deploy-contract proof. `POST /api/v1/source-ingestion/run-once` adds a certified internal
 operator action over the same batch foundation, but it requires durable
 repository posture plus configured manifest and Core settings, returns
 aggregate decision counts only, and remains `not_certified`. Accepted internal mutations now create source-safe outbox records with
@@ -50,9 +52,10 @@ preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 downstream realization, and supported-feature promotion. It does not provide live implementation proof, external broker
 publication, downstream delivery, Gateway/Workbench proof, data-product
 certification, or supported-feature promotion. These are not externally
-supported features until live source adapters, scheduled daemon/deploy
-source-worker proof, Workbench proof, downstream acceptance, data-product
-certification, and supported-feature evidence are present.
+supported features until live source adapters, certified long-running scheduled
+source-worker runtime proof, Workbench proof, downstream acceptance,
+data-product certification, and supported-feature evidence are present. The
+current scheduled worker deploy-contract proof is a foundation control only.
 
 Planned capabilities:
 

@@ -71,8 +71,8 @@ First implementation program:
    weight,
 5. extend the current manifest-backed run-once source-ingestion worker,
    check-only gate, and PostgreSQL replay/conflict recovery proof into
-   scheduled daemon/deploy source-ingestion workers, deploy migration evidence,
-   live Core source-adapter proof, and durable operational procedures,
+   certified long-running scheduled source-ingestion runtime, deploy migration
+   evidence, live Core source-adapter proof, and durable operational procedures,
 6. extend the first bounded read-only Gateway publication into Workbench
    product surfaces only after live source adapters, durable state, and
    supportability proof exist,

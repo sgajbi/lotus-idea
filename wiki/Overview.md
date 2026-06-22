@@ -75,7 +75,7 @@ implementation proof, or a client-demo feature claim.
 | --- | --- | --- |
 | Signal evaluation | Certified internal foundation | Not a supported product workflow |
 | Candidate lifecycle and review | Certified internal foundation | Requires Workbench proof and entitlement proof |
-| Source ingestion | Run-once internal foundation | Requires live Core and scheduled worker proof |
+| Source ingestion | Run-once and scheduled-worker internal foundation | Requires live Core, mesh, Gateway/Workbench, downstream, and support-promotion proof |
 | Data mesh | Proposed contracts, readiness diagnostics, and blocked runtime snapshot evidence | Requires platform certification and runtime telemetry promotion |
 | Gateway publication | Bounded read-only foundation | Requires Workbench and supported-feature evidence |
 | Downstream realization | Intent/outcome tracking foundation plus source-safe submission routes, adapter, and planned contract posture | Requires Advise, Manage, Report, Render, and Archive route-existence and execution proof |

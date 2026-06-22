@@ -15,15 +15,17 @@ certified internal API foundations, persistence and migration support,
 operator readiness diagnostics, source-safe observability, and CI guardrails.
 
 No external business feature is supported yet. Feature promotion still requires
-valid live source proof, scheduled worker proof, certified runtime trust
-telemetry, data-mesh certification, Gateway and Workbench proof, downstream
-realization proof, supported-feature registration, and evidence on `main`.
+valid live source proof, valid scheduled-worker deploy proof, certified runtime
+trust telemetry, data-mesh certification, Gateway and Workbench proof,
+downstream realization proof, supported-feature registration, and evidence on
+`main`.
 
 Current implemented foundations include:
 
 - high-cash signal evaluation over caller-supplied Core evidence,
 - Core-backed high-cash source ingestion orchestration, run-once worker CLI,
-  readiness diagnostic, and aggregate-only operator run-once API,
+  deployable scheduled-worker entrypoint, readiness diagnostic, and
+  aggregate-only operator run-once API,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection and queue readiness diagnostics,
 - AI explanation governance diagnostics without provider execution,
@@ -196,7 +198,7 @@ docker compose up --build
 | `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
 | `make migration-contract-gate` | Validate migration contract structure. |
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
-| `make source-ingestion-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, source-safe check-only output, and live-proof artifact contract without calling Core. |
+| `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, and live-proof artifact contract without calling Core. |
 | `make implementation-proof-readiness-check` | Generate source-safe RFC proof readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
@@ -302,7 +304,6 @@ Local controls keep implementation claims grounded:
 
 ## Documentation Map
 
-- [wiki/Home.md](wiki/Home.md): authored source for the GitHub wiki.
 - [wiki/Overview.md](wiki/Overview.md): product and current-state summary.
 - [wiki/Architecture.md](wiki/Architecture.md): architecture and flow summary.
 - [wiki/Integrations.md](wiki/Integrations.md): upstream and downstream map.
