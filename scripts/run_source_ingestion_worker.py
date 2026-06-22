@@ -10,14 +10,17 @@ from typing import Any
 from app.application.source_ingestion import run_high_cash_source_ingestion_batch
 from app.application.source_ingestion_worker import (
     source_ingestion_worker_plan_from_manifest,
+    summarize_source_ingestion_worker_failure,
     summarize_source_ingestion_worker_run,
 )
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
     DownstreamClientConfigurationError,
     DownstreamJsonClient,
+    DownstreamServiceError,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
+from app.ports.core_sources import CoreSourceEntitlementDenied, CoreSourceUnavailable
 from app.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 
 
@@ -31,10 +34,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     try:
         plan = source_ingestion_worker_plan_from_manifest(_read_manifest(_manifest_path(args)))
-        if args.check_only:
-            _write_json(plan.check_summary())
-            return 0
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"source ingestion worker configuration error: {exc}", file=sys.stderr)
+        return 2
 
+    if args.check_only:
+        _write_json(plan.check_summary())
+        return 0
+
+    repository = get_idea_repository()
+    try:
         core_base_url = _core_base_url(args)
         core_source = LotusCoreHighCashSourceAdapter(
             DownstreamJsonClient(
@@ -44,7 +53,6 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
         )
-        repository = get_idea_repository()
         result = run_high_cash_source_ingestion_batch(
             plan.command,
             core_source=core_source,
@@ -58,6 +66,36 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         return 0
+    except CoreSourceEntitlementDenied:
+        _write_json(
+            summarize_source_ingestion_worker_failure(
+                plan=plan,
+                error_code="core_source_entitlement_denied",
+                durable_storage_backed=idea_repository_durable_storage_backed(repository),
+            )
+        )
+        print("source ingestion worker blocked: core_source_entitlement_denied", file=sys.stderr)
+        return 3
+    except CoreSourceUnavailable as exc:
+        _write_json(
+            summarize_source_ingestion_worker_failure(
+                plan=plan,
+                error_code=exc.code,
+                durable_storage_backed=idea_repository_durable_storage_backed(repository),
+            )
+        )
+        print(f"source ingestion worker blocked: {exc.code}", file=sys.stderr)
+        return 3
+    except DownstreamServiceError as exc:
+        _write_json(
+            summarize_source_ingestion_worker_failure(
+                plan=plan,
+                error_code=exc.code,
+                durable_storage_backed=idea_repository_durable_storage_backed(repository),
+            )
+        )
+        print(f"source ingestion worker blocked: {exc.code}", file=sys.stderr)
+        return 3
     except (DownstreamClientConfigurationError, OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"source ingestion worker configuration error: {exc}", file=sys.stderr)
         return 2

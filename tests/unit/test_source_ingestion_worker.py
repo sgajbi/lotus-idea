@@ -13,6 +13,7 @@ from app.application.source_ingestion import run_high_cash_source_ingestion_batc
 from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
+    summarize_source_ingestion_worker_failure,
     summarize_source_ingestion_worker_run,
 )
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
@@ -20,6 +21,7 @@ from app.ports.core_sources import (
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
+    CoreSourceEntitlementDenied,
 )
 
 
@@ -32,11 +34,14 @@ PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
 @dataclass
 class RecordingCoreSource(CoreOpportunitySourcePort):
     seen_request: CoreHighCashEvidenceRequest | None = None
+    error: Exception | None = None
 
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
     ) -> CoreHighCashEvidence:
         self.seen_request = request
+        if self.error is not None:
+            raise self.error
         return _core_evidence()
 
 
@@ -67,7 +72,10 @@ def test_loads_worker_manifest_as_bounded_batch_command() -> None:
     assert plan.command.work_items[0].portfolio_id == PORTFOLIO_ID
     assert plan.command.work_items[0].as_of_date == AS_OF_DATE
     assert plan.command.work_items[0].idempotency_key is not None
-    assert plan.check_summary()["mode"] == "check_only"
+    check_summary = plan.check_summary()
+    assert check_summary["mode"] == "check_only"
+    assert check_summary["workItems"][0]["itemIndex"] == 0
+    assert "portfolioId" not in check_summary["workItems"][0]
 
 
 def test_rejects_unknown_manifest_keys_before_worker_execution() -> None:
@@ -135,10 +143,45 @@ def test_summarizes_worker_run_without_source_payloads_or_supported_claims() -> 
     assert persistence.record is not None
     assert summary["items"][0]["candidateId"] == persistence.record.candidate.candidate_id
     assert str(summary["items"][0]["candidateId"]).startswith("idea_high_cash_")
+    assert summary["items"][0]["hasIdempotencyKey"] is True
+    assert "idempotencyKey" not in summary["items"][0]
     assert "portfolioId" not in summary["items"][0]
     assert source.seen_request is not None
     assert source.seen_request.correlation_id == "corr-worker"
     assert source.seen_request.trace_id == "trace-worker"
+
+
+def test_summarizes_worker_source_failure_without_source_payloads() -> None:
+    plan = source_ingestion_worker_plan_from_manifest(
+        {
+            "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "workItems": [
+                {
+                    "portfolioId": PORTFOLIO_ID,
+                    "asOfDate": "2026-06-21",
+                    "idempotencyKey": "signal-ingestion:high-cash:lotus-core:explicit",
+                }
+            ],
+        }
+    )
+
+    summary = summarize_source_ingestion_worker_failure(
+        plan=plan,
+        error_code="core_source_entitlement_denied",
+        durable_storage_backed=False,
+    )
+
+    assert summary["mode"] == "run_once"
+    assert summary["status"] == "blocked"
+    assert summary["sourceAuthority"] == "lotus-core"
+    assert summary["supportedFeaturePromoted"] is False
+    assert summary["workItemCount"] == 1
+    assert summary["errorCode"] == "core_source_entitlement_denied"
+    assert summary["decisionCounts"]["accepted"] == 0
+    assert "workItems" not in summary
+    assert "portfolioId" not in json.dumps(summary)
+    assert "idempotencyKey" not in json.dumps(summary)
 
 
 def test_cli_check_only_validates_example_manifest(capsys: Any) -> None:
@@ -154,6 +197,47 @@ def test_cli_check_only_validates_example_manifest(capsys: Any) -> None:
     assert payload["schemaVersion"] == MANIFEST_SCHEMA_VERSION
     assert payload["mode"] == "check_only"
     assert payload["workItemCount"] == 1
+    assert payload["workItems"][0]["itemIndex"] == 0
+    assert "portfolioId" not in captured.out
+
+
+def test_cli_run_mode_returns_source_safe_item_block_for_core_entitlement_denial(
+    capsys: Any,
+    monkeypatch: Any,
+) -> None:
+    module = _load_worker_script()
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
+    )
+
+    monkeypatch.setattr(
+        module,
+        "LotusCoreHighCashSourceAdapter",
+        lambda _client: RecordingCoreSource(error=CoreSourceEntitlementDenied()),
+    )
+
+    assert (
+        module.main(
+            [
+                "--manifest",
+                str(manifest_path),
+                "--core-base-url",
+                "http://localhost:8100",
+            ]
+        )
+        == 0
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["mode"] == "run_once"
+    assert payload["decisionCounts"]["blocked"] == 1
+    assert payload["items"][0]["decision"] == "blocked"
+    assert payload["items"][0]["hasIdempotencyKey"] is True
+    assert payload["supportedFeaturePromoted"] is False
+    assert "idempotencyKey" not in payload["items"][0]
+    assert "signal-ingestion:high-cash:lotus-core" not in captured.out
+    assert "portfolioId" not in captured.out
 
 
 def _source_ref(product_id: str) -> SourceRef:
