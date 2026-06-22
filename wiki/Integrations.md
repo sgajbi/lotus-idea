@@ -140,3 +140,10 @@ for Advise, Manage, and Report handoffs, and blocker groups for Advise,
 Manage, Report, Render, and Archive realization. It is diagnostic only; the
 planned contract records are not downstream route-existence proof and the
 endpoint does not call downstream services or promote any integration claim.
+
+The planned contract rows are authored in
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json` and
+validated by `make downstream-realization-contract-gate`. That gate keeps the
+records planned, source-authority preserving, blocker-backed, and free of
+current-route or supported-feature claims until Advise, Manage, and Report
+implementation evidence exists.

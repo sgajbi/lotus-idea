@@ -249,8 +249,11 @@ current conversion intent/outcome counts, report evidence-pack request counts,
 source-of-truth paths, planned Advise/Manage/Report downstream contract
 readiness, and blocker groups for `lotus-advise`, `lotus-manage`,
 `lotus-report`, `lotus-render`, and `lotus-archive`. Planned contract records
-name the owning repository and adapter posture, but they are not downstream
-route-existence proof. The endpoint does not call downstream services, create
+name the owning repository and adapter posture from
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`, and
+`make downstream-realization-contract-gate` keeps them planned and
+not-certified. They are not downstream route-existence proof. The endpoint
+does not call downstream services, create
 proposals, create manage actions, materialize reports, render output, archive
 records, authorize client-ready publication, or promote a supported feature.
 

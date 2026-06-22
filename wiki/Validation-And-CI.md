@@ -47,6 +47,7 @@ make no-sensitive-content-guard
 make source-observability-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
+make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
@@ -133,26 +134,31 @@ Persistence adapter validation:
    trust telemetry preview can be generated and read without exposing candidate
    identifiers, source routes, evidence hashes, portfolio identifiers, or
    client identifiers.
-9. `tests/unit/test_downstream_realization_readiness.py` and
+9. `tests/unit/test_downstream_realization_contract_gate.py` and
+   `make downstream-realization-contract-gate` prove the governed downstream
+   realization contract plan remains planned, source-authority preserving,
+   blocker-backed, and free of route-existence, downstream-execution, or
+   supported-feature claims.
+10. `tests/unit/test_downstream_realization_readiness.py` and
    `tests/integration/test_downstream_realization_readiness_api.py` prove the
    downstream realization readiness diagnostic for blocked supportability,
    role plus capability enforcement, product-safe payloads, source-authority
    boundaries, planned downstream contract-readiness records, and bounded
    `not_certified` operation events without calling Advise, Manage, Report,
    Render, or Archive.
-10. `tests/unit/test_source_ingestion_readiness.py` and
+11. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
    `not_certified` operation events without calling Core.
-11. `tests/unit/test_review_queue_application.py`,
+12. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-12. `tests/unit/test_ai_explanation_readiness.py`,
+13. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
    readiness diagnostic for blocked model-risk posture, operator/capability
@@ -160,7 +166,7 @@ Persistence adapter validation:
    events without invoking `lotus-ai` or exposing prompts, provider payloads,
    candidate identifiers, source routes, portfolio identifiers, or client
    identifiers.
-13. `tests/unit/test_outbox_delivery_readiness.py` and
+14. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
    outbox delivery readiness diagnostic for aggregate backlog/status posture,
    durable repository posture, broker configuration posture, operator plus
@@ -176,7 +182,8 @@ The CI contract gate is blocking from day one. It prevents accidental removal of
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 verified immutable action SHA pins with version provenance, 99% combined coverage in merge/releasability lanes, Docker build
 validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
-data-mesh contract validation, migration contract validation, migration execution dry-run
+data-mesh contract validation, downstream realization contract validation,
+migration contract validation, migration execution dry-run
 validation, source-ingestion worker manifest and output-contract validation, PostgreSQL runtime
 proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
@@ -305,6 +312,13 @@ route-existence proof. These checks do not certify Advise proposal creation,
 Manage action realization, Report/Render/Archive materialization,
 Gateway/Workbench support, data-product promotion, client-ready publication,
 or supported-feature promotion.
+
+The downstream-realization contract gate validates
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
+It blocks missing contract rows, owner/source-authority drift, current-route
+claims, premature certification, missing blockers, and missing evidence refs.
+Its passing checks certify contract-plan hygiene only; they do not prove
+downstream route existence or execution.
 
 CI warning policy:
 

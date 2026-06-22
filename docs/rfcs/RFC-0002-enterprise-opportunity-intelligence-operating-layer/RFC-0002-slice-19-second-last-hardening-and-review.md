@@ -132,3 +132,24 @@ This slice also hardens CI runtime provenance:
 4. The CI quality guide, enterprise-readiness standard, README, repository
    context, quality scorecard, and wiki source now describe the immutable
    action-pin expectation for future agentic work.
+
+This slice also hardens downstream realization contract governance:
+
+1. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
+   is now the machine-readable source of truth for planned Advise, Manage, and
+   Report handoff contract posture.
+2. `scripts/downstream_realization_contract_gate.py` validates required
+   contract rows, source-authority ownership, planned target-route posture,
+   not-certified route fit, planned adapter status, evidence references,
+   blockers, source-of-truth paths, and no premature route-existence,
+   downstream-execution, or supported-feature claims.
+3. `make downstream-realization-contract-gate` runs the validator directly,
+   `make lint` runs it as a blocking local/GitHub lane gate, and
+   `scripts/ci_contract_gate.py` prevents future agents from removing the
+   target or lint call.
+4. `tests/unit/test_downstream_realization_contract_gate.py` covers current
+   pass behavior plus premature certification, contract drift, current-route
+   evidence, missing blockers, and broken source-of-truth paths.
+5. README, repository context, API certification docs, downstream realization
+   runbook, CI quality guide, quality scorecard, RFC index, and wiki source now
+   describe the gate without promoting downstream realization.

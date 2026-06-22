@@ -324,9 +324,14 @@ operator diagnostic for downstream realization supportability. It requires the
 conversion intent, conversion outcome, and report evidence-pack request counts
 plus Advise, Manage, Report, Render, and Archive blockers and planned
 downstream contract-readiness records for Advise, Manage, and Report handoff
-seams. It emits bounded `downstream_realization_readiness_read` operation
-events and does not call downstream services, prove downstream route
-existence, or promote downstream realization.
+seams from
+`contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
+`make downstream-realization-contract-gate` blocks premature route-existence,
+downstream-execution, supported-feature, and source-authority drift in that
+contract plan. The endpoint emits bounded
+`downstream_realization_readiness_read` operation events and does not call
+downstream services, prove downstream route existence, or promote downstream
+realization.
 `scripts/generate_implementation_proof_readiness.py` and
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
@@ -652,19 +657,21 @@ owned by upstream services.
     `make source-observability-contract-gate`
 21. implementation-truth gate: `make implementation-truth-gate`
 22. data-mesh contract gate: `make data-mesh-contract-gate`
-23. migration contract gate: `make migration-contract-gate`
-24. migration execution dry-run gate: `make migration-execution-gate`
-25. run-once source-ingestion worker manifest and output-contract gate:
+23. downstream realization contract gate:
+    `make downstream-realization-contract-gate`
+24. migration contract gate: `make migration-contract-gate`
+25. migration execution dry-run gate: `make migration-execution-gate`
+26. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-26. implementation proof readiness generator:
+27. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-27. runtime trust telemetry preview generator:
+28. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-28. PostgreSQL runtime proof with configured integration URL:
+29. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-29. apply migrations with configured PostgreSQL URL: `make migrate`
-30. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-31. remove ignored generated local artifacts: `make clean`
+30. apply migrations with configured PostgreSQL URL: `make migrate`
+31. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+32. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
