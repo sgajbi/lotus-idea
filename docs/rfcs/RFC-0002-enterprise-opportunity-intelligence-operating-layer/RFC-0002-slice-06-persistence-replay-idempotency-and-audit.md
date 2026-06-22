@@ -52,11 +52,20 @@ Implemented first-wave internal scope:
 7. The same orchestration shape exists for the Core source-port flow, but it
    still does not promote live source support while Core cash-weight authority
    remains governed by `sgajbi/lotus-core#430`.
-8. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
+8. `src/app/application/source_ingestion.py` now adds an internal
+   high-cash source-ingestion orchestration wrapper over the Core source port
+   and repository port. It generates source-ingestion idempotency keys, maps
+   repository and evaluator results into explicit accepted, replayed, conflict,
+   duplicate-candidate, blocked, suppressed, and skipped-not-eligible decisions,
+   and keeps blocked, suppressed, and below-threshold evaluations non-mutating.
+   Core-backed idempotency payloads now include generated candidate and
+   source-signal identity, so same-key source changes conflict instead of being
+   treated as an equivalent replay.
+9. `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` now exposes the
    caller-supplied high-cash evaluate-and-persist path as a certified internal
    API foundation with `Idempotency-Key`, `idea.candidate.persist`, product-safe
    conflict errors, and repository-derived `durableStorageBacked` posture.
-9. `src/app/application/candidate_lifecycle.py` and
+10. `src/app/application/candidate_lifecycle.py` and
    `src/app/api/candidate_lifecycle.py` now expose certified internal candidate
    lifecycle transition orchestration over the same repository contract.
    `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` requires
@@ -64,7 +73,7 @@ Implemented first-wave internal scope:
    canonical domain lifecycle transition graph, writes lifecycle history and
    audit evidence, returns accepted/replayed/not-found/conflict/invalid-state
    posture, and keeps `supportedFeaturePromoted=false`.
-10. `src/app/ports/idea_repository.py` now centralizes the repository workflow
+11. `src/app/ports/idea_repository.py` now centralizes the repository workflow
     protocols used by application orchestration. Candidate persistence,
     candidate snapshots, lifecycle mutation, review and feedback mutation,
     conversion mutation, report evidence-pack requests, and AI explanation
@@ -72,7 +81,7 @@ Implemented first-wave internal scope:
     repository protocols. `tests/unit/test_repository_port_boundary.py`
     prevents future application modules from reintroducing scattered
     repository protocol declarations outside the governed runtime provider.
-11. `migrations/001_idea_repository_foundation.sql` and
+12. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,
     idempotency, lifecycle, audit, review, feedback, conversion, and report
@@ -80,14 +89,14 @@ Implemented first-wave internal scope:
     validates required tables, indexes, JSONB payload columns, UTC timestamp
     columns, source relationships, and rollback statements so future agents
     cannot add persistence-shaped work without governed reversibility evidence.
-12. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
+13. `src/app/infrastructure/migrations.py` and `scripts/run_migrations.py` now
     provide a PostgreSQL migration execution path. `make migration-execution-gate`
     dry-runs apply and rollback plans in CI without needing a database, while
     `make migrate` and `make migrate-rollback` execute the same plans when
     `LOTUS_IDEA_DATABASE_URL` points to a PostgreSQL database. The Docker image
     now includes `migrations/` so runtime migration commands have the same SQL
     contract as local development.
-13. `src/app/infrastructure/postgres_repository.py` now implements the first
+14. `src/app/infrastructure/postgres_repository.py` now implements the first
     PostgreSQL repository adapter behind the governed port surface. The adapter
     hydrates repository snapshots from the schema, delegates domain decisions to
     the same in-memory repository contract, flushes typed table rows and JSONB
@@ -96,19 +105,19 @@ Implemented first-wave internal scope:
     idempotency replay, lifecycle history, audit events, review decisions,
     feedback, conversion intent/outcome, report evidence-pack requests, snapshot
     hydration, and rollback behavior with a fake Postgres cursor.
-14. `src/app/repository_state.py` now selects the process-local
+15. `src/app/repository_state.py` now selects the process-local
     `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
     when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
     mapping rows so the adapter receives the row shape it enforces. The
     `src/app/api/repository_state.py` module remains a compatibility shim so
     concrete infrastructure wiring stays out of the API layer.
-15. Repository-backed API routes now derive `durableStorageBacked` responses and
+16. Repository-backed API routes now derive `durableStorageBacked` responses and
     `durable_storage_backed` operation-event labels from the active repository
     instead of hardcoding storage posture. Default local/test runtime remains
     process-local and continues to report `durableStorageBacked=false`; a
     configured PostgreSQL runtime reports `durableStorageBacked=true` for the
     repository-backed foundation routes.
-16. `tests/integration/test_postgres_runtime_integration.py` now runs the
+17. `tests/integration/test_postgres_runtime_integration.py` now runs the
     first real PostgreSQL runtime proof. It applies the governed schema,
     persists a high-cash candidate through
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, reloads the
@@ -159,17 +168,21 @@ Targeted validation:
 1. `.venv\Scripts\python.exe -m pytest tests\unit\test_high_cash_application.py tests\unit\test_idea_persistence.py -q`
    passed with `19 passed` for the new orchestration and persistence replay
    coverage.
-2. `.venv\Scripts\python.exe -m ruff check src\app\application\high_cash_signal.py tests\unit\test_high_cash_application.py`
+2. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion.py tests\unit\test_high_cash_application.py -q`
+   passed with `21 passed` for the internal source-ingestion orchestration,
+   generated idempotency key, replay, conflict, blocked, suppressed, and
+   skipped-not-eligible coverage.
+3. `.venv\Scripts\python.exe -m ruff check src\app\application\high_cash_signal.py tests\unit\test_high_cash_application.py`
    passed.
-3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
-4. Prior Slice 06 validation also covered
+4. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
+5. Prior Slice 06 validation also covered
    `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py -q`
    with `11 passed`.
-5. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+6. `make check` passed with lint, format, CI contract, monetary/no-sensitive
    guards, data-mesh contract gate, supported-feature gate,
    endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
-   `174` unit tests.
-6. `make ci` passed with `13` integration tests, `2` e2e tests, `174` unit
+   `257` unit tests.
+7. `make ci` passed with `13` integration tests, `2` e2e tests, `174` unit
    tests under coverage, coverage gate at `99.37%`, and dependency audit
    reporting no known vulnerabilities.
 7. Later endpoint foundation validation covered the certified
