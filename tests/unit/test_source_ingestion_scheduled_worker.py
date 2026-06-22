@@ -7,6 +7,8 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+import pytest
+
 from app.application.source_ingestion_scheduled_worker import (
     DOCKER_COMPOSE_WORKER_SERVICE,
     RUN_ONCE_WORKER_ENTRYPOINT,
@@ -129,6 +131,147 @@ def test_rejects_scheduled_worker_deploy_proof_with_naive_timestamp() -> None:
     assert scheduled_worker_deploy_proof_is_valid(proof) is False
 
 
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("schemaVersion", "wrong"),
+        ("repository", "lotus-core"),
+        ("sourceAuthority", "lotus-performance"),
+        ("opportunityFamily", "cash"),
+        ("generatedAtUtc", ""),
+        ("generatedAtUtc", "not-a-datetime"),
+        ("supportedFeaturePromoted", True),
+        ("proofClosed", True),
+        ("scheduledWorkerDeployProofValid", False),
+    ],
+)
+def test_rejects_scheduled_worker_deploy_proof_with_invalid_top_level_fields(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    proof = _valid_scheduled_worker_proof()
+    proof[field_name] = bad_value
+
+    assert scheduled_worker_deploy_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("schedulerEntrypoint", "wrong.py"),
+        ("schedulerEntrypointPresent", False),
+        ("runOnceWorkerEntrypoint", "wrong.py"),
+        ("runOnceWorkerEntrypointPresent", False),
+        ("dockerComposeService", "wrong-service"),
+        ("dockerComposeServicePresent", False),
+    ],
+)
+def test_rejects_scheduled_worker_deploy_proof_with_invalid_deployment_fields(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    proof = _valid_scheduled_worker_proof()
+    deployment = proof["deployment"]
+    assert isinstance(deployment, dict)
+    deployment[field_name] = bad_value
+
+    assert scheduled_worker_deploy_proof_is_valid(proof) is False
+
+
+def test_rejects_scheduled_worker_deploy_proof_with_non_mapping_deployment() -> None:
+    proof = _valid_scheduled_worker_proof()
+    proof["deployment"] = []
+
+    assert scheduled_worker_deploy_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("schemaVersion", "wrong"),
+        ("mode", "run"),
+        ("sourceAuthority", "lotus-performance"),
+        ("opportunityFamily", "cash"),
+        ("runOnceManifestSchemaVersion", "wrong"),
+        ("schedulerEntrypoint", "wrong.py"),
+        ("runOnceWorkerEntrypoint", "wrong.py"),
+        ("dockerComposeService", "wrong-service"),
+        ("supportedFeaturePromoted", True),
+    ],
+)
+def test_rejects_scheduled_worker_deploy_proof_with_invalid_summary_fields(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    proof = _valid_scheduled_worker_proof()
+    summary = proof["checkSummary"]
+    assert isinstance(summary, dict)
+    summary[field_name] = bad_value
+
+    assert scheduled_worker_deploy_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    "summary_mutation",
+    [
+        {"schedulePolicy": []},
+        {"schedulePolicy": {"intervalSeconds": 0, "maxRuns": 1, "runOnStart": True}},
+        {"schedulePolicy": {"intervalSeconds": 300, "maxRuns": 0, "runOnStart": True}},
+        {"schedulePolicy": {"intervalSeconds": 300, "maxRuns": 1, "runOnStart": False}},
+        {"runOnceManifest": []},
+        {"runOnceManifest": {"schemaVersion": "wrong"}},
+    ],
+)
+def test_rejects_scheduled_worker_deploy_proof_with_invalid_summary_shapes(
+    summary_mutation: dict[str, object],
+) -> None:
+    proof = _valid_scheduled_worker_proof()
+    summary = proof["checkSummary"]
+    assert isinstance(summary, dict)
+    summary.update(summary_mutation)
+
+    assert scheduled_worker_deploy_proof_is_valid(proof) is False
+
+
+def test_rejects_scheduled_worker_deploy_proof_with_non_mapping_summary() -> None:
+    proof = _valid_scheduled_worker_proof()
+    proof["checkSummary"] = []
+
+    assert scheduled_worker_deploy_proof_is_valid(proof) is False
+
+
+def test_schedule_config_defaults_none_values() -> None:
+    schedule = source_ingestion_schedule_config_from_values(
+        interval_seconds=None,
+        max_runs=None,
+    )
+
+    assert schedule.interval_seconds == 300
+    assert schedule.max_runs == 1
+
+
+@pytest.mark.parametrize(
+    ("interval_seconds", "max_runs"),
+    [
+        ("abc", "1"),
+        ("", "1"),
+        (0, "1"),
+        (True, "1"),
+        ("300", "abc"),
+        ("300", 0),
+    ],
+)
+def test_schedule_config_rejects_invalid_positive_integers(
+    interval_seconds: object,
+    max_runs: object,
+) -> None:
+    with pytest.raises(ValueError, match="must be a positive integer"):
+        source_ingestion_schedule_config_from_values(
+            interval_seconds=interval_seconds,
+            max_runs=max_runs,
+        )
+
+
 def test_scheduled_worker_cli_check_only_is_source_safe(capsys: Any) -> None:
     module = _load_scheduler_script()
     manifest_path = (
@@ -197,6 +340,24 @@ def _manifest() -> dict[str, Any]:
             }
         ],
     }
+
+
+def _valid_scheduled_worker_proof() -> dict[str, Any]:
+    plan = source_ingestion_worker_plan_from_manifest(_manifest())
+    summary = build_scheduled_worker_check_summary(
+        plan=plan,
+        schedule=source_ingestion_schedule_config_from_values(
+            interval_seconds=300,
+            max_runs=1,
+        ),
+    )
+    return build_scheduled_worker_deploy_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        check_summary=summary,
+        scheduler_entrypoint_present=True,
+        run_once_worker_entrypoint_present=True,
+        docker_compose_service_present=True,
+    )
 
 
 def _load_scheduler_script() -> ModuleType:
