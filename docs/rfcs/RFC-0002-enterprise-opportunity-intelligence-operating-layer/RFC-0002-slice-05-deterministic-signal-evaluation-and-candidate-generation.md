@@ -75,7 +75,7 @@ Additional implemented source-adapter foundation:
 Not implemented yet:
 
 1. live Core integration proof against a running Core service,
-2. database-backed source-ingestion worker and recovery proof,
+2. scheduled database-backed source-ingestion worker and live-service recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
 4. Gateway/Workbench proof,
 5. supported-feature promotion,

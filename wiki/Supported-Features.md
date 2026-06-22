@@ -15,10 +15,11 @@ reviewed report conversion intents, with safe source summaries, retention refs,
 Report/Render/Archive authority refs, idempotency, audit, and a certified
 internal API foundation. Real PostgreSQL runtime proof exists for high-cash
 persistence/replay plus the first internal advisor queue, lifecycle, review,
-feedback, conversion, and report evidence-pack request workflow path. These are
-not externally supported features until live source adapters, deploy/source-ingestion
-recovery evidence, Gateway/Workbench proof, downstream acceptance,
-data-product certification, and supported-feature evidence are present.
+feedback, conversion, report evidence-pack request workflow path, and internal
+source-ingestion replay/conflict recovery. These are not externally supported
+features until live source adapters, scheduled source-worker proof,
+Gateway/Workbench proof, downstream acceptance, data-product certification,
+and supported-feature evidence are present.
 
 Planned capabilities:
 

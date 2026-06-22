@@ -123,8 +123,8 @@ now adds an internal high-cash source-ingestion orchestration wrapper over the
 Core source port and repository port, including generated source-ingestion
 idempotency keys and explicit accepted, replayed, conflict, blocked,
 suppressed, and skipped-not-eligible decisions. There is still no live Core
-integration proof, database-backed source-ingestion worker recovery proof,
-Gateway route, Workbench proof, data-product certification, or supported-feature
+integration proof, scheduled database-backed source-ingestion worker, Gateway
+route, Workbench proof, data-product certification, or supported-feature
 promotion yet.
 The upstream Core cash-weight contract dependency is tracked in
 `sgajbi/lotus-core#430`.
@@ -181,11 +181,13 @@ persisting a high-cash candidate through the API, reloading the provider,
 proving idempotency replay from database state, projecting the advisor queue,
 transitioning lifecycle state, recording review approval, recording feedback,
 recording report conversion intent/outcome state, recording a report
-evidence-pack request, validating the backing workflow tables, and proving schema
-rollback/reapply restores a usable API persistence contract. This is still not
-production storage certification: deploy migration evidence, source-ingestion
-worker proof and recovery evidence, data-product certification, downstream
-workflow proof, and supported-feature promotion remain planned.
+evidence-pack request, proving internal Core-backed source-ingestion replay and
+same-key changed-source conflict recovery through the repository adapter,
+validating the backing workflow tables, and proving schema rollback/reapply
+restores a usable API persistence contract. This is still not production
+storage certification: deploy migration evidence, scheduled source-ingestion
+worker proof, live Core source adapter proof, data-product certification,
+downstream workflow proof, and supported-feature promotion remain planned.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in

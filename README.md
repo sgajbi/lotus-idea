@@ -36,8 +36,9 @@ data-mesh-readiness APIs. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
 high-cash persistence plus the first internal review, feedback, conversion,
-report evidence-pack, advisor queue, and migration rollback/reapply recovery
-workflow now exist behind blocking gates.
+report evidence-pack, advisor queue, source-ingestion replay/conflict recovery,
+and migration rollback/reapply recovery workflow now exist behind blocking
+gates.
 Runtime API state is process-local by default and becomes repository-durable
 only when `LOTUS_IDEA_DATABASE_URL` is configured after migrations are applied.
 No business feature is supported until the relevant
@@ -241,8 +242,9 @@ The test applies and rolls back the repository schema, persists a high-cash
 candidate through the API, resets the repository provider, proves idempotent
 replay from PostgreSQL, proves schema rollback/reapply restores a usable runtime
 contract, projects the advisor queue, records review approval and feedback,
-records report conversion intent/outcome state, and records a report evidence-pack
-request:
+records report conversion intent/outcome state, records a report evidence-pack
+request, and proves internal Core-backed source-ingestion replay/conflict
+recovery through the PostgreSQL repository adapter:
 
 ```powershell
 $env:LOTUS_IDEA_POSTGRES_INTEGRATION_URL = "postgresql://lotus_idea:lotus_idea@localhost:5432/lotus_idea"

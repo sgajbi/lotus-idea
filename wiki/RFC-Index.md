@@ -35,6 +35,7 @@ Current RFC-0002 implementation-start baseline:
    schema/rollback contract, PostgreSQL migration execution CLI, tested
    PostgreSQL repository adapter foundation, opt-in API runtime wiring, and a
    real PostgreSQL high-cash persistence/replay plus first internal
+   source-ingestion replay/conflict recovery and
    review/feedback/conversion/report workflow proof without supported-feature
    promotion.
 7. Slice 07 partially implements internal deterministic scoring, score reason

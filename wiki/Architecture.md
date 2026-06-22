@@ -102,9 +102,10 @@ is configured after migrations are applied. `make postgres-integration-gate`
 now proves high-cash API persistence/replay and the first internal review,
 feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service, including schema apply, provider reload,
-idempotency replay from database state, backing table validation, and schema
-rollback/reapply recovery. Production storage readiness still requires deploy
-migration evidence and source-ingestion recovery evidence.
+idempotency replay from database state, internal source-ingestion
+replay/conflict recovery, backing table validation, and schema rollback/reapply
+recovery. Production storage readiness still requires deploy migration evidence
+and scheduled/live source-worker evidence.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -158,7 +159,8 @@ repository, a PostgreSQL migration execution CLI, and a tested
 is process-local by default and PostgreSQL-backed only when
 `LOTUS_IDEA_DATABASE_URL` is configured. The real PostgreSQL runtime proof now
 covers high-cash evaluate-and-persist replay plus the first internal advisor
-queue, review, feedback, conversion, and report evidence-pack workflow path.
+queue, review, feedback, conversion, report evidence-pack workflow path, and
+internal source-ingestion replay/conflict recovery.
 This opt-in wiring and proof are not data-product certification, live-source
 support, Gateway/Workbench support, downstream realization, or
 supported-feature promotion.

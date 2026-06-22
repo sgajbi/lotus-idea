@@ -9,7 +9,9 @@ feedback, conversion, report evidence-pack, advisor queue, and migration
 rollback/reapply recovery workflow path. Internal high-cash source-ingestion
 orchestration now uses generated source-ingestion idempotency keys when needed
 and classifies accepted, replayed, conflict, blocked, suppressed, and
-not-eligible outcomes over the Core source port and repository port.
+not-eligible outcomes over the Core source port and repository port. The
+PostgreSQL runtime proof also covers internal source-ingestion replay after
+repository reload and same-key changed-source conflict recovery.
 Runtime API state remains process-local by default and reports
 `durableStorageBacked=false` unless the database URL is configured. When
 configured, repository-backed API responses and operation events report
@@ -49,9 +51,11 @@ downstream realization proof, or supported-feature promotion.
    idempotency replay from database state, projects the advisor queue, records
    lifecycle transitions, review approval, feedback, conversion intent,
    conversion outcome, and report evidence-pack request state, validates the
-   backing tables, rolls back the schema, reapplies it, and proves the recovered
-   API persistence contract is usable. GitHub PR Merge Gate and Main
-   Releasability run this proof against `postgres:18-alpine`.
+   backing tables, proves internal Core-backed source-ingestion replay/conflict
+   recovery through the PostgreSQL repository adapter, rolls back the schema,
+   reapplies it, and proves the recovered API persistence contract is usable.
+   GitHub PR Merge Gate and Main Releasability run this proof against
+   `postgres:18-alpine`.
 9. `src/app/application/source_ingestion.py` is the internal high-cash
    source-ingestion orchestration foundation. It does not run a background
    worker yet; it standardizes the future worker's generated idempotency key
@@ -107,8 +111,8 @@ Do not claim production storage readiness, production recovery,
 data-product promotion, or supported business workflows until later slices add:
 
 1. deploy-pipeline migration evidence,
-2. source-ingestion worker recovery evidence against the real service,
-3. source-ingestion worker proof and live source adapter proof,
+2. scheduled source-ingestion worker proof against the real service,
+3. live source adapter proof against a running Core service,
 4. data-product telemetry and platform mesh certification,
 5. Gateway/Workbench/downstream proof for supported workflows,
 6. updated endpoint certification, supported-feature, docs, wiki, and mesh
