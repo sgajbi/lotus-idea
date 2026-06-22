@@ -42,6 +42,7 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert set(snapshot.source_of_truth) == {
         "conversion_workflow",
         "report_evidence_workflow",
+        "downstream_realization_orchestration",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
         "downstream_contract_plan",
