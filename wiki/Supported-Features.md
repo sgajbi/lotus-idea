@@ -38,8 +38,11 @@ queue and candidate detail routes, but these foundations are not deployed
 scheduler daemon proof, live Core worker certification, Workbench proof, or
 supported-feature promotion. The AI explanation readiness diagnostic is an
 operator
-supportability check only; it does not invoke `lotus-ai`, certify runtime AI
-lineage-store proof, prove model-risk dashboards, or promote AI explanation support. The
+supportability check only; it does not invoke `lotus-ai`, prove model-risk
+dashboards, or promote AI explanation support. Source-safe AI explanation
+lineage persistence has PostgreSQL runtime proof for accepted, replayed, and
+conflicting request ids, but that proof is repository durability evidence, not
+`lotus-ai` runtime execution or AI product certification. The
 downstream realization readiness diagnostic is an operator supportability
 check only; it reports workflow counts, planned Advise/Manage/Report contract
 posture, and Advise/Manage/Report/Render/Archive blockers without calling

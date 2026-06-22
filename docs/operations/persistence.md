@@ -8,8 +8,9 @@ mutations now also create source-safe pending outbox records in the active
 repository snapshot, with internal retry/dead-letter delivery state semantics
 over a publisher port and a source-safe HTTP broker-publisher adapter
 foundation. It also has real PostgreSQL runtime
-proof for high-cash API persistence/replay and the first internal review,
-feedback, conversion, report evidence-pack, advisor queue, and migration
+proof for high-cash API persistence/replay, source-safe AI explanation lineage
+acceptance/replay/conflict, and the first internal review, feedback,
+conversion, report evidence-pack, advisor queue, and migration
 rollback/reapply recovery workflow path. Internal high-cash source-ingestion
 orchestration now uses generated source-ingestion idempotency keys when needed
 and classifies accepted, replayed, conflict, blocked, suppressed, and
@@ -22,7 +23,8 @@ validates the example manifest and source-safe check-only output contract
 without calling Core or writing repository state. The PostgreSQL runtime proof
 also covers internal source-ingestion
 replay after repository reload and same-key changed-source conflict recovery.
-Source-safe AI explanation lineage is now part of the repository contract. It
+Source-safe AI explanation lineage is now part of the repository contract and
+the real PostgreSQL runtime proof. It
 records request identity, candidate identity, evidence packet identity,
 evidence hash, workflow-pack identity, posture, verifier outcome, fallback
 state, bounded output summary ids, actor, timestamps, and
@@ -69,8 +71,8 @@ supported feature.
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | No certified live broker runtime or downstream delivery |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
-| AI explanation lineage | Source-safe request/result lineage through the repository port and PostgreSQL migration `002` | No `lotus-ai` runtime execution, prompt/provider telemetry, model-risk dashboard certification, or supported product claim |
-| Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
+| AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, model-risk dashboard certification, or supported product claim |
+| Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay and AI explanation lineage accepted/replayed/conflict behavior | Not supported-feature promotion |
 
 ```mermaid
 flowchart LR
