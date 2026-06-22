@@ -214,6 +214,7 @@ source-authority contracts only, not runtime certification.
 make install
 make lint
 make ci-contract-gate
+make repository-hygiene-gate
 make maintainability-gate
 make documentation-contract-gate
 make quality-scorecard-gate
@@ -350,7 +351,10 @@ auto-merge helper emits an explicit warning and skips queuing auto-merge; use
 an authorized human or release actor for a manual rebase merge. GitHub workflow
 jobs must declare bounded `timeout-minutes` values, and critical lanes must not use
 `continue-on-error: true`; `make ci-contract-gate` blocks drift in those
-controls. `make maintainability-gate` is also blocking through `make lint`;
+controls. `make repository-hygiene-gate` is blocking through `make lint`;
+it prevents future agentic changes from committing generated Python cache,
+coverage, build, dependency, local environment, or local database artifacts.
+`make maintainability-gate` is also blocking through `make lint`;
 it prevents future agentic changes from adding oversized source, test, or
 script files/functions beyond the measured enterprise-quality thresholds.
 `make documentation-contract-gate` is blocking through `make lint` as well;

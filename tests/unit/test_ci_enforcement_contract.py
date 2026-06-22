@@ -23,6 +23,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "ci: lint typecheck architecture-boundary-gate" in makefile
     assert "ci-contract-gate:" in makefile
     assert "$(MAKE) ci-contract-gate" in makefile
+    assert "repository-hygiene-gate:" in makefile
+    assert "$(MAKE) repository-hygiene-gate" in makefile
     assert "maintainability-gate:" in makefile
     assert "$(MAKE) maintainability-gate" in makefile
     assert "documentation-contract-gate:" in makefile
@@ -89,6 +91,15 @@ def test_ci_contract_gate_blocks_missing_merge_grade_checks() -> None:
 
     assert "Makefile missing required target `security-audit`" in errors
     assert "Makefile ci target missing `security-audit`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_repository_hygiene_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) repository-hygiene-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) repository-hygiene-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_write_permissions_in_read_only_lanes(tmp_path: Path) -> None:

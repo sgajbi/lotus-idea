@@ -62,3 +62,18 @@ This slice also hardens endpoint certification quality:
    stale test references, and malformed JSON examples.
 4. `docs/operations/api-certification.md`, README, repository context, quality
    scorecard, CI quality guide, and wiki source now describe the stronger gate.
+
+This slice also hardens repository hygiene:
+
+1. `scripts/repository_hygiene_gate.py` validates tracked Git files and fails if
+   generated Python cache files, local coverage artifacts, build outputs,
+   dependency directories, local environment files, logs, or local databases are
+   committed.
+2. `make repository-hygiene-gate` runs the validator directly and `make lint`
+   runs it as a blocking local and GitHub lane gate.
+3. `scripts/ci_contract_gate.py` requires the target and lint call so future
+   agents cannot silently remove repository hygiene enforcement.
+4. `tests/unit/test_repository_hygiene_gate.py` covers current pass behavior and
+   generated/cache/local-artifact failure cases.
+5. README, repository context, enterprise-readiness guidance, quality
+   scorecard, and wiki source now describe the new source-tree hygiene control.

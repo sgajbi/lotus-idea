@@ -17,6 +17,7 @@ Repo-native validation commands:
 make check
 make ci
 make ci-contract-gate
+make repository-hygiene-gate
 make maintainability-gate
 make documentation-contract-gate
 make quality-scorecard-gate
@@ -35,7 +36,7 @@ make quality-baseline
 ```
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
-maintainability thresholds, documentation contract enforcement, quality-scorecard truth, OpenAPI quality,
+repository hygiene, maintainability thresholds, documentation contract enforcement, quality-scorecard truth, OpenAPI quality,
 implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
@@ -109,7 +110,12 @@ validation, source-ingestion worker manifest validation, PostgreSQL runtime
 proof, workflow-dispatch access, non-suppressed auto-merge token
 usage, merged-PR main-releasability dispatch, bounded job timeouts, no `continue-on-error: true`
 in critical lanes, maintainability enforcement, quality-scorecard truth,
-implementation-truth enforcement, and source-safe local quality gates.
+repository-hygiene enforcement, implementation-truth enforcement, and source-safe local quality gates.
+
+The repository-hygiene gate blocks tracked generated artifacts and local runtime byproducts:
+Python cache files, coverage outputs, build/dist outputs, dependency directories, local
+environment files, logs, and local databases. It is intentionally based on `git ls-files` so
+developers can keep ignored local working files while CI protects the durable source tree.
 
 The maintainability gate blocks oversized Python files/functions in source, test, and script
 trees. It is calibrated above the current baseline so new agentic work must split or refactor

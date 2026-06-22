@@ -520,19 +520,20 @@ owned by upstream services.
 11. architecture report: `make architecture-boundary-report`
 12. quality scorecard refresh: `make quality-baseline`
 13. CI contract gate: `make ci-contract-gate`
-14. maintainability gate: `make maintainability-gate`
-15. documentation contract gate: `make documentation-contract-gate`
-16. quality scorecard gate: `make quality-scorecard-gate`
-17. implementation-truth gate: `make implementation-truth-gate`
-18. data-mesh contract gate: `make data-mesh-contract-gate`
-19. migration contract gate: `make migration-contract-gate`
-20. migration execution dry-run gate: `make migration-execution-gate`
-21. run-once source-ingestion worker manifest gate:
+14. repository hygiene gate: `make repository-hygiene-gate`
+15. maintainability gate: `make maintainability-gate`
+16. documentation contract gate: `make documentation-contract-gate`
+17. quality scorecard gate: `make quality-scorecard-gate`
+18. implementation-truth gate: `make implementation-truth-gate`
+19. data-mesh contract gate: `make data-mesh-contract-gate`
+20. migration contract gate: `make migration-contract-gate`
+21. migration execution dry-run gate: `make migration-execution-gate`
+22. run-once source-ingestion worker manifest gate:
     `make source-ingestion-worker-check`
-22. PostgreSQL runtime proof with configured integration URL:
+23. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-23. apply migrations with configured PostgreSQL URL: `make migrate`
-24. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+24. apply migrations with configured PostgreSQL URL: `make migrate`
+25. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -545,7 +546,7 @@ owned by upstream services.
    `main`.
 
 Required baseline checks include lint, format check, typecheck, architecture
-boundary enforcement, maintainability thresholds, documentation contract enforcement,
+boundary enforcement, repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
@@ -557,7 +558,7 @@ critical workflow jobs.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
-remove architecture, maintainability, OpenAPI, endpoint-certification, supported-feature,
+remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
 validation, PostgreSQL runtime proof, coverage,
@@ -566,6 +567,13 @@ controls, bounded workflow timeouts, no `continue-on-error: true` in critical
 lanes, implementation-truth enforcement, non-suppressed auto-merge token usage,
 workflow-dispatch access, or merged-PR main-releasability dispatch from local
 or GitHub validation.
+
+`make repository-hygiene-gate` is blocking through `make lint`. It scans
+tracked Git files and fails if generated Python cache files, local coverage
+artifacts, build outputs, dependency directories, local environment files, log
+files, or local database files are committed. This preserves a clean
+bank-buyable source boundary: durable implementation, contract, test, evidence,
+and documentation truth belongs in Git; local runtime byproducts do not.
 
 `make maintainability-gate` is blocking through `make lint`. It enforces the
 current measured enterprise-quality thresholds for Python size hotspots:
