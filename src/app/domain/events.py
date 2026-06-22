@@ -81,9 +81,7 @@ def build_candidate_outbox_event(
     causation_id: str | None = None,
 ) -> OutboxEventRecord:
     _require_aware_utc(occurred_at_utc, "occurred_at_utc")
-    idempotency_fingerprint = (
-        _fingerprint(idempotency_key) if idempotency_key is not None else None
-    )
+    idempotency_fingerprint = _fingerprint(idempotency_key) if idempotency_key is not None else None
     event_id = _event_id(
         event_type=event_type,
         aggregate_id=aggregate_id,
