@@ -191,19 +191,13 @@ def build_implementation_proof_readiness_snapshot(
                 "wiki/Supported-Features.md",
                 "wiki/Demo-Readiness.md",
             ),
-            blockers=(
-                ()
-                if supported_feature_count
-                else ("no_supported_features_promoted",)
-            ),
+            blockers=(() if supported_feature_count else ("no_supported_features_promoted",)),
             supported_feature_promoted=bool(supported_feature_count),
         ),
     )
 
     overall_blockers = tuple(
-        dict.fromkeys(
-            blocker for capability in capabilities for blocker in capability.blockers
-        )
+        dict.fromkeys(blocker for capability in capabilities for blocker in capability.blockers)
     )
     certification_ready = not overall_blockers
     return ImplementationProofReadinessSnapshot(
