@@ -156,9 +156,7 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
         "portfolio_id": "portfolio-001",
         "client_id": "client-001",
     }
-    assert connection.rows["idea_outbox_event"][0]["event_type"] == (
-        "idea.candidate.persisted.v1"
-    )
+    assert connection.rows["idea_outbox_event"][0]["event_type"] == ("idea.candidate.persisted.v1")
     assert connection.rows["idea_outbox_event"][0]["status"] == OutboxEventStatus.PENDING.value
     assert (
         snapshot.idempotency_candidates["signal-ingestion:high-cash:001"] == candidate.candidate_id
