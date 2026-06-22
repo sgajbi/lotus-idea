@@ -63,6 +63,21 @@ foundation:
     `tests/integration/test_source_ingestion_readiness_api.py` prove blocked,
     configured, permission-denied, relative-manifest, and operation-event
     behavior without calling Core or writing repository state.
+17. `src/app/application/review_queue.py` adds an advisor queue readiness
+    snapshot over the existing deterministic queue projection and repository
+    snapshot, reporting aggregate counts, exclusion counts, durable-storage
+    posture, `not_certified` supportability, and certification blockers without
+    exposing candidate identifiers or access-scope identifiers.
+18. `GET /api/v1/review-queues/advisor/readiness` exposes that snapshot to
+    operators with `idea.review.queue.readiness.read`, returns
+    `supportedFeaturePromoted=false`, and emits bounded
+    `review_queue_readiness_read` operation events.
+19. `tests/unit/test_review_queue_application.py`,
+    `tests/integration/test_review_queue_api.py`, and
+    `tests/integration/test_api_operation_events.py` prove aggregate readiness
+    counts, non-storage blockers, permission-denied behavior, timestamp
+    validation, product-safe payloads, and operation-event behavior for the
+    advisor queue readiness diagnostic.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -71,6 +86,9 @@ dashboard/alert certification, or supported-feature promotion.
 The source-ingestion readiness diagnostic is explicitly `not_certified` until
 live Core source proof, scheduled worker deploy proof, runtime data-mesh
 telemetry, and Gateway/Workbench proof exist.
+The advisor queue readiness diagnostic is explicitly `not_certified` until
+durable queue posture, platform caller-context entitlement proof, Workbench
+proof, data-product certification, and runtime trust telemetry exist.
 
 ## Required Work
 

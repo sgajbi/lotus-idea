@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Partially implemented - deterministic scoring plus certified scope-aware advisor queue API foundation only
+Status: Partially implemented - deterministic scoring plus certified scope-aware advisor queue API and readiness diagnostic foundations only
 
 ## Outcome
 
@@ -69,6 +69,20 @@ Implemented on the Slice 07 foundation branch:
     tenant/book/portfolio/client access scope onto created and persisted
     candidates so explicit queue scope filters are evaluated against durable
     candidate truth.
+13. `src/app/application/review_queue.py` now exposes
+    `build_review_queue_readiness_snapshot`, which reuses the same repository
+    snapshot and deterministic queue projection path to produce source-safe
+    aggregate queue counts, exclusion counts, durable-storage posture, and
+    certification blockers without creating a parallel queue implementation.
+14. `GET /api/v1/review-queues/advisor/readiness` exposes that posture as a
+    certified internal operator diagnostic requiring
+    `idea.review.queue.readiness.read` plus the `operator` role. It returns
+    `supportabilityStatus=not_certified`, `supportedFeaturePromoted=false`, and
+    no candidate identifiers or access-scope identifiers.
+15. `tests/unit/test_review_queue_application.py` and
+    `tests/integration/test_review_queue_api.py` prove aggregate readiness
+    counts, non-storage blockers, product-safe payloads, permission-denied
+    behavior, and timezone validation for the queue readiness diagnostic.
 
 ## Remaining Gaps
 
@@ -84,7 +98,8 @@ work remains planned:
    integration; the internal queue API now supports explicit scope filters, but
    product entitlement proof remains planned,
 5. data-product certification and trust telemetry for queue products,
-6. supportability metrics and runtime diagnostics for queue health,
+6. broader supportability metrics, dashboards, alerts, and runtime diagnostics
+   for queue health beyond the certified aggregate readiness diagnostic,
 7. supported-feature promotion after live proof.
 
 ## Validation
@@ -110,3 +125,6 @@ Targeted validation:
 8. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_queue_application.py tests/integration/test_review_queue_api.py tests/unit/test_postgres_repository.py`
    passed with `16 passed` after adding scope-aware queue filtering, blank
    scope validation, and PostgreSQL candidate scope serialization evidence.
+9. `.venv\Scripts\python.exe -m pytest tests\unit\test_review_queue_application.py tests\integration\test_review_queue_api.py tests\integration\test_api_operation_events.py tests\unit\test_service_contract.py -q`
+   passed after adding the advisor queue readiness diagnostic, before full
+   documentation and ledger gates were rerun.

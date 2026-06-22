@@ -321,9 +321,9 @@ fallback/verifier evaluation over persisted candidate evidence:
 requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
 runtime workflows, persist durable AI lineage, or grant downstream authority.
-All twelve business routes plus the data-mesh-readiness and
-source-ingestion-readiness operator diagnostics are covered by OpenAPI and
-endpoint certification evidence. The PostgreSQL runtime
+All twelve business routes plus the data-mesh-readiness,
+source-ingestion-readiness, and advisor-queue-readiness operator diagnostics
+are covered by OpenAPI and endpoint certification evidence. The PostgreSQL runtime
 proof now covers the high-cash persist, advisor queue, lifecycle, review,
 feedback, conversion intent/outcome, and report evidence-pack request path.
 `lotus-gateway` main now publishes read-only `GET
@@ -390,7 +390,11 @@ intent, conversion outcome, report evidence-pack request, and
 data-mesh-readiness diagnostic APIs emit bounded operation events. The
 source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,
-blocked/accepted configuration posture, and no source payloads. Operation
+blocked/accepted configuration posture, and no source payloads.
+The advisor-queue-readiness diagnostic emits
+`review_queue_readiness_read` events with `not_certified` supportability,
+aggregate-only queue counts, blocked certification posture, and no candidate or
+access-scope identifiers.
 events are emitted without
 portfolio/client/account/holding/transaction identifiers, request/response
 bodies, trace ids, or correlation ids as metric labels. This is not yet full

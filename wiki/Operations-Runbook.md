@@ -44,6 +44,13 @@ remaining certification blockers without calling Core or exposing source
 payloads. It remains `not_certified` until live Core source proof, scheduled
 worker deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof
 exist.
+The internal `GET /api/v1/review-queues/advisor/readiness` diagnostic is
+available for operators with `idea.review.queue.readiness.read` to inspect
+aggregate advisor queue posture, exclusion counts, durable-storage posture, and
+remaining certification blockers without exposing candidate identifiers or
+access-scope identifiers. It remains `not_certified` until durable queue
+posture, platform caller-context entitlement proof, Workbench proof,
+data-product certification, and runtime trust telemetry exist.
 
 Initial commands:
 
@@ -80,7 +87,8 @@ advisor queue reads, review actions, AI explanation fallback/verifier
 evaluation, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, data-mesh-readiness
-diagnostic reads, and source-ingestion-readiness diagnostic reads.
+diagnostic reads, source-ingestion-readiness diagnostic reads, and advisor
+queue-readiness diagnostic reads.
 
 Current outcomes:
 
@@ -99,8 +107,10 @@ Current outcomes:
 10. `blocked`: verifier rejected unsupported AI output, candidate evidence
     replay found stale source posture, expected current data-mesh-readiness
     posture while runtime trust telemetry and platform certification remain
-    absent, or source-ingestion readiness is missing run-once worker
-    configuration/certification proof.
+    absent, source-ingestion readiness is missing run-once worker
+    configuration/certification proof, or advisor queue readiness is missing
+    durable queue posture, entitlement proof, Workbench proof, data-product
+    certification, or runtime trust telemetry.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -131,7 +141,15 @@ certification cannot pass if supportability telemetry proof is missing.
 The inventory covers high-cash evaluation, high-cash persistence, candidate
 evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
-evidence-pack request, and data-mesh-readiness and source-ingestion-readiness
-diagnostic endpoints. These endpoints are certified as
+evidence-pack request, and data-mesh-readiness, source-ingestion-readiness, and
+advisor-queue-readiness diagnostic endpoints. These endpoints are certified as
 internal foundations or operator diagnostics only; they are not supported
 business features.
+
+`GET /api/v1/review-queues/advisor/readiness` is the certified internal
+advisor queue readiness diagnostic. It returns aggregate queue counts,
+exclusion counts, durable-storage posture, and certification blockers for
+operators without exposing candidate identifiers or access-scope identifiers.
+It is not a Gateway route, Workbench proof, PM/compliance queue surface,
+data-product certification, client-ready publication, or supported-feature
+promotion.
