@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -216,6 +216,15 @@ Implemented first-wave internal scope:
     repo-native command, and PR Merge Gate / Main Releasability run it against
     `postgres:18-alpine` with
     `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`.
+28. `src/app/application/durable_repository_proof.py`,
+    `scripts/generate_durable_repository_proof.py`, and
+    `make durable-repository-proof-contract-gate` now define and validate a
+    source-safe durable repository proof artifact for aggregate RFC proof
+    readiness. The artifact cites migration contracts, the PostgreSQL adapter,
+    and the GitHub PostgreSQL runtime proof lane. It clears only aggregate
+    stale durable-repository proof blockers; it does not configure runtime
+    storage, certify production storage, replace `make postgres-integration-gate`,
+    or promote support.
 
 Not implemented yet:
 
@@ -242,6 +251,10 @@ become CI-visible before any supported database-backed product claim is made.
 The current proof now also exercises the first internal review, queue,
 conversion, report evidence-pack workflow, pending outbox persistence, and
 internal source-ingestion replay/conflict recovery path against PostgreSQL. The
+durable repository proof artifact lets aggregate implementation-readiness
+evidence cite that persistence proof without requiring the generator itself to
+connect to PostgreSQL; runtime endpoints still report durable storage only from
+the active repository provider. The
 source-ingestion application layer now has a bounded run-once batch primitive,
 a versioned manifest-backed run-once CLI and check-only gate, and a bounded
 scheduled-worker deploy-contract proof over that run-once primitive. The outbox

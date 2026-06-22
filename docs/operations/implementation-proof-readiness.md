@@ -107,6 +107,18 @@ the aggregate readiness generator, so the repo-native proof snapshot does not
 report a stale scheduled-worker deploy-proof blocker. This remains deploy
 topology proof only; it is not live long-running scheduler certification.
 
+Durable repository proof is captured by
+`scripts/generate_durable_repository_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF` or passed with
+`--durable-repository-proof` clears only the aggregate
+`durable_repository_not_configured` blocker inside generated
+implementation-proof readiness evidence. It does not configure the running
+service, connect to PostgreSQL, certify production storage, prove deploy
+migrations, certify live Core ingestion, certify runtime trust telemetry,
+prove Gateway or Workbench behavior, or promote a supported feature. Runtime
+readiness endpoints continue to report missing durable repository posture when
+`LOTUS_IDEA_DATABASE_URL` is absent.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -157,7 +169,8 @@ Implementation-backed evidence:
 2. API route: `src/app/api/implementation_proof_readiness.py`,
 3. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
 4. repo-native check that generates and consumes the scheduled-worker
-   deploy-proof artifact: `make implementation-proof-readiness-check`,
+   deploy-proof and durable repository proof artifacts:
+   `make implementation-proof-readiness-check`,
 5. downstream contract check: `make downstream-realization-contract-gate`,
 6. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
@@ -177,16 +190,22 @@ Implementation-backed evidence:
     `make source-ingestion-scheduled-worker-check`,
 14. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-15. outbox delivery run-once endpoint:
+15. durable repository proof generator:
+    `scripts/generate_durable_repository_proof.py`,
+16. durable repository proof contract gate:
+    `make durable-repository-proof-contract-gate`,
+17. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-16. operation event: `implementation_proof_readiness_read`,
-17. endpoint ledger:
+18. operation event: `implementation_proof_readiness_read`,
+19. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-18. unit tests:
+20. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-19. generator tests:
+21. durable repository proof tests:
+    `tests/unit/test_durable_repository_proof.py`,
+22. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-20. integration tests:
+23. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
@@ -194,6 +213,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_implementation_proof_readiness.py tests/integration/test_implementation_proof_readiness_api.py -q
 make implementation-proof-readiness-check
+make durable-repository-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make downstream-realization-contract-gate
