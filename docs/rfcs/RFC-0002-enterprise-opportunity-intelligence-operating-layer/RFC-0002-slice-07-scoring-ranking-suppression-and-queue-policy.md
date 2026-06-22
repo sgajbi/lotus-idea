@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Partially implemented - deterministic scoring plus certified advisor queue API foundation only
+Status: Partially implemented - deterministic scoring plus certified scope-aware advisor queue API foundation only
 
 ## Outcome
 
@@ -37,8 +37,9 @@ Implemented on the Slice 07 foundation branch:
    candidate without mutating lifecycle authority.
 5. `build_review_queue` creates a deterministic review queue projection,
    excludes suppressed, duplicate, expired, closed, rejected, blocked,
-   snoozed, unscored, and non-reviewable candidates, and ranks by score,
-   creation time, and candidate identity for stable ordering.
+   snoozed, unscored, non-reviewable, and access-scope-mismatched candidates,
+   and ranks by score, creation time, and candidate identity for stable
+   ordering.
 6. `tests/unit/test_scoring_queue_policy.py` provides golden examples for
    deterministic scoring, conflict penalty behavior, score attachment, stable
    ranking, priority buckets, suppression, snooze, expiry, unsupported evidence,
@@ -49,18 +50,25 @@ Implemented on the Slice 07 foundation branch:
    exclusions to `build_review_queue`, and applies snooze state without adding a
    parallel queue implementation.
 8. `tests/unit/test_review_queue_application.py` proves snapshot-backed queue
-   projection, expired-record exclusion, snooze exclusion, and timezone-aware
-   evaluation validation.
+   projection, expired-record exclusion, snooze exclusion, access-scope
+   filtering, and timezone-aware evaluation validation.
 9. `src/app/api/review_queues.py` exposes the certified internal
    `GET /api/v1/review-queues/advisor` API foundation over persisted candidate
    snapshots.
 10. The advisor queue API requires `idea.review.queue.read` capability or
-    advisor role, requires timezone-aware `evaluatedAtUtc`, returns ranked queue
+    advisor role, requires timezone-aware `evaluatedAtUtc`, accepts optional
+    tenant/book/portfolio/client scope query filters, returns ranked queue
     items plus exclusions, and explicitly reports `durableStorageBacked=false`
     and `supportedFeaturePromoted=false`.
 11. `tests/integration/test_review_queue_api.py` covers persisted-candidate
-    queue projection, empty queues, permission denial, and product-safe
-    timezone validation.
+    queue projection, scope-filtered queue reads, empty queues, permission
+    denial, and product-safe validation for timestamps and blank scope filters.
+12. `src/app/domain/access_scope.py`, `src/app/domain/ideas.py`,
+    `src/app/domain/signal_evaluation.py`, `src/app/api/idea_signals.py`, and
+    `src/app/infrastructure/postgres_repository.py` now carry optional
+    tenant/book/portfolio/client access scope onto created and persisted
+    candidates so explicit queue scope filters are evaluated against durable
+    candidate truth.
 
 ## Remaining Gaps
 
@@ -70,8 +78,11 @@ work remains planned:
 1. persisted queue state and database-backed ranking projections,
 2. source-adapter input orchestration that creates and updates persisted
    candidates before queue projection,
-3. Gateway contract,
-4. Workbench review queue UI proof and entitlement-backed scope filtering,
+3. broader Gateway contract beyond the first bounded read-only queue/detail
+   routes,
+4. Workbench review queue UI proof and platform caller-context entitlement
+   integration; the internal queue API now supports explicit scope filters, but
+   product entitlement proof remains planned,
 5. data-product certification and trust telemetry for queue products,
 6. supportability metrics and runtime diagnostics for queue health,
 7. supported-feature promotion after live proof.
@@ -96,3 +107,6 @@ Targeted validation:
    passed with `4 passed` after adding the advisor review queue API foundation.
 7. `.venv\Scripts\python.exe scripts\openapi_quality_gate.py` passed after
    adding the advisor review queue route.
+8. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_queue_application.py tests/integration/test_review_queue_api.py tests/unit/test_postgres_repository.py`
+   passed with `16 passed` after adding scope-aware queue filtering, blank
+   scope validation, and PostgreSQL candidate scope serialization evidence.

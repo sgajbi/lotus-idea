@@ -83,7 +83,8 @@ client-communication authority, and keep `supportedFeaturePromoted=false`.
 The advisor review queue endpoint exposes the Slice 07 deterministic queue
 projection over persisted candidate snapshots. It requires
 `idea.review.queue.read` capability or advisor role, returns ranked items plus
-exclusions, and keeps `supportedFeaturePromoted=false`.
+exclusions, accepts optional tenant/book/portfolio/client query filters for
+scope-aware projection, and keeps `supportedFeaturePromoted=false`.
 `durableStorageBacked` follows the active repository provider.
 
 `lotus-gateway` now publishes the first bounded read-only idea routes on main:
@@ -124,7 +125,8 @@ Implementation files:
    authorization/scope mapping, product-safe errors, idempotency-conflict
    handling, OpenAPI examples, and route registration.
 8. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
-   product-safe errors, OpenAPI examples, and route registration.
+   optional tenant/book/portfolio/client scope filters, product-safe errors,
+   OpenAPI examples, and route registration.
 9. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
    signal and review routes.
 10. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
@@ -196,8 +198,10 @@ failures return product-safe Problem Details.
 
 The advisor review queue endpoint is permissioned by
 `idea.review.queue.read` capability or advisor role. It requires a
-timezone-aware `evaluatedAtUtc` query parameter and returns product-safe Problem
-Details for permission or validation failures.
+timezone-aware `evaluatedAtUtc` query parameter, accepts optional
+tenant/book/portfolio/client scope filters, excludes persisted candidates
+outside the requested scope with `access_scope_mismatch`, and returns
+product-safe Problem Details for permission or validation failures.
 
 The candidate detail endpoint is permissioned by
 `idea.candidate.detail.read` capability or advisor/operator role. It returns
@@ -345,6 +349,10 @@ Focused validation passed for the current foundation:
     publication for advisor queue and candidate detail. Gateway validation
     passed `make lint`, `make check`, Feature Lane, Quality Baseline, PR Merge
     Gate, Main Releasability, and wiki publication.
+25. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_queue_application.py tests/integration/test_review_queue_api.py tests/unit/test_postgres_repository.py`
+    passed with `16 passed` after adding scope-aware advisor queue filtering,
+    product-safe blank-scope validation, and PostgreSQL candidate-scope
+    serialization evidence.
 
 PR merge-gate evidence remains required before merge.
 
