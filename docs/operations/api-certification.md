@@ -24,7 +24,8 @@ blocks weak certification by requiring:
 5. `baseline_certified` status only for health/metadata baseline endpoints,
 6. certified business/operator endpoints to name an `idea.*` capability,
 7. certified endpoints to preserve Gateway, Workbench, and supported-feature-promotion boundaries,
-8. product-safe 403 behavior and `scripts/openapi_quality_gate.py` evidence.
+8. product-safe 403 behavior and `scripts/openapi_quality_gate.py` evidence,
+9. bounded operation-event test evidence for every certified business/operator endpoint.
 
 ## Certified Foundation Endpoints
 

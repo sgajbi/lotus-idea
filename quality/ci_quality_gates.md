@@ -77,3 +77,5 @@ operation to have a ledger entry; validates required evidence fields, valid JSON
 real `tests/path.py::test_name` references, baseline endpoint status discipline, OpenAPI-gate
 evidence, certified endpoint capability posture, product-safe 403 behavior, and explicit
 Gateway/Workbench/supported-feature boundary wording before an endpoint can remain `certified`.
+Certified business/operator endpoints must also reference bounded operation-event test evidence so
+API certification cannot drift away from supportability telemetry proof.

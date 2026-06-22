@@ -35,6 +35,7 @@ BASELINE_OPERATIONS = {
 BOUNDARY_TERMS = ("Gateway", "Workbench", "supported-feature promotion")
 CAPABILITY_PATTERN = re.compile(r"\bidea\.[a-z0-9.-]+\b")
 TEST_REFERENCE_PATTERN = re.compile(r"^(?P<path>tests/.+\.py)::(?P<test>[A-Za-z_][A-Za-z0-9_]*)$")
+OPERATION_EVENT_TEST_TERMS = ("operation_event", "operation_events")
 
 
 def _openapi_operations_from_app() -> set[tuple[str, str]]:
@@ -156,6 +157,14 @@ def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
 
     if not any("403" in str(example) for example in endpoint.get("error_examples", [])):
         errors.append(f"{operation}: certified endpoint must document product-safe 403 behavior")
+
+    test_evidence = endpoint.get("test_evidence", [])
+    if not any(
+        term in str(reference) for reference in test_evidence for term in OPERATION_EVENT_TEST_TERMS
+    ):
+        errors.append(
+            f"{operation}: certified endpoint must reference bounded operation-event test evidence"
+        )
 
     return errors
 

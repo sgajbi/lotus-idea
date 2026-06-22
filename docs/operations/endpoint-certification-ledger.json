@@ -24,7 +24,8 @@
       "test_evidence": [
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_creates_candidate_from_source_owned_evidence",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial",
-        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_requires_signal_evaluation_capability"
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_requires_signal_evaluation_capability",
+        "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -53,7 +54,8 @@
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_replays_same_idempotency_payload",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_rejects_blank_idempotency_key_safely",
-        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_requires_candidate_persistence_capability"
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_requires_candidate_persistence_capability",
+        "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -82,7 +84,8 @@
         "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_records_idempotent_transition",
         "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_returns_safe_conflicts_and_not_found",
         "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_requires_permission_and_valid_request",
-        "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_enables_review_approval_without_bypassing_state"
+        "tests/integration/test_review_workflow_api.py::test_lifecycle_transition_api_enables_review_approval_without_bypassing_state",
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -201,7 +204,8 @@
         "tests/integration/test_review_workflow_api.py::test_review_action_api_replays_same_idempotency_payload",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_conflict_for_changed_idempotency_payload",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_state_conflict_for_generated_candidate_approval",
-        "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope"
+        "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -228,7 +232,8 @@
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_feedback_api_persists_source_provenanced_feedback",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_not_found_for_missing_candidate",
-        "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope"
+        "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -256,7 +261,8 @@
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_records_review_approved_candidate_without_downstream_authority",
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_replays_and_conflicts_idempotently",
-        "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_requires_approved_state_permission_and_valid_request"
+        "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_requires_approved_state_permission_and_valid_request",
+        "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -283,7 +289,8 @@
       ],
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_records_source_authorized_result",
-        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays"
+        "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays",
+        "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -312,7 +319,8 @@
         "tests/integration/test_review_workflow_api.py::test_report_evidence_pack_api_records_request_without_render_or_archive_authority",
         "tests/integration/test_review_workflow_api.py::test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publication",
         "tests/unit/test_report_evidence.py::test_report_evidence_pack_requires_report_conversion_intent_and_preserves_authorities",
-        "tests/unit/test_idea_persistence.py::test_report_evidence_pack_persistence_records_idempotent_request"
+        "tests/unit/test_idea_persistence.py::test_report_evidence_pack_persistence_records_idempotent_request",
+        "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -339,7 +347,8 @@
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_projects_persisted_candidates",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_returns_empty_queue_without_candidates",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_requires_read_permission",
-        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_naive_evaluation_time_safely"
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_naive_evaluation_time_safely",
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

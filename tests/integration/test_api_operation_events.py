@@ -9,7 +9,9 @@ import app.api.ai_governance as ai_governance_api
 import app.api.candidate_detail as candidate_detail_api
 import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
+import app.api.conversion_governance as conversion_governance_api
 import app.api.idea_signals as idea_signals_api
+import app.api.report_evidence as report_evidence_api
 import app.api.review_queues as review_queues_api
 import app.api.review_workflow as review_workflow_api
 from app.api.repository_state import reset_idea_repository_for_tests
@@ -107,6 +109,33 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
+def conversion_intent_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Capabilities": "idea.conversion.intent.record",
+        "X-Correlation-Id": "corr-operation-conversion-intent-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def conversion_outcome_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "lotus-report-worker",
+        "X-Caller-Capabilities": "idea.conversion.outcome.record",
+        "X-Correlation-Id": "corr-operation-conversion-outcome-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
+def report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Capabilities": "idea.report-evidence-pack.request",
+        "X-Correlation-Id": "corr-operation-report-evidence-pack-api",
+        "Idempotency-Key": idempotency_key,
+    }
+
+
 def ai_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -200,6 +229,47 @@ def feedback_payload() -> dict[str, Any]:
     }
 
 
+def approve_review_payload() -> dict[str, Any]:
+    return {
+        "reviewId": "operation-review-approve-001",
+        "action": "approve_for_conversion",
+        "accessScope": access_scope(),
+        "authorizedScope": authorized_scope(),
+        "reasonCodes": ["review_required"],
+        "decidedAtUtc": "2026-06-21T10:05:00Z",
+    }
+
+
+def conversion_intent_payload() -> dict[str, Any]:
+    return {
+        "conversionIntentId": "operation-conversion-report-001",
+        "target": "report_evidence",
+        "reasonCodes": ["review_approved_for_conversion"],
+        "requestedAtUtc": "2026-06-21T10:15:00Z",
+    }
+
+
+def conversion_outcome_payload() -> dict[str, Any]:
+    return {
+        "conversionOutcomeId": "operation-conversion-outcome-001",
+        "status": "accepted",
+        "sourceSystem": "lotus-report",
+        "downstreamReference": "operation-report-evidence-pack-001",
+        "recordedAtUtc": "2026-06-21T10:20:00Z",
+    }
+
+
+def report_evidence_pack_payload() -> dict[str, Any]:
+    return {
+        "reportEvidencePackId": "operation-report-evidence-pack-001",
+        "purpose": "client_review_report_section",
+        "reasonCodes": ["review_approved_for_conversion"],
+        "requestedAtUtc": "2026-06-21T10:25:00Z",
+        "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
+        "clientReadyPublicationRequested": False,
+    }
+
+
 def ai_payload() -> dict[str, Any]:
     return {
         "requestId": "operation-ai-explanation-001",
@@ -221,7 +291,7 @@ def capture_operation_events(
 ) -> list[OperationEventCall]:
     events: list[OperationEventCall] = []
 
-    def capture(
+    def capture_foundation_event(
         operation: Any,
         outcome: Any,
         *,
@@ -233,8 +303,22 @@ def capture_operation_events(
             (operation.value, outcome.value, source_authority, durable_storage_backed, error_code)
         )
 
+    def capture_operation_event(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.source_authority,
+                event.durable_storage_backed,
+                event.error_code,
+            )
+        )
+
     for module in modules:
-        monkeypatch.setattr(module, "emit_foundation_operation_event", capture)
+        if hasattr(module, "emit_foundation_operation_event"):
+            monkeypatch.setattr(module, "emit_foundation_operation_event", capture_foundation_event)
+        if hasattr(module, "emit_operation_event"):
+            monkeypatch.setattr(module, "emit_operation_event", capture_operation_event)
     return events
 
 
@@ -248,6 +332,50 @@ def persist_candidate(client: TestClient, *, suffix: str, idempotency_key: str) 
     payload = response.json()
     assert payload["persistence"]["decision"] == "accepted"
     return str(payload["persistence"]["candidateId"])
+
+
+def transition_candidate(
+    client: TestClient,
+    candidate_id: str,
+    *,
+    target_status: str,
+    idempotency_key: str,
+    transition_id: str,
+    minute: int,
+) -> None:
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(
+            transition_id=transition_id,
+            target_status=target_status,
+        )
+        | {"changedAtUtc": f"2026-06-21T10:{minute:02d}:00Z"},
+        headers=lifecycle_headers(idempotency_key),
+    )
+    assert response.status_code == 200
+    assert response.json()["persistence"]["decision"] == "accepted"
+
+
+def approve_candidate_for_conversion(client: TestClient, candidate_id: str) -> None:
+    for index, target_status in enumerate(
+        ("enriched", "scored", "governance_checked", "ready_for_review"),
+        start=1,
+    ):
+        transition_candidate(
+            client,
+            candidate_id,
+            target_status=target_status,
+            idempotency_key=f"operation-lifecycle-{target_status}-001",
+            transition_id=f"operation-lifecycle-{target_status}-001",
+            minute=index,
+        )
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=approve_review_payload(),
+        headers=review_headers("operation-review-approved-conversion-001"),
+    )
+    assert response.status_code == 200
+    assert response.json()["persistence"]["reviewPosture"] == "approved_for_conversion"
 
 
 def test_signal_and_candidate_persistence_emit_bounded_operation_events(
@@ -390,3 +518,43 @@ def test_candidate_evidence_replay_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("candidate_evidence_replay", "accepted", "lotus-idea", False, None)]
+
+
+def test_conversion_and_report_workflow_emit_operation_events(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    conversion_events = capture_operation_events(monkeypatch, conversion_governance_api)
+    report_events = capture_operation_events(monkeypatch, report_evidence_api)
+    candidate_id = persist_candidate(
+        client,
+        suffix="-conversion-report-events",
+        idempotency_key="operation-persist-conversion-report-001",
+    )
+    approve_candidate_for_conversion(client, candidate_id)
+
+    intent_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json=conversion_intent_payload(),
+        headers=conversion_intent_headers("operation-conversion-intent-accepted-001"),
+    )
+    outcome_response = client.post(
+        "/api/v1/conversion-intents/operation-conversion-report-001/outcomes",
+        json=conversion_outcome_payload(),
+        headers=conversion_outcome_headers("operation-conversion-outcome-accepted-001"),
+    )
+    report_response = client.post(
+        "/api/v1/conversion-intents/operation-conversion-report-001/report-evidence-packs",
+        json=report_evidence_pack_payload(),
+        headers=report_evidence_pack_headers("operation-report-evidence-pack-accepted-001"),
+    )
+
+    assert intent_response.status_code == 200
+    assert outcome_response.status_code == 200
+    assert report_response.status_code == 200
+    assert conversion_events == [
+        ("conversion_intent", "accepted", "lotus-idea", False, None),
+        ("conversion_outcome", "accepted", "lotus-idea", False, None),
+    ]
+    assert report_events == [("report_evidence_pack", "accepted", "lotus-report", False, None)]

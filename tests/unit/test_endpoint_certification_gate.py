@@ -71,6 +71,55 @@ def test_endpoint_certification_gate_blocks_weak_unsupported_boundary() -> None:
     ) in errors
 
 
+def test_endpoint_certification_gate_blocks_missing_operation_event_evidence() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
+        "certification_status": "certified",
+        "when_to_use": "Use with idea.review.record capability.",
+        "when_not_to_use": (
+            "Do not use as Gateway contract, Workbench product proof, or "
+            "supported-feature promotion."
+        ),
+        "error_examples": ["403 returns product-safe Problem Details."],
+        "test_evidence": [
+            "tests/integration/test_review_workflow_api.py::test_review_action_api_persists_suppression_with_audit_posture"
+        ],
+        "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint)
+
+    assert (
+        "('POST', '/api/v1/idea-candidates/{candidateId}/review-actions'): "
+        "certified endpoint must reference bounded operation-event test evidence"
+    ) in errors
+
+
+def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = {
+        "method": "POST",
+        "path": "/api/v1/idea-candidates/{candidateId}/review-actions",
+        "certification_status": "certified",
+        "when_to_use": "Use with idea.review.record capability.",
+        "when_not_to_use": (
+            "Do not use as Gateway contract, Workbench product proof, or "
+            "supported-feature promotion."
+        ),
+        "error_examples": ["403 returns product-safe Problem Details."],
+        "test_evidence": [
+            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        ],
+        "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint)
+
+    assert errors == []
+
+
 def test_endpoint_certification_gate_validates_test_references() -> None:
     module = _load_endpoint_certification_gate()
 

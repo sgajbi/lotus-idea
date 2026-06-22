@@ -242,6 +242,10 @@ make check
 make ci
 ```
 
+`make endpoint-certification-gate` now requires certified business/operator
+endpoints to cite bounded operation-event test evidence in addition to
+OpenAPI, capability, 403, test-reference, and unsupported-boundary evidence.
+
 Equivalent explicit commands:
 
 ```powershell
