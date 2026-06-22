@@ -7,16 +7,22 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
-from app.application.ai_governance import build_ai_explanation_readiness_snapshot
+from app.application.ai_governance import (
+    AIExplanationReadinessSnapshot,
+    build_ai_explanation_readiness_snapshot,
+)
 from app.application.data_mesh_readiness import (
+    DataMeshReadinessSnapshot,
     REPOSITORY_ROOT,
     build_data_mesh_readiness_snapshot,
 )
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
+    ReviewQueueReadinessSnapshot,
     build_review_queue_readiness_snapshot,
 )
 from app.application.source_ingestion_readiness import (
+    SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
 from app.ports.idea_repository import CandidateSnapshotRepository
@@ -92,108 +98,13 @@ def build_implementation_proof_readiness_snapshot(
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
     capabilities = (
-        _capability(
-            "source-ingestion",
-            "Source-owned high-cash signal ingestion",
-            readiness_status=source_ingestion.run_once_configuration_status,
-            supportability_status=source_ingestion.certification_status,
-            evidence_refs=(
-                "src/app/application/source_ingestion.py",
-                "scripts/run_source_ingestion_worker.py",
-                "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
-                "make source-ingestion-worker-check",
-            ),
-            blockers=(
-                *source_ingestion.configuration_blockers,
-                *source_ingestion.certification_blockers,
-            ),
-        ),
-        _capability(
-            "advisor-review-queue",
-            "Deterministic advisor review queue",
-            readiness_status=review_queue.readiness_status,
-            supportability_status=review_queue.supportability_status,
-            evidence_refs=(
-                "src/app/application/review_queue.py",
-                "GET /api/v1/review-queues/advisor",
-                "GET /api/v1/review-queues/advisor/readiness",
-                "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
-            ),
-            blockers=review_queue.certification_blockers,
-        ),
-        _capability(
-            "ai-explanation",
-            "AI-assisted explanation governance",
-            readiness_status=ai_explanation.readiness_status,
-            supportability_status=ai_explanation.supportability_status,
-            evidence_refs=(
-                "src/app/application/ai_governance.py",
-                "POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
-                "GET /api/v1/ai-explanations/readiness",
-            ),
-            blockers=ai_explanation.certification_blockers,
-        ),
-        _capability(
-            "data-mesh-certification",
-            "Data-mesh producer and consumer certification",
-            readiness_status=data_mesh.lifecycle_status,
-            supportability_status=data_mesh.certification_status,
-            evidence_refs=(
-                "contracts/domain-data-products/lotus-idea-products.v1.json",
-                "contracts/domain-data-products/lotus-idea-consumers.v1.json",
-                "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
-                "GET /api/v1/data-mesh/readiness",
-            ),
-            blockers=data_mesh.blockers,
-        ),
-        _capability(
-            "workbench-product-proof",
-            "Workbench product realization",
-            readiness_status="planned",
-            supportability_status="not_certified",
-            evidence_refs=(
-                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-11-workbench-product-realization.md",
-                "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
-                "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}",
-            ),
-            blockers=(
-                "workbench_panel_missing",
-                "workbench_gateway_bff_consumption_proof_missing",
-                "browser_accessibility_proof_missing",
-                "canonical_demo_runtime_proof_missing",
-            ),
-        ),
-        _capability(
-            "downstream-realization",
-            "Advise, Manage, Report, Render, and Archive realization",
-            readiness_status="planned",
-            supportability_status="not_certified",
-            evidence_refs=(
-                "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
-                "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
-                "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
-            ),
-            blockers=(
-                "advise_proposal_creation_adapter_missing",
-                "manage_action_register_adapter_missing",
-                "report_render_archive_materialization_missing",
-                "downstream_live_contract_proof_missing",
-            ),
-        ),
-        _capability(
-            "supported-feature-promotion",
-            "Implementation-backed supported-feature promotion",
-            readiness_status="blocked",
-            supportability_status="not_certified",
-            evidence_refs=(
-                "supported-features/supported-features.json",
-                "docs/demo/demo-claims.md",
-                "wiki/Supported-Features.md",
-                "wiki/Demo-Readiness.md",
-            ),
-            blockers=(() if supported_feature_count else ("no_supported_features_promoted",)),
-            supported_feature_promoted=bool(supported_feature_count),
-        ),
+        _source_ingestion_capability(source_ingestion),
+        _review_queue_capability(review_queue),
+        _ai_explanation_capability(ai_explanation),
+        _data_mesh_capability(data_mesh),
+        _workbench_product_capability(),
+        _downstream_realization_capability(),
+        _supported_feature_capability(supported_feature_count),
     )
 
     overall_blockers = tuple(
@@ -244,6 +155,139 @@ def _capability(
         evidence_refs=evidence_refs,
         blockers=blockers,
         supported_feature_promoted=supported_feature_promoted,
+    )
+
+
+def _source_ingestion_capability(
+    snapshot: SourceIngestionReadinessSnapshot,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "source-ingestion",
+        "Source-owned high-cash signal ingestion",
+        readiness_status=snapshot.run_once_configuration_status,
+        supportability_status=snapshot.certification_status,
+        evidence_refs=(
+            "src/app/application/source_ingestion.py",
+            "scripts/run_source_ingestion_worker.py",
+            "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
+            "make source-ingestion-worker-check",
+        ),
+        blockers=(
+            *snapshot.configuration_blockers,
+            *snapshot.certification_blockers,
+        ),
+    )
+
+
+def _review_queue_capability(
+    snapshot: ReviewQueueReadinessSnapshot,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "advisor-review-queue",
+        "Deterministic advisor review queue",
+        readiness_status=snapshot.readiness_status,
+        supportability_status=snapshot.supportability_status,
+        evidence_refs=(
+            "src/app/application/review_queue.py",
+            "GET /api/v1/review-queues/advisor",
+            "GET /api/v1/review-queues/advisor/readiness",
+            "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
+        ),
+        blockers=snapshot.certification_blockers,
+    )
+
+
+def _ai_explanation_capability(
+    snapshot: AIExplanationReadinessSnapshot,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "ai-explanation",
+        "AI-assisted explanation governance",
+        readiness_status=snapshot.readiness_status,
+        supportability_status=snapshot.supportability_status,
+        evidence_refs=(
+            "src/app/application/ai_governance.py",
+            "POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
+            "GET /api/v1/ai-explanations/readiness",
+        ),
+        blockers=snapshot.certification_blockers,
+    )
+
+
+def _data_mesh_capability(
+    snapshot: DataMeshReadinessSnapshot,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "data-mesh-certification",
+        "Data-mesh producer and consumer certification",
+        readiness_status=snapshot.lifecycle_status,
+        supportability_status=snapshot.certification_status,
+        evidence_refs=(
+            "contracts/domain-data-products/lotus-idea-products.v1.json",
+            "contracts/domain-data-products/lotus-idea-consumers.v1.json",
+            "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
+            "GET /api/v1/data-mesh/readiness",
+        ),
+        blockers=snapshot.blockers,
+    )
+
+
+def _workbench_product_capability() -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "workbench-product-proof",
+        "Workbench product realization",
+        readiness_status="planned",
+        supportability_status="not_certified",
+        evidence_refs=(
+            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-11-workbench-product-realization.md",
+            "lotus-gateway GET /api/v1/ideas/review-queues/advisor",
+            "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}",
+        ),
+        blockers=(
+            "workbench_panel_missing",
+            "workbench_gateway_bff_consumption_proof_missing",
+            "browser_accessibility_proof_missing",
+            "canonical_demo_runtime_proof_missing",
+        ),
+    )
+
+
+def _downstream_realization_capability() -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "downstream-realization",
+        "Advise, Manage, Report, Render, and Archive realization",
+        readiness_status="planned",
+        supportability_status="not_certified",
+        evidence_refs=(
+            "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+            "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
+            "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+        ),
+        blockers=(
+            "advise_proposal_creation_adapter_missing",
+            "manage_action_register_adapter_missing",
+            "report_render_archive_materialization_missing",
+            "downstream_live_contract_proof_missing",
+        ),
+    )
+
+
+def _supported_feature_capability(
+    supported_feature_count: int,
+) -> ImplementationProofCapabilityReadiness:
+    return _capability(
+        "supported-feature-promotion",
+        "Implementation-backed supported-feature promotion",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=(
+            "supported-features/supported-features.json",
+            "docs/demo/demo-claims.md",
+            "wiki/Supported-Features.md",
+            "wiki/Demo-Readiness.md",
+        ),
+        blockers=(() if supported_feature_count else ("no_supported_features_promoted",)),
+        supported_feature_promoted=bool(supported_feature_count),
     )
 
 
