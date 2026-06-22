@@ -1,16 +1,26 @@
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from app.main import app
+from app.main import app, create_app
 
 
-@app.get("/__test_validation/{item_id}", include_in_schema=False)
-async def _test_validation_route(item_id: int) -> dict[str, int]:
-    return {"item_id": item_id}
+def test_create_app_returns_isolated_application_instance() -> None:
+    isolated = create_app()
+
+    @isolated.get("/__test_only", include_in_schema=False)
+    async def _test_only_route() -> dict[str, str]:
+        return {"status": "test-only"}
+
+    assert isolated is not app
+    assert TestClient(isolated).get("/__test_only").status_code == 200
+    assert TestClient(app).get("/__test_only").status_code == 404
 
 
-@app.get("/__test_unhandled_error", include_in_schema=False)
-async def _test_unhandled_error_route() -> None:
-    raise RuntimeError("raw internal detail")
+def test_create_app_keeps_readiness_state_isolated() -> None:
+    isolated = create_app()
+    isolated.state.is_draining = True
+
+    assert TestClient(isolated).get("/health/ready").status_code == 503
+    assert TestClient(app).get("/health/ready").status_code == 200
 
 
 def test_health_endpoints() -> None:
@@ -48,7 +58,13 @@ def test_not_found_error_is_product_safe() -> None:
 
 
 def test_validation_error_is_product_safe() -> None:
-    client = TestClient(app)
+    isolated = create_app()
+
+    @isolated.get("/__test_validation/{item_id}", include_in_schema=False)
+    async def _test_validation_route(item_id: int) -> dict[str, int]:
+        return {"item_id": item_id}
+
+    client = TestClient(isolated)
     response = client.get("/__test_validation/not-an-int")
     assert response.status_code == 400
     body = response.text.lower()
@@ -58,7 +74,13 @@ def test_validation_error_is_product_safe() -> None:
 
 
 def test_unhandled_error_is_product_safe() -> None:
-    client = TestClient(app, raise_server_exceptions=False)
+    isolated = create_app()
+
+    @isolated.get("/__test_unhandled_error", include_in_schema=False)
+    async def _test_unhandled_error_route() -> None:
+        raise RuntimeError("raw internal detail")
+
+    client = TestClient(isolated, raise_server_exceptions=False)
     response = client.get("/__test_unhandled_error")
     assert response.status_code == 500
     body = response.text.lower()
@@ -67,11 +89,13 @@ def test_unhandled_error_is_product_safe() -> None:
 
 
 def test_http_exception_is_product_safe() -> None:
-    @app.get("/__test_http_exception", include_in_schema=False)
+    isolated = create_app()
+
+    @isolated.get("/__test_http_exception", include_in_schema=False)
     async def _test_http_exception_route() -> None:
         raise HTTPException(status_code=403, detail="raw entitlement detail")
 
-    client = TestClient(app)
+    client = TestClient(isolated)
     response = client.get("/__test_http_exception")
     assert response.status_code == 403
     assert "raw entitlement detail" not in response.text.lower()
