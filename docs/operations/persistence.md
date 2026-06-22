@@ -234,7 +234,7 @@ publication, data-product promotion, or supported business workflows until
 later slices add:
 
 1. deploy-pipeline migration evidence,
-2. scheduled daemon/deploy source-ingestion worker proof against the real service,
+2. certified long-running scheduled source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
 4. live broker runtime behavior, downstream consumer contract proof, and live
    event-publication evidence beyond the internal retry/dead-letter foundation,

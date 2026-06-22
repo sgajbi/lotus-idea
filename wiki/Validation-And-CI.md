@@ -51,6 +51,7 @@ make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
+make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
@@ -72,6 +73,7 @@ OpenAPI quality, source-observability contract enforcement, implementation-truth
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest and source-safe output-contract validation,
+scheduled source-ingestion worker deploy-contract validation,
 source-ingestion live-proof artifact contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
@@ -125,12 +127,17 @@ Persistence adapter validation:
    `make source-ingestion-worker-check` prove the versioned run-once worker
    manifest contract plus source-safe check-only output contract without
    calling Core or writing repository state.
-7. `tests/unit/test_source_ingestion_live_proof.py`,
+7. `tests/unit/test_source_ingestion_scheduled_worker.py`,
+   `tests/unit/test_source_ingestion_scheduled_worker_contract_gate.py`, and
+   `make source-ingestion-scheduled-worker-check` prove the scheduled worker
+   deploy-contract shape, opt-in Docker Compose worker service, source-safe
+   scheduler check-only output, and scheduled-worker proof artifact validation.
+8. `tests/unit/test_source_ingestion_live_proof.py`,
    `tests/unit/test_source_ingestion_live_proof_contract_gate.py`, and
    `make source-ingestion-live-proof-contract-gate` prove the live Core
    source-ingestion proof artifact contract, source-sensitive-field blocking,
    and readiness blocker behavior without calling Core in CI.
-8. `tests/unit/test_generate_implementation_proof_readiness.py` and
+9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including the outbox-delivery proof
    family, can be generated without starting the service and without exposing
@@ -193,9 +200,10 @@ Persistence adapter validation:
    idempotency keys, source payloads, broker payloads, or downstream contract
    details.
 15. Runtime API database wiring is opt-in and still requires deploy migration
-   evidence, scheduled daemon/deploy source-worker proof, live Core
+   evidence, certified long-running scheduled source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
-   supported durable product claim.
+   supported durable product claim. The scheduled worker deploy-contract proof
+   is validated separately by `make source-ingestion-scheduled-worker-check`.
 
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
@@ -308,14 +316,18 @@ provider while remaining blocked and not certified.
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only. A valid proof artifact can clear only the
-live-Core-source blocker; the route still does not certify scheduled worker
-deployment, data-product promotion, Gateway/Workbench support, or
-supported-feature promotion.
+live-Core-source blocker; the route still does not certify the scheduled worker
+deploy-contract artifact, long-running scheduled runtime, data-product
+promotion, Gateway/Workbench support, or supported-feature promotion.
+The scheduled worker deploy-contract artifact is covered separately by
+`make source-ingestion-scheduled-worker-check`; a valid artifact clears only
+the scheduled-worker deploy-proof blocker.
 The internal source-ingestion-run-once endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the bounded operator action only; they do not certify live Core
-ingestion, scheduled worker deployment, data-product promotion,
-Gateway/Workbench support, or supported-feature promotion.
+ingestion, the scheduled worker deploy-contract artifact, long-running
+scheduled runtime, data-product promotion, Gateway/Workbench support, or
+supported-feature promotion.
 
 The internal advisor-queue-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify

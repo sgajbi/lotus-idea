@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -78,18 +78,28 @@ durable operating-context enforcement:
     guides, quality scorecard, RFC evidence, and wiki source now describe the
     certified internal `POST /api/v1/source-ingestion/run-once` operator action
     while preserving the boundary that no live Core source certification,
-    scheduled worker deployment proof, Gateway/Workbench proof, or
-    supported-feature promotion exists.
+    scheduled worker deploy-contract proof through that endpoint, certified
+    long-running scheduled runtime, Gateway/Workbench proof, or supported-feature
+    promotion exists.
 14. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs,
     RFC evidence, and wiki source now describe the live source-proof artifact
     contract and `make source-ingestion-live-proof-contract-gate`, while
     preserving the boundary that a valid artifact clears only the live-Core
     blocker and does not promote source ingestion as a supported feature.
+15. README, repository context, `docs/operations/source-ingestion-run-once.md`,
+    `docs/operations/api-certification.md`, `docs/operations/observability.md`,
+    `docs/operations/implementation-proof-readiness.md`, demo claims, quality
+    docs, RFC evidence, and wiki source now describe the scheduled worker
+    entrypoint, Compose worker profile, deploy-proof artifact contract, and
+    `make source-ingestion-scheduled-worker-check`, while preserving the
+    boundary that a valid artifact clears only the scheduled-worker deploy-proof
+    blocker and does not promote source ingestion as a supported feature.
 
 This documentation slice does not promote any supported feature. It does not
-add Gateway/Workbench proof, durable persistence, data-product certification,
-downstream realization, live source certification, or scheduled worker proof.
+add Gateway/Workbench proof, data-product certification, downstream
+realization, live source certification, or certified long-running scheduled
+runtime proof.
 
 ## Required Work
 

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic and live source-proof artifact contract available; full live proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, and scheduled-worker deploy-contract proof available; full live proof remains pending
 
 ## Outcome
 
@@ -51,7 +51,9 @@ Prove the complete supported opportunity journey end to end.
     source-ingestion operator proof surface. It can exercise the configured
     manifest and Core source adapter only when durable repository posture is
     active, returns aggregate decision counts only, and remains not certified
-    until live Core source proof and scheduled worker deployment proof exist.
+    until live Core source proof, certified long-running scheduling proof,
+    data-mesh runtime telemetry, Gateway/Workbench proof, and supported-feature
+    promotion evidence exist.
 11. `src/app/application/source_ingestion_live_proof.py`,
     `scripts/generate_source_ingestion_live_proof.py`, and
     `make source-ingestion-live-proof-contract-gate` now define and enforce the
@@ -59,6 +61,16 @@ Prove the complete supported opportunity journey end to end.
     referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`, the
     source-ingestion readiness diagnostic can clear only
     `live_core_source_proof_missing`; scheduled worker, data-mesh,
+    Gateway/Workbench, and supported-feature blockers remain.
+12. `src/app/application/source_ingestion_scheduled_worker.py`,
+    `scripts/run_scheduled_source_ingestion_worker.py`,
+    `scripts/generate_scheduled_source_ingestion_worker_proof.py`, and
+    `make source-ingestion-scheduled-worker-check` now define and enforce the
+    source-safe scheduled worker deploy-contract proof shape. When a valid
+    artifact is referenced through
+    `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, the
+    source-ingestion readiness diagnostic can clear only
+    `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
     Gateway/Workbench, and supported-feature blockers remain.
 
 This is a proof-control surface, not live proof. It makes missing evidence
@@ -96,11 +108,16 @@ proof gap.
 The source-ingestion run-once operator action narrows the source proof gap from
 "worker exists only as a CLI" to "service-boundary execution exists when
 durable storage and runtime configuration are present"; it does not close live
-Core source certification or scheduled worker deployment proof.
+Core source certification or certified long-running scheduled runtime proof.
 The live-proof artifact contract narrows the live Core gap from "no durable
 proof shape" to "operator-captured proof can be validated and wired into
-readiness"; it does not close scheduled worker deployment, platform mesh,
+readiness"; it does not close certified scheduled daemon runtime, platform mesh,
 Gateway/Workbench, downstream, or supported-feature proof.
+The scheduled-worker deploy-contract artifact narrows the scheduling proof gap
+from "no deployable worker contract" to "bounded scheduler entrypoint, Compose
+worker service, and source-safe proof are CI-enforced"; it does not close
+long-running scheduler operations, live Core source certification, platform
+mesh certification, Gateway/Workbench, downstream, or supported-feature proof.
 The outbox-delivery readiness diagnostic and run-once operator action do the
 same for broker and event delivery posture; they do not close the external
 publication, platform mesh event certification, or downstream consumer proof

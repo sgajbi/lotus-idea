@@ -71,7 +71,8 @@ The response remains blocked until all of the following are implemented and
 validated through the owning repositories and platform gates:
 
 1. live Core source-ingestion proof beyond the bounded internal run-once API,
-2. scheduled worker deployment proof,
+2. certified long-running scheduled worker runtime proof beyond the current
+   deploy-contract artifact,
 3. certified runtime trust telemetry and platform mesh certification,
 4. live broker runtime proof and downstream consumer contracts,
 5. platform mesh event certification for outbox publication,
@@ -93,6 +94,12 @@ Source-ingestion live proof is captured by
 `scripts/generate_source_ingestion_live_proof.py`. A valid artifact referenced
 through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
 `live_core_source_proof_missing`; it does not clear scheduled worker,
+data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
+
+Scheduled source-ingestion worker deploy proof is captured by
+`scripts/generate_scheduled_source_ingestion_worker_proof.py`. A valid artifact
+referenced through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears
+only `scheduled_worker_deploy_proof_missing`; it does not clear live Core,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
 
 ## Response Shape
@@ -158,18 +165,22 @@ Implementation-backed evidence:
     `docs/operations/source-ingestion-run-once.md`,
 11. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-12. source-ingestion live-proof contract gate:
+12. scheduled source-ingestion worker proof generator:
+    `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
+13. scheduled source-ingestion worker contract gate:
+    `make source-ingestion-scheduled-worker-check`,
+14. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-13. outbox delivery run-once endpoint:
+15. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-14. operation event: `implementation_proof_readiness_read`,
-15. endpoint ledger:
+16. operation event: `implementation_proof_readiness_read`,
+17. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-16. unit tests:
+18. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-17. generator tests:
+19. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-18. integration tests:
+20. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
@@ -177,6 +188,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_implementation_proof_readiness.py tests/integration/test_implementation_proof_readiness_api.py -q
 make implementation-proof-readiness-check
+make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check

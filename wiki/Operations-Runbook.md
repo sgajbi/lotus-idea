@@ -45,6 +45,15 @@ changed-source conflict recovery. This is not a deployed scheduler daemon, live
 Core source-worker certification, production storage certification,
 data-product certification, Gateway route, Workbench proof, or supported
 business feature.
+`scripts/run_scheduled_source_ingestion_worker.py` adds a bounded scheduled
+worker entrypoint over the same run-once worker path, and `docker-compose.yml`
+declares the opt-in `lotus-idea-source-ingestion-worker` service under the
+`worker` profile. `make source-ingestion-scheduled-worker-check` validates the
+deploy contract and source-safe proof shape without calling Core. A valid proof
+artifact referenced through
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears only the
+scheduled-worker blocker; it is not live Core, data-mesh, Gateway/Workbench,
+downstream, or supported-feature proof.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.
@@ -69,15 +78,19 @@ The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
 for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
 run-once worker manifest, Core base URL, durable repository configuration, and
 remaining certification blockers without calling Core or exposing source
-payloads. It remains `not_certified` until live Core source proof, scheduled
-worker deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof
-exist.
+payloads. It remains `not_certified` until live Core source proof, runtime
+data-mesh telemetry, Gateway/Workbench proof, downstream proof, and
+supported-feature evidence exist.
 `scripts/generate_source_ingestion_live_proof.py` captures a source-safe live
 Core proof artifact for release reviewers. Point
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a valid artifact to clear only the
-live-Core blocker in readiness; scheduled worker deployment, mesh
-certification, Gateway/Workbench proof, and supported-feature promotion remain
-blocked.
+live-Core blocker in readiness.
+`scripts/generate_scheduled_source_ingestion_worker_proof.py` captures a
+source-safe scheduled worker deploy-contract artifact. Point
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` at a valid artifact to
+clear only the scheduled-worker deploy-proof blocker. Certified long-running
+scheduled runtime, mesh certification, Gateway/Workbench proof, and
+supported-feature promotion remain blocked.
 The internal `POST /api/v1/source-ingestion/run-once` action is available for
 operators with `idea.source-ingestion.run` to run one bounded source-ingestion
 pass through the configured manifest, active repository provider, and Core
@@ -149,7 +162,7 @@ instead of producing a false support claim.
 
 | Operating area | Current proof | Must not be inferred |
 | --- | --- | --- |
-| Source ingestion | Manifest plus source-safe check-only output gate; live-proof artifact contract; internal run-once foundation and aggregate-only operator route | Deployed scheduler, mesh certification, Gateway/Workbench support, or supported ingestion product |
+| Source ingestion | Manifest plus source-safe check-only output gate, scheduled-worker deploy-contract gate, live-proof artifact contract, internal run-once foundation, and aggregate-only operator route | Live source certification, mesh certification, Gateway/Workbench support, downstream proof, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | Certified live broker runtime, platform mesh event certification, or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
@@ -179,6 +192,7 @@ make check
 make ci
 make postgres-integration-gate
 make source-ingestion-worker-check
+make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check

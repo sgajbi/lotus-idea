@@ -8,7 +8,7 @@
 | Required capability | `idea.source-ingestion.run` |
 | Source authority | `lotus-core` |
 | Supportability | `not_certified` |
-| Product claim | No scheduled worker certification or supported-feature promotion |
+| Product claim | No live source certification or supported-feature promotion |
 
 `POST /api/v1/source-ingestion/run-once` runs one bounded high-cash
 source-ingestion pass through the configured worker manifest, active repository
@@ -34,11 +34,21 @@ artifact is valid and referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF
 readiness can clear only `live_core_source_proof_missing`; scheduled worker,
 data-mesh, Gateway/Workbench, and supported-feature blockers remain.
 
+`scripts/run_scheduled_source_ingestion_worker.py` wraps the run-once worker in
+a bounded scheduler entrypoint for deploy topology proof. The worker is also
+declared in `docker-compose.yml` as the opt-in
+`lotus-idea-source-ingestion-worker` service under the `worker` profile.
+`scripts/generate_scheduled_source_ingestion_worker_proof.py` writes a
+source-safe deploy-proof artifact. When that artifact is valid and referenced
+through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, readiness can
+clear only `scheduled_worker_deploy_proof_missing`; live Core, data-mesh,
+Gateway/Workbench, downstream, and supported-feature blockers remain.
+
 ## What It Does Not Prove
 
 The endpoint does not:
 
-1. prove scheduled worker deployment,
+1. prove live Core source certification,
 2. certify data-mesh runtime telemetry,
 3. create Gateway or Workbench product support,
 4. expose portfolio identifiers, raw Core payloads, raw idempotency keys, or
@@ -107,6 +117,23 @@ python scripts/generate_source_ingestion_live_proof.py `
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
 ```
 
+Scheduled-worker deploy proof:
+
+```powershell
+python scripts/run_scheduled_source_ingestion_worker.py `
+  --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
+  --check-only `
+  --interval-seconds 300 `
+  --max-runs 1
+
+python scripts/generate_scheduled_source_ingestion_worker_proof.py `
+  --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
+  --generated-at-utc 2026-06-21T10:10:00Z `
+  --output output/source-ingestion/scheduled-worker-proof.json
+
+$env:LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF = "output/source-ingestion/scheduled-worker-proof.json"
+```
+
 Core response requirement:
 
 - The high-cash adapter consumes Core `HoldingsAsOf:v1`
@@ -123,15 +150,23 @@ Implementation-backed evidence:
 
 1. domain batch runner: `src/app/application/source_ingestion.py`,
 2. manifest planner: `src/app/application/source_ingestion_worker.py`,
-3. live-proof builder: `src/app/application/source_ingestion_live_proof.py`,
-4. runtime builder: `src/app/source_ingestion_state.py`,
-5. API route: `src/app/api/source_ingestion_readiness.py`,
-6. endpoint ledger:
+3. scheduled-worker planner:
+   `src/app/application/source_ingestion_scheduled_worker.py`,
+4. live-proof builder: `src/app/application/source_ingestion_live_proof.py`,
+5. runtime builder: `src/app/source_ingestion_state.py`,
+6. API route: `src/app/api/source_ingestion_readiness.py`,
+7. scheduled worker entrypoint:
+   `scripts/run_scheduled_source_ingestion_worker.py`,
+8. scheduled worker proof generator:
+   `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
+9. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-7. integration tests:
+10. integration tests:
    `tests/integration/test_source_ingestion_readiness_api.py`,
-8. live-proof contract gate: `make source-ingestion-live-proof-contract-gate`,
-9. proof-readiness diagnostic:
+11. scheduled-worker contract gate:
+   `make source-ingestion-scheduled-worker-check`,
+12. live-proof contract gate: `make source-ingestion-live-proof-contract-gate`,
+13. proof-readiness diagnostic:
    `GET /api/v1/implementation-proof/readiness`.
 
 Run:
@@ -139,6 +174,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_source_ingestion.py tests/unit/test_source_ingestion_worker.py tests/integration/test_source_ingestion_readiness_api.py -q
 make source-ingestion-worker-check
+make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make endpoint-certification-gate
 make openapi-gate

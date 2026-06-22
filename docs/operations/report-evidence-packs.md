@@ -59,7 +59,7 @@ Current proof lives in:
 5. `tests/unit/test_service_contract.py`,
 6. `docs/operations/endpoint-certification-ledger.json`.
 
-Promotion requires deploy evidence, scheduled daemon/deploy source-worker proof, live
-source-adapter proof, downstream acceptance tests, render/archive proof,
+Promotion requires deploy evidence, certified long-running scheduled source-worker
+proof, live source-adapter proof, downstream acceptance tests, render/archive proof,
 Gateway/Workbench proof, data-mesh certification, runtime trust telemetry,
 supported-feature registration, and published wiki truth.

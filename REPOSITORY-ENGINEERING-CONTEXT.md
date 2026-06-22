@@ -133,6 +133,17 @@ and raw idempotency keys. `make source-ingestion-worker-check` validates the
 example manifest and exact source-safe check-only output contract in the local
 lint path so future agent changes cannot silently break the worker contract or
 leak source-sensitive fields.
+`scripts/run_scheduled_source_ingestion_worker.py` now adds a bounded
+scheduled-worker entrypoint over the same run-once worker path, and
+`docker-compose.yml` includes an opt-in
+`lotus-idea-source-ingestion-worker` service under the `worker` profile.
+`src/app/application/source_ingestion_scheduled_worker.py`,
+`scripts/generate_scheduled_source_ingestion_worker_proof.py`, and
+`make source-ingestion-scheduled-worker-check` define and enforce the
+source-safe scheduled-worker deploy-proof contract. A valid artifact referenced
+through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` can clear only
+the `scheduled_worker_deploy_proof_missing` blocker in readiness; live Core,
+data-mesh, Gateway/Workbench, and support-promotion blockers remain.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -144,8 +155,8 @@ repository, manifest, and Core configuration are present, and returns aggregate
 decision counts only. The upstream Core cash-weight contract dependency from
 `sgajbi/lotus-core#430` is closed in Core PR #431, and `lotus-idea` issue #22
 now tracks this adapter-consumption slice. There is still no live Core
-integration proof, scheduled daemon/deploy source-ingestion worker, Workbench
-proof, data-product certification, or supported-feature promotion yet.
+integration proof, certified scheduled daemon runtime, Workbench proof,
+data-product certification, or supported-feature promotion yet.
 `src/app/application/source_ingestion_live_proof.py` and
 `scripts/generate_source_ingestion_live_proof.py` now define the source-safe
 live Core source-ingestion proof artifact contract. A valid artifact referenced
@@ -153,8 +164,8 @@ through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` can clear only the
 `live_core_source_proof_missing` blocker in the source-ingestion readiness
 diagnostic. `make source-ingestion-live-proof-contract-gate` blocks proof
 payload shape drift, source-sensitive fields, and accidental support promotion.
-Scheduled worker deployment proof, data-mesh/runtime telemetry certification,
-Gateway/Workbench proof, and supported-feature promotion remain planned.
+Data-mesh/runtime telemetry certification, Gateway/Workbench proof, and
+supported-feature promotion remain planned.
 
 RFC-0002 Slice 06 is partially implemented as an internal persistence
 foundation in `src/app/domain/persistence.py`. The repository now has immutable
@@ -259,12 +270,14 @@ evidence-pack request, proving internal Core-backed source-ingestion replay and
 same-key changed-source conflict recovery through the repository adapter,
 validating the backing workflow tables, and proving schema rollback/reapply
 restores a usable API persistence contract. This is still not production
-storage certification: deploy migration evidence, scheduled daemon/deploy
-source-ingestion worker proof, live Core source adapter proof, data-product
-certification, live broker runtime proof, downstream consumer proof,
-downstream workflow proof, and supported-feature promotion remain planned. The
-current run-once worker CLI is developer/operator foundation only and is
-validated in check-only mode by `make source-ingestion-worker-check`.
+storage certification: deploy migration evidence, certified long-running
+scheduled source-ingestion runtime proof, live Core source adapter proof,
+data-product certification, live broker runtime proof, downstream consumer
+proof, downstream workflow proof, and supported-feature promotion remain
+planned. The current run-once worker CLI and scheduled worker deploy-contract
+foundation are developer/operator foundations only and are validated in
+check-only mode by `make source-ingestion-worker-check` and
+`make source-ingestion-scheduled-worker-check`.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in
@@ -743,19 +756,21 @@ owned by upstream services.
 25. migration execution dry-run gate: `make migration-execution-gate`
 26. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-27. source-ingestion live-proof artifact contract gate:
+27. scheduled source-ingestion worker deploy-contract gate:
+    `make source-ingestion-scheduled-worker-check`
+28. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-28. implementation proof readiness generator:
+29. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-29. runtime trust telemetry preview generator:
+30. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-30. runtime trust telemetry snapshot generator:
+31. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-31. PostgreSQL runtime proof with configured integration URL:
+32. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-32. apply migrations with configured PostgreSQL URL: `make migrate`
-33. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-34. remove ignored generated local artifacts: `make clean`
+33. apply migrations with configured PostgreSQL URL: `make migrate`
+34. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+35. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -775,7 +790,8 @@ enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest and
-output-contract validation, source-ingestion live-proof contract validation,
+output-contract validation, scheduled source-ingestion worker deploy-contract
+validation, source-ingestion live-proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,
@@ -788,7 +804,8 @@ bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
-and output-contract validation, no-sensitive-content evidence validation,
+and output-contract validation, scheduled source-ingestion worker
+deploy-contract validation, no-sensitive-content evidence validation,
 source-observability contract validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded

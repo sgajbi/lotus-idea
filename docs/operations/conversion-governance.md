@@ -68,8 +68,8 @@ Implementation source:
 
 Promotion requirements:
 
-1. deploy evidence, scheduled daemon/deploy source-worker proof, and live source-adapter proof
-   for the PostgreSQL-backed workflow,
+1. deploy evidence, certified long-running scheduled source-worker proof, and
+   live source-adapter proof for the PostgreSQL-backed workflow,
 2. Gateway/Workbench proof,
 3. downstream acceptance tests in `lotus-advise`, `lotus-manage`, and
    `lotus-report` where each service remains source authority for its workflow,

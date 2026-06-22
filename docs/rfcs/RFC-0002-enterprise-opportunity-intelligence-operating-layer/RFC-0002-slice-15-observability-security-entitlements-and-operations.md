@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, outbox delivery readiness/run-once, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
 
 ## Outcome
 
@@ -166,8 +166,11 @@ production durable-storage certification, data-product certification,
 downstream Report/Render/Archive realization, Gateway/Workbench proof,
 dashboard/alert certification, or supported-feature promotion.
 The source-ingestion readiness diagnostic and run-once operator action are
-explicitly `not_certified` until live Core source proof, scheduled worker
-deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof exist.
+explicitly `not_certified` until live Core source proof, certified long-running
+scheduled runtime proof, runtime data-mesh telemetry, Gateway/Workbench proof,
+and supported-feature promotion evidence exist. A valid scheduled-worker
+deploy-contract artifact may clear only the
+`scheduled_worker_deploy_proof_missing` blocker.
 The advisor queue readiness diagnostic is explicitly `not_certified` until
 durable queue posture, platform caller-context entitlement proof, Workbench
 proof, data-product certification, and runtime trust telemetry exist.
