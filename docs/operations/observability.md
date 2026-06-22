@@ -50,6 +50,7 @@ Current instrumented operations:
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
 | `downstream_realization_readiness_read` | Internal downstream realization readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
+| `mesh_trust_telemetry_preview_read` | Internal runtime trust telemetry preview diagnostic read | `lotus-idea` | `not_certified` |
 | `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
 | `implementation_proof_readiness_read` | Internal aggregate RFC-0002 proof-readiness diagnostic read | `lotus-idea` | `not_certified` |
 
@@ -92,8 +93,10 @@ fields. Do not add identifiers or payload fragments to operation labels.
    entitlement proof, Workbench proof, data-product certification, or runtime
    trust telemetry. It also covers downstream realization readiness while
    Advise, Manage, Report, Render, Archive, Gateway/Workbench, and mesh proof
-   remain absent. It also covers the aggregate implementation-proof
-   readiness diagnostic when any RFC-0002 proof family remains uncertified.
+   remain absent. It also covers the runtime trust telemetry preview while the
+   preview is not yet platform-certified or published through Gateway/Workbench
+   discovery, and the aggregate implementation-proof readiness diagnostic when
+   any RFC-0002 proof family remains uncertified.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

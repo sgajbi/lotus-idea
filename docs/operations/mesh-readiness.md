@@ -1,6 +1,7 @@
 # Data Mesh Readiness
 
-Status: Planned data-mesh posture with an internal readiness diagnostic.
+Status: Planned data-mesh posture with internal readiness and runtime telemetry
+preview diagnostics.
 
 Certification status: not certified.
 
@@ -36,6 +37,10 @@ Every `lotus-idea` product remains `proposed` until:
 
 The static telemetry snapshot is deliberately blocked so operators and future
 agents cannot treat the day-one contract baseline as runtime certification.
+The runtime telemetry preview described below is implementation-backed
+diagnostic evidence, but it remains pre-certification evidence until platform
+source-manifest inclusion, mesh certification, Gateway discovery, Workbench
+discovery, and supported-feature promotion evidence exist.
 
 ## Runtime Diagnostic
 
@@ -59,6 +64,29 @@ This endpoint is endpoint-certified as an operator diagnostic. It is not data
 product certification, platform source-manifest inclusion, Gateway discovery,
 Workbench discovery, runtime lineage proof, or a supported-feature claim.
 
+`GET /api/v1/data-mesh/trust-telemetry/runtime-preview` returns aggregate
+runtime telemetry preview posture from the active repository provider. It
+requires:
+
+1. `X-Caller-Roles: operator`
+2. `X-Caller-Capabilities: idea.mesh.trust-telemetry.preview.read`
+
+The response includes:
+
+1. `productId: lotus-idea:IdeaCandidate:v1`,
+2. aggregate candidate and source-reference counts,
+3. source-authority, freshness, supportability, and lifecycle count maps,
+4. aggregate review, feedback, conversion, and report evidence-pack counts,
+5. `runtimeTelemetryBacked: true` for the preview artifact,
+6. `platformCertified: false`,
+7. `certificationStatus: not_certified`,
+8. explicit certification blockers.
+
+The preview deliberately omits candidate identifiers, portfolio identifiers,
+client identifiers, raw source routes, evidence hashes, request payloads, and
+response payloads. It is endpoint-certified as an internal operator diagnostic,
+not as data-product certification or product discovery.
+
 The Docker image copies `contracts/` into `/app/contracts` so containerized
 diagnostics read the same contract truth as local validation.
 
@@ -68,6 +96,7 @@ Run:
 
 ```powershell
 make data-mesh-contract-gate
+make runtime-trust-telemetry-preview-check
 ```
 
 The gate validates:
@@ -82,6 +111,8 @@ The gate validates:
    `lotus-idea:IdeaCandidate:v1`,
 6. optional sibling `lotus-platform` catalog/source-manifest evidence catches
    source-product drift or premature `lotus-idea` source-manifest inclusion.
+7. the runtime telemetry preview generator still emits source-safe
+   not-certified evidence from the active repository provider.
 
 This gate is not mesh certification. It is a pre-certification guardrail so
 future implementation slices cannot accidentally promote proposed contracts or

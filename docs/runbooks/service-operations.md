@@ -8,6 +8,7 @@
 - make postgres-integration-gate
 - make source-ingestion-worker-check
 - make implementation-proof-readiness-check
+- make runtime-trust-telemetry-preview-check
 - docker compose up --build
 
 ## Health and Readiness
@@ -48,11 +49,19 @@
    source-safe workflow counts and blockers for Advise, Manage, Report, Render,
    and Archive without calling downstream services or creating downstream
    records.
-9. For CI or async evidence without running the service, run
+9. For runtime trust telemetry preview checks, call
+   `GET /api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=<timestamp>`
+   with the `operator` role and
+   `idea.mesh.trust-telemetry.preview.read` capability. This reports aggregate
+   active-repository counts only and is not data-product certification.
+10. For CI or async evidence without running the service, run
    `make implementation-proof-readiness-check` or
    `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
    The generated JSON is an operator proof-readiness artifact, not a supported
    product claim.
+11. For source-safe runtime trust telemetry preview evidence without running
+    the service, run `make runtime-trust-telemetry-preview-check` or
+    `scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc <timestamp>`.
 
 ## Current Operation Event Diagnostics
 
@@ -70,9 +79,10 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 9. conversion outcome recording,
 10. report evidence-pack request recording,
 11. data-mesh readiness diagnostic reads,
-12. source-ingestion readiness diagnostic reads,
-13. downstream-realization readiness diagnostic reads,
-14. implementation-proof readiness diagnostic reads.
+12. runtime trust telemetry preview diagnostic reads,
+13. source-ingestion readiness diagnostic reads,
+14. downstream-realization readiness diagnostic reads,
+15. implementation-proof readiness diagnostic reads.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
@@ -86,9 +96,10 @@ Use the operation `outcome` before inspecting payload-level evidence:
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 9. `blocked`: candidate evidence replay found stale source posture, or
-   data-mesh, source-ingestion, AI explanation, review queue, downstream
-   realization, or aggregate implementation-proof readiness remains blocked by
-   explicit configuration or certification blockers.
+   data-mesh, runtime trust telemetry preview, source-ingestion, AI
+   explanation, review queue, downstream realization, or aggregate
+   implementation-proof readiness remains blocked by explicit configuration or
+   certification blockers.
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,

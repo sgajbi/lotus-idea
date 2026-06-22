@@ -30,6 +30,7 @@ make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
 make implementation-proof-readiness-check
+make runtime-trust-telemetry-preview-check
 make supported-features-gate
 make endpoint-certification-gate
 make postgres-integration-gate
@@ -47,6 +48,7 @@ unit tests, integration tests, e2e tests, data-mesh contract validation, migrati
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest validation,
 implementation-proof readiness artifact generation,
+runtime trust telemetry preview artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
 jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint.
 
@@ -102,25 +104,31 @@ Persistence adapter validation:
    implementation-proof readiness artifact can be generated without starting
    the service and without exposing candidate, portfolio, client, prompt, or
    source payload identifiers.
-8. `tests/unit/test_downstream_realization_readiness.py` and
+8. `tests/unit/test_runtime_trust_telemetry.py`,
+   `tests/integration/test_runtime_trust_telemetry_api.py`, and
+   `make runtime-trust-telemetry-preview-check` prove the source-safe runtime
+   trust telemetry preview can be generated and read without exposing candidate
+   identifiers, source routes, evidence hashes, portfolio identifiers, or
+   client identifiers.
+9. `tests/unit/test_downstream_realization_readiness.py` and
    `tests/integration/test_downstream_realization_readiness_api.py` prove the
    downstream realization readiness diagnostic for blocked supportability,
    role plus capability enforcement, product-safe payloads, source-authority
    boundaries, and bounded `not_certified` operation events without calling
    Advise, Manage, Report, Render, or Archive.
-9. `tests/unit/test_source_ingestion_readiness.py` and
+10. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
    `not_certified` operation events without calling Core.
-10. `tests/unit/test_review_queue_application.py`,
+11. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-11. `tests/unit/test_ai_explanation_readiness.py`,
+12. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
    readiness diagnostic for blocked model-risk posture, operator/capability
@@ -128,7 +136,7 @@ Persistence adapter validation:
    events without invoking `lotus-ai` or exposing prompts, provider payloads,
    candidate identifiers, source routes, portfolio identifiers, or client
    identifiers.
-12. Runtime API database wiring is opt-in and still requires deploy migration
+13. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -222,6 +230,13 @@ The internal data-mesh-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify the
 diagnostic route only; they do not certify the data products it reports as
 blocked.
+
+The internal runtime trust telemetry preview endpoint is covered by OpenAPI,
+endpoint certification, unit tests, integration tests, and a repo-native
+generator check. Its passing checks certify source-safe pre-certification
+telemetry preview only; they do not certify data products, platform
+source-manifest inclusion, Gateway/Workbench discovery, or supported-feature
+promotion.
 
 The internal source-ingestion-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks

@@ -64,7 +64,8 @@ Current RFC-0002 implementation-start baseline:
    transitions, source-safe candidate detail, candidate evidence replay,
    AI explanation evaluation, advisor queues, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
-   AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics, and
+   AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics,
+   runtime trust telemetry preview diagnostics, and
    source-ingestion-readiness diagnostics. A certified internal
    downstream-realization-readiness diagnostic now reports Advise, Manage,
    Report, Render, and Archive blockers without calling downstream services.

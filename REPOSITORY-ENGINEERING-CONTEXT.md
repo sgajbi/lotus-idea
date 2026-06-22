@@ -283,12 +283,12 @@ supported-feature promotion exists.
 operator diagnostic for aggregate RFC-0002 proof posture. It requires the
 `operator` role and `idea.implementation-proof.readiness.read`, returns
 source-safe blockers across source ingestion, advisor queue, AI explanation,
-data mesh, Workbench realization, downstream realization, and
-supported-feature promotion, emits bounded
+data mesh, runtime trust telemetry preview, Workbench realization, downstream
+realization, and supported-feature promotion, emits bounded
 `implementation_proof_readiness_read` operation events, and does not expose
 candidate identifiers, source payloads, Gateway/Workbench proof,
-data-product certification, client-ready publication, or supported-feature
-promotion.
+data-product certification, certified runtime trust telemetry, client-ready
+publication, or supported-feature promotion.
 `GET /api/v1/downstream-realization/readiness` now exposes a certified internal
 operator diagnostic for downstream realization supportability. It requires the
 `operator` role and `idea.downstream-realization.readiness.read`, reports
@@ -398,17 +398,23 @@ package intake adapter, no `lotus-render` deterministic output, no
 authority, no Gateway/Workbench proof, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.
 
-RFC-0002 Slice 14 is partially implemented as an internal data-mesh-readiness
-diagnostic foundation. `src/app/application/data_mesh_readiness.py` reads
-repo-owned producer, mesh-readiness, and trust-telemetry contracts, and
+RFC-0002 Slice 14 is partially implemented as internal data-mesh-readiness and
+runtime trust telemetry preview diagnostics. `src/app/application/data_mesh_readiness.py`
+reads repo-owned producer, mesh-readiness, and trust-telemetry contracts, and
 `GET /api/v1/data-mesh/readiness` exposes the current operator-facing
-`planned` / `not_certified` posture with explicit blockers. The endpoint
-requires `idea.mesh.readiness.read` plus the `operator` role, emits a bounded
-`mesh_readiness_read` operation event with `not_certified` supportability, and
-returns `supportedFeaturePromoted=false`. This is endpoint-certified diagnostic
-evidence only; it is not data-product certification, platform source-manifest
-inclusion, Gateway/Workbench discovery, runtime lineage proof, or supported
-mesh promotion.
+`planned` / `not_certified` posture with explicit blockers. `src/app/application/runtime_trust_telemetry.py`
+builds a source-safe runtime preview from the active repository snapshot, and
+`GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
+candidate, source-authority, freshness, supportability, lifecycle, review,
+feedback, conversion, and report evidence-pack counts for callers with
+`idea.mesh.trust-telemetry.preview.read` plus the `operator` role. The preview
+emits a bounded `mesh_trust_telemetry_preview_read` operation event, reports
+`certificationStatus=not_certified`, `platformCertified=false`, and
+`supportedFeaturePromoted=false`, and is also available through
+`make runtime-trust-telemetry-preview-check`. These endpoints are
+endpoint-certified diagnostic evidence only; they are not data-product
+certification, platform source-manifest inclusion, Gateway/Workbench discovery,
+raw lineage export, or supported mesh promotion.
 
 RFC-0002 Slice 15 is partially implemented as a bounded operation observability
 foundation. `src/app/observability/logging.py` now defines the
@@ -617,10 +623,12 @@ owned by upstream services.
     `make source-ingestion-worker-check`
 26. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-27. PostgreSQL runtime proof with configured integration URL:
+27. runtime trust telemetry preview generator:
+    `make runtime-trust-telemetry-preview-check`
+28. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-28. apply migrations with configured PostgreSQL URL: `make migrate`
-29. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+29. apply migrations with configured PostgreSQL URL: `make migrate`
+30. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -641,6 +649,7 @@ supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest validation,
 implementation-proof readiness artifact generation,
+runtime trust telemetry preview artifact generation,
 unit tests, integration tests, e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
 Docker build validation, bounded GitHub job timeouts, and no soft-failed

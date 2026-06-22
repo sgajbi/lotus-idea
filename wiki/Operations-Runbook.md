@@ -37,6 +37,12 @@ business feature.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.
+The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`
+diagnostic is available for operators with
+`idea.mesh.trust-telemetry.preview.read` to inspect aggregate runtime telemetry
+preview counts from the active repository provider. It remains
+`not_certified` until platform source-manifest inclusion, mesh certification,
+Gateway/Workbench discovery, and supported-feature evidence exist.
 The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
 for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
 run-once worker manifest, Core base URL, durable repository configuration, and
@@ -63,11 +69,12 @@ Workbench proof exist.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
-queue, AI explanation, data mesh, Workbench realization, downstream
-realization, and supported-feature promotion. It remains `not_certified` and
-`blocked` while any proof family lacks live evidence, and it must not be used
-as live implementation proof, Gateway/Workbench proof, data-product
-certification, client-ready publication, or supported-feature promotion.
+queue, AI explanation, data mesh, runtime trust telemetry preview, Workbench
+realization, downstream realization, and supported-feature promotion. It
+remains `not_certified` and `blocked` while any proof family lacks live
+evidence, and it must not be used as live implementation proof,
+Gateway/Workbench proof, data-product certification, certified runtime trust
+telemetry, client-ready publication, or supported-feature promotion.
 The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
 available for operators with `idea.downstream-realization.readiness.read` to
 inspect Advise, Manage, Report, Render, and Archive realization blockers over
@@ -85,6 +92,7 @@ make ci
 make postgres-integration-gate
 make source-ingestion-worker-check
 make implementation-proof-readiness-check
+make runtime-trust-telemetry-preview-check
 uvicorn app.main:app --reload --port 8330
 ```
 

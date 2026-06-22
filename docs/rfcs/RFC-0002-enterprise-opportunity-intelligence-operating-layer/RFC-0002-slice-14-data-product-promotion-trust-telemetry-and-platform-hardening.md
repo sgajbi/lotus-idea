@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness diagnostic only
+Status: Partially implemented - internal not-certified mesh readiness and runtime telemetry preview diagnostics
 
 ## Outcome
 
@@ -10,7 +10,7 @@ data product producer, not only an API service with planned metadata.
 
 ## Current Implementation Evidence
 
-This slice now has an internal operator diagnostic foundation only:
+This slice now has internal operator diagnostic foundations only:
 
 1. `src/app/application/data_mesh_readiness.py` reads repo-owned producer,
    mesh-readiness, and trust-telemetry contracts and builds a closed
@@ -19,7 +19,7 @@ This slice now has an internal operator diagnostic foundation only:
    `operator` role and `idea.mesh.readiness.read` capability.
 3. The endpoint returns explicit blockers:
    `data_mesh_not_certified`, `producer_products_not_active`, and
-   `runtime_trust_telemetry_blocked`.
+   `certified_runtime_trust_telemetry_missing`.
 4. The endpoint returns `runtimeTelemetryBacked=false`,
    `platformCertified=false`, and `supportedFeaturePromoted=false`.
 5. The endpoint emits a bounded `mesh_readiness_read` operation event with
@@ -28,19 +28,36 @@ This slice now has an internal operator diagnostic foundation only:
    diagnostics use the same repo-authored contract truth as local validation.
 7. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal diagnostic operation, not as mesh certification.
+8. `src/app/application/runtime_trust_telemetry.py` builds a source-safe
+   runtime trust telemetry preview from the active repository snapshot.
+9. `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
+   candidate, source-authority, freshness, supportability, lifecycle, review,
+   feedback, conversion, and report evidence-pack counts to callers with the
+   `operator` role and `idea.mesh.trust-telemetry.preview.read` capability.
+10. `scripts/generate_runtime_trust_telemetry_preview.py` and
+    `make runtime-trust-telemetry-preview-check` generate the same
+    pre-certification preview as source-safe automation evidence.
+11. The preview returns `runtimeTelemetryBacked=true` for the diagnostic
+    artifact while preserving `certificationStatus=not_certified`,
+    `platformCertified=false`, `certificationReady=false`, and
+    `supportedFeaturePromoted=false`.
 
 Evidence:
 
 1. `tests/unit/test_data_mesh_readiness.py`
 2. `tests/integration/test_data_mesh_readiness_api.py`
-3. `scripts/endpoint_certification_gate.py`
-4. `scripts/openapi_quality_gate.py`
+3. `tests/unit/test_runtime_trust_telemetry.py`
+4. `tests/integration/test_runtime_trust_telemetry_api.py`
+5. `scripts/generate_runtime_trust_telemetry_preview.py`
+6. `scripts/endpoint_certification_gate.py`
+7. `scripts/openapi_quality_gate.py`
 
 ## Current Non-Goals
 
 1. No producer product is promoted from `proposed`.
 2. No platform source-manifest inclusion is claimed.
-3. No runtime trust telemetry replaces the blocked static fallback.
+3. No runtime trust telemetry preview replaces the blocked static fallback for
+   platform certification.
 4. No Gateway or Workbench discovery contract is created.
 5. No supported feature is promoted.
 
@@ -68,12 +85,16 @@ Evidence:
 
 ## Remaining Gap
 
-The diagnostic endpoint deliberately reports blocked posture. Full Slice 14
-completion still requires implementation-backed product declarations, runtime
-trust telemetry, platform catalog/source-manifest inclusion, Gateway/Workbench
-discovery proof, certified consumer contracts, and supported-feature evidence.
-Until those exist, `lotus-idea` remains a planned data-mesh producer/consumer
-with repo-native anti-drift controls only.
+The diagnostic endpoints deliberately report blocked / not-certified posture.
+The runtime telemetry preview is implementation-backed pre-certification
+evidence, but it does not activate producer declarations or replace the blocked
+static fallback for platform mesh certification. Full Slice 14 completion still
+requires implementation-backed active product declarations, platform
+catalog/source-manifest inclusion, Gateway/Workbench discovery proof, certified
+consumer contracts, platform mesh certification, and supported-feature
+evidence. Until those exist, `lotus-idea` remains a planned data-mesh
+producer/consumer with repo-native anti-drift controls and source-safe runtime
+preview evidence only.
 
 ## Acceptance Gate
 
@@ -96,6 +117,7 @@ with repo-native anti-drift controls only.
 1. Gate 1 is preserved: no proposed product is marked active.
 2. Gates 2 through 5 remain blocked pending platform and runtime mesh
    certification.
-3. Gate 6 is partially satisfied for the diagnostic endpoint through OpenAPI
-   and endpoint-certification evidence.
+3. Gate 6 is partially satisfied for the diagnostic endpoints through OpenAPI,
+   endpoint-certification, runtime-preview generator, and unit/integration
+   evidence.
 4. Gate 7 has no new platform/scaffold blocker from this diagnostic slice.
