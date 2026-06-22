@@ -73,10 +73,17 @@ durable operating-context enforcement:
     `make downstream-realization-contract-gate` while preserving the boundary
     that no downstream route existence, downstream execution, or
     supported-feature promotion exists.
+13. README, repository context, `docs/operations/source-ingestion-run-once.md`,
+    `docs/operations/api-certification.md`, observability and persistence
+    guides, quality scorecard, RFC evidence, and wiki source now describe the
+    certified internal `POST /api/v1/source-ingestion/run-once` operator action
+    while preserving the boundary that no live Core source certification,
+    scheduled worker deployment proof, Gateway/Workbench proof, or
+    supported-feature promotion exists.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,
-downstream realization, or live source ingestion.
+downstream realization, live source certification, or scheduled worker proof.
 
 ## Required Work
 

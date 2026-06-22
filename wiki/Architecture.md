@@ -178,6 +178,11 @@ internal outbox retry/dead-letter and publisher-adapter foundation.
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
 supported feature.
+`POST /api/v1/source-ingestion/run-once` exposes the same bounded
+source-ingestion batch foundation through the service boundary for operators.
+It requires durable repository posture plus configured manifest and Core
+source settings, blocks before mutation when those inputs are absent or
+invalid, and returns aggregate decision counts only.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, delivery-ready backlog, durable repository posture, broker
@@ -322,7 +327,10 @@ covers high-cash evaluate-and-persist replay plus the first internal advisor
 queue, review, feedback, conversion, report evidence-pack workflow path, and
 internal source-ingestion replay/conflict recovery. Unit tests also prove the
 bounded run-once source-ingestion batch worker foundation and the
-manifest-backed worker CLI check-only contract.
+manifest-backed worker CLI check-only contract. Integration tests now prove the
+operator run-once route's durable-storage guard, runtime-configuration guard,
+configured execution path, permission policy, source-safe response, and
+bounded `source_ingestion_run_once` operation event.
 Accepted internal mutations now also append source-safe outbox records through
 the same repository snapshot contract. The repository port and PostgreSQL
 adapter support delivery-ready reads, published status, failed retry status,

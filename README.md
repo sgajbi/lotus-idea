@@ -22,7 +22,8 @@ registration, and evidence on `main`.
 Current implemented foundations include:
 
 - high-cash signal evaluation over caller-supplied Core evidence,
-- Core-backed high-cash source ingestion orchestration and run-once worker CLI,
+- Core-backed high-cash source ingestion orchestration, run-once worker CLI,
+  readiness diagnostic, and aggregate-only operator run-once API,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection and queue readiness diagnostics,
 - AI explanation governance diagnostics without provider execution,
@@ -42,10 +43,7 @@ Current implemented foundations include:
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
   detail.
 
-Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md),
-[docs/operations/api-certification.md](docs/operations/api-certification.md),
-[docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md),
-and [wiki/Overview.md](wiki/Overview.md).
+Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
 
 ## Product Boundary
 
@@ -259,7 +257,7 @@ been applied.
 Operational entrypoints:
 
 - local diagnostics: `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
-- source ingestion readiness: `/api/v1/source-ingestion/readiness`
+- source ingestion readiness/run-once: `/api/v1/source-ingestion/readiness`, `/api/v1/source-ingestion/run-once`
 - outbox delivery readiness/run-once: `/api/v1/outbox-delivery/readiness`, `/api/v1/outbox-delivery/run-once`
 - advisor queue readiness: `/api/v1/review-queues/advisor/readiness`
 - AI explanation readiness: `/api/v1/ai-explanations/readiness`
@@ -274,6 +272,7 @@ Operator details live in:
 - [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md)
 - [docs/operations/observability.md](docs/operations/observability.md)
 - [docs/operations/persistence.md](docs/operations/persistence.md)
+- [docs/operations/source-ingestion-run-once.md](docs/operations/source-ingestion-run-once.md)
 - [docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md)
 - [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md)
 

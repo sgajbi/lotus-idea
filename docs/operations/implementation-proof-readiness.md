@@ -50,7 +50,7 @@ It returns:
 The diagnostic is deliberately not live journey proof. It does not:
 
 1. call `lotus-core`,
-2. execute source-ingestion against a live source,
+2. certify source-ingestion against a live source,
 3. call `lotus-ai`,
 4. certify data products or runtime trust telemetry,
 5. prove Gateway or Workbench product behavior,
@@ -70,7 +70,7 @@ supported-feature promotion.
 The response remains blocked until all of the following are implemented and
 validated through the owning repositories and platform gates:
 
-1. live Core source-ingestion proof,
+1. live Core source-ingestion proof beyond the bounded internal run-once API,
 2. scheduled worker deployment proof,
 3. certified runtime trust telemetry and platform mesh certification,
 4. live broker runtime proof and downstream consumer contracts,
@@ -146,16 +146,20 @@ Implementation-backed evidence:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
 8. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-9. outbox delivery run-once endpoint:
+9. source-ingestion run-once endpoint:
+   `POST /api/v1/source-ingestion/run-once`,
+10. source-ingestion run-once runbook:
+   `docs/operations/source-ingestion-run-once.md`,
+11. outbox delivery run-once endpoint:
    `POST /api/v1/outbox-delivery/run-once`,
-10. operation event: `implementation_proof_readiness_read`,
-11. endpoint ledger:
+12. operation event: `implementation_proof_readiness_read`,
+13. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-12. unit tests:
+14. unit tests:
    `tests/unit/test_implementation_proof_readiness.py`,
-13. generator tests:
+15. generator tests:
    `tests/unit/test_generate_implementation_proof_readiness.py`,
-14. integration tests:
+16. integration tests:
    `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:

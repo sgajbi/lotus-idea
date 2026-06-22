@@ -20,7 +20,10 @@ feedback, conversion, report evidence-pack request workflow path, and internal
 source-ingestion replay/conflict recovery. A manifest-backed run-once
 source-ingestion worker CLI and `make source-ingestion-worker-check` also
 exist; the gate validates both manifest shape and source-safe check-only output
-shape. Accepted internal mutations now create source-safe outbox records with
+shape. `POST /api/v1/source-ingestion/run-once` adds a certified internal
+operator action over the same batch foundation, but it requires durable
+repository posture plus configured manifest and Core settings, returns
+aggregate decision counts only, and remains `not_certified`. Accepted internal mutations now create source-safe outbox records with
 retryable failed status, published status, and dead-letter status through the
 repository port. Certified internal outbox delivery readiness and run-once
 operator endpoints now report aggregate backlog/status posture and can execute

@@ -155,7 +155,11 @@ Persistence adapter validation:
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
-   `not_certified` operation events without calling Core.
+   `not_certified` operation events without calling Core. The integration
+   suite also proves the source-ingestion run-once operator action blocks
+   without durable storage or runtime configuration, executes the configured
+   domain batch path source-safely, enforces operator capability, and emits a
+   bounded `source_ingestion_run_once` event.
 12. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
@@ -298,6 +302,11 @@ endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only; they do not certify live Core ingestion,
 scheduled worker deployment, data-product promotion, Gateway/Workbench support,
 or supported-feature promotion.
+The internal source-ingestion-run-once endpoint is covered by OpenAPI,
+endpoint certification, unit tests, and integration tests. Its passing checks
+certify the bounded operator action only; they do not certify live Core
+ingestion, scheduled worker deployment, data-product promotion,
+Gateway/Workbench support, or supported-feature promotion.
 
 The internal advisor-queue-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify

@@ -59,20 +59,27 @@ foundation:
     operators with `idea.source-ingestion.readiness.read`, returns
     `not_certified` posture, and emits bounded
     `source_ingestion_readiness_read` operation events.
-16. `tests/unit/test_source_ingestion_readiness.py` and
+16. `POST /api/v1/source-ingestion/run-once` exposes the bounded
+    source-ingestion batch foundation as an internal operator action with
+    `idea.source-ingestion.run`. It emits bounded
+    `source_ingestion_run_once` events, fails closed before mutation when
+    durable repository, manifest, or Core configuration is absent or invalid,
+    and returns aggregate decision counts only.
+17. `tests/unit/test_source_ingestion_readiness.py` and
     `tests/integration/test_source_ingestion_readiness_api.py` prove blocked,
-    configured, permission-denied, relative-manifest, and operation-event
-    behavior without calling Core or writing repository state.
-17. `src/app/application/review_queue.py` adds an advisor queue readiness
+    configured, permission-denied, relative-manifest, source-ingestion
+    run-once, and operation-event behavior without exposing portfolio ids, raw
+    idempotency keys, source payloads, or candidate ids.
+18. `src/app/application/review_queue.py` adds an advisor queue readiness
     snapshot over the existing deterministic queue projection and repository
     snapshot, reporting aggregate counts, exclusion counts, durable-storage
     posture, `not_certified` supportability, and certification blockers without
     exposing candidate identifiers or access-scope identifiers.
-18. `GET /api/v1/review-queues/advisor/readiness` exposes that snapshot to
+19. `GET /api/v1/review-queues/advisor/readiness` exposes that snapshot to
     operators with `idea.review.queue.readiness.read`, returns
     `supportedFeaturePromoted=false`, and emits bounded
     `review_queue_readiness_read` operation events.
-19. `tests/unit/test_review_queue_application.py`,
+20. `tests/unit/test_review_queue_application.py`,
     `tests/integration/test_review_queue_api.py`, and
     `tests/integration/test_api_operation_events.py` prove aggregate readiness
     counts, non-storage blockers, permission-denied behavior, timestamp
@@ -158,9 +165,9 @@ This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
 downstream Report/Render/Archive realization, Gateway/Workbench proof,
 dashboard/alert certification, or supported-feature promotion.
-The source-ingestion readiness diagnostic is explicitly `not_certified` until
-live Core source proof, scheduled worker deploy proof, runtime data-mesh
-telemetry, and Gateway/Workbench proof exist.
+The source-ingestion readiness diagnostic and run-once operator action are
+explicitly `not_certified` until live Core source proof, scheduled worker
+deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof exist.
 The advisor queue readiness diagnostic is explicitly `not_certified` until
 durable queue posture, platform caller-context entitlement proof, Workbench
 proof, data-product certification, and runtime trust telemetry exist.

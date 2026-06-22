@@ -72,6 +72,13 @@ remaining certification blockers without calling Core or exposing source
 payloads. It remains `not_certified` until live Core source proof, scheduled
 worker deploy proof, runtime data-mesh telemetry, and Gateway/Workbench proof
 exist.
+The internal `POST /api/v1/source-ingestion/run-once` action is available for
+operators with `idea.source-ingestion.run` to run one bounded source-ingestion
+pass through the configured manifest, active repository provider, and Core
+source adapter. It requires durable repository configuration, fails closed
+before mutation when manifest or Core configuration is absent or invalid, and
+returns aggregate decision counts only. It does not expose portfolio ids, raw
+source payloads, raw idempotency keys, or candidate ids.
 The internal `GET /api/v1/outbox-delivery/readiness` diagnostic is available
 for operators with `idea.outbox-delivery.readiness.read` to inspect aggregate
 outbox backlog, retry/dead-letter posture, durable repository posture, broker
@@ -136,7 +143,7 @@ instead of producing a false support claim.
 
 | Operating area | Current proof | Must not be inferred |
 | --- | --- | --- |
-| Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation | Deployed scheduler, live Core certification, or supported ingestion product |
+| Source ingestion | Manifest plus source-safe check-only output gate; internal run-once foundation and aggregate-only operator route | Deployed scheduler, live Core certification, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths | Production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | Certified live broker runtime, platform mesh event certification, or downstream delivery |
 | Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
@@ -204,7 +211,8 @@ conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, downstream realization
 submission, data-mesh-readiness
 diagnostic reads, runtime-trust-telemetry-preview and snapshot diagnostic
-reads, source-ingestion-readiness diagnostic reads, advisor queue-readiness
+reads, source-ingestion-readiness diagnostic reads, source-ingestion run-once
+operator actions, advisor queue-readiness
 diagnostic reads, outbox-delivery-readiness diagnostic reads, outbox-delivery
 run-once operator actions,
 downstream-realization-readiness diagnostic reads, plus aggregate
@@ -232,7 +240,9 @@ Current outcomes:
     certification remain absent, runtime trust telemetry snapshot generation
     is blocked by platform certification and discovery proof gaps,
     source-ingestion readiness is missing run-once
-    worker configuration/certification proof, advisor queue readiness is
+    worker configuration/certification proof, source-ingestion run-once is
+    blocked by missing durable storage, manifest, or Core configuration,
+    advisor queue readiness is
     missing durable queue posture, entitlement proof, Workbench proof,
     data-product certification, or runtime trust telemetry, outbox delivery
     readiness is missing live broker runtime proof, downstream consumer contracts,
@@ -276,6 +286,7 @@ evidence replay, lifecycle transition, AI explanation evaluation, advisor
 queue, review action, feedback, conversion intent, conversion outcome, report
 evidence-pack request, and AI-explanation-readiness, data-mesh-readiness,
 runtime-trust-telemetry-preview/snapshot, source-ingestion-readiness,
+source-ingestion-run-once,
 downstream-realization-readiness, downstream submission,
 advisor-queue-readiness, outbox-delivery-readiness diagnostic, and
 outbox-delivery-run-once operator endpoints.
