@@ -279,6 +279,16 @@ is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
 execution, prompt/RAG/provider integration, durable AI lineage store,
 Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
+`GET /api/v1/implementation-proof/readiness` now exposes a certified internal
+operator diagnostic for aggregate RFC-0002 proof posture. It requires the
+`operator` role and `idea.implementation-proof.readiness.read`, returns
+source-safe blockers across source ingestion, advisor queue, AI explanation,
+data mesh, Workbench realization, downstream realization, and
+supported-feature promotion, emits bounded
+`implementation_proof_readiness_read` operation events, and does not expose
+candidate identifiers, source payloads, Gateway/Workbench proof,
+data-product certification, client-ready publication, or supported-feature
+promotion.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation plus bounded read-only Gateway publication for advisor queue and
@@ -482,8 +492,11 @@ logs; fix or document the owned warning source instead.
    intents and persists source-provenanced request packages without downstream
    Report/Render/Archive realization. Source-ingestion-readiness orchestration
    reports manifest, Core base URL, durable repository configuration, and
-   certification blockers for the high-cash run-once worker without executing
-   Core source reads.
+    certification blockers for the high-cash run-once worker without executing
+    Core source reads. Implementation-proof-readiness orchestration aggregates
+    current RFC-0002 capability proof blockers across source ingestion, queue,
+    AI, data mesh, Workbench, downstream realization, and supported-feature
+    promotion without leaking source payloads or promoting support.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence

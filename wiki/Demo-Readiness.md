@@ -15,5 +15,9 @@ Demo readiness requires:
 9. canonical live validation,
 10. security and sensitive-content review.
 
+`GET /api/v1/implementation-proof/readiness` is available as an internal
+operator diagnostic to show which proof families remain blocked. It is a
+readiness aid, not demo evidence by itself.
+
 Screenshots or client-demo material must not be promoted before validation
 passes.

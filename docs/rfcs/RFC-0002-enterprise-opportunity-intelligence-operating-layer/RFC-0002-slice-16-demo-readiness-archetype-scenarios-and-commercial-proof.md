@@ -1,11 +1,27 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Planned
+Status: Partially implemented - proof-readiness diagnostic available; demo claims remain blocked
 
 ## Outcome
 
 Prepare client-demo and commercial proof only after implementation-backed
 capabilities exist.
+
+## Current Implementation Evidence
+
+1. `docs/demo/demo-claims.md` now records current implementation-backed
+   foundation posture and keeps demo claims blocked until live proof,
+   Workbench proof, data-product certification, downstream realization, and
+   supported-feature evidence exist.
+2. `GET /api/v1/implementation-proof/readiness` gives operators and demo leads
+   a source-safe blocker view across source ingestion, advisor queue, AI
+   explanation, data mesh, Workbench, downstream realization, and
+   supported-feature promotion.
+3. `docs/operations/implementation-proof-readiness.md` documents how to call
+   and interpret the diagnostic as a readiness aid, not as demo evidence.
+
+This slice does not create demo-ready material. It deliberately prevents
+commercial proof from getting ahead of implementation-backed runtime evidence.
 
 ## Required Work
 
@@ -15,6 +31,15 @@ capabilities exist.
 3. Update `docs/demo/demo-claims.md` only for supported claims.
 4. Create RFP-safe and demo-safe material that explains supported, gated,
    prohibited, and degraded behavior.
+
+## Remaining Gap
+
+1. Canonical archetype scenarios still require live source-backed candidate
+   generation and replay evidence.
+2. Demo materials still require Workbench panel proof and canonical runtime
+   evidence.
+3. RFP-safe language must remain blocked until supported-feature promotion
+   evidence exists.
 
 ## Acceptance Gate
 

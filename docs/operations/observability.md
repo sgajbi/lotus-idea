@@ -50,6 +50,7 @@ Current instrumented operations:
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `source_ingestion_readiness_read` | Internal source-ingestion readiness diagnostic read | `lotus-core` | `not_certified` |
+| `implementation_proof_readiness_read` | Internal aggregate RFC-0002 proof-readiness diagnostic read | `lotus-idea` | `not_certified` |
 
 Metric labels are limited to:
 
@@ -88,7 +89,8 @@ fields. Do not add identifiers or payload fragments to operation labels.
    diagnostic is missing run-once worker configuration inputs, or the advisor
    queue readiness diagnostic still lacks durable repository posture,
    entitlement proof, Workbench proof, data-product certification, or runtime
-   trust telemetry.
+   trust telemetry. It also covers the aggregate implementation-proof
+   readiness diagnostic when any RFC-0002 proof family remains uncertified.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

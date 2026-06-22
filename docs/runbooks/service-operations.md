@@ -33,6 +33,14 @@
    `idea.source-ingestion.readiness.read` capability. This reports manifest,
    Core base URL, durable repository configuration, and remaining certification
    blockers without calling Core or exposing source payloads.
+7. For aggregate RFC-0002 proof posture checks, call
+   `GET /api/v1/implementation-proof/readiness?evaluatedAtUtc=<timestamp>`
+   with the `operator` role and
+   `idea.implementation-proof.readiness.read` capability. This reports
+   source-safe blockers across source ingestion, advisor queue, AI
+   explanation, data mesh, Workbench, downstream realization, and
+   supported-feature promotion. It is not live proof, Workbench proof,
+   data-product certification, or supported-feature promotion.
 
 ## Current Operation Event Diagnostics
 
@@ -50,7 +58,8 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 9. conversion outcome recording,
 10. report evidence-pack request recording,
 11. data-mesh readiness diagnostic reads,
-12. source-ingestion readiness diagnostic reads.
+12. source-ingestion readiness diagnostic reads,
+13. implementation-proof readiness diagnostic reads.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
@@ -64,8 +73,9 @@ Use the operation `outcome` before inspecting payload-level evidence:
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 9. `blocked`: candidate evidence replay found stale source posture, or
-   data-mesh/source-ingestion readiness remains blocked by explicit
-   configuration or certification blockers.
+   data-mesh, source-ingestion, AI explanation, review queue, or aggregate
+   implementation-proof readiness remains blocked by explicit configuration or
+   certification blockers.
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,

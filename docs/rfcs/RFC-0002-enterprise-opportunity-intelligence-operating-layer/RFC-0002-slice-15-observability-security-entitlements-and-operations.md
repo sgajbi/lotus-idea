@@ -91,6 +91,19 @@ foundation:
     posture, permission-denied behavior, product-safe payloads, and
     not-certified operation-event behavior for the AI explanation readiness
     diagnostic.
+22. `src/app/application/implementation_proof_readiness.py` adds an aggregate
+    RFC-0002 proof-readiness snapshot over existing source-ingestion,
+    review-queue, AI-explanation, data-mesh, Workbench, downstream, and
+    supported-feature proof families without exposing source payloads.
+23. `GET /api/v1/implementation-proof/readiness` exposes that snapshot to
+    operators with `idea.implementation-proof.readiness.read`, returns
+    `not_certified` posture, and emits bounded
+    `implementation_proof_readiness_read` operation events.
+24. `tests/unit/test_implementation_proof_readiness.py` and
+    `tests/integration/test_implementation_proof_readiness_api.py` prove
+    blocked aggregate proof posture, source-safe payloads, permission-denied
+    behavior, timezone validation, unavailable-contract safe errors, and
+    not-certified operation-event behavior.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -106,6 +119,9 @@ The AI explanation readiness diagnostic is explicitly `not_certified` until
 `lotus-ai` runtime workflow execution, durable AI lineage storage,
 workflow-pack runtime certification, model-risk operations dashboards, runtime
 trust telemetry, and Workbench proof exist.
+The implementation-proof readiness diagnostic is explicitly `not_certified`
+until every reported proof family has implementation-backed live evidence and
+supported-feature promotion evidence where applicable.
 
 ## Required Work
 

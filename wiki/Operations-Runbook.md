@@ -60,6 +60,14 @@ or client identifiers. It remains `not_certified` until `lotus-ai` runtime
 workflow execution, durable AI lineage storage, workflow-pack runtime
 certification, model-risk operations dashboards, runtime trust telemetry, and
 Workbench proof exist.
+The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
+available for operators with `idea.implementation-proof.readiness.read` to
+inspect aggregate RFC-0002 proof posture across source ingestion, advisor
+queue, AI explanation, data mesh, Workbench realization, downstream
+realization, and supported-feature promotion. It remains `not_certified` and
+`blocked` while any proof family lacks live evidence, and it must not be used
+as live implementation proof, Gateway/Workbench proof, data-product
+certification, client-ready publication, or supported-feature promotion.
 
 Initial commands:
 
@@ -97,7 +105,8 @@ evaluation, AI explanation readiness diagnostic reads, feedback records,
 conversion intent recording, conversion outcome
 recording, report evidence-pack request recording, data-mesh-readiness
 diagnostic reads, source-ingestion-readiness diagnostic reads, and advisor
-queue-readiness diagnostic reads.
+queue-readiness diagnostic reads, plus aggregate implementation-proof-readiness
+diagnostic reads.
 
 Current outcomes:
 
@@ -121,7 +130,9 @@ Current outcomes:
     certification remain absent, source-ingestion readiness is missing run-once
     worker configuration/certification proof, or advisor queue readiness is
     missing durable queue posture, entitlement proof, Workbench proof,
-    data-product certification, or runtime trust telemetry.
+    data-product certification, or runtime trust telemetry. Aggregate
+    implementation-proof readiness reports `blocked` whenever any RFC-0002
+    proof family still lacks certification evidence.
 
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
@@ -172,4 +183,12 @@ payloads, candidate identifiers, source routes, portfolio identifiers, or
 client identifiers. It is not `lotus-ai` runtime proof, durable AI lineage
 certification, model-risk dashboard proof, Gateway/Workbench support,
 data-product certification, client-ready publication, or supported-feature
+promotion.
+
+`GET /api/v1/implementation-proof/readiness` is the certified internal
+aggregate proof-readiness diagnostic. It returns capability-level blockers,
+source-of-truth paths, and current supportability posture for operators without
+exposing candidate identifiers, source payloads, portfolio identifiers, or
+client identifiers. It is not live implementation proof, data-product
+certification, Workbench proof, client-ready publication, or supported-feature
 promotion.
