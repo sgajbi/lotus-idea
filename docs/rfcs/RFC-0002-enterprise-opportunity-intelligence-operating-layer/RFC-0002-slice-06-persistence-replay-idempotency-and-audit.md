@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-ingestion replay/conflict recovery proof, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -126,7 +126,9 @@ Implemented first-wave internal scope:
     repository, transitions the candidate to review-ready state, records review
     approval, advisor feedback, report conversion intent, conversion outcome,
     and report evidence-pack request state, validates the backing workflow
-    tables, rolls the schema back, reapplies it, and proves the recovered API
+    tables, proves internal Core-backed source-ingestion replay and same-key
+    changed-source conflict recovery through the PostgreSQL repository adapter,
+    rolls the schema back, reapplies it, and proves the recovered API
     persistence contract is usable. `make postgres-integration-gate` is the
     repo-native command, and PR Merge Gate / Main Releasability run it against
     `postgres:18-alpine` with
@@ -135,12 +137,11 @@ Implemented first-wave internal scope:
 Not implemented yet:
 
 1. deploy-pipeline migration execution proof against a real PostgreSQL service,
-2. database-backed source-ingestion workers,
-3. source-ingestion recovery proof against a real PostgreSQL service,
-4. live source adapter and source-ingestion proof,
-5. data-product certification,
-6. Gateway/Workbench/downstream proof,
-7. supported-feature promotion.
+2. scheduled database-backed source-ingestion workers,
+3. live source adapter and live source-ingestion proof against a running Core service,
+4. data-product certification,
+5. Gateway/Workbench/downstream proof,
+6. supported-feature promotion.
 
 ## Migration And Rollback Posture
 
@@ -154,16 +155,17 @@ promotion so schema, rollback, indexing, relationship posture, execution command
 shape, adapter behavior, runtime selection, and the first durable replay path
 become CI-visible before any supported database-backed product claim is made.
 The current proof now also exercises the first internal review, queue,
-conversion, and report evidence-pack workflow against PostgreSQL. The next
-durable persistence slices must prove source-ingestion worker behavior,
-deploy-pipeline migration evidence, and source-ingestion recovery behavior
-against that service, and keep API responses truthful:
+conversion, report evidence-pack workflow, and internal source-ingestion
+replay/conflict recovery path against PostgreSQL. The next durable persistence
+slices must prove scheduled source-ingestion worker behavior, deploy-pipeline
+migration evidence, and live Core source-adapter behavior against that service,
+and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.
 
 ## Validation
 
-Targeted validation:
+Current slice validation:
 
 1. `.venv\Scripts\python.exe -m pytest tests\unit\test_high_cash_application.py tests\unit\test_idea_persistence.py -q`
    passed with `19 passed` for the new orchestration and persistence replay
@@ -172,88 +174,103 @@ Targeted validation:
    passed with `21 passed` for the internal source-ingestion orchestration,
    generated idempotency key, replay, conflict, blocked, suppressed, and
    skipped-not-eligible coverage.
-3. `.venv\Scripts\python.exe -m ruff check src\app\application\high_cash_signal.py tests\unit\test_high_cash_application.py`
+3. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
+   skips locally when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not configured;
+   the suite now includes internal source-ingestion replay/conflict recovery
+   proof for GitHub PR/Main PostgreSQL lanes where `postgres:18-alpine` is
+   configured.
+4. `make check` passed with lint, format, CI contract, maintainability,
+   monetary/no-sensitive guards, implementation-truth, data-mesh,
+   migration, supported-feature, endpoint-certification, typecheck,
+   architecture, OpenAPI, and `257` unit tests.
+5. `make ci` passed with `60` integration tests, `4` local PostgreSQL skips,
+   `2` e2e tests, `257` unit tests under coverage, coverage gate at
+   `99.14%`, and dependency audit reporting no known vulnerabilities.
+
+Prior Slice 06 validation:
+
+1. `.venv\Scripts\python.exe -m ruff check src\app\application\high_cash_signal.py tests\unit\test_high_cash_application.py`
    passed.
-4. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
-5. Prior Slice 06 validation also covered
+2. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
+3. Prior persistence validation also covered
    `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_idempotency_audit.py -q`
    with `11 passed`.
-6. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+4. `make check` passed with lint, format, CI contract, monetary/no-sensitive
    guards, data-mesh contract gate, supported-feature gate,
    endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
    `257` unit tests.
-7. `make ci` passed with `13` integration tests, `2` e2e tests, `174` unit
+5. `make ci` passed with `13` integration tests, `2` e2e tests, `174` unit
    tests under coverage, coverage gate at `99.37%`, and dependency audit
    reporting no known vulnerabilities.
-7. Later endpoint foundation validation covered the certified
+6. Later endpoint foundation validation covered the certified
    evaluate-and-persist API with OpenAPI and endpoint-certification gates; at
    that point database-backed persistence remained planned.
-8. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_service_contract.py tests\integration\test_review_workflow_api.py -q`
+7. `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_service_contract.py tests\integration\test_review_workflow_api.py -q`
    passed with `29 passed` after adding idempotent lifecycle transition
    repository and API coverage.
-9. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` and
+8. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py` and
    `.venv\Scripts\python.exe scripts\openapi_quality_gate.py` passed after
    adding lifecycle route certification evidence.
-10. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+9. `make check` passed with lint, format, CI contract, monetary/no-sensitive
     guards, data-mesh contract gate, supported-feature gate,
     endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
     `189` unit tests.
-11. `make ci` passed with `39` integration tests, `2` e2e tests, `189` unit
+10. `make ci` passed with `39` integration tests, `2` e2e tests, `189` unit
     tests under coverage, coverage gate at `99.14%`, and dependency audit
     reporting no known vulnerabilities.
-12. `make docker-build` passed for `backend-service:ci-test`.
-13. `.venv\Scripts\python.exe -m ruff check src\app\application src\app\ports\idea_repository.py tests\unit\test_repository_port_boundary.py`
+11. `make docker-build` passed for `backend-service:ci-test`.
+12. `.venv\Scripts\python.exe -m ruff check src\app\application src\app\ports\idea_repository.py tests\unit\test_repository_port_boundary.py`
     passed after centralizing repository workflow protocols.
-14. `.venv\Scripts\python.exe -m pytest tests\unit\test_repository_port_boundary.py tests\unit\test_high_cash_application.py tests\unit\test_review_queue_application.py tests\unit\test_review_workflow_application.py tests\unit\test_idea_persistence.py -q`
+13. `.venv\Scripts\python.exe -m pytest tests\unit\test_repository_port_boundary.py tests\unit\test_high_cash_application.py tests\unit\test_review_queue_application.py tests\unit\test_review_workflow_application.py tests\unit\test_idea_persistence.py -q`
     passed with `43 passed`.
-15. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\application src\app\ports\idea_repository.py`
+14. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\application src\app\ports\idea_repository.py`
     passed.
-16. `.venv\Scripts\python.exe scripts\migration_contract_gate.py` passed after
+15. `.venv\Scripts\python.exe scripts\migration_contract_gate.py` passed after
     adding the first versioned schema/rollback contract.
-17. `.venv\Scripts\python.exe -m pytest tests\unit\test_migration_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
+16. `.venv\Scripts\python.exe -m pytest tests\unit\test_migration_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
     passed with `14 passed`.
-18. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+17. `make check` passed with lint, format, CI contract, monetary/no-sensitive
     guards, data-mesh contract gate, migration contract gate,
     supported-feature gate, endpoint-certification gate, typecheck,
     architecture boundary, OpenAPI, and `223` unit tests.
-19. `make ci` passed with `59` integration tests, `2` e2e tests, `223` unit
+18. `make ci` passed with `59` integration tests, `2` e2e tests, `223` unit
     tests under coverage, coverage gate at `99.17%`, and dependency audit
     reporting no known vulnerabilities.
-20. `.venv\Scripts\python.exe scripts\run_migrations.py --direction apply --dry-run`
+19. `.venv\Scripts\python.exe scripts\run_migrations.py --direction apply --dry-run`
     and `.venv\Scripts\python.exe scripts\run_migrations.py --direction rollback --dry-run`
     passed with `20` planned statements each.
-21. `.venv\Scripts\python.exe -m pytest tests\unit\test_migration_execution.py tests\unit\test_migration_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
+20. `.venv\Scripts\python.exe -m pytest tests\unit\test_migration_execution.py tests\unit\test_migration_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
     passed with `19 passed`.
-22. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\infrastructure\migrations.py scripts\run_migrations.py`
+21. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini src\app\infrastructure\migrations.py scripts\run_migrations.py`
     passed.
-23. `.venv\Scripts\python.exe -m pip_audit -r requirements\shared-runtime.lock.txt -r requirements\ci-tooling.lock.txt`
+22. `.venv\Scripts\python.exe -m pip_audit -r requirements\shared-runtime.lock.txt -r requirements\ci-tooling.lock.txt`
     passed with no known vulnerabilities after adding
     `psycopg[binary]==3.3.4`.
-24. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+23. `make check` passed with lint, format, CI contract, monetary/no-sensitive
     guards, data-mesh contract gate, migration contract gate,
     migration execution dry-run gate, supported-feature gate,
     endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
     `228` unit tests.
-25. `make ci` passed with `59` integration tests, `2` e2e tests, `228` unit
+24. `make ci` passed with `59` integration tests, `2` e2e tests, `228` unit
     tests under coverage, coverage gate at `99.08%`, and dependency audit
     reporting no known vulnerabilities.
-26. `make docker-build` passed for `backend-service:ci-test` after adding
+25. `make docker-build` passed for `backend-service:ci-test` after adding
     `migrations/` to the Docker image.
-27. `make postgres-integration-gate` passed against a disposable
+26. `make postgres-integration-gate` passed against a disposable
     `postgres:18-alpine` service on `localhost:55434` with `2 passed` after
     broadening the proof to cover high-cash persistence/replay, advisor queue
     projection, lifecycle transitions, review approval replay, feedback,
     report conversion intent replay, conversion outcome, report evidence-pack
     request replay, and backing workflow table counts.
-28. `make check` passed with lint, format, CI contract, monetary/no-sensitive
+27. `make check` passed with lint, format, CI contract, monetary/no-sensitive
     guards, data-mesh contract gate, migration contract gate,
     migration execution dry-run gate, supported-feature gate,
     endpoint-certification gate, typecheck, architecture boundary, OpenAPI, and
     `237` unit tests.
-29. `make ci` passed with `60` integration tests, `2` local PostgreSQL skips,
+28. `make ci` passed with `60` integration tests, `2` local PostgreSQL skips,
     `2` e2e tests, `237` unit tests under coverage, coverage gate at `99.15%`,
     and dependency audit reporting no known vulnerabilities.
-30. `make docker-build` passed for `backend-service:ci-test` after broadening
+29. `make docker-build` passed for `backend-service:ci-test` after broadening
     the PostgreSQL runtime proof and synchronizing docs/wiki truth.
 
 GitHub PR validation and wiki publication remain required before mainline

@@ -22,8 +22,10 @@ Internal high-cash source-ingestion orchestration now exists as an application
 foundation over the Core source port and repository port. It generates a
 source-ingestion idempotency key when one is not supplied and classifies
 accepted, replayed, conflict, blocked, suppressed, and not-eligible outcomes,
-but it is not a live worker, production recovery proof, data-product
-certification, Gateway route, Workbench proof, or supported business feature.
+and the PostgreSQL runtime proof covers replay after repository reload plus
+same-key changed-source conflict recovery. It is not a live Core source worker,
+production storage certification, data-product certification, Gateway route,
+Workbench proof, or supported business feature.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.

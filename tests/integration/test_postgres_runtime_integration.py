@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from decimal import Decimal
 import os
 from pathlib import Path
 from typing import Any, Iterator, cast
@@ -8,7 +11,13 @@ import psycopg
 import pytest
 from fastapi.testclient import TestClient
 
+from app.application.source_ingestion import (
+    HighCashSourceIngestionDecision,
+    IngestHighCashSourceSignalCommand,
+    ingest_high_cash_signal_from_core,
+)
 from app.api.repository_state import reset_idea_repository_for_tests
+from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.migrations import (
     MigrationConnection,
     MigrationDirection,
@@ -16,6 +25,12 @@ from app.infrastructure.migrations import (
     execute_migration_plan,
 )
 from app.main import app
+from app.ports.core_sources import (
+    CoreHighCashEvidence,
+    CoreHighCashEvidenceRequest,
+    CoreOpportunitySourcePort,
+)
+from app.repository_state import get_idea_repository
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -112,6 +127,54 @@ def test_postgres_migration_rollback_and_reapply_restores_runtime_contract(
     recovered_payload = recovered.json()
     assert recovered_payload["durableStorageBacked"] is True
     assert recovered_payload["persistence"]["decision"] == "accepted"
+    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
+    assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
+
+
+def test_postgres_runtime_provider_recovers_source_ingestion_replay_and_conflict(
+    postgres_database_url: str,
+) -> None:
+    source = RecordingCoreSource(evidence=_core_high_cash_evidence())
+    first = ingest_high_cash_signal_from_core(
+        _source_ingestion_command(),
+        core_source=source,
+        repository=get_idea_repository(),
+    )
+
+    assert first.decision is HighCashSourceIngestionDecision.ACCEPTED
+    assert first.signal_result.persistence is not None
+    assert first.signal_result.persistence.record is not None
+    candidate_id = first.signal_result.persistence.record.candidate.candidate_id
+    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
+    assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
+
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    replayed = ingest_high_cash_signal_from_core(
+        _source_ingestion_command(),
+        core_source=source,
+        repository=get_idea_repository(),
+    )
+
+    assert replayed.decision is HighCashSourceIngestionDecision.REPLAYED
+    assert replayed.signal_result.persistence is not None
+    assert replayed.signal_result.persistence.record is not None
+    assert replayed.signal_result.persistence.record.candidate.candidate_id == candidate_id
+    assert _table_count(postgres_database_url, "idea_candidate_record") == 1
+    assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
+
+    source.evidence = _core_high_cash_evidence(holdings_hash="sha256:changed-holdings")
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    conflict = ingest_high_cash_signal_from_core(
+        _source_ingestion_command(),
+        core_source=source,
+        repository=get_idea_repository(),
+    )
+
+    assert conflict.decision is HighCashSourceIngestionDecision.CONFLICT
+    assert conflict.signal_result.persistence is not None
+    assert conflict.signal_result.persistence.record is not None
+    assert conflict.signal_result.persistence.record.candidate.candidate_id == candidate_id
+    assert conflict.signal_result.persistence.audit_event is None
     assert _table_count(postgres_database_url, "idea_candidate_record") == 1
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
 
@@ -277,6 +340,56 @@ def _schema_tables_exist(database_url: str) -> bool:
             )
             existing_tables = {str(row[0]) for row in cursor.fetchall()}
     return existing_tables == set(POSTGRES_SCHEMA_TABLES)
+
+
+@dataclass
+class RecordingCoreSource(CoreOpportunitySourcePort):
+    evidence: CoreHighCashEvidence
+    seen_request: CoreHighCashEvidenceRequest | None = None
+
+    def fetch_high_cash_evidence(
+        self, request: CoreHighCashEvidenceRequest
+    ) -> CoreHighCashEvidence:
+        self.seen_request = request
+        return self.evidence
+
+
+def _source_ingestion_command() -> IngestHighCashSourceSignalCommand:
+    return IngestHighCashSourceSignalCommand(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=date(2026, 6, 21),
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        idempotency_key="signal-ingestion:high-cash:lotus-core:postgres-recovery-001",
+        correlation_id="corr-postgres-source-ingestion-proof",
+        trace_id="trace-postgres-source-ingestion-proof",
+    )
+
+
+def _core_high_cash_evidence(
+    *,
+    holdings_hash: str = "sha256:lotus-core:HoldingsAsOf:v1",
+) -> CoreHighCashEvidence:
+    return CoreHighCashEvidence(
+        source_reported_cash_weight=Decimal("0.18"),
+        portfolio_state_ref=_core_source_ref("lotus-core:PortfolioStateSnapshot:v1"),
+        holdings_ref=_core_source_ref("lotus-core:HoldingsAsOf:v1", content_hash=holdings_hash),
+        cash_movement_ref=_core_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
+        cashflow_projection_ref=_core_source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+    )
+
+
+def _core_source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef:
+    return SourceRef(
+        product_id=product_id,
+        source_system=SourceSystem.LOTUS_CORE,
+        product_version="v1",
+        route=f"/source/{product_id}",
+        as_of_date=date(2026, 6, 21),
+        generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        content_hash=content_hash or f"sha256:{product_id}",
+        data_quality_status="complete",
+        freshness=EvidenceFreshness.CURRENT,
+    )
 
 
 def _source_ref(product_id: str) -> dict[str, str]:
