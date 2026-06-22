@@ -233,6 +233,23 @@ def test_downstream_submission_api_requires_submission_capability() -> None:
     assert response.json()["code"] == "permission_denied"
 
 
+def test_report_downstream_submission_api_requires_submission_capability() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
+        headers={
+            "X-Caller-Subject": "advisor-001",
+            "X-Caller-Capabilities": "idea.report-evidence-pack.request",
+            "X-Correlation-Id": "corr-report-downstream-denied-api",
+            "Idempotency-Key": "report-downstream-submit-denied-api-001",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+
+
 def test_downstream_submission_api_rejects_blank_idempotency_key(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -254,6 +271,27 @@ def test_downstream_submission_api_rejects_blank_idempotency_key(
     assert response.json()["code"] == "invalid_request"
     assert advise_client.submitted == ()
     assert manage_client.submitted == ()
+
+
+def test_report_downstream_submission_api_rejects_blank_idempotency_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
+        headers=downstream_submission_headers(" "),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert report_client.submitted == ()
 
 
 def test_conversion_downstream_submission_api_returns_not_found_with_configured_clients(
