@@ -8,8 +8,9 @@ conversion intent/outcome and report evidence-pack API foundations. The service
 remains internal foundation only:
 repository-backed API persistence is process-local by default and
 PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. There is no
-downstream adapter, production recovery command, Gateway/Workbench proof, or
-supported business API yet. A versioned migration/rollback schema contract
+downstream adapter, production recovery command, Workbench proof, or supported
+business API yet. Bounded read-only Gateway publication exists for advisor
+queue and candidate detail only. A versioned migration/rollback schema contract
 exists for the durable repository and is enforced by `make migration-contract-gate`.
 `make migration-execution-gate` dry-runs apply and rollback execution plans, and
 `make migrate` / `make migrate-rollback` execute against PostgreSQL when

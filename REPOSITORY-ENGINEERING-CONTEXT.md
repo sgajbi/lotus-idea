@@ -134,7 +134,7 @@ silently break the worker contract.
 operator diagnostic for run-once worker configuration and certification
 blockers without calling Core or leaking source payloads. There is still no
 live Core integration proof, scheduled daemon/deploy source-ingestion worker,
-Gateway route, Workbench proof, data-product certification, or
+Workbench proof, data-product certification, or
 supported-feature promotion yet.
 The upstream Core cash-weight contract dependency is tracked in
 `sgajbi/lotus-core#430`.
@@ -223,9 +223,11 @@ duplicate exclusion rules; repository-snapshot application orchestration in
 `src/app/application/review_queue.py`; certified internal advisor queue API
 foundation in `src/app/api/review_queues.py`; and golden unit/integration
 coverage for expected ordering and edge cases. This is not yet a supported
-queue product: no database-backed queue state, Gateway/Workbench proof,
-entitlement-backed scope filtering, data-product certification, trust
-telemetry, or supported-feature promotion exists.
+queue product: database-backed queue projection proof exists only inside the
+opt-in PostgreSQL runtime proof, and bounded read-only Gateway publication now
+exists for the advisor queue; Workbench proof, entitlement-backed scope
+filtering, data-product certification, trust telemetry, and supported-feature
+promotion remain planned.
 
 RFC-0002 Slice 08 is partially implemented as an internal advisor review and
 feedback governance plus certified API foundation in
@@ -267,11 +269,12 @@ operation events, and always reports `durableStorageBacked=false`,
 `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`. This is
 not yet a supported AI explanation product: no `lotus-ai` runtime workflow
 execution, prompt/RAG/provider integration, durable AI lineage store,
-Gateway/Workbench proof, trust telemetry, model-risk operations dashboard, or
+Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
-foundation. `POST /api/v1/idea-signals/high-cash/evaluate` accepts
+foundation plus bounded read-only Gateway publication for advisor queue and
+candidate detail. `POST /api/v1/idea-signals/high-cash/evaluate` accepts
 caller-supplied, source-owned Core evidence references and source-reported cash
 weight, enforces `idea.signal.evaluate` capability or advisor role, and returns
 deterministic candidate, blocked, suppressed, or not-eligible posture.
@@ -287,7 +290,7 @@ downstream authority. `POST /api/v1/idea-candidates/{candidateId}/evidence-repla
 exposes internal operator replay posture over current source refs and persisted
 evidence hashes with matched, stale-source, hash-mismatch, expired, and
 not-found outcomes, without live Core calls, raw source export, downstream
-authority, Gateway/Workbench proof, data-product certification, or
+authority, Workbench proof, data-product certification, or
 supported-feature promotion. `GET /api/v1/review-queues/advisor` exposes deterministic
 advisor queue projection over persisted candidate snapshots. The review-action
 and feedback APIs expose internal review workflow persistence over the same
@@ -321,10 +324,15 @@ source-ingestion-readiness operator diagnostics are covered by OpenAPI and
 endpoint certification evidence. The PostgreSQL runtime
 proof now covers the high-cash persist, advisor queue, lifecycle, review,
 feedback, conversion intent/outcome, and report evidence-pack request path.
-This is not yet a supported product capability: there are no live source
-adapters, Gateway routes, Workbench surfaces, supported database-backed API
-state beyond the current opt-in PostgreSQL workflow proof, data-product
-certification, runtime trust telemetry, or supported-feature promotion.
+`lotus-gateway` main now publishes read-only `GET
+/api/v1/ideas/review-queues/advisor` and `GET
+/api/v1/ideas/candidates/{candidate_id}` routes that forward caller
+context/correlation to `lotus-idea`, preserve `lotus-idea` ranking and source
+refs, and block upstream `supportedFeaturePromoted=true`. This is not yet a
+supported product capability: there are no live source adapters, Workbench
+surfaces, supported database-backed API state beyond the current opt-in
+PostgreSQL workflow proof, data-product certification, runtime trust
+telemetry, or supported-feature promotion.
 
 RFC-0002 Slice 12 is partially implemented as an internal conversion governance
 foundation in `src/app/domain/conversion_governance.py`. The repository now has

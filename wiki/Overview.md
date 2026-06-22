@@ -25,9 +25,12 @@ progress. Current support:
    caller-supplied, source-owned Core evidence,
 7. certified internal candidate lifecycle, AI explanation evaluator, advisor
    queue, review-action, and feedback API foundations over persisted
-   candidates.
+   candidates,
+8. bounded read-only Gateway publication for advisor queue and candidate
+   detail.
 
 No external business feature is supported yet. The high-cash, advisor queue,
 lifecycle, AI explanation, review-action, and feedback API foundations are
-certified for internal contract evolution, not for live Gateway/Workbench or
-client-demo feature claims.
+certified for internal contract evolution, and the first Gateway publication is
+read-only integration foundation. This is not Workbench proof, data-product
+certification, or a client-demo feature claim.

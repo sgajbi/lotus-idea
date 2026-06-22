@@ -64,8 +64,8 @@ Current RFC-0002 implementation-start baseline:
    AI explanation evaluation, advisor queues, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
    data-mesh-readiness diagnostics, and source-ingestion-readiness diagnostics.
-   Gateway, Workbench, live source
-   adapters, data-product
+   Bounded read-only Gateway publication exists for advisor queue and
+   candidate detail; Workbench, live source adapters, data-product
    certification, and supported-feature promotion remain planned.
 11. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with

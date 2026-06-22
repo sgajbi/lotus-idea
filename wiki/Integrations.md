@@ -26,6 +26,22 @@ source-owned APIs, data products, and Gateway/BFF contracts.
 Integration claims are planned until the relevant RFC-0002 slice is implemented
 and certified.
 
+## Gateway Publication Foundation
+
+`lotus-gateway` now publishes bounded read-only routes for the current advisor
+queue and candidate detail foundations:
+
+1. `GET /api/v1/ideas/review-queues/advisor`,
+2. `GET /api/v1/ideas/candidates/{candidate_id}`.
+
+Gateway forwards caller context and correlation headers to `lotus-idea`,
+preserves `lotus-idea` ranking, source references, durable-storage posture, and
+unsupported-feature posture, and blocks any upstream
+`supportedFeaturePromoted=true` response. Gateway does not generate, rank,
+enrich, certify, or promote ideas locally. This is not Workbench proof,
+data-product certification, live source proof, client-ready publication, or a
+supported feature.
+
 ## Data Product Dependencies
 
 Mesh integration truth starts in

@@ -135,14 +135,19 @@ client-communication authority.
 `GET /api/v1/review-queues/advisor` is the certified internal advisor queue API
 foundation. It projects persisted candidate snapshots through the deterministic
 Slice 07 queue policy and returns ranked items plus exclusions without a durable
-queue store, Gateway route, Workbench surface, or supported-feature promotion.
+queue store, Workbench surface, or supported-feature promotion. `lotus-gateway`
+publishes this as a bounded read-only route at
+`GET /api/v1/ideas/review-queues/advisor` without generating or ranking ideas.
 
 `GET /api/v1/idea-candidates/{candidateId}` is the certified internal
 source-safe candidate detail API foundation. It reads persisted candidate
 snapshots and returns redacted source evidence, lifecycle history, review,
 feedback, conversion, report-evidence, and audit summary posture without source
-route disclosure, raw evidence export, downstream authority, Gateway/Workbench
-proof, data-product certification, or supported-feature promotion.
+route disclosure, raw evidence export, downstream authority, Workbench proof,
+data-product certification, or supported-feature promotion. `lotus-gateway`
+publishes this as a bounded read-only route at
+`GET /api/v1/ideas/candidates/{candidate_id}` while preserving `lotus-idea`
+source authority.
 
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` is the certified
 internal candidate evidence replay API foundation. It compares caller-supplied

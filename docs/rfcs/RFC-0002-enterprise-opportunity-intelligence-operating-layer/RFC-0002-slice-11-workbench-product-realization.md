@@ -1,13 +1,14 @@
 # RFC-0002 Slice 11: Workbench Product Realization
 
-Status: Planned
+Status: Planned - Gateway read publication foundation exists; Workbench proof remains pending
 
 Current implementation note: RFC-0002 Slice 10 now provides
 `GET /api/v1/idea-candidates/{candidateId}` as a certified internal,
 source-safe candidate detail API foundation for a future Workbench evidence
-drawer. This does not implement Gateway composition, Workbench UI, browser
-proof, accessibility proof, entitlement-denied panel proof, demo screenshots,
-or supported-feature promotion.
+drawer, and `lotus-gateway` now publishes bounded read-only advisor queue and
+candidate detail routes. This does not implement Workbench UI, browser proof,
+accessibility proof, entitlement-denied panel proof, demo screenshots,
+data-product certification, or supported-feature promotion.
 
 ## Outcome
 

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 10: Certified APIs, OpenAPI, And Gateway Contract
 
-Status: Partially implemented - certified internal API foundations including source-safe candidate detail, evidence replay, AI explanation evaluator, and operator diagnostics only
+Status: Partially implemented - certified internal API foundations plus bounded read-only Gateway publication for advisor queue and candidate detail
 
 ## Outcome
 
@@ -49,9 +49,10 @@ over persisted candidate snapshots. It requires
 redacted source evidence, lifecycle history, review decisions, feedback,
 conversion intents/outcomes, report evidence-pack summaries, and audit summary
 posture, and does not expose source-system routes, raw source content hashes,
-downstream authority, Gateway/Workbench proof, data-product certification, or
-supported-feature promotion. `durableStorageBacked` follows the active
-repository provider.
+downstream authority, Workbench proof, data-product certification, or
+supported-feature promotion. The bounded read-only Gateway candidate detail
+publication preserves this source-safe projection; `durableStorageBacked`
+follows the active repository provider.
 
 The candidate evidence replay endpoint exposes internal operator replay posture
 over persisted evidence hashes. It requires `idea.candidate.evidence.replay`
@@ -84,6 +85,16 @@ projection over persisted candidate snapshots. It requires
 `idea.review.queue.read` capability or advisor role, returns ranked items plus
 exclusions, and keeps `supportedFeaturePromoted=false`.
 `durableStorageBacked` follows the active repository provider.
+
+`lotus-gateway` now publishes the first bounded read-only idea routes on main:
+`GET /api/v1/ideas/review-queues/advisor` and
+`GET /api/v1/ideas/candidates/{candidate_id}`. Gateway forwards caller
+context and correlation headers to `lotus-idea`, preserves `lotus-idea`
+ranking, source references, durable-storage posture, and unsupported-feature
+posture, blocks any upstream `supportedFeaturePromoted=true` response, and
+does not generate, rank, enrich, certify, or promote ideas locally. This is
+not Workbench proof, data-product certification, live source proof, client-ready
+publication, or supported-feature promotion.
 
 The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires
@@ -233,9 +244,10 @@ failures.
 repository-backed foundation endpoints: process-local runtime reports `false`,
 and `LOTUS_IDEA_DATABASE_URL` runtime reports `true`. The endpoints are
 certified as API foundations but are not supported business features because
-live source adapters, Gateway/Workbench proof, data-product certification,
-runtime trust telemetry, downstream realization proof, and supported-feature
-registration are not implemented yet.
+live source adapters, Workbench proof, data-product certification, runtime
+trust telemetry, downstream realization proof, and supported-feature
+registration are not implemented yet. The bounded read-only Gateway
+publication listed above is integration foundation only, not support.
 
 ## Required Work
 
@@ -243,8 +255,9 @@ registration are not implemented yet.
 2. Add complete OpenAPI descriptions, examples, error cases, degraded cases,
    unsupported-evidence cases, idempotency behavior, and entitlement behavior.
 3. Update endpoint certification ledger.
-4. Add `lotus-gateway` contracts and routes without Gateway-side idea
-   generation or ranking.
+4. Extend `lotus-gateway` contracts and routes without Gateway-side idea
+   generation or ranking when additional read or workflow surfaces become
+   implementation-backed.
 
 ## Remaining Work
 
@@ -252,8 +265,9 @@ registration are not implemented yet.
    into live source contract proof once Core publishes an explicit
    source-reported cash-weight field; keep all official cash/holding
    calculations in `lotus-core`.
-2. Add Gateway contracts and tests that prove Gateway preserves `lotus-idea`
-   source authority and does not rank or generate ideas.
+2. Extend Gateway coverage beyond the first read-only advisor queue and
+   candidate detail publication where needed, preserving `lotus-idea` source
+   authority and preventing Gateway-side ranking or generation.
 3. Add Workbench review-surface proof before any UI or demo claim.
 4. Add deployment and recovery proof for PostgreSQL-backed API state.
 5. Add data-product trust telemetry, platform mesh certification, and
@@ -326,6 +340,11 @@ Focused validation passed for the current foundation:
     passed with `9 passed` after adding the evidence replay API foundation,
     OpenAPI/ledger examples, matched/stale/hash-mismatch/not-found/permission
     behavior, and bounded `candidate_evidence_replay` operation-event coverage.
+24. `lotus-gateway` PR #467 merged to main at
+    `c32c7ebda5deac798a6c04675c35df63f36a79cb` with read-only Gateway
+    publication for advisor queue and candidate detail. Gateway validation
+    passed `make lint`, `make check`, Feature Lane, Quality Baseline, PR Merge
+    Gate, Main Releasability, and wiki publication.
 
 PR merge-gate evidence remains required before merge.
 
@@ -334,7 +353,9 @@ PR merge-gate evidence remains required before merge.
 1. OpenAPI quality gate passes for every exposed route.
 2. Endpoint certification passes for every exposed route.
 3. Gateway contract tests prove source-owned `lotus-idea` truth is preserved
-   before Gateway routes are claimed complete.
+   before each Gateway route is claimed implemented; the first bounded
+   read-only advisor queue and candidate detail routes satisfy this foundation
+   rule but do not complete Workbench or supported-feature promotion.
 4. No alias or stale endpoint remains without explicit time-boxed justification.
 5. Supported-feature promotion remains blocked until live runtime,
    Gateway/Workbench, data-product, docs/wiki, and certification evidence all
