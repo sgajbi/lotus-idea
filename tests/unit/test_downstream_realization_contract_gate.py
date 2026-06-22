@@ -175,7 +175,7 @@ def test_downstream_realization_contract_loader_coerces_non_list_contract_fields
 
 
 def _plan_payload(plan: Any) -> dict[str, Any]:
-    return json.loads(
+    payload = json.loads(
         json.dumps(
             {
                 "contract_id": plan.contract_id,
@@ -203,3 +203,8 @@ def _plan_payload(plan: Any) -> dict[str, Any]:
             }
         )
     )
+    if not isinstance(payload, dict):
+        raise AssertionError(
+            "expected downstream realization plan payload to round-trip as an object"
+        )
+    return payload
