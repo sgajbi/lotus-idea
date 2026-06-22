@@ -20,7 +20,7 @@ def test_ai_explanation_readiness_reports_blocked_not_certified_posture() -> Non
     assert snapshot.supported_feature_promoted is False
     assert snapshot.certification_blockers == (
         "lotus_ai_runtime_execution_missing",
-        "durable_ai_lineage_store_missing",
+        "certified_ai_lineage_store_missing",
         "workflow_pack_runtime_contract_not_certified",
         "model_risk_operations_dashboard_missing",
         "certified_runtime_trust_telemetry_missing",

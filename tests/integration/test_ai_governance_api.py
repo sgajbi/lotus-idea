@@ -178,6 +178,8 @@ def test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim
     assert payload["fallbackUsed"] is True
     assert payload["fallbackReason"] == "ai_unavailable"
     assert payload["grantsDownstreamAuthority"] is False
+    assert payload["aiLineageRecorded"] is True
+    assert payload["aiLineagePersistenceDecision"] == "accepted"
     assert payload["durableStorageBacked"] is False
     assert payload["lotusAiRuntimeExecuted"] is False
     assert payload["supportedFeaturePromoted"] is False
@@ -208,6 +210,8 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
     assert payload["verifiedOutput"]["outputId"] == "ai-output-001"
     assert payload["verifiedOutput"]["claimIds"] == ["claim-001"]
     assert payload["approvedMetadataKeys"] == ["channel"]
+    assert payload["aiLineageRecorded"] is True
+    assert payload["aiLineagePersistenceDecision"] == "accepted"
     assert payload["lotusAiRuntimeExecuted"] is False
 
 
@@ -243,6 +247,39 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
     assert forbidden_action.json()["posture"] == "blocked_forbidden_action"
     assert forbidden_action.json()["verifierOutcome"] == "failed_forbidden_action"
     assert forbidden_action.json()["reasonCodes"] == ["ai_forbidden_action_blocked"]
+
+
+def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-replay-001")
+    payload = ai_request_payload(request_id="ai-explanation-replay-001")
+
+    first = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=payload,
+        headers=ai_headers(),
+    )
+    replayed = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=payload,
+        headers=ai_headers(),
+    )
+    changed = dict(payload)
+    changed["fallbackReason"] = "workflow_not_approved"
+    conflict = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=changed,
+        headers=ai_headers(),
+    )
+
+    assert first.status_code == 200
+    assert first.json()["aiLineagePersistenceDecision"] == "accepted"
+    assert replayed.status_code == 200
+    assert replayed.json()["aiLineagePersistenceDecision"] == "replayed"
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "ai_explanation_lineage_conflict"
+    assert "workflow_not_approved" not in conflict.text
 
 
 def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None:
@@ -352,7 +389,7 @@ def test_ai_explanation_readiness_api_returns_source_safe_blocked_posture() -> N
         "lotusAiRuntimeExecuted": False,
         "certificationBlockers": [
             "lotus_ai_runtime_execution_missing",
-            "durable_ai_lineage_store_missing",
+            "certified_ai_lineage_store_missing",
             "workflow_pack_runtime_contract_not_certified",
             "model_risk_operations_dashboard_missing",
             "certified_runtime_trust_telemetry_missing",

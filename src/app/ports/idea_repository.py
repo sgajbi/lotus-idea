@@ -4,6 +4,8 @@ from datetime import datetime
 from typing import Any, Protocol
 
 from app.domain import (
+    AIExplanationLineagePersistenceResult,
+    AIExplanationResult,
     CandidatePersistenceRecord,
     CandidatePersistenceResult,
     ConversionIntentResult,
@@ -150,7 +152,10 @@ class ReportEvidenceWorkflowRepository(Protocol):
 
 
 class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
-    pass
+    def record_ai_explanation_lineage(
+        self,
+        result: AIExplanationResult,
+    ) -> AIExplanationLineagePersistenceResult: ...
 
 
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):

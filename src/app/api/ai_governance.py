@@ -20,6 +20,7 @@ from app.application.ai_governance import (
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
+    AIExplanationLineagePersistenceDecision,
     AIExplanationPosture,
     AIExplanationResult,
     AIOutputClaim,
@@ -345,6 +346,11 @@ class AIExplanationEvaluationResponse(CamelModel):
         alias="verifiedOutput",
     )
     approved_metadata_keys: tuple[str, ...] = Field(..., alias="approvedMetadataKeys")
+    ai_lineage_recorded: bool = Field(..., alias="aiLineageRecorded")
+    ai_lineage_persistence_decision: str | None = Field(
+        default=None,
+        alias="aiLineagePersistenceDecision",
+    )
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     lotus_ai_runtime_executed: bool = Field(False, alias="lotusAiRuntimeExecuted")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -353,6 +359,10 @@ class AIExplanationEvaluationResponse(CamelModel):
     def from_domain(
         cls,
         result: AIExplanationResult,
+        *,
+        ai_lineage_recorded: bool,
+        ai_lineage_persistence_decision: str | None,
+        durable_storage_backed: bool,
     ) -> "AIExplanationEvaluationResponse":
         return cls(
             requestId=result.request.request_id,
@@ -375,7 +385,9 @@ class AIExplanationEvaluationResponse(CamelModel):
                 else None
             ),
             approvedMetadataKeys=tuple(sorted(result.request.approved_metadata.keys())),
-            durableStorageBacked=False,
+            aiLineageRecorded=ai_lineage_recorded,
+            aiLineagePersistenceDecision=ai_lineage_persistence_decision,
+            durableStorageBacked=durable_storage_backed,
             lotusAiRuntimeExecuted=False,
             supportedFeaturePromoted=False,
         )
@@ -474,9 +486,10 @@ async def evaluate_ai_explanation(
     )
     try:
         _require_ai_explanation_caller(caller)
+        repository = get_idea_repository()
         result = evaluate_ai_explanation_to_repository(
             request.to_command(candidate_id=candidate_id, caller=caller),
-            repository=get_idea_repository(),
+            repository=repository,
         )
     except PermissionDeniedError:
         _emit_ai_explanation_operation_event(
@@ -526,10 +539,44 @@ async def evaluate_ai_explanation(
             detail="The idea candidate was not found.",
         )
     assert result.explanation_result is not None
+    assert result.lineage_persistence_result is not None
+    if (
+        result.lineage_persistence_result.decision
+        is AIExplanationLineagePersistenceDecision.CONFLICT
+    ):
+        _emit_ai_explanation_operation_event(
+            OperationOutcome.INVALID_STATE,
+            "ai_explanation_lineage_conflict",
+        )
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="ai_explanation_lineage_conflict",
+            title="AI explanation lineage conflict",
+            detail="The AI explanation request id has already been recorded with different lineage.",
+        )
+    if (
+        result.lineage_persistence_result.decision
+        is AIExplanationLineagePersistenceDecision.NOT_FOUND
+    ):
+        _emit_ai_explanation_operation_event(
+            OperationOutcome.NOT_FOUND,
+            "candidate_not_found",
+        )
+        return problem_response(
+            status_code=status.HTTP_404_NOT_FOUND,
+            code="candidate_not_found",
+            title="Candidate not found",
+            detail="The idea candidate was not found.",
+        )
     _emit_ai_explanation_operation_event(
         _operation_outcome_from_ai_result(result.explanation_result)
     )
-    return AIExplanationEvaluationResponse.from_domain(result.explanation_result)
+    return AIExplanationEvaluationResponse.from_domain(
+        result.explanation_result,
+        ai_lineage_recorded=result.lineage_persistence_result.lineage_record is not None,
+        ai_lineage_persistence_decision=result.lineage_persistence_result.decision.value,
+        durable_storage_backed=bool(getattr(repository, "durable_storage_backed", False)),
+    )
 
 
 def _require_ai_explanation_caller(caller: CallerContext) -> None:
@@ -640,7 +687,7 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "lotusAiRuntimeExecuted": False,
                         "certificationBlockers": [
                             "lotus_ai_runtime_execution_missing",
-                            "durable_ai_lineage_store_missing",
+                            "certified_ai_lineage_store_missing",
                             "workflow_pack_runtime_contract_not_certified",
                             "model_risk_operations_dashboard_missing",
                             "certified_runtime_trust_telemetry_missing",
@@ -666,9 +713,10 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
     "description": (
         "Evaluates an internal AI explanation workflow result or deterministic fallback "
         "against a persisted idea candidate. The route applies redaction, source-product "
-        "claim verification, forbidden-action blocking, and bounded operation telemetry. "
+        "claim verification, forbidden-action blocking, source-safe lineage recording, "
+        "and bounded operation telemetry. "
         "It does not call an AI provider, execute lotus-ai runtime workflows, persist "
-        "durable audit records, grant downstream authority, or promote a supported feature."
+        "provider payloads or prompts, grant downstream authority, or promote a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": AIExplanationEvaluationResponse,
@@ -730,6 +778,8 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                             "verifierRanAtUtc": "2026-06-21T10:12:00Z",
                         },
                         "approvedMetadataKeys": ["channel"],
+                        "aiLineageRecorded": True,
+                        "aiLineagePersistenceDecision": "accepted",
                         "durableStorageBacked": False,
                         "lotusAiRuntimeExecuted": False,
                         "supportedFeaturePromoted": False,

@@ -46,6 +46,22 @@ REQUIRED_FORWARD_FRAGMENTS = (
     "REFERENCES idea_conversion_intent(conversion_intent_id)",
 )
 
+AI_LINEAGE_REQUIRED_TABLES = ("idea_ai_explanation_lineage",)
+
+AI_LINEAGE_REQUIRED_INDEXES = (
+    "idx_idea_ai_explanation_lineage_candidate_time",
+    "idx_idea_ai_explanation_lineage_workflow_time",
+    "idx_idea_ai_explanation_lineage_posture_time",
+)
+
+AI_LINEAGE_REQUIRED_FORWARD_FRAGMENTS = (
+    "JSONB NOT NULL",
+    "TIMESTAMPTZ NOT NULL",
+    "PRIMARY KEY",
+    "BOOLEAN NOT NULL",
+    "REFERENCES idea_candidate_record(candidate_id)",
+)
+
 PROHIBITED_SQL_FRAGMENTS = (
     "TODO",
     "TBD",
@@ -58,6 +74,9 @@ class MigrationContract(NamedTuple):
     version: str
     forward_path: Path
     rollback_path: Path
+    required_tables: tuple[str, ...]
+    required_indexes: tuple[str, ...]
+    required_forward_fragments: tuple[str, ...]
 
 
 REQUIRED_MIGRATIONS = (
@@ -65,6 +84,17 @@ REQUIRED_MIGRATIONS = (
         version="001",
         forward_path=MIGRATIONS_DIR / "001_idea_repository_foundation.sql",
         rollback_path=MIGRATIONS_DIR / "001_idea_repository_foundation.rollback.sql",
+        required_tables=REQUIRED_TABLES,
+        required_indexes=REQUIRED_INDEXES,
+        required_forward_fragments=REQUIRED_FORWARD_FRAGMENTS,
+    ),
+    MigrationContract(
+        version="002",
+        forward_path=MIGRATIONS_DIR / "002_ai_explanation_lineage.sql",
+        rollback_path=MIGRATIONS_DIR / "002_ai_explanation_lineage.rollback.sql",
+        required_tables=AI_LINEAGE_REQUIRED_TABLES,
+        required_indexes=AI_LINEAGE_REQUIRED_INDEXES,
+        required_forward_fragments=AI_LINEAGE_REQUIRED_FORWARD_FRAGMENTS,
     ),
 )
 
@@ -119,13 +149,13 @@ def _validate_forward_sql(migration: MigrationContract, forward_sql: str) -> lis
                 f"Migration {migration.version} forward SQL contains prohibited "
                 f"fragment `{prohibited}`"
             )
-    for table in REQUIRED_TABLES:
+    for table in migration.required_tables:
         if not _contains_sql_statement(forward_sql, f"CREATE TABLE IF NOT EXISTS {table}"):
             errors.append(f"Migration {migration.version} missing table `{table}`")
-    for index in REQUIRED_INDEXES:
+    for index in migration.required_indexes:
         if not _contains_sql_statement(forward_sql, f"CREATE INDEX IF NOT EXISTS {index}"):
             errors.append(f"Migration {migration.version} missing index `{index}`")
-    for fragment in REQUIRED_FORWARD_FRAGMENTS:
+    for fragment in migration.required_forward_fragments:
         if fragment.upper() not in upper_forward:
             errors.append(f"Migration {migration.version} forward SQL missing `{fragment}`")
     return errors
@@ -133,10 +163,10 @@ def _validate_forward_sql(migration: MigrationContract, forward_sql: str) -> lis
 
 def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> list[str]:
     errors: list[str] = []
-    for index in REQUIRED_INDEXES:
+    for index in migration.required_indexes:
         if not _contains_sql_statement(rollback_sql, f"DROP INDEX IF EXISTS {index};"):
             errors.append(f"Migration {migration.version} rollback missing index `{index}`")
-    for table in reversed(REQUIRED_TABLES):
+    for table in reversed(migration.required_tables):
         if not _contains_sql_statement(rollback_sql, f"DROP TABLE IF EXISTS {table};"):
             errors.append(f"Migration {migration.version} rollback missing table `{table}`")
     return errors

@@ -9,6 +9,13 @@ from types import MappingProxyType
 from typing import Any, Mapping
 
 from app.domain.audit import AuditEvent
+from app.domain.ai_governance import AIExplanationResult
+from app.domain.ai_lineage_persistence import (
+    AIExplanationLineagePersistenceDecision,
+    AIExplanationLineagePersistenceResult,
+    AIExplanationLineageRecord,
+    ai_explanation_lineage_record_from_result,
+)
 from app.domain.events import (
     OutboxEventRecord,
     OutboxEventStatus,
@@ -124,6 +131,7 @@ class CandidatePersistenceRecord:
     conversion_intents: tuple[GovernedConversionIntent, ...] = ()
     conversion_outcomes: tuple[GovernedConversionOutcome, ...] = ()
     report_evidence_packs: tuple[GovernedReportEvidencePack, ...] = ()
+    ai_explanation_lineage_records: tuple[AIExplanationLineageRecord, ...] = ()
 
     def __post_init__(self) -> None:
         _require_text(self.evidence_hash, "evidence_hash")
@@ -135,6 +143,11 @@ class CandidatePersistenceRecord:
         object.__setattr__(self, "conversion_intents", tuple(self.conversion_intents))
         object.__setattr__(self, "conversion_outcomes", tuple(self.conversion_outcomes))
         object.__setattr__(self, "report_evidence_packs", tuple(self.report_evidence_packs))
+        object.__setattr__(
+            self,
+            "ai_explanation_lineage_records",
+            tuple(self.ai_explanation_lineage_records),
+        )
 
     def is_expired_at(self, evaluated_at_utc: datetime) -> bool:
         _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
@@ -190,6 +203,7 @@ class IdeaRepositorySnapshot:
     idempotency_candidates: Mapping[str, str]
     conversion_intent_candidates: Mapping[str, str] = field(default_factory=dict)
     report_evidence_pack_candidates: Mapping[str, str] = field(default_factory=dict)
+    ai_explanation_lineage_candidates: Mapping[str, str] = field(default_factory=dict)
     outbox_events: Mapping[str, OutboxEventRecord] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -218,6 +232,11 @@ class IdeaRepositorySnapshot:
         )
         object.__setattr__(
             self,
+            "ai_explanation_lineage_candidates",
+            MappingProxyType(dict(self.ai_explanation_lineage_candidates)),
+        )
+        object.__setattr__(
+            self,
             "outbox_events",
             MappingProxyType(dict(self.outbox_events)),
         )
@@ -232,6 +251,7 @@ class InMemoryIdeaRepository:
         self._idempotency_candidates: dict[str, str] = {}
         self._conversion_intent_candidates: dict[str, str] = {}
         self._report_evidence_pack_candidates: dict[str, str] = {}
+        self._ai_explanation_lineage_candidates: dict[str, str] = {}
         self._outbox_events: dict[str, OutboxEventRecord] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
@@ -239,6 +259,9 @@ class InMemoryIdeaRepository:
             self._idempotency_candidates.update(snapshot.idempotency_candidates)
             self._conversion_intent_candidates.update(snapshot.conversion_intent_candidates)
             self._report_evidence_pack_candidates.update(snapshot.report_evidence_pack_candidates)
+            self._ai_explanation_lineage_candidates.update(
+                snapshot.ai_explanation_lineage_candidates
+            )
             self._outbox_events.update(snapshot.outbox_events)
 
     def persist_candidate(
@@ -881,6 +904,66 @@ class InMemoryIdeaRepository:
             audit_event=result.audit_event,
         )
 
+    def record_ai_explanation_lineage(
+        self,
+        result: AIExplanationResult,
+    ) -> AIExplanationLineagePersistenceResult:
+        lineage_record = ai_explanation_lineage_record_from_result(result)
+        candidate_id = lineage_record.candidate_id
+        record = self._candidate_records.get(candidate_id)
+        if record is None:
+            return AIExplanationLineagePersistenceResult(
+                decision=AIExplanationLineagePersistenceDecision.NOT_FOUND,
+                record=None,
+                lineage_record=None,
+            )
+
+        existing_candidate_id = self._ai_explanation_lineage_candidates.get(
+            lineage_record.request_id
+        )
+        if existing_candidate_id is not None:
+            existing_record = self._candidate_records.get(existing_candidate_id)
+            existing_lineage = (
+                _ai_explanation_lineage_by_request_id(
+                    existing_record,
+                    lineage_record.request_id,
+                )
+                if existing_record is not None
+                else None
+            )
+            if existing_lineage is not None and (
+                existing_lineage.lineage_hash == lineage_record.lineage_hash
+            ):
+                return AIExplanationLineagePersistenceResult(
+                    decision=AIExplanationLineagePersistenceDecision.REPLAYED,
+                    record=existing_record,
+                    lineage_record=existing_lineage,
+                    audit_event=None,
+                )
+            return AIExplanationLineagePersistenceResult(
+                decision=AIExplanationLineagePersistenceDecision.CONFLICT,
+                record=existing_record,
+                lineage_record=existing_lineage,
+                audit_event=None,
+            )
+
+        updated = replace(
+            record,
+            audit_events=(*record.audit_events, result.audit_event),
+            ai_explanation_lineage_records=(
+                *record.ai_explanation_lineage_records,
+                lineage_record,
+            ),
+        )
+        self._candidate_records[candidate_id] = updated
+        self._ai_explanation_lineage_candidates[lineage_record.request_id] = candidate_id
+        return AIExplanationLineagePersistenceResult(
+            decision=AIExplanationLineagePersistenceDecision.ACCEPTED,
+            record=updated,
+            lineage_record=lineage_record,
+            audit_event=result.audit_event,
+        )
+
     def outbox_events_for_delivery(
         self,
         *,
@@ -976,6 +1059,7 @@ class InMemoryIdeaRepository:
             idempotency_candidates=self._idempotency_candidates,
             conversion_intent_candidates=self._conversion_intent_candidates,
             report_evidence_pack_candidates=self._report_evidence_pack_candidates,
+            ai_explanation_lineage_candidates=self._ai_explanation_lineage_candidates,
             outbox_events=self._outbox_events,
         )
 
@@ -1067,6 +1151,18 @@ def evidence_hash_for_source_refs(source_refs: tuple[SourceRef, ...]) -> str:
     ]
     canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return f"sha256:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
+
+
+def _ai_explanation_lineage_by_request_id(
+    record: CandidatePersistenceRecord | None,
+    request_id: str,
+) -> AIExplanationLineageRecord | None:
+    if record is None:
+        return None
+    for lineage_record in record.ai_explanation_lineage_records:
+        if lineage_record.request_id == request_id:
+            return lineage_record
+    return None
 
 
 def _audit_event(

@@ -7,6 +7,12 @@ from decimal import Decimal
 import pytest
 
 from app.domain import (
+    AIFallbackReason,
+    AIExplanationCommand,
+    AIExplanationLineagePersistenceDecision,
+    AIExplanationResult,
+    AIWorkflowPackRef,
+    AIWorkflowPurpose,
     CandidatePersistenceDecision,
     ConversionIntentCommand,
     ConversionOutcomeCommand,
@@ -32,8 +38,10 @@ from app.domain import (
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    build_ai_explanation_request,
     evaluate_high_cash_signal,
     build_candidate_outbox_event,
+    deterministic_ai_fallback,
     record_conversion_outcome,
     request_conversion_intent,
     request_report_evidence_pack,
@@ -143,6 +151,34 @@ def report_evidence_pack_command() -> ReportEvidencePackCommand:
         reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
         requested_at_utc=datetime(2026, 6, 21, 10, 25, tzinfo=UTC),
         retention_policy_ref="lotus-report:idea-evidence-retention:v1",
+    )
+
+
+def ai_explanation_result_for_candidate(
+    candidate: IdeaCandidate,
+    *,
+    request_id: str = "ai-lineage-request-001",
+    fallback_reason: AIFallbackReason = AIFallbackReason.AI_UNAVAILABLE,
+) -> AIExplanationResult:
+    request = build_ai_explanation_request(
+        candidate,
+        AIExplanationCommand(
+            request_id=request_id,
+            actor_subject="advisor-001",
+            workflow_pack=AIWorkflowPackRef(
+                workflow_pack_id="lotus-ai:idea-explanation:v1",
+                workflow_pack_version="v1",
+                purpose=AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
+                evaluation_ref="lotus-ai:governed-verifier:v1",
+            ),
+            approved_metadata={"audience": "internal_advisor_review"},
+            requested_at_utc=datetime(2026, 6, 21, 10, 12, tzinfo=UTC),
+        ),
+    )
+    return deterministic_ai_fallback(
+        request,
+        fallback_reason=fallback_reason,
+        occurred_at_utc=datetime(2026, 6, 21, 10, 12, tzinfo=UTC),
     )
 
 
@@ -444,6 +480,69 @@ def test_repository_snapshot_recovers_candidate_idempotency_and_replay_state() -
     assert replayed.decision is CandidatePersistenceDecision.REPLAYED
     assert replay.status is EvidenceReplayStatus.MATCHED
     assert recovered.snapshot().outbox_events == repository.snapshot().outbox_events
+
+
+def test_ai_explanation_lineage_records_replays_and_conflicts_by_request_id() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:ai-lineage:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    result = ai_explanation_result_for_candidate(persisted.record.candidate)
+    changed_result = ai_explanation_result_for_candidate(
+        persisted.record.candidate,
+        fallback_reason=AIFallbackReason.WORKFLOW_NOT_APPROVED,
+    )
+
+    accepted = repository.record_ai_explanation_lineage(result)
+    replayed = repository.record_ai_explanation_lineage(result)
+    conflict = repository.record_ai_explanation_lineage(changed_result)
+
+    assert accepted.decision is AIExplanationLineagePersistenceDecision.ACCEPTED
+    assert replayed.decision is AIExplanationLineagePersistenceDecision.REPLAYED
+    assert conflict.decision is AIExplanationLineagePersistenceDecision.CONFLICT
+    assert accepted.lineage_record is not None
+    assert accepted.lineage_record.request_id == "ai-lineage-request-001"
+    assert accepted.lineage_record.candidate_id == candidate.candidate_id
+    assert accepted.lineage_record.fallback_used is True
+    assert accepted.lineage_record.grants_downstream_authority is False
+    assert accepted.lineage_record.claim_ids == ()
+    assert accepted.lineage_record.proposed_action_types == ()
+    assert accepted.record is not None
+    assert len(accepted.record.ai_explanation_lineage_records) == 1
+    assert accepted.audit_event is not None
+    assert accepted.audit_event.event_type == "idea.ai_explanation.evaluated"
+    assert len(repository.snapshot().outbox_events) == 1
+
+
+def test_ai_explanation_lineage_snapshot_recovers_request_index() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:ai-lineage-snapshot:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    result = ai_explanation_result_for_candidate(persisted.record.candidate)
+    accepted = repository.record_ai_explanation_lineage(result)
+    assert accepted.lineage_record is not None
+
+    recovered = InMemoryIdeaRepository(repository.snapshot())
+    replayed = recovered.record_ai_explanation_lineage(result)
+
+    assert replayed.decision is AIExplanationLineagePersistenceDecision.REPLAYED
+    assert replayed.lineage_record == accepted.lineage_record
+    assert recovered.snapshot().ai_explanation_lineage_candidates == {
+        "ai-lineage-request-001": candidate.candidate_id,
+    }
 
 
 def test_outbox_event_payload_rejects_sensitive_source_and_client_keys() -> None:
