@@ -7,6 +7,7 @@ from typing import Any
 
 from app.application.source_ingestion import (
     DEFAULT_SOURCE_INGESTION_BATCH_LIMIT,
+    HighCashSourceIngestionDecision,
     HighCashSourceIngestionBatchResult,
     HighCashSourceIngestionResult,
     HighCashSourceIngestionWorkItem,
@@ -50,12 +51,12 @@ class SourceIngestionWorkerPlan:
             "workItemCount": len(self.command.work_items),
             "workItems": [
                 {
-                    "portfolioId": item.portfolio_id,
+                    "itemIndex": index,
                     "asOfDate": item.as_of_date.isoformat(),
                     "hasExplicitIdempotencyKey": item.idempotency_key is not None,
                     "hasDuplicateOfCandidateId": item.duplicate_of_candidate_id is not None,
                 }
-                for item in self.command.work_items
+                for index, item in enumerate(self.command.work_items)
             ],
         }
 
@@ -103,11 +104,32 @@ def summarize_source_ingestion_worker_run(
         "items": [
             {
                 "decision": item_result.decision.value,
-                "idempotencyKey": item_result.idempotency_key,
+                "hasIdempotencyKey": bool(item_result.idempotency_key),
                 "candidateId": _candidate_id(item_result),
             }
             for item_result in result.item_results
         ],
+    }
+
+
+def summarize_source_ingestion_worker_failure(
+    *,
+    plan: SourceIngestionWorkerPlan,
+    error_code: str,
+    durable_storage_backed: bool,
+) -> dict[str, Any]:
+    return {
+        "schemaVersion": plan.schema_version,
+        "mode": "run_once",
+        "status": "blocked",
+        "sourceAuthority": "lotus-core",
+        "evaluatedAtUtc": plan.command.evaluated_at_utc.isoformat(),
+        "actorSubject": plan.command.actor_subject,
+        "durableStorageBacked": durable_storage_backed,
+        "supportedFeaturePromoted": False,
+        "workItemCount": len(plan.command.work_items),
+        "decisionCounts": _empty_decision_counts(),
+        "errorCode": _safe_error_code(error_code),
     }
 
 
@@ -132,6 +154,17 @@ def _work_items_from_manifest(
             )
         )
     return tuple(parsed_items)
+
+
+def _empty_decision_counts() -> dict[str, int]:
+    return {decision.value: 0 for decision in HighCashSourceIngestionDecision}
+
+
+def _safe_error_code(error_code: str) -> str:
+    stripped = error_code.strip()
+    if not stripped:
+        return "core_source_unavailable"
+    return stripped
 
 
 def _candidate_id(item_result: HighCashSourceIngestionResult) -> str | None:
