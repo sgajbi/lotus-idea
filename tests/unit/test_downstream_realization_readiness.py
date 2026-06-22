@@ -34,12 +34,15 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert "advise_proposal_creation_adapter_missing" in snapshot.blockers
     assert "manage_action_register_adapter_missing" in snapshot.blockers
     assert "report_evidence_pack_materialization_missing" in snapshot.blockers
+    assert "dedicated_report_idea_evidence_intake_contract_missing" in snapshot.blockers
     assert set(snapshot.source_of_truth) == {
         "conversion_workflow",
         "report_evidence_workflow",
+        "downstream_contract_plan",
         "rfc_slice_12",
         "rfc_slice_13",
     }
+    assert len(snapshot.downstream_contracts) == 3
 
 
 def test_downstream_realization_readiness_counts_internal_workflow_records() -> None:
@@ -92,4 +95,36 @@ def test_downstream_realization_readiness_capabilities_preserve_source_authority
         and capability.supportability_status != "supported"
         and not capability.certification_ready
         for capability in snapshot.capabilities
+    )
+
+
+def test_downstream_realization_readiness_contracts_preserve_downstream_authority() -> None:
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+    )
+
+    contracts = {contract.contract_id: contract for contract in snapshot.downstream_contracts}
+
+    assert set(contracts) == {
+        "lotus-idea-to-lotus-advise-proposal-intake:v1",
+        "lotus-idea-to-lotus-manage-action-intake:v1",
+        "lotus-idea-to-lotus-report-evidence-pack-intake:v1",
+    }
+    assert (
+        contracts["lotus-idea-to-lotus-advise-proposal-intake:v1"].source_authority
+        == "lotus-advise"
+    )
+    assert (
+        contracts["lotus-idea-to-lotus-manage-action-intake:v1"].source_authority == "lotus-manage"
+    )
+    report_contract = contracts["lotus-idea-to-lotus-report-evidence-pack-intake:v1"]
+    assert report_contract.owner_repository == "lotus-report"
+    assert report_contract.target_route == "planned:lotus-report-idea-evidence-pack-intake"
+    assert "dedicated_report_idea_evidence_intake_contract_missing" in (report_contract.blockers)
+    assert all(
+        contract.route_fit_status == "not_certified"
+        and contract.adapter_status == "planned"
+        and not contract.certification_ready
+        for contract in snapshot.downstream_contracts
     )

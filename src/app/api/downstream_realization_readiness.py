@@ -11,6 +11,7 @@ from app.api.caller_headers import caller_context_from_headers
 from app.api.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.downstream_realization_readiness import (
     DownstreamRealizationCapabilityReadiness,
+    DownstreamRealizationContractReadiness,
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
@@ -78,6 +79,35 @@ class DownstreamRealizationCapabilityReadinessResponse(CamelModel):
         )
 
 
+class DownstreamRealizationContractReadinessResponse(CamelModel):
+    contract_id: str = Field(..., alias="contractId")
+    owner_repository: str = Field(..., alias="ownerRepository")
+    source_authority: str = Field(..., alias="sourceAuthority")
+    target_route: str = Field(..., alias="targetRoute")
+    route_fit_status: str = Field(..., alias="routeFitStatus")
+    adapter_status: str = Field(..., alias="adapterStatus")
+    certification_ready: bool = Field(..., alias="certificationReady")
+    evidence_refs: tuple[str, ...] = Field(..., alias="evidenceRefs")
+    blockers: tuple[str, ...]
+
+    @classmethod
+    def from_domain(
+        cls,
+        contract: DownstreamRealizationContractReadiness,
+    ) -> "DownstreamRealizationContractReadinessResponse":
+        return cls(
+            contractId=contract.contract_id,
+            ownerRepository=contract.owner_repository,
+            sourceAuthority=contract.source_authority,
+            targetRoute=contract.target_route,
+            routeFitStatus=contract.route_fit_status,
+            adapterStatus=contract.adapter_status,
+            certificationReady=contract.certification_ready,
+            evidenceRefs=contract.evidence_refs,
+            blockers=contract.blockers,
+        )
+
+
 class DownstreamRealizationReadinessResponse(CamelModel):
     repository: str
     readiness_status: str = Field(..., alias="readinessStatus")
@@ -93,6 +123,9 @@ class DownstreamRealizationReadinessResponse(CamelModel):
     source_of_truth: Mapping[str, str] = Field(..., alias="sourceOfTruth")
     blockers: tuple[str, ...]
     capabilities: tuple[DownstreamRealizationCapabilityReadinessResponse, ...]
+    downstream_contracts: tuple[DownstreamRealizationContractReadinessResponse, ...] = Field(
+        ..., alias="downstreamContracts"
+    )
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
     @classmethod
@@ -114,6 +147,10 @@ class DownstreamRealizationReadinessResponse(CamelModel):
             capabilities=tuple(
                 DownstreamRealizationCapabilityReadinessResponse.from_domain(capability)
                 for capability in snapshot.capabilities
+            ),
+            downstreamContracts=tuple(
+                DownstreamRealizationContractReadinessResponse.from_domain(contract)
+                for contract in snapshot.downstream_contracts
             ),
             supportedFeaturePromoted=snapshot.supported_feature_promoted,
         )
@@ -187,10 +224,11 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "Returns source-safe operator readiness for downstream realization across "
         "lotus-advise, lotus-manage, lotus-report, lotus-render, and lotus-archive. "
         "The endpoint reports lotus-idea-owned conversion intent, conversion outcome, "
-        "and report evidence-pack request counts plus explicit downstream blockers. "
+        "report evidence-pack request counts, planned Advise/Manage/Report downstream "
+        "contract posture, and explicit downstream blockers. "
         "It does not call downstream systems, create proposals, create manage actions, "
-        "render documents, archive records, authorize client publication, or promote a "
-        "supported feature."
+        "prove downstream route existence, render documents, archive records, authorize "
+        "client publication, or promote a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": DownstreamRealizationReadinessResponse,
@@ -212,11 +250,13 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "sourceOfTruth": {
                             "conversion_workflow": "src/app/application/conversion_workflow.py",
                             "report_evidence_workflow": "src/app/application/report_evidence.py",
+                            "downstream_contract_plan": "src/app/application/downstream_realization_readiness.py",
                         },
                         "blockers": [
                             "advise_proposal_creation_adapter_missing",
                             "manage_action_register_adapter_missing",
                             "report_evidence_pack_materialization_missing",
+                            "dedicated_report_idea_evidence_intake_contract_missing",
                         ],
                         "capabilities": [
                             {
@@ -230,6 +270,25 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                     "POST /api/v1/idea-candidates/{candidateId}/conversion-intents"
                                 ],
                                 "blockers": ["advise_proposal_creation_adapter_missing"],
+                            }
+                        ],
+                        "downstreamContracts": [
+                            {
+                                "contractId": (
+                                    "lotus-idea-to-lotus-report-evidence-pack-intake:v1"
+                                ),
+                                "ownerRepository": "lotus-report",
+                                "sourceAuthority": "lotus-report",
+                                "targetRoute": "planned:lotus-report-idea-evidence-pack-intake",
+                                "routeFitStatus": "not_certified",
+                                "adapterStatus": "planned",
+                                "certificationReady": False,
+                                "evidenceRefs": [
+                                    "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"
+                                ],
+                                "blockers": [
+                                    "dedicated_report_idea_evidence_intake_contract_missing"
+                                ],
                             }
                         ],
                         "supportedFeaturePromoted": False,
