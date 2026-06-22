@@ -44,6 +44,14 @@ mesh contracts and returns operator-facing `not_certified` posture with
 blockers. It is an API-certified diagnostic, not data-product certification,
 Gateway discovery, Workbench discovery, or supported-feature promotion.
 
+The internal
+`GET /api/v1/data-mesh/trust-telemetry/runtime-preview` endpoint reads the
+active repository snapshot and returns aggregate runtime telemetry preview
+counts for the proposed `IdeaCandidate:v1` product. It omits candidate
+identifiers, source routes, evidence hashes, portfolio identifiers, and client
+identifiers. It is pre-certification runtime evidence only; platform mesh
+certification and product promotion remain planned.
+
 The first consumer contract expansion is source-authority only. It prepares the
 high-cash / idle-liquidity path around Core-owned cash and holdings products,
 and records later first-wave Performance, Risk, Advise, Manage, Report, and AI
@@ -186,8 +194,9 @@ feature.
 `GET /api/v1/implementation-proof/readiness` is the certified internal
 aggregate RFC-0002 proof-readiness diagnostic. It reports source-safe
 capability blockers across source ingestion, advisor queue, AI explanation,
-data mesh, Workbench realization, downstream realization, and supported-feature
-promotion. It is not live implementation proof, data-product certification,
+data mesh, runtime trust telemetry preview, Workbench realization, downstream
+realization, and supported-feature promotion. It is not live implementation
+proof, data-product certification, certified runtime trust telemetry,
 Gateway/Workbench proof, client-ready publication, or supported-feature
 promotion.
 

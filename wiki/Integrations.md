@@ -54,6 +54,13 @@ Internal operators can call `GET /api/v1/data-mesh/readiness` with the
 repo-authored readiness truth at runtime. The route reports blockers only; it
 does not expose a consumer-facing product contract.
 
+Internal operators can also call
+`GET /api/v1/data-mesh/trust-telemetry/runtime-preview` with
+`idea.mesh.trust-telemetry.preview.read` to inspect source-safe aggregate
+runtime telemetry preview counts from the active repository provider. This
+preview is not platform mesh certification, product discovery, Gateway or
+Workbench proof, or supported-feature promotion.
+
 The current planned consumer declaration names source-authority products for
 the RFC-0002 first-wave map:
 

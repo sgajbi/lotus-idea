@@ -39,7 +39,11 @@ persistence, candidate detail, evidence replay, lifecycle, AI explanation,
 AI explanation readiness, queue, queue-readiness, review, feedback, conversion,
 report evidence, and data-mesh-readiness APIs plus certified internal source-ingestion and advisor
 queue readiness diagnostics and an aggregate implementation-proof readiness
-diagnostic for operator configuration, proof, and certification blockers. The first versioned persistence schema, rollback
+diagnostic for operator configuration, proof, and certification blockers. It
+also exposes an internal source-safe runtime trust telemetry preview diagnostic
+for the proposed `IdeaCandidate:v1` data product, reporting aggregate active
+repository counts and certification blockers without data-product
+certification or supported-feature promotion. The first versioned persistence schema, rollback
 contract, PostgreSQL migration execution CLI, tested PostgreSQL repository
 adapter, opt-in API repository wiring, and real PostgreSQL runtime proof for
 high-cash persistence plus the first internal review, feedback, conversion,
@@ -158,10 +162,21 @@ promote a supported feature.
 diagnostic for RFC-0002 implementation proof posture. It requires
 `idea.implementation-proof.readiness.read` plus the `operator` role and a
 timezone-aware `evaluatedAtUtc` query parameter. It aggregates source
-ingestion, advisor queue, AI explanation, data mesh, Workbench, downstream
-realization, and supported-feature promotion blockers. It does not expose
-candidate identifiers, source payloads, Gateway/Workbench proof, data-product
-certification, client-ready publication, or supported-feature promotion.
+ingestion, advisor queue, AI explanation, data mesh, runtime trust telemetry
+preview, Workbench, downstream realization, and supported-feature promotion
+blockers. It does not expose candidate identifiers, source payloads,
+Gateway/Workbench proof, data-product certification, certified runtime trust
+telemetry, client-ready publication, or supported-feature promotion.
+
+`GET /api/v1/data-mesh/trust-telemetry/runtime-preview` is a certified
+internal operator diagnostic for pre-certification runtime trust telemetry. It
+requires `idea.mesh.trust-telemetry.preview.read` plus the `operator` role and
+reports aggregate candidate, source-authority, freshness, supportability,
+lifecycle, review, feedback, conversion, and report evidence-pack counts from
+the active repository provider. It does not expose candidate identifiers,
+source routes, evidence hashes, portfolio identifiers, client identifiers,
+platform source-manifest inclusion, Gateway/Workbench discovery, data-product
+certification, or supported-feature promotion.
 
 The first consumer dependency set is aligned to the RFC-0002 source map:
 `lotus-core` portfolio state, holdings/cash balance, cash movement, cashflow
@@ -287,6 +302,7 @@ make migration-contract-gate
 make migration-execution-gate
 make source-ingestion-worker-check
 make implementation-proof-readiness-check
+make runtime-trust-telemetry-preview-check
 make supported-features-gate
 make endpoint-certification-gate
 make postgres-integration-gate
@@ -327,6 +343,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
 .venv\Scripts\python.exe scripts/run_source_ingestion_worker.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --check-only
 .venv\Scripts\python.exe scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z
+.venv\Scripts\python.exe scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z
 .venv\Scripts\python.exe scripts/supported_features_gate.py
 .venv\Scripts\python.exe scripts/endpoint_certification_gate.py
 .venv\Scripts\python.exe -m pytest tests/integration/test_postgres_runtime_integration.py
@@ -415,6 +432,14 @@ candidate identifiers or source payloads:
 
 ```powershell
 curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.implementation-proof.readiness.read" "http://localhost:8330/api/v1/implementation-proof/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
+```
+
+To inspect pre-certification runtime trust telemetry without exposing
+candidate identifiers, source routes, evidence hashes, or client/portfolio
+scope:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.mesh.trust-telemetry.preview.read" "http://localhost:8330/api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=2026-06-21T10:10:00Z"
 ```
 
 To inspect downstream realization blockers without calling Advise, Manage,

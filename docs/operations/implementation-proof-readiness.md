@@ -19,9 +19,10 @@ It aggregates current evidence and blockers across:
 2. deterministic advisor review queue,
 3. AI-assisted explanation governance,
 4. data-mesh producer and consumer certification,
-5. Workbench product realization,
-6. downstream Advise, Manage, Report, Render, and Archive realization,
-7. supported-feature promotion.
+5. source-safe runtime trust telemetry preview,
+6. Workbench product realization,
+7. downstream Advise, Manage, Report, Render, and Archive realization,
+8. supported-feature promotion.
 
 ## What It Proves
 
@@ -36,10 +37,11 @@ It returns:
 3. advisor queue readiness posture,
 4. AI explanation readiness posture,
 5. data-mesh readiness posture,
-6. Workbench realization blockers,
-7. downstream realization blockers,
-8. supported-feature promotion blockers,
-9. source-of-truth implementation paths.
+6. runtime trust telemetry preview posture,
+7. Workbench realization blockers,
+8. downstream realization blockers,
+9. supported-feature promotion blockers,
+10. source-of-truth implementation paths.
 
 ## What It Does Not Prove
 
@@ -68,7 +70,7 @@ validated through the owning repositories and platform gates:
 
 1. live Core source-ingestion proof,
 2. scheduled worker deployment proof,
-3. runtime trust telemetry and platform mesh certification,
+3. certified runtime trust telemetry and platform mesh certification,
 4. Workbench panel and browser proof,
 5. downstream Advise, Manage, Report, Render, and Archive realization,
 6. supported-feature promotion evidence.
@@ -84,6 +86,7 @@ The success response is intentionally aggregate and source-safe:
 | `advisorQueue` | Advisor queue supportability blockers |
 | `aiExplanation` | AI explanation guardrail and runtime blockers |
 | `dataMesh` | Data-product and mesh certification blockers |
+| `runtimeTrustTelemetryPreview` | Source-safe aggregate runtime telemetry preview and certification blockers |
 | `workbenchRealization` | Gateway/Workbench product proof blockers |
 | `downstreamRealization` | Advise, Manage, Report, Render, and Archive blockers |
 | `supportedFeaturePromotion` | Supported-feature promotion blockers |

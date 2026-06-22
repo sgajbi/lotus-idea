@@ -31,7 +31,9 @@ progress. Current support:
 9. certified internal downstream realization readiness diagnostic for Advise,
    Manage, Report, Render, and Archive blocker visibility,
 10. certified internal aggregate implementation-proof readiness diagnostic for
-    RFC-0002 blocker visibility.
+    RFC-0002 blocker visibility,
+11. certified internal runtime trust telemetry preview diagnostic for aggregate
+    data-mesh evidence posture.
 
 No external business feature is supported yet. The high-cash, advisor queue,
 lifecycle, AI explanation, AI explanation readiness, review-action, and
@@ -39,6 +41,7 @@ feedback API foundations are certified for internal contract evolution and
 operator supportability diagnostics, and the first Gateway publication is
 read-only integration foundation. The implementation-proof readiness diagnostic
 reports blockers. The downstream realization readiness diagnostic reports
-blockers and workflow counts only. Neither endpoint is Workbench proof,
-data-product certification, AI runtime proof, downstream execution proof, live
-implementation proof, or a client-demo feature claim.
+blockers and workflow counts only. The runtime trust telemetry preview reports
+aggregate active-repository counts only. None of these diagnostics is
+Workbench proof, data-product certification, AI runtime proof, downstream
+execution proof, live implementation proof, or a client-demo feature claim.
