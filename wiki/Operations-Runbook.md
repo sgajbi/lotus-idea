@@ -23,8 +23,11 @@ foundation over the Core source port and repository port. It generates a
 source-ingestion idempotency key when one is not supplied and classifies
 accepted, replayed, conflict, blocked, suppressed, and not-eligible outcomes,
 and it now includes a bounded run-once batch worker foundation with per-item
-idempotency, batch decision counts, and maximum item validation. The PostgreSQL
-runtime proof covers replay after repository reload plus same-key
+idempotency, batch decision counts, and maximum item validation.
+`scripts/run_source_ingestion_worker.py` provides the versioned run-once worker
+CLI, and `make source-ingestion-worker-check` validates the manifest contract
+without calling Core or writing state. The PostgreSQL runtime proof covers
+replay after repository reload plus same-key
 changed-source conflict recovery. This is not a deployed scheduler daemon, live
 Core source-worker certification, production storage certification,
 data-product certification, Gateway route, Workbench proof, or supported
@@ -40,6 +43,7 @@ make install
 make check
 make ci
 make postgres-integration-gate
+make source-ingestion-worker-check
 uvicorn app.main:app --reload --port 8330
 ```
 

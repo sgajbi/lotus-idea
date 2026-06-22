@@ -11,9 +11,12 @@ orchestration now uses generated source-ingestion idempotency keys when needed
 and classifies accepted, replayed, conflict, blocked, suppressed, and
 not-eligible outcomes over the Core source port and repository port. It also
 has a bounded run-once batch worker foundation with per-item idempotency and
-batch decision counts for scheduling-ready internal execution. The
-PostgreSQL runtime proof also covers internal source-ingestion replay after
-repository reload and same-key changed-source conflict recovery.
+batch decision counts for scheduling-ready internal execution.
+`scripts/run_source_ingestion_worker.py` now provides a versioned
+manifest-backed run-once CLI, and `make source-ingestion-worker-check`
+validates the example manifest without calling Core or writing repository
+state. The PostgreSQL runtime proof also covers internal source-ingestion
+replay after repository reload and same-key changed-source conflict recovery.
 Runtime API state remains process-local by default and reports
 `durableStorageBacked=false` unless the database URL is configured. When
 configured, repository-backed API responses and operation events report
@@ -63,7 +66,13 @@ downstream realization proof, or supported-feature promotion.
    It standardizes the future scheduler's generated idempotency key shape,
    per-item replay/conflict posture, batch decision counts, and non-mutating
    behavior for blocked, suppressed, and below-threshold Core source evidence.
-   It is not a daemon, deploy-pipeline worker, or live Core certification.
+10. `src/app/application/source_ingestion_worker.py` and
+    `scripts/run_source_ingestion_worker.py` add a versioned manifest-backed
+    run-once worker entrypoint. Check-only mode returns a product-safe
+    validation summary and is enforced by `make source-ingestion-worker-check`;
+    run mode requires a configured Core base URL and active repository
+    provider. It is not a daemon, deploy-pipeline worker, or live Core
+    certification.
 
 ## Validation
 
@@ -72,9 +81,25 @@ Run the migration contract gate directly:
 ```powershell
 make migration-contract-gate
 make migration-execution-gate
+make source-ingestion-worker-check
 ```
 
-Both gates are also part of `make lint`, `make check`, and `make ci`.
+These gates are also part of `make lint`, `make check`, and `make ci`.
+
+Run the run-once worker contract check without calling Core or writing state:
+
+```powershell
+make source-ingestion-worker-check
+```
+
+Run the worker manually only against an intended Core service and repository
+provider:
+
+```powershell
+$env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
+$env:LOTUS_CORE_BASE_URL = "http://localhost:8310"
+.venv\Scripts\python.exe scripts/run_source_ingestion_worker.py
+```
 
 Run the opt-in PostgreSQL runtime proof locally with a disposable or dedicated
 integration database:

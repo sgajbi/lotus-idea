@@ -6,6 +6,7 @@
 - make typecheck
 - make ci
 - make postgres-integration-gate
+- make source-ingestion-worker-check
 - docker compose up --build
 
 ## Health and Readiness
@@ -24,6 +25,9 @@
    `make postgres-integration-gate` with `LOTUS_IDEA_POSTGRES_INTEGRATION_URL`
    pointed at a disposable PostgreSQL database. The gate proves the current
    API workflow persistence path and schema rollback/reapply recovery posture.
+5. For source-ingestion worker contract changes, run
+   `make source-ingestion-worker-check`. This validates the versioned worker
+   manifest in check-only mode without calling Core or writing repository state.
 
 ## Current Operation Event Diagnostics
 

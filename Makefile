@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate maintainability-gate monetary-float-guard no-sensitive-content-guard implementation-truth-gate data-mesh-contract-gate migration-contract-gate migration-execution-gate migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate maintainability-gate monetary-float-guard no-sensitive-content-guard implementation-truth-gate data-mesh-contract-gate migration-contract-gate migration-execution-gate source-ingestion-worker-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 
@@ -24,6 +24,7 @@ lint:
 	$(MAKE) data-mesh-contract-gate
 	$(MAKE) migration-contract-gate
 	$(MAKE) migration-execution-gate
+	$(MAKE) source-ingestion-worker-check
 	$(MAKE) supported-features-gate
 	$(MAKE) endpoint-certification-gate
 
@@ -51,6 +52,9 @@ migration-contract-gate:
 migration-execution-gate:
 	$(VENV_PYTHON) scripts/run_migrations.py --direction apply --dry-run
 	$(VENV_PYTHON) scripts/run_migrations.py --direction rollback --dry-run
+
+source-ingestion-worker-check:
+	$(VENV_PYTHON) scripts/run_source_ingestion_worker.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --check-only
 
 migrate:
 	$(VENV_PYTHON) scripts/run_migrations.py --direction apply

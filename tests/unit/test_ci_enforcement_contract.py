@@ -35,6 +35,9 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) migration-execution-gate" in makefile
     assert "scripts/run_migrations.py --direction apply --dry-run" in makefile
     assert "scripts/run_migrations.py --direction rollback --dry-run" in makefile
+    assert "source-ingestion-worker-check:" in makefile
+    assert "$(MAKE) source-ingestion-worker-check" in makefile
+    assert "scripts/run_source_ingestion_worker.py" in makefile
     assert "postgres-integration-gate:" in makefile
     assert "tests/integration/test_postgres_runtime_integration.py" in makefile
     assert (

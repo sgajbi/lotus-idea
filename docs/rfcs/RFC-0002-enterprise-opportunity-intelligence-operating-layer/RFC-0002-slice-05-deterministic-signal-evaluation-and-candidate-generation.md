@@ -73,6 +73,12 @@ Additional implemented source-adapter foundation:
    returns explicit accepted, replayed, conflict, blocked, suppressed, and
    skipped-not-eligible decisions without adding API, Gateway, Workbench, or
    supported-feature claims.
+7. `src/app/application/source_ingestion_worker.py` and
+   `scripts/run_source_ingestion_worker.py` now add the versioned
+   manifest-backed run-once worker entrypoint. Check-only mode validates
+   `docs/examples/source-ingestion/high-cash-worker-manifest.example.json`
+   without calling Core or writing repository state, and run mode emits a
+   product-safe summary without source payloads or supported-feature promotion.
 
 Not implemented yet:
 
@@ -131,3 +137,8 @@ Current source-ingestion orchestration validation:
    passed with `11 passed` after adding bounded run-once batch worker coverage
    for duplicate replay, changed-source conflict, batch decision counts,
    timezone validation, and maximum item enforcement.
+3. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_worker.py tests\unit\test_source_ingestion.py tests\unit\test_ci_enforcement_contract.py -q`
+   passed with `30 passed` after adding the manifest-backed worker CLI and CI
+   gate coverage.
+4. `make source-ingestion-worker-check` passed, proving the example manifest
+   validates in check-only mode without Core or repository writes.
