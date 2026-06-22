@@ -95,3 +95,16 @@ def test_ci_contract_gate_blocks_weakened_clean_target() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile clean target must run `scripts/clean_generated_artifacts.py`" in errors
+
+
+def test_ci_contract_gate_blocks_unscoped_unit_test_target() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(VENV_PYTHON) -m pytest $(UNIT_TESTS)", "$(VENV_PYTHON) -m pytest tests/unit")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile test-unit target must run `$(VENV_PYTHON) -m pytest $(UNIT_TESTS)`" in errors
