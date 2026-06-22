@@ -58,13 +58,16 @@ Additional implemented source-adapter foundation:
    adapter over Core's declared `PortfolioStateSnapshot:v1`, `HoldingsAsOf:v1`,
    `PortfolioCashMovementSummary:v1`, and `PortfolioCashflowProjection:v1`
    routes. It preserves source refs, propagates correlation/trace headers, and
-   consumes a source-reported cash-weight field only when Core provides it.
+   consumes Core's `HoldingsAsOf:v1` cash-weight field from
+   `totals.source_reported_cash_weight` only when Core reports supported
+   cash-weight posture.
 4. The adapter deliberately does not derive cash weight from cash totals,
    invested market value, portfolio totals, or any other Core-owned portfolio
    facts. When Core omits a source-reported cash-weight field, evaluation stays
    blocked with missing-source posture.
 5. The upstream Core contract gap for explicit source-reported cash weight is
-   tracked in `sgajbi/lotus-core#430`.
+   closed in `sgajbi/lotus-core#430` / Core PR #431. `lotus-idea` issue #22
+   tracks the downstream adapter-consumption slice.
 6. `src/app/application/source_ingestion.py` now adds the first internal
    high-cash source-ingestion orchestration wrapper and bounded run-once batch
    worker foundation over the Core source port and repository port. It
@@ -149,3 +152,13 @@ Current source-ingestion orchestration validation:
 4. `make source-ingestion-worker-check` passed, proving the example manifest
    and source-safe check-only output contract validate without Core or
    repository writes.
+
+Current Core cash-weight adapter validation:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_lotus_core_sources.py -q`
+   covers Core's nested `totals.source_reported_cash_weight` response shape,
+   blocked supportability states, malformed cash-weight values, source refs,
+   and trace/correlation propagation.
+2. This closes the adapter-shape gap only. It does not certify live Core
+   source ingestion, scheduled worker deployment, data-product certification,
+   Gateway/Workbench support, or supported-feature promotion.

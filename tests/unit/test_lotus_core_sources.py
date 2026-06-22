@@ -99,6 +99,70 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
     assert len(seen) == 4
 
 
+def test_lotus_core_adapter_consumes_core_totals_source_reported_cash_weight() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            return httpx.Response(200, json=_payload("PortfolioStateSnapshot"))
+        if "cash-balances" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload(
+                    "HoldingsAsOf",
+                    extra={
+                        "totals": {
+                            "source_reported_cash_weight": "0.1835",
+                            "source_reported_cash_weight_denominator_portfolio_currency": "2000000",
+                            "source_reported_cash_weight_supportability": "SUPPORTED",
+                        }
+                    },
+                ),
+            )
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
+        return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
+
+    assert evidence.source_reported_cash_weight == Decimal("0.1835")
+
+
+@pytest.mark.parametrize(
+    "supportability",
+    [
+        "BLOCKED_MISSING_DENOMINATOR",
+        "BLOCKED_ZERO_DENOMINATOR",
+        "BLOCKED_STALE_DENOMINATOR",
+    ],
+)
+def test_lotus_core_adapter_blocks_cash_weight_when_core_supportability_is_blocked(
+    supportability: str,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            return httpx.Response(200, json=_payload("PortfolioStateSnapshot"))
+        if "cash-balances" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload(
+                    "HoldingsAsOf",
+                    extra={
+                        "totals": {
+                            "source_reported_cash_weight": "0.25",
+                            "source_reported_cash_weight_denominator_portfolio_currency": None,
+                            "source_reported_cash_weight_supportability": supportability,
+                        }
+                    },
+                ),
+            )
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
+        return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
+
+    assert evidence.source_reported_cash_weight is None
+
+
 def test_lotus_core_adapter_keeps_cash_weight_missing_when_source_omits_it() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "POST":
@@ -186,6 +250,33 @@ def test_lotus_core_adapter_maps_malformed_cash_weight_to_source_unavailable() -
             return httpx.Response(
                 200,
                 json=_payload("HoldingsAsOf", extra={"sourceReportedCashWeight": "not-decimal"}),
+            )
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
+        return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+
+    with pytest.raises(CoreSourceUnavailable) as exc_info:
+        _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
+
+    assert exc_info.value.code == "core_cash_weight_malformed"
+
+
+def test_lotus_core_adapter_maps_malformed_nested_cash_weight_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "POST":
+            return httpx.Response(200, json=_payload("PortfolioStateSnapshot"))
+        if "cash-balances" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload(
+                    "HoldingsAsOf",
+                    extra={
+                        "totals": {
+                            "source_reported_cash_weight": "not-decimal",
+                            "source_reported_cash_weight_supportability": "SUPPORTED",
+                        }
+                    },
+                ),
             )
         if "cash-movement-summary" in str(request.url):
             return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
