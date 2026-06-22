@@ -9,6 +9,24 @@ and Workbench concerns.
 `lotus-idea` consumes official evidence and carries provenance. It does not
 recompute official calculations.
 
+```mermaid
+flowchart LR
+    subgraph Sources["Source authorities"]
+        Core["lotus-core"]
+        Perf["lotus-performance"]
+        Risk["lotus-risk"]
+        Advise["lotus-advise"]
+        Manage["lotus-manage"]
+        Report["lotus-report"]
+        AI["lotus-ai"]
+    end
+
+    Sources -->|"provenance, freshness, source refs"| Idea["lotus-idea"]
+    Idea -->|"read-only composition"| Gateway["lotus-gateway"]
+    Gateway --> Workbench["lotus-workbench"]
+    Idea -->|"review-gated intent"| Downstream["Advise / Manage / Report / Render / Archive"]
+```
+
 | Domain | Source owner |
 | --- | --- |
 | Portfolio, holdings, cash, mandate, client, product facts | `lotus-core` |
@@ -26,6 +44,21 @@ recompute official calculations.
 ## Data Mesh Baseline
 
 Repo-owned proposed mesh declarations live under `contracts/`:
+
+```mermaid
+flowchart TD
+    Contracts["Repo-owned mesh contracts"]
+    Readiness["/api/v1/data-mesh/readiness"]
+    Preview["/api/v1/data-mesh/trust-telemetry/runtime-preview"]
+    Platform["Platform mesh certification"]
+    Promotion["Supported-feature promotion"]
+
+    Contracts --> Readiness
+    Contracts --> Preview
+    Readiness -->|"not_certified blockers"| Platform
+    Preview -->|"aggregate runtime counts"| Platform
+    Platform --> Promotion
+```
 
 1. `contracts/domain-data-products/lotus-idea-products.v1.json`
 2. `contracts/domain-data-products/lotus-idea-consumers.v1.json`

@@ -13,8 +13,24 @@ The target operating model is:
    Workbench workflows,
 6. use AI only for bounded explanation assistance through `lotus-ai`.
 
-Current posture: opportunity intelligence foundation implementation is in
-progress. Current support:
+```mermaid
+flowchart TD
+    Evidence["Source-owned evidence"]
+    Candidate["Opportunity candidate"]
+    Queue["Human review queue"]
+    Decision["Review decision and feedback"]
+    Conversion["Conversion intent and outcome"]
+    Proof["Readiness and trust diagnostics"]
+
+    Evidence --> Candidate --> Queue --> Decision --> Conversion
+    Candidate --> Proof
+    Decision --> Proof
+```
+
+## Current posture
+
+The opportunity intelligence foundation implementation is in progress. Current
+support:
 
 1. repository scaffold,
 2. service boundary ADRs,
@@ -45,3 +61,12 @@ blockers and workflow counts only. The runtime trust telemetry preview reports
 aggregate active-repository counts only. None of these diagnostics is
 Workbench proof, data-product certification, AI runtime proof, downstream
 execution proof, live implementation proof, or a client-demo feature claim.
+
+| Capability area | Current posture | Promotion boundary |
+| --- | --- | --- |
+| Signal evaluation | Certified internal foundation | Not a supported product workflow |
+| Candidate lifecycle and review | Certified internal foundation | Requires Workbench proof and entitlement proof |
+| Source ingestion | Run-once internal foundation | Requires live Core and scheduled worker proof |
+| Data mesh | Proposed contracts and readiness diagnostics | Requires platform certification and runtime telemetry |
+| Gateway publication | Bounded read-only foundation | Requires Workbench and supported-feature evidence |
+| Downstream realization | Intent/outcome tracking foundation | Requires Advise, Manage, Report, Render, and Archive execution proof |

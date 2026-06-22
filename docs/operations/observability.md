@@ -4,13 +4,15 @@ This repository starts from the Lotus platform observability scaffold.
 
 ## Default Signals
 
-- /health, /health/live, and /health/ready
-- /metrics outside the OpenAPI schema
-- correlation and trace response headers
-- structured JSON application events
-- product-safe error responses
-- bounded idea operation events for certified internal API foundations
-- bounded request diagnostic events for validation, HTTP, and unhandled errors
+| Signal | Purpose | Boundary |
+| --- | --- | --- |
+| `/health`, `/health/live`, `/health/ready` | Service liveness and readiness checks | No business readiness claim |
+| `/metrics` | Prometheus scrape target outside OpenAPI | No sensitive labels |
+| Correlation and trace response headers | Request tracing across services | Not used as metric labels |
+| Structured JSON application events | Operator diagnostics | Product-safe fields only |
+| Product-safe error responses | Client and operator failure posture | No raw entitlement or source payload leakage |
+| Idea operation events | Certified internal foundation telemetry | Foundation supportability only |
+| Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
 
 ## Sensitive-Content Rule
 
@@ -30,6 +32,21 @@ RFC-0002 Slice 15 adds the first business-operation observability foundation.
 vocabulary plus the `lotus_idea_operation_events_total` Prometheus counter.
 `make endpoint-certification-gate` requires certified business/operator endpoints to cite bounded
 operation-event test evidence in `docs/operations/endpoint-certification-ledger.json`.
+
+```mermaid
+flowchart LR
+    API["Certified internal API"]
+    Policy["Domain or readiness policy"]
+    Helper["record_idea_operation_event"]
+    Logs["Structured JSON event"]
+    Metrics["lotus_idea_operation_events_total"]
+    Ledger["Endpoint certification ledger"]
+
+    API --> Policy --> Helper
+    Helper --> Logs
+    Helper --> Metrics
+    Ledger -->|"requires test evidence"| API
+```
 
 Current instrumented operations:
 
@@ -56,12 +73,14 @@ Current instrumented operations:
 
 Metric labels are limited to:
 
-1. `operation`,
-2. `outcome`,
-3. `supportability_status`,
-4. `source_authority`,
-5. `durable_storage_backed`,
-6. `supported_feature_promoted`.
+| Label | Allowed meaning |
+| --- | --- |
+| `operation` | Governed operation vocabulary from the central helper |
+| `outcome` | Bounded result posture such as `accepted`, `blocked`, or `permission_denied` |
+| `supportability_status` | Foundation, blocked, or not-certified posture |
+| `source_authority` | Owning Lotus service or `lotus-idea` |
+| `durable_storage_backed` | Whether the active repository provider is durable |
+| `supported_feature_promoted` | Whether supported-feature promotion exists |
 
 The operation helper rejects sensitive attributes such as client, portfolio, account, holding,
 transaction, request body, response body, raw entitlement failure, trace id, or correlation id
