@@ -1,6 +1,6 @@
 # RFC-0002 Slice 09: Governed AI Explanation And Model-Risk Controls
 
-Status: Partially implemented - internal AI governance and certified API foundation only
+Status: Partially implemented - internal AI governance, certified API foundation, and source-safe lineage persistence foundation
 
 ## Outcome
 
@@ -41,15 +41,16 @@ Implemented in this slice:
    claim blocking, forbidden-action blocking, request/workflow identity
    validation, and no candidate-state mutation.
 9. `src/app/application/ai_governance.py` orchestrates persisted candidate
-   snapshot lookup, governed request construction, deterministic fallback, and
-   verifier evaluation without provider execution or durable persistence
-   claims.
+   snapshot lookup, governed request construction, deterministic fallback,
+   verifier evaluation, and source-safe lineage recording without provider
+   execution or supported-feature claims.
 10. `src/app/api/ai_governance.py` exposes the certified internal endpoint
     `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`.
     It requires `idea.ai-explanation.evaluate`, returns redacted evidence only,
-    blocks unsupported claims and forbidden actions, emits bounded
-    `ai_explanation` operation events, and keeps `durableStorageBacked=false`,
-    `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
+    blocks unsupported claims and forbidden actions, records source-safe
+    lineage, emits bounded `ai_explanation` operation events, reports
+    `durableStorageBacked` from the active repository provider, and keeps
+    `lotusAiRuntimeExecuted=false` and `supportedFeaturePromoted=false`.
 11. `src/app/application/ai_governance.py` also exposes a deterministic
     AI-explanation readiness snapshot, and `src/app/api/ai_governance.py`
     publishes it through `GET /api/v1/ai-explanations/readiness` for operator
@@ -58,16 +59,36 @@ Implemented in this slice:
     `supportabilityStatus=not_certified`, `lotusAiRuntimeExecuted=false`,
     `durableAiLineageStoreBacked=false`, and `supportedFeaturePromoted=false`,
     and returns only guardrail availability plus certification blockers.
-12. `tests/unit/test_ai_explanation_readiness.py` proves the readiness snapshot
+12. `src/app/domain/persistence.py` adds `AIExplanationLineageRecord` and
+    idempotent lineage persistence decisions. `InMemoryIdeaRepository` records
+    exactly one lineage record per AI request id, replays identical lineage,
+    blocks changed-content conflicts, appends the safe audit event, and does
+    not create outbox work for AI explanation evaluation.
+13. `migrations/002_ai_explanation_lineage.sql`,
+    `migrations/002_ai_explanation_lineage.rollback.sql`,
+    `src/app/infrastructure/postgres_codecs.py`, and
+    `src/app/infrastructure/postgres_repository.py` add PostgreSQL persistence
+    for source-safe AI explanation lineage. The stored record includes request
+    id, candidate id, evidence packet id, evidence content hash, workflow-pack
+    identity, posture, verifier outcome, fallback state, reason codes, bounded
+    output summary ids, actor, timestamps, lineage hash, and
+    no-downstream-authority posture. It excludes prompts, provider payloads,
+    raw source routes, trace ids, correlation ids, portfolio ids, client ids,
+    request bodies, response bodies, and free-form source payloads.
+14. `tests/unit/test_ai_explanation_readiness.py` proves the readiness snapshot
     stays blocked and not certified until runtime and lineage evidence exist.
-13. `tests/integration/test_ai_governance_api.py` covers deterministic
+15. `tests/integration/test_ai_governance_api.py` covers deterministic
     fallback, verified-output acceptance, unsupported-claim blocking,
     forbidden-action blocking, permission denial, missing candidate handling,
     invalid candidate state, forbidden metadata, and source-safe AI readiness
-    diagnostics.
-14. `tests/integration/test_api_operation_events.py` proves the API emits the
+    diagnostics, plus accepted/replayed/conflicting lineage persistence.
+16. `tests/integration/test_api_operation_events.py` proves the API emits the
     bounded `ai_explanation` operation event and the not-certified
     `ai_explanation_readiness_read` operation event.
+17. `tests/unit/test_idea_persistence.py` and
+    `tests/unit/test_postgres_repository.py` prove in-memory and PostgreSQL
+    lineage acceptance, replay, conflict handling, snapshot recovery, and
+    source-safe JSON persistence.
 
 Validation evidence from the implementation slice:
 
@@ -81,6 +102,11 @@ Validation evidence from the implementation slice:
    audit reporting no known vulnerabilities.
 7. `python -m pytest tests/unit/test_ai_explanation_readiness.py tests/integration/test_ai_governance_api.py tests/integration/test_api_operation_events.py`
    is the focused readiness diagnostic proof for the current slice.
+8. `python -m pytest tests/unit/test_idea_persistence.py tests/unit/test_postgres_repository.py tests/integration/test_ai_governance_api.py`
+   passed after adding source-safe lineage persistence.
+9. `python scripts/migration_contract_gate.py` and
+   `python scripts/run_migrations.py --direction apply --dry-run` passed after
+   adding migration `002_ai_explanation_lineage`.
 
 ## Current Governance References
 
@@ -105,7 +131,7 @@ includes:
 1. `lotus-ai` workflow-pack registration and runtime execution,
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
-3. durable persistence for AI request/result lineage,
+3. certified runtime AI lineage-store evidence and model-risk operating proof,
 4. Gateway/Workbench proof,
 5. model-risk operations dashboards, trust telemetry, and support runbooks,
 6. supported-feature promotion after runtime proof.
@@ -129,5 +155,5 @@ includes:
    conversion state.
 
 Runtime `lotus-ai` workflow execution remains planned until a later slice adds
-ports/adapters, durable persistence, Gateway/Workbench contracts, and
+ports/adapters, runtime lineage certification, Gateway/Workbench contracts, and
 cross-repository proof.

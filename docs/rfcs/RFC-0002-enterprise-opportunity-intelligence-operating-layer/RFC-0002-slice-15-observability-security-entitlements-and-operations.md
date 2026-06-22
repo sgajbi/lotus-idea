@@ -175,7 +175,7 @@ The advisor queue readiness diagnostic is explicitly `not_certified` until
 durable queue posture, platform caller-context entitlement proof, Workbench
 proof, data-product certification, and runtime trust telemetry exist.
 The AI explanation readiness diagnostic is explicitly `not_certified` until
-`lotus-ai` runtime workflow execution, durable AI lineage storage,
+`lotus-ai` runtime workflow execution, certified AI lineage-store proof,
 workflow-pack runtime certification, model-risk operations dashboards, runtime
 trust telemetry, and Workbench proof exist.
 The implementation-proof readiness diagnostic is explicitly `not_certified`

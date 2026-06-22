@@ -256,7 +256,7 @@ certified internal AI explanation evaluator foundation. It evaluates
 deterministic fallback or supplied workflow output against persisted candidate
 evidence, redacts source refs, blocks unsupported claims and forbidden actions,
 and emits bounded `ai_explanation` operation events. It does not call providers,
-execute `lotus-ai` runtime workflows, persist durable AI lineage, grant
+execute `lotus-ai` runtime workflows, certify runtime AI lineage-store proof, grant
 downstream authority, expose a Gateway/Workbench surface, or promote a
 supported feature.
 

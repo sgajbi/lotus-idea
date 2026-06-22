@@ -124,7 +124,7 @@ explanation guardrail availability, model-risk supportability posture, and
 remaining certification blockers without invoking `lotus-ai`, exposing prompts,
 provider payloads, candidate identifiers, source routes, portfolio identifiers,
 or client identifiers. It remains `not_certified` until `lotus-ai` runtime
-workflow execution, durable AI lineage storage, workflow-pack runtime
+workflow execution, certified AI lineage-store proof, workflow-pack runtime
 certification, model-risk operations dashboards, runtime trust telemetry, and
 Workbench proof exist.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
@@ -255,7 +255,7 @@ Current outcomes:
    explanation precondition failed.
 10. `blocked`: verifier rejected unsupported AI output, candidate evidence
     replay found stale source posture, AI explanation readiness is missing
-    `lotus-ai` runtime execution, durable lineage, model-risk dashboard,
+    `lotus-ai` runtime execution, certified AI lineage-store proof, model-risk dashboard,
     runtime trust telemetry, or Workbench proof, expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
     certification remain absent, runtime trust telemetry snapshot generation
@@ -326,7 +326,7 @@ promotion.
 explanation readiness diagnostic. It returns guardrail availability and
 certification blockers for operators without exposing prompts, provider
 payloads, candidate identifiers, source routes, portfolio identifiers, or
-client identifiers. It is not `lotus-ai` runtime proof, durable AI lineage
+client identifiers. It is not `lotus-ai` runtime proof, certified AI lineage-store
 certification, model-risk dashboard proof, Gateway/Workbench support,
 data-product certification, client-ready publication, or supported-feature
 promotion.

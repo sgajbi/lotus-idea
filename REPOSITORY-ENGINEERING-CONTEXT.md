@@ -335,7 +335,11 @@ AI output, and a certified internal API at
 requires `idea.ai-explanation.evaluate`, returns redacted evidence without
 routes or raw provider/prompt material, emits bounded `ai_explanation`
 operation events, and always reports `durableStorageBacked=false`,
-`lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
+`lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false` in the
+default process-local runtime. It now records source-safe AI explanation
+lineage through the repository port; PostgreSQL-backed runs persist that
+lineage durably without prompts, provider payloads, raw source routes, trace
+ids, correlation ids, portfolio ids, client ids, or free-form source payloads.
 `GET /api/v1/ai-explanations/readiness` now exposes a certified internal
 operator diagnostic for AI explanation supportability. It requires both the
 `operator` role and `idea.ai-explanation.readiness.read`, returns guardrail
@@ -344,7 +348,7 @@ availability plus `not_certified` blockers, emits bounded
 authority, and does not expose prompts, provider payloads, candidate
 identifiers, source routes, portfolio identifiers, or client identifiers. This
 is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
-execution, prompt/RAG/provider integration, durable AI lineage store,
+execution, prompt/RAG/provider integration, certified AI lineage-store proof,
 Workbench proof, trust telemetry, model-risk operations dashboard, or
 supported-feature promotion exists.
 `GET /api/v1/implementation-proof/readiness` now exposes a certified internal
@@ -425,7 +429,7 @@ fallback/verifier evaluation over persisted candidate evidence:
 `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`. It
 requires `idea.ai-explanation.evaluate`, blocks unsupported claims and
 forbidden actions, and explicitly does not call providers, execute `lotus-ai`
-runtime workflows, persist durable AI lineage, or grant downstream authority.
+runtime workflows, certify runtime AI lineage-store evidence, or grant downstream authority.
 `GET /api/v1/ai-explanations/readiness` exposes the internal model-risk
 supportability diagnostic for AI explanation guardrails and certification
 blockers without executing `lotus-ai`. All twelve business routes plus the

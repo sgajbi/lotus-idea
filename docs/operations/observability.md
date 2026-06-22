@@ -108,7 +108,7 @@ fields. Do not add identifiers or payload fragments to operation labels.
    lifecycle/review/conversion preconditions before retrying.
 9. `blocked` means the verifier rejected unsupported AI output, evidence
    replay found stale source posture, the AI explanation readiness diagnostic
-   remains blocked until `lotus-ai` runtime execution, durable AI lineage,
+   remains blocked until `lotus-ai` runtime execution, certified AI lineage-store proof,
    model-risk dashboard, runtime trust telemetry, and Workbench proof exist,
    the mesh-readiness diagnostic remains blocked until runtime trust telemetry
    and platform mesh certification exist, the source-ingestion readiness
