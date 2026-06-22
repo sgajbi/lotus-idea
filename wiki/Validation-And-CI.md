@@ -350,7 +350,7 @@ client-ready publication, or supported-feature promotion.
 The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
 the diagnostic route only; they do not certify `lotus-ai` runtime execution,
-provider invocation, durable AI lineage, model-risk dashboard readiness,
+provider invocation, certified AI lineage-store proof, model-risk dashboard readiness,
 Gateway/Workbench support, data-product promotion, client-ready publication, or
 supported-feature promotion.
 

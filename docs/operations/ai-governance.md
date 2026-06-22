@@ -2,9 +2,11 @@
 
 `lotus-idea` uses AI only as a governed assistance layer. The current
 implementation is an internal domain and API foundation; it does not call
-providers, does not execute `lotus-ai` runtime workflows, does not persist
-durable AI lineage, and does not promote AI-assisted explanation as a supported
-feature.
+providers, does not execute `lotus-ai` runtime workflows, and does not promote
+AI-assisted explanation as a supported feature. The evaluator now records
+source-safe lineage through the repository port; when PostgreSQL is configured
+that lineage is stored durably, but it is not certified `lotus-ai` runtime
+lineage or model-risk dashboard proof.
 
 ## Current Implementation
 
@@ -21,9 +23,13 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
 6. explicit no-downstream-authority semantics for AI output,
 7. a certified internal API foundation at
    `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`,
-8. bounded operation telemetry through `ai_explanation` events with
+8. source-safe lineage persistence for request id, candidate id, evidence
+   packet id, evidence content hash, workflow-pack identity, posture, verifier
+   outcome, fallback state, reason codes, output summary ids, actor, timestamps,
+   and no-downstream-authority posture,
+9. bounded operation telemetry through `ai_explanation` events with
    `accepted`, `fallback`, or `blocked` outcomes,
-9. a certified internal operator diagnostic at
+10. a certified internal operator diagnostic at
    `GET /api/v1/ai-explanations/readiness` that reports guardrail availability,
    `not_certified` supportability, and remaining certification blockers without
    invoking `lotus-ai` or exposing prompts, provider payloads, candidate
@@ -37,10 +43,13 @@ or response bodies.
 
 Successful API responses always return:
 
-1. `durableStorageBacked=false`,
-2. `lotusAiRuntimeExecuted=false`,
-3. `supportedFeaturePromoted=false`,
-4. `grantsDownstreamAuthority=false`.
+1. `aiLineageRecorded=true` when source-safe lineage was accepted or replayed,
+2. `aiLineagePersistenceDecision=accepted|replayed`,
+3. `durableStorageBacked=false` in the default process-local runtime and
+   `true` only when the active repository provider is PostgreSQL,
+4. `lotusAiRuntimeExecuted=false`,
+5. `supportedFeaturePromoted=false`,
+6. `grantsDownstreamAuthority=false`.
 
 The readiness diagnostic always returns:
 
@@ -68,6 +77,19 @@ The internal domain model supports these bounded workflow purposes:
 Runtime execution through `lotus-ai` remains planned. `lotus-ai` owns provider
 execution, prompt registry, RAG, evaluation, workflow-pack runtime, and AI
 telemetry.
+
+## Lineage Boundary
+
+The current lineage record is an audit and replay foundation owned by
+`lotus-idea`. It is intentionally source-safe and excludes raw prompts,
+provider responses, source routes, trace ids, correlation ids, portfolio ids,
+client ids, request bodies, response bodies, and free-form source payloads.
+
+`lotus-ai` remains the owner for runtime workflow execution, prompt registry,
+RAG context construction, provider telemetry, evaluation telemetry, and
+model-risk operating evidence. The readiness diagnostic therefore remains
+`not_certified` until runtime execution, certified AI lineage-store evidence,
+model-risk dashboards, runtime trust telemetry, and Workbench proof exist.
 
 ## API Behavior
 

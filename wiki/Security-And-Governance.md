@@ -63,7 +63,7 @@ identifiers.
 diagnostic for AI explanation model-risk supportability. It requires both the
 `operator` role and `idea.ai-explanation.readiness.read`, reports
 `not_certified` blockers, and returns `supportedFeaturePromoted=false`. It does
-not call `lotus-ai`, expose prompts or provider payloads, certify durable AI
+not call `lotus-ai`, expose prompts or provider payloads, certify runtime AI
 lineage, or create Gateway/Workbench support.
 
 Operation-event governance:

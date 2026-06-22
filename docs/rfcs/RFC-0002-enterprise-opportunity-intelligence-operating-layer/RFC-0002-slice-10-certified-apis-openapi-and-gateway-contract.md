@@ -101,7 +101,7 @@ The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires
 `idea.ai-explanation.evaluate`, returns redacted evidence only, blocks
 unsupported claims and forbidden actions, never calls providers or executes
-`lotus-ai` runtime workflows, never persists durable AI lineage, never grants
+`lotus-ai` runtime workflows, never certifies runtime AI lineage-store proof, never grants
 downstream authority, and keeps `durableStorageBacked=false`,
 `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
 

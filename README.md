@@ -28,7 +28,7 @@ Current implemented foundations include:
   aggregate-only operator run-once API,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection and queue readiness diagnostics,
-- AI explanation governance diagnostics without provider execution,
+- AI explanation governance diagnostics and source-safe lineage persistence without provider execution,
 - conversion intent, conversion outcome, and report evidence-pack request
   foundations,
 - governed downstream contract-readiness diagnostics, source-safe application

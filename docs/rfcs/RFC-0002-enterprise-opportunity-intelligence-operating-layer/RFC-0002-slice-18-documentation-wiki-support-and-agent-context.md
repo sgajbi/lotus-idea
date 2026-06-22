@@ -28,7 +28,7 @@ durable operating-context enforcement:
    same slice when documentation truth changes.
 5. `docs/operations/ai-governance.md` now describes the certified internal AI
    evaluator API while preserving the unsupported boundary around provider
-   execution, durable AI lineage, Gateway/Workbench proof, and supported
+   execution, certified AI lineage-store proof, Gateway/Workbench proof, and supported
    feature promotion.
 6. `make documentation-contract-gate` now runs through `make lint` and blocks
    removal, thinning, missing anchors, or placeholder erosion across the

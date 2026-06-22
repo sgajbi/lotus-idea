@@ -22,6 +22,13 @@ validates the example manifest and source-safe check-only output contract
 without calling Core or writing repository state. The PostgreSQL runtime proof
 also covers internal source-ingestion
 replay after repository reload and same-key changed-source conflict recovery.
+Source-safe AI explanation lineage is now part of the repository contract. It
+records request identity, candidate identity, evidence packet identity,
+evidence hash, workflow-pack identity, posture, verifier outcome, fallback
+state, bounded output summary ids, actor, timestamps, and
+no-downstream-authority posture without storing prompts, provider payloads,
+raw source routes, trace ids, correlation ids, portfolio ids, client ids, or
+free-form source payloads.
 `POST /api/v1/source-ingestion/run-once` now exposes that bounded
 source-ingestion orchestration as a protected internal operator action. It
 requires `idea.source-ingestion.run`, requires durable repository posture,
@@ -62,6 +69,7 @@ supported feature.
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, and bounded run-once operator action for accepted internal mutations | No certified live broker runtime or downstream delivery |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
+| AI explanation lineage | Source-safe request/result lineage through the repository port and PostgreSQL migration `002` | No `lotus-ai` runtime execution, prompt/provider telemetry, model-risk dashboard certification, or supported product claim |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay | Not supported-feature promotion |
 
 ```mermaid
@@ -84,36 +92,39 @@ flowchart LR
    report evidence-pack tables.
 2. `migrations/001_idea_repository_foundation.rollback.sql` drops the same
    indexes and tables in dependency-safe reverse order.
-3. `scripts/migration_contract_gate.py` blocks missing migration files, missing
+3. `migrations/002_ai_explanation_lineage.sql` adds the source-safe AI
+   explanation lineage table and candidate, workflow-pack, and posture/time
+   indexes. `002_ai_explanation_lineage.rollback.sql` removes the same objects.
+4. `scripts/migration_contract_gate.py` blocks missing migration files, missing
    rollback posture, missing tables, missing indexes, missing JSONB payload
    columns, missing UTC timestamp columns, missing source relationships, and
    placeholder SQL.
-4. `scripts/run_migrations.py` executes the migration plan against PostgreSQL
+5. `scripts/run_migrations.py` executes the migration plan against PostgreSQL
    when `LOTUS_IDEA_DATABASE_URL` is set, and dry-runs the apply/rollback plan
    for CI without requiring a database.
-5. `src/app/domain/events.py` defines the outbox event envelope,
+6. `src/app/domain/events.py` defines the outbox event envelope,
    deterministic event identity, status vocabulary, hashed idempotency
    fingerprint, forbidden payload-key guard, published transition, failed retry
    transition, and dead-letter transition. Accepted internal mutations append
    pending events; replay, conflict, not-found, blocked, suppressed, and
    not-eligible paths do not create duplicate outbox work.
-6. `src/app/infrastructure/postgres_repository.py` implements the governed
+7. `src/app/infrastructure/postgres_repository.py` implements the governed
    repository port surface over the schema. It materializes candidate,
    idempotency, lifecycle, audit, review, feedback, conversion, and report
-   evidence-pack state plus pending outbox records through typed table columns
-   plus JSONB snapshots, and rolls back the database transaction on flush
-   failure.
-7. `src/app/repository_state.py` selects the process-local in-memory repository
+   evidence-pack state, AI explanation lineage records, plus pending outbox
+   records through typed table columns plus JSONB snapshots, and rolls back the
+   database transaction on flush failure.
+8. `src/app/repository_state.py` selects the process-local in-memory repository
    by default, or a `PostgresIdeaRepository` backed by a psycopg connection with
    mapping rows when `LOTUS_IDEA_DATABASE_URL` is set. `src/app/api/repository_state.py`
    is only a compatibility shim and must not own concrete infrastructure wiring.
-8. Repository-backed endpoints derive `durableStorageBacked` and
+9. Repository-backed endpoints derive `durableStorageBacked` and
    `durable_storage_backed` operation-event labels from the active repository
    instead of hardcoding storage posture.
-9. The evidence replay endpoint derives matched, stale-source, hash-mismatch,
+10. The evidence replay endpoint derives matched, stale-source, hash-mismatch,
    expired, and not-found posture from the active repository provider and emits
    bounded `candidate_evidence_replay` operation events.
-10. `tests/integration/test_postgres_runtime_integration.py` applies the schema
+11. `tests/integration/test_postgres_runtime_integration.py` applies the schema
    to a real PostgreSQL service, persists through the FastAPI
    evaluate-and-persist endpoint, reloads the repository provider, proves
    idempotency replay from database state, projects the advisor queue, records
@@ -124,12 +135,12 @@ flowchart LR
    reapplies it, and proves the recovered API persistence contract is usable.
    GitHub PR Merge Gate and Main Releasability run this proof against
    `postgres:18-alpine`.
-11. `src/app/application/source_ingestion.py` is the internal high-cash
+12. `src/app/application/source_ingestion.py` is the internal high-cash
    source-ingestion orchestration and bounded run-once batch worker foundation.
    It standardizes the future scheduler's generated idempotency key shape,
    per-item replay/conflict posture, batch decision counts, and non-mutating
    behavior for blocked, suppressed, and below-threshold Core source evidence.
-12. `src/app/application/source_ingestion_worker.py` and
+13. `src/app/application/source_ingestion_worker.py` and
     `scripts/run_source_ingestion_worker.py` add a versioned manifest-backed
     run-once worker entrypoint. Check-only mode returns a product-safe
     validation summary, and `make source-ingestion-worker-check` enforces both
@@ -138,11 +149,11 @@ flowchart LR
     provider. Both check-only and run summaries redact raw source payloads,
     portfolio ids, and raw idempotency keys. It is not a daemon,
     deploy-pipeline worker, or live Core certification.
-13. `POST /api/v1/source-ingestion/run-once` adds the protected service
+14. `POST /api/v1/source-ingestion/run-once` adds the protected service
     boundary for the same source-ingestion batch foundation. It requires
     durable repository configuration and blocks before mutation when runtime
     inputs are missing or invalid.
-14. `src/app/application/outbox_delivery.py` adds the first run-once delivery
+15. `src/app/application/outbox_delivery.py` adds the first run-once delivery
     orchestration over a publisher port and the governed repository port. It
     reads pending and retryable failed events, marks accepted publications as
     published, marks rejected publications as failed for retry, dead-letters
@@ -156,13 +167,13 @@ flowchart LR
     bounded publisher reasons. This is internal recoverability and adapter
     foundation only; certified live broker runtime, downstream consumers, and
     event-publication support remain unimplemented.
-15. `src/app/application/outbox_delivery_readiness.py` and
+16. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
     delivery readiness for operators. The diagnostic reports aggregate status
     counts, adapter presence, and blockers only, so operators can see backlog
     posture without accessing event ids, aggregate ids, raw idempotency keys,
     source payloads, broker payloads, or downstream event contracts.
-16. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
+17. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
     through the service boundary for operators. It does not mutate pending
     records when broker configuration is absent or invalid, and successful runs
     return only aggregate attempted, published, failed, dead-lettered, and
