@@ -37,6 +37,7 @@ REQUIRED_TARGETS = (
     "migration-contract-gate",
     "migration-execution-gate",
     "source-ingestion-worker-check",
+    "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
     "endpoint-certification-gate",
     "postgres-integration-gate",
@@ -67,6 +68,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) migration-contract-gate",
     "$(MAKE) migration-execution-gate",
     "$(MAKE) source-ingestion-worker-check",
+    "$(MAKE) runtime-trust-telemetry-snapshot-check",
     "$(MAKE) supported-features-gate",
     "$(MAKE) endpoint-certification-gate",
 )
@@ -261,6 +263,12 @@ def validate_makefile(makefile: str) -> list[str]:
         errors.append(
             "Makefile source-ingestion-worker-check target must run "
             "`scripts/source_ingestion_worker_contract_gate.py`"
+        )
+    runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
+    if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
+        errors.append(
+            "Makefile runtime-trust-telemetry-snapshot-check target must run "
+            "`scripts/generate_runtime_trust_telemetry_snapshot.py`"
         )
     clean_block = _target_block(makefile, "clean")
     if "scripts/clean_generated_artifacts.py" not in clean_block:
