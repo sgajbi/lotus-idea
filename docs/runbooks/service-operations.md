@@ -42,7 +42,13 @@
    explanation, data mesh, Workbench, downstream realization, and
    supported-feature promotion. It is not live proof, Workbench proof,
    data-product certification, or supported-feature promotion.
-8. For CI or async evidence without running the service, run
+8. For downstream realization blocker checks, call
+   `GET /api/v1/downstream-realization/readiness` with the `operator` role and
+   `idea.downstream-realization.readiness.read` capability. This reports
+   source-safe workflow counts and blockers for Advise, Manage, Report, Render,
+   and Archive without calling downstream services or creating downstream
+   records.
+9. For CI or async evidence without running the service, run
    `make implementation-proof-readiness-check` or
    `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
    The generated JSON is an operator proof-readiness artifact, not a supported
@@ -65,7 +71,8 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 10. report evidence-pack request recording,
 11. data-mesh readiness diagnostic reads,
 12. source-ingestion readiness diagnostic reads,
-13. implementation-proof readiness diagnostic reads.
+13. downstream-realization readiness diagnostic reads,
+14. implementation-proof readiness diagnostic reads.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 
@@ -79,9 +86,9 @@ Use the operation `outcome` before inspecting payload-level evidence:
 7. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 8. `invalid_state`: lifecycle, review, target authority, or report intent precondition failed.
 9. `blocked`: candidate evidence replay found stale source posture, or
-   data-mesh, source-ingestion, AI explanation, review queue, or aggregate
-   implementation-proof readiness remains blocked by explicit configuration or
-   certification blockers.
+   data-mesh, source-ingestion, AI explanation, review queue, downstream
+   realization, or aggregate implementation-proof readiness remains blocked by
+   explicit configuration or certification blockers.
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,

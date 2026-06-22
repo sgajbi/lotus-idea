@@ -102,19 +102,25 @@ Persistence adapter validation:
    implementation-proof readiness artifact can be generated without starting
    the service and without exposing candidate, portfolio, client, prompt, or
    source payload identifiers.
-8. `tests/unit/test_source_ingestion_readiness.py` and
+8. `tests/unit/test_downstream_realization_readiness.py` and
+   `tests/integration/test_downstream_realization_readiness_api.py` prove the
+   downstream realization readiness diagnostic for blocked supportability,
+   role plus capability enforcement, product-safe payloads, source-authority
+   boundaries, and bounded `not_certified` operation events without calling
+   Advise, Manage, Report, Render, or Archive.
+9. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
    `not_certified` operation events without calling Core.
-9. `tests/unit/test_review_queue_application.py`,
+10. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-10. `tests/unit/test_ai_explanation_readiness.py`,
+11. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
    readiness diagnostic for blocked model-risk posture, operator/capability
@@ -122,7 +128,7 @@ Persistence adapter validation:
    events without invoking `lotus-ai` or exposing prompts, provider payloads,
    candidate identifiers, source routes, portfolio identifiers, or client
    identifiers.
-11. Runtime API database wiring is opt-in and still requires deploy migration
+12. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, scheduled daemon/deploy source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim.
@@ -232,6 +238,13 @@ the diagnostic route only; they do not certify `lotus-ai` runtime execution,
 provider invocation, durable AI lineage, model-risk dashboard readiness,
 Gateway/Workbench support, data-product promotion, client-ready publication, or
 supported-feature promotion.
+
+The internal downstream-realization-readiness endpoint is covered by OpenAPI,
+endpoint certification, unit tests, and integration tests. Its passing checks
+certify the diagnostic route only; they do not certify Advise proposal
+creation, Manage action realization, Report/Render/Archive materialization,
+Gateway/Workbench support, data-product promotion, client-ready publication,
+or supported-feature promotion.
 
 CI warning policy:
 

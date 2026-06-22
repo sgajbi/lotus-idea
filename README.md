@@ -145,6 +145,15 @@ prompts or provider payloads, certify durable AI lineage, provide
 Gateway/Workbench support, certify a data product, or promote a supported
 feature.
 
+`GET /api/v1/downstream-realization/readiness` is a certified internal
+operator diagnostic for downstream realization supportability. It requires
+`idea.downstream-realization.readiness.read` plus the `operator` role and
+reports `lotus-idea` conversion intent, conversion outcome, and report
+evidence-pack request counts plus Advise, Manage, Report, Render, and Archive
+blockers. It does not call downstream services, create proposals, create manage
+actions, render or archive documents, authorize client-ready publication, or
+promote a supported feature.
+
 `GET /api/v1/implementation-proof/readiness` is a certified internal operator
 diagnostic for RFC-0002 implementation proof posture. It requires
 `idea.implementation-proof.readiness.read` plus the `operator` role and a
@@ -213,6 +222,9 @@ source-authority contracts only, not runtime certification.
   orchestration returns source-safe aggregate queue counts, exclusion counts,
   durable-storage posture, and certification blockers without exposing
   candidate identifiers, access scope, or supported queue posture. Internal
+  downstream-realization-readiness orchestration returns source-safe workflow
+  counts and downstream blockers without calling Advise, Manage, Report, Render,
+  or Archive or promoting support. Internal
   implementation-proof-readiness orchestration aggregates current RFC-0002
   capability proof blockers across source ingestion, queue, AI, data mesh,
   Workbench, downstream realization, and supported-feature promotion without
@@ -239,8 +251,8 @@ source-authority contracts only, not runtime certification.
   and bounded idea operation events. Certified internal high-cash, candidate
   persistence, candidate detail, candidate evidence replay, lifecycle, AI
   explanation, advisor queue, queue-readiness, review, feedback, conversion,
-  and report evidence-pack foundation APIs plus the data-mesh-readiness and
-  source-ingestion-readiness diagnostics emit
+  and report evidence-pack foundation APIs plus downstream-realization,
+  data-mesh, source-ingestion, and implementation-proof readiness diagnostics emit
   product-safe operation logs and the `lotus_idea_operation_events_total`
   metric without sensitive labels or supported-feature promotion.
 - `src/app/security/`: caller context and authorization policy.
@@ -405,6 +417,13 @@ candidate identifiers or source payloads:
 curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.implementation-proof.readiness.read" "http://localhost:8330/api/v1/implementation-proof/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z"
 ```
 
+To inspect downstream realization blockers without calling Advise, Manage,
+Report, Render, or Archive:
+
+```powershell
+curl -H "X-Caller-Roles: operator" -H "X-Caller-Capabilities: idea.downstream-realization.readiness.read" http://localhost:8330/api/v1/downstream-realization/readiness
+```
+
 Repository-backed endpoints report `durableStorageBacked=true` only in this
 configured posture. This does not promote data-product certification,
 Gateway/Workbench support, live source ingestion, downstream realization, or
@@ -481,6 +500,8 @@ evidence anchors, and stale scaffold-era underclaim detection.
 - API certification guide: `docs/operations/api-certification.md`
 - Observability guide: `docs/operations/observability.md`
 - AI governance guide: `docs/operations/ai-governance.md`
+- Downstream realization readiness guide:
+  `docs/operations/downstream-realization-readiness.md`
 - Implementation proof readiness guide:
   `docs/operations/implementation-proof-readiness.md`
 - Conversion governance guide: `docs/operations/conversion-governance.md`

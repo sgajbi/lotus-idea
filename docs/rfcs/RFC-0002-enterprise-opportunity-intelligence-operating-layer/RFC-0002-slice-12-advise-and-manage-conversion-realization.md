@@ -63,6 +63,14 @@ Implemented in this slice:
     review-approved candidate, recording the report conversion intent, replaying
     the intent from database idempotency state, recording a source-authorized
     conversion outcome, and validating the conversion intent/outcome tables.
+15. `src/app/application/downstream_realization_readiness.py` and
+    `GET /api/v1/downstream-realization/readiness` add a certified internal
+    operator diagnostic over current conversion intent/outcome counts and
+    Advise/Manage realization blockers. The diagnostic requires both the
+    `operator` role and `idea.downstream-realization.readiness.read`
+    capability, emits `downstream_realization_readiness_read`, and keeps the
+    supportability posture `not_certified` until live downstream contract proof
+    exists.
 
 ## Remaining Work
 
@@ -77,6 +85,11 @@ This slice is not yet a supported conversion product. Remaining work includes:
    services,
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
+
+The downstream-realization readiness diagnostic is a blocker index only. It
+does not create proposals, suitability records, manage action-register records,
+rebalance records, orders, client communications, reports, rendered output, or
+archive records.
 
 ## Required Work
 

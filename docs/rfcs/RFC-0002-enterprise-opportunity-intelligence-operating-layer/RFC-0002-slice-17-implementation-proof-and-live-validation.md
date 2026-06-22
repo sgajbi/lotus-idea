@@ -25,6 +25,11 @@ Prove the complete supported opportunity journey end to end.
 5. Unit and integration tests prove blocked posture, source-safe output,
    permission denial, timezone validation, unavailable-contract handling, and
    bounded `implementation_proof_readiness_read` operation events.
+6. `GET /api/v1/downstream-realization/readiness` now supplies the downstream
+   realization proof family used by the aggregate diagnostic. It reports
+   Advise, Manage, Report, Render, and Archive blockers with current
+   conversion/report workflow counts, while preserving the no-downstream-call
+   and no-supported-feature boundary.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -50,6 +55,10 @@ without relying on chat memory.
 3. Platform data-mesh certification and runtime trust telemetry remain pending.
 4. Supported-feature promotion remains blocked until the readiness diagnostic
    reports no blockers and evidence is merged to `main`.
+
+The new downstream realization readiness diagnostic narrows the proof gap from
+"unknown" to "explicitly blocked with source-authority refs"; it does not close
+the downstream proof gap.
 
 ## Acceptance Gate
 

@@ -28,13 +28,17 @@ progress. Current support:
    candidates,
 8. bounded read-only Gateway publication for advisor queue and candidate
    detail,
-9. certified internal aggregate implementation-proof readiness diagnostic for
-   RFC-0002 blocker visibility.
+9. certified internal downstream realization readiness diagnostic for Advise,
+   Manage, Report, Render, and Archive blocker visibility,
+10. certified internal aggregate implementation-proof readiness diagnostic for
+    RFC-0002 blocker visibility.
 
 No external business feature is supported yet. The high-cash, advisor queue,
 lifecycle, AI explanation, AI explanation readiness, review-action, and
 feedback API foundations are certified for internal contract evolution and
 operator supportability diagnostics, and the first Gateway publication is
 read-only integration foundation. The implementation-proof readiness diagnostic
-reports blockers; it is not Workbench proof, data-product certification, AI
-runtime proof, live implementation proof, or a client-demo feature claim.
+reports blockers. The downstream realization readiness diagnostic reports
+blockers and workflow counts only. Neither endpoint is Workbench proof,
+data-product certification, AI runtime proof, downstream execution proof, live
+implementation proof, or a client-demo feature claim.

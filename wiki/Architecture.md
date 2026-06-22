@@ -191,6 +191,15 @@ promotion. It is not live implementation proof, data-product certification,
 Gateway/Workbench proof, client-ready publication, or supported-feature
 promotion.
 
+`GET /api/v1/downstream-realization/readiness` is the certified internal
+operator diagnostic for downstream realization supportability. It reports
+current conversion intent/outcome counts, report evidence-pack request counts,
+source-of-truth paths, and blocker groups for `lotus-advise`,
+`lotus-manage`, `lotus-report`, `lotus-render`, and `lotus-archive`. It does
+not call downstream services, create proposals, create manage actions,
+materialize reports, render output, archive records, authorize client-ready
+publication, or promote a supported feature.
+
 ## Persistence Orchestration Foundation
 
 The internal application layer can now evaluate high-cash evidence and persist

@@ -39,6 +39,10 @@ Implemented in the first Slice 13 foundation:
    - `tests/integration/test_review_workflow_api.py`,
    - `tests/integration/test_postgres_runtime_integration.py`,
    - `tests/unit/test_service_contract.py`.
+7. `GET /api/v1/downstream-realization/readiness` now reports the current
+   report evidence-pack request count and the explicit Report/Render/Archive
+   blockers for operators without calling `lotus-report`, `lotus-render`, or
+   `lotus-archive`.
 
 Current endpoint behavior:
 
@@ -80,6 +84,13 @@ Not yet satisfied:
    trust telemetry, downstream materialization proof, or supported-feature
    promotion exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
+
+The downstream-realization readiness diagnostic is certified as an internal
+operator endpoint, but it is not materialization proof. It keeps
+Report/Render/Archive ownership outside `lotus-idea` and remains
+`not_certified` until downstream intake, deterministic rendering, archive
+metadata, retention/legal-hold, retrieval, and access-audit proof are
+implemented in the owning services.
 
 ## Boundary Decision
 
