@@ -65,6 +65,7 @@ Current instrumented operations:
 | `conversion_intent` | Internal review-gated conversion intent recording | `lotus-idea` | `foundation_only` |
 | `conversion_outcome` | Internal downstream conversion outcome recording | `lotus-idea` | `foundation_only` |
 | `report_evidence_pack` | Internal report evidence-pack request recording | `lotus-report` | `foundation_only` |
+| `downstream_realization_submission` | Internal downstream submission posture for Advise/Manage conversion intents and Report evidence-pack requests | `lotus-idea` | `not_certified` |
 | `outbox_delivery_readiness_read` | Internal outbox delivery readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `downstream_realization_readiness_read` | Internal downstream realization readiness diagnostic read | `lotus-idea` | `not_certified` |
 | `mesh_readiness_read` | Internal data-mesh readiness diagnostic read | `lotus-idea` | `not_certified` |
@@ -113,7 +114,9 @@ fields. Do not add identifiers or payload fragments to operation labels.
    entitlement proof, Workbench proof, data-product certification, or runtime
    trust telemetry. It also covers downstream realization readiness while
    Advise, Manage, Report, Render, Archive, Gateway/Workbench, and mesh proof
-   remain absent. It also covers the runtime trust telemetry preview while the
+   remain absent, and downstream submission while adapters are missing or a
+   downstream adapter returns a bounded rejection. It also covers the runtime
+   trust telemetry preview while the
    preview is not yet platform-certified or published through Gateway/Workbench
    discovery, and the aggregate implementation-proof readiness diagnostic when
    any RFC-0002 proof family remains uncertified. It also covers outbox

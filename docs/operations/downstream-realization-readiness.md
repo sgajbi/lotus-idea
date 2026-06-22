@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | No downstream realization or supported-feature promotion |
+| Product claim | Internal submission posture only; no downstream realization or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -29,10 +29,26 @@ It returns:
 6. source-safe application orchestration and HTTP adapter-foundation presence
    for the Advise proposal, Manage action, and Report evidence-pack handoff
    seams,
-7. planned downstream contract readiness for the Advise proposal, Manage
+7. certified internal submission routes for existing Advise/Manage conversion
+   intents and Report evidence-pack requests,
+8. planned downstream contract readiness for the Advise proposal, Manage
    action, and Report evidence-pack handoff seams,
-8. `not_certified` supportability until downstream live contracts and product
+9. `not_certified` supportability until downstream live contracts and product
    proof exist.
+
+The submission routes are:
+
+| Route | Purpose | Required capability |
+| --- | --- | --- |
+| `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions` | Submit an existing Advise or Manage conversion intent through configured source-safe adapters and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
+| `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
+
+These routes are API-certified internal foundations. They propagate
+correlation, trace, and idempotency headers to configured adapters, fail closed
+when adapter configuration is missing, and emit
+`downstream_realization_submission` operation events with
+`supportability_status=not_certified`. They do not record authoritative
+downstream outcomes or promote support.
 
 ## What It Does Not Prove
 
@@ -46,6 +62,11 @@ The diagnostic is deliberately not downstream execution proof. It does not:
 6. create Archive records,
 7. authorize publication of client-facing material,
 8. promote a supported feature.
+
+The submission routes also do not prove that the downstream target route exists
+or accepted business authority. A downstream service remains the source of
+truth for proposal creation, action creation, report package intake, render
+output, archive record creation, completion, rejection, and failure reasons.
 
 ## Downstream Contract Plan
 
@@ -108,6 +129,21 @@ The success response is intentionally aggregate and source-safe:
 | `sourceOfTruth` | Implementation and RFC paths that define current behavior |
 | `supportedFeaturePromoted` | Always `false` until supported-feature evidence exists |
 
+## Adapter Configuration
+
+The submission routes require explicit adapter configuration. Missing or blank
+configuration returns product-safe `503 downstream_realization_not_configured`
+instead of silently pretending to submit work.
+
+| Adapter | Base URL env var | Submit path env var |
+| --- | --- | --- |
+| Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH` |
+| Manage action realization | `LOTUS_IDEA_MANAGE_REALIZATION_BASE_URL` | `LOTUS_IDEA_MANAGE_REALIZATION_SUBMIT_PATH` |
+| Report evidence-pack realization | `LOTUS_IDEA_REPORT_REALIZATION_BASE_URL` | `LOTUS_IDEA_REPORT_REALIZATION_SUBMIT_PATH` |
+
+`LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS` controls the HTTP adapter
+timeout and defaults conservatively when absent.
+
 ## Evidence
 
 Implementation-backed evidence:
@@ -116,32 +152,37 @@ Implementation-backed evidence:
    `src/app/application/downstream_realization_readiness.py`,
 2. downstream realization orchestration:
    `src/app/application/downstream_realization.py`,
-3. downstream adapter port:
+3. downstream submission API:
+   `src/app/api/downstream_realization.py`,
+4. downstream adapter port:
    `src/app/ports/downstream_realization.py`,
-4. downstream adapter foundation:
+5. downstream adapter foundation:
    `src/app/infrastructure/downstream_realization.py`,
-5. governed contract plan:
+6. governed contract plan:
    `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-6. contract gate: `scripts/downstream_realization_contract_gate.py`,
-7. API route: `src/app/api/downstream_realization_readiness.py`,
-8. operation event: `downstream_realization_readiness_read`,
-9. endpoint ledger:
+7. contract gate: `scripts/downstream_realization_contract_gate.py`,
+8. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+9. operation events:
+   `downstream_realization_readiness_read` and
+   `downstream_realization_submission`,
+10. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-10. unit tests:
+11. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-11. application orchestration tests:
+12. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-12. adapter tests:
+13. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-13. gate tests:
+14. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-14. integration tests:
-   `tests/integration/test_downstream_realization_readiness_api.py`.
+15. integration tests:
+   `tests/integration/test_downstream_realization_readiness_api.py` and
+   `tests/integration/test_downstream_realization_api.py`.
 
 Run:
 
 ```powershell
-python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_readiness_api.py -q
+python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_api.py tests/integration/test_downstream_realization_readiness_api.py -q
 make downstream-realization-contract-gate
 make endpoint-certification-gate
 make openapi-gate

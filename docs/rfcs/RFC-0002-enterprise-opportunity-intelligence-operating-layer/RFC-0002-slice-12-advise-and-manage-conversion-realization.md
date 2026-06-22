@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream application orchestration and adapter foundations, and governed downstream contract-plan gate
+Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream submission API, application orchestration and adapter foundations, and governed downstream contract-plan gate
 
 ## Outcome
 
@@ -103,6 +103,24 @@ Implemented in this slice:
     routing, Manage failure mapping, report-target rejection through the
     conversion-intent submission path, not-found behavior, no outcome recording,
     no downstream-authority grant, and no supported-feature promotion.
+21. `src/app/api/downstream_realization.py` exposes the certified internal
+    `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
+    route for existing Advise and Manage conversion intents. The route requires
+    `idea.downstream-realization.submit` and `Idempotency-Key`, obtains
+    configured Advise/Manage clients from `src/app/downstream_realization_state.py`,
+    propagates correlation, trace, and idempotency headers through the
+    application layer, and fails closed with
+    `503 downstream_realization_not_configured` when adapter configuration is
+    absent.
+22. `docs/operations/endpoint-certification-ledger.json` and
+    `docs/operations/api-certification.md` record endpoint certification,
+    product-safe errors, usage boundaries, and operation-event evidence for
+    the downstream submission route.
+23. `tests/integration/test_downstream_realization_api.py` proves the
+    Advise submission success path, missing-adapter fail-closed posture,
+    permission denial, report-target rejection on the conversion route,
+    not-certified operation-event emission, and absence of downstream outcome
+    recording or supported-feature promotion.
 
 ## Remaining Work
 
@@ -118,10 +136,11 @@ This slice is not yet a supported conversion product. Remaining work includes:
 6. data-product trust telemetry and mesh certification,
 7. supported-feature promotion after runtime and downstream proof.
 
-The downstream-realization readiness diagnostic is a blocker index only. It
-does not create proposals, suitability records, manage action-register records,
-rebalance records, orders, client communications, reports, rendered output, or
-archive records. Planned contract-readiness records are not route-existence
+The downstream-realization readiness diagnostic and submission API are blocker
+and submission-posture foundations only. They do not create proposals,
+suitability records, manage action-register records, rebalance records, orders,
+client communications, reports, rendered output, or archive records. Planned
+contract-readiness records and configured adapter calls are not route-existence
 proof in the downstream repositories.
 
 ## Required Work
@@ -145,6 +164,7 @@ proof in the downstream repositories.
    advice.
 
 The current implementation satisfies the internal domain governance, certified
-internal API foundation, and source-safe adapter-foundation portions of this
-gate only. Cross-repository downstream realization remains planned until the
-owning services certify live contracts and acceptance proof.
+internal API foundation, source-safe submission API, and source-safe
+adapter-foundation portions of this gate only. Cross-repository downstream
+realization remains planned until the owning services certify live contracts
+and acceptance proof.

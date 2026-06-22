@@ -20,7 +20,9 @@ Current implemented scope:
    downstream ports without recording authoritative downstream outcomes,
 7. certified internal API foundations expose:
    - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
-   - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
+   - `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`,
+   - `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`,
+   - `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`.
 
 The report conversion path now has one additional internal request foundation:
 
@@ -32,8 +34,8 @@ report conversion intents. It does not create `lotus-report`, `lotus-render`, or
 
 Current non-supported scope:
 
-1. source-safe downstream orchestration and adapter foundations exist, but no
-   live downstream contract is certified,
+1. source-safe downstream orchestration, submission APIs, and adapter
+   foundations exist, but no live downstream contract is certified,
 2. no proposal, DPM action, downstream report package, rendered document, or
    archive record is created by `lotus-idea`,
 3. no conversion data product is certified,
@@ -50,12 +52,16 @@ Implementation source:
 - `src/app/domain/conversion_governance.py`
 - `src/app/application/conversion_workflow.py`
 - `src/app/application/downstream_realization.py`
+- `src/app/api/downstream_realization.py`
+- `src/app/downstream_realization_state.py`
 - `src/app/api/conversion_governance.py`
 - `src/app/domain/report_evidence.py`
 - `src/app/application/report_evidence.py`
 - `src/app/api/report_evidence.py`
 - `tests/unit/test_conversion_governance.py`
 - `tests/unit/test_idea_persistence.py`
+- `tests/unit/test_downstream_realization_application.py`
+- `tests/integration/test_downstream_realization_api.py`
 - `tests/integration/test_review_workflow_api.py`
 - `docs/operations/endpoint-certification-ledger.json`
 - `docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-12-advise-and-manage-conversion-realization.md`

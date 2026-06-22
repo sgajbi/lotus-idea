@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream application orchestration and adapter foundation, and governed downstream contract-plan gate
+Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream submission API, application orchestration and adapter foundation, and governed downstream contract-plan gate
 
 ## Outcome
 
@@ -69,6 +69,24 @@ Implemented in the first Slice 13 foundation:
     evidence-pack submission behavior, not-found behavior, no downstream
     outcome recording, no downstream-authority grant, and no supported-feature
     promotion.
+12. `src/app/api/downstream_realization.py` exposes the certified internal
+    `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
+    route for existing report evidence-pack requests. The route requires
+    `idea.downstream-realization.submit` and `Idempotency-Key`, obtains the
+    configured Report client from `src/app/downstream_realization_state.py`,
+    propagates correlation, trace, and idempotency headers through the
+    application layer, and fails closed with
+    `503 downstream_realization_not_configured` when adapter configuration is
+    absent.
+13. `docs/operations/endpoint-certification-ledger.json` and
+    `docs/operations/api-certification.md` record endpoint certification,
+    product-safe errors, usage boundaries, and operation-event evidence for
+    the report evidence-pack downstream submission route.
+14. `tests/integration/test_downstream_realization_api.py` proves the Report
+    submission success path, missing-adapter fail-closed posture, permission
+    denial, not-certified operation-event emission, and absence of Report
+    package intake, Render output, Archive record, client-publication, or
+    supported-feature claims.
 
 Current endpoint behavior:
 
@@ -114,10 +132,10 @@ Not yet satisfied:
    promotion exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
 
-The downstream-realization readiness diagnostic is certified as an internal
-operator endpoint, but it is not materialization proof or downstream
-route-existence proof. It keeps Report/Render/Archive ownership outside
-`lotus-idea` and remains `not_certified` until downstream intake,
+The downstream-realization readiness diagnostic and report submission API are
+certified as internal foundations, but they are not materialization proof or
+downstream route-existence proof. They keep Report/Render/Archive ownership
+outside `lotus-idea` and remain `not_certified` until downstream intake,
 deterministic rendering, archive metadata, retention/legal-hold, retrieval, and
 access-audit proof are implemented in the owning services.
 

@@ -41,7 +41,7 @@ It returns:
 6. runtime trust telemetry preview posture,
 7. outbox delivery readiness posture,
 8. Workbench realization blockers,
-9. downstream realization blockers,
+9. downstream realization blockers and internal submission route evidence,
 10. supported-feature promotion blockers,
 11. source-of-truth implementation paths.
 
@@ -84,6 +84,10 @@ Downstream realization blockers are backed by
 `make downstream-realization-contract-gate` validates that the planned
 contract rows stay source-authority preserving and do not become false
 route-existence, downstream-execution, or supported-feature claims.
+The downstream realization capability now also cites the internal submission
+routes for Advise/Manage conversion intents and Report evidence-pack requests,
+but those routes are submission posture only and do not clear live downstream
+proof blockers.
 
 ## Response Shape
 

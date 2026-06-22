@@ -45,9 +45,9 @@ support:
 8. bounded read-only Gateway publication for advisor queue and candidate
    detail,
 9. certified internal downstream realization readiness diagnostic plus
-   source-safe submission foundation for Advise, Manage, Report, Render, and
-   Archive blocker visibility and planned Advise/Manage/Report handoff
-   contract posture,
+   source-safe downstream submission APIs for existing Advise/Manage
+   conversion intents and Report evidence-pack requests, with planned
+   Advise/Manage/Report handoff contract posture,
 10. certified internal aggregate implementation-proof readiness diagnostic for
     RFC-0002 blocker visibility,
 11. certified internal runtime trust telemetry preview diagnostic for aggregate
@@ -60,7 +60,8 @@ operator supportability diagnostics, and the first Gateway publication is
 read-only integration foundation. The implementation-proof readiness diagnostic
 reports blockers, including outbox-delivery blockers. The downstream
 realization readiness diagnostic reports blockers, workflow counts,
-source-safe orchestration/adapter-foundation presence, and planned contract posture only. The
+source-safe orchestration/adapter-foundation presence, submission route
+posture, and planned contract posture only. The
 runtime trust telemetry preview reports aggregate active-repository counts
 only. None of these diagnostics is Workbench proof,
 data-product certification, AI runtime proof, certified live broker runtime,
@@ -74,4 +75,4 @@ implementation proof, or a client-demo feature claim.
 | Source ingestion | Run-once internal foundation | Requires live Core and scheduled worker proof |
 | Data mesh | Proposed contracts and readiness diagnostics | Requires platform certification and runtime telemetry |
 | Gateway publication | Bounded read-only foundation | Requires Workbench and supported-feature evidence |
-| Downstream realization | Intent/outcome tracking foundation plus source-safe submission orchestration, adapter, and planned contract posture | Requires Advise, Manage, Report, Render, and Archive route-existence and execution proof |
+| Downstream realization | Intent/outcome tracking foundation plus source-safe submission routes, adapter, and planned contract posture | Requires Advise, Manage, Report, Render, and Archive route-existence and execution proof |

@@ -115,6 +115,20 @@ certified internal API foundations:
 1. `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
 2. `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`.
 
+`lotus-idea` can also submit existing internal requests through source-safe
+adapter foundations when the corresponding adapter configuration is present:
+
+1. `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
+   for Advise or Manage conversion intents,
+2. `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
+   for Report evidence-pack requests.
+
+Those submission routes require `idea.downstream-realization.submit` and
+`Idempotency-Key`, propagate correlation/trace/idempotency context, and return
+bounded submission posture. They fail closed when adapter configuration is
+missing and do not record authoritative downstream outcomes or prove downstream
+route existence.
+
 The opt-in PostgreSQL runtime proof now covers the first internal report
 conversion intent/outcome path. It proves `lotus-idea` workflow-state
 persistence only; it does not prove downstream service intake.
@@ -140,6 +154,9 @@ for Advise, Manage, and Report handoffs, and blocker groups for Advise,
 Manage, Report, Render, and Archive realization. It is diagnostic only; the
 planned contract records are not downstream route-existence proof and the
 endpoint does not call downstream services or promote any integration claim.
+The submission routes may call configured adapters, but adapter calls are still
+not acceptance, materialization, or route-existence certification from the
+owning downstream repositories.
 
 The planned contract rows are authored in
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json` and
