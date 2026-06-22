@@ -167,11 +167,14 @@ holding, transaction, request-body, response-body, and raw entitlement failure
 markers. It is blocking through `make lint` and has focused pass/fail unit
 coverage so future evidence artifacts cannot quietly leak sensitive material.
 
-The documentation contract gate blocks deletion, thinning, missing anchors, and
-placeholder text across the required README, repository context, standards,
-runbooks, quality, evidence, and wiki surfaces. It keeps enterprise operating
-context intact for future implementation agents without promoting any business
-capability.
+The documentation contract gate blocks deletion, thinning, missing anchors,
+placeholder text, and unstructured operator text dumps across the required
+README, repository context, standards, runbooks, quality, evidence, and wiki
+surfaces. Proof and readiness guides must keep a polished operator structure:
+current-truth table, proof boundary, non-proof boundary, blockers,
+response-shape table, implementation evidence, and executable example. The
+gate keeps enterprise operating context intact for future implementation
+agents without promoting any business capability.
 
 The quality-scorecard gate keeps the bank-buyable control matrix executable. It
 requires the standard control rows, approved readiness statuses, non-empty

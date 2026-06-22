@@ -16,6 +16,14 @@ class DocumentationSurface:
     required_fragments: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class PolishedDocumentationSurface:
+    relative_path: str
+    required_headings: tuple[str, ...]
+    min_markdown_tables: int
+    min_code_fences: int
+
+
 REQUIRED_SURFACES = (
     DocumentationSurface(
         "AGENTS.md",
@@ -158,6 +166,35 @@ REQUIRED_SURFACES = (
     ),
 )
 
+POLISHED_SURFACES = (
+    PolishedDocumentationSurface(
+        "docs/operations/implementation-proof-readiness.md",
+        (
+            "## What It Proves",
+            "## What It Does Not Prove",
+            "## Current Blockers",
+            "## Response Shape",
+            "## Evidence",
+            "## Example",
+        ),
+        2,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "docs/operations/downstream-realization-readiness.md",
+        (
+            "## What It Proves",
+            "## What It Does Not Prove",
+            "## Current Blockers",
+            "## Response Shape",
+            "## Evidence",
+            "## Example",
+        ),
+        2,
+        1,
+    ),
+)
+
 PROHIBITED_PLACEHOLDERS = (
     ("TODO", re.compile(r"\bTODO\b", re.IGNORECASE)),
     ("TBD", re.compile(r"\bTBD\b", re.IGNORECASE)),
@@ -170,10 +207,31 @@ def _non_empty_lines(content: str) -> list[str]:
     return [line for line in content.splitlines() if line.strip()]
 
 
+def _markdown_table_count(content: str) -> int:
+    lines = content.splitlines()
+    table_count = 0
+    for index, line in enumerate(lines[:-1]):
+        if not line.strip().startswith("|"):
+            continue
+        separator = lines[index + 1].strip()
+        if separator.startswith("|") and "---" in separator:
+            table_count += 1
+    return table_count
+
+
+def _code_fence_count(content: str) -> int:
+    return content.count("```") // 2
+
+
+def _has_heading(content: str, heading: str) -> bool:
+    return content.startswith(f"{heading}\n") or f"\n{heading}\n" in content
+
+
 def validate_documentation_contract(
     *,
     root: Path = ROOT,
     surfaces: tuple[DocumentationSurface, ...] = REQUIRED_SURFACES,
+    polished_surfaces: tuple[PolishedDocumentationSurface, ...] = POLISHED_SURFACES,
 ) -> list[str]:
     errors: list[str] = []
     for surface in surfaces:
@@ -194,6 +252,27 @@ def validate_documentation_contract(
         for name, pattern in PROHIBITED_PLACEHOLDERS:
             if pattern.search(content):
                 errors.append(f"{surface.relative_path}: contains placeholder text `{name}`")
+    for surface in polished_surfaces:
+        path = root / surface.relative_path
+        if not path.exists():
+            errors.append(f"{surface.relative_path}: polished documentation surface is missing")
+            continue
+        content = path.read_text(encoding="utf-8")
+        for heading in surface.required_headings:
+            if not _has_heading(content, heading):
+                errors.append(f"{surface.relative_path}: missing polished heading `{heading}`")
+        table_count = _markdown_table_count(content)
+        if table_count < surface.min_markdown_tables:
+            errors.append(
+                f"{surface.relative_path}: has {table_count} markdown tables; "
+                f"minimum is {surface.min_markdown_tables}"
+            )
+        code_fence_count = _code_fence_count(content)
+        if code_fence_count < surface.min_code_fences:
+            errors.append(
+                f"{surface.relative_path}: has {code_fence_count} code fences; "
+                f"minimum is {surface.min_code_fences}"
+            )
     return errors
 
 

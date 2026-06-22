@@ -485,7 +485,10 @@ URL paths.
 it prevents future agentic work from deleting, thinning, or hollowing out the
 README, repository context, standards, runbooks, RFC index, quality scorecard,
 evidence guide, and wiki pages that operators and implementation agents need
-to follow the bank-buyable contract.
+to follow the bank-buyable contract. It also enforces a polished operator-doc
+profile for proof and readiness guides, including current-truth tables,
+explicit proof and non-proof boundaries, blocker sections, response-shape
+tables, evidence links, and executable examples.
 `make quality-scorecard-gate` is also blocking through `make lint`; it keeps
 the bank-buyable control matrix aligned with implementation truth by enforcing
 approved status vocabulary, non-empty evidence/gap/next-slice cells, required

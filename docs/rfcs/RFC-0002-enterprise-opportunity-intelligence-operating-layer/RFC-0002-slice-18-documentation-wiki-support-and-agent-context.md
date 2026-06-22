@@ -34,10 +34,14 @@ durable operating-context enforcement:
    removal, thinning, missing anchors, or placeholder erosion across the
    required README, repository context, enterprise standard, runbook, RFC
    index, quality, evidence, and wiki surfaces future implementation agents
-   depend on.
+   depend on. It also enforces a polished proof/readiness guide profile so
+   operator-facing diagnostics use current-truth tables, proof and non-proof
+   boundaries, blocker sections, response-shape tables, evidence references,
+   and executable examples instead of raw text dumps.
 7. Focused unit coverage proves the documentation contract gate passes current
    repository truth and fails missing, thin, missing-anchor, and placeholder
-   documentation surfaces.
+   documentation surfaces, plus unpolished operator diagnostics without
+   required headings, tables, or command examples.
 8. `docs/operations/implementation-proof-readiness.md`, README, repository
    context, demo claims, operations runbooks, and wiki source now describe the
    certified internal implementation-proof readiness diagnostic and preserve
@@ -48,6 +52,11 @@ durable operating-context enforcement:
    internal downstream realization readiness diagnostic with a polished
    operator-facing structure: current truth, proof boundary, blockers,
    response shape, evidence, and executable example.
+10. `docs/operations/implementation-proof-readiness.md` now uses the same
+    polished operator-facing structure and is protected by the documentation
+    contract gate, making implementation proof posture readable for business,
+    engineering, operations, release, and demo reviewers without overclaiming
+    live proof or supported-feature promotion.
 
 This documentation slice does not promote any supported feature. It does not
 add Gateway/Workbench proof, durable persistence, data-product certification,
