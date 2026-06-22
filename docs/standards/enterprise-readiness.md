@@ -4,10 +4,18 @@
 - Status: baseline adopted.
 
 Enterprise-quality enforcement is repo-native from day one. `make lint`, `make check`, and GitHub
-lanes protect architecture boundaries, maintainability thresholds, OpenAPI quality, data-mesh
+lanes protect architecture boundaries, maintainability thresholds, documentation surface
+contracts, OpenAPI quality, data-mesh
 contract posture, migration safety, supported-feature promotion control, endpoint certification,
 security audit, coverage, workflow timeout posture, no soft-failed critical CI jobs, and
 implementation-truth claims in README/docs/wiki current-state surfaces.
+
+Day-one enterprise posture is governed by
+`lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`.
+`make documentation-contract-gate` enforces the minimum durable documentation
+surface that lets engineers, operators, reviewers, and future agents apply that
+contract: README, repository context, standards, runbooks, RFC index, quality
+scorecard, evidence guide, and repo-local wiki source.
 
 The maintainability gate is intentionally conservative and measured against the current baseline:
 source files/functions, test files/functions, and script files/functions have explicit maximum

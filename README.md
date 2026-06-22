@@ -198,6 +198,7 @@ make install
 make lint
 make ci-contract-gate
 make maintainability-gate
+make documentation-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
@@ -221,6 +222,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe -m ruff format --check .
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
 .venv\Scripts\python.exe scripts/maintainability_gate.py
+.venv\Scripts\python.exe scripts/documentation_contract_gate.py
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
@@ -320,6 +322,11 @@ bounded `timeout-minutes` values, and critical lanes must not use
 controls. `make maintainability-gate` is also blocking through `make lint`;
 it prevents future agentic changes from adding oversized source, test, or
 script files/functions beyond the measured enterprise-quality thresholds.
+`make documentation-contract-gate` is blocking through `make lint` as well;
+it prevents future agentic work from deleting, thinning, or hollowing out the
+README, repository context, standards, runbooks, RFC index, quality scorecard,
+evidence guide, and wiki pages that operators and implementation agents need
+to follow the bank-buyable contract.
 
 - Bank-buyable contract:
   `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
