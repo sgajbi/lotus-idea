@@ -33,12 +33,19 @@ class DownstreamClientConfig:
             raise DownstreamClientConfigurationError("Downstream timeout_seconds must be positive.")
 
 
-def build_trace_headers(*, correlation_id: str | None, trace_id: str | None) -> dict[str, str]:
+def build_trace_headers(
+    *,
+    correlation_id: str | None,
+    trace_id: str | None,
+    idempotency_key: str | None = None,
+) -> dict[str, str]:
     headers: dict[str, str] = {}
     if correlation_id:
         headers["X-Correlation-Id"] = correlation_id
     if trace_id:
         headers["X-Trace-Id"] = trace_id
+    if idempotency_key:
+        headers["Idempotency-Key"] = idempotency_key
     return headers
 
 
@@ -71,6 +78,7 @@ class DownstreamJsonClient:
         json_payload: dict[str, Any],
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         return self._request_json(
             "POST",
@@ -78,6 +86,7 @@ class DownstreamJsonClient:
             json_payload=json_payload,
             correlation_id=correlation_id,
             trace_id=trace_id,
+            idempotency_key=idempotency_key,
         )
 
     def _request_json(
@@ -88,6 +97,7 @@ class DownstreamJsonClient:
         json_payload: dict[str, Any] | None = None,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any]:
         try:
             response = self._client.request(
@@ -97,6 +107,7 @@ class DownstreamJsonClient:
                 headers=build_trace_headers(
                     correlation_id=correlation_id,
                     trace_id=trace_id,
+                    idempotency_key=idempotency_key,
                 ),
             )
         except httpx.TimeoutException as exc:

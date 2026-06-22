@@ -27,21 +27,25 @@ class DownstreamRealizationStatus(StrEnum):
 @dataclass(frozen=True)
 class RealizeConversionIntentCommand:
     conversion_intent_id: str
+    idempotency_key: str
     correlation_id: str | None = None
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
+        _require_text(self.idempotency_key, "idempotency_key")
 
 
 @dataclass(frozen=True)
 class RealizeReportEvidencePackCommand:
     report_evidence_pack_id: str
+    idempotency_key: str
     correlation_id: str | None = None
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.report_evidence_pack_id, "report_evidence_pack_id")
+        _require_text(self.idempotency_key, "idempotency_key")
 
 
 @dataclass(frozen=True)
@@ -78,12 +82,14 @@ def submit_conversion_intent_to_downstream(
             conversion_intent,
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
+            idempotency_key=command.idempotency_key,
         )
     elif conversion_intent.intent.target is ConversionTarget.MANAGE_REVIEW:
         outcome = manage_client.submit_action_intent(
             conversion_intent,
             correlation_id=command.correlation_id,
             trace_id=command.trace_id,
+            idempotency_key=command.idempotency_key,
         )
     else:
         return DownstreamRealizationSubmissionResult(
@@ -122,6 +128,7 @@ def submit_report_evidence_pack_to_downstream(
         evidence_pack,
         correlation_id=command.correlation_id,
         trace_id=command.trace_id,
+        idempotency_key=command.idempotency_key,
     )
     return _submission_result(
         accepted=outcome.accepted,

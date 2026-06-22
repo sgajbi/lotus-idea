@@ -50,6 +50,7 @@ class CapturingAdviseClient:
     submitted: tuple[GovernedConversionIntent, ...] = ()
     correlation_id: str | None = None
     trace_id: str | None = None
+    idempotency_key: str | None = None
 
     def submit_proposal_intent(
         self,
@@ -57,10 +58,12 @@ class CapturingAdviseClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         self.submitted = (*self.submitted, intent)
         self.correlation_id = correlation_id
         self.trace_id = trace_id
+        self.idempotency_key = idempotency_key
         return self.outcome
 
 
@@ -70,6 +73,7 @@ class CapturingManageClient:
     submitted: tuple[GovernedConversionIntent, ...] = ()
     correlation_id: str | None = None
     trace_id: str | None = None
+    idempotency_key: str | None = None
 
     def submit_action_intent(
         self,
@@ -77,10 +81,12 @@ class CapturingManageClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         self.submitted = (*self.submitted, intent)
         self.correlation_id = correlation_id
         self.trace_id = trace_id
+        self.idempotency_key = idempotency_key
         return self.outcome
 
 
@@ -90,6 +96,7 @@ class CapturingReportClient:
     submitted: tuple[GovernedReportEvidencePack, ...] = ()
     correlation_id: str | None = None
     trace_id: str | None = None
+    idempotency_key: str | None = None
 
     def submit_report_evidence_pack_request(
         self,
@@ -97,10 +104,12 @@ class CapturingReportClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         self.submitted = (*self.submitted, evidence_pack)
         self.correlation_id = correlation_id
         self.trace_id = trace_id
+        self.idempotency_key = idempotency_key
         return self.outcome
 
 
@@ -112,6 +121,7 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     result = submit_conversion_intent_to_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="submission-advise-001",
             correlation_id="corr-realization",
             trace_id="trace-realization",
         ),
@@ -131,6 +141,7 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     )
     assert advise_client.correlation_id == "corr-realization"
     assert advise_client.trace_id == "trace-realization"
+    assert advise_client.idempotency_key == "submission-advise-001"
     assert manage_client.submitted == ()
     assert "portfolio_id" not in str(result)
     assert "client_id" not in str(result)
@@ -146,6 +157,7 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
     result = submit_conversion_intent_to_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-manage_review-001",
+            idempotency_key="submission-manage-001",
             correlation_id="corr-manage-realization",
             trace_id="trace-manage-realization",
         ),
@@ -162,13 +174,17 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
     assert manage_client.submitted[0].target_source_authority is SourceSystem.LOTUS_MANAGE
     assert manage_client.correlation_id == "corr-manage-realization"
     assert manage_client.trace_id == "trace-manage-realization"
+    assert manage_client.idempotency_key == "submission-manage-001"
 
 
 def test_report_conversion_intent_requires_report_evidence_pack_request_submission() -> None:
     repository = repository_with_conversion(ConversionTarget.REPORT_EVIDENCE)
 
     result = submit_conversion_intent_to_downstream(
-        RealizeConversionIntentCommand(conversion_intent_id="conversion-report_evidence-001"),
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-report_evidence-001",
+            idempotency_key="submission-report-intent-001",
+        ),
         repository=repository,
         advise_client=CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream()),
         manage_client=CapturingManageClient(DownstreamRealizationOutcome.accepted_by_downstream()),
@@ -187,6 +203,7 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
     result = submit_report_evidence_pack_to_downstream(
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id="report-evidence-pack-001",
+            idempotency_key="submission-report-pack-001",
             correlation_id="corr-report-realization",
             trace_id="trace-report-realization",
         ),
@@ -201,6 +218,7 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
     assert report_client.submitted[0].report_evidence_pack_id == "report-evidence-pack-001"
     assert report_client.correlation_id == "corr-report-realization"
     assert report_client.trace_id == "trace-report-realization"
+    assert report_client.idempotency_key == "submission-report-pack-001"
 
 
 def test_downstream_realization_returns_not_found_without_calling_clients() -> None:
@@ -210,13 +228,19 @@ def test_downstream_realization_returns_not_found_without_calling_clients() -> N
     report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
 
     conversion_result = submit_conversion_intent_to_downstream(
-        RealizeConversionIntentCommand(conversion_intent_id="missing-conversion"),
+        RealizeConversionIntentCommand(
+            conversion_intent_id="missing-conversion",
+            idempotency_key="submission-missing-conversion-001",
+        ),
         repository=repository,
         advise_client=advise_client,
         manage_client=manage_client,
     )
     pack_result = submit_report_evidence_pack_to_downstream(
-        RealizeReportEvidencePackCommand(report_evidence_pack_id="missing-pack"),
+        RealizeReportEvidencePackCommand(
+            report_evidence_pack_id="missing-pack",
+            idempotency_key="submission-missing-pack-001",
+        ),
         repository=repository,
         report_client=report_client,
     )

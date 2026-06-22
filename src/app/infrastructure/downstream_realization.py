@@ -60,6 +60,7 @@ class HttpAdviseProposalRealizationClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         _require_target(intent, ConversionTarget.ADVISE_PROPOSAL)
         return _post_downstream_envelope(
@@ -68,6 +69,7 @@ class HttpAdviseProposalRealizationClient:
             json_payload=_conversion_intent_envelope(intent),
             correlation_id=correlation_id,
             trace_id=trace_id,
+            idempotency_key=idempotency_key,
         )
 
 
@@ -87,6 +89,7 @@ class HttpManageActionRealizationClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         _require_target(intent, ConversionTarget.MANAGE_REVIEW)
         return _post_downstream_envelope(
@@ -95,6 +98,7 @@ class HttpManageActionRealizationClient:
             json_payload=_conversion_intent_envelope(intent),
             correlation_id=correlation_id,
             trace_id=trace_id,
+            idempotency_key=idempotency_key,
         )
 
 
@@ -114,6 +118,7 @@ class HttpReportEvidencePackMaterializationClient:
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         return _post_downstream_envelope(
             self._client,
@@ -121,6 +126,7 @@ class HttpReportEvidencePackMaterializationClient:
             json_payload=_report_evidence_pack_envelope(evidence_pack),
             correlation_id=correlation_id,
             trace_id=trace_id,
+            idempotency_key=idempotency_key,
         )
 
 
@@ -143,6 +149,7 @@ def _post_downstream_envelope(
     json_payload: dict[str, Any],
     correlation_id: str | None,
     trace_id: str | None,
+    idempotency_key: str | None,
 ) -> DownstreamRealizationOutcome:
     try:
         client.post_json(
@@ -150,6 +157,7 @@ def _post_downstream_envelope(
             json_payload=json_payload,
             correlation_id=correlation_id,
             trace_id=trace_id,
+            idempotency_key=idempotency_key,
         )
     except DownstreamServiceError as exc:
         return DownstreamRealizationOutcome.rejected_by_downstream(_failure_reason(exc))

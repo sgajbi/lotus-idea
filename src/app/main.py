@@ -7,6 +7,7 @@ from app.api.candidate_evidence_replay import register_candidate_evidence_replay
 from app.api.candidate_lifecycle import register_candidate_lifecycle_routes
 from app.api.conversion_governance import register_conversion_governance_routes
 from app.api.data_mesh_readiness import register_data_mesh_readiness_routes
+from app.api.downstream_realization import register_downstream_realization_routes
 from app.api.downstream_realization_readiness import (
     register_downstream_realization_readiness_routes,
 )
@@ -37,6 +38,7 @@ register_review_queue_routes(app)
 register_review_workflow_routes(app)
 register_conversion_governance_routes(app)
 register_report_evidence_routes(app)
+register_downstream_realization_routes(app)
 register_downstream_realization_readiness_routes(app)
 register_data_mesh_readiness_routes(app)
 register_runtime_trust_telemetry_routes(app)

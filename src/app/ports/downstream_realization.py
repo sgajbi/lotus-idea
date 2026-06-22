@@ -29,6 +29,7 @@ class AdviseProposalRealizationClient(Protocol):
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         """Submit a source-safe proposal intent envelope to lotus-advise."""
 
@@ -40,6 +41,7 @@ class ManageActionRealizationClient(Protocol):
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         """Submit a source-safe action intent envelope to lotus-manage."""
 
@@ -51,5 +53,6 @@ class ReportEvidencePackMaterializationClient(Protocol):
         *,
         correlation_id: str | None = None,
         trace_id: str | None = None,
+        idempotency_key: str | None = None,
     ) -> DownstreamRealizationOutcome:
         """Submit a source-safe evidence-pack request envelope to lotus-report."""
