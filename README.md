@@ -13,7 +13,10 @@ model/lifecycle foundation, verified platform scaffold/wiki baseline evidence,
 an internal high-cash deterministic signal policy, the first Core source-port
 and conservative HTTP adapter foundation for high-cash evidence,
 an internal persistence/replay/idempotency/audit foundation, an internal
-high-cash evaluate-and-persist orchestration foundation,
+high-cash evaluate-and-persist orchestration foundation, an internal
+Core-backed source-ingestion orchestration foundation with generated
+idempotency keys and accepted/replayed/conflict/blocked/suppressed/not-eligible
+outcome classification,
 deterministic scoring/review-queue projection and repository-snapshot queue
 orchestration foundation, an internal advisor review/feedback governance and
 workflow persistence foundation, and an internal AI governance
@@ -121,6 +124,10 @@ source-authority contracts only, not runtime certification.
   evaluate high-cash signals over caller-supplied Core evidence and over a
   Core source port that fetches governed Core evidence, and internally persist
   created candidates through the Slice 06 idempotency/audit repository contract.
+  `source_ingestion.py` adds the first internal high-cash source-ingestion
+  orchestration wrapper over the same Core source port and repository port,
+  including generated source-ingestion idempotency keys and explicit
+  accepted/replayed/conflict/blocked/suppressed/not-eligible decisions.
   Internal review-queue orchestration projects persisted candidate snapshots
   through the Slice 07 deterministic queue policy and certified internal advisor
   queue API foundation. Internal candidate lifecycle orchestration records

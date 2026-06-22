@@ -209,10 +209,16 @@ def _idempotency_payload_for_core_high_cash(
     )
     return {
         "as_of_date": command.as_of_date.isoformat(),
+        "candidate_id": (
+            evaluation.candidate.candidate_id if evaluation.candidate is not None else None
+        ),
         "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
         "family": OpportunityFamily.HIGH_CASH.value,
         "portfolio_id": command.portfolio_id,
         "policy_version": policy.policy_version,
+        "source_signal_ids": (
+            list(evaluation.candidate.source_signal_ids) if evaluation.candidate is not None else []
+        ),
         "source_refs": [_source_ref_payload(source_ref) for source_ref in source_refs],
     }
 

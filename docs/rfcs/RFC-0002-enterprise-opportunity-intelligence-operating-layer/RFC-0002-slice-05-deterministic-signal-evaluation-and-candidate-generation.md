@@ -65,11 +65,17 @@ Additional implemented source-adapter foundation:
    blocked with missing-source posture.
 5. The upstream Core contract gap for explicit source-reported cash weight is
    tracked in `sgajbi/lotus-core#430`.
+6. `src/app/application/source_ingestion.py` now adds the first internal
+   high-cash source-ingestion orchestration wrapper over the Core source port
+   and repository port. It generates source-ingestion idempotency keys when a
+   caller does not provide one and returns explicit accepted, replayed,
+   conflict, blocked, suppressed, and skipped-not-eligible decisions without
+   adding API, Gateway, Workbench, or supported-feature claims.
 
 Not implemented yet:
 
 1. live Core integration proof against a running Core service,
-2. database persistence/replay,
+2. database-backed source-ingestion worker and recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
 4. Gateway/Workbench proof,
 5. supported-feature promotion,
@@ -114,3 +120,8 @@ Current source-port validation:
 
 GitHub PR validation and post-merge main releasability remain required before
 mainline closure.
+
+Current source-ingestion orchestration validation:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion.py tests\unit\test_high_cash_application.py -q`
+   passed with `21 passed`.

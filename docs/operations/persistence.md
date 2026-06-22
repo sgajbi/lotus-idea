@@ -6,7 +6,10 @@ tested PostgreSQL repository adapter foundation, and opt-in API repository
 wiring through `LOTUS_IDEA_DATABASE_URL`. It also has real PostgreSQL runtime
 proof for high-cash API persistence/replay and the first internal review,
 feedback, conversion, report evidence-pack, advisor queue, and migration
-rollback/reapply recovery workflow path.
+rollback/reapply recovery workflow path. Internal high-cash source-ingestion
+orchestration now uses generated source-ingestion idempotency keys when needed
+and classifies accepted, replayed, conflict, blocked, suppressed, and
+not-eligible outcomes over the Core source port and repository port.
 Runtime API state remains process-local by default and reports
 `durableStorageBacked=false` unless the database URL is configured. When
 configured, repository-backed API responses and operation events report
@@ -49,6 +52,11 @@ downstream realization proof, or supported-feature promotion.
    backing tables, rolls back the schema, reapplies it, and proves the recovered
    API persistence contract is usable. GitHub PR Merge Gate and Main
    Releasability run this proof against `postgres:18-alpine`.
+9. `src/app/application/source_ingestion.py` is the internal high-cash
+   source-ingestion orchestration foundation. It does not run a background
+   worker yet; it standardizes the future worker's generated idempotency key
+   shape and non-mutating behavior for blocked, suppressed, and below-threshold
+   Core source evidence.
 
 ## Validation
 

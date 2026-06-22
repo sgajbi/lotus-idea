@@ -118,9 +118,14 @@ evidence port, source-backed application orchestration, and a conservative HTTP
 adapter over the declared Core source products. The adapter preserves source
 refs and fails closed when Core omits a source-reported cash-weight field; it
 does not calculate cash weight from cash totals or market values. This remains
-internal source-adapter foundation behavior: there is no live Core integration
-proof, database persistence, Gateway route, Workbench proof, data-product
-certification, or supported-feature promotion yet.
+internal source-adapter foundation behavior. `src/app/application/source_ingestion.py`
+now adds an internal high-cash source-ingestion orchestration wrapper over the
+Core source port and repository port, including generated source-ingestion
+idempotency keys and explicit accepted, replayed, conflict, blocked,
+suppressed, and skipped-not-eligible decisions. There is still no live Core
+integration proof, database-backed source-ingestion worker recovery proof,
+Gateway route, Workbench proof, data-product certification, or supported-feature
+promotion yet.
 The upstream Core cash-weight contract dependency is tracked in
 `sgajbi/lotus-core#430`.
 
@@ -134,11 +139,15 @@ history, conversion intent/outcome records, conversion intent lookup, report
 evidence-pack request records, safe audit events for mutating actions, snapshot
 recovery for internal replay tests,
 application-level high-cash evaluate-and-persist orchestration in
-`src/app/application/high_cash_signal.py`, and candidate lifecycle orchestration
-in `src/app/application/candidate_lifecycle.py`. The high-cash orchestration
-persists only created candidates, replays matching idempotency keys, conflicts
-on changed payloads, and leaves blocked/not-eligible/suppressed evaluations
-non-mutating. The lifecycle API records governed transitions through the
+`src/app/application/high_cash_signal.py`, internal high-cash source-ingestion
+orchestration in `src/app/application/source_ingestion.py`, and candidate
+lifecycle orchestration in `src/app/application/candidate_lifecycle.py`. The
+high-cash orchestration persists only created candidates, replays matching
+idempotency keys, conflicts on changed payloads, and leaves
+blocked/not-eligible/suppressed evaluations non-mutating. The Core-backed
+idempotency payload now pins generated candidate and source-signal identity so
+same-key source changes conflict instead of being treated as an equivalent
+replay. The lifecycle API records governed transitions through the
 canonical domain transition graph with accepted, replayed, not-found, conflict,
 and invalid-transition posture while still reporting
 `durableStorageBacked=false`.
@@ -175,8 +184,8 @@ recording report conversion intent/outcome state, recording a report
 evidence-pack request, validating the backing workflow tables, and proving schema
 rollback/reapply restores a usable API persistence contract. This is still not
 production storage certification: deploy migration evidence, source-ingestion
-recovery proof, data-product certification, downstream workflow proof, and
-supported-feature promotion remain planned.
+worker proof and recovery evidence, data-product certification, downstream
+workflow proof, and supported-feature promotion remain planned.
 
 RFC-0002 Slice 07 is partially implemented as an internal deterministic scoring
 and review-queue projection plus certified API foundation in

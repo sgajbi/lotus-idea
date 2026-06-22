@@ -18,6 +18,12 @@ feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service when
 `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured, including schema
 rollback/reapply recovery.
+Internal high-cash source-ingestion orchestration now exists as an application
+foundation over the Core source port and repository port. It generates a
+source-ingestion idempotency key when one is not supplied and classifies
+accepted, replayed, conflict, blocked, suppressed, and not-eligible outcomes,
+but it is not a live worker, production recovery proof, data-product
+certification, Gateway route, Workbench proof, or supported business feature.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.
