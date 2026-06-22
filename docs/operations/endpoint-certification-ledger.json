@@ -499,6 +499,34 @@
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
     {
+      "method": "POST",
+      "path": "/api/v1/source-ingestion/run-once",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Run one bounded internal high-cash Core source-ingestion pass for operators using the configured worker manifest, active repository provider, and Core source adapter while returning aggregate counts only.",
+      "when_to_use": "Use for internal operator validation when a caller has idea.source-ingestion.run capability, durable repository configuration is active, and operators need to exercise the source-ingestion orchestration without exposing portfolio identifiers, idempotency keys, raw Core payloads, or candidate identifiers.",
+      "when_not_to_use": "Do not use as live Core source-ingestion proof, scheduled worker deployment proof, data-product certification proof, platform source-manifest inclusion proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "POST /api/v1/source-ingestion/run-once with X-Caller-Roles: operator and X-Caller-Capabilities: idea.source-ingestion.run"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"runStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"sourceAuthority\":\"lotus-core\",\"opportunityFamily\":\"high_cash\",\"durableStorageBacked\":false,\"configuredManifestAvailable\":false,\"coreBaseUrlConfigured\":false,\"totalCount\":0,\"decisionCounts\":{\"accepted\":0,\"replayed\":0,\"conflict\":0,\"duplicate_candidate\":0,\"skipped_not_eligible\":0,\"blocked\":0,\"suppressed\":0},\"configurationBlockers\":[\"durable_repository_not_configured\"],\"certificationBlockers\":[\"live_core_source_proof_missing\",\"scheduled_worker_deploy_proof_missing\",\"data_mesh_runtime_telemetry_not_certified\",\"gateway_workbench_proof_missing\",\"supported_feature_promotion_missing\"],\"liveSourceCertified\":false,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.source-ingestion.run capability."
+      ],
+      "test_evidence": [
+        "tests/unit/test_source_ingestion.py::test_run_once_batch_ingests_and_replays_duplicate_work_items",
+        "tests/unit/test_source_ingestion_worker.py::test_summarizes_worker_run_without_source_payloads_or_supported_claims",
+        "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_blocks_without_durable_repository",
+        "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_blocks_runtime_configuration_without_mutation",
+        "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_executes_configured_batch_source_safely",
+        "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_requires_operator_permission",
+        "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_emits_not_certified_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
       "method": "GET",
       "path": "/api/v1/outbox-delivery/readiness",
       "certification_status": "certified",

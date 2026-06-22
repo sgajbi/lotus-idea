@@ -198,6 +198,8 @@ def _source_ingestion_capability(
             "scripts/run_source_ingestion_worker.py",
             "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
             "make source-ingestion-worker-check",
+            "GET /api/v1/source-ingestion/readiness",
+            "POST /api/v1/source-ingestion/run-once",
         ),
         blockers=(
             *snapshot.configuration_blockers,
