@@ -72,11 +72,13 @@ def queue_headers(capabilities: str = "idea.review.queue.read") -> dict[str, str
 
 
 def readiness_headers(
+    *,
+    roles: str = "operator",
     capabilities: str = "idea.review.queue.readiness.read",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "platform-operator",
-        "X-Caller-Roles": "operator",
+        "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-review-queue-readiness-api",
     }
@@ -323,6 +325,14 @@ def test_advisor_review_queue_readiness_api_requires_operator_permission() -> No
         "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
         headers=queue_headers(),
     )
+    role_denied = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=readiness_headers(roles="advisor"),
+    )
+    capability_denied = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=readiness_headers(capabilities="idea.review.queue.read"),
+    )
 
     assert response.status_code == 403
     assert response.json() == {
@@ -332,6 +342,10 @@ def test_advisor_review_queue_readiness_api_requires_operator_permission() -> No
         "title": "Permission denied",
         "detail": "The caller is not permitted to read idea review queue readiness.",
     }
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
 
 
 def test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely() -> None:

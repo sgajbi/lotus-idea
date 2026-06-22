@@ -6,6 +6,7 @@ from app.security.caller_context import (
     PermissionDeniedError,
     permission_denied_response,
     require_capability,
+    require_role_and_capability,
 )
 
 
@@ -25,6 +26,35 @@ def test_capability_policy_allows_role() -> None:
         allowed_roles=("ops-admin",),
     )
     require_capability(caller, policy)
+
+
+def test_role_and_capability_requirement_requires_both() -> None:
+    policy = CapabilityPolicy.for_roles(
+        required_capability="portfolio:operate",
+        allowed_roles=("operator",),
+    )
+    require_role_and_capability(
+        CallerContext.from_iterables(
+            subject="operator",
+            roles=("operator",),
+            capabilities=("portfolio:operate",),
+        ),
+        policy,
+    )
+
+    with pytest.raises(PermissionDeniedError):
+        require_role_and_capability(
+            CallerContext.from_iterables(
+                subject="capability-only",
+                capabilities=("portfolio:operate",),
+            ),
+            policy,
+        )
+    with pytest.raises(PermissionDeniedError):
+        require_role_and_capability(
+            CallerContext.from_iterables(subject="role-only", roles=("operator",)),
+            policy,
+        )
 
 
 def test_permission_denied_response_is_product_safe() -> None:

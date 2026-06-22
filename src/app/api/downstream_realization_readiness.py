@@ -26,6 +26,7 @@ from app.security.caller_context import (
     CapabilityPolicy,
     CallerContext,
     PermissionDeniedError,
+    require_role_and_capability,
 )
 
 
@@ -156,12 +157,7 @@ async def get_downstream_realization_readiness(
 
 
 def _require_downstream_realization_readiness_caller(caller: CallerContext) -> None:
-    if not caller.has_role("operator") or not caller.has_capability(
-        _READ_DOWNSTREAM_REALIZATION_READINESS_POLICY.required_capability
-    ):
-        raise PermissionDeniedError(
-            _READ_DOWNSTREAM_REALIZATION_READINESS_POLICY.required_capability
-        )
+    require_role_and_capability(caller, _READ_DOWNSTREAM_REALIZATION_READINESS_POLICY)
 
 
 def _emit_downstream_realization_readiness_event(

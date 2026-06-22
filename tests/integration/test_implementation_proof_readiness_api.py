@@ -10,11 +10,15 @@ from app.api.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
 
-def proof_readiness_headers() -> dict[str, str]:
+def proof_readiness_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.implementation-proof.readiness.read",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "platform-operator",
-        "X-Caller-Roles": "operator",
-        "X-Caller-Capabilities": "idea.implementation-proof.readiness.read",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-implementation-proof-readiness-api",
     }
 
@@ -68,9 +72,21 @@ def test_implementation_proof_readiness_api_requires_operator_permission() -> No
     client = TestClient(app)
 
     response = client.get(readiness_url())
+    role_denied = client.get(
+        readiness_url(),
+        headers=proof_readiness_headers(roles="advisor"),
+    )
+    capability_denied = client.get(
+        readiness_url(),
+        headers=proof_readiness_headers(capabilities="idea.review.queue.read"),
+    )
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
     assert "portfolio" not in response.text.lower()
 
 

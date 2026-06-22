@@ -12,11 +12,15 @@ from app.main import app
 from app.repository_state import DATABASE_URL_ENV
 
 
-def source_ingestion_readiness_headers() -> dict[str, str]:
+def source_ingestion_readiness_headers(
+    *,
+    roles: str = "operator",
+    capabilities: str = "idea.source-ingestion.readiness.read",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "platform-operator",
-        "X-Caller-Roles": "operator",
-        "X-Caller-Capabilities": "idea.source-ingestion.readiness.read",
+        "X-Caller-Roles": roles,
+        "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-source-ingestion-readiness-api",
     }
 
@@ -66,9 +70,23 @@ def test_source_ingestion_readiness_api_requires_operator_permission() -> None:
     client = TestClient(app)
 
     response = client.get("/api/v1/source-ingestion/readiness")
+    role_denied = client.get(
+        "/api/v1/source-ingestion/readiness",
+        headers=source_ingestion_readiness_headers(roles="advisor"),
+    )
+    capability_denied = client.get(
+        "/api/v1/source-ingestion/readiness",
+        headers=source_ingestion_readiness_headers(
+            capabilities="idea.review.queue.read",
+        ),
+    )
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
+    assert role_denied.status_code == 403
+    assert role_denied.json()["code"] == "permission_denied"
+    assert capability_denied.status_code == 403
+    assert capability_denied.json()["code"] == "permission_denied"
     assert "lotus_core_base_url" not in response.text.lower()
 
 

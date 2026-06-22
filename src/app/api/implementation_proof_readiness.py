@@ -27,7 +27,7 @@ from app.observability import (
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
-    require_capability,
+    require_role_and_capability,
 )
 
 
@@ -136,7 +136,7 @@ async def get_implementation_proof_readiness(
         capabilities=x_caller_capabilities,
     )
     try:
-        require_capability(caller, _READ_IMPLEMENTATION_PROOF_READINESS_POLICY)
+        require_role_and_capability(caller, _READ_IMPLEMENTATION_PROOF_READINESS_POLICY)
     except PermissionDeniedError:
         _emit_implementation_proof_readiness_event(
             OperationOutcome.PERMISSION_DENIED,

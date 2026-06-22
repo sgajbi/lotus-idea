@@ -72,6 +72,14 @@ def require_capability(caller: CallerContext, policy: CapabilityPolicy) -> None:
         raise PermissionDeniedError(policy.required_capability)
 
 
+def require_role_and_capability(caller: CallerContext, policy: CapabilityPolicy) -> None:
+    has_allowed_role = not policy.allowed_roles or any(
+        caller.has_role(role) for role in policy.allowed_roles
+    )
+    if not has_allowed_role or not caller.has_capability(policy.required_capability):
+        raise PermissionDeniedError(policy.required_capability)
+
+
 def permission_denied_response(_: PermissionDeniedError) -> JSONResponse:
     return problem_response(
         status_code=status.HTTP_403_FORBIDDEN,
