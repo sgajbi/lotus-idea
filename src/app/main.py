@@ -9,6 +9,7 @@ from app.api.idea_signals import register_idea_signal_routes
 from app.api.report_evidence import register_report_evidence_routes
 from app.api.review_queues import register_review_queue_routes
 from app.api.review_workflow import register_review_workflow_routes
+from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.errors import problem_response
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.observability import configure_logging, log_event
@@ -27,6 +28,7 @@ register_review_workflow_routes(app)
 register_conversion_governance_routes(app)
 register_report_evidence_routes(app)
 register_data_mesh_readiness_routes(app)
+register_source_ingestion_readiness_routes(app)
 Instrumentator().instrument(app).expose(app, include_in_schema=False)
 configure_logging()
 
