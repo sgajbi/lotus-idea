@@ -124,6 +124,9 @@ def build_downstream_realization_readiness_snapshot(
         source_of_truth={
             "conversion_workflow": "src/app/application/conversion_workflow.py",
             "report_evidence_workflow": "src/app/application/report_evidence.py",
+            "downstream_realization_orchestration": (
+                "src/app/application/downstream_realization.py"
+            ),
             "downstream_adapter_port": "src/app/ports/downstream_realization.py",
             "downstream_adapter_foundation": "src/app/infrastructure/downstream_realization.py",
             "downstream_contract_plan": (

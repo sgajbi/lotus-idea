@@ -96,6 +96,7 @@ def _validate_source_of_truth(
     required_keys = {
         "readiness_builder",
         "contract_loader",
+        "downstream_realization_orchestration",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
         "contract_gate",
