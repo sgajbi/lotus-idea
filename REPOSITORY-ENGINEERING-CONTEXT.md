@@ -477,14 +477,15 @@ owned by upstream services.
 11. architecture report: `make architecture-boundary-report`
 12. quality scorecard refresh: `make quality-baseline`
 13. CI contract gate: `make ci-contract-gate`
-14. implementation-truth gate: `make implementation-truth-gate`
-15. data-mesh contract gate: `make data-mesh-contract-gate`
-16. migration contract gate: `make migration-contract-gate`
-17. migration execution dry-run gate: `make migration-execution-gate`
-18. PostgreSQL runtime proof with configured integration URL:
+14. maintainability gate: `make maintainability-gate`
+15. implementation-truth gate: `make implementation-truth-gate`
+16. data-mesh contract gate: `make data-mesh-contract-gate`
+17. migration contract gate: `make migration-contract-gate`
+18. migration execution dry-run gate: `make migration-execution-gate`
+19. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-19. apply migrations with configured PostgreSQL URL: `make migrate`
-20. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+20. apply migrations with configured PostgreSQL URL: `make migrate`
+21. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -497,7 +498,7 @@ owned by upstream services.
    `main`.
 
 Required baseline checks include lint, format check, typecheck, architecture
-boundary enforcement, OpenAPI quality, implementation-truth gate,
+boundary enforcement, maintainability thresholds, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, unit tests, integration tests, e2e tests,
@@ -507,7 +508,7 @@ critical workflow jobs.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
-remove architecture, OpenAPI, endpoint-certification, supported-feature,
+remove architecture, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, action-version, least-privilege workflow
@@ -515,6 +516,15 @@ controls, bounded workflow timeouts, no `continue-on-error: true` in critical
 lanes, implementation-truth enforcement, non-suppressed auto-merge token usage,
 workflow-dispatch access, or merged-PR main-releasability dispatch from local
 or GitHub validation.
+
+`make maintainability-gate` is blocking through `make lint`. It enforces the
+current measured enterprise-quality thresholds for Python size hotspots:
+source files must stay at or below 1200 lines, source functions at or below
+130 lines, test files at or below 1200 lines, test functions at or below 180
+lines, script files at or below 500 lines, and script functions at or below
+120 lines. These limits are intentionally conservative against the current
+baseline and prevent future agentic changes from normalizing large, hard-to-review
+modules.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and

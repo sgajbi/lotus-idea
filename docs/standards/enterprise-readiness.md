@@ -4,7 +4,11 @@
 - Status: baseline adopted.
 
 Enterprise-quality enforcement is repo-native from day one. `make lint`, `make check`, and GitHub
-lanes protect architecture boundaries, OpenAPI quality, data-mesh contract posture, migration
-safety, supported-feature promotion control, endpoint certification, security audit, coverage,
-workflow timeout posture, no soft-failed critical CI jobs, and implementation-truth claims in
-README/docs/wiki current-state surfaces.
+lanes protect architecture boundaries, maintainability thresholds, OpenAPI quality, data-mesh
+contract posture, migration safety, supported-feature promotion control, endpoint certification,
+security audit, coverage, workflow timeout posture, no soft-failed critical CI jobs, and
+implementation-truth claims in README/docs/wiki current-state surfaces.
+
+The maintainability gate is intentionally conservative and measured against the current baseline:
+source files/functions, test files/functions, and script files/functions have explicit maximum
+line-count thresholds. New work should refactor or split modules before exceeding those thresholds.

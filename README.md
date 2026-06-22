@@ -181,6 +181,7 @@ source-authority contracts only, not runtime certification.
 make install
 make lint
 make ci-contract-gate
+make maintainability-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
@@ -202,6 +203,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe -m ruff check .
 .venv\Scripts\python.exe -m ruff format --check .
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
+.venv\Scripts\python.exe scripts/maintainability_gate.py
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
@@ -271,7 +273,9 @@ Main Releasability dispatch so post-merge release evidence is produced on
 `main` by a non-suppressed merge actor. GitHub workflow jobs must declare
 bounded `timeout-minutes` values, and critical lanes must not use
 `continue-on-error: true`; `make ci-contract-gate` blocks drift in those
-controls.
+controls. `make maintainability-gate` is also blocking through `make lint`;
+it prevents future agentic changes from adding oversized source, test, or
+script files/functions beyond the measured enterprise-quality thresholds.
 
 - Bank-buyable contract:
   `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
