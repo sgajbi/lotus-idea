@@ -107,6 +107,11 @@ The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 holding, transaction, request body, response body, raw entitlement failure,
 trace id, or correlation id values.
 
+Request validation, HTTP, and unhandled-error diagnostics use the central
+request diagnostic helper and log route templates rather than raw URL paths.
+`make source-observability-contract-gate` blocks raw `print()`, direct Python
+logging, and low-level `log_event` bypasses in application source.
+
 These signals are operator diagnostics only. `durable_storage_backed=true`
 confirms only that the active repository provider is durable; it does not
 certify production recovery readiness, data-product promotion, broader

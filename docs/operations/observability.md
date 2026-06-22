@@ -10,12 +10,18 @@ This repository starts from the Lotus platform observability scaffold.
 - structured JSON application events
 - product-safe error responses
 - bounded idea operation events for certified internal API foundations
+- bounded request diagnostic events for validation, HTTP, and unhandled errors
 
 ## Sensitive-Content Rule
 
 Logs, metrics, traces, dashboards, and evidence artifacts must not include client names, portfolio
 ids, holdings, raw entitlement failures, request bodies, response bodies, trace ids, or correlation
 ids as metric labels.
+
+Application source must not bypass the central observability module. `make
+source-observability-contract-gate` blocks raw `print()`, direct Python logging, and low-level
+`log_event` calls outside `src/app/observability/logging.py`. Request exception handlers use the
+central request diagnostic helper and log route templates instead of raw URL paths.
 
 ## Idea Operation Events
 

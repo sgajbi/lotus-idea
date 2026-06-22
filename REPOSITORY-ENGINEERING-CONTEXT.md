@@ -370,7 +370,10 @@ RFC-0002 Slice 15 is partially implemented as a bounded operation observability
 foundation. `src/app/observability/logging.py` now defines the
 `lotus_idea_operation_events_total` metric, bounded operation/outcome/
 supportability vocabulary, product-safe structured operation logs, and
-sensitive operation-attribute rejection. High-cash evaluation, candidate
+sensitive operation-attribute rejection. Request exception diagnostics now use
+a central helper that logs route templates rather than raw URL paths, and
+`make source-observability-contract-gate` blocks raw `print()`, direct Python
+logging, or low-level `log_event` bypasses in application source. High-cash evaluation, candidate
 persistence, candidate detail read, lifecycle transition, advisor review queue,
 candidate evidence replay, review action, AI explanation, feedback, conversion
 intent, conversion outcome, report evidence-pack request, and
@@ -469,8 +472,8 @@ logs; fix or document the owned warning source instead.
    contains migration execution helpers and `PostgresIdeaRepository`, which is
    tested as a durable repository adapter and selected by API runtime wiring
    when `LOTUS_IDEA_DATABASE_URL` is configured.
-7. `src/app/observability/`: correlation, logging, tracing, metrics, bounded
-   idea operation events, safe metric-label policy, and audit event helpers.
+7. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
+   diagnostics, bounded idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement
    policy, and sensitive-output controls.
 9. `src/app/resilience/`: timeout, retry, backoff, and circuit-breaker policies.
@@ -539,16 +542,18 @@ owned by upstream services.
 15. maintainability gate: `make maintainability-gate`
 16. documentation contract gate: `make documentation-contract-gate`
 17. quality scorecard gate: `make quality-scorecard-gate`
-18. implementation-truth gate: `make implementation-truth-gate`
-19. data-mesh contract gate: `make data-mesh-contract-gate`
-20. migration contract gate: `make migration-contract-gate`
-21. migration execution dry-run gate: `make migration-execution-gate`
-22. run-once source-ingestion worker manifest gate:
+18. source-observability contract gate:
+    `make source-observability-contract-gate`
+19. implementation-truth gate: `make implementation-truth-gate`
+20. data-mesh contract gate: `make data-mesh-contract-gate`
+21. migration contract gate: `make migration-contract-gate`
+22. migration execution dry-run gate: `make migration-execution-gate`
+23. run-once source-ingestion worker manifest gate:
     `make source-ingestion-worker-check`
-23. PostgreSQL runtime proof with configured integration URL:
+24. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-24. apply migrations with configured PostgreSQL URL: `make migrate`
-25. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+25. apply migrations with configured PostgreSQL URL: `make migrate`
+26. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
 
 ## Validation And CI Expectations
 
@@ -562,7 +567,7 @@ owned by upstream services.
 
 Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, repository hygiene, maintainability thresholds, documentation contract enforcement,
-quality-scorecard truth, OpenAPI quality, implementation-truth gate,
+quality-scorecard truth, source-observability contract enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest validation,
@@ -576,7 +581,7 @@ bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
 safe migration execution dry-run validation, source-ingestion worker manifest
-validation, PostgreSQL runtime proof, coverage,
+validation, source-observability contract validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, action-version, least-privilege workflow
 controls, bounded workflow timeouts, no `continue-on-error: true` in critical
 lanes, implementation-truth enforcement, non-suppressed auto-merge token usage,
@@ -614,6 +619,13 @@ approved readiness statuses, non-empty evidence/gap/next-slice cells,
 implementation-backed evidence anchors, and stale scaffold-era underclaim
 detection after internal API, persistence, observability, and test foundations
 land.
+
+`make source-observability-contract-gate` is blocking through `make lint`. It
+scans application source and fails raw `print()`, direct Python logging imports
+or calls, and low-level `log_event` bypasses outside the central observability
+module. Feature code should emit bounded operation events or use the central
+request diagnostic helper so supportability evidence stays product-safe and
+low-cardinality.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and

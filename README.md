@@ -225,6 +225,7 @@ make repository-hygiene-gate
 make maintainability-gate
 make documentation-contract-gate
 make quality-scorecard-gate
+make source-observability-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
@@ -255,6 +256,7 @@ Equivalent explicit commands:
 .venv\Scripts\python.exe scripts/ci_contract_gate.py
 .venv\Scripts\python.exe scripts/maintainability_gate.py
 .venv\Scripts\python.exe scripts/documentation_contract_gate.py
+.venv\Scripts\python.exe scripts/source_observability_contract_gate.py
 .venv\Scripts\python.exe scripts/data_mesh_contract_gate.py
 .venv\Scripts\python.exe scripts/migration_contract_gate.py
 .venv\Scripts\python.exe scripts/run_migrations.py --direction apply --dry-run
@@ -368,6 +370,11 @@ coverage, build, dependency, local environment, or local database artifacts.
 `make maintainability-gate` is also blocking through `make lint`;
 it prevents future agentic changes from adding oversized source, test, or
 script files/functions beyond the measured enterprise-quality thresholds.
+`make source-observability-contract-gate` is also blocking through
+`make lint`; it prevents future application code from adding raw `print()`,
+direct Python logging, or low-level `log_event` bypasses outside the central
+observability module. Request diagnostics use route templates rather than raw
+URL paths.
 `make documentation-contract-gate` is blocking through `make lint` as well;
 it prevents future agentic work from deleting, thinning, or hollowing out the
 README, repository context, standards, runbooks, RFC index, quality scorecard,

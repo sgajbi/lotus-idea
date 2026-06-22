@@ -6,9 +6,9 @@ from app.observability.logging import (
     OperationOutcome,
     OperationSupportability,
     configure_logging,
+    emit_request_diagnostic_event,
     emit_operation_event,
     emit_foundation_operation_event,
-    log_event,
 )
 
 __all__ = [
@@ -19,7 +19,7 @@ __all__ = [
     "OperationOutcome",
     "OperationSupportability",
     "configure_logging",
+    "emit_request_diagnostic_event",
     "emit_operation_event",
     "emit_foundation_operation_event",
-    "log_event",
 ]

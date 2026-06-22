@@ -21,6 +21,7 @@ make repository-hygiene-gate
 make maintainability-gate
 make documentation-contract-gate
 make quality-scorecard-gate
+make source-observability-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make migration-contract-gate
@@ -37,7 +38,7 @@ make quality-baseline
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, documentation contract enforcement, quality-scorecard truth, OpenAPI quality,
-implementation-truth gate, supported-feature gate, endpoint-certification gate,
+source-observability contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 source-ingestion worker manifest validation,
@@ -132,6 +133,12 @@ requires the standard control rows, approved readiness statuses, non-empty
 evidence/gap/next-slice cells, implementation-backed evidence anchors, and
 stale scaffold-era underclaim detection after internal API, persistence,
 observability, and test foundations have landed.
+
+The source-observability contract gate blocks ad hoc application logging in
+`src/app`. Feature code must use bounded operation events or the central
+request diagnostic helper rather than raw `print()`, direct Python logging, or
+low-level `log_event` calls. Request diagnostics log route templates rather
+than raw URL paths.
 
 The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
 and wiki source for unqualified current-state claims that imply demo readiness, production support,

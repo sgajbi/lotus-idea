@@ -13,6 +13,13 @@ from prometheus_client import Counter
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 SERVICE_NAME = "lotus-idea"
+REQUEST_DIAGNOSTIC_EVENTS = frozenset(
+    {
+        "request.validation_failed",
+        "request.http_error",
+        "request.unhandled_error",
+    }
+)
 
 FORBIDDEN_OPERATION_FIELD_KEYS = frozenset(
     {
@@ -99,6 +106,32 @@ def log_event(event_name: str, service: str, level: LogLevel = "INFO", **fields:
         getattr(logging, level),
         json.dumps(payload, sort_keys=True, default=str),
     )
+
+
+def emit_request_diagnostic_event(
+    event_name: str,
+    *,
+    route: str,
+    method: str,
+    level: LogLevel = "INFO",
+    status_code: int | None = None,
+    error_category: str | None = None,
+) -> None:
+    if event_name not in REQUEST_DIAGNOSTIC_EVENTS:
+        raise ValueError(f"unsupported request diagnostic event: {event_name}")
+    if not route.startswith("/") or "?" in route:
+        raise ValueError("route must be a route template without query string")
+    if not method.strip():
+        raise ValueError("method is required")
+    fields: dict[str, object] = {
+        "route": route,
+        "method": method,
+    }
+    if status_code is not None:
+        fields["status_code"] = status_code
+    if error_category is not None:
+        fields["error_category"] = error_category
+    log_event(event_name, SERVICE_NAME, level, **fields)
 
 
 @dataclass(frozen=True)
