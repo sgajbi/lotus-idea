@@ -40,6 +40,7 @@ class CoreHighCashEvidence:
     holdings_ref: SourceRef | None
     cash_movement_ref: SourceRef | None
     cashflow_projection_ref: SourceRef | None
+    cash_weight_diagnostic: str | None = None
     entitlement_allowed: bool = True
 
 

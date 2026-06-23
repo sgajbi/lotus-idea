@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -101,6 +102,7 @@ def summarize_source_ingestion_worker_run(
         "supportedFeaturePromoted": False,
         "totalCount": result.total_count,
         "decisionCounts": result.decision_counts(),
+        "blockReasonCounts": _block_reason_counts(result),
         "items": [
             {
                 "decision": item_result.decision.value,
@@ -129,6 +131,7 @@ def summarize_source_ingestion_worker_failure(
         "supportedFeaturePromoted": False,
         "workItemCount": len(plan.command.work_items),
         "decisionCounts": _empty_decision_counts(),
+        "blockReasonCounts": {_safe_error_code(error_code): len(plan.command.work_items)},
         "errorCode": _safe_error_code(error_code),
     }
 
@@ -158,6 +161,20 @@ def _work_items_from_manifest(
 
 def _empty_decision_counts() -> dict[str, int]:
     return {decision.value: 0 for decision in HighCashSourceIngestionDecision}
+
+
+def _block_reason_counts(result: HighCashSourceIngestionBatchResult) -> dict[str, int]:
+    counts: Counter[str] = Counter()
+    for item_result in result.item_results:
+        if item_result.decision is not HighCashSourceIngestionDecision.BLOCKED:
+            continue
+        reason_codes = tuple(item_result.signal_result.source_diagnostic_codes) or tuple(
+            reason.value for reason in item_result.signal_result.evaluation.unsupported_reasons
+        )
+        if not reason_codes:
+            reason_codes = ("source_evidence_blocked",)
+        counts.update(reason_codes)
+    return {reason: counts[reason] for reason in sorted(counts)}
 
 
 def _safe_error_code(error_code: str) -> str:

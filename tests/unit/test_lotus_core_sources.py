@@ -184,6 +184,7 @@ def test_lotus_core_adapter_consumes_core_totals_source_reported_cash_weight() -
     evidence = _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
 
     assert evidence.source_reported_cash_weight == Decimal("0.1835")
+    assert evidence.cash_weight_diagnostic == "core_cash_weight_supported"
 
 
 @pytest.mark.parametrize(
@@ -221,6 +222,7 @@ def test_lotus_core_adapter_blocks_cash_weight_when_core_supportability_is_block
     evidence = _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
 
     assert evidence.source_reported_cash_weight is None
+    assert evidence.cash_weight_diagnostic == f"core_cash_weight_{supportability.lower()}"
 
 
 def test_lotus_core_adapter_keeps_cash_weight_missing_when_source_omits_it() -> None:
@@ -236,6 +238,7 @@ def test_lotus_core_adapter_keeps_cash_weight_missing_when_source_omits_it() -> 
     evidence = _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
 
     assert evidence.source_reported_cash_weight is None
+    assert evidence.cash_weight_diagnostic == "core_cash_weight_missing"
 
 
 def test_lotus_core_adapter_maps_forbidden_source_response_to_entitlement_denied() -> None:

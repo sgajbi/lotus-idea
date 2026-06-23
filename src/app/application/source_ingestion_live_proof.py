@@ -60,6 +60,7 @@ def build_source_ingestion_live_proof_payload(
         "proofClosed": not proof_blockers,
         "totalCount": _non_negative_int(worker_summary.get("totalCount")),
         "decisionCounts": decision_counts,
+        "blockReasonCounts": _reason_counts(worker_summary.get("blockReasonCounts")),
         "proofBlockers": proof_blockers,
         "remainingCertificationBlockers": list(REMAINING_CERTIFICATION_BLOCKERS),
         "evidenceRefs": list(LIVE_PROOF_EVIDENCE_REFS),
@@ -118,6 +119,16 @@ def _decision_counts(worker_summary: Mapping[str, Any]) -> dict[str, int]:
     if not isinstance(raw_counts, Mapping):
         return {}
     return {str(key): _non_negative_int(value) for key, value in raw_counts.items()}
+
+
+def _reason_counts(value: object) -> dict[str, int]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        str(key): _non_negative_int(count)
+        for key, count in sorted(value.items(), key=lambda item: str(item[0]))
+        if str(key).strip()
+    }
 
 
 def _run_status(worker_summary: Mapping[str, Any]) -> str:

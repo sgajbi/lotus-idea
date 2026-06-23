@@ -52,6 +52,7 @@ def test_live_proof_payload_remains_source_safe_and_not_promoted() -> None:
             "durableStorageBacked": True,
             "totalCount": 1,
             "decisionCounts": {"accepted": 1, "replayed": 0},
+            "blockReasonCounts": {},
         },
     )
 
@@ -60,6 +61,7 @@ def test_live_proof_payload_remains_source_safe_and_not_promoted() -> None:
     assert payload["supportedFeaturePromoted"] is False
     assert payload["proofClosed"] is False
     assert "live_core_source_proof_missing" not in payload["proofBlockers"]
+    assert payload["blockReasonCounts"] == {}
     assert "scheduled_worker_deploy_proof_missing" in payload["remainingCertificationBlockers"]
     assert live_core_source_proof_is_valid(payload) is True
     serialized = json.dumps(payload)
@@ -80,6 +82,7 @@ def test_blocked_live_proof_does_not_validate() -> None:
             "durableStorageBacked": True,
             "totalCount": 0,
             "decisionCounts": {"accepted": 0, "replayed": 0},
+            "blockReasonCounts": {"core_source_unavailable": 1},
             "errorCode": "core_source_unavailable",
         },
     )
@@ -87,6 +90,7 @@ def test_blocked_live_proof_does_not_validate() -> None:
     assert payload["runStatus"] == "blocked"
     assert "live_core_source_run_blocked" in payload["proofBlockers"]
     assert "source_error_core_source_unavailable" in payload["proofBlockers"]
+    assert payload["blockReasonCounts"] == {"core_source_unavailable": 1}
     assert live_core_source_proof_is_valid(payload) is False
 
 
@@ -111,6 +115,7 @@ def test_non_live_source_ingestion_proof_records_all_certification_blockers() ->
             "durableStorageBacked": False,
             "totalCount": -1,
             "decisionCounts": {"accepted": -1, "replayed": 0},
+            "blockReasonCounts": {"missing_source": 2, "": 5},
         },
     )
 
@@ -118,6 +123,7 @@ def test_non_live_source_ingestion_proof_records_all_certification_blockers() ->
     assert payload["runStatus"] == "failed"
     assert payload["totalCount"] == 0
     assert payload["decisionCounts"] == {"accepted": 0, "replayed": 0}
+    assert payload["blockReasonCounts"] == {"missing_source": 2}
     assert payload["proofBlockers"][:4] == [
         "live_core_source_proof_missing",
         "live_core_source_run_blocked",
@@ -138,6 +144,7 @@ def test_live_source_ingestion_proof_tolerates_replay_evidence() -> None:
             "durableStorageBacked": True,
             "totalCount": 1,
             "decisionCounts": {"accepted": 0, "replayed": 1},
+            "blockReasonCounts": {},
         },
     )
 
@@ -154,11 +161,13 @@ def test_live_source_ingestion_proof_normalizes_malformed_worker_summary() -> No
             "mode": "run_once",
             "durableStorageBacked": True,
             "decisionCounts": True,
+            "blockReasonCounts": True,
         },
     )
 
     assert payload["sourceAuthority"] == "lotus-core"
     assert payload["decisionCounts"] == {}
+    assert payload["blockReasonCounts"] == {}
     assert "no_candidate_ingestion_evidence" in payload["proofBlockers"]
     assert live_core_source_proof_is_valid(payload) is False
 
@@ -174,6 +183,7 @@ def test_live_core_source_proof_rejects_malformed_blocker_shape() -> None:
             "durableStorageBacked": True,
             "totalCount": 1,
             "decisionCounts": {"accepted": 1},
+            "blockReasonCounts": {},
         },
     )
     payload["proofBlockers"] = "live_core_source_proof_missing"
@@ -217,6 +227,7 @@ def test_live_proof_cli_writes_blocked_source_safe_artifact(
     assert payload["runStatus"] == "completed"
     assert payload["liveCoreSourceAttempted"] is True
     assert "no_candidate_ingestion_evidence" in payload["proofBlockers"]
+    assert payload["blockReasonCounts"] == {"core_source_unavailable": 1}
     assert payload["supportedFeaturePromoted"] is False
     serialized = json.dumps(payload)
     assert "portfolioId" not in serialized

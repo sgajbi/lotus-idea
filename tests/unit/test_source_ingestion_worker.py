@@ -170,6 +170,7 @@ def test_summarizes_worker_run_without_source_payloads_or_supported_claims() -> 
     assert summary["durableStorageBacked"] is False
     assert summary["supportedFeaturePromoted"] is False
     assert summary["decisionCounts"]["accepted"] == 1
+    assert summary["blockReasonCounts"] == {}
     persistence = result.item_results[0].signal_result.persistence
     assert persistence is not None
     assert persistence.record is not None
@@ -211,6 +212,7 @@ def test_summarizes_worker_source_failure_without_source_payloads() -> None:
     assert summary["workItemCount"] == 1
     assert summary["errorCode"] == "core_source_entitlement_denied"
     assert summary["decisionCounts"]["accepted"] == 0
+    assert summary["blockReasonCounts"] == {"core_source_entitlement_denied": 1}
     assert "workItems" not in summary
     assert "portfolioId" not in json.dumps(summary)
     assert "idempotencyKey" not in json.dumps(summary)
@@ -233,6 +235,37 @@ def test_summarizes_worker_failure_with_default_safe_error_code() -> None:
 
     assert summary["errorCode"] == "core_source_unavailable"
     assert summary["decisionCounts"]["blocked"] == 0
+    assert summary["blockReasonCounts"] == {"core_source_unavailable": 1}
+
+
+def test_summarizes_worker_block_reasons_without_source_identifiers() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(error=CoreSourceEntitlementDenied())
+    plan = source_ingestion_worker_plan_from_manifest(
+        {
+            "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "workItems": [{"portfolioId": PORTFOLIO_ID, "asOfDate": "2026-06-21"}],
+        }
+    )
+
+    result = run_high_cash_source_ingestion_batch(
+        plan.command,
+        core_source=source,
+        repository=repository,
+    )
+    summary = summarize_source_ingestion_worker_run(
+        plan=plan,
+        result=result,
+        durable_storage_backed=True,
+    )
+
+    assert summary["decisionCounts"]["blocked"] == 1
+    assert summary["blockReasonCounts"] == {"core_source_entitlement_denied": 1}
+    serialized = json.dumps(summary)
+    assert "portfolioId" not in serialized
+    assert "PB_SG_GLOBAL_BAL_001" not in serialized
+    assert "idempotencyKey" not in serialized
 
 
 def test_cli_check_only_validates_example_manifest(capsys: Any) -> None:
@@ -283,6 +316,7 @@ def test_cli_run_mode_returns_source_safe_item_block_for_core_entitlement_denial
     payload = json.loads(captured.out)
     assert payload["mode"] == "run_once"
     assert payload["decisionCounts"]["blocked"] == 1
+    assert payload["blockReasonCounts"] == {"core_source_entitlement_denied": 1}
     assert payload["items"][0]["decision"] == "blocked"
     assert payload["items"][0]["hasIdempotencyKey"] is True
     assert payload["supportedFeaturePromoted"] is False
@@ -347,6 +381,7 @@ def _core_evidence() -> CoreHighCashEvidence:
         holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
         cash_movement_ref=_source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
         cashflow_projection_ref=_source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        cash_weight_diagnostic="core_cash_weight_supported",
     )
 
 
