@@ -6,7 +6,7 @@ providers, does not execute `lotus-ai` runtime workflows, and does not promote
 AI-assisted explanation as a supported feature. The evaluator now records
 source-safe lineage through the repository port; when PostgreSQL is configured
 that lineage is stored durably, but it is not certified `lotus-ai` runtime
-lineage or model-risk dashboard proof.
+lineage or certified model-risk dashboard/alert proof.
 
 ## Current Implementation
 
@@ -61,8 +61,38 @@ The readiness diagnostic always returns:
 5. `lotusAiRuntimeExecuted=false`,
 6. `supportedFeaturePromoted=false`.
 
+It also returns explicit model-risk operations posture:
+
+| Field | Current value | Meaning |
+| --- | --- | --- |
+| `modelRiskOperationsContractAvailable` | `true` | A repo-owned model-risk operations contract exists and is validated by `make ai-model-risk-ops-contract-gate`. |
+| `modelRiskDashboardContractAvailable` | `true` | Dashboard control requirements are declared for implemented AI explanation/readiness telemetry. |
+| `modelRiskAlertContractAvailable` | `true` | Alert candidate requirements are declared for implemented AI explanation/readiness telemetry. |
+| `modelRiskDashboardCertified` | `false` | No certified model-risk dashboard exists yet. |
+| `modelRiskAlertCertified` | `false` | No certified model-risk alert pack exists yet. |
+
 It requires both the `operator` role and
 `idea.ai-explanation.readiness.read` capability.
+
+## Model-Risk Operations Contract
+
+`contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` defines
+the current not-certified operating contract for AI explanation supportability.
+It maps implemented telemetry and endpoints to the dashboard controls and alert
+candidates operators will eventually need.
+
+| Control | Implemented source | Current certification |
+| --- | --- | --- |
+| AI explanation readiness posture | `GET /api/v1/ai-explanations/readiness`, `ai_explanation_readiness_read` events | `not_certified` |
+| AI output verifier posture | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`, `ai_explanation` events | `not_certified` |
+| AI lineage durability posture | `durable_storage_backed` telemetry label and readiness response | `not_certified` |
+
+The contract is validated by `make ai-model-risk-ops-contract-gate`, which
+blocks sensitive labels, unowned operations, missing source-of-truth paths, and
+premature certification flags. Passing this gate proves only that the operating
+contract is present, source-safe, and synchronized with implemented telemetry.
+It is not `lotus-ai` runtime proof, model-risk dashboard certification, alert
+certification, Workbench proof, or supported-feature promotion.
 
 ## Allowed Current Purposes
 
@@ -91,8 +121,8 @@ RAG context construction, provider telemetry, evaluation telemetry, and
 model-risk operating evidence. Durable repository-backed lineage persistence
 is necessary proof, but it is not sufficient certification. The readiness
 diagnostic therefore remains `not_certified` until runtime execution, certified
-AI lineage-store evidence, model-risk dashboards, runtime trust telemetry, and
-Workbench proof exist.
+AI lineage-store evidence, certified model-risk dashboards and alerts, runtime
+trust telemetry, and Workbench proof exist.
 
 ## API Behavior
 

@@ -411,8 +411,11 @@ and does not expose prompts, provider payloads, candidate identifiers, source
 routes, portfolio identifiers, or client identifiers. This
 is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
 execution, prompt/RAG/provider integration, certified AI lineage-store proof,
-Workbench proof, trust telemetry, model-risk operations dashboard, or
-supported-feature promotion exists.
+certified model-risk dashboard/alert evidence, Workbench proof, trust
+telemetry, or supported-feature promotion exists. The repo-owned AI
+model-risk operations contract is enforced by
+`make ai-model-risk-ops-contract-gate`, but it is explicitly not dashboard,
+alert, `lotus-ai`, Workbench, or supported-feature certification.
 `GET /api/v1/implementation-proof/readiness` now exposes a certified internal
 operator diagnostic for aggregate RFC-0002 proof posture. It requires the
 `operator` role and `idea.implementation-proof.readiness.read`, returns
@@ -845,25 +848,27 @@ owned by upstream services.
     `make source-observability-contract-gate`
 21. operation metric contract gate:
     `make operation-metric-contract-gate`
-22. implementation-truth gate: `make implementation-truth-gate`
-23. data-mesh contract gate: `make data-mesh-contract-gate`
-24. downstream realization contract gate:
+22. AI model-risk operations contract gate:
+    `make ai-model-risk-ops-contract-gate`
+23. implementation-truth gate: `make implementation-truth-gate`
+24. data-mesh contract gate: `make data-mesh-contract-gate`
+25. downstream realization contract gate:
     `make downstream-realization-contract-gate`
-25. migration contract gate: `make migration-contract-gate`
-26. migration execution dry-run gate: `make migration-execution-gate`
-27. durable repository proof contract gate:
+26. migration contract gate: `make migration-contract-gate`
+27. migration execution dry-run gate: `make migration-execution-gate`
+28. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`
-28. runtime trust telemetry proof contract gate:
+29. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`
-29. Workbench read-path proof contract gate:
+30. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`
-30. run-once source-ingestion worker manifest and output-contract gate:
+31. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-31. scheduled source-ingestion worker deploy-contract gate:
+32. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-32. source-ingestion live-proof artifact contract gate:
+33. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-33. implementation proof readiness generator:
+34. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
@@ -994,6 +999,16 @@ validates `contracts/observability/lotus-idea-operation-metrics.v1.json`
 against code-owned operation, outcome, supportability, and metric-label
 vocabulary, and blocks sensitive labels plus premature dashboard, alert, mesh,
 Gateway/Workbench, or supported-feature certification claims.
+
+`make ai-model-risk-ops-contract-gate` is blocking through `make lint`. It
+validates
+`contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`
+against implemented AI explanation and AI readiness operation telemetry,
+required model-risk dashboard controls, required alert candidates, source-of-
+truth paths, and explicit non-proof boundaries. It narrows the prior
+model-risk operations gap from missing contract to not-certified contract
+posture; it does not certify a dashboard, alert, `lotus-ai` runtime execution,
+AI lineage store, Workbench surface, or supported feature.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and

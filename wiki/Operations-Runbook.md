@@ -153,8 +153,10 @@ remaining certification blockers without invoking `lotus-ai`, exposing prompts,
 provider payloads, candidate identifiers, source routes, portfolio identifiers,
 or client identifiers. It remains `not_certified` until `lotus-ai` runtime
 workflow execution, certified AI lineage-store proof, workflow-pack runtime
-certification, model-risk operations dashboards, runtime trust telemetry, and
-Workbench proof exist.
+certification, certified model-risk dashboard and alert evidence, runtime trust
+telemetry, and Workbench proof exist. The current AI model-risk operations
+contract is enforced and source-safe, but it is not dashboard or alert
+certification.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
@@ -288,8 +290,8 @@ Current outcomes:
    explanation precondition failed.
 10. `blocked`: verifier rejected unsupported AI output, candidate evidence
     replay found stale source posture, AI explanation readiness is missing
-    `lotus-ai` runtime execution, certified AI lineage-store proof, model-risk dashboard,
-    runtime trust telemetry, or Workbench proof, expected current
+    `lotus-ai` runtime execution, certified AI lineage-store proof, certified
+    model-risk dashboard/alert evidence, runtime trust telemetry, or Workbench proof, expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
     certification remain absent, runtime trust telemetry snapshot generation
     is blocked by platform certification and discovery proof gaps,
@@ -367,7 +369,7 @@ explanation readiness diagnostic. It returns guardrail availability and
 certification blockers for operators without exposing prompts, provider
 payloads, candidate identifiers, source routes, portfolio identifiers, or
 client identifiers. It is not `lotus-ai` runtime proof, certified AI lineage-store
-certification, model-risk dashboard proof, Gateway/Workbench support,
+certification, certified model-risk dashboard/alert proof, Gateway/Workbench support,
 data-product certification, client-ready publication, or supported-feature
 promotion.
 

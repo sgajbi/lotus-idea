@@ -168,6 +168,15 @@ foundation:
     code-owned operation, outcome, label, source-authority, and supportability
     vocabulary, and blocks premature dashboard, alert, mesh,
     Gateway/Workbench, or supported-feature claims.
+34. `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
+    `scripts/ai_model_risk_operations_contract_gate.py`, and
+    `make ai-model-risk-ops-contract-gate` now define and enforce the
+    not-certified AI model-risk operations contract for implemented AI
+    explanation and readiness telemetry. The gate requires dashboard controls,
+    alert candidates, source-of-truth paths, code-owned operation names,
+    bounded metric labels, and non-proof boundaries, while blocking premature
+    model-risk dashboard, alert, `lotus-ai`, Workbench, or supported-feature
+    certification claims.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -188,8 +197,10 @@ fail-closed against the persisted candidate scope, and the bounded Gateway
 candidate detail route forwards those headers without interpreting them.
 The AI explanation readiness diagnostic is explicitly `not_certified` until
 `lotus-ai` runtime workflow execution, certified AI lineage-store proof,
-workflow-pack runtime certification, model-risk operations dashboards, runtime
-trust telemetry, and Workbench proof exist.
+workflow-pack runtime certification, certified model-risk operations dashboards
+and alerts, runtime trust telemetry, and Workbench proof exist. The current
+AI model-risk operations contract narrows the prior dashboard gap to a
+not-certified contract posture; it is not certification evidence.
 The implementation-proof readiness diagnostic is explicitly `not_certified`
 until every reported proof family has implementation-backed live evidence and
 supported-feature promotion evidence where applicable.
@@ -227,9 +238,10 @@ certification, client-ready publication, or supported-feature promotion.
 
 ## Remaining Gap
 
-1. Add dashboard and alert references only after metric families are stable and
-   implemented. The operation metric catalog now proves the first metric family
-   is code-owned and bounded, but dashboards and alerts remain uncertified.
+1. Certify dashboard and alert references only after metric families are stable
+   and implemented. The operation metric catalog and AI model-risk operations
+   contract now prove code-owned, bounded, not-certified telemetry/control
+   posture, but dashboards and alerts remain uncertified.
 2. Add live runtime source-readiness proof after Core source adapters and
    deployable worker runtime exist.
 3. Add product-scope entitlement proof for Workbench and any broader Gateway
