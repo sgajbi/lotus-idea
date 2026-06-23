@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.security.caller_context import CallerContext, CallerEntitlementScope
 
 
@@ -32,4 +33,16 @@ def caller_context_from_headers(
             portfolio_ids=_split_header_values(portfolio_ids),
             client_ids=_split_header_values(client_ids),
         ),
+    )
+
+
+def caller_access_scope_filter(caller: CallerContext) -> QueueAccessScopeFilter | None:
+    scope = caller.entitlement_scope
+    if scope.is_empty:
+        return None
+    return QueueAccessScopeFilter(
+        tenant_id=scope.tenant_ids,
+        book_id=scope.book_ids,
+        portfolio_id=scope.portfolio_ids,
+        client_id=scope.client_ids,
     )

@@ -8,7 +8,7 @@ from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
 from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.candidate_detail import GetCandidateDetailCommand, get_candidate_detail
 from app.domain import (
@@ -373,16 +373,39 @@ async def get_idea_candidate_detail(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
 ) -> CandidateDetailResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
+    try:
+        caller = caller_context_from_headers(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+        )
+    except ValueError:
+        _emit_candidate_detail_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="Caller entitlement scope headers cannot contain blank values.",
+        )
     try:
         require_capability(caller, _READ_CANDIDATE_DETAIL_POLICY)
         result = get_candidate_detail(
-            GetCandidateDetailCommand(candidate_id=candidate_id),
+            GetCandidateDetailCommand(
+                candidate_id=candidate_id,
+                access_scope_filter=caller_access_scope_filter(caller),
+            ),
             repository=get_idea_repository(),
         )
     except PermissionDeniedError:
@@ -406,6 +429,18 @@ async def get_idea_candidate_detail(
             code="invalid_request",
             title="Invalid request",
             detail="candidateId is required.",
+        )
+
+    if result.access_scope_denied:
+        _emit_candidate_detail_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to read idea candidate detail.",
         )
 
     if result.record is None:
@@ -452,10 +487,11 @@ CANDIDATE_DETAIL_ROUTE: RouteMetadata = {
     "description": (
         "Returns a source-safe internal detail projection for a persisted idea candidate, "
         "including redacted source evidence, lifecycle history, review, feedback, "
-        "conversion, report-evidence, and audit summary posture. This is an RFC-0002 "
-        "Slice 10 and Slice 11 API foundation for evidence-drawer use; it is not a "
-        "Gateway route, Workbench product proof, data-product certification, or "
-        "supported-feature promotion."
+        "conversion, report-evidence, and audit summary posture. When platform "
+        "caller-context scope headers are present, the route applies those entitlements "
+        "fail-closed before returning detail. This is an RFC-0002 Slice 10 and Slice 11 "
+        "API foundation for evidence-drawer use; it is not a Workbench product proof, "
+        "data-product certification, or supported-feature promotion."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": CandidateDetailResponse,
@@ -519,7 +555,13 @@ CANDIDATE_DETAIL_ROUTE: RouteMetadata = {
             },
         },
         400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks candidate detail permission."},
+        403: {
+            "model": ProblemDetails,
+            "description": (
+                "Caller lacks candidate detail permission or the candidate is outside "
+                "caller entitlements."
+            ),
+        },
         404: {"model": ProblemDetails, "description": "Candidate was not found."},
     },
 }

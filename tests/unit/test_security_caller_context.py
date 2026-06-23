@@ -1,6 +1,6 @@
 import pytest
 
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
 from app.security.caller_context import (
     CallerContext,
     CallerEntitlementScope,
@@ -104,6 +104,32 @@ def test_caller_context_from_headers_parses_entitlement_scope_headers() -> None:
         "PB_SG_ALT_BAL_002",
     )
     assert caller.entitlement_scope.client_ids == ("client-001",)
+
+
+def test_caller_access_scope_filter_matches_entitlement_headers() -> None:
+    caller = caller_context_from_headers(
+        subject="advisor-001",
+        roles="advisor",
+        capabilities="idea.candidate.detail.read",
+        tenant_ids="tenant-private-bank-sg",
+        book_ids="book-advisor-001",
+        portfolio_ids="PB_SG_GLOBAL_BAL_001,PB_SG_ALT_BAL_002",
+        client_ids="client-001",
+    )
+
+    scope_filter = caller_access_scope_filter(caller)
+
+    assert scope_filter is not None
+    assert scope_filter.tenant_id == ("tenant-private-bank-sg",)
+    assert scope_filter.book_id == ("book-advisor-001",)
+    assert scope_filter.portfolio_id == ("PB_SG_GLOBAL_BAL_001", "PB_SG_ALT_BAL_002")
+    assert scope_filter.client_id == ("client-001",)
+
+
+def test_caller_access_scope_filter_is_none_without_entitlement_scope() -> None:
+    caller = CallerContext.from_iterables(subject="advisor-001", roles=("advisor",))
+
+    assert caller_access_scope_filter(caller) is None
 
 
 def test_caller_context_from_headers_rejects_blank_entitlement_scope_header_values() -> None:

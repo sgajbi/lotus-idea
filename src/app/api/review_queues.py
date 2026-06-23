@@ -8,7 +8,7 @@ from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
 from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
@@ -29,7 +29,6 @@ from app.observability import (
 )
 from app.security.caller_context import (
     CapabilityPolicy,
-    CallerContext,
     PermissionDeniedError,
     require_capability,
     require_role_and_capability,
@@ -272,7 +271,7 @@ async def get_advisor_review_queue(
         )
     effective_scope_filter = _effective_queue_scope_filter(
         requested_scope_filter=requested_scope_filter,
-        caller_scope_filter=_caller_queue_scope_filter(caller),
+        caller_scope_filter=caller_access_scope_filter(caller),
     )
     if effective_scope_filter is None:
         _emit_review_queue_operation_event(
@@ -355,18 +354,6 @@ async def get_advisor_review_queue_readiness(
         durable_storage_backed=durable_storage_backed,
     )
     return ReviewQueueReadinessResponse.from_domain(snapshot)
-
-
-def _caller_queue_scope_filter(caller: CallerContext) -> QueueAccessScopeFilter | None:
-    scope = caller.entitlement_scope
-    if scope.is_empty:
-        return None
-    return QueueAccessScopeFilter(
-        tenant_id=scope.tenant_ids,
-        book_id=scope.book_ids,
-        portfolio_id=scope.portfolio_ids,
-        client_id=scope.client_ids,
-    )
 
 
 def _effective_queue_scope_filter(
