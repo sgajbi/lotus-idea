@@ -26,8 +26,8 @@ def source_ref(product_id: str) -> dict[str, str]:
     }
 
 
-def high_cash_payload() -> dict[str, Any]:
-    return {
+def high_cash_payload(*, scoped: bool = False) -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "sourceReportedCashWeight": "0.18",
@@ -39,6 +39,9 @@ def high_cash_payload() -> dict[str, Any]:
         },
         "entitlementAllowed": True,
     }
+    if scoped:
+        payload["accessScope"] = access_scope()
+    return payload
 
 
 def persist_headers(idempotency_key: str) -> dict[str, str]:
@@ -49,13 +52,27 @@ def persist_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def detail_headers(capabilities: str = "idea.candidate.detail.read") -> dict[str, str]:
-    return {
+def detail_headers(
+    capabilities: str = "idea.candidate.detail.read",
+    *,
+    portfolio_ids: str | None = None,
+) -> dict[str, str]:
+    headers = {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-candidate-detail-api",
     }
+    if portfolio_ids is not None:
+        headers.update(
+            {
+                "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+                "X-Caller-Book-Ids": "book-advisor-001",
+                "X-Caller-Portfolio-Ids": portfolio_ids,
+                "X-Caller-Client-Ids": "client-001",
+            }
+        )
+    return headers
 
 
 def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
@@ -126,10 +143,15 @@ def authorized_scope() -> dict[str, list[str]]:
     }
 
 
-def persisted_candidate_id(client: TestClient, *, idempotency_key: str) -> str:
+def persisted_candidate_id(
+    client: TestClient,
+    *,
+    idempotency_key: str,
+    scoped: bool = False,
+) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(),
+        json=high_cash_payload(scoped=scoped),
         headers=persist_headers(idempotency_key),
     )
     assert response.status_code == 200
@@ -355,6 +377,57 @@ def test_candidate_detail_api_requires_permission_and_existing_candidate() -> No
     }
 
 
+def test_candidate_detail_api_applies_caller_entitlement_scope_fail_closed() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="detail-seed-scope-001",
+        scoped=True,
+    )
+
+    allowed = client.get(
+        f"/api/v1/idea-candidates/{candidate_id}",
+        headers=detail_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001"),
+    )
+    denied = client.get(
+        f"/api/v1/idea-candidates/{candidate_id}",
+        headers=detail_headers(portfolio_ids="PB_SG_ALT_BAL_002"),
+    )
+
+    assert allowed.status_code == 200
+    assert allowed.json()["candidate"]["candidateId"] == candidate_id
+    assert denied.status_code == 403
+    assert denied.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to read idea candidate detail.",
+    }
+    assert candidate_id not in str(denied.json())
+    assert "PB_SG" not in str(denied.json())
+
+
+def test_candidate_detail_api_rejects_blank_entitlement_scope_header_safely() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/idea-candidates/idea_high_cash_scope",
+        headers=detail_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001, "),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Caller entitlement scope headers cannot contain blank values.",
+    }
+
+
 def test_candidate_detail_api_rejects_blank_candidate_id_safely() -> None:
     reset_idea_repository_for_tests()
 
@@ -371,6 +444,10 @@ def test_candidate_detail_api_rejects_blank_candidate_id_safely() -> None:
             x_caller_subject="advisor-001",
             x_caller_roles="advisor",
             x_caller_capabilities="idea.candidate.detail.read",
+            x_caller_tenant_ids=None,
+            x_caller_book_ids=None,
+            x_caller_portfolio_ids=None,
+            x_caller_client_ids=None,
         )
     )
 
