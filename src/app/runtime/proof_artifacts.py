@@ -8,11 +8,14 @@ from typing import Any
 
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
+from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 
 
 @dataclass(frozen=True)
 class ConfiguredImplementationProofArtifacts:
+    source_ingestion_live_proof_ref: str | None
+    source_ingestion_scheduled_worker_proof_ref: str | None
     durable_repository_proof: dict[str, Any] | None
     durable_repository_proof_ref: str | None
     runtime_trust_telemetry_proof: dict[str, Any] | None
@@ -26,6 +29,11 @@ def configured_implementation_proof_artifacts(
     repository_root: Path | None = None,
 ) -> ConfiguredImplementationProofArtifacts:
     root = repository_root or Path.cwd()
+    source_ingestion_live_proof_path = _configured_path(LIVE_PROOF_ENV, root=root)
+    source_ingestion_scheduled_worker_proof_path = _configured_path(
+        SCHEDULED_WORKER_PROOF_ENV,
+        root=root,
+    )
     durable_repository_proof_path = _configured_path(DURABLE_REPOSITORY_PROOF_ENV, root=root)
     runtime_trust_telemetry_proof_path = _configured_path(
         RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
@@ -33,6 +41,16 @@ def configured_implementation_proof_artifacts(
     )
     workbench_read_path_proof_path = _configured_path(WORKBENCH_READ_PATH_PROOF_ENV, root=root)
     return ConfiguredImplementationProofArtifacts(
+        source_ingestion_live_proof_ref=_source_safe_artifact_ref(
+            source_ingestion_live_proof_path,
+            root=root,
+            artifact_name="source ingestion live proof artifact",
+        ),
+        source_ingestion_scheduled_worker_proof_ref=_source_safe_artifact_ref(
+            source_ingestion_scheduled_worker_proof_path,
+            root=root,
+            artifact_name="source ingestion scheduled-worker proof artifact",
+        ),
         durable_repository_proof=_read_optional_json_object(
             durable_repository_proof_path,
             artifact_name="durable repository proof",

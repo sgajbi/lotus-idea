@@ -97,6 +97,8 @@ def build_implementation_proof_readiness_snapshot(
     evaluated_at_utc: datetime,
     repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
+    source_ingestion_live_proof_ref: str | None = None,
+    source_ingestion_scheduled_worker_proof_ref: str | None = None,
     durable_repository_proof: Mapping[str, object] | None = None,
     durable_repository_proof_ref: str | None = None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None = None,
@@ -134,7 +136,11 @@ def build_implementation_proof_readiness_snapshot(
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...] = (
-        _source_ingestion_capability(source_ingestion),
+        _source_ingestion_capability(
+            source_ingestion,
+            live_proof_ref=source_ingestion_live_proof_ref,
+            scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
+        ),
         _review_queue_capability(review_queue),
         _ai_explanation_capability(ai_explanation),
         _data_mesh_capability(data_mesh),
@@ -293,25 +299,33 @@ def _apply_workbench_read_path_proof(
 
 def _source_ingestion_capability(
     snapshot: SourceIngestionReadinessSnapshot,
+    *,
+    live_proof_ref: str | None,
+    scheduled_worker_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
+    evidence_refs = [
+        "src/app/application/source_ingestion.py",
+        "scripts/run_source_ingestion_worker.py",
+        "scripts/run_scheduled_source_ingestion_worker.py",
+        "scripts/generate_source_ingestion_live_proof.py",
+        "scripts/generate_scheduled_source_ingestion_worker_proof.py",
+        "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
+        "make source-ingestion-worker-check",
+        "make source-ingestion-scheduled-worker-check",
+        "make source-ingestion-live-proof-contract-gate",
+        "GET /api/v1/source-ingestion/readiness",
+        "POST /api/v1/source-ingestion/run-once",
+    ]
+    if snapshot.live_core_source_proof_valid and live_proof_ref:
+        evidence_refs.append(live_proof_ref)
+    if snapshot.scheduled_worker_deploy_proof_valid and scheduled_worker_proof_ref:
+        evidence_refs.append(scheduled_worker_proof_ref)
     return _capability(
         "source-ingestion",
         "Source-owned high-cash signal ingestion",
         readiness_status=snapshot.run_once_configuration_status,
         supportability_status=snapshot.certification_status,
-        evidence_refs=(
-            "src/app/application/source_ingestion.py",
-            "scripts/run_source_ingestion_worker.py",
-            "scripts/run_scheduled_source_ingestion_worker.py",
-            "scripts/generate_source_ingestion_live_proof.py",
-            "scripts/generate_scheduled_source_ingestion_worker_proof.py",
-            "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
-            "make source-ingestion-worker-check",
-            "make source-ingestion-scheduled-worker-check",
-            "make source-ingestion-live-proof-contract-gate",
-            "GET /api/v1/source-ingestion/readiness",
-            "POST /api/v1/source-ingestion/run-once",
-        ),
+        evidence_refs=tuple(dict.fromkeys(evidence_refs)),
         blockers=(
             *snapshot.configuration_blockers,
             *snapshot.certification_blockers,
