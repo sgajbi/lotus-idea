@@ -34,7 +34,7 @@ aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
 or downstream claims. That is recoverability foundation only; no certified live
 broker runtime, downstream consumer, Gateway event, platform mesh event, or
 supported event publication exists. `lotus-gateway` now publishes bounded read-only advisor
-queue and candidate detail routes, but these foundations are not deployed
+queue and candidate detail routes with caller entitlement-scope forwarding, but these foundations are not deployed
 scheduler daemon proof, live Core worker certification, Workbench proof, or
 supported-feature promotion. The AI explanation readiness diagnostic is an
 operator

@@ -243,7 +243,8 @@ route disclosure, raw evidence export, downstream authority, Workbench proof,
 data-product certification, or supported-feature promotion. `lotus-gateway`
 publishes this as a bounded read-only route at
 `GET /api/v1/ideas/candidates/{candidate_id}` while preserving `lotus-idea`
-source authority.
+source authority and forwarding caller entitlement-scope headers for
+`lotus-idea` fail-closed access checks.
 
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` is the certified
 internal candidate evidence replay API foundation. It compares caller-supplied
