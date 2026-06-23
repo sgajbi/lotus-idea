@@ -112,6 +112,11 @@ Aggregate implementation-proof readiness records the validated live and
 scheduled source-ingestion proof artifact refs in the `source-ingestion`
 capability evidence, so reviewers can trace blocker clearance without exposing
 Core payloads, portfolio identity, or worker source records.
+The repo-native `make implementation-proof-readiness-check` target can consume
+live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+`LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, and
+optional `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command
+while allowing live release-proof evidence when the stack is available.
 The internal `POST /api/v1/source-ingestion/run-once` action is available for
 operators with `idea.source-ingestion.run` to run one bounded source-ingestion
 pass through the configured manifest, active repository provider, and Core

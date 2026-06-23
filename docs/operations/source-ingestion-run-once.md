@@ -148,6 +148,17 @@ python scripts/generate_source_ingestion_live_proof.py `
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
 ```
 
+Aggregate readiness can consume that live proof through the canonical Make
+target without a one-off generator command:
+
+```powershell
+$env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
+$env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
+$env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
+make implementation-proof-readiness-check
+```
+
 ### Repeatable Durable Proof Runs
 
 Live proof uses the same idempotency semantics as the run-once worker. When a

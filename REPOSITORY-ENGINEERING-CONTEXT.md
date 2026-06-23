@@ -856,6 +856,12 @@ owned by upstream services.
     `make source-ingestion-live-proof-contract-gate`
 32. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
+    It remains CI-stable by default and can consume live source-proof evidence
+    through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+    `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
+    `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC`, and
+    `IMPLEMENTATION_PROOF_OUTPUT` when release reviewers are validating against
+    a running Core stack.
 33. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
 34. runtime trust telemetry snapshot generator:

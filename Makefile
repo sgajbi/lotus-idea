@@ -4,6 +4,12 @@ VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
 INTEGRATION_TESTS ?= tests/integration
 E2E_TESTS ?= tests/e2e
+IMPLEMENTATION_PROOF_EVALUATED_AT_UTC ?= 2026-06-21T10:10:00Z
+IMPLEMENTATION_PROOF_OUTPUT ?=
+LOTUS_CORE_BASE_URL ?=
+LOTUS_CORE_QUERY_BASE_URL ?=
+LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL ?=
+LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF ?=
 
 ifeq ($(OS),Windows_NT)
 VENV_PYTHON := $(VENV_DIR)/Scripts/python.exe
@@ -103,11 +109,11 @@ source-ingestion-live-proof-contract-gate:
 	$(VENV_PYTHON) scripts/source_ingestion_live_proof_contract_gate.py
 
 implementation-proof-readiness-check:
-	$(VENV_PYTHON) scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --generated-at-utc 2026-06-21T10:10:00Z --output output/source-ingestion/scheduled-worker-proof.json
-	$(VENV_PYTHON) scripts/generate_durable_repository_proof.py --generated-at-utc 2026-06-21T10:10:00Z --output output/persistence/durable-repository-proof.json
-	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_proof.py --generated-at-utc 2026-06-21T10:10:00Z --output output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json
-	$(VENV_PYTHON) scripts/generate_workbench_read_path_proof.py --generated-at-utc 2026-06-21T10:10:00Z --output output/workbench/workbench-read-path-proof.json
-	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc 2026-06-21T10:10:00Z --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json --durable-repository-proof output/persistence/durable-repository-proof.json --runtime-trust-telemetry-proof output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json --workbench-read-path-proof output/workbench/workbench-read-path-proof.json
+	$(VENV_PYTHON) scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/source-ingestion/scheduled-worker-proof.json
+	$(VENV_PYTHON) scripts/generate_durable_repository_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/persistence/durable-repository-proof.json
+	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json
+	$(VENV_PYTHON) scripts/generate_workbench_read_path_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/workbench/workbench-read-path-proof.json
+	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json $(if $(IMPLEMENTATION_PROOF_OUTPUT),--output $(IMPLEMENTATION_PROOF_OUTPUT),) $(if $(LOTUS_CORE_BASE_URL),--core-base-url $(LOTUS_CORE_BASE_URL),) $(if $(LOTUS_CORE_QUERY_BASE_URL),--core-query-base-url $(LOTUS_CORE_QUERY_BASE_URL),) $(if $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),--core-query-control-plane-base-url $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),) $(if $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),--source-ingestion-live-proof $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),) --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json --durable-repository-proof output/persistence/durable-repository-proof.json --runtime-trust-telemetry-proof output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json --workbench-read-path-proof output/workbench/workbench-read-path-proof.json
 
 runtime-trust-telemetry-preview-check:
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z
