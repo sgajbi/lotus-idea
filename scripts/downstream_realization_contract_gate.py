@@ -38,6 +38,7 @@ REQUIRED_EVIDENCE_REFS = {
     "lotus-idea-to-lotus-report-evidence-pack-intake:v1": {
         "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
+        "lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json",
         "lotus-render",
         "lotus-archive",
     },

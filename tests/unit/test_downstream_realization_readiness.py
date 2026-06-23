@@ -37,8 +37,9 @@ def test_downstream_realization_readiness_reports_blocked_foundation_posture() -
     assert "report_evidence_pack_materialization_missing" not in snapshot.blockers
     assert "advise_live_contract_proof_missing" in snapshot.blockers
     assert "manage_live_contract_proof_missing" in snapshot.blockers
+    assert "lotus_report_live_intake_route_proof_missing" in snapshot.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.blockers
-    assert "dedicated_report_idea_evidence_intake_contract_missing" in snapshot.blockers
+    assert "dedicated_report_idea_evidence_intake_contract_missing" not in snapshot.blockers
     assert set(snapshot.source_of_truth) == {
         "conversion_workflow",
         "report_evidence_workflow",
@@ -143,7 +144,14 @@ def test_downstream_realization_readiness_contracts_preserve_downstream_authorit
     report_contract = contracts["lotus-idea-to-lotus-report-evidence-pack-intake:v1"]
     assert report_contract.owner_repository == "lotus-report"
     assert report_contract.target_route == "planned:lotus-report-idea-evidence-pack-intake"
-    assert "dedicated_report_idea_evidence_intake_contract_missing" in (report_contract.blockers)
+    assert "lotus_report_live_intake_route_proof_missing" in report_contract.blockers
+    assert "dedicated_report_idea_evidence_intake_contract_missing" not in (
+        report_contract.blockers
+    )
+    assert (
+        "lotus-report/contracts/idea-evidence-intake/"
+        "lotus-report-idea-evidence-pack-intake.v1.json" in report_contract.evidence_refs
+    )
     assert all(
         contract.route_fit_status == "not_certified"
         and contract.adapter_status == "adapter_foundation_present"

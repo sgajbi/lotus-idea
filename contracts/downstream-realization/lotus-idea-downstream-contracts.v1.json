@@ -70,11 +70,12 @@
         "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-13-report-render-archive-and-evidence-pack-materialization.md",
+        "lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json",
         "lotus-render",
         "lotus-archive"
       ],
       "blockers": [
-        "dedicated_report_idea_evidence_intake_contract_missing",
+        "lotus_report_live_intake_route_proof_missing",
         "report_evidence_pack_live_materialization_proof_missing",
         "rendered_output_creation_missing",
         "archive_record_creation_missing",

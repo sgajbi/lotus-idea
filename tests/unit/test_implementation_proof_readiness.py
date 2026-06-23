@@ -141,7 +141,13 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
         in downstream.evidence_refs
     )
+    assert (
+        "lotus-report/contracts/idea-evidence-intake/"
+        "lotus-report-idea-evidence-pack-intake.v1.json" in downstream.evidence_refs
+    )
+    assert "lotus_report_live_intake_route_proof_missing" in downstream.blockers
     assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
+    assert "dedicated_report_idea_evidence_intake_contract_missing" not in downstream.blockers
     ai_explanation = next(
         capability
         for capability in snapshot.capabilities

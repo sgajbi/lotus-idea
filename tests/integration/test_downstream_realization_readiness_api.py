@@ -50,8 +50,9 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture()
     assert "report_evidence_pack_materialization_missing" not in payload["blockers"]
     assert "advise_live_contract_proof_missing" in payload["blockers"]
     assert "manage_live_contract_proof_missing" in payload["blockers"]
+    assert "lotus_report_live_intake_route_proof_missing" in payload["blockers"]
     assert "report_evidence_pack_live_materialization_proof_missing" in payload["blockers"]
-    assert "dedicated_report_idea_evidence_intake_contract_missing" in payload["blockers"]
+    assert "dedicated_report_idea_evidence_intake_contract_missing" not in payload["blockers"]
     assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
         "advise-proposal-realization",
         "manage-action-realization",
@@ -78,7 +79,15 @@ def test_downstream_realization_readiness_api_returns_blocked_operator_posture()
     assert report_contract["routeFitStatus"] == "not_certified"
     assert report_contract["adapterStatus"] == "adapter_foundation_present"
     assert report_contract["certificationReady"] is False
-    assert "dedicated_report_idea_evidence_intake_contract_missing" in (report_contract["blockers"])
+    assert "lotus_report_live_intake_route_proof_missing" in report_contract["blockers"]
+    assert (
+        "dedicated_report_idea_evidence_intake_contract_missing"
+        not in (report_contract["blockers"])
+    )
+    assert (
+        "lotus-report/contracts/idea-evidence-intake/"
+        "lotus-report-idea-evidence-pack-intake.v1.json" in report_contract["evidenceRefs"]
+    )
     assert "client_id" not in response.text
     assert "portfolio_id" not in response.text
     assert "request_body" not in response.text
