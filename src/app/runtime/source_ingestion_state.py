@@ -8,9 +8,13 @@ from typing import Any
 
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     MANIFEST_ENV,
     REPOSITORY_ROOT,
     TIMEOUT_SECONDS_ENV,
+    CoreSourceRuntimeUrls,
+    core_source_runtime_urls_from_environment,
     resolve_source_ingestion_manifest_path,
 )
 from app.application.source_ingestion_worker import (
@@ -32,6 +36,8 @@ class SourceIngestionRuntime:
     core_source: CoreOpportunitySourcePort
     configured_manifest_available: bool
     core_base_url_configured: bool
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
 
 
 @dataclass(frozen=True)
@@ -39,6 +45,8 @@ class SourceIngestionRuntimeBlocker:
     code: str
     configured_manifest_available: bool = False
     core_base_url_configured: bool = False
+    core_query_base_url_configured: bool = False
+    core_query_control_plane_base_url_configured: bool = False
 
 
 def build_source_ingestion_runtime_from_environment() -> (
@@ -54,37 +62,77 @@ def build_source_ingestion_runtime_from_environment() -> (
     if not manifest_path.is_file():
         return SourceIngestionRuntimeBlocker("source_ingestion_manifest_unreadable")
 
-    core_base_url = os.getenv(CORE_BASE_URL_ENV, "").strip()
-    if not core_base_url:
+    core_source_urls = core_source_runtime_urls_from_environment()
+    if not core_source_urls.fully_configured:
         return SourceIngestionRuntimeBlocker(
             "lotus_core_base_url_not_configured",
             configured_manifest_available=configured_manifest_available,
+            core_query_base_url_configured=core_source_urls.query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                core_source_urls.query_control_plane_base_url_configured
+            ),
         )
 
     try:
         plan = source_ingestion_worker_plan_from_manifest(_read_manifest(manifest_path))
-        config = DownstreamClientConfig(
-            base_url=core_base_url,
-            timeout_seconds=_timeout_seconds_from_environment(),
-        )
+        query_config, query_control_plane_config = _core_source_client_configs(core_source_urls)
     except DownstreamClientConfigurationError:
         return SourceIngestionRuntimeBlocker(
             "lotus_core_base_url_invalid",
             configured_manifest_available=configured_manifest_available,
             core_base_url_configured=True,
+            core_query_base_url_configured=core_source_urls.query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                core_source_urls.query_control_plane_base_url_configured
+            ),
         )
     except (OSError, json.JSONDecodeError, ValueError):
         return SourceIngestionRuntimeBlocker(
             "source_ingestion_manifest_invalid",
             configured_manifest_available=configured_manifest_available,
             core_base_url_configured=True,
+            core_query_base_url_configured=core_source_urls.query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                core_source_urls.query_control_plane_base_url_configured
+            ),
         )
 
     return SourceIngestionRuntime(
         plan=plan,
-        core_source=LotusCoreHighCashSourceAdapter(DownstreamJsonClient(config)),
+        core_source=LotusCoreHighCashSourceAdapter(
+            query_client=DownstreamJsonClient(query_config),
+            query_control_plane_client=DownstreamJsonClient(query_control_plane_config),
+        ),
         configured_manifest_available=configured_manifest_available,
         core_base_url_configured=True,
+        core_query_base_url_configured=core_source_urls.query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            core_source_urls.query_control_plane_base_url_configured
+        ),
+    )
+
+
+def _core_source_client_configs(
+    core_source_urls: CoreSourceRuntimeUrls,
+) -> tuple[DownstreamClientConfig, DownstreamClientConfig]:
+    if (
+        core_source_urls.query_base_url is None
+        or core_source_urls.query_control_plane_base_url is None
+    ):
+        raise DownstreamClientConfigurationError(
+            f"{CORE_QUERY_BASE_URL_ENV} and {CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV} are required, "
+            f"or {CORE_BASE_URL_ENV} must provide a compatibility fallback."
+        )
+    timeout_seconds = _timeout_seconds_from_environment()
+    return (
+        DownstreamClientConfig(
+            base_url=core_source_urls.query_base_url,
+            timeout_seconds=timeout_seconds,
+        ),
+        DownstreamClientConfig(
+            base_url=core_source_urls.query_control_plane_base_url,
+            timeout_seconds=timeout_seconds,
+        ),
     )
 
 

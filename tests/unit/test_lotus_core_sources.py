@@ -45,6 +45,26 @@ def _adapter(handler: httpx.MockTransport) -> LotusCoreHighCashSourceAdapter:
     )
 
 
+def _split_adapter(
+    *,
+    query_handler: httpx.MockTransport,
+    query_control_plane_handler: httpx.MockTransport,
+) -> LotusCoreHighCashSourceAdapter:
+    return LotusCoreHighCashSourceAdapter(
+        query_client=DownstreamJsonClient(
+            DownstreamClientConfig(base_url="https://core-query.example", timeout_seconds=0.5),
+            client=httpx.Client(base_url="https://core-query.example", transport=query_handler),
+        ),
+        query_control_plane_client=DownstreamJsonClient(
+            DownstreamClientConfig(base_url="https://core-control.example", timeout_seconds=0.5),
+            client=httpx.Client(
+                base_url="https://core-control.example",
+                transport=query_control_plane_handler,
+            ),
+        ),
+    )
+
+
 def _request() -> CoreHighCashEvidenceRequest:
     return CoreHighCashEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
@@ -97,6 +117,46 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
         evidence.cashflow_projection_ref.product_id == "lotus-core:PortfolioCashflowProjection:v1"
     )
     assert len(seen) == 4
+
+
+def test_lotus_core_adapter_splits_query_and_control_plane_clients() -> None:
+    seen_query: list[str] = []
+    seen_control_plane: list[str] = []
+
+    def query_handler(request: httpx.Request) -> httpx.Response:
+        seen_query.append(str(request.url))
+        if "cash-balances" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("HoldingsAsOf", extra={"sourceReportedCashWeight": "0.18"}),
+            )
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
+        if "cashflow-projection" in str(request.url):
+            return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+        raise AssertionError(f"unexpected query URL {request.url}")
+
+    def control_plane_handler(request: httpx.Request) -> httpx.Response:
+        seen_control_plane.append(str(request.url))
+        assert request.method == "POST"
+        return httpx.Response(
+            200,
+            json=_payload(
+                "PortfolioStateSnapshot",
+                extra={"request_fingerprint": "core-snapshot-fingerprint"},
+            ),
+        )
+
+    evidence = _split_adapter(
+        query_handler=httpx.MockTransport(query_handler),
+        query_control_plane_handler=httpx.MockTransport(control_plane_handler),
+    ).fetch_high_cash_evidence(_request())
+
+    assert evidence.source_reported_cash_weight == Decimal("0.18")
+    assert len(seen_control_plane) == 1
+    assert "core-snapshot" in seen_control_plane[0]
+    assert len(seen_query) == 3
+    assert all("core-query.example" in url for url in seen_query)
 
 
 def test_lotus_core_adapter_consumes_core_totals_source_reported_cash_weight() -> None:

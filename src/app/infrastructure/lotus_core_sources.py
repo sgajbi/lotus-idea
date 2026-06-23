@@ -23,8 +23,13 @@ CASHFLOW_PROJECTION_PRODUCT_ID = "lotus-core:PortfolioCashflowProjection:v1"
 
 
 class LotusCoreHighCashSourceAdapter:
-    def __init__(self, client: DownstreamJsonClient) -> None:
-        self._client = client
+    def __init__(
+        self,
+        query_client: DownstreamJsonClient,
+        query_control_plane_client: DownstreamJsonClient | None = None,
+    ) -> None:
+        self._query_client = query_client
+        self._query_control_plane_client = query_control_plane_client or query_client
 
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
@@ -32,7 +37,7 @@ class LotusCoreHighCashSourceAdapter:
         portfolio_ref = quote(request.portfolio_id, safe="")
         as_of = request.as_of_date.isoformat()
         try:
-            portfolio_state_payload = self._client.post_json(
+            portfolio_state_payload = self._query_control_plane_client.post_json(
                 f"/integration/portfolios/{portfolio_ref}/core-snapshot",
                 json_payload={
                     "as_of_date": as_of,
@@ -44,17 +49,17 @@ class LotusCoreHighCashSourceAdapter:
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
             )
-            holdings_payload = self._client.get_json(
+            holdings_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cash-balances?as_of_date={as_of}",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
             )
-            cash_movement_payload = self._client.get_json(
+            cash_movement_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cash-movement-summary?start_date={as_of}&end_date={as_of}",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
             )
-            cashflow_projection_payload = self._client.get_json(
+            cashflow_projection_payload = self._query_client.get_json(
                 f"/portfolios/{portfolio_ref}/cashflow-projection?as_of_date={as_of}&horizon_days=30&include_projected=true",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,

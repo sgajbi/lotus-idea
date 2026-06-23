@@ -324,8 +324,53 @@ def test_scheduled_worker_cli_requires_core_base_url_for_run_mode(capsys: Any) -
     )
 
     captured = capsys.readouterr()
+    assert "--core-query-base-url" in captured.err
+    assert "--core-query-control-plane-base-url" in captured.err
     assert "--core-base-url" in captured.err
     assert "None" not in captured.err
+
+
+def test_scheduled_worker_cli_forwards_split_core_source_urls(
+    capsys: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_scheduler_script()
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
+    )
+    forwarded_args: list[list[str]] = []
+
+    def capture_run_once(args: list[str]) -> int:
+        forwarded_args.append(args)
+        return 0
+
+    monkeypatch.setattr(module, "run_once_worker_main", capture_run_once)
+
+    assert (
+        module.main(
+            [
+                "--manifest",
+                str(manifest_path),
+                "--core-query-base-url",
+                "http://localhost:8201",
+                "--core-query-control-plane-base-url",
+                "http://localhost:8202",
+                "--interval-seconds",
+                "60",
+                "--max-runs",
+                "1",
+            ]
+        )
+        == 0
+    )
+
+    assert len(forwarded_args) == 1
+    assert "--core-query-base-url" in forwarded_args[0]
+    assert "http://localhost:8201" in forwarded_args[0]
+    assert "--core-query-control-plane-base-url" in forwarded_args[0]
+    assert "http://localhost:8202" in forwarded_args[0]
+    captured = capsys.readouterr()
+    assert "scheduled_iteration_started" in captured.out
 
 
 def _manifest() -> dict[str, Any]:
