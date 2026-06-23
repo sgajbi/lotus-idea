@@ -125,10 +125,11 @@ durable operating-context enforcement:
 20. README, repository context,
     `docs/operations/implementation-proof-readiness.md`, RFC evidence, and
     wiki source now describe that the live implementation-proof readiness API
-    consumes configured durable repository, runtime trust telemetry, and
-    Workbench read-path proof artifacts through environment paths, while
-    preserving the boundary that only matching aggregate blockers are cleared
-    and no certification or supported-feature promotion is implied.
+    consumes configured source-ingestion live, source-ingestion scheduled-worker,
+    durable repository, runtime trust telemetry, and Workbench read-path proof
+    artifact paths, records validated source-safe artifact refs in capability
+    evidence, and preserves the boundary that only matching aggregate blockers
+    are cleared and no certification or supported-feature promotion is implied.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof only; it does not add full

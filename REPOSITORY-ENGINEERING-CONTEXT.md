@@ -149,7 +149,11 @@ data-mesh, Gateway/Workbench, and support-promotion blockers remain.
 `make implementation-proof-readiness-check` now generates that deploy-proof
 artifact under ignored `output/source-ingestion/` and passes it explicitly into
 the aggregate proof-readiness generator, preventing stale scheduled-worker
-deploy-proof blockers in repo-native evidence.
+deploy-proof blockers in repo-native evidence. Aggregate implementation-proof
+readiness now records validated source-ingestion live-proof and
+scheduled-worker deploy-proof artifact refs in the `source-ingestion`
+capability evidence when those blockers clear, preserving source-safe audit
+traceability for release reviewers.
 It also generates a source-safe durable repository proof artifact under ignored
 `output/persistence/` and passes it into aggregate proof-readiness generation.
 That artifact cites migration contracts, the PostgreSQL adapter, and the
@@ -432,9 +436,15 @@ proof-readiness snapshot as repo-native automation evidence for CI, async runs,
 and operator handoff. The generator accepts explicit source-ingestion manifest,
 live-proof, scheduled-worker proof, durable repository proof, runtime trust
 telemetry proof, and Workbench read-path proof paths for deterministic CI
-evidence without requiring ambient process environment mutation.
-The live operator API also consumes configured durable repository, runtime
-trust telemetry, and Workbench read-path proof artifact paths through
+evidence without requiring ambient process environment mutation. The
+source-ingestion capability evidence includes validated source-ingestion
+live-proof and scheduled-worker deploy-proof artifact refs when the
+corresponding blockers are cleared.
+The live operator API also consumes configured source-ingestion live,
+source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
+and Workbench read-path proof artifact paths through
+`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+`LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`, and
 `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`, clearing only the matching aggregate

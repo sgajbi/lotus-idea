@@ -96,6 +96,10 @@ Source-ingestion live proof is captured by
 through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
 `live_core_source_proof_missing`; it does not clear scheduled worker,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
+When aggregate implementation-proof readiness consumes a valid live proof path,
+the `source-ingestion` capability also records a source-safe artifact reference
+in `evidenceRefs`, so release reviewers can trace why that blocker cleared
+without exposing Core payloads or portfolio identity.
 Canonical Core runtimes should pass explicit `--core-query-base-url` and
 `--core-query-control-plane-base-url` values because query-service reads and
 query-control-plane snapshots can be served by different Core processes.
@@ -110,7 +114,10 @@ data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
 `make implementation-proof-readiness-check` now generates that deploy-proof
 artifact under ignored `output/source-ingestion/` and passes it explicitly into
 the aggregate readiness generator, so the repo-native proof snapshot does not
-report a stale scheduled-worker deploy-proof blocker. This remains deploy
+report a stale scheduled-worker deploy-proof blocker. Aggregate
+implementation-proof readiness records the validated artifact reference in the
+`source-ingestion` capability `evidenceRefs`, making the blocker-clearance
+evidence auditable without leaking source payloads. This remains deploy
 topology proof only; it is not live long-running scheduler certification.
 
 Durable repository proof is captured by
@@ -162,7 +169,7 @@ The success response is intentionally aggregate and source-safe:
 | `sourceOfTruth` | Implementation, RFC, supported-feature, demo-claim, and endpoint-ledger paths |
 | `capabilities[]` | Capability-level readiness records for each proof family |
 | `capabilities[].capabilityId` | Stable proof-family identifier such as `source-ingestion`, `outbox-delivery`, or `downstream-realization` |
-| `capabilities[].evidenceRefs` | Source-safe implementation and endpoint references |
+| `capabilities[].evidenceRefs` | Source-safe implementation, endpoint, and validated proof artifact references |
 | `capabilities[].blockers` | Source-safe blocker codes for that capability family |
 
 ## Example
@@ -200,7 +207,8 @@ Implementation-backed evidence:
 4. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
 5. repo-native check that generates and consumes the scheduled-worker
    deploy-proof, durable repository proof, runtime telemetry proof, and
-   Workbench read-path proof artifacts:
+   Workbench read-path proof artifacts, and records validated proof refs in
+   capability evidence:
    `make implementation-proof-readiness-check`,
 6. downstream contract check: `make downstream-realization-contract-gate`,
 7. runtime trust telemetry snapshot check:

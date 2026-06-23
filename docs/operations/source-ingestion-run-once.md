@@ -33,6 +33,9 @@ and writes a source-safe proof artifact for release reviewers. When that
 artifact is valid and referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 readiness can clear only `live_core_source_proof_missing`; scheduled worker,
 data-mesh, Gateway/Workbench, and supported-feature blockers remain.
+Aggregate implementation-proof readiness also records the validated live-proof
+artifact ref in source-safe capability evidence so reviewers can audit the
+blocker clearance without seeing Core payloads or portfolio identity.
 
 `scripts/run_scheduled_source_ingestion_worker.py` wraps the run-once worker in
 a bounded scheduler entrypoint for deploy topology proof. The worker is also
@@ -47,6 +50,8 @@ Gateway/Workbench, downstream, and supported-feature blockers remain.
 artifact under ignored `output/source-ingestion/` and passes it into the
 aggregate RFC proof-readiness generator so CI evidence does not keep a stale
 scheduled-worker deploy-proof blocker after the contract has been validated.
+The same aggregate snapshot records the validated deploy-proof artifact ref in
+source-safe capability evidence.
 
 ## What It Does Not Prove
 
