@@ -144,8 +144,6 @@
         "product_name",
         "product_version",
         "as_of_date",
-        "request_fingerprint",
-        "source_services",
         "correlation_id"
       ],
       "migration_posture": {
@@ -168,8 +166,6 @@
         "product_name",
         "product_version",
         "as_of_date",
-        "request_fingerprint",
-        "source_services",
         "correlation_id"
       ],
       "migration_posture": {
@@ -290,11 +286,7 @@
       "required_trust_metadata": [
         "product_name",
         "product_version",
-        "tenant_id",
         "generated_at",
-        "as_of_date",
-        "data_quality_status",
-        "lineage_bundle_id",
         "correlation_id"
       ],
       "migration_posture": {
@@ -316,11 +308,7 @@
       "required_trust_metadata": [
         "product_name",
         "product_version",
-        "tenant_id",
         "generated_at",
-        "as_of_date",
-        "data_quality_status",
-        "lineage_bundle_id",
         "correlation_id"
       ],
       "migration_posture": {
@@ -396,11 +384,7 @@
       "required_trust_metadata": [
         "product_name",
         "product_version",
-        "tenant_id",
         "generated_at",
-        "as_of_date",
-        "data_quality_status",
-        "lineage_bundle_id",
         "correlation_id"
       ],
       "migration_posture": {
