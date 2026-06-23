@@ -295,6 +295,15 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
             "Makefile implementation-proof-readiness-check target must pass the "
             "source-ingestion manifest into readiness generation"
         )
+    for marker, description in (
+        ("--source-ingestion-live-proof", "live source-ingestion proof artifact"),
+        ("--core-query-base-url", "Core query-service URL"),
+        ("--core-query-control-plane-base-url", "Core query-control-plane URL"),
+        ("IMPLEMENTATION_PROOF_OUTPUT", "implementation proof output artifact"),
+    ):
+        if marker not in target_block:
+            message = "Makefile implementation-proof-readiness-check target must support "
+            errors.append(f"{message}optional {description} wiring")
     return errors
 
 

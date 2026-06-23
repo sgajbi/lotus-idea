@@ -109,6 +109,17 @@ Canonical Core runtimes should pass explicit `--core-query-base-url` and
 query-control-plane snapshots can be served by different Core processes.
 `--core-base-url` remains a compatibility fallback for older single-base
 stacks.
+The repo-native `make implementation-proof-readiness-check` target accepts the
+same live-evidence inputs through Make variables, so release reviewers can use
+the canonical target instead of a one-off command:
+
+| Variable | Effect |
+| --- | --- |
+| `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC` | Overrides the deterministic proof timestamp. |
+| `IMPLEMENTATION_PROOF_OUTPUT` | Writes the aggregate readiness JSON to a chosen ignored output path. |
+| `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
+| `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
+| `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
 
 When rerunning live proof against an existing durable PostgreSQL repository,
 preserve idempotency history. If the same generated default idempotency key was
@@ -281,6 +292,13 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_implementation_proof_readiness.py tests/integration/test_implementation_proof_readiness_api.py -q
 make implementation-proof-readiness-check
+
+$env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
+$env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
+$env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
+make implementation-proof-readiness-check
+
 make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make workbench-read-path-proof-contract-gate

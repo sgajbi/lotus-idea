@@ -187,6 +187,75 @@ def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_readiness_wir
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_live_source_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),"
+            "--source-ingestion-live-proof $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support "
+        "optional live source-ingestion proof artifact wiring"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_live_core_url_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_CORE_QUERY_BASE_URL),"
+            "--core-query-base-url $(LOTUS_CORE_QUERY_BASE_URL),) ",
+            "",
+        )
+        .replace(
+            "$(if $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),"
+            "--core-query-control-plane-base-url "
+            "$(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support "
+        "optional Core query-service URL wiring"
+    ) in errors
+    assert (
+        "Makefile implementation-proof-readiness-check target must support "
+        "optional Core query-control-plane URL wiring"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_implementation_proof_output_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(IMPLEMENTATION_PROOF_OUTPUT),--output $(IMPLEMENTATION_PROOF_OUTPUT),) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support "
+        "optional implementation proof output artifact wiring"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
