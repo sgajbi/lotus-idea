@@ -90,6 +90,97 @@ def test_blocked_live_proof_does_not_validate() -> None:
     assert live_core_source_proof_is_valid(payload) is False
 
 
+def test_live_proof_requires_timezone_aware_generation_time() -> None:
+    with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
+        build_source_ingestion_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10),
+            live_core_source_attempted=True,
+            worker_summary={},
+        )
+
+
+def test_non_live_source_ingestion_proof_records_all_certification_blockers() -> None:
+    payload = build_source_ingestion_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_core_source_attempted=False,
+        worker_summary={
+            "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+            "mode": "manual",
+            "status": "failed",
+            "sourceAuthority": " lotus-core ",
+            "durableStorageBacked": False,
+            "totalCount": -1,
+            "decisionCounts": {"accepted": -1, "replayed": 0},
+        },
+    )
+
+    assert payload["sourceAuthority"] == "lotus-core"
+    assert payload["runStatus"] == "failed"
+    assert payload["totalCount"] == 0
+    assert payload["decisionCounts"] == {"accepted": 0, "replayed": 0}
+    assert payload["proofBlockers"][:4] == [
+        "live_core_source_proof_missing",
+        "live_core_source_run_blocked",
+        "durable_repository_not_configured",
+        "no_candidate_ingestion_evidence",
+    ]
+    assert live_core_source_proof_is_valid(payload) is False
+
+
+def test_live_source_ingestion_proof_tolerates_replay_evidence() -> None:
+    payload = build_source_ingestion_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_core_source_attempted=True,
+        worker_summary={
+            "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+            "mode": "run_once",
+            "sourceAuthority": "lotus-core",
+            "durableStorageBacked": True,
+            "totalCount": 1,
+            "decisionCounts": {"accepted": 0, "replayed": 1},
+        },
+    )
+
+    assert payload["runStatus"] == "completed"
+    assert "no_candidate_ingestion_evidence" not in payload["proofBlockers"]
+    assert live_core_source_proof_is_valid(payload) is True
+
+
+def test_live_source_ingestion_proof_normalizes_malformed_worker_summary() -> None:
+    payload = build_source_ingestion_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_core_source_attempted=True,
+        worker_summary={
+            "mode": "run_once",
+            "durableStorageBacked": True,
+            "decisionCounts": True,
+        },
+    )
+
+    assert payload["sourceAuthority"] == "lotus-core"
+    assert payload["decisionCounts"] == {}
+    assert "no_candidate_ingestion_evidence" in payload["proofBlockers"]
+    assert live_core_source_proof_is_valid(payload) is False
+
+
+def test_live_core_source_proof_rejects_malformed_blocker_shape() -> None:
+    payload = build_source_ingestion_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_core_source_attempted=True,
+        worker_summary={
+            "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+            "mode": "run_once",
+            "sourceAuthority": "lotus-core",
+            "durableStorageBacked": True,
+            "totalCount": 1,
+            "decisionCounts": {"accepted": 1},
+        },
+    )
+    payload["proofBlockers"] = "live_core_source_proof_missing"
+
+    assert live_core_source_proof_is_valid(payload) is False
+
+
 def test_live_proof_cli_writes_blocked_source_safe_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
