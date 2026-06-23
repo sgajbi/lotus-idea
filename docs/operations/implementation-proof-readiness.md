@@ -235,58 +235,70 @@ Implementation-backed evidence:
    Workbench read-path proof artifacts, and records validated proof refs in
    capability evidence:
    `make implementation-proof-readiness-check`,
-6. downstream contract check: `make downstream-realization-contract-gate`,
-7. runtime trust telemetry snapshot check:
+6. AI model-risk operations contract:
+   `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
+7. AI model-risk operations contract gate:
+   `make ai-model-risk-ops-contract-gate`,
+8. downstream contract check: `make downstream-realization-contract-gate`,
+9. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
-8. runtime trust telemetry snapshot endpoint:
+10. runtime trust telemetry snapshot endpoint:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
-9. generated runtime telemetry evidence:
+11. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-10. source-ingestion run-once endpoint:
+12. source-ingestion run-once endpoint:
    `POST /api/v1/source-ingestion/run-once`,
-11. source-ingestion run-once runbook:
+13. source-ingestion run-once runbook:
     `docs/operations/source-ingestion-run-once.md`,
-12. source-ingestion live-proof generator:
+14. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-13. source-ingestion block-reason diagnostics tests:
+15. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,
-14. scheduled source-ingestion worker proof generator:
+16. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-15. scheduled source-ingestion worker contract gate:
+17. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-16. source-ingestion live-proof contract gate:
+18. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-16. durable repository proof generator:
+19. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
-17. durable repository proof contract gate:
+20. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
-18. runtime trust telemetry proof generator:
+21. runtime trust telemetry proof generator:
     `scripts/generate_runtime_trust_telemetry_proof.py`,
-19. runtime trust telemetry proof contract gate:
+22. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`,
-20. Workbench read-path proof generator:
+23. Workbench read-path proof generator:
     `scripts/generate_workbench_read_path_proof.py`,
-21. Workbench read-path proof contract gate:
+24. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-22. Workbench read-path proof tests:
+25. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-23. runtime trust telemetry proof tests:
+26. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-24. outbox delivery run-once endpoint:
+27. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-25. operation event: `implementation_proof_readiness_read`,
-26. endpoint ledger:
+28. operation event: `implementation_proof_readiness_read`,
+29. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-27. runtime artifact loader tests:
+30. runtime artifact loader tests:
     `tests/unit/test_proof_artifacts.py`,
-28. unit tests:
+31. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-29. durable repository proof tests:
+32. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-30. generator tests:
+33. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-31. integration tests:
+34. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
+
+The `ai-explanation` capability evidence includes the AI model-risk operations
+contract and gate so proof reviewers can see that dashboard-control and
+alert-candidate requirements are source-safe and synchronized with implemented
+AI explanation telemetry. Those refs do not clear
+`model_risk_operations_dashboard_not_certified` or
+`model_risk_operations_alerts_not_certified`; certified dashboard and alert
+runtime evidence remains required.
 
 Run:
 

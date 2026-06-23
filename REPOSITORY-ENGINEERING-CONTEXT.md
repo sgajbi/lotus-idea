@@ -452,6 +452,10 @@ evidence without requiring ambient process environment mutation. The
 source-ingestion capability evidence includes validated source-ingestion
 live-proof and scheduled-worker deploy-proof artifact refs when the
 corresponding blockers are cleared.
+The AI explanation capability evidence includes the AI model-risk operations
+contract and gate refs so release reviewers can see the not-certified
+dashboard-control and alert-candidate posture without clearing model-risk
+dashboard or alert blockers.
 The live operator API also consumes configured source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
 and Workbench read-path proof artifact paths through
