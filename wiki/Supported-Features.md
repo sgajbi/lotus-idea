@@ -33,10 +33,13 @@ one bounded configured-publisher pass without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
 or downstream claims. That is recoverability foundation only; no certified live
 broker runtime, downstream consumer, Gateway event, platform mesh event, or
-supported event publication exists. `lotus-gateway` now publishes bounded read-only advisor
-queue and candidate detail routes with caller entitlement-scope forwarding, but these foundations are not deployed
-scheduler daemon proof, live Core worker certification, Workbench proof, or
-supported-feature promotion. The AI explanation readiness diagnostic is an
+supported event publication exists. `lotus-gateway` now publishes bounded
+read-only advisor queue and candidate detail routes with caller
+entitlement-scope forwarding, and `lotus-workbench` now renders the bounded
+read-only advisor queue/detail path through Gateway. These foundations are not
+deployed scheduler daemon proof, live Core worker certification, full Workbench
+live proof, or supported-feature promotion. The AI explanation readiness
+diagnostic is an
 operator
 supportability check only; it does not invoke `lotus-ai`, prove model-risk
 dashboards, or promote AI explanation support. Source-safe AI explanation
@@ -55,10 +58,10 @@ check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 downstream realization, and supported-feature promotion. It does not provide live implementation proof, external broker
-publication, downstream delivery, Gateway/Workbench proof, data-product
+publication, downstream delivery, full Gateway/Workbench live proof, data-product
 certification, or supported-feature promotion. These are not externally
 supported features until live source adapters, certified long-running scheduled
-source-worker runtime proof, Workbench proof, downstream acceptance,
+source-worker runtime proof, full Workbench live proof, downstream acceptance,
 data-product certification, and supported-feature evidence are present. The
 current scheduled worker deploy-contract proof is a foundation control only.
 

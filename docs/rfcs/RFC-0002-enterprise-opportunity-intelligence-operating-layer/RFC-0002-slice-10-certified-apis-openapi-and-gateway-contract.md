@@ -94,9 +94,10 @@ scope-aware projection, and keeps `supportedFeaturePromoted=false`.
 context, caller entitlement-scope, and correlation headers to `lotus-idea`,
 preserves `lotus-idea` ranking, source references, durable-storage posture, and
 unsupported-feature posture, blocks any upstream `supportedFeaturePromoted=true` response, and
-does not generate, rank, enrich, certify, or promote ideas locally. This is
-not Workbench proof, data-product certification, live source proof, client-ready
-publication, or supported-feature promotion.
+does not generate, rank, enrich, certify, or promote ideas locally. Workbench
+PR #391 now consumes these read-only Gateway paths for bounded queue/detail
+rendering. This is not full Workbench live proof, data-product certification,
+live source proof, client-ready publication, or supported-feature promotion.
 
 The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires
@@ -285,7 +286,9 @@ publication listed above is integration foundation only, not support.
 2. Extend Gateway coverage beyond the first read-only advisor queue and
    candidate detail publication where needed, preserving `lotus-idea` source
    authority and preventing Gateway-side ranking or generation.
-3. Add Workbench review-surface proof before any UI or demo claim.
+3. Extend the bounded Workbench read-only review surface into full live,
+   entitlement-denied, mutation, and demo proof before any supported UI or demo
+   claim.
 4. Add deployment and recovery proof for PostgreSQL-backed API state.
 5. Add data-product trust telemetry, platform mesh certification, and
    supported-feature promotion only after runtime proof exists.
@@ -376,8 +379,9 @@ PR merge-gate evidence remains required before merge.
 3. Gateway contract tests prove source-owned `lotus-idea` truth is preserved
    before each Gateway route is claimed implemented; the first bounded
    read-only advisor queue and candidate detail routes satisfy this foundation
-   rule, including caller entitlement-scope forwarding, but do not complete
-   Workbench or supported-feature promotion.
+   rule, including caller entitlement-scope forwarding. Workbench PR #391
+   consumes those routes for bounded read-only rendering, but this does not
+   complete full live Workbench proof or supported-feature promotion.
 4. No alias or stale endpoint remains without explicit time-boxed justification.
 5. Supported-feature promotion remains blocked until live runtime,
    Gateway/Workbench, data-product, docs/wiki, and certification evidence all

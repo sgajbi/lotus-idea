@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -109,9 +109,16 @@ durable operating-context enforcement:
     and `make runtime-trust-telemetry-proof-contract-gate`, while preserving the
     boundary that a valid artifact clears only the aggregate candidate-snapshot
     blocker and does not certify the platform mesh or promote support.
+18. README, repository context, API certification docs, demo claims, RFC
+    evidence, and wiki source now describe `lotus-workbench` PR #391 as
+    bounded read-only Workbench queue/detail rendering through Gateway, while
+    preserving the boundary that full live proof, entitlement-denied proof,
+    mutation affordances, downstream realization, data-product certification,
+    and supported-feature promotion remain blocked.
 
-This documentation slice does not promote any supported feature. It does not
-add Gateway/Workbench proof, data-product certification, downstream
+This documentation slice does not promote any supported feature. It records
+bounded Workbench read-path proof only; it does not add full
+Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled
 runtime proof.
 

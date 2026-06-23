@@ -15,10 +15,7 @@ certified internal API foundations, persistence and migration support,
 operator readiness diagnostics, source-safe observability, and CI guardrails.
 
 No external business feature is supported yet. Feature promotion still requires
-valid live source proof, valid scheduled-worker deploy proof, certified runtime
-trust telemetry, data-mesh certification, Gateway and Workbench proof,
-downstream realization proof, supported-feature registration, and evidence on
-`main`.
+live source proof, scheduled-worker deploy proof, certified runtime trust telemetry, data-mesh certification, full Gateway/Workbench live proof, downstream realization proof, supported-feature registration, and evidence on `main`.
 
 Current implemented foundations include:
 
@@ -38,7 +35,9 @@ Current implemented foundations include:
   proof, durable repository proof, and runtime telemetry candidate-snapshot
   proof consumed by aggregate readiness evidence,
 - bounded `lotus-gateway` read-only queue/detail routes, including caller
-  entitlement-scope forwarding for both published read paths.
+  entitlement-scope forwarding for both published read paths,
+- bounded `lotus-workbench` read-only queue/detail rendering through Gateway,
+  with stricter live validation before demo evidence is accepted.
 
 Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
 
@@ -103,7 +102,7 @@ day one. Repo-owned source truth starts in:
 - [docs/operations/mesh-readiness.md](docs/operations/mesh-readiness.md)
 
 All products remain proposed and not certified until runtime behavior,
-telemetry, platform catalog inclusion, Gateway and Workbench discovery,
+telemetry, platform catalog inclusion, full Gateway and Workbench live proof,
 certification evidence, and supported-feature promotion are complete.
 
 ## Architecture At A Glance
@@ -114,7 +113,7 @@ flowchart LR
     Idea["lotus-idea<br/>candidate policy, lifecycle, evidence, review, conversion intent"]
     Store["Active repository<br/>process-local or PostgreSQL"]
     Gateway["lotus-gateway<br/>bounded read-only publication"]
-    Workbench["lotus-workbench<br/>planned product proof"]
+    Workbench["lotus-workbench<br/>bounded read proof<br/>full support blocked"]
     Downstream["Advise / Manage / Report / Render / Archive<br/>planned realization proof"]
 
     Core -->|"source refs, freshness, evidence"| Idea
