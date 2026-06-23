@@ -89,9 +89,10 @@ Current RFC-0002 implementation-start baseline:
    scheduled source-ingestion worker deploy-proof artifact, durable repository
    proof artifact, and runtime telemetry proof artifact before producing the
    same source-safe posture as repo-native automation evidence.
-   Bounded read-only Gateway publication and Workbench queue/detail rendering
-   exist for advisor review; full live source adapters, full Workbench proof,
-   data-product certification, and supported-feature promotion remain planned.
+   Bounded live source-ingestion proof, read-only Gateway publication, and
+   Workbench queue/detail rendering exist for advisor review; full source-worker
+   certification, full Workbench proof, data-product certification, and
+   supported-feature promotion remain planned.
 12. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and

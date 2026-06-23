@@ -105,7 +105,7 @@ Additional implemented source-adapter foundation:
 
 Not implemented yet:
 
-1. live Core integration proof against a running Core service,
+1. source-worker certification beyond bounded live Core source-ingestion proof,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
 4. Gateway/Workbench proof,

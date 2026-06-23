@@ -55,9 +55,11 @@ Implemented first-wave internal scope:
    suppressed, or not-eligible evaluations remain non-mutating.
 7. The same orchestration shape exists for the Core source-port flow. Core
    cash-weight authority is now implemented in Core PR #431 and consumed by
-   the `lotus-idea` adapter from `totals.source_reported_cash_weight`, but this
-   still does not promote live source support until live Core integration proof
-   is captured and merged.
+   the `lotus-idea` adapter from `totals.source_reported_cash_weight`. Bounded
+   live Core source-ingestion proof can now be captured and consumed by
+   readiness, but this still does not promote live source support until
+   source-worker certification, mesh, Workbench, and supported-feature proof are
+   captured and merged.
 8. `src/app/application/source_ingestion.py` now adds an internal
    high-cash source-ingestion orchestration wrapper over the Core source port
    and repository port. It generates source-ingestion idempotency keys, maps

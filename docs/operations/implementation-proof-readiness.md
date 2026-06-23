@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | No live proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion proof can be consumed; no full live journey, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -48,10 +48,11 @@ It returns:
 
 ## What It Does Not Prove
 
-The diagnostic is deliberately not live journey proof. It does not:
+The diagnostic is deliberately not full live journey proof. It does not:
 
 1. call `lotus-core`,
-2. certify source-ingestion against a live source,
+2. certify source-ingestion as a supported live source product beyond a
+   configured bounded proof artifact,
 3. call `lotus-ai`,
 4. certify data products or runtime trust telemetry,
 5. prove Gateway or Workbench product behavior,
@@ -71,7 +72,7 @@ supported-feature promotion.
 The response remains blocked until all of the following are implemented and
 validated through the owning repositories and platform gates:
 
-1. live Core source-ingestion proof beyond the bounded internal run-once API,
+1. source-ingestion certification beyond the bounded live Core proof artifact,
 2. certified long-running scheduled worker runtime proof beyond the current
    deploy-contract artifact,
 3. certified runtime trust telemetry and platform mesh certification,

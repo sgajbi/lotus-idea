@@ -38,16 +38,16 @@ read-only advisor queue and candidate detail routes with caller
 entitlement-scope forwarding, and `lotus-workbench` now renders the bounded
 read-only advisor queue/detail path through Gateway. These foundations are not
 deployed scheduler daemon proof, live Core worker certification, full Workbench
-live proof, or supported-feature promotion. The AI explanation readiness
-diagnostic is an
-operator
-supportability check only; it does not invoke `lotus-ai`, prove model-risk
-dashboards, or promote AI explanation support. Source-safe AI explanation
-lineage persistence has PostgreSQL runtime proof for accepted, replayed, and
-conflicting request ids, and the readiness diagnostic reports durable lineage
-backing when the active repository is durable. That proof is repository
-durability evidence, not `lotus-ai` runtime execution or AI product
-certification. The
+live proof, or supported-feature promotion. The bounded live source-ingestion
+proof artifact is implementation evidence for source-ingestion readiness only;
+it is not live source-worker certification or a supported feature. The AI
+explanation readiness diagnostic is an operator supportability check only; it
+does not invoke `lotus-ai`, prove model-risk dashboards, or promote AI
+explanation support. Source-safe AI explanation lineage persistence has
+PostgreSQL runtime proof for accepted, replayed, and conflicting request ids,
+and the readiness diagnostic reports durable lineage backing when the active
+repository is durable. That proof is repository durability evidence, not
+`lotus-ai` runtime execution or AI product certification. The
 downstream realization readiness diagnostic is an operator supportability
 check only; it reports workflow counts, planned Advise/Manage/Report contract
 posture, and Advise/Manage/Report/Render/Archive blockers without calling
@@ -58,14 +58,16 @@ check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 downstream realization, and supported-feature promotion. It consumes a
-source-safe bounded Workbench read-path proof artifact, but it does not provide
-live implementation proof, external broker publication, downstream delivery,
-full Gateway/Workbench live proof, data-product certification, or
+source-safe bounded live source-ingestion proof artifact and a bounded
+Workbench read-path proof artifact, but it does not provide full live
+implementation proof, external broker publication, downstream delivery, full
+Gateway/Workbench live proof, data-product certification, or
 supported-feature promotion. These are not externally
-supported features until live source adapters, certified long-running scheduled
-source-worker runtime proof, full Workbench live proof, downstream acceptance,
-data-product certification, and supported-feature evidence are present. The
-current scheduled worker deploy-contract proof is a foundation control only.
+supported features until live source-worker certification, certified
+long-running scheduled source-worker runtime proof, full Workbench live proof,
+downstream acceptance, data-product certification, and supported-feature
+evidence are present. The current scheduled worker deploy-contract proof is a
+foundation control only.
 
 Planned capabilities:
 

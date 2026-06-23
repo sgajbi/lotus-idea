@@ -188,9 +188,11 @@ requires `idea.source-ingestion.run`, blocks before mutation unless durable
 repository, manifest, and Core configuration are present, and returns aggregate
 decision counts only. The upstream Core cash-weight contract dependency from
 `sgajbi/lotus-core#430` is closed in Core PR #431, and `lotus-idea` issue #22
-now tracks this adapter-consumption slice. There is still no live Core
-integration proof, certified scheduled daemon runtime, full Workbench live
-proof, data-product certification, or supported-feature promotion yet.
+now tracks this adapter-consumption slice. The bounded live Core
+source-ingestion proof path now exists through the proof artifact contract, but
+certified long-running scheduler runtime, data-mesh certification, full
+Gateway/Workbench live proof, downstream realization proof, and
+supported-feature promotion remain blocked.
 `src/app/application/source_ingestion_live_proof.py` and
 `scripts/generate_source_ingestion_live_proof.py` now define the source-safe
 live Core source-ingestion proof artifact contract. A valid artifact referenced
@@ -202,13 +204,13 @@ diagnostics, and accidental support promotion.
 The runtime boundary now distinguishes Core query-service reads from
 query-control-plane snapshot calls through `LOTUS_CORE_QUERY_BASE_URL` and
 `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, with `LOTUS_CORE_BASE_URL` retained
-only as a compatibility fallback for older single-base local stacks.
-Live diagnostic probing on 2026-06-23 confirmed the split Core routes are
-reachable, but the local `lotus-core` query-service cash-balances response did
-not expose the required `totals.source_reported_cash_weight*` fields; upstream
-issue `sgajbi/lotus-core#437` tracks that Core-owned runtime payload gap.
-`lotus-idea` must remain blocked rather than reconstructing source-reported
-cash-weight supportability locally.
+only as a compatibility fallback for older single-base local stacks. The live
+proof remains source-authority preserving: `lotus-idea` consumes
+`totals.source_reported_cash_weight*` only when Core exposes those fields and
+must remain blocked rather than reconstructing source-reported cash-weight
+supportability locally. Upstream issue `sgajbi/lotus-core#437` remains the
+durable tracker for Core-owned runtime payload closure until the Core issue is
+closed.
 Data-mesh/runtime telemetry certification, full Gateway/Workbench live proof,
 and supported-feature promotion remain planned.
 
