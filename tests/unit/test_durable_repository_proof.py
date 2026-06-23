@@ -5,6 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
+from typing import Mapping, cast
 
 import pytest
 
@@ -74,6 +75,7 @@ def test_rejects_durable_repository_proof_with_naive_timestamp() -> None:
         ("supportedFeaturePromoted", True),
         ("proofClosed", True),
         ("generatedAtUtc", "not-a-datetime"),
+        ("generatedAtUtc", None),
     ],
 )
 def test_rejects_durable_repository_proof_with_invalid_top_level_fields(
@@ -82,6 +84,45 @@ def test_rejects_durable_repository_proof_with_invalid_top_level_fields(
 ) -> None:
     proof = _valid_durable_repository_proof()
     proof[field_name] = bad_value
+
+    assert durable_repository_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("aggregateBlockersCleared", []),
+        ("evidenceRefs", []),
+        ("remainingCertificationBlockers", []),
+        ("proofChecks", []),
+    ],
+)
+def test_rejects_durable_repository_proof_with_invalid_contract_fields(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    proof = _valid_durable_repository_proof()
+    proof[field_name] = bad_value
+
+    assert durable_repository_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    "check_name",
+    [
+        "timezoneAwareGeneratedAtUtc",
+        "fileEvidencePresent",
+        "makeTargetEvidencePresent",
+        "postgresRuntimeProofCiLane",
+    ],
+)
+def test_rejects_durable_repository_proof_with_invalid_proof_checks(
+    check_name: str,
+) -> None:
+    proof = _valid_durable_repository_proof()
+    proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
+    proof_checks[check_name] = False
+    proof["proofChecks"] = proof_checks
 
     assert durable_repository_proof_is_valid(proof) is False
 

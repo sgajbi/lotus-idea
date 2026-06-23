@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -154,12 +155,66 @@ def test_runtime_trust_telemetry_snapshot_materializes_source_safe_runtime_evide
     assert "/source-owned/" not in rendered
 
 
-def _persist_high_cash_candidate(repository: InMemoryIdeaRepository, *, suffix: str) -> str:
-    result = evaluate_high_cash_signal(_high_cash_input(suffix=suffix), _policy())
+def test_runtime_trust_telemetry_snapshot_reports_stale_source_evidence() -> None:
+    repository = InMemoryIdeaRepository()
+    _persist_high_cash_candidate(
+        repository,
+        suffix="stale",
+        freshness=EvidenceFreshness.STALE,
+        data_quality_status="stale",
+    )
+
+    snapshot = build_runtime_trust_telemetry_snapshot(
+        repository=repository,
+        durable_storage_backed=True,
+        generated_at_utc=OBSERVED_AT,
+    ).to_dict()
+
+    assert snapshot["freshness"]["freshness_state"] == "stale"
+    assert snapshot["completeness_status"] == "stale"
+    assert snapshot["reconciliation_status"] == "partial"
+    assert snapshot["data_quality_status"] == "quality_warning"
+    assert "stale_or_unavailable_source_refs_present" in snapshot["blocking"]["blocked_reason"]
+
+
+def _persist_high_cash_candidate(
+    repository: InMemoryIdeaRepository,
+    *,
+    suffix: str,
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    data_quality_status: str = "complete",
+) -> str:
+    result = evaluate_high_cash_signal(
+        _high_cash_input(suffix=suffix),
+        _policy(),
+    )
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert result.candidate is not None
+    candidate = result.candidate
+    if freshness is not EvidenceFreshness.CURRENT or data_quality_status != "complete":
+        source_refs = tuple(
+            _source_ref(
+                product_id,
+                suffix=suffix,
+                freshness=freshness,
+                data_quality_status=data_quality_status,
+            )
+            for product_id in (
+                "lotus-core:PortfolioStateSnapshot:v1",
+                "lotus-core:HoldingsAsOf:v1",
+                "lotus-core:PortfolioCashMovementSummary:v1",
+                "lotus-core:PortfolioCashflowProjection:v1",
+            )
+        )
+        lineage_ref = replace(candidate.evidence_packet.lineage_ref, source_refs=source_refs)
+        evidence_packet = replace(
+            candidate.evidence_packet,
+            source_refs=source_refs,
+            lineage_ref=lineage_ref,
+        )
+        candidate = replace(candidate, evidence_packet=evidence_packet)
     repository.persist_candidate(
-        result.candidate,
+        candidate,
         idempotency_key=f"runtime-trust-telemetry-{suffix}",
         payload={"suffix": suffix},
         actor_subject="platform-operator",
@@ -176,25 +231,50 @@ def _policy() -> HighCashSignalPolicy:
     )
 
 
-def _high_cash_input(*, suffix: str) -> HighCashSignalInput:
+def _high_cash_input(
+    *,
+    suffix: str,
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    data_quality_status: str = "complete",
+) -> HighCashSignalInput:
     return HighCashSignalInput(
         as_of_date=AS_OF_DATE,
         source_reported_cash_weight=Decimal("0.18"),
-        portfolio_state_ref=_source_ref("lotus-core:PortfolioStateSnapshot:v1", suffix=suffix),
-        holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1", suffix=suffix),
+        portfolio_state_ref=_source_ref(
+            "lotus-core:PortfolioStateSnapshot:v1",
+            suffix=suffix,
+            freshness=freshness,
+            data_quality_status=data_quality_status,
+        ),
+        holdings_ref=_source_ref(
+            "lotus-core:HoldingsAsOf:v1",
+            suffix=suffix,
+            freshness=freshness,
+            data_quality_status=data_quality_status,
+        ),
         cash_movement_ref=_source_ref(
             "lotus-core:PortfolioCashMovementSummary:v1",
             suffix=suffix,
+            freshness=freshness,
+            data_quality_status=data_quality_status,
         ),
         cashflow_projection_ref=_source_ref(
             "lotus-core:PortfolioCashflowProjection:v1",
             suffix=suffix,
+            freshness=freshness,
+            data_quality_status=data_quality_status,
         ),
         evaluated_at_utc=OBSERVED_AT,
     )
 
 
-def _source_ref(product_id: str, *, suffix: str) -> SourceRef:
+def _source_ref(
+    product_id: str,
+    *,
+    suffix: str,
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    data_quality_status: str = "complete",
+) -> SourceRef:
     return SourceRef(
         product_id=product_id,
         source_system=SourceSystem.LOTUS_CORE,
@@ -203,6 +283,6 @@ def _source_ref(product_id: str, *, suffix: str) -> SourceRef:
         as_of_date=AS_OF_DATE,
         generated_at_utc=OBSERVED_AT,
         content_hash=f"sha256:{product_id}:{suffix}",
-        data_quality_status="complete",
-        freshness=EvidenceFreshness.CURRENT,
+        data_quality_status=data_quality_status,
+        freshness=freshness,
     )

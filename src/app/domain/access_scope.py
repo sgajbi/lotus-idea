@@ -6,15 +6,6 @@ from dataclasses import dataclass
 ScopeFilterValue = str | Iterable[str] | None
 
 
-def _clean_optional(value: str | None) -> str | None:
-    if value is None:
-        return None
-    cleaned = value.strip()
-    if not cleaned:
-        raise ValueError("scope fields cannot be blank")
-    return cleaned
-
-
 def _clean_optional_values(value: ScopeFilterValue) -> tuple[str, ...]:
     if value is None:
         return ()

@@ -173,6 +173,27 @@ def test_source_ingestion_readiness_keeps_live_core_blocker_for_invalid_proof(
     assert "live_core_source_proof_missing" in snapshot.certification_blockers
 
 
+def test_source_ingestion_readiness_keeps_live_core_blocker_for_malformed_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    proof = tmp_path / "live-proof.json"
+    proof.write_text("{not-json", encoding="utf-8")
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(LIVE_PROOF_ENV, str(proof))
+    monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot()
+
+    assert snapshot.configured_live_proof_available is True
+    assert snapshot.live_core_source_proof_valid is False
+    assert "live_core_source_proof_missing" in snapshot.certification_blockers
+
+
 def test_source_ingestion_readiness_clears_only_scheduled_worker_blocker_with_valid_proof(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -211,6 +232,27 @@ def test_source_ingestion_readiness_keeps_scheduled_worker_blocker_for_invalid_p
     manifest.write_text("{}", encoding="utf-8")
     scheduled_proof = tmp_path / "scheduled-worker-proof.json"
     scheduled_proof.write_text('{"schemaVersion": "wrong"}', encoding="utf-8")
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
+    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot()
+
+    assert snapshot.configured_scheduled_worker_proof_available is True
+    assert snapshot.scheduled_worker_deploy_proof_valid is False
+    assert "scheduled_worker_deploy_proof_missing" in snapshot.certification_blockers
+
+
+def test_source_ingestion_readiness_keeps_scheduled_worker_blocker_for_malformed_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    scheduled_proof = tmp_path / "scheduled-worker-proof.json"
+    scheduled_proof.write_text("{not-json", encoding="utf-8")
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))

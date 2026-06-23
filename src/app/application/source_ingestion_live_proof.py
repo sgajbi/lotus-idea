@@ -77,6 +77,7 @@ def live_core_source_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         and payload.get("runStatus") == "completed"
         and payload.get("durableStorageBacked") is True
         and payload.get("supportedFeaturePromoted") is False
+        and isinstance(payload.get("proofBlockers"), list | tuple)
         and "live_core_source_proof_missing" not in _text_sequence(payload.get("proofBlockers"))
         and _has_ingestion_evidence(payload.get("decisionCounts"))
     )

@@ -202,6 +202,28 @@ def test_build_review_queue_from_repository_filters_by_multi_portfolio_scope() -
     assert queue.exclusions[0].reason is QueueExclusionReason.ACCESS_SCOPE_MISMATCH
 
 
+def test_queue_access_scope_filter_rejects_blank_scope_values() -> None:
+    with pytest.raises(ValueError, match="scope fields cannot be blank"):
+        QueueAccessScopeFilter(portfolio_id=("PB_SG_GLOBAL_BAL_001", " "))
+
+
+def test_queue_access_scope_filter_handles_empty_scope_and_missing_candidate_scope() -> None:
+    assert QueueAccessScopeFilter().matches(None) is True
+    assert QueueAccessScopeFilter(portfolio_id="PB_SG_GLOBAL_BAL_001").matches(None) is False
+
+
+def test_queue_access_scope_filter_allows_unbounded_entitlement_dimensions() -> None:
+    requested = QueueAccessScopeFilter(
+        tenant_id="tenant-private-bank-sg",
+        book_id="book-advisor-001",
+        portfolio_id=("PB_SG_GLOBAL_BAL_001", "PB_SG_ALT_BAL_002"),
+        client_id="client-001",
+    )
+    unbounded = QueueAccessScopeFilter()
+
+    assert requested.is_subset_of(unbounded) is True
+
+
 def test_build_review_queue_from_repository_excludes_expired_candidate_records() -> None:
     repository = InMemoryIdeaRepository()
     candidate_id = persist_high_cash_candidate(repository)
