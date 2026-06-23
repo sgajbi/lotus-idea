@@ -106,6 +106,20 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "downstream-realization",
         "supported-feature-promotion",
     }
+    capabilities = {
+        capability["capabilityId"]: capability for capability in payload["capabilities"]
+    }
+    assert (
+        "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
+        in capabilities["ai-explanation"]["evidenceRefs"]
+    )
+    assert "make ai-model-risk-ops-contract-gate" in capabilities["ai-explanation"]["evidenceRefs"]
+    assert (
+        "model_risk_operations_dashboard_not_certified"
+        in capabilities["ai-explanation"]["blockers"]
+    )
+    ai_explanation_blockers = capabilities["ai-explanation"]["blockers"]
+    assert "model_risk_operations_alerts_not_certified" in ai_explanation_blockers
     assert "portfolio_id" not in response.text
     assert "client_id" not in response.text
 

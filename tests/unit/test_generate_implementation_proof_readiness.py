@@ -61,6 +61,18 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
         "downstream-realization",
         "supported-feature-promotion",
     }
+    ai_explanation = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "ai-explanation"
+    )
+    assert (
+        "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
+        in ai_explanation["evidenceRefs"]
+    )
+    assert "make ai-model-risk-ops-contract-gate" in ai_explanation["evidenceRefs"]
+    assert "model_risk_operations_dashboard_not_certified" in ai_explanation["blockers"]
+    assert "model_risk_operations_alerts_not_certified" in ai_explanation["blockers"]
     serialized = json.dumps(payload)
     assert "portfolio_id" not in serialized
     assert "client_id" not in serialized

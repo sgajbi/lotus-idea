@@ -361,6 +361,8 @@ def _ai_explanation_capability(
         supportability_status=snapshot.supportability_status,
         evidence_refs=(
             "src/app/application/ai_governance.py",
+            "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json",
+            "make ai-model-risk-ops-contract-gate",
             "POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
             "GET /api/v1/ai-explanations/readiness",
         ),
