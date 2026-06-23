@@ -155,8 +155,9 @@ flowchart LR
     run-once worker entrypoint. Check-only mode returns a product-safe
     validation summary, and `make source-ingestion-worker-check` enforces both
     manifest parseability and the exact source-safe check-only output contract;
-    run mode requires a configured Core base URL and active repository
-    provider. Both check-only and run summaries redact raw source payloads,
+    run mode requires configured Core query and query-control-plane URLs, or
+    the legacy compatibility Core base URL, plus an active repository provider.
+    Both check-only and run summaries redact raw source payloads,
     portfolio ids, and raw idempotency keys. It is not a daemon,
     deploy-pipeline worker, or live Core certification.
 14. `POST /api/v1/source-ingestion/run-once` adds the protected service
@@ -212,9 +213,13 @@ provider:
 
 ```powershell
 $env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
-$env:LOTUS_CORE_BASE_URL = "http://localhost:8310"
+$env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
+$env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
 .venv\Scripts\python.exe scripts/run_source_ingestion_worker.py
 ```
+
+Use `LOTUS_CORE_BASE_URL` only as a compatibility fallback for older
+single-base Core stacks.
 
 Run the opt-in PostgreSQL runtime proof locally with a disposable or dedicated
 integration database:

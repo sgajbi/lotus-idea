@@ -75,11 +75,12 @@ Implemented first-wave internal scope:
    `scripts/run_source_ingestion_worker.py` now provide a versioned
    manifest-backed run-once worker entrypoint. `--check-only` validates the
    manifest and returns a product-safe summary without Core calls, repository
-   writes, portfolio ids, or raw idempotency keys. Run mode requires an
-   explicit Core base URL or `LOTUS_CORE_BASE_URL` and emits decision counts,
-   candidate ids when candidates are created, and idempotency-key presence only,
-   without source payloads, portfolio ids in result items, raw idempotency keys,
-   or supported-feature promotion.
+   writes, portfolio ids, or raw idempotency keys. Run mode requires explicit
+   Core query and query-control-plane URLs, or compatibility
+   `LOTUS_CORE_BASE_URL`, and emits decision counts, candidate ids when
+   candidates are created, and idempotency-key presence only, without source
+   payloads, portfolio ids in result items, raw idempotency keys, or
+   supported-feature promotion.
 10. `make source-ingestion-worker-check` now validates the example manifest and
     source-safe check-only output contract in the lint path. It blocks raw
     portfolio identifiers, source routes, source payloads, raw idempotency

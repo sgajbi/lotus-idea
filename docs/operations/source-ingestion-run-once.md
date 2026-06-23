@@ -22,8 +22,8 @@ The endpoint proves the service can:
 
 1. enforce operator role and `idea.source-ingestion.run` capability,
 2. fail closed before mutation when durable repository configuration is absent,
-3. fail closed before mutation when the manifest or Core base URL is missing or
-   invalid,
+3. fail closed before mutation when the manifest, Core query URL, or Core
+   query-control-plane URL is missing or invalid,
 4. execute the existing domain batch runner when runtime state is configured,
 5. return aggregate decision counts only,
 6. emit bounded `source_ingestion_run_once` operation events.
@@ -86,7 +86,9 @@ flowchart LR
 | `runStatus` | `blocked` or `completed` |
 | `durableStorageBacked` | Whether the active repository provider is durable |
 | `configuredManifestAvailable` | Whether the configured manifest path exists |
-| `coreBaseUrlConfigured` | Whether `LOTUS_CORE_BASE_URL` is configured |
+| `coreBaseUrlConfigured` | Whether both effective Core runtime URLs are configured |
+| `coreQueryBaseUrlConfigured` | Whether `LOTUS_CORE_QUERY_BASE_URL` is configured, or resolved through compatibility `LOTUS_CORE_BASE_URL` |
+| `coreQueryControlPlaneBaseUrlConfigured` | Whether `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` is configured, or resolved through compatibility `LOTUS_CORE_BASE_URL` |
 | `totalCount` | Number of work items processed by the domain batch runner |
 | `decisionCounts` | Aggregate decision counts by bounded ingestion outcome |
 | `configurationBlockers` | Runtime blockers that prevented execution |
@@ -106,15 +108,22 @@ Required runtime environment:
 ```powershell
 $env:LOTUS_IDEA_DATABASE_URL = "postgresql://..."
 $env:LOTUS_IDEA_SOURCE_INGESTION_MANIFEST = "docs/examples/source-ingestion/high-cash-worker-manifest.example.json"
-$env:LOTUS_CORE_BASE_URL = "http://localhost:8100"
+$env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
+$env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
 ```
+
+`LOTUS_CORE_BASE_URL` remains a compatibility fallback for older single-base
+local stacks. Prefer the split URLs for canonical Lotus Core runtimes because
+cash-balance queries and query-control-plane snapshots are served by different
+Core services.
 
 Live-proof capture:
 
 ```powershell
 python scripts/generate_source_ingestion_live_proof.py `
   --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
-  --core-base-url http://localhost:8100 `
+  --core-query-base-url http://localhost:8201 `
+  --core-query-control-plane-base-url http://localhost:8202 `
   --generated-at-utc 2026-06-21T10:10:00Z `
   --output output/source-ingestion/live-proof.json
 

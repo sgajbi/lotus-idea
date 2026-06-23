@@ -58,7 +58,8 @@ flowchart TD
 6. For runtime source-ingestion configuration checks, call
    `GET /api/v1/source-ingestion/readiness` with the `operator` role and
    `idea.source-ingestion.readiness.read` capability. This reports manifest,
-   Core base URL, durable repository configuration, live-proof artifact
+   Core query URL, Core query-control-plane URL, durable repository
+   configuration, live-proof artifact
    validity, scheduled-worker proof validity, and remaining certification
    blockers without calling Core or exposing source payloads.
 7. For bounded source-ingestion operator execution, call
@@ -67,7 +68,8 @@ flowchart TD
    manifest, and Core configuration, blocks before mutation when runtime
    inputs are missing or invalid, and returns aggregate decision counts only.
 8. For live Core source-ingestion proof capture, run
-   `scripts/generate_source_ingestion_live_proof.py --manifest <path> --core-base-url <url> --generated-at-utc <timestamp> --output output/source-ingestion/live-proof.json`.
+   `scripts/generate_source_ingestion_live_proof.py --manifest <path> --core-query-base-url <query-url> --core-query-control-plane-base-url <control-plane-url> --generated-at-utc <timestamp> --output output/source-ingestion/live-proof.json`.
+   Use `--core-base-url` only for legacy single-base Core stacks.
    Then set `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` to that output path.
    A valid artifact clears only the live-Core blocker; it is not scheduled
    worker, data-mesh, Gateway/Workbench, downstream, or supported-feature

@@ -76,13 +76,16 @@ certification, Gateway/Workbench discovery, client-ready publication, or
 supported-feature promotion.
 The internal `GET /api/v1/source-ingestion/readiness` diagnostic is available
 for operators with `idea.source-ingestion.readiness.read` to inspect high-cash
-run-once worker manifest, Core base URL, durable repository configuration, and
-remaining certification blockers without calling Core or exposing source
-payloads. It remains `not_certified` until live Core source proof, runtime
-data-mesh telemetry, Gateway/Workbench proof, downstream proof, and
-supported-feature evidence exist.
+run-once worker manifest, Core query URL, Core query-control-plane URL, durable
+repository configuration, and remaining certification blockers without calling
+Core or exposing source payloads. It remains `not_certified` until live Core
+source proof, runtime data-mesh telemetry, Gateway/Workbench proof, downstream
+proof, and supported-feature evidence exist.
 `scripts/generate_source_ingestion_live_proof.py` captures a source-safe live
-Core proof artifact for release reviewers. Point
+Core proof artifact for release reviewers. Prefer explicit
+`--core-query-base-url` and `--core-query-control-plane-base-url` values for
+canonical split Core runtimes; `--core-base-url` remains a compatibility
+fallback for older single-base stacks. Point
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a valid artifact to clear only the
 live-Core blocker in readiness.
 `scripts/generate_scheduled_source_ingestion_worker_proof.py` captures a
