@@ -14,8 +14,12 @@ from app.application.implementation_proof_readiness import (
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.source_ingestion_live_proof import (
+    build_source_ingestion_live_proof_payload,
+)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    LIVE_PROOF_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
@@ -129,12 +133,83 @@ def test_generate_implementation_proof_readiness_uses_explicit_scheduled_worker_
     )
     assert "scheduled_worker_deploy_proof_missing" not in source_ingestion["blockers"]
     assert "live_core_source_proof_missing" in source_ingestion["blockers"]
+    assert "source ingestion scheduled-worker proof artifact" in source_ingestion["evidenceRefs"]
     assert "durable_repository_not_configured" in source_ingestion["blockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
     assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
     assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
     assert os.environ[SCHEDULED_WORKER_PROOF_ENV] == "pre-existing-proof.json"
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    monkeypatch.setenv(MANIFEST_ENV, "pre-existing-manifest.json")
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://pre-existing-core")
+    monkeypatch.setenv(LIVE_PROOF_ENV, "pre-existing-live-proof.json")
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+            }
+        ),
+        encoding="utf-8",
+    )
+    live_proof = tmp_path / "source-ingestion-live-proof.json"
+    live_proof.write_text(
+        json.dumps(
+            build_source_ingestion_live_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                live_core_source_attempted=True,
+                worker_summary={
+                    "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                    "mode": "run_once",
+                    "sourceAuthority": "lotus-core",
+                    "durableStorageBacked": True,
+                    "totalCount": 1,
+                    "decisionCounts": {"accepted": 1, "replayed": 0},
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--source-ingestion-manifest",
+            str(manifest),
+            "--core-base-url",
+            "http://localhost:8310",
+            "--source-ingestion-live-proof",
+            str(live_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    source_ingestion = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "source-ingestion"
+    )
+    assert "live_core_source_proof_missing" not in source_ingestion["blockers"]
+    assert "scheduled_worker_deploy_proof_missing" in source_ingestion["blockers"]
+    assert "source ingestion live proof artifact" in source_ingestion["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+    assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
+    assert os.environ[CORE_BASE_URL_ENV] == "http://pre-existing-core"
+    assert os.environ[LIVE_PROOF_ENV] == "pre-existing-live-proof.json"
 
 
 def test_generate_implementation_proof_readiness_uses_explicit_durable_repository_proof(

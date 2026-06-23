@@ -169,6 +169,10 @@ async def get_implementation_proof_readiness(
             evaluated_at_utc=evaluated_at_utc,
             repository=repository,
             durable_storage_backed=durable_storage_backed,
+            source_ingestion_live_proof_ref=proof_artifacts.source_ingestion_live_proof_ref,
+            source_ingestion_scheduled_worker_proof_ref=(
+                proof_artifacts.source_ingestion_scheduled_worker_proof_ref
+            ),
             durable_repository_proof=proof_artifacts.durable_repository_proof,
             durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
             runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry_proof,

@@ -17,6 +17,24 @@ from app.application.runtime_trust_telemetry_proof import (
     RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.source_ingestion_live_proof import (
+    build_source_ingestion_live_proof_payload,
+)
+from app.application.source_ingestion_readiness import (
+    CORE_BASE_URL_ENV,
+    LIVE_PROOF_ENV,
+    MANIFEST_ENV,
+    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduled_worker import (
+    build_scheduled_worker_check_summary,
+    build_scheduled_worker_deploy_proof_payload,
+    source_ingestion_schedule_config_from_values,
+)
+from app.application.source_ingestion_worker import (
+    MANIFEST_SCHEMA_VERSION,
+    source_ingestion_worker_plan_from_manifest,
+)
 from app.application.workbench_read_path_proof import (
     WORKBENCH_READ_PATH_PROOF_ENV,
     build_workbench_read_path_proof_payload,
@@ -97,9 +115,34 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     tmp_path: Path,
 ) -> None:
     evaluated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+    manifest_path = tmp_path / "source-ingestion-manifest.json"
+    live_proof_path = tmp_path / "source-ingestion-live-proof.json"
+    scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    live_proof_path.write_text(
+        json.dumps(
+            build_source_ingestion_live_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                live_core_source_attempted=True,
+                worker_summary={
+                    "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                    "mode": "run_once",
+                    "sourceAuthority": "lotus-core",
+                    "durableStorageBacked": True,
+                    "totalCount": 1,
+                    "decisionCounts": {"accepted": 1, "replayed": 0},
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    scheduled_proof_path.write_text(
+        json.dumps(_valid_scheduled_worker_proof(generated_at_utc=evaluated_at_utc)),
+        encoding="utf-8",
+    )
     durable_proof_path.write_text(
         json.dumps(
             build_durable_repository_proof_payload(
@@ -127,6 +170,10 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         ),
         encoding="utf-8",
     )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
+    monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof_path))
+    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
     monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
     monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
@@ -141,6 +188,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["supportedFeaturePromoted"] is False
+    assert "live_core_source_proof_missing" not in payload["overallBlockers"]
+    assert "scheduled_worker_deploy_proof_missing" not in payload["overallBlockers"]
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
@@ -150,6 +199,13 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     capabilities = {
         capability["capabilityId"]: capability for capability in payload["capabilities"]
     }
+    assert (
+        "source ingestion live proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
+    )
+    assert (
+        "source ingestion scheduled-worker proof artifact"
+        in capabilities["source-ingestion"]["evidenceRefs"]
+    )
     assert "durable repository proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
     assert (
         "runtime trust telemetry proof artifact"
@@ -264,3 +320,27 @@ def test_implementation_proof_readiness_api_reports_unavailable_contracts_safely
             "implementation_proof_readiness_unavailable",
         )
     ]
+
+
+def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, object]:
+    plan = source_ingestion_worker_plan_from_manifest(
+        {
+            "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+        }
+    )
+    summary = build_scheduled_worker_check_summary(
+        plan=plan,
+        schedule=source_ingestion_schedule_config_from_values(
+            interval_seconds=300,
+            max_runs=1,
+        ),
+    )
+    return build_scheduled_worker_deploy_proof_payload(
+        generated_at_utc=generated_at_utc,
+        check_summary=summary,
+        scheduler_entrypoint_present=True,
+        run_once_worker_entrypoint_present=True,
+        docker_compose_service_present=True,
+    )

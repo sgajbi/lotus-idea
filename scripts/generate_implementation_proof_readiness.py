@@ -60,6 +60,14 @@ def main(argv: list[str] | None = None) -> int:
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
                 durable_storage_backed=idea_repository_durable_storage_backed(repository),
+                source_ingestion_live_proof_ref=_source_safe_artifact_ref(
+                    _resolve_optional_path(args.source_ingestion_live_proof),
+                    artifact_name="source ingestion live proof artifact",
+                ),
+                source_ingestion_scheduled_worker_proof_ref=_source_safe_artifact_ref(
+                    _resolve_optional_path(args.source_ingestion_scheduled_worker_proof),
+                    artifact_name="source ingestion scheduled-worker proof artifact",
+                ),
                 durable_repository_proof=durable_repository_proof,
                 durable_repository_proof_ref=_source_safe_artifact_ref(
                     durable_repository_proof_path,

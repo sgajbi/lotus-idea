@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import json
 from pathlib import Path
 
 import pytest
@@ -13,8 +14,27 @@ from app.application.implementation_proof_readiness import (
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.source_ingestion_live_proof import (
+    build_source_ingestion_live_proof_payload,
+)
+from app.application.source_ingestion_readiness import (
+    CORE_BASE_URL_ENV,
+    LIVE_PROOF_ENV,
+    MANIFEST_ENV,
+    SCHEDULED_WORKER_PROOF_ENV,
+)
+from app.application.source_ingestion_scheduled_worker import (
+    build_scheduled_worker_check_summary,
+    build_scheduled_worker_deploy_proof_payload,
+    source_ingestion_schedule_config_from_values,
+)
+from app.application.source_ingestion_worker import (
+    MANIFEST_SCHEMA_VERSION,
+    source_ingestion_worker_plan_from_manifest,
+)
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
+from app.runtime.repository_state import DATABASE_URL_ENV
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -162,6 +182,64 @@ def test_implementation_proof_readiness_uses_durable_repository_proof_without_su
     assert "output/persistence/durable-repository-proof.json" in source_ingestion.evidence_refs
 
 
+def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_without_promotion(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    live_proof = tmp_path / "source-ingestion-live-proof.json"
+    scheduled_proof = tmp_path / "source-ingestion-scheduled-worker-proof.json"
+    manifest.write_text("{}", encoding="utf-8")
+    live_proof.write_text(
+        json.dumps(
+            build_source_ingestion_live_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                live_core_source_attempted=True,
+                worker_summary={
+                    "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+                    "mode": "run_once",
+                    "sourceAuthority": "lotus-core",
+                    "durableStorageBacked": True,
+                    "totalCount": 1,
+                    "decisionCounts": {"accepted": 1, "replayed": 0},
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    scheduled_proof.write_text(json.dumps(_valid_scheduled_worker_proof()), encoding="utf-8")
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof))
+    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        source_ingestion_live_proof_ref="output/source-ingestion/live-proof.json",
+        source_ingestion_scheduled_worker_proof_ref=(
+            "output/source-ingestion/scheduled-worker-proof.json"
+        ),
+    )
+
+    source_ingestion = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "source-ingestion"
+    )
+    assert "live_core_source_proof_missing" not in source_ingestion.blockers
+    assert "scheduled_worker_deploy_proof_missing" not in source_ingestion.blockers
+    assert "data_mesh_runtime_telemetry_not_certified" in source_ingestion.blockers
+    assert "gateway_workbench_proof_missing" in source_ingestion.blockers
+    assert "output/source-ingestion/live-proof.json" in source_ingestion.evidence_refs
+    assert "output/source-ingestion/scheduled-worker-proof.json" in (source_ingestion.evidence_refs)
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+
+
 def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_without_certification() -> (
     None
 ):
@@ -255,3 +333,27 @@ def test_implementation_proof_readiness_rejects_invalid_supported_features_shape
 
     with pytest.raises(ValueError, match="supported features must be a list"):
         _supported_feature_count(registry_path)
+
+
+def _valid_scheduled_worker_proof() -> dict[str, object]:
+    plan = source_ingestion_worker_plan_from_manifest(
+        {
+            "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
+        }
+    )
+    summary = build_scheduled_worker_check_summary(
+        plan=plan,
+        schedule=source_ingestion_schedule_config_from_values(
+            interval_seconds=300,
+            max_runs=1,
+        ),
+    )
+    return build_scheduled_worker_deploy_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        check_summary=summary,
+        scheduler_entrypoint_present=True,
+        run_once_worker_entrypoint_present=True,
+        docker_compose_service_present=True,
+    )
