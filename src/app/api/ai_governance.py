@@ -416,6 +416,20 @@ class AIExplanationReadinessResponse(CamelModel):
         alias="forbiddenActionBlockingAvailable",
     )
     durable_ai_lineage_store_backed: bool = Field(..., alias="durableAiLineageStoreBacked")
+    model_risk_operations_contract_available: bool = Field(
+        ...,
+        alias="modelRiskOperationsContractAvailable",
+    )
+    model_risk_dashboard_contract_available: bool = Field(
+        ...,
+        alias="modelRiskDashboardContractAvailable",
+    )
+    model_risk_alert_contract_available: bool = Field(
+        ...,
+        alias="modelRiskAlertContractAvailable",
+    )
+    model_risk_dashboard_certified: bool = Field(..., alias="modelRiskDashboardCertified")
+    model_risk_alert_certified: bool = Field(..., alias="modelRiskAlertCertified")
     lotus_ai_runtime_executed: bool = Field(..., alias="lotusAiRuntimeExecuted")
     certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
     supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
@@ -438,6 +452,13 @@ class AIExplanationReadinessResponse(CamelModel):
             unsupportedClaimBlockingAvailable=snapshot.unsupported_claim_blocking_available,
             forbiddenActionBlockingAvailable=snapshot.forbidden_action_blocking_available,
             durableAiLineageStoreBacked=snapshot.durable_ai_lineage_store_backed,
+            modelRiskOperationsContractAvailable=(
+                snapshot.model_risk_operations_contract_available
+            ),
+            modelRiskDashboardContractAvailable=(snapshot.model_risk_dashboard_contract_available),
+            modelRiskAlertContractAvailable=snapshot.model_risk_alert_contract_available,
+            modelRiskDashboardCertified=snapshot.model_risk_dashboard_certified,
+            modelRiskAlertCertified=snapshot.model_risk_alert_certified,
             lotusAiRuntimeExecuted=snapshot.lotus_ai_runtime_executed,
             certificationBlockers=snapshot.certification_blockers,
             supportedFeaturePromoted=snapshot.supported_feature_promoted,
@@ -693,12 +714,18 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                         "unsupportedClaimBlockingAvailable": True,
                         "forbiddenActionBlockingAvailable": True,
                         "durableAiLineageStoreBacked": False,
+                        "modelRiskOperationsContractAvailable": True,
+                        "modelRiskDashboardContractAvailable": True,
+                        "modelRiskAlertContractAvailable": True,
+                        "modelRiskDashboardCertified": False,
+                        "modelRiskAlertCertified": False,
                         "lotusAiRuntimeExecuted": False,
                         "certificationBlockers": [
                             "lotus_ai_runtime_execution_missing",
                             "certified_ai_lineage_store_missing",
                             "workflow_pack_runtime_contract_not_certified",
-                            "model_risk_operations_dashboard_missing",
+                            "model_risk_operations_dashboard_not_certified",
+                            "model_risk_operations_alerts_not_certified",
                             "certified_runtime_trust_telemetry_missing",
                             "workbench_product_proof_missing",
                         ],

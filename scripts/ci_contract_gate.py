@@ -32,6 +32,7 @@ REQUIRED_TARGETS = (
     "no-sensitive-content-guard",
     "source-observability-contract-gate",
     "operation-metric-contract-gate",
+    "ai-model-risk-ops-contract-gate",
     "implementation-truth-gate",
     "data-mesh-contract-gate",
     "downstream-realization-contract-gate",
@@ -69,6 +70,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) no-sensitive-content-guard",
     "$(MAKE) source-observability-contract-gate",
     "$(MAKE) operation-metric-contract-gate",
+    "$(MAKE) ai-model-risk-ops-contract-gate",
     "$(MAKE) implementation-truth-gate",
     "$(MAKE) data-mesh-contract-gate",
     "$(MAKE) downstream-realization-contract-gate",
@@ -364,6 +366,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "runtime-trust-telemetry-proof-contract-gate": "scripts/runtime_trust_telemetry_proof_contract_gate.py",
         "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
         "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
+        "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
     }
     for target, script in script_target_expectations.items():
         if script not in _target_block(makefile, target):
