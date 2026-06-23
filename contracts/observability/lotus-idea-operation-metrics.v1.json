@@ -1,0 +1,199 @@
+{
+  "contract_id": "lotus-idea-operation-metrics",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "lifecycle_status": "implemented_internal_foundation",
+  "supportability_status": "not_certified",
+  "supported_feature_promoted": false,
+  "dashboard_certified": false,
+  "alert_certified": false,
+  "source_of_truth": {
+    "metric_source": "src/app/observability/logging.py",
+    "contract_gate": "scripts/operation_metric_contract_gate.py",
+    "operations_doc": "docs/operations/observability.md",
+    "operations_runbook": "wiki/Operations-Runbook.md",
+    "rfc_slice_15": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md"
+  },
+  "metrics": [
+    {
+      "metric_name": "lotus_idea_operation_events_total",
+      "prometheus_type": "counter",
+      "description": "Count of bounded lotus-idea business operation events.",
+      "labels": [
+        "operation",
+        "outcome",
+        "supportability_status",
+        "source_authority",
+        "durable_storage_backed",
+        "supported_feature_promoted"
+      ],
+      "outcomes": [
+        "accepted",
+        "fallback",
+        "replayed",
+        "conflict",
+        "duplicate",
+        "not_found",
+        "permission_denied",
+        "invalid_request",
+        "invalid_state",
+        "blocked",
+        "suppressed",
+        "not_eligible"
+      ],
+      "operations": [
+        {
+          "operation": "ai_explanation",
+          "scope": "Internal AI explanation fallback and verifier evaluation",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "ai_explanation_readiness_read",
+          "scope": "Internal AI explanation readiness diagnostic",
+          "source_authority": "lotus-ai",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "signal_evaluation",
+          "scope": "Internal high-cash signal evaluation",
+          "source_authority": "lotus-core",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "candidate_persistence",
+          "scope": "Internal high-cash candidate persistence and replay",
+          "source_authority": "lotus-core",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "candidate_detail_read",
+          "scope": "Internal candidate detail read with caller-scope enforcement",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "candidate_evidence_replay",
+          "scope": "Internal candidate evidence hash replay posture",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "lifecycle_transition",
+          "scope": "Internal candidate lifecycle transition recording",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "review_queue_read",
+          "scope": "Internal advisor review queue projection",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "review_queue_readiness_read",
+          "scope": "Internal advisor queue readiness diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "review_action",
+          "scope": "Internal human review decision recording",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "feedback_record",
+          "scope": "Internal advisor feedback recording",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "conversion_intent",
+          "scope": "Internal review-gated conversion intent recording",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "conversion_outcome",
+          "scope": "Internal downstream conversion outcome recording",
+          "source_authority": "lotus-idea",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "report_evidence_pack",
+          "scope": "Internal report evidence-pack request recording",
+          "source_authority": "lotus-report",
+          "supportability_status": "foundation_only"
+        },
+        {
+          "operation": "downstream_realization_submission",
+          "scope": "Internal downstream submission posture for Advise, Manage, and Report handoffs",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "outbox_delivery_run_once",
+          "scope": "Internal outbox delivery run-once operator action",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "outbox_delivery_readiness_read",
+          "scope": "Internal outbox delivery readiness diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "downstream_realization_readiness_read",
+          "scope": "Internal downstream realization readiness diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "mesh_readiness_read",
+          "scope": "Internal data-mesh readiness diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "mesh_trust_telemetry_preview_read",
+          "scope": "Internal runtime trust telemetry preview diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "mesh_trust_telemetry_snapshot_read",
+          "scope": "Internal runtime trust telemetry snapshot diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "source_ingestion_run_once",
+          "scope": "Internal source-ingestion run-once operator action",
+          "source_authority": "lotus-core",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "source_ingestion_readiness_read",
+          "scope": "Internal source-ingestion readiness diagnostic",
+          "source_authority": "lotus-core",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "implementation_proof_readiness_read",
+          "scope": "Internal aggregate RFC-0002 proof-readiness diagnostic",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        }
+      ]
+    }
+  ],
+  "non_proof_boundaries": [
+    "This contract is not dashboard certification.",
+    "This contract is not alert certification.",
+    "This contract is not data-mesh certification.",
+    "This contract is not Gateway or Workbench proof.",
+    "This contract is not supported-feature promotion."
+  ]
+}

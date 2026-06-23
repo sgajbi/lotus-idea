@@ -13,6 +13,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Product-safe error responses | Client and operator failure posture | No raw entitlement or source payload leakage |
 | Idea operation events | Certified internal foundation telemetry | Foundation supportability only |
 | Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
+| Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
 
 ## Sensitive-Content Rule
 
@@ -32,6 +33,11 @@ RFC-0002 Slice 15 adds the first business-operation observability foundation.
 vocabulary plus the `lotus_idea_operation_events_total` Prometheus counter.
 `make endpoint-certification-gate` requires certified business/operator endpoints to cite bounded
 operation-event test evidence in `docs/operations/endpoint-certification-ledger.json`.
+`contracts/observability/lotus-idea-operation-metrics.v1.json` is the machine-readable metric
+catalog for this implemented foundation. `make operation-metric-contract-gate` keeps the catalog
+aligned to the code-owned operation enum, outcome enum, metric labels, source-authority labels, and
+not-certified supportability boundary. It also blocks premature dashboard, alert, mesh,
+Gateway/Workbench, or supported-feature claims.
 
 ```mermaid
 flowchart LR
@@ -90,6 +96,11 @@ Metric labels are limited to:
 The operation helper rejects sensitive attributes such as client, portfolio, account, holding,
 transaction, request body, response body, raw entitlement failure, trace id, or correlation id
 fields. Do not add identifiers or payload fragments to operation labels.
+
+The operation metric catalog is intentionally a guardrail, not a promotion record. It proves the
+metric vocabulary is implemented, bounded, and synchronized with code. It does not certify a Grafana
+dashboard, Prometheus alert, platform mesh product, Gateway/Workbench route, or external supported
+feature.
 
 ## Operator Interpretation
 

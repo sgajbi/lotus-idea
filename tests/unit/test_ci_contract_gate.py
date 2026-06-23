@@ -292,3 +292,24 @@ def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_gate() -> Non
         "Makefile workbench-read-path-proof-contract-gate target must run "
         "`scripts/workbench_read_path_proof_contract_gate.py`"
     ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_operation_metric_contract_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) operation-metric-contract-gate\n", "")
+        .replace(
+            "$(VENV_PYTHON) scripts/operation_metric_contract_gate.py",
+            "$(VENV_PYTHON) scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) operation-metric-contract-gate`" in errors
+    assert (
+        "Makefile operation-metric-contract-gate target must run "
+        "`scripts/operation_metric_contract_gate.py`"
+    ) in errors

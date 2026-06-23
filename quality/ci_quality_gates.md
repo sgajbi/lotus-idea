@@ -15,28 +15,29 @@ Blocking scaffold commands:
 6. `make monetary-float-guard`
 7. `make no-sensitive-content-guard`
 8. `make source-observability-contract-gate`
-9. `make implementation-truth-gate`
-10. `make data-mesh-contract-gate`
-11. `make downstream-realization-contract-gate`
-12. `make migration-contract-gate`
-13. `make migration-execution-gate`
-14. `make durable-repository-proof-contract-gate`
-15. `make runtime-trust-telemetry-proof-contract-gate`
-16. `make workbench-read-path-proof-contract-gate`
-17. `make source-ingestion-worker-check`
-18. `make source-ingestion-scheduled-worker-check`
-19. `make source-ingestion-live-proof-contract-gate`
-20. `make implementation-proof-readiness-check` generates the scheduled-worker
+9. `make operation-metric-contract-gate`
+10. `make implementation-truth-gate`
+11. `make data-mesh-contract-gate`
+12. `make downstream-realization-contract-gate`
+13. `make migration-contract-gate`
+14. `make migration-execution-gate`
+15. `make durable-repository-proof-contract-gate`
+16. `make runtime-trust-telemetry-proof-contract-gate`
+17. `make workbench-read-path-proof-contract-gate`
+18. `make source-ingestion-worker-check`
+19. `make source-ingestion-scheduled-worker-check`
+20. `make source-ingestion-live-proof-contract-gate`
+21. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, and Workbench read-path proof artifact, then
     consumes all four in aggregate RFC proof-readiness evidence.
-21. `make supported-features-gate`
-22. `make endpoint-certification-gate`
-23. `make postgres-integration-gate`
-24. `make openapi-gate`
-25. `make coverage-gate`
-26. `make security-audit`
-27. `make docker-build`
+22. `make supported-features-gate`
+23. `make endpoint-certification-gate`
+24. `make postgres-integration-gate`
+25. `make openapi-gate`
+26. `make coverage-gate`
+27. `make security-audit`
+28. `make docker-build`
 
 Cleanup support command:
 
@@ -64,7 +65,7 @@ durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 Workbench read-path proof contract validation,
 implementation-proof readiness artifact generation, source-observability
-contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
+contract validation, operation metric contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
@@ -137,6 +138,13 @@ instead of becoming another unreviewed shell one-liner.
 code must use bounded operation-event emitters or the central request diagnostic helper instead of
 raw `print()`, direct Python logging, or low-level `log_event` calls. Request diagnostics log route
 templates rather than raw URL paths, keeping operator evidence product-safe.
+
+`make operation-metric-contract-gate` validates
+`contracts/observability/lotus-idea-operation-metrics.v1.json` against the code-owned operation,
+outcome, supportability, source-authority, and metric-label vocabulary. It blocks sensitive metric
+labels and prevents the implemented metric catalog from being treated as dashboard certification,
+alert certification, platform mesh certification, Gateway/Workbench proof, or supported-feature
+promotion.
 
 `make source-ingestion-live-proof-contract-gate` also protects the live-proof
 artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof

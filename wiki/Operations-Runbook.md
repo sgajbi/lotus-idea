@@ -314,6 +314,13 @@ The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supported_feature_promoted`. They must not include portfolio, client, account,
 holding, transaction, request body, response body, raw entitlement failure,
 trace id, or correlation id values.
+The machine-readable metric catalog lives at
+`contracts/observability/lotus-idea-operation-metrics.v1.json`, and
+`make operation-metric-contract-gate` keeps it aligned with the code-owned
+operation and outcome vocabulary. The catalog is current implementation
+evidence only; it is not dashboard certification, alert certification,
+data-mesh certification, Gateway/Workbench proof, or supported-feature
+promotion.
 
 Request validation, HTTP, and unhandled-error diagnostics use the central
 request diagnostic helper and log route templates rather than raw URL paths.

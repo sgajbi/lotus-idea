@@ -203,6 +203,7 @@ docker compose up --build
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
+| `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
 | `make check` | Run the local PR-grade gate set. |
 | `make ci` | Run the broader CI-equivalent local suite. |
@@ -275,6 +276,9 @@ Local controls keep implementation claims grounded:
   quality pages, evidence guide, and wiki pages that operators and agents need.
 - `make source-observability-contract-gate` prevents raw logs, raw `print()`,
   direct Python logging, and unsafe observability bypasses.
+- `make operation-metric-contract-gate` keeps the operation metric catalog
+  synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
+  Gateway/Workbench, or supported-feature overclaims.
 - `make no-sensitive-content-guard` keeps local evidence and output artifacts
   free of sensitive marker names.
 - `make durable-repository-proof-contract-gate` keeps the aggregate
