@@ -128,6 +128,13 @@ local stacks. Prefer the split URLs for canonical Lotus Core runtimes because
 cash-balance queries and query-control-plane snapshots are served by different
 Core services.
 
+The checked-in example manifest targets `DEMO_ADV_USD_001` on `2026-06-20`
+because that Core seed currently has supported same-date cash-weight evidence
+above the high-cash policy threshold. `PB_SG_GLOBAL_BAL_001` remains the
+canonical Workbench/demo portfolio, but its 2026-06-20 Core cash weight is below
+the high-cash threshold and should not be used to force an accepted
+source-ingestion proof.
+
 Live-proof capture:
 
 ```powershell
