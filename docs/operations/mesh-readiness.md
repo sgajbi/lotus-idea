@@ -63,6 +63,11 @@ The response includes:
 This endpoint is endpoint-certified as an operator diagnostic. It is not data
 product certification, platform source-manifest inclusion, Gateway discovery,
 Workbench discovery, runtime lineage proof, or a supported-feature claim.
+Its blocker list is intentionally aligned to the platform mesh certification
+families so operators and future agents can see the exact missing promotion
+proof: source-manifest inclusion, catalog inclusion, SLO certification, access
+policy certification, evidence-policy certification, Gateway/Workbench
+discovery proof, and supported-feature promotion.
 
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` returns aggregate
 runtime telemetry preview posture from the active repository provider. It

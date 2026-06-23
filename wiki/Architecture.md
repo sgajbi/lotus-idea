@@ -82,6 +82,9 @@ The internal `GET /api/v1/data-mesh/readiness` endpoint reads the repo-owned
 mesh contracts and returns operator-facing `not_certified` posture with
 blockers. It is an API-certified diagnostic, not data-product certification,
 Gateway discovery, Workbench discovery, or supported-feature promotion.
+The blocker list is aligned to platform mesh certification families so missing
+source-manifest, catalog, SLO, access, evidence, Gateway/Workbench discovery,
+and supported-feature proof stay visible before any product is promoted.
 
 The internal
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` endpoint reads the

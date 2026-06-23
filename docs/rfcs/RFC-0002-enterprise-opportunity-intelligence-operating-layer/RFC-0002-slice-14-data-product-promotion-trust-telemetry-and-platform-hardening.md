@@ -19,7 +19,10 @@ This slice now has internal operator diagnostic foundations only:
    `operator` role and `idea.mesh.readiness.read` capability.
 3. The endpoint returns explicit blockers:
    `data_mesh_not_certified`, `producer_products_not_active`, and
-   `certified_runtime_trust_telemetry_missing`.
+   `certified_runtime_trust_telemetry_missing`, plus platform-aligned
+   promotion blockers for source-manifest inclusion, catalog inclusion, SLO
+   certification, access-policy certification, evidence-policy certification,
+   Gateway/Workbench discovery proof, and supported-feature promotion.
 4. The endpoint returns `runtimeTelemetryBacked=false`,
    `platformCertified=false`, and `supportedFeaturePromoted=false`.
 5. The endpoint emits a bounded `mesh_readiness_read` operation event with
@@ -144,5 +147,6 @@ telemetry evidence only.
 3. Gate 6 is partially satisfied for the diagnostic endpoints and generated
    runtime evidence through OpenAPI, endpoint-certification, runtime-preview
    endpoint/generator, runtime-snapshot endpoint/generator, and
-   unit/integration evidence.
+   unit/integration evidence, with the mesh readiness endpoint now exposing the
+   platform certification families that remain missing before promotion.
 4. Gate 7 has no new platform/scaffold blocker from this diagnostic slice.

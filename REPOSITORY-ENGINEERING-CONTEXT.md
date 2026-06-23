@@ -585,7 +585,12 @@ RFC-0002 Slice 14 is partially implemented as internal data-mesh-readiness and
 runtime trust telemetry preview/snapshot diagnostics. `src/app/application/data_mesh_readiness.py`
 reads repo-owned producer, mesh-readiness, and trust-telemetry contracts, and
 `GET /api/v1/data-mesh/readiness` exposes the current operator-facing
-`planned` / `not_certified` posture with explicit blockers. `src/app/application/runtime_trust_telemetry.py`
+`planned` / `not_certified` posture with explicit blockers. Those blockers now
+name the missing platform promotion proof for source-manifest inclusion,
+catalog inclusion, SLO certification, access-policy certification,
+evidence-policy certification, Gateway/Workbench discovery proof, and
+supported-feature promotion so aggregate proof-readiness cannot hide the real
+mesh certification path. `src/app/application/runtime_trust_telemetry.py`
 builds a source-safe runtime preview from the active repository snapshot, and
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
 candidate, source-authority, freshness, supportability, lifecycle, review,

@@ -39,6 +39,10 @@ for this posture. It requires the `operator` role and
 `idea.mesh.readiness.read`, reports `not_certified` with explicit blockers, and
 returns `supportedFeaturePromoted=false`. It is not data-product certification
 or product discovery.
+Its blockers are deliberately mapped to the platform promotion path:
+source-manifest inclusion, catalog inclusion, SLO certification, access-policy
+certification, evidence-policy certification, Gateway/Workbench discovery, and
+supported-feature promotion.
 
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` is the current internal
 operator diagnostic for pre-certification runtime telemetry preview. It

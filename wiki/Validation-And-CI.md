@@ -334,7 +334,11 @@ Data-mesh foundation checks:
 The internal data-mesh-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify the
 diagnostic route only; they do not certify the data products it reports as
-blocked.
+blocked. The endpoint's blocker contract is part of the anti-promotion control
+and must continue to name missing platform source-manifest inclusion, catalog
+inclusion, SLO certification, access-policy certification, evidence-policy
+certification, Gateway/Workbench discovery proof, and supported-feature
+promotion until those are implementation-backed and platform-certified.
 
 The internal runtime trust telemetry preview endpoint is covered by OpenAPI,
 endpoint certification, unit tests, integration tests, and a repo-native
