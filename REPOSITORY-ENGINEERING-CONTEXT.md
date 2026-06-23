@@ -182,6 +182,16 @@ through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` can clear only the
 `live_core_source_proof_missing` blocker in the source-ingestion readiness
 diagnostic. `make source-ingestion-live-proof-contract-gate` blocks proof
 payload shape drift, source-sensitive fields, and accidental support promotion.
+The runtime boundary now distinguishes Core query-service reads from
+query-control-plane snapshot calls through `LOTUS_CORE_QUERY_BASE_URL` and
+`LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, with `LOTUS_CORE_BASE_URL` retained
+only as a compatibility fallback for older single-base local stacks.
+Live diagnostic probing on 2026-06-23 confirmed the split Core routes are
+reachable, but the local `lotus-core` query-service cash-balances response did
+not expose the required `totals.source_reported_cash_weight*` fields; upstream
+issue `sgajbi/lotus-core#437` tracks that Core-owned runtime payload gap.
+`lotus-idea` must remain blocked rather than reconstructing source-reported
+cash-weight supportability locally.
 Data-mesh/runtime telemetry certification, Gateway/Workbench proof, and
 supported-feature promotion remain planned.
 
@@ -677,9 +687,10 @@ logs; fix or document the owned warning source instead.
    presence, planned Advise/Manage/Report handoff contract posture, and
    downstream blockers without calling downstream systems or claiming route
    existence in owning services.
-   Source-ingestion-readiness orchestration reports manifest, Core base URL,
-   durable repository configuration, and certification blockers for the
-   high-cash run-once worker without executing Core source reads. The
+   Source-ingestion-readiness orchestration reports manifest, Core query URL,
+   Core query-control-plane URL, durable repository configuration, and
+   certification blockers for the high-cash run-once worker without executing
+   Core source reads. The
    source-ingestion run-once route executes the same bounded domain batch only
    when durable repository and runtime configuration are present, returning
    aggregate decision counts only.

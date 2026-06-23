@@ -135,10 +135,11 @@ recovery readiness, Gateway/Workbench route, downstream Report/Render/Archive re
 supported business feature.
 
 The source-ingestion readiness diagnostic reports `accepted` only when the
-configured manifest, Core base URL, and durable repository environment are
-present. The run-once operator action emits `source_ingestion_run_once` with
-aggregate work-item count buckets only and fails closed before mutation when
-durable storage, manifest, or Core configuration is absent. Both remain
+configured manifest, Core query URL, Core query-control-plane URL, and durable
+repository environment are present. The run-once operator action emits
+`source_ingestion_run_once` with aggregate work-item count buckets only and
+fails closed before mutation when durable storage, manifest, or Core
+configuration is absent. Both remain
 `not_certified` until live Core source proof, runtime data-mesh telemetry,
 Gateway/Workbench proof, downstream proof, and supported-feature evidence
 exist. A valid scheduled-worker deploy-proof artifact can clear only the

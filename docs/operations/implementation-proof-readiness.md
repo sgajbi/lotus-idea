@@ -96,6 +96,11 @@ Source-ingestion live proof is captured by
 through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
 `live_core_source_proof_missing`; it does not clear scheduled worker,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
+Canonical Core runtimes should pass explicit `--core-query-base-url` and
+`--core-query-control-plane-base-url` values because query-service reads and
+query-control-plane snapshots can be served by different Core processes.
+`--core-base-url` remains a compatibility fallback for older single-base
+stacks.
 
 Scheduled source-ingestion worker deploy proof is captured by
 `scripts/generate_scheduled_source_ingestion_worker_proof.py`. A valid artifact
