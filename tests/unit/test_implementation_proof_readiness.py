@@ -142,6 +142,18 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         in downstream.evidence_refs
     )
     assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
+    ai_explanation = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "ai-explanation"
+    )
+    assert (
+        "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
+        in ai_explanation.evidence_refs
+    )
+    assert "make ai-model-risk-ops-contract-gate" in ai_explanation.evidence_refs
+    assert "model_risk_operations_dashboard_not_certified" in ai_explanation.blockers
+    assert "model_risk_operations_alerts_not_certified" in ai_explanation.blockers
     serialized = repr(snapshot)
     assert "portfolio_id" not in serialized
     assert "client_id" not in serialized
