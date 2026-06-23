@@ -172,8 +172,9 @@ and supported-feature promotion evidence exist. A valid scheduled-worker
 deploy-contract artifact may clear only the
 `scheduled_worker_deploy_proof_missing` blocker.
 The advisor queue readiness diagnostic is explicitly `not_certified` until
-durable queue posture, platform caller-context entitlement proof, Workbench
-proof, data-product certification, and runtime trust telemetry exist.
+durable queue posture, Workbench proof, data-product certification, and runtime
+trust telemetry exist. Platform caller-context scope forwarding and direct
+queue enforcement now exist for the first bounded Gateway advisor-queue route.
 The AI explanation readiness diagnostic is explicitly `not_certified` until
 `lotus-ai` runtime workflow execution, certified AI lineage-store proof,
 workflow-pack runtime certification, model-risk operations dashboards, runtime
@@ -204,9 +205,11 @@ discovery, and supported-feature evidence exist.
    unavailable, conversion failure, entitlement denial, and replay mismatch.
 
 The first bounded read-only Gateway publication routes now have caller-context
-forwarding and unsupported-feature blocking proof in `lotus-gateway`, and
-`make endpoint-certification-gate` requires the `lotus-idea` endpoint ledger to
-name the exact Gateway route without implying Workbench proof, data-product
+forwarding and unsupported-feature blocking proof in `lotus-gateway`. The
+advisor queue route also forwards platform entitlement-scope headers and
+`lotus-idea` enforces them fail-closed against queue query filters. `make
+endpoint-certification-gate` requires the `lotus-idea` endpoint ledger to name
+the exact Gateway route without implying Workbench proof, data-product
 certification, client-ready publication, or supported-feature promotion.
 
 ## Remaining Gap
@@ -217,7 +220,7 @@ certification, client-ready publication, or supported-feature promotion.
    deployable worker runtime exist.
 3. Add product-scope entitlement proof for Workbench and any broader Gateway
    route set after those surfaces are implemented; the first read-only Gateway
-   routes remain bounded publication proof only.
+   advisor queue route remains bounded caller-scope publication proof only.
 4. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
    and container reviews for the full supported service surface before any
    supported-feature promotion.

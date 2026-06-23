@@ -119,8 +119,10 @@ available for operators with `idea.review.queue.readiness.read` to inspect
 aggregate advisor queue posture, exclusion counts, durable-storage posture, and
 remaining certification blockers without exposing candidate identifiers or
 access-scope identifiers. It remains `not_certified` until durable queue
-posture, platform caller-context entitlement proof, Workbench proof,
-data-product certification, and runtime trust telemetry exist.
+posture, Workbench proof, data-product certification, and runtime trust
+telemetry exist. The first bounded Gateway advisor queue route now forwards
+platform caller-context scope headers, and the internal queue API enforces those
+entitlements fail-closed.
 The internal `GET /api/v1/ai-explanations/readiness` diagnostic is available
 for operators with `idea.ai-explanation.readiness.read` to inspect AI
 explanation guardrail availability, model-risk supportability posture, and
@@ -272,8 +274,8 @@ Current outcomes:
     worker configuration/certification proof, source-ingestion run-once is
     blocked by missing durable storage, manifest, or Core configuration,
     advisor queue readiness is
-    missing durable queue posture, entitlement proof, Workbench proof,
-    data-product certification, or runtime trust telemetry, outbox delivery
+    missing durable queue posture, Workbench proof, data-product certification,
+    or runtime trust telemetry, outbox delivery
     readiness is missing live broker runtime proof, downstream consumer contracts,
     platform mesh event certification, Gateway/Workbench proof, and
     supported-feature evidence, or downstream realization readiness is missing

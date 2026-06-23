@@ -83,6 +83,17 @@ Implemented on the Slice 07 foundation branch:
     `tests/integration/test_review_queue_api.py` prove aggregate readiness
     counts, non-storage blockers, product-safe payloads, permission-denied
     behavior, and timezone validation for the queue readiness diagnostic.
+16. `src/app/security/caller_context.py` and `src/app/api/caller_headers.py`
+    now carry platform caller-context entitlement scope headers for tenant,
+    book, portfolio, and client identifiers.
+17. `GET /api/v1/review-queues/advisor` now applies caller entitlement scope
+    automatically, rejects query filters outside the caller's entitled scope
+    with product-safe `403` responses, and still supports narrower explicit
+    query filters for internal callers.
+18. `lotus-gateway` forwards `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`,
+    `X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` on the bounded
+    advisor review queue route, so the first Gateway publication path preserves
+    queue entitlement scope instead of relying on query-only filters.
 
 ## Remaining Gaps
 
@@ -94,9 +105,10 @@ work remains planned:
    candidates before queue projection,
 3. broader Gateway contract beyond the first bounded read-only queue/detail
    routes,
-4. Workbench review queue UI proof and platform caller-context entitlement
-   integration; the internal queue API now supports explicit scope filters, but
-   product entitlement proof remains planned,
+4. Workbench review queue UI proof and broader product-surface entitlement
+   proof; the first bounded Gateway route now forwards platform caller-context
+   scope headers and the internal queue API enforces them, but Workbench panel
+   proof remains planned,
 5. data-product certification and trust telemetry for queue products,
 6. broader supportability metrics, dashboards, alerts, and runtime diagnostics
    for queue health beyond the certified aggregate readiness diagnostic,
@@ -128,3 +140,10 @@ Targeted validation:
 9. `.venv\Scripts\python.exe -m pytest tests\unit\test_review_queue_application.py tests\integration\test_review_queue_api.py tests\integration\test_api_operation_events.py tests\unit\test_service_contract.py -q`
    passed after adding the advisor queue readiness diagnostic, before full
    documentation and ledger gates were rerun.
+10. `.venv\Scripts\python.exe -m pytest tests\unit\test_security_caller_context.py tests\unit\test_review_queue_application.py tests\integration\test_review_queue_api.py -q`
+    passed with `28 passed` after adding caller-context entitlement scope
+    parsing, multi-portfolio queue filtering, automatic scope application, and
+    product-safe scope denial behavior.
+11. `python -m pytest tests\integration\test_ideas_router.py tests\contract\test_ideas_contract.py -q`
+    passed with `5 passed` in `lotus-gateway` after adding entitlement-scope
+    header forwarding proof for the advisor queue route.

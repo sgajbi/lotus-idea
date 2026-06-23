@@ -743,7 +743,7 @@ state as current support until promotion evidence is linked.
 | Idea candidate lifecycle | `lotus-idea` | Gated foundation | API, persistence, audit, endpoint certification | lifecycle model, tests, OpenAPI, replay, supported-feature update |
 | Opportunity signal ingestion | `lotus-idea` plus source owners | Proposed | source contracts, ingestion jobs/APIs, data products | source refs, freshness, idempotency, contract tests, mesh certification |
 | Idea evidence packet | `lotus-idea` | Proposed | API, data-product declaration, trust telemetry | deterministic packet, redaction, lineage, replay, data-product posture |
-| Advisor opportunity queue | `lotus-idea`, `lotus-gateway`, `lotus-workbench` | Gated foundation | queue API, bounded read-only Gateway route, Workbench panel | browser proof, entitlement proof, unsupported/degraded states |
+| Advisor opportunity queue | `lotus-idea`, `lotus-gateway`, `lotus-workbench` | Gated foundation | queue API, bounded read-only Gateway route, Workbench panel | browser proof, Workbench entitlement proof, unsupported/degraded states |
 | Scoring and ranking | `lotus-idea` | Gated foundation | scoring policy, rank API/projection | golden examples, score versioning, stability, supportability |
 | AI explanation draft | `lotus-idea`, `lotus-ai` | Gated | workflow pack, explanation API, review state | redaction, fallback, verifier, no-autonomous-advice proof |
 | Review and feedback | `lotus-idea` | Gated foundation | review API, audit, feedback data product | role tests, audit events, feedback validation, queue update proof |

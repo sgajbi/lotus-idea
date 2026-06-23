@@ -115,9 +115,9 @@ fields. Do not add identifiers or payload fragments to operation labels.
    diagnostic is missing run-once worker configuration inputs, the
    source-ingestion run-once operator action is blocked by missing durable
    storage, manifest, or Core configuration, or the advisor queue readiness
-   diagnostic still lacks durable repository posture,
-   entitlement proof, Workbench proof, data-product certification, or runtime
-   trust telemetry. It also covers downstream realization readiness while
+   diagnostic still lacks durable repository posture, Workbench proof,
+   data-product certification, or runtime trust telemetry. It also covers
+   downstream realization readiness while
    Advise, Manage, Report, Render, Archive, Gateway/Workbench, and mesh proof
    remain absent, and downstream submission while adapters are missing or a
    downstream adapter returns a bounded rejection. It also covers the runtime
