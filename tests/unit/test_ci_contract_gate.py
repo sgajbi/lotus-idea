@@ -168,6 +168,25 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_readiness
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--workbench-read-path-proof output/workbench/workbench-read-path-proof.json",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "Workbench read-path proof artifact into readiness generation"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = (
@@ -184,4 +203,23 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() ->
     assert (
         "Makefile runtime-trust-telemetry-proof-contract-gate target must run "
         "`scripts/runtime_trust_telemetry_proof_contract_gate.py`"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "scripts/workbench_read_path_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile workbench-read-path-proof-contract-gate target must run "
+        "`scripts/workbench_read_path_proof_contract_gate.py`"
     ) in errors

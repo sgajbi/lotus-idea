@@ -115,6 +115,13 @@ durable operating-context enforcement:
     preserving the boundary that full live proof, entitlement-denied proof,
     mutation affordances, downstream realization, data-product certification,
     and supported-feature promotion remain blocked.
+19. README, repository context,
+    `docs/operations/implementation-proof-readiness.md`, quality gate docs, RFC
+    evidence, and wiki source now describe the Workbench read-path proof
+    artifact contract and `make workbench-read-path-proof-contract-gate`, while
+    preserving the boundary that a valid artifact clears only
+    `workbench_gateway_bff_consumption_proof_missing` and does not certify a
+    full Workbench panel, canonical demo runtime, or supported feature.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof only; it does not add full

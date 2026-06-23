@@ -57,9 +57,11 @@ The implementation-proof readiness diagnostic is also an operator supportability
 check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
-downstream realization, and supported-feature promotion. It does not provide live implementation proof, external broker
-publication, downstream delivery, full Gateway/Workbench live proof, data-product
-certification, or supported-feature promotion. These are not externally
+downstream realization, and supported-feature promotion. It consumes a
+source-safe bounded Workbench read-path proof artifact, but it does not provide
+live implementation proof, external broker publication, downstream delivery,
+full Gateway/Workbench live proof, data-product certification, or
+supported-feature promotion. These are not externally
 supported features until live source adapters, certified long-running scheduled
 source-worker runtime proof, full Workbench live proof, downstream acceptance,
 data-product certification, and supported-feature evidence are present. The

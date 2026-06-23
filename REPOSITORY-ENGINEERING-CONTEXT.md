@@ -162,6 +162,12 @@ proof-readiness generation. That artifact exercises a deterministic seeded
 candidate snapshot through the runtime telemetry builder and clears only the
 stale aggregate `runtime_candidate_snapshot_missing` blocker; platform mesh,
 Gateway/Workbench, and supported-feature blockers remain.
+It also generates a source-safe Workbench read-path proof artifact under
+ignored `output/workbench/` and passes it into aggregate proof-readiness
+generation. That artifact records the bounded Gateway-backed Workbench queue
+and detail read implementation and clears only
+`workbench_gateway_bff_consumption_proof_missing`; full panel, accessibility,
+canonical demo runtime, data-product, and supported-feature blockers remain.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -424,9 +430,9 @@ realization.
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
 and operator handoff. The generator accepts explicit source-ingestion manifest,
-live-proof, scheduled-worker proof, and durable repository proof paths for
-deterministic CI evidence without requiring ambient process environment
-mutation.
+live-proof, scheduled-worker proof, durable repository proof, runtime trust
+telemetry proof, and Workbench read-path proof paths for deterministic CI
+evidence without requiring ambient process environment mutation.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation plus bounded read-only Gateway publication for advisor queue and
@@ -816,23 +822,25 @@ owned by upstream services.
     `make durable-repository-proof-contract-gate`
 27. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`
-28. run-once source-ingestion worker manifest and output-contract gate:
+28. Workbench read-path proof contract gate:
+    `make workbench-read-path-proof-contract-gate`
+29. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-29. scheduled source-ingestion worker deploy-contract gate:
+30. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-30. source-ingestion live-proof artifact contract gate:
+31. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-31. implementation proof readiness generator:
+32. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-32. runtime trust telemetry preview generator:
+33. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-33. runtime trust telemetry snapshot generator:
+34. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-34. PostgreSQL runtime proof with configured integration URL:
+35. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-35. apply migrations with configured PostgreSQL URL: `make migrate`
-36. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-37. remove ignored generated local artifacts: `make clean`
+36. apply migrations with configured PostgreSQL URL: `make migrate`
+37. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+38. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -856,6 +864,7 @@ output-contract validation, scheduled source-ingestion worker deploy-contract
 validation, source-ingestion live-proof contract validation,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
+Workbench read-path proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,

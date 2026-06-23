@@ -52,6 +52,7 @@ make migration-contract-gate
 make migration-execution-gate
 make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
+make workbench-read-path-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -76,6 +77,7 @@ unit tests, integration tests, e2e tests, data-mesh contract validation, migrati
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
+Workbench read-path proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption in aggregate implementation-proof readiness,
@@ -155,7 +157,12 @@ Persistence adapter validation:
     `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
     runtime telemetry candidate-snapshot proof contract that aggregate readiness
     consumes to clear only `runtime_candidate_snapshot_missing`.
-11. `tests/unit/test_runtime_trust_telemetry.py`,
+11. `tests/unit/test_workbench_read_path_proof.py` and
+    `make workbench-read-path-proof-contract-gate` prove the source-safe
+    bounded Workbench queue/detail read-path proof contract that aggregate
+    readiness consumes to clear only
+    `workbench_gateway_bff_consumption_proof_missing`.
+12. `tests/unit/test_runtime_trust_telemetry.py`,
    `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
    `tests/integration/test_runtime_trust_telemetry_api.py`,
    `make runtime-trust-telemetry-preview-check`, and
@@ -165,19 +172,19 @@ Persistence adapter validation:
    produced without exposing candidate identifiers, source routes, evidence
    hashes, portfolio identifiers, or client identifiers, and without promoting
    mesh certification.
-12. `tests/unit/test_downstream_realization_contract_gate.py` and
+13. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,
    blocker-backed, and free of route-existence, downstream-execution, or
    supported-feature claims.
-10. `tests/unit/test_downstream_realization_readiness.py` and
+14. `tests/unit/test_downstream_realization_readiness.py` and
    `tests/integration/test_downstream_realization_readiness_api.py` prove the
    downstream realization readiness diagnostic for blocked supportability,
    role plus capability enforcement, product-safe payloads, source-authority
    boundaries, planned downstream contract-readiness records, and bounded
    `not_certified` operation events without calling Advise, Manage, Report,
    Render, or Archive.
-11. `tests/unit/test_source_ingestion_readiness.py` and
+15. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded

@@ -22,20 +22,21 @@ Blocking scaffold commands:
 13. `make migration-execution-gate`
 14. `make durable-repository-proof-contract-gate`
 15. `make runtime-trust-telemetry-proof-contract-gate`
-16. `make source-ingestion-worker-check`
-17. `make source-ingestion-scheduled-worker-check`
-18. `make source-ingestion-live-proof-contract-gate`
-19. `make implementation-proof-readiness-check` generates the scheduled-worker
-    deploy-proof artifact, durable repository proof artifact, and runtime trust
-    telemetry proof artifact, then consumes all three in aggregate RFC
-    proof-readiness evidence.
-20. `make supported-features-gate`
-21. `make endpoint-certification-gate`
-22. `make postgres-integration-gate`
-23. `make openapi-gate`
-24. `make coverage-gate`
-25. `make security-audit`
-26. `make docker-build`
+16. `make workbench-read-path-proof-contract-gate`
+17. `make source-ingestion-worker-check`
+18. `make source-ingestion-scheduled-worker-check`
+19. `make source-ingestion-live-proof-contract-gate`
+20. `make implementation-proof-readiness-check` generates the scheduled-worker
+    deploy-proof artifact, durable repository proof artifact, runtime trust
+    telemetry proof artifact, and Workbench read-path proof artifact, then
+    consumes all four in aggregate RFC proof-readiness evidence.
+21. `make supported-features-gate`
+22. `make endpoint-certification-gate`
+23. `make postgres-integration-gate`
+24. `make openapi-gate`
+25. `make coverage-gate`
+26. `make security-audit`
+27. `make docker-build`
 
 Cleanup support command:
 
@@ -60,6 +61,7 @@ scheduled source-ingestion worker deploy-contract validation,
 source-ingestion live-proof contract validation,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
+Workbench read-path proof contract validation,
 implementation-proof readiness artifact generation, source-observability
 contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
