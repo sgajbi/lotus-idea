@@ -1,0 +1,67 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import pytest
+
+from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
+from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
+from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
+from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
+
+
+def test_configured_implementation_proof_artifacts_loads_relative_source_safe_refs(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    durable_path = tmp_path / "output" / "persistence" / "durable-repository-proof.json"
+    runtime_path = (
+        tmp_path / "output" / "trust-telemetry" / "runtime" / "runtime-trust-telemetry-proof.json"
+    )
+    workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
+    for path in (durable_path, runtime_path, workbench_path):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"artifact": path.name}), encoding="utf-8")
+
+    monkeypatch.setenv(
+        DURABLE_REPOSITORY_PROOF_ENV,
+        "output/persistence/durable-repository-proof.json",
+    )
+    monkeypatch.setenv(
+        RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
+        "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json",
+    )
+    monkeypatch.setenv(
+        WORKBENCH_READ_PATH_PROOF_ENV,
+        "output/workbench/workbench-read-path-proof.json",
+    )
+
+    artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
+
+    assert artifacts.durable_repository_proof == {"artifact": "durable-repository-proof.json"}
+    assert artifacts.durable_repository_proof_ref == (
+        "output/persistence/durable-repository-proof.json"
+    )
+    assert artifacts.runtime_trust_telemetry_proof == {
+        "artifact": "runtime-trust-telemetry-proof.json"
+    }
+    assert artifacts.runtime_trust_telemetry_proof_ref == (
+        "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
+    )
+    assert artifacts.workbench_read_path_proof == {"artifact": "workbench-read-path-proof.json"}
+    assert (
+        artifacts.workbench_read_path_proof_ref == "output/workbench/workbench-read-path-proof.json"
+    )
+
+
+def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "proof.json"
+    proof_path.write_text("[]", encoding="utf-8")
+    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(proof_path))
+
+    with pytest.raises(ValueError, match="durable repository proof must be a JSON object"):
+        configured_implementation_proof_artifacts(repository_root=tmp_path)

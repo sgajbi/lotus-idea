@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
 from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
 from app.application.implementation_proof_readiness import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -163,10 +164,17 @@ async def get_implementation_proof_readiness(
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     try:
+        proof_artifacts = configured_implementation_proof_artifacts()
         snapshot = build_implementation_proof_readiness_snapshot(
             evaluated_at_utc=evaluated_at_utc,
             repository=repository,
             durable_storage_backed=durable_storage_backed,
+            durable_repository_proof=proof_artifacts.durable_repository_proof,
+            durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
+            runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry_proof,
+            runtime_trust_telemetry_proof_ref=proof_artifacts.runtime_trust_telemetry_proof_ref,
+            workbench_read_path_proof=proof_artifacts.workbench_read_path_proof,
+            workbench_read_path_proof_ref=proof_artifacts.workbench_read_path_proof_ref,
         )
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         _emit_implementation_proof_readiness_event(

@@ -433,6 +433,13 @@ and operator handoff. The generator accepts explicit source-ingestion manifest,
 live-proof, scheduled-worker proof, durable repository proof, runtime trust
 telemetry proof, and Workbench read-path proof paths for deterministic CI
 evidence without requiring ambient process environment mutation.
+The live operator API also consumes configured durable repository, runtime
+trust telemetry, and Workbench read-path proof artifact paths through
+`LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
+`LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`, and
+`LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`, clearing only the matching aggregate
+proof blockers while preserving all certification and support-promotion
+blockers.
 
 RFC-0002 Slice 10 is partially implemented as certified internal API
 foundation plus bounded read-only Gateway publication for advisor queue and

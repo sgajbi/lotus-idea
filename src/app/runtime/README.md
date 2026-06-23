@@ -4,8 +4,8 @@ This package owns process-local dependency composition for the Lotus Idea
 service.
 
 Keep concrete environment wiring here when it builds repositories, source
-adapters, publishers, or downstream clients for API routes, workers, and proof
-generators.
+adapters, publishers, downstream clients, or configured proof-artifact readers
+for API routes, workers, and proof generators.
 
 Do not put domain policy, use-case orchestration, HTTP DTOs, or concrete adapter
 implementations here:
