@@ -21,19 +21,21 @@ Blocking scaffold commands:
 12. `make migration-contract-gate`
 13. `make migration-execution-gate`
 14. `make durable-repository-proof-contract-gate`
-15. `make source-ingestion-worker-check`
-16. `make source-ingestion-scheduled-worker-check`
-17. `make source-ingestion-live-proof-contract-gate`
-18. `make implementation-proof-readiness-check` generates the scheduled-worker
-    deploy-proof artifact and durable repository proof artifact, then consumes
-    both in aggregate RFC proof-readiness evidence.
-19. `make supported-features-gate`
-20. `make endpoint-certification-gate`
-21. `make postgres-integration-gate`
-22. `make openapi-gate`
-23. `make coverage-gate`
-24. `make security-audit`
-25. `make docker-build`
+15. `make runtime-trust-telemetry-proof-contract-gate`
+16. `make source-ingestion-worker-check`
+17. `make source-ingestion-scheduled-worker-check`
+18. `make source-ingestion-live-proof-contract-gate`
+19. `make implementation-proof-readiness-check` generates the scheduled-worker
+    deploy-proof artifact, durable repository proof artifact, and runtime trust
+    telemetry proof artifact, then consumes all three in aggregate RFC
+    proof-readiness evidence.
+20. `make supported-features-gate`
+21. `make endpoint-certification-gate`
+22. `make postgres-integration-gate`
+23. `make openapi-gate`
+24. `make coverage-gate`
+25. `make security-audit`
+26. `make docker-build`
 
 Cleanup support command:
 
@@ -57,6 +59,7 @@ source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation,
 source-ingestion live-proof contract validation,
 durable repository proof contract validation,
+runtime trust telemetry proof contract validation,
 implementation-proof readiness artifact generation, source-observability
 contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job

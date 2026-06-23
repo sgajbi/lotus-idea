@@ -198,6 +198,7 @@ make durable-repository-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
+make runtime-trust-telemetry-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check
@@ -346,10 +347,11 @@ downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
-artifact, and the same source-safe readiness snapshot without running the HTTP
-service. Use it as CI or async operator evidence only; it is not live scheduler
-certification, runtime database configuration, production storage
-certification, production recovery readiness, or a supported product claim.
+artifact, runtime trust telemetry proof artifact, and the same source-safe
+readiness snapshot without running the HTTP service. Use it as CI or async
+operator evidence only; it is not live scheduler certification, runtime
+database configuration, production storage certification, production recovery
+readiness, platform mesh certification, or a supported product claim.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

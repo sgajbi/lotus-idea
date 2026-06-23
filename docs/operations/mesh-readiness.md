@@ -114,6 +114,14 @@ explicit certification blockers. The generated file is ignored by Git. Neither
 surface replaces the checked-in static fallback contract, promotes producer
 products, or includes `lotus-idea` in the platform source manifest.
 
+`make runtime-trust-telemetry-proof-contract-gate` validates the separate
+source-safe candidate-snapshot proof contract used by aggregate implementation
+readiness. The generated proof under ignored
+`output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json` can clear
+only `runtime_candidate_snapshot_missing` in the aggregate proof-readiness
+artifact. It is not platform mesh certification and does not promote
+`IdeaCandidate:v1` from proposed posture.
+
 The Docker image copies `contracts/` into `/app/contracts` so containerized
 diagnostics read the same contract truth as local validation.
 
@@ -123,6 +131,7 @@ Run:
 
 ```powershell
 make data-mesh-contract-gate
+make runtime-trust-telemetry-proof-contract-gate
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check
 ```
@@ -143,6 +152,8 @@ The gate validates:
    not-certified evidence from the active repository provider.
 8. the runtime telemetry snapshot endpoint and generator still emit
    contract-shaped, source-safe, blocked runtime snapshot evidence.
+9. the runtime telemetry proof contract remains source-safe, deterministic, and
+   limited to clearing the aggregate candidate-snapshot blocker.
 
 This gate is not mesh certification. It is a pre-certification guardrail so
 future implementation slices cannot accidentally promote proposed contracts or

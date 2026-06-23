@@ -156,6 +156,12 @@ That artifact cites migration contracts, the PostgreSQL adapter, and the
 GitHub PostgreSQL runtime proof lane; it clears only aggregate stale
 durable-repository proof blockers and does not configure runtime storage,
 certify production storage operations, or promote support.
+It also generates a source-safe runtime trust telemetry proof artifact under
+ignored `output/trust-telemetry/runtime/` and passes it into aggregate
+proof-readiness generation. That artifact exercises a deterministic seeded
+candidate snapshot through the runtime telemetry builder and clears only the
+stale aggregate `runtime_candidate_snapshot_missing` blocker; platform mesh,
+Gateway/Workbench, and supported-feature blockers remain.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -789,23 +795,25 @@ owned by upstream services.
 25. migration execution dry-run gate: `make migration-execution-gate`
 26. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`
-27. run-once source-ingestion worker manifest and output-contract gate:
+27. runtime trust telemetry proof contract gate:
+    `make runtime-trust-telemetry-proof-contract-gate`
+28. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-28. scheduled source-ingestion worker deploy-contract gate:
+29. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-29. source-ingestion live-proof artifact contract gate:
+30. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-30. implementation proof readiness generator:
+31. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
-31. runtime trust telemetry preview generator:
+32. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-32. runtime trust telemetry snapshot generator:
+33. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-33. PostgreSQL runtime proof with configured integration URL:
+34. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-34. apply migrations with configured PostgreSQL URL: `make migrate`
-35. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-36. remove ignored generated local artifacts: `make clean`
+35. apply migrations with configured PostgreSQL URL: `make migrate`
+36. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+37. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -828,6 +836,7 @@ migration execution dry-run gate, source-ingestion worker manifest and
 output-contract validation, scheduled source-ingestion worker deploy-contract
 validation, source-ingestion live-proof contract validation,
 durable repository proof contract validation,
+runtime trust telemetry proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,

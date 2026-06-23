@@ -51,6 +51,7 @@ make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
 make durable-repository-proof-contract-gate
+make runtime-trust-telemetry-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -74,6 +75,7 @@ OpenAPI quality, source-observability contract enforcement, implementation-truth
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
+runtime trust telemetry proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption in aggregate implementation-proof readiness,
@@ -144,12 +146,16 @@ Persistence adapter validation:
    and readiness blocker behavior without calling Core in CI.
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
-   implementation-proof readiness artifact, including durable repository proof
-   consumption and the outbox-delivery proof family, can be generated without
-   starting the service and without exposing
+   implementation-proof readiness artifact, including durable repository proof,
+   runtime trust telemetry proof consumption, and the outbox-delivery proof
+   family, can be generated without starting the service and without exposing
    candidate, portfolio, client, prompt, outbox event, raw idempotency, broker,
    or source payload identifiers.
-8. `tests/unit/test_runtime_trust_telemetry.py`,
+10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
+    `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
+    runtime telemetry candidate-snapshot proof contract that aggregate readiness
+    consumes to clear only `runtime_candidate_snapshot_missing`.
+11. `tests/unit/test_runtime_trust_telemetry.py`,
    `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
    `tests/integration/test_runtime_trust_telemetry_api.py`,
    `make runtime-trust-telemetry-preview-check`, and
@@ -159,7 +165,7 @@ Persistence adapter validation:
    produced without exposing candidate identifiers, source routes, evidence
    hashes, portfolio identifiers, or client identifiers, and without promoting
    mesh certification.
-9. `tests/unit/test_downstream_realization_contract_gate.py` and
+12. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,
    blocker-backed, and free of route-existence, downstream-execution, or

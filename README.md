@@ -35,7 +35,8 @@ Current implemented foundations include:
   semantics, a source-safe HTTP broker-publisher adapter foundation, and
   readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
-  proof, and durable repository proof consumed by aggregate readiness evidence,
+  proof, durable repository proof, and runtime telemetry candidate-snapshot
+  proof consumed by aggregate readiness evidence,
 - bounded `lotus-gateway` read-only routes for advisor queue and candidate
   detail.
 
@@ -194,8 +195,9 @@ docker compose up --build
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, and live-proof artifact contract without calling Core. |
-| `make implementation-proof-readiness-check` | Generate the scheduled-worker deploy proof artifact, durable repository proof artifact, and source-safe RFC proof-readiness evidence. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry proof, and source-safe RFC proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
+| `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
 | `make check` | Run the local PR-grade gate set. |

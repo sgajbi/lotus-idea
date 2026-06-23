@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, and source-safe runtime snapshot diagnostics
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, and runtime telemetry proof contract
 
 ## Outcome
 
@@ -51,6 +51,13 @@ This slice now has internal operator diagnostic foundations only:
 14. The endpoint and generated snapshot use platform trust telemetry fields for
     `lotus-idea:IdeaCandidate:v1`, remain blocked, and omit candidate ids,
     portfolio ids, client ids, raw source routes, and raw evidence hashes.
+15. `src/app/application/runtime_trust_telemetry_proof.py`,
+    `scripts/generate_runtime_trust_telemetry_proof.py`, and
+    `make runtime-trust-telemetry-proof-contract-gate` define and enforce a
+    source-safe candidate-snapshot proof contract for aggregate implementation
+    readiness. The proof clears only `runtime_candidate_snapshot_missing` and
+    keeps platform source-manifest, mesh certification, Gateway/Workbench
+    discovery, and supported-feature blockers in place.
 
 Evidence:
 
@@ -63,6 +70,8 @@ Evidence:
 7. `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`
 8. `scripts/endpoint_certification_gate.py`
 9. `scripts/openapi_quality_gate.py`
+10. `tests/unit/test_runtime_trust_telemetry_proof.py`
+11. `scripts/runtime_trust_telemetry_proof_contract_gate.py`
 
 ## Current Non-Goals
 
@@ -99,8 +108,9 @@ Evidence:
 ## Remaining Gap
 
 The diagnostic endpoints deliberately report blocked / not-certified posture.
-The runtime telemetry preview, runtime snapshot endpoint, and generated
-snapshot are implementation-backed pre-certification evidence, but they do not
+The runtime telemetry preview, runtime snapshot endpoint, generated
+snapshot, and runtime telemetry proof contract are implementation-backed
+pre-certification evidence, but they do not
 activate producer declarations or replace the blocked static fallback for
 platform mesh certification. Full Slice
 14 completion still requires implementation-backed active product declarations,

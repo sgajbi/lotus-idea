@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, and durable repository proof artifact available; full live proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, and runtime telemetry proof artifact available; full live proof remains pending
 
 ## Outcome
 
@@ -88,6 +88,14 @@ Prove the complete supported opportunity journey end to end.
     the stale aggregate `durable_repository_not_configured` proof blocker while
     preserving live Core, production storage, data-mesh, Gateway/Workbench,
     downstream, and supported-feature blockers.
+15. `src/app/application/runtime_trust_telemetry_proof.py`,
+    `scripts/generate_runtime_trust_telemetry_proof.py`, and
+    `make runtime-trust-telemetry-proof-contract-gate` now define and enforce a
+    source-safe runtime trust telemetry candidate-snapshot proof artifact. The
+    aggregate implementation-readiness generator consumes that artifact to clear
+    only `runtime_candidate_snapshot_missing`, while preserving platform
+    source-manifest, platform mesh, Gateway/Workbench discovery, and
+    supported-feature blockers.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -116,8 +124,11 @@ without relying on chat memory.
 4. Supported-feature promotion remains blocked until the readiness diagnostic
    reports no blockers and evidence is merged to `main`.
 5. Durable repository proof is now explicit in aggregate readiness evidence, but
-   deploy migration evidence, backup/restore, recovery operations, and
-   production storage certification remain pending.
+    deploy migration evidence, backup/restore, recovery operations, and
+    production storage certification remain pending.
+6. Runtime telemetry candidate-snapshot proof is now explicit in aggregate
+   readiness evidence, but platform mesh certification and product discovery
+   proof remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close
@@ -146,6 +157,10 @@ The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench
 discovery, or supported-feature proof gaps.
+The runtime telemetry proof artifact narrows the aggregate readiness gap from
+"runtime candidate snapshot missing" to "source-safe seeded candidate snapshot
+contract is proven"; it also does not close platform mesh certification,
+Gateway/Workbench discovery, or supported-feature proof gaps.
 
 ## Acceptance Gate
 
