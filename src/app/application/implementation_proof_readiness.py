@@ -41,6 +41,7 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
+from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
 from app.ports.idea_repository import OutboxDeliveryRepository
 
 SUPPORTED_FEATURES_PATH = Path("supported-features/supported-features.json")
@@ -100,6 +101,8 @@ def build_implementation_proof_readiness_snapshot(
     durable_repository_proof_ref: str | None = None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None = None,
     runtime_trust_telemetry_proof_ref: str | None = None,
+    workbench_read_path_proof: Mapping[str, object] | None = None,
+    workbench_read_path_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -153,6 +156,14 @@ def build_implementation_proof_readiness_snapshot(
             _apply_runtime_trust_telemetry_proof(
                 capability,
                 runtime_trust_telemetry_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof):
+        capabilities = tuple(
+            _apply_workbench_read_path_proof(
+                capability,
+                workbench_read_path_proof_ref,
             )
             for capability in capabilities
         )
@@ -251,6 +262,30 @@ def _apply_runtime_trust_telemetry_proof(
             blocker
             for blocker in capability.blockers
             if blocker != "runtime_candidate_snapshot_missing"
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_workbench_read_path_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    workbench_read_path_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if "workbench_gateway_bff_consumption_proof_missing" not in capability.blockers:
+        return capability
+    evidence_refs = capability.evidence_refs
+    if workbench_read_path_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, workbench_read_path_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in capability.blockers
+            if blocker != "workbench_gateway_bff_consumption_proof_missing"
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )

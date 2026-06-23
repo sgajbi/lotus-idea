@@ -28,6 +28,7 @@ from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
 )
+from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 
 
@@ -200,6 +201,41 @@ def test_generate_implementation_proof_readiness_uses_explicit_runtime_trust_tel
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
     assert "platform_mesh_certification_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_workbench_read_path_proof(
+    tmp_path: Path,
+) -> None:
+    workbench_proof = tmp_path / "workbench-read-path-proof.json"
+    workbench_proof.write_text(
+        json.dumps(
+            build_workbench_read_path_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--workbench-read-path-proof",
+            str(workbench_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
+    assert "workbench_panel_missing" in payload["overallBlockers"]
+    assert "canonical_demo_runtime_proof_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

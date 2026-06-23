@@ -29,6 +29,7 @@ from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -50,6 +51,11 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_trust_telemetry_proof_path,
                 artifact_name="runtime trust telemetry proof",
             )
+            workbench_read_path_proof_path = _resolve_optional_path(args.workbench_read_path_proof)
+            workbench_read_path_proof = _read_optional_json_object(
+                workbench_read_path_proof_path,
+                artifact_name="workbench read-path proof",
+            )
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
@@ -63,6 +69,11 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_trust_telemetry_proof_ref=_source_safe_artifact_ref(
                     runtime_trust_telemetry_proof_path,
                     artifact_name="runtime trust telemetry proof artifact",
+                ),
+                workbench_read_path_proof=workbench_read_path_proof,
+                workbench_read_path_proof_ref=_source_safe_artifact_ref(
+                    workbench_read_path_proof_path,
+                    artifact_name="workbench read-path proof artifact",
                 ),
             )
         payload = implementation_proof_readiness_payload(snapshot)
@@ -178,6 +189,14 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Optional runtime trust telemetry candidate snapshot proof artifact path. "
             f"Defaults to {RUNTIME_TRUST_TELEMETRY_PROOF_ENV} when set."
+        ),
+    )
+    parser.add_argument(
+        "--workbench-read-path-proof",
+        default=os.getenv(WORKBENCH_READ_PATH_PROOF_ENV),
+        help=(
+            "Optional bounded Workbench read-path proof artifact path. "
+            f"Defaults to {WORKBENCH_READ_PATH_PROOF_ENV} when set."
         ),
     )
     return parser

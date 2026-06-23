@@ -13,6 +13,7 @@ from app.application.implementation_proof_readiness import (
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -198,6 +199,38 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
         "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
         in runtime_telemetry.evidence_refs
     )
+
+
+def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:
+    proof = build_workbench_read_path_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        workbench_read_path_proof=proof,
+        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+    )
+
+    assert "workbench_gateway_bff_consumption_proof_missing" not in snapshot.overall_blockers
+    assert "workbench_panel_missing" in snapshot.overall_blockers
+    assert "browser_accessibility_proof_missing" in snapshot.overall_blockers
+    assert "canonical_demo_runtime_proof_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+    workbench = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "workbench-product-proof"
+    )
+    assert "workbench_gateway_bff_consumption_proof_missing" not in workbench.blockers
+    assert "workbench_panel_missing" in workbench.blockers
+    assert "output/workbench/workbench-read-path-proof.json" in workbench.evidence_refs
 
 
 def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:

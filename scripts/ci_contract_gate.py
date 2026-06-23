@@ -38,6 +38,7 @@ REQUIRED_TARGETS = (
     "migration-execution-gate",
     "durable-repository-proof-contract-gate",
     "runtime-trust-telemetry-proof-contract-gate",
+    "workbench-read-path-proof-contract-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
@@ -73,6 +74,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) migration-execution-gate",
     "$(MAKE) durable-repository-proof-contract-gate",
     "$(MAKE) runtime-trust-telemetry-proof-contract-gate",
+    "$(MAKE) workbench-read-path-proof-contract-gate",
     "$(MAKE) source-ingestion-worker-check",
     "$(MAKE) source-ingestion-scheduled-worker-check",
     "$(MAKE) source-ingestion-live-proof-contract-gate",
@@ -263,6 +265,11 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
             "Makefile implementation-proof-readiness-check target must generate "
             "a runtime trust telemetry proof artifact"
         )
+    if "scripts/generate_workbench_read_path_proof.py" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must generate "
+            "a Workbench read-path proof artifact"
+        )
     if "--source-ingestion-scheduled-worker-proof" not in target_block:
         errors.append(
             "Makefile implementation-proof-readiness-check target must pass the "
@@ -277,6 +284,11 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
         errors.append(
             "Makefile implementation-proof-readiness-check target must pass the "
             "runtime trust telemetry proof artifact into readiness generation"
+        )
+    if "--workbench-read-path-proof" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "Workbench read-path proof artifact into readiness generation"
         )
     if "--source-ingestion-manifest" not in target_block:
         errors.append(
@@ -346,6 +358,9 @@ def validate_makefile(makefile: str) -> list[str]:
         ),
         "runtime-trust-telemetry-proof-contract-gate": (
             "scripts/runtime_trust_telemetry_proof_contract_gate.py"
+        ),
+        "workbench-read-path-proof-contract-gate": (
+            "scripts/workbench_read_path_proof_contract_gate.py"
         ),
     }
     for target, script in script_target_expectations.items():

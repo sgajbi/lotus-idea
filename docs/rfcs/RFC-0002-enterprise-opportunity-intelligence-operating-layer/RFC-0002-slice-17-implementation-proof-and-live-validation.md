@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, and bounded Workbench read-path proof available; full live proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, and bounded Workbench read-path proof available; full live proof remains pending
 
 ## Outcome
 
@@ -105,6 +105,14 @@ Prove the complete supported opportunity journey end to end.
     live source ingestion, entitlement-denied panel proof, mutation
     affordances, downstream realization, data-product certification, or
     supported-feature promotion.
+17. `src/app/application/workbench_read_path_proof.py`,
+    `scripts/generate_workbench_read_path_proof.py`, and
+    `make workbench-read-path-proof-contract-gate` now define and enforce a
+    source-safe bounded Workbench read-path proof artifact. The aggregate
+    implementation-readiness generator consumes that artifact to clear only
+    `workbench_gateway_bff_consumption_proof_missing`, while preserving full
+    panel, browser accessibility, canonical demo runtime, data-product, and
+    supported-feature blockers.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -138,6 +146,10 @@ without relying on chat memory.
 6. Runtime telemetry candidate-snapshot proof is now explicit in aggregate
    readiness evidence, but platform mesh certification and product discovery
    proof remain pending.
+7. Workbench read-path proof is now explicit in aggregate readiness evidence,
+   but full Workbench panel proof, browser accessibility proof, canonical demo
+   runtime proof, entitlement-denied proof, mutation affordances, and
+   supported-feature promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close
@@ -170,6 +182,11 @@ The runtime telemetry proof artifact narrows the aggregate readiness gap from
 "runtime candidate snapshot missing" to "source-safe seeded candidate snapshot
 contract is proven"; it also does not close platform mesh certification,
 Gateway/Workbench discovery, or supported-feature proof gaps.
+The Workbench read-path proof artifact narrows the aggregate readiness gap from
+"no durable Workbench BFF-consumption proof" to "bounded read-only Gateway
+queue/detail consumption has a source-safe proof artifact"; it does not close
+full Workbench product proof, browser proof, canonical demo proof, mutation
+affordances, or supported-feature proof.
 
 ## Acceptance Gate
 

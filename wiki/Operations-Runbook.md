@@ -352,7 +352,8 @@ downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
-artifact, runtime trust telemetry proof artifact, and the same source-safe
+artifact, runtime trust telemetry proof artifact, Workbench read-path proof
+artifact, and the same source-safe
 readiness snapshot without running the HTTP service. Use it as CI or async
 operator evidence only; it is not live scheduler certification, runtime
 database configuration, production storage certification, production recovery
