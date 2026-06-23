@@ -96,6 +96,10 @@ Source-ingestion live proof is captured by
 through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
 `live_core_source_proof_missing`; it does not clear scheduled worker,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
+The artifact carries source-safe aggregate `blockReasonCounts` so blocked
+attempts can distinguish Core unavailable, entitlement denied, missing
+cash-weight evidence, and Core-reported blocked cash-weight supportability
+without exposing source payloads or reconstructing source-owned calculations.
 When aggregate implementation-proof readiness consumes a valid live proof path,
 the `source-ingestion` capability also records a source-safe artifact reference
 in `evidenceRefs`, so release reviewers can trace why that blocker cleared
@@ -223,11 +227,13 @@ Implementation-backed evidence:
     `docs/operations/source-ingestion-run-once.md`,
 12. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-13. scheduled source-ingestion worker proof generator:
+13. source-ingestion block-reason diagnostics tests:
+    `tests/unit/test_source_ingestion_worker.py`,
+14. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-14. scheduled source-ingestion worker contract gate:
+15. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-15. source-ingestion live-proof contract gate:
+16. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
 16. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,

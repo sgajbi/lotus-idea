@@ -65,6 +65,11 @@ Prove the complete supported opportunity journey end to end.
     source-ingestion readiness diagnostic can clear only
     `live_core_source_proof_missing`; scheduled worker, data-mesh,
     Gateway/Workbench, and supported-feature blockers remain.
+    The artifact now carries aggregate `blockReasonCounts` for blocked proof
+    attempts, with bounded codes for Core source unavailability, entitlement
+    denial, missing cash-weight evidence, and Core-reported cash-weight
+    supportability blockers. This improves live-proof diagnosis without
+    exposing source payloads or reconstructing cash weight in `lotus-idea`.
 12. `src/app/application/source_ingestion_scheduled_worker.py`,
     `scripts/run_scheduled_source_ingestion_worker.py`,
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`, and
@@ -177,6 +182,9 @@ The live-proof artifact contract narrows the live Core gap from "no durable
 proof shape" to "operator-captured proof can be validated and wired into
 readiness"; it does not close certified scheduled daemon runtime, platform mesh,
 Gateway/Workbench, downstream, or supported-feature proof.
+The aggregate block-reason diagnostics further narrow the operator-debugging
+gap for blocked live attempts; they are not source certification and do not
+change the supported-feature posture.
 The scheduled-worker deploy-contract artifact narrows the scheduling proof gap
 from "no deployable worker contract" to "bounded scheduler entrypoint, Compose
 worker service, source-safe proof, and aggregate readiness consumption are

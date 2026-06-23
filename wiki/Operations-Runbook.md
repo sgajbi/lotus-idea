@@ -45,6 +45,11 @@ changed-source conflict recovery. This is not a deployed scheduler daemon, live
 Core source-worker certification, production storage certification,
 data-product certification, Gateway route, Workbench proof, or supported
 business feature.
+Blocked run-mode summaries and live-proof artifacts also include aggregate
+`blockReasonCounts`. These bounded counts help diagnose Core unavailable,
+entitlement denied, omitted cash-weight evidence, and Core-reported blocked
+cash-weight supportability without recomputing source-owned values or exposing
+Core payloads.
 `scripts/run_scheduled_source_ingestion_worker.py` adds a bounded scheduled
 worker entrypoint over the same run-once worker path, and `docker-compose.yml`
 declares the opt-in `lotus-idea-source-ingestion-worker` service under the
@@ -88,6 +93,9 @@ canonical split Core runtimes; `--core-base-url` remains a compatibility
 fallback for older single-base stacks. Point
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a valid artifact to clear only the
 live-Core blocker in readiness.
+Blocked proof artifacts can still be useful operator evidence because
+`blockReasonCounts` identifies the bounded source blocker class without
+exposing portfolio, candidate, or source payload data.
 `scripts/generate_scheduled_source_ingestion_worker_proof.py` captures a
 source-safe scheduled worker deploy-contract artifact. Point
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` at a valid artifact to

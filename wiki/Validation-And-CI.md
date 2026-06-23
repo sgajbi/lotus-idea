@@ -135,8 +135,8 @@ Persistence adapter validation:
    item enforcement, and correlation propagation.
 6. `tests/unit/test_source_ingestion_worker.py` and
    `make source-ingestion-worker-check` prove the versioned run-once worker
-   manifest contract plus source-safe check-only output contract without
-   calling Core or writing repository state.
+   manifest contract plus source-safe check-only output contract and aggregate
+   blocked-reason diagnostics without calling Core or writing repository state.
 7. `tests/unit/test_source_ingestion_scheduled_worker.py`,
    `tests/unit/test_source_ingestion_scheduled_worker_contract_gate.py`, and
    `make source-ingestion-scheduled-worker-check` prove the scheduled worker
@@ -146,7 +146,8 @@ Persistence adapter validation:
    `tests/unit/test_source_ingestion_live_proof_contract_gate.py`, and
    `make source-ingestion-live-proof-contract-gate` prove the live Core
    source-ingestion proof artifact contract, source-sensitive-field blocking,
-   and readiness blocker behavior without calling Core in CI.
+   aggregate blocked-reason diagnostics, and readiness blocker behavior without
+   calling Core in CI.
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including source-ingestion proof

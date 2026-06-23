@@ -36,6 +36,11 @@ data-mesh, Gateway/Workbench, and supported-feature blockers remain.
 Aggregate implementation-proof readiness also records the validated live-proof
 artifact ref in source-safe capability evidence so reviewers can audit the
 blocker clearance without seeing Core payloads or portfolio identity.
+The live-proof artifact also includes aggregate `blockReasonCounts` for
+blocked attempts. These counts help operators distinguish Core unavailable,
+entitlement denied, omitted cash-weight evidence, and Core-reported blocked
+cash-weight supportability without exposing source payloads or reconstructing
+cash weight in `lotus-idea`.
 
 `scripts/run_scheduled_source_ingestion_worker.py` wraps the run-once worker in
 a bounded scheduler entrypoint for deploy topology proof. The worker is also
@@ -96,6 +101,7 @@ flowchart LR
 | `coreQueryControlPlaneBaseUrlConfigured` | Whether `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` is configured, or resolved through compatibility `LOTUS_CORE_BASE_URL` |
 | `totalCount` | Number of work items processed by the domain batch runner |
 | `decisionCounts` | Aggregate decision counts by bounded ingestion outcome |
+| `blockReasonCounts` | Source-safe aggregate reason counts for blocked work items |
 | `configurationBlockers` | Runtime blockers that prevented execution |
 | `certificationBlockers` | Remaining proof blockers before support promotion |
 
@@ -161,6 +167,9 @@ Core response requirement:
   `BLOCKED_ZERO_DENOMINATOR`, or `BLOCKED_STALE_DENOMINATOR`, the source
   evaluation remains blocked. `lotus-idea` must not reconstruct cash weight
   from cash totals, market value, or AUM.
+- Live-proof artifacts report that posture through aggregate
+  `blockReasonCounts`, never through raw Core fields, portfolio identifiers, or
+  source payload excerpts.
 
 ## Evidence
 
@@ -184,7 +193,9 @@ Implementation-backed evidence:
 11. scheduled-worker contract gate:
    `make source-ingestion-scheduled-worker-check`,
 12. live-proof contract gate: `make source-ingestion-live-proof-contract-gate`,
-13. proof-readiness diagnostic:
+13. block-reason diagnostics tests:
+   `tests/unit/test_source_ingestion_worker.py`,
+14. proof-readiness diagnostic:
    `GET /api/v1/implementation-proof/readiness`.
 
 Run:
