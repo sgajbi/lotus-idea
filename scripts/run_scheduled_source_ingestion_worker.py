@@ -14,6 +14,8 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from app.application.source_ingestion_readiness import (  # noqa: E402
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     MANIFEST_ENV,
     TIMEOUT_SECONDS_ENV,
 )
@@ -48,9 +50,13 @@ def main(argv: list[str] | None = None) -> int:
         _write_json(build_scheduled_worker_check_summary(plan=plan, schedule=schedule))
         return 0
 
-    if not args.core_base_url:
+    if not _core_source_urls_configured(args):
         print(
-            f"scheduled source ingestion worker configuration error: --core-base-url or {CORE_BASE_URL_ENV} is required",
+            "scheduled source ingestion worker configuration error: "
+            f"--core-query-base-url/{CORE_QUERY_BASE_URL_ENV} and "
+            f"--core-query-control-plane-base-url/{CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV} "
+            f"are required, or --core-base-url/{CORE_BASE_URL_ENV} must provide a "
+            "compatibility fallback",
             file=sys.stderr,
         )
         return 2
@@ -89,6 +95,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--manifest", default=os.getenv(MANIFEST_ENV))
     parser.add_argument("--core-base-url", default=os.getenv(CORE_BASE_URL_ENV))
+    parser.add_argument("--core-query-base-url", default=os.getenv(CORE_QUERY_BASE_URL_ENV))
+    parser.add_argument(
+        "--core-query-control-plane-base-url",
+        default=os.getenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV),
+    )
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument(
         "--interval-seconds",
@@ -113,12 +124,27 @@ def _run_once_args(args: argparse.Namespace) -> list[str]:
     run_args = [
         "--manifest",
         str(args.manifest),
-        "--core-base-url",
-        str(args.core_base_url),
         "--timeout-seconds",
         str(args.timeout_seconds),
     ]
+    if args.core_base_url:
+        run_args.extend(["--core-base-url", str(args.core_base_url)])
+    if args.core_query_base_url:
+        run_args.extend(["--core-query-base-url", str(args.core_query_base_url)])
+    if args.core_query_control_plane_base_url:
+        run_args.extend(
+            [
+                "--core-query-control-plane-base-url",
+                str(args.core_query_control_plane_base_url),
+            ]
+        )
     return run_args
+
+
+def _core_source_urls_configured(args: argparse.Namespace) -> bool:
+    if args.core_base_url:
+        return True
+    return bool(args.core_query_base_url and args.core_query_control_plane_base_url)
 
 
 def _manifest_path(args: argparse.Namespace) -> Path:

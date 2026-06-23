@@ -7,6 +7,8 @@ import pytest
 
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     MANIFEST_ENV,
     TIMEOUT_SECONDS_ENV,
 )
@@ -24,6 +26,8 @@ def test_source_ingestion_runtime_blocks_when_manifest_is_not_configured(
 ) -> None:
     monkeypatch.delenv(MANIFEST_ENV, raising=False)
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
 
     result = build_source_ingestion_runtime_from_environment()
 
@@ -49,6 +53,8 @@ def test_source_ingestion_runtime_blocks_when_core_base_url_is_missing(
     manifest = write_manifest(tmp_path)
     monkeypatch.setenv(MANIFEST_ENV, str(manifest))
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
 
     result = build_source_ingestion_runtime_from_environment()
 
@@ -73,6 +79,8 @@ def test_source_ingestion_runtime_blocks_invalid_manifest(
         "source_ingestion_manifest_invalid",
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
 
 
@@ -91,6 +99,8 @@ def test_source_ingestion_runtime_blocks_non_object_manifest(
         "source_ingestion_manifest_invalid",
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
 
 
@@ -108,6 +118,8 @@ def test_source_ingestion_runtime_blocks_invalid_core_configuration(
         "lotus_core_base_url_invalid",
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
 
 
@@ -126,6 +138,8 @@ def test_source_ingestion_runtime_blocks_invalid_timeout(
         "lotus_core_base_url_invalid",
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
 
 
@@ -144,6 +158,8 @@ def test_source_ingestion_runtime_blocks_non_numeric_timeout(
         "lotus_core_base_url_invalid",
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
 
 
@@ -161,8 +177,50 @@ def test_source_ingestion_runtime_builds_manifest_plan_and_core_adapter(
     assert isinstance(result, SourceIngestionRuntime)
     assert result.configured_manifest_available is True
     assert result.core_base_url_configured is True
+    assert result.core_query_base_url_configured is True
+    assert result.core_query_control_plane_base_url_configured is True
     assert result.plan.command.work_items[0].portfolio_id == "PB_SG_GLOBAL_BAL_001"
     assert isinstance(result.core_source, LotusCoreHighCashSourceAdapter)
+
+
+def test_source_ingestion_runtime_builds_with_split_core_runtime_urls(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = write_manifest(tmp_path)
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.setenv(CORE_QUERY_BASE_URL_ENV, "http://localhost:8201")
+    monkeypatch.setenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, "http://localhost:8202")
+    monkeypatch.setenv(TIMEOUT_SECONDS_ENV, "2.5")
+
+    result = build_source_ingestion_runtime_from_environment()
+
+    assert isinstance(result, SourceIngestionRuntime)
+    assert result.core_base_url_configured is True
+    assert result.core_query_base_url_configured is True
+    assert result.core_query_control_plane_base_url_configured is True
+    assert isinstance(result.core_source, LotusCoreHighCashSourceAdapter)
+
+
+def test_source_ingestion_runtime_blocks_partial_split_core_runtime_urls(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = write_manifest(tmp_path)
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.setenv(CORE_QUERY_BASE_URL_ENV, "http://localhost:8201")
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
+
+    result = build_source_ingestion_runtime_from_environment()
+
+    assert result == SourceIngestionRuntimeBlocker(
+        "lotus_core_base_url_not_configured",
+        configured_manifest_available=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=False,
+    )
 
 
 def test_source_ingestion_runtime_uses_default_timeout_when_not_configured(

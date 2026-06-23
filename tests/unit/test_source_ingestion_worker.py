@@ -264,7 +264,7 @@ def test_cli_run_mode_returns_source_safe_item_block_for_core_entitlement_denial
     monkeypatch.setattr(
         module,
         "LotusCoreHighCashSourceAdapter",
-        lambda _client: RecordingCoreSource(error=CoreSourceEntitlementDenied()),
+        lambda **_kwargs: RecordingCoreSource(error=CoreSourceEntitlementDenied()),
     )
 
     assert (
@@ -289,6 +289,41 @@ def test_cli_run_mode_returns_source_safe_item_block_for_core_entitlement_denial
     assert "idempotencyKey" not in payload["items"][0]
     assert "signal-ingestion:high-cash:lotus-core" not in captured.out
     assert "portfolioId" not in captured.out
+
+
+def test_cli_run_mode_accepts_split_core_source_urls(
+    capsys: Any,
+    monkeypatch: Any,
+) -> None:
+    module = _load_worker_script()
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
+    )
+
+    monkeypatch.setattr(
+        module, "LotusCoreHighCashSourceAdapter", lambda **_kwargs: RecordingCoreSource()
+    )
+
+    assert (
+        module.main(
+            [
+                "--manifest",
+                str(manifest_path),
+                "--core-query-base-url",
+                "http://localhost:8201",
+                "--core-query-control-plane-base-url",
+                "http://localhost:8202",
+            ]
+        )
+        == 0
+    )
+
+    captured = capsys.readouterr()
+    payload = json.loads(captured.out)
+    assert payload["mode"] == "run_once"
+    assert payload["totalCount"] == 1
+    assert sum(payload["decisionCounts"].values()) == 1
+    assert payload["supportedFeaturePromoted"] is False
 
 
 def _source_ref(product_id: str) -> SourceRef:

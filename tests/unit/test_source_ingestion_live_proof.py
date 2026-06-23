@@ -103,7 +103,7 @@ def test_live_proof_cli_writes_blocked_source_safe_artifact(
     monkeypatch.setattr(
         module,
         "LotusCoreHighCashSourceAdapter",
-        lambda _client: RecordingCoreSource(
+        lambda **_kwargs: RecordingCoreSource(
             error=CoreSourceUnavailable(code="core_source_unavailable")
         ),
     )
@@ -130,6 +130,43 @@ def test_live_proof_cli_writes_blocked_source_safe_artifact(
     serialized = json.dumps(payload)
     assert "portfolioId" not in serialized
     assert "idempotencyKey" not in serialized
+
+
+def test_live_proof_cli_accepts_split_core_source_urls(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_live_proof_script()
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
+    )
+    output_path = tmp_path / "source-ingestion-live-proof.json"
+
+    monkeypatch.setattr(
+        module, "LotusCoreHighCashSourceAdapter", lambda **_kwargs: RecordingCoreSource()
+    )
+
+    result = module.main(
+        [
+            "--manifest",
+            str(manifest_path),
+            "--core-query-base-url",
+            "http://localhost:8201",
+            "--core-query-control-plane-base-url",
+            "http://localhost:8202",
+            "--generated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["liveCoreSourceAttempted"] is True
+    assert payload["runStatus"] == "completed"
+    assert "live_core_source_proof_missing" not in payload["proofBlockers"]
+    assert payload["supportedFeaturePromoted"] is False
 
 
 def _source_ref(product_id: str) -> SourceRef:

@@ -78,6 +78,10 @@ class SourceIngestionReadinessResponse(CamelModel):
     )
     scheduled_worker_deploy_proof_valid: bool = Field(..., alias="scheduledWorkerDeployProofValid")
     core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
+    core_query_base_url_configured: bool = Field(..., alias="coreQueryBaseUrlConfigured")
+    core_query_control_plane_base_url_configured: bool = Field(
+        ..., alias="coreQueryControlPlaneBaseUrlConfigured"
+    )
     durable_repository_configured: bool = Field(..., alias="durableRepositoryConfigured")
     run_once_configuration_status: str = Field(..., alias="runOnceConfigurationStatus")
     run_once_configured: bool = Field(..., alias="runOnceConfigured")
@@ -107,6 +111,10 @@ class SourceIngestionReadinessResponse(CamelModel):
             ),
             scheduledWorkerDeployProofValid=snapshot.scheduled_worker_deploy_proof_valid,
             coreBaseUrlConfigured=snapshot.core_base_url_configured,
+            coreQueryBaseUrlConfigured=snapshot.core_query_base_url_configured,
+            coreQueryControlPlaneBaseUrlConfigured=(
+                snapshot.core_query_control_plane_base_url_configured
+            ),
             durableRepositoryConfigured=snapshot.durable_repository_configured,
             runOnceConfigurationStatus=snapshot.run_once_configuration_status,
             runOnceConfigured=snapshot.run_once_configured,
@@ -127,6 +135,10 @@ class SourceIngestionRunOnceResponse(CamelModel):
     durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
     configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
     core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
+    core_query_base_url_configured: bool = Field(..., alias="coreQueryBaseUrlConfigured")
+    core_query_control_plane_base_url_configured: bool = Field(
+        ..., alias="coreQueryControlPlaneBaseUrlConfigured"
+    )
     total_count: int = Field(..., alias="totalCount")
     decision_counts: dict[str, int] = Field(..., alias="decisionCounts")
     configuration_blockers: tuple[str, ...] = Field(..., alias="configurationBlockers")
@@ -142,6 +154,8 @@ class SourceIngestionRunOnceResponse(CamelModel):
         durable_storage_backed: bool,
         configured_manifest_available: bool = False,
         core_base_url_configured: bool = False,
+        core_query_base_url_configured: bool = False,
+        core_query_control_plane_base_url_configured: bool = False,
     ) -> "SourceIngestionRunOnceResponse":
         return cls(
             repository="lotus-idea",
@@ -152,6 +166,8 @@ class SourceIngestionRunOnceResponse(CamelModel):
             durableStorageBacked=durable_storage_backed,
             configuredManifestAvailable=configured_manifest_available,
             coreBaseUrlConfigured=core_base_url_configured,
+            coreQueryBaseUrlConfigured=core_query_base_url_configured,
+            coreQueryControlPlaneBaseUrlConfigured=core_query_control_plane_base_url_configured,
             totalCount=0,
             decisionCounts=_empty_decision_counts(),
             configurationBlockers=(blocker,),
@@ -177,6 +193,10 @@ class SourceIngestionRunOnceResponse(CamelModel):
             durableStorageBacked=durable_storage_backed,
             configuredManifestAvailable=runtime.configured_manifest_available,
             coreBaseUrlConfigured=runtime.core_base_url_configured,
+            coreQueryBaseUrlConfigured=runtime.core_query_base_url_configured,
+            coreQueryControlPlaneBaseUrlConfigured=(
+                runtime.core_query_control_plane_base_url_configured
+            ),
             totalCount=result.total_count,
             decisionCounts=result.decision_counts(),
             configurationBlockers=(),
@@ -256,6 +276,10 @@ async def post_source_ingestion_run_once(
             durable_storage_backed=durable_storage_backed,
             configured_manifest_available=snapshot.configured_manifest_available,
             core_base_url_configured=snapshot.core_base_url_configured,
+            core_query_base_url_configured=snapshot.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                snapshot.core_query_control_plane_base_url_configured
+            ),
         )
 
     runtime = _build_source_ingestion_runtime_from_environment()
@@ -270,6 +294,10 @@ async def post_source_ingestion_run_once(
             durable_storage_backed=durable_storage_backed,
             configured_manifest_available=runtime.configured_manifest_available,
             core_base_url_configured=runtime.core_base_url_configured,
+            core_query_base_url_configured=runtime.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                runtime.core_query_control_plane_base_url_configured
+            ),
         )
 
     result = run_high_cash_source_ingestion_batch(
@@ -395,6 +423,8 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
                         "configuredScheduledWorkerProofAvailable": False,
                         "scheduledWorkerDeployProofValid": False,
                         "coreBaseUrlConfigured": False,
+                        "coreQueryBaseUrlConfigured": False,
+                        "coreQueryControlPlaneBaseUrlConfigured": False,
                         "durableRepositoryConfigured": False,
                         "runOnceConfigurationStatus": "blocked",
                         "runOnceConfigured": False,
@@ -402,6 +432,8 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
                         "liveSourceCertified": False,
                         "configurationBlockers": [
                             "source_ingestion_manifest_not_configured",
+                            "lotus_core_query_base_url_not_configured",
+                            "lotus_core_query_control_plane_base_url_not_configured",
                             "lotus_core_base_url_not_configured",
                             "durable_repository_not_configured",
                         ],
@@ -453,6 +485,8 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
                         "durableStorageBacked": False,
                         "configuredManifestAvailable": False,
                         "coreBaseUrlConfigured": False,
+                        "coreQueryBaseUrlConfigured": False,
+                        "coreQueryControlPlaneBaseUrlConfigured": False,
                         "totalCount": 0,
                         "decisionCounts": {
                             "accepted": 0,

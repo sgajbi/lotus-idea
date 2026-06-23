@@ -15,6 +15,8 @@ from app.runtime.repository_state import DATABASE_URL_ENV
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
+CORE_QUERY_BASE_URL_ENV = "LOTUS_CORE_QUERY_BASE_URL"
+CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV = "LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL"
 MANIFEST_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST"
 LIVE_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF"
 SCHEDULED_WORKER_PROOF_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF"
@@ -38,6 +40,8 @@ class SourceIngestionReadinessSnapshot:
     configured_scheduled_worker_proof_available: bool
     scheduled_worker_deploy_proof_valid: bool
     core_base_url_configured: bool
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
     durable_repository_configured: bool
     run_once_configuration_status: str
     certification_status: str
@@ -72,6 +76,7 @@ def build_source_ingestion_readiness_snapshot(
         os.getenv(SCHEDULED_WORKER_PROOF_ENV, "").strip(),
         repository_root=repository_root,
     )
+    core_source_urls = core_source_runtime_urls_from_environment()
     live_core_source_proof_valid = _live_core_source_proof_valid(configured_live_proof_path)
     scheduled_worker_deploy_proof_valid = _scheduled_worker_deploy_proof_valid(
         configured_scheduled_worker_proof_path
@@ -79,6 +84,7 @@ def build_source_ingestion_readiness_snapshot(
     configuration_blockers = _configuration_blockers(
         example_manifest=example_manifest,
         configured_manifest_path=configured_manifest_path,
+        core_source_urls=core_source_urls,
     )
     certification_blockers = _certification_blockers(
         live_core_source_proof_valid=live_core_source_proof_valid,
@@ -103,7 +109,11 @@ def build_source_ingestion_readiness_snapshot(
             and configured_scheduled_worker_proof_path.is_file()
         ),
         scheduled_worker_deploy_proof_valid=scheduled_worker_deploy_proof_valid,
-        core_base_url_configured=bool(os.getenv(CORE_BASE_URL_ENV, "").strip()),
+        core_base_url_configured=core_source_urls.fully_configured,
+        core_query_base_url_configured=core_source_urls.query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            core_source_urls.query_control_plane_base_url_configured
+        ),
         durable_repository_configured=bool(os.getenv(DATABASE_URL_ENV, "").strip()),
         run_once_configuration_status=("configured" if not configuration_blockers else "blocked"),
         certification_status="not_certified",
@@ -113,10 +123,37 @@ def build_source_ingestion_readiness_snapshot(
     )
 
 
+@dataclass(frozen=True)
+class CoreSourceRuntimeUrls:
+    query_base_url: str | None
+    query_control_plane_base_url: str | None
+    query_base_url_configured: bool
+    query_control_plane_base_url_configured: bool
+
+    @property
+    def fully_configured(self) -> bool:
+        return self.query_base_url_configured and self.query_control_plane_base_url_configured
+
+
+def core_source_runtime_urls_from_environment() -> CoreSourceRuntimeUrls:
+    legacy_base_url = os.getenv(CORE_BASE_URL_ENV, "").strip() or None
+    query_base_url = os.getenv(CORE_QUERY_BASE_URL_ENV, "").strip() or legacy_base_url
+    query_control_plane_base_url = (
+        os.getenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, "").strip() or legacy_base_url
+    )
+    return CoreSourceRuntimeUrls(
+        query_base_url=query_base_url,
+        query_control_plane_base_url=query_control_plane_base_url,
+        query_base_url_configured=bool(query_base_url),
+        query_control_plane_base_url_configured=bool(query_control_plane_base_url),
+    )
+
+
 def _configuration_blockers(
     *,
     example_manifest: Path,
     configured_manifest_path: Path | None,
+    core_source_urls: CoreSourceRuntimeUrls,
 ) -> tuple[str, ...]:
     blockers: list[str] = []
     if not example_manifest.is_file():
@@ -125,7 +162,11 @@ def _configuration_blockers(
         blockers.append("source_ingestion_manifest_not_configured")
     elif not configured_manifest_path.is_file():
         blockers.append("source_ingestion_manifest_unreadable")
-    if not os.getenv(CORE_BASE_URL_ENV, "").strip():
+    if not core_source_urls.query_base_url_configured:
+        blockers.append("lotus_core_query_base_url_not_configured")
+    if not core_source_urls.query_control_plane_base_url_configured:
+        blockers.append("lotus_core_query_control_plane_base_url_not_configured")
+    if not core_source_urls.fully_configured:
         blockers.append("lotus_core_base_url_not_configured")
     if not os.getenv(DATABASE_URL_ENV, "").strip():
         blockers.append("durable_repository_not_configured")

@@ -14,6 +14,8 @@ import app.api.source_ingestion_readiness as source_ingestion_readiness_api
 from app.application.source_ingestion import HighCashSourceIngestionBatchResult
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     LIVE_PROOF_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
@@ -92,6 +94,8 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
 ) -> None:
     monkeypatch.delenv(MANIFEST_ENV, raising=False)
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
@@ -114,6 +118,8 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
     assert payload["configuredScheduledWorkerProofAvailable"] is False
     assert payload["scheduledWorkerDeployProofValid"] is False
     assert payload["coreBaseUrlConfigured"] is False
+    assert payload["coreQueryBaseUrlConfigured"] is False
+    assert payload["coreQueryControlPlaneBaseUrlConfigured"] is False
     assert payload["durableRepositoryConfigured"] is False
     assert payload["runOnceConfigurationStatus"] == "blocked"
     assert payload["runOnceConfigured"] is False
@@ -122,6 +128,8 @@ def test_source_ingestion_readiness_api_returns_blocked_operator_posture(
     assert payload["supportedFeaturePromoted"] is False
     assert payload["configurationBlockers"] == [
         "source_ingestion_manifest_not_configured",
+        "lotus_core_query_base_url_not_configured",
+        "lotus_core_query_control_plane_base_url_not_configured",
         "lotus_core_base_url_not_configured",
         "durable_repository_not_configured",
     ]
@@ -236,6 +244,8 @@ def test_source_ingestion_readiness_api_emits_configured_run_once_event(
 
     assert response.status_code == 200
     assert response.json()["runOnceConfigurationStatus"] == "configured"
+    assert response.json()["coreQueryBaseUrlConfigured"] is True
+    assert response.json()["coreQueryControlPlaneBaseUrlConfigured"] is True
     assert events == [
         (
             "source_ingestion_readiness_read",
@@ -302,6 +312,8 @@ def test_source_ingestion_run_once_api_blocks_runtime_configuration_without_muta
             "source_ingestion_manifest_not_configured",
             configured_manifest_available=False,
             core_base_url_configured=False,
+            core_query_base_url_configured=False,
+            core_query_control_plane_base_url_configured=False,
         ),
     )
     client = TestClient(app)
@@ -317,6 +329,8 @@ def test_source_ingestion_run_once_api_blocks_runtime_configuration_without_muta
     assert payload["durableStorageBacked"] is True
     assert payload["configuredManifestAvailable"] is False
     assert payload["coreBaseUrlConfigured"] is False
+    assert payload["coreQueryBaseUrlConfigured"] is False
+    assert payload["coreQueryControlPlaneBaseUrlConfigured"] is False
     assert payload["totalCount"] == 0
     assert "source_ingestion_manifest_not_configured" in payload["configurationBlockers"]
     assert len(repository.snapshot().candidate_records) == 0
@@ -346,6 +360,8 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
         core_source=source,
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
     monkeypatch.setattr(
         source_ingestion_readiness_api,
@@ -373,6 +389,8 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
     assert payload["durableStorageBacked"] is True
     assert payload["configuredManifestAvailable"] is True
     assert payload["coreBaseUrlConfigured"] is True
+    assert payload["coreQueryBaseUrlConfigured"] is True
+    assert payload["coreQueryControlPlaneBaseUrlConfigured"] is True
     assert payload["totalCount"] == 1
     assert payload["decisionCounts"]["accepted"] == 1
     assert payload["configurationBlockers"] == []
@@ -431,6 +449,8 @@ def test_source_ingestion_run_once_api_emits_not_certified_operation_event(
         core_source=RecordingCoreSource(),
         configured_manifest_available=True,
         core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
     )
     monkeypatch.setattr(
         source_ingestion_readiness_api,

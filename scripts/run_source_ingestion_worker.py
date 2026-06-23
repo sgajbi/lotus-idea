@@ -10,6 +10,8 @@ from typing import Any
 from app.application.source_ingestion import run_high_cash_source_ingestion_batch
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     MANIFEST_ENV,
     TIMEOUT_SECONDS_ENV,
 )
@@ -31,6 +33,12 @@ from app.runtime.repository_state import (
     idea_repository_durable_storage_backed,
 )
 
+CORE_BASE_URL_HELP = (
+    f"Optional compatibility Core base URL used for both Core query and query-control-plane "
+    f"clients. Prefer --core-query-base-url and --core-query-control-plane-base-url for the "
+    f"canonical split Core runtime. Defaults to {CORE_BASE_URL_ENV}."
+)
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
@@ -47,14 +55,21 @@ def main(argv: list[str] | None = None) -> int:
 
     repository = get_idea_repository()
     try:
-        core_base_url = _core_base_url(args)
+        core_query_base_url, core_query_control_plane_base_url = _core_source_base_urls(args)
+        timeout_seconds = _timeout_seconds(args)
         core_source = LotusCoreHighCashSourceAdapter(
-            DownstreamJsonClient(
+            query_client=DownstreamJsonClient(
                 DownstreamClientConfig(
-                    base_url=core_base_url,
-                    timeout_seconds=_timeout_seconds(args),
+                    base_url=core_query_base_url,
+                    timeout_seconds=timeout_seconds,
                 )
-            )
+            ),
+            query_control_plane_client=DownstreamJsonClient(
+                DownstreamClientConfig(
+                    base_url=core_query_control_plane_base_url,
+                    timeout_seconds=timeout_seconds,
+                )
+            ),
         )
         result = run_high_cash_source_ingestion_batch(
             plan.command,
@@ -109,7 +124,22 @@ def _parser() -> argparse.ArgumentParser:
         description="Run or validate the lotus-idea high-cash source-ingestion worker manifest."
     )
     parser.add_argument("--manifest", default=os.getenv(MANIFEST_ENV))
-    parser.add_argument("--core-base-url", default=os.getenv(CORE_BASE_URL_ENV))
+    parser.add_argument(
+        "--core-base-url", default=os.getenv(CORE_BASE_URL_ENV), help=CORE_BASE_URL_HELP
+    )
+    parser.add_argument(
+        "--core-query-base-url",
+        default=os.getenv(CORE_QUERY_BASE_URL_ENV),
+        help=f"Core query-service base URL. Defaults to {CORE_QUERY_BASE_URL_ENV}.",
+    )
+    parser.add_argument(
+        "--core-query-control-plane-base-url",
+        default=os.getenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV),
+        help=(
+            "Core query-control-plane service base URL. Defaults to "
+            f"{CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV}."
+        ),
+    )
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument(
         "--check-only",
@@ -132,10 +162,22 @@ def _read_manifest(path: Path) -> dict[str, Any]:
     return payload
 
 
-def _core_base_url(args: argparse.Namespace) -> str:
-    if not args.core_base_url:
-        raise ValueError(f"--core-base-url or {CORE_BASE_URL_ENV} is required for run mode")
-    return str(args.core_base_url)
+def _core_source_base_urls(args: argparse.Namespace) -> tuple[str, str]:
+    query_base_url = str(args.core_query_base_url or args.core_base_url or "").strip()
+    query_control_plane_base_url = str(
+        args.core_query_control_plane_base_url or args.core_base_url or ""
+    ).strip()
+    missing: list[str] = []
+    if not query_base_url:
+        missing.append(f"--core-query-base-url or {CORE_QUERY_BASE_URL_ENV}")
+    if not query_control_plane_base_url:
+        missing.append(
+            f"--core-query-control-plane-base-url or {CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV}"
+        )
+    if missing:
+        missing.append(f"or compatibility --core-base-url/{CORE_BASE_URL_ENV}")
+        raise ValueError("Core source URLs are required for run mode: " + ", ".join(missing))
+    return query_base_url, query_control_plane_base_url
 
 
 def _timeout_seconds(args: argparse.Namespace) -> float:

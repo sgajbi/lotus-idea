@@ -18,6 +18,8 @@ from app.application.implementation_proof_readiness import (
 )
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     LIVE_PROOF_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
@@ -135,7 +137,21 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--core-base-url",
-        help=f"Optional Core base URL to expose to readiness as {CORE_BASE_URL_ENV}.",
+        help=(
+            f"Optional compatibility Core base URL to expose to readiness as {CORE_BASE_URL_ENV}. "
+            "Prefer the split query and query-control-plane URL arguments for live Core proof."
+        ),
+    )
+    parser.add_argument(
+        "--core-query-base-url",
+        help=f"Optional Core query-service base URL to expose as {CORE_QUERY_BASE_URL_ENV}.",
+    )
+    parser.add_argument(
+        "--core-query-control-plane-base-url",
+        help=(
+            "Optional Core query-control-plane base URL to expose as "
+            f"{CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV}."
+        ),
     )
     parser.add_argument(
         "--source-ingestion-live-proof",
@@ -185,6 +201,8 @@ def _readiness_environment_overrides(args: argparse.Namespace) -> dict[str, str 
     return {
         MANIFEST_ENV: args.source_ingestion_manifest,
         CORE_BASE_URL_ENV: args.core_base_url,
+        CORE_QUERY_BASE_URL_ENV: args.core_query_base_url,
+        CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV: args.core_query_control_plane_base_url,
         LIVE_PROOF_ENV: args.source_ingestion_live_proof,
         SCHEDULED_WORKER_PROOF_ENV: args.source_ingestion_scheduled_worker_proof,
     }

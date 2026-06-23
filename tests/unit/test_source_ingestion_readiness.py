@@ -11,6 +11,8 @@ from app.application.source_ingestion_live_proof import (
 )
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
+    CORE_QUERY_BASE_URL_ENV,
+    CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV,
     LIVE_PROOF_ENV,
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
@@ -33,6 +35,8 @@ def test_source_ingestion_readiness_reports_blocked_default_posture(
 ) -> None:
     monkeypatch.delenv(MANIFEST_ENV, raising=False)
     monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
     monkeypatch.delenv(LIVE_PROOF_ENV, raising=False)
     monkeypatch.delenv(SCHEDULED_WORKER_PROOF_ENV, raising=False)
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
@@ -49,6 +53,8 @@ def test_source_ingestion_readiness_reports_blocked_default_posture(
     assert snapshot.configured_scheduled_worker_proof_available is False
     assert snapshot.scheduled_worker_deploy_proof_valid is False
     assert snapshot.core_base_url_configured is False
+    assert snapshot.core_query_base_url_configured is False
+    assert snapshot.core_query_control_plane_base_url_configured is False
     assert snapshot.durable_repository_configured is False
     assert snapshot.run_once_configuration_status == "blocked"
     assert snapshot.run_once_configured is False
@@ -57,6 +63,8 @@ def test_source_ingestion_readiness_reports_blocked_default_posture(
     assert snapshot.supported_feature_promoted is False
     assert snapshot.configuration_blockers == (
         "source_ingestion_manifest_not_configured",
+        "lotus_core_query_base_url_not_configured",
+        "lotus_core_query_control_plane_base_url_not_configured",
         "lotus_core_base_url_not_configured",
         "durable_repository_not_configured",
     )
@@ -88,6 +96,8 @@ def test_source_ingestion_readiness_reports_configured_run_once_posture(
     assert snapshot.configured_scheduled_worker_proof_available is False
     assert snapshot.scheduled_worker_deploy_proof_valid is False
     assert snapshot.core_base_url_configured is True
+    assert snapshot.core_query_base_url_configured is True
+    assert snapshot.core_query_control_plane_base_url_configured is True
     assert snapshot.durable_repository_configured is True
     assert snapshot.run_once_configuration_status == "configured"
     assert snapshot.run_once_configured is True
@@ -128,6 +138,8 @@ def test_source_ingestion_readiness_clears_only_live_core_blocker_with_valid_pro
     snapshot = build_source_ingestion_readiness_snapshot()
 
     assert snapshot.configured_live_proof_available is True
+    assert snapshot.core_query_base_url_configured is True
+    assert snapshot.core_query_control_plane_base_url_configured is True
     assert snapshot.live_core_source_proof_valid is True
     assert snapshot.configured_scheduled_worker_proof_available is False
     assert snapshot.scheduled_worker_deploy_proof_valid is False
@@ -236,6 +248,50 @@ def test_source_ingestion_readiness_resolves_relative_manifest_from_repo_root(
     assert snapshot.example_manifest_available is True
     assert snapshot.configured_manifest_available is True
     assert snapshot.run_once_configured is True
+
+
+def test_source_ingestion_readiness_supports_split_core_runtime_urls(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.setenv(CORE_QUERY_BASE_URL_ENV, "http://localhost:8201")
+    monkeypatch.setenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, "http://localhost:8202")
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot()
+
+    assert snapshot.core_base_url_configured is True
+    assert snapshot.core_query_base_url_configured is True
+    assert snapshot.core_query_control_plane_base_url_configured is True
+    assert snapshot.run_once_configuration_status == "configured"
+    assert snapshot.configuration_blockers == ()
+
+
+def test_source_ingestion_readiness_reports_partial_split_core_url_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text("{}", encoding="utf-8")
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.setenv(CORE_QUERY_BASE_URL_ENV, "http://localhost:8201")
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
+    monkeypatch.setenv(DATABASE_URL_ENV, "postgresql://localhost/lotus_idea")
+
+    snapshot = build_source_ingestion_readiness_snapshot()
+
+    assert snapshot.core_base_url_configured is False
+    assert snapshot.core_query_base_url_configured is True
+    assert snapshot.core_query_control_plane_base_url_configured is False
+    assert snapshot.configuration_blockers == (
+        "lotus_core_query_control_plane_base_url_not_configured",
+        "lotus_core_base_url_not_configured",
+    )
 
 
 def test_source_ingestion_readiness_blocks_unreadable_configured_manifest(
