@@ -11,7 +11,8 @@
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
 | `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
-| `make implementation-proof-readiness-check` | Scheduled-worker deploy proof plus RFC-0002 aggregate proof-readiness evidence. |
+| `make runtime-trust-telemetry-proof-contract-gate` | Source-safe runtime telemetry candidate-snapshot proof contract. |
+| `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry proof, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `docker compose up --build` | Local container entrypoint. |
