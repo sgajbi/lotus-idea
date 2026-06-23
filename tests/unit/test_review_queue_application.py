@@ -161,6 +161,47 @@ def test_build_review_queue_from_repository_filters_by_advisor_access_scope() ->
     assert queue.exclusions[0].reason is QueueExclusionReason.ACCESS_SCOPE_MISMATCH
 
 
+def test_build_review_queue_from_repository_filters_by_multi_portfolio_scope() -> None:
+    repository = InMemoryIdeaRepository()
+    first_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-first-scope",
+        idempotency_key="signal-ingestion:high-cash:multi-scope-first",
+        candidate_scope=access_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+    )
+    second_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-second-scope",
+        idempotency_key="signal-ingestion:high-cash:multi-scope-second",
+        candidate_scope=access_scope(portfolio_id="PB_SG_ALT_BAL_002"),
+    )
+    excluded_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-third-scope",
+        idempotency_key="signal-ingestion:high-cash:multi-scope-third",
+        candidate_scope=access_scope(portfolio_id="PB_SG_OFF_SCOPE_003"),
+    )
+
+    queue = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            access_scope_filter=QueueAccessScopeFilter(
+                tenant_id="tenant-private-bank-sg",
+                book_id="book-advisor-001",
+                portfolio_id=("PB_SG_GLOBAL_BAL_001", "PB_SG_ALT_BAL_002"),
+                client_id="client-001",
+            ),
+        ),
+        repository=repository,
+    )
+
+    assert [item.candidate.candidate_id for item in queue.items] == sorted(
+        [first_candidate_id, second_candidate_id]
+    )
+    assert [exclusion.candidate_id for exclusion in queue.exclusions] == [excluded_candidate_id]
+    assert queue.exclusions[0].reason is QueueExclusionReason.ACCESS_SCOPE_MISMATCH
+
+
 def test_build_review_queue_from_repository_excludes_expired_candidate_records() -> None:
     repository = InMemoryIdeaRepository()
     candidate_id = persist_high_cash_candidate(repository)
@@ -253,7 +294,6 @@ def test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture()
     assert snapshot.certification_ready is False
     assert snapshot.certification_blockers == (
         "durable_repository_not_configured",
-        "platform_caller_context_entitlement_proof_missing",
         "workbench_product_proof_missing",
         "data_product_certification_missing",
         "certified_runtime_trust_telemetry_missing",

@@ -123,7 +123,6 @@ def _review_queue_certification_blockers(*, durable_storage_backed: bool) -> tup
         blockers.append("durable_repository_not_configured")
     blockers.extend(
         (
-            "platform_caller_context_entitlement_proof_missing",
             "workbench_product_proof_missing",
             "data_product_certification_missing",
             "certified_runtime_trust_telemetry_missing",
