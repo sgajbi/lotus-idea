@@ -7,7 +7,7 @@
   "traceId": "trace-source-ingestion-worker",
   "workItems": [
     {
-      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "portfolioId": "DEMO_ADV_USD_001",
       "asOfDate": "2026-06-20"
     }
   ]

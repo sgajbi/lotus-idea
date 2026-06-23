@@ -57,12 +57,14 @@ bank-buyable `lotus-idea` service, and internal domain primitives for later
 API/persistence slices.
 
 RFC-0002 Slice 00 now records the implementation-start baseline: high cash /
-idle liquidity is the first opportunity family, `PB_SG_GLOBAL_BAL_001` is the
-canonical first proof portfolio, advisor-only review is the first audience,
-report-only evidence is the first downstream conversion path, and missing
-evidence / unsupported-claim verification is the first AI posture. The baseline
-keeps all source calculations in their owning services and does not promote any
-business capability beyond the current foundation-only supported-feature state.
+idle liquidity is the first opportunity family, `PB_SG_GLOBAL_BAL_001` remains
+the canonical Workbench/demo portfolio, `DEMO_ADV_USD_001` is the current
+live-supported high-cash source-ingestion proof seed, advisor-only review is the
+first audience, report-only evidence is the first downstream conversion path,
+and missing evidence / unsupported-claim verification is the first AI posture.
+The baseline keeps all source calculations in their owning services and does
+not promote any business capability beyond the current foundation-only
+supported-feature state.
 
 RFC-0002 Slice 01 is implemented as platform automation and scaffold review
 evidence. The reusable generated-wiki gap found during `lotus-idea` creation is
