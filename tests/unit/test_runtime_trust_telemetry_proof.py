@@ -5,6 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import pytest
 
@@ -125,7 +126,7 @@ def test_runtime_trust_telemetry_proof_contract_gate_scans_tuple_content() -> No
     assert errors == ["$[0]: forbidden source-sensitive text `PB_SG_GLOBAL_BAL_001` is present"]
 
 
-def _valid_runtime_trust_telemetry_proof() -> dict[str, object]:
+def _valid_runtime_trust_telemetry_proof() -> dict[str, Any]:
     return build_runtime_trust_telemetry_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
