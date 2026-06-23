@@ -113,6 +113,13 @@ Prove the complete supported opportunity journey end to end.
     `workbench_gateway_bff_consumption_proof_missing`, while preserving full
     panel, browser accessibility, canonical demo runtime, data-product, and
     supported-feature blockers.
+18. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
+    the same source-safe artifact-consumption path as the aggregate generator
+    for durable repository, runtime trust telemetry, and Workbench read-path
+    proofs. `tests/unit/test_proof_artifacts.py` and
+    `tests/integration/test_implementation_proof_readiness_api.py` prove that
+    configured valid artifacts clear only their intended aggregate blockers and
+    keep the API `blocked`, `not_certified`, and unpromoted.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -187,6 +194,10 @@ The Workbench read-path proof artifact narrows the aggregate readiness gap from
 queue/detail consumption has a source-safe proof artifact"; it does not close
 full Workbench product proof, browser proof, canonical demo proof, mutation
 affordances, or supported-feature proof.
+The runtime proof-artifact loader narrows the operator-readiness gap from
+"generator-only artifact consumption" to "HTTP and generated readiness share
+the same configured proof evidence"; it does not certify storage, mesh,
+Workbench, downstream, or supported-feature readiness.
 
 ## Acceptance Gate
 

@@ -1,13 +1,30 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
 
 import app.api.implementation_proof_readiness as implementation_proof_readiness_api
+from app.application.durable_repository_proof import (
+    DURABLE_REPOSITORY_PROOF_ENV,
+    build_durable_repository_proof_payload,
+)
+from app.application.runtime_trust_telemetry_proof import (
+    RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
+    build_runtime_trust_telemetry_proof_payload,
+)
+from app.application.workbench_read_path_proof import (
+    WORKBENCH_READ_PATH_PROOF_ENV,
+    build_workbench_read_path_proof_payload,
+)
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def proof_readiness_headers(
@@ -33,6 +50,9 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv("LOTUS_IDEA_SOURCE_INGESTION_MANIFEST", raising=False)
     monkeypatch.delenv("LOTUS_CORE_BASE_URL", raising=False)
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
+    monkeypatch.delenv(DURABLE_REPOSITORY_PROOF_ENV, raising=False)
+    monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, raising=False)
+    monkeypatch.delenv(WORKBENCH_READ_PATH_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
     client = TestClient(app)
 
@@ -70,6 +90,75 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     }
     assert "portfolio_id" not in response.text
     assert "client_id" not in response.text
+
+
+def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    evaluated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+    durable_proof_path = tmp_path / "durable-repository-proof.json"
+    runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
+    workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
+    durable_proof_path.write_text(
+        json.dumps(
+            build_durable_repository_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    runtime_proof_path.write_text(
+        json.dumps(
+            build_runtime_trust_telemetry_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    workbench_proof_path.write_text(
+        json.dumps(
+            build_workbench_read_path_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
+    monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
+    monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
+    monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(readiness_url(), headers=proof_readiness_headers())
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportabilityStatus"] == "not_certified"
+    assert payload["supportedFeaturePromoted"] is False
+    assert "durable_repository_not_configured" not in payload["overallBlockers"]
+    assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
+    assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
+    assert "workbench_panel_missing" in payload["overallBlockers"]
+    assert "platform_mesh_certification_missing" in payload["overallBlockers"]
+    assert "no_supported_features_promoted" in payload["overallBlockers"]
+    capabilities = {
+        capability["capabilityId"]: capability for capability in payload["capabilities"]
+    }
+    assert "durable repository proof artifact" in capabilities["source-ingestion"]["evidenceRefs"]
+    assert (
+        "runtime trust telemetry proof artifact"
+        in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
+    )
+    assert (
+        "workbench read-path proof artifact"
+        in capabilities["workbench-product-proof"]["evidenceRefs"]
+    )
 
 
 def test_implementation_proof_readiness_api_requires_operator_permission() -> None:

@@ -33,7 +33,7 @@ Current implemented foundations include:
   readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
   proof, durable repository proof, runtime telemetry candidate-snapshot proof,
-  and Workbench read-path proof consumed by aggregate readiness evidence,
+  and Workbench read-path proof consumed by generated and operator API aggregate readiness evidence,
 - bounded `lotus-gateway` read-only queue/detail routes, including caller
   entitlement-scope forwarding for both published read paths,
 - bounded `lotus-workbench` read-only queue/detail rendering through Gateway,

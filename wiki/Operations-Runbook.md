@@ -354,10 +354,16 @@ client-ready publication, or supported-feature promotion.
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof
 artifact, and the same source-safe
-readiness snapshot without running the HTTP service. Use it as CI or async
-operator evidence only; it is not live scheduler certification, runtime
-database configuration, production storage certification, production recovery
-readiness, platform mesh certification, or a supported product claim.
+readiness snapshot without running the HTTP service. The live operator API also
+honors valid durable repository, runtime trust telemetry, and Workbench
+read-path proof artifact paths configured through
+`LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
+`LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`, and
+`LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`, clearing only the matching aggregate
+proof blockers. Use these artifacts as CI or async operator evidence only;
+they are not live scheduler certification, runtime database configuration,
+production storage certification, production recovery readiness, platform mesh
+certification, full Workbench proof, or a supported product claim.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

@@ -118,33 +118,35 @@ Durable repository proof is captured by
 through `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF` or passed with
 `--durable-repository-proof` clears only the aggregate
 `durable_repository_not_configured` blocker inside generated
-implementation-proof readiness evidence. It does not configure the running
-service, connect to PostgreSQL, certify production storage, prove deploy
-migrations, certify live Core ingestion, certify runtime trust telemetry,
-prove Gateway or Workbench behavior, or promote a supported feature. Runtime
-readiness endpoints continue to report missing durable repository posture when
-`LOTUS_IDEA_DATABASE_URL` is absent.
+implementation-proof readiness evidence and the operator API readiness
+snapshot. It does not configure the running service, connect to PostgreSQL,
+certify production storage, prove deploy migrations, certify live Core
+ingestion, certify runtime trust telemetry, prove Gateway or Workbench
+behavior, or promote a supported feature. Runtime readiness endpoints continue
+to report missing durable repository posture when `LOTUS_IDEA_DATABASE_URL` is
+absent.
 
 Runtime trust telemetry proof is captured by
 `scripts/generate_runtime_trust_telemetry_proof.py`. A valid artifact
 referenced through `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF` or passed with
 `--runtime-trust-telemetry-proof` clears only the aggregate
 `runtime_candidate_snapshot_missing` blocker inside generated
-implementation-proof readiness evidence. It exercises a deterministic,
-source-safe candidate snapshot through the runtime trust telemetry builder. It
-does not certify the platform source manifest, platform mesh, Gateway or
-Workbench discovery, client-ready publication, or supported-feature promotion.
+implementation-proof readiness evidence and the operator API readiness
+snapshot. It exercises a deterministic, source-safe candidate snapshot through
+the runtime trust telemetry builder. It does not certify the platform source
+manifest, platform mesh, Gateway or Workbench discovery, client-ready
+publication, or supported-feature promotion.
 
 Workbench read-path proof is captured by
 `scripts/generate_workbench_read_path_proof.py`. A valid artifact referenced
 through `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF` or passed with
 `--workbench-read-path-proof` clears only the aggregate
 `workbench_gateway_bff_consumption_proof_missing` blocker inside generated
-implementation-proof readiness evidence. It records the bounded Gateway-backed
-Workbench queue/detail read path from `lotus-workbench` PR #391. It does not
-certify a full Workbench panel, browser accessibility proof, canonical demo
-runtime proof, data-product certification, client-ready publication, or
-supported-feature promotion.
+implementation-proof readiness evidence and the operator API readiness
+snapshot. It records the bounded Gateway-backed Workbench queue/detail read
+path from `lotus-workbench` PR #391. It does not certify a full Workbench
+panel, browser accessibility proof, canonical demo runtime proof, data-product
+certification, client-ready publication, or supported-feature promotion.
 
 ## Response Shape
 
@@ -194,58 +196,61 @@ Implementation-backed evidence:
 
 1. application builder: `src/app/application/implementation_proof_readiness.py`,
 2. API route: `src/app/api/implementation_proof_readiness.py`,
-3. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
-4. repo-native check that generates and consumes the scheduled-worker
+3. runtime artifact loader: `src/app/runtime/proof_artifacts.py`,
+4. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
+5. repo-native check that generates and consumes the scheduled-worker
    deploy-proof, durable repository proof, runtime telemetry proof, and
    Workbench read-path proof artifacts:
    `make implementation-proof-readiness-check`,
-5. downstream contract check: `make downstream-realization-contract-gate`,
-6. runtime trust telemetry snapshot check:
+6. downstream contract check: `make downstream-realization-contract-gate`,
+7. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
-7. runtime trust telemetry snapshot endpoint:
+8. runtime trust telemetry snapshot endpoint:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
-8. generated runtime telemetry evidence:
+9. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-9. source-ingestion run-once endpoint:
+10. source-ingestion run-once endpoint:
    `POST /api/v1/source-ingestion/run-once`,
-10. source-ingestion run-once runbook:
+11. source-ingestion run-once runbook:
     `docs/operations/source-ingestion-run-once.md`,
-11. source-ingestion live-proof generator:
+12. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-12. scheduled source-ingestion worker proof generator:
+13. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-13. scheduled source-ingestion worker contract gate:
+14. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-14. source-ingestion live-proof contract gate:
+15. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-15. durable repository proof generator:
+16. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
-16. durable repository proof contract gate:
+17. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
-17. runtime trust telemetry proof generator:
+18. runtime trust telemetry proof generator:
     `scripts/generate_runtime_trust_telemetry_proof.py`,
-18. runtime trust telemetry proof contract gate:
+19. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`,
-19. Workbench read-path proof generator:
+20. Workbench read-path proof generator:
     `scripts/generate_workbench_read_path_proof.py`,
-20. Workbench read-path proof contract gate:
+21. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-21. Workbench read-path proof tests:
+22. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-22. runtime trust telemetry proof tests:
+23. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-23. outbox delivery run-once endpoint:
+24. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-24. operation event: `implementation_proof_readiness_read`,
-25. endpoint ledger:
+25. operation event: `implementation_proof_readiness_read`,
+26. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-26. unit tests:
+27. runtime artifact loader tests:
+    `tests/unit/test_proof_artifacts.py`,
+28. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-27. durable repository proof tests:
+29. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-28. generator tests:
+30. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-29. integration tests:
+31. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 Run:
