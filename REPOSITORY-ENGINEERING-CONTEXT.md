@@ -173,8 +173,8 @@ repository, manifest, and Core configuration are present, and returns aggregate
 decision counts only. The upstream Core cash-weight contract dependency from
 `sgajbi/lotus-core#430` is closed in Core PR #431, and `lotus-idea` issue #22
 now tracks this adapter-consumption slice. There is still no live Core
-integration proof, certified scheduled daemon runtime, Workbench proof,
-data-product certification, or supported-feature promotion yet.
+integration proof, certified scheduled daemon runtime, full Workbench live
+proof, data-product certification, or supported-feature promotion yet.
 `src/app/application/source_ingestion_live_proof.py` and
 `scripts/generate_source_ingestion_live_proof.py` now define the source-safe
 live Core source-ingestion proof artifact contract. A valid artifact referenced
@@ -192,8 +192,8 @@ not expose the required `totals.source_reported_cash_weight*` fields; upstream
 issue `sgajbi/lotus-core#437` tracks that Core-owned runtime payload gap.
 `lotus-idea` must remain blocked rather than reconstructing source-reported
 cash-weight supportability locally.
-Data-mesh/runtime telemetry certification, Gateway/Workbench proof, and
-supported-feature promotion remain planned.
+Data-mesh/runtime telemetry certification, full Gateway/Workbench live proof,
+and supported-feature promotion remain planned.
 
 RFC-0002 Slice 06 is partially implemented as an internal persistence
 foundation in `src/app/domain/persistence.py`. The repository now has immutable
@@ -490,10 +490,12 @@ feedback, conversion intent/outcome, and report evidence-pack request path.
 /api/v1/ideas/candidates/{candidate_id}` routes that forward caller
 context, caller entitlement scope, and correlation to `lotus-idea`, preserve `lotus-idea` ranking and source
 refs, and block upstream `supportedFeaturePromoted=true`. This is not yet a
-supported product capability: there are no live source adapters, Workbench
-surfaces, supported database-backed API state beyond the current opt-in
-PostgreSQL workflow proof, data-product certification, runtime trust
-telemetry, or supported-feature promotion.
+supported product capability: there is now bounded read-only Workbench
+queue/detail rendering through `lotus-workbench` PR #391, but no live source
+adapters, review-action/feedback/conversion Workbench affordances,
+entitlement-denied live panel proof, supported database-backed API state beyond
+the current opt-in PostgreSQL workflow proof, data-product certification,
+runtime trust telemetry, or supported-feature promotion.
 
 RFC-0002 Slice 12 is partially implemented as an internal conversion governance
 foundation in `src/app/domain/conversion_governance.py`. The repository now has

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, and runtime telemetry proof artifact available; full live proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, and bounded Workbench read-path proof available; full live proof remains pending
 
 ## Outcome
 
@@ -96,6 +96,15 @@ Prove the complete supported opportunity journey end to end.
     only `runtime_candidate_snapshot_missing`, while preserving platform
     source-manifest, platform mesh, Gateway/Workbench discovery, and
     supported-feature blockers.
+16. `lotus-workbench` PR #391 merged bounded read-only Workbench rendering for
+    the Gateway-published advisor queue and source-safe candidate detail. The
+    live-validation script now fails unless a populated candidate row, loaded
+    detail posture, non-empty source count, and observed candidate-detail route
+    are present before screenshot evidence is recorded. This clears only the
+    prior absence of a Workbench read-path implementation; it does not certify
+    live source ingestion, entitlement-denied panel proof, mutation
+    affordances, downstream realization, data-product certification, or
+    supported-feature promotion.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -117,8 +126,8 @@ without relying on chat memory.
 
 1. No canonical live proof run has been captured for the full opportunity
    journey.
-2. Workbench, live broker runtime, and downstream realization proof
-   remain pending.
+2. Full Workbench live proof, live broker runtime, and downstream realization
+   proof remain pending.
 3. Platform data-mesh certification, runtime trust telemetry, and mesh event
    certification remain pending.
 4. Supported-feature promotion remains blocked until the readiness diagnostic
