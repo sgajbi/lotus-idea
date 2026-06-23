@@ -160,6 +160,14 @@ foundation:
     payloads, role plus capability enforcement, timezone validation, and
     not-certified operation-event behavior for the runtime trust telemetry
     snapshot diagnostic.
+33. `contracts/observability/lotus-idea-operation-metrics.v1.json`,
+    `scripts/operation_metric_contract_gate.py`, and
+    `make operation-metric-contract-gate` now define and enforce a
+    machine-readable operation metric catalog for
+    `lotus_idea_operation_events_total`. The gate keeps the catalog aligned to
+    code-owned operation, outcome, label, source-authority, and supportability
+    vocabulary, and blocks premature dashboard, alert, mesh,
+    Gateway/Workbench, or supported-feature claims.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
@@ -220,7 +228,8 @@ certification, client-ready publication, or supported-feature promotion.
 ## Remaining Gap
 
 1. Add dashboard and alert references only after metric families are stable and
-   implemented.
+   implemented. The operation metric catalog now proves the first metric family
+   is code-owned and bounded, but dashboards and alerts remain uncertified.
 2. Add live runtime source-readiness proof after Core source adapters and
    deployable worker runtime exist.
 3. Add product-scope entitlement proof for Workbench and any broader Gateway

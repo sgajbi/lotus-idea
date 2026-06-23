@@ -45,6 +45,7 @@ make quality-scorecard-gate
 make monetary-float-guard
 make no-sensitive-content-guard
 make source-observability-contract-gate
+make operation-metric-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make downstream-realization-contract-gate
@@ -72,7 +73,7 @@ make clean
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
-OpenAPI quality, source-observability contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+OpenAPI quality, source-observability contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
@@ -300,6 +301,13 @@ The source-observability contract gate blocks ad hoc application logging in
 request diagnostic helper rather than raw `print()`, direct Python logging, or
 low-level `log_event` calls. Request diagnostics log route templates rather
 than raw URL paths.
+
+The operation-metric contract gate validates
+`contracts/observability/lotus-idea-operation-metrics.v1.json` against the
+code-owned operation, outcome, supportability, and metric-label vocabulary. It
+blocks sensitive labels and prevents the metric catalog from being rewritten as
+dashboard certification, alert certification, data-mesh certification,
+Gateway/Workbench proof, or supported-feature promotion.
 
 The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
 and wiki source for unqualified current-state claims that imply demo readiness, production support,

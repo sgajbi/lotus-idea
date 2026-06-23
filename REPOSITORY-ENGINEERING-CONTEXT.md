@@ -843,25 +843,27 @@ owned by upstream services.
 19. no-sensitive-content guard: `make no-sensitive-content-guard`
 20. source-observability contract gate:
     `make source-observability-contract-gate`
-21. implementation-truth gate: `make implementation-truth-gate`
-22. data-mesh contract gate: `make data-mesh-contract-gate`
-23. downstream realization contract gate:
+21. operation metric contract gate:
+    `make operation-metric-contract-gate`
+22. implementation-truth gate: `make implementation-truth-gate`
+23. data-mesh contract gate: `make data-mesh-contract-gate`
+24. downstream realization contract gate:
     `make downstream-realization-contract-gate`
-24. migration contract gate: `make migration-contract-gate`
-25. migration execution dry-run gate: `make migration-execution-gate`
-26. durable repository proof contract gate:
+25. migration contract gate: `make migration-contract-gate`
+26. migration execution dry-run gate: `make migration-execution-gate`
+27. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`
-27. runtime trust telemetry proof contract gate:
+28. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`
-28. Workbench read-path proof contract gate:
+29. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`
-29. run-once source-ingestion worker manifest and output-contract gate:
+30. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-30. scheduled source-ingestion worker deploy-contract gate:
+31. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-31. source-ingestion live-proof artifact contract gate:
+32. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-32. implementation proof readiness generator:
+33. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
@@ -869,15 +871,15 @@ owned by upstream services.
     `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC`, and
     `IMPLEMENTATION_PROOF_OUTPUT` when release reviewers are validating against
     a running Core stack.
-33. runtime trust telemetry preview generator:
+34. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-34. runtime trust telemetry snapshot generator:
+35. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-35. PostgreSQL runtime proof with configured integration URL:
+36. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-36. apply migrations with configured PostgreSQL URL: `make migrate`
-37. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-38. remove ignored generated local artifacts: `make clean`
+37. apply migrations with configured PostgreSQL URL: `make migrate`
+38. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+39. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -893,7 +895,7 @@ Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, repository hygiene, maintainability thresholds,
 documentation contract enforcement, quality-scorecard truth, monetary precision
 guarding, no-sensitive-content evidence guarding, source-observability contract
-enforcement, OpenAPI quality, implementation-truth gate,
+enforcement, operation metric contract enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
 endpoint-certification gate, data-mesh contract gate, migration contract gate,
 migration execution dry-run gate, source-ingestion worker manifest and
@@ -986,6 +988,12 @@ or calls, and low-level `log_event` bypasses outside the central observability
 module. Feature code should emit bounded operation events or use the central
 request diagnostic helper so supportability evidence stays product-safe and
 low-cardinality.
+
+`make operation-metric-contract-gate` is blocking through `make lint`. It
+validates `contracts/observability/lotus-idea-operation-metrics.v1.json`
+against code-owned operation, outcome, supportability, and metric-label
+vocabulary, and blocks sensitive labels plus premature dashboard, alert, mesh,
+Gateway/Workbench, or supported-feature certification claims.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and
