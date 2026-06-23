@@ -20,15 +20,21 @@ Current RFC-0002 implementation-start baseline:
    identified generated-wiki gap is already addressed in `lotus-platform`
    commit `549d290` and covered by the platform scaffold contract tests; no
    `lotus-core` change or new platform PR is required for this slice.
-3. Slice 03 implements the pure domain model and lifecycle foundation without
+3. Slice 02 is partially implemented for cleanup and structure normalization:
+   runtime composition providers for repository state, source ingestion, outbox
+   publication, and downstream realization now live under `src/app/runtime/`,
+   and the blocking architecture-boundary gate protects that runtime wiring
+   from API/FastAPI leakage. It remains a cleanup slice only and does not
+   promote a business feature.
+4. Slice 03 implements the pure domain model and lifecycle foundation without
    API, persistence, or supported-feature promotion.
-4. Slice 04 partially implements the source-authority and data-mesh baseline,
+5. Slice 04 partially implements the source-authority and data-mesh baseline,
    including proposed producer contracts, consumer dependencies, blocked static
    trust telemetry, SLO/access/evidence policy files, and a repo-native
    `data-mesh-contract-gate`. Platform mesh certification remains planned.
-5. Slice 05 partially implements the high-cash / idle-liquidity deterministic
+6. Slice 05 partially implements the high-cash / idle-liquidity deterministic
    domain policy without source adapters, API, or supported-feature promotion.
-6. Slice 06 partially implements internal candidate persistence records,
+7. Slice 06 partially implements internal candidate persistence records,
    evidence replay posture, certified evidence replay API foundation,
    idempotency conflict handling, idempotent lifecycle transition recording,
    lifecycle audit history, snapshot recovery, and a central repository
@@ -44,26 +50,26 @@ Current RFC-0002 implementation-start baseline:
    configuration posture, and certification blockers while proving bounded
    configured-publisher orchestration without exposing event identifiers,
    calling downstream services, or promoting a supported feature.
-7. Slice 07 partially implements internal deterministic scoring, score reason
+8. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
    exclusions plus a certified internal advisor queue API foundation without
    persisted queue state, Gateway, Workbench, or supported-feature promotion.
-8. Slice 08 partially implements internal advisor review and feedback
+9. Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, queue projection interaction, repository-backed
    persistence orchestration, and certified internal review/feedback API
    foundations with PostgreSQL-backed internal workflow proof but without
    Gateway, Workbench, PM/compliance/operator queue surfaces, mesh
    certification, or supported-feature promotion.
-9. Slice 09 partially implements internal AI governance with redacted evidence
+10. Slice 09 partially implements internal AI governance with redacted evidence
    envelopes, forbidden metadata rejection, deterministic fallback,
    unsupported-claim and forbidden-action verifier outcomes, safe audit events,
    no AI downstream authority, and a certified internal AI explanation
    evaluator API plus a not-certified AI explanation readiness diagnostic
    without `lotus-ai` runtime execution, Gateway, Workbench, or
    supported-feature promotion.
-10. Slice 10 partially implements certified internal API foundations for
+11. Slice 10 partially implements certified internal API foundations for
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,
    AI explanation evaluation, advisor queues, review actions, feedback,
@@ -86,7 +92,7 @@ Current RFC-0002 implementation-start baseline:
    Bounded read-only Gateway publication and Workbench queue/detail rendering
    exist for advisor review; full live source adapters, full Workbench proof,
    data-product certification, and supported-feature promotion remain planned.
-11. Slice 12 partially implements internal conversion governance for
+12. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
     `lotus-report`, plus certified internal API foundations and an internal
@@ -99,12 +105,12 @@ Current RFC-0002 implementation-start baseline:
     `make downstream-realization-contract-gate`. It does not prove downstream
     route existence, create downstream records, execute downstream materialization,
     or promote a supported feature.
-12. Slice 18 is partially implemented for API certification and
+13. Slice 18 is partially implemented for API certification and
     implementation-proof documentation truth. `docs/operations/api-certification.md`
     and `docs/operations/implementation-proof-readiness.md` now mirror the
     certified foundation endpoint inventory, current capabilities,
     implementation proof blockers, and unsupported boundaries.
-13. Slice 15 partially implements evidence replay, AI explanation readiness,
+14. Slice 15 partially implements evidence replay, AI explanation readiness,
     source-ingestion readiness/run-once, outbox delivery readiness/run-once, downstream
     realization readiness, and aggregate implementation-proof readiness
     supportability: operators can replay candidate evidence posture over
@@ -117,10 +123,10 @@ Current RFC-0002 implementation-start baseline:
     without calling Advise, Manage, Report, Render, or Archive, and inspect
     aggregate proof blockers without promoting live ingestion, Workbench,
     downstream, data-mesh, or supported-feature support.
-14. The first opportunity journey is high cash / idle liquidity for
+15. The first opportunity journey is high cash / idle liquidity for
     `PB_SG_GLOBAL_BAL_001`.
-15. The first review audience is advisor only.
-16. The first downstream conversion posture is report-only evidence after
+16. The first review audience is advisor only.
+17. The first downstream conversion posture is report-only evidence after
     advisor review.
-17. Business features remain unsupported until later slices implement runtime
+18. Business features remain unsupported until later slices implement runtime
     behavior, certification, and supported-feature promotion.

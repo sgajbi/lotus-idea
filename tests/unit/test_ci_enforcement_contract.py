@@ -83,6 +83,29 @@ def test_architecture_boundary_gate_protects_runtime_composition_layer() -> None
     assert "framework" in runtime_rule["description"]
 
 
+def test_architecture_boundary_gate_detects_runtime_api_leakage(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    module = _load_architecture_boundary_gate()
+    source_root = tmp_path / "src" / "app"
+    runtime_path = source_root / "runtime" / "bad_runtime.py"
+    runtime_path.parent.mkdir(parents=True)
+    runtime_path.write_text(
+        "from fastapi import Depends\nfrom app.api.idea_signals import router\n"
+    )
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "SRC_ROOT", source_root)
+
+    violations = module.validate_architecture_boundaries()
+
+    assert {(violation["layer"], violation["import"]) for violation in violations} == {
+        ("runtime", "app.api.idea_signals"),
+        ("runtime", "fastapi"),
+    }
+
+
 def _load_ci_contract_gate() -> ModuleType:
     script_path = ROOT / "scripts" / "ci_contract_gate.py"
     spec = importlib.util.spec_from_file_location("ci_contract_gate", script_path)
