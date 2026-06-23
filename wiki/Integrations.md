@@ -122,6 +122,14 @@ only the scheduled-worker blocker. Mesh certification, Gateway/Workbench proof,
 downstream realization proof, and supported-feature promotion remain required
 before source-ingestion support or product claims can be promoted.
 
+The report-owned planned intake contract for future idea evidence-pack
+materialization now exists at
+`lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
+That clears only the missing-contract blocker in `lotus-idea` readiness. Live
+`lotus-report` route proof, report evidence-pack materialization, rendered
+output, archive record creation, and client-publication authority remain
+blocked.
+
 ## Conversion Boundaries
 
 RFC-0002 Slice 12 now has an internal governed conversion foundation. It maps

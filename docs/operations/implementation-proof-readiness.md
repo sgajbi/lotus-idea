@@ -89,8 +89,10 @@ contract rows stay source-authority preserving and do not become false
 route-existence, downstream-execution, or supported-feature claims.
 The downstream realization capability now also cites the internal submission
 routes for Advise/Manage conversion intents and Report evidence-pack requests,
-but those routes are submission posture only and do not clear live downstream
-proof blockers.
+plus the report-owned planned intake contract at
+`lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
+Those refs prove contract posture only; they do not clear live downstream route,
+materialization, render, archive, or client-publication blockers.
 
 Source-ingestion live proof is captured by
 `scripts/generate_source_ingestion_live_proof.py`. A valid artifact referenced
@@ -240,56 +242,58 @@ Implementation-backed evidence:
 7. AI model-risk operations contract gate:
    `make ai-model-risk-ops-contract-gate`,
 8. downstream contract check: `make downstream-realization-contract-gate`,
-9. runtime trust telemetry snapshot check:
+9. report-owned planned intake contract:
+   `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
+10. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
-10. runtime trust telemetry snapshot endpoint:
+11. runtime trust telemetry snapshot endpoint:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
-11. generated runtime telemetry evidence:
+12. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-12. source-ingestion run-once endpoint:
+13. source-ingestion run-once endpoint:
    `POST /api/v1/source-ingestion/run-once`,
-13. source-ingestion run-once runbook:
+14. source-ingestion run-once runbook:
     `docs/operations/source-ingestion-run-once.md`,
-14. source-ingestion live-proof generator:
+15. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-15. source-ingestion block-reason diagnostics tests:
+16. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,
-16. scheduled source-ingestion worker proof generator:
+17. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-17. scheduled source-ingestion worker contract gate:
+18. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-18. source-ingestion live-proof contract gate:
+19. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-19. durable repository proof generator:
+20. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
-20. durable repository proof contract gate:
+21. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
-21. runtime trust telemetry proof generator:
+22. runtime trust telemetry proof generator:
     `scripts/generate_runtime_trust_telemetry_proof.py`,
-22. runtime trust telemetry proof contract gate:
+23. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`,
-23. Workbench read-path proof generator:
+24. Workbench read-path proof generator:
     `scripts/generate_workbench_read_path_proof.py`,
-24. Workbench read-path proof contract gate:
+25. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-25. Workbench read-path proof tests:
+26. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-26. runtime trust telemetry proof tests:
+27. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-27. outbox delivery run-once endpoint:
+28. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-28. operation event: `implementation_proof_readiness_read`,
-29. endpoint ledger:
+29. operation event: `implementation_proof_readiness_read`,
+30. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-30. runtime artifact loader tests:
+31. runtime artifact loader tests:
     `tests/unit/test_proof_artifacts.py`,
-31. unit tests:
+32. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-32. durable repository proof tests:
+33. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-33. generator tests:
+34. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-34. integration tests:
+35. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations

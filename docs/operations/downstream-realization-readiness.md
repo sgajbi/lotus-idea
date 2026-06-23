@@ -80,7 +80,7 @@ artifact that CI validates.
 | --- | --- | --- | --- |
 | `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | `planned:lotus-advise-proposal-intake` | `not_certified`; adapter foundation present |
 | `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | `planned:lotus-manage-action-intake` | `not_certified`; adapter foundation present |
-| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` | `not_certified`; adapter foundation present |
+| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` | `not_certified`; adapter foundation present; report-owned planned intake contract exists at `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json` |
 
 These contract records are planning and certification evidence only. They are
 not route-existence proof in the downstream repositories and must remain
@@ -104,8 +104,8 @@ validated through the owning repositories and platform gates:
 1. `lotus-advise` proposal/suitability intake is implemented and certified,
 2. `lotus-manage` action-register or DPM review intake is implemented and
    certified,
-3. dedicated `lotus-report` idea evidence-pack intake is implemented and
-   certified,
+3. `lotus-report` live idea evidence-pack intake route proof is implemented
+   and certified,
 4. `lotus-report`, `lotus-render`, and `lotus-archive` materialization proof
    exists for an idea evidence pack,
 5. downstream live contract proof is captured,
@@ -160,22 +160,24 @@ Implementation-backed evidence:
    `src/app/infrastructure/downstream_realization.py`,
 6. governed contract plan:
    `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-7. contract gate: `scripts/downstream_realization_contract_gate.py`,
-8. readiness API route: `src/app/api/downstream_realization_readiness.py`,
-9. operation events:
+7. report-owned planned intake contract:
+   `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
+8. contract gate: `scripts/downstream_realization_contract_gate.py`,
+9. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+10. operation events:
    `downstream_realization_readiness_read` and
    `downstream_realization_submission`,
-10. endpoint ledger:
+11. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-11. unit tests:
+12. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-12. application orchestration tests:
+13. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-13. adapter tests:
+14. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-14. gate tests:
+15. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-15. integration tests:
+16. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py` and
    `tests/integration/test_downstream_realization_api.py`.
 

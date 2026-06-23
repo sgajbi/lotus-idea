@@ -293,7 +293,11 @@ readiness, and blocker groups for `lotus-advise`, `lotus-manage`,
 name the owning repository and adapter posture from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`, and
 `make downstream-realization-contract-gate` keeps them planned and
-not-certified. They are not downstream route-existence proof. The endpoint
+not-certified. The Report handoff record cites the report-owned planned intake
+contract at
+`lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
+but that contract is not downstream route-existence or materialization proof.
+The endpoint
 does not call downstream services, create
 proposals, create manage actions, materialize reports, render output, archive
 records, authorize client-ready publication, or promote a supported feature.
