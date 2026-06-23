@@ -97,7 +97,8 @@ unsupported-feature posture, blocks any upstream `supportedFeaturePromoted=true`
 does not generate, rank, enrich, certify, or promote ideas locally. Workbench
 PR #391 now consumes these read-only Gateway paths for bounded queue/detail
 rendering. This is not full Workbench live proof, data-product certification,
-live source proof, client-ready publication, or supported-feature promotion.
+full source-ingestion certification, client-ready publication, or
+supported-feature promotion.
 
 The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires
@@ -262,9 +263,9 @@ configuration is absent or invalid.
 repository-backed foundation endpoints: process-local runtime reports `false`,
 and `LOTUS_IDEA_DATABASE_URL` runtime reports `true`. The endpoints are
 certified as API foundations but are not supported business features because
-live source adapters, Workbench proof, data-product certification, runtime
-trust telemetry, downstream realization proof, and supported-feature
-registration are not implemented yet. The bounded read-only Gateway
+source-worker certification beyond bounded live proof, Workbench proof,
+data-product certification, runtime trust telemetry, downstream realization
+proof, and supported-feature registration are not implemented yet. The bounded read-only Gateway
 publication listed above is integration foundation only, not support.
 
 ## Required Work

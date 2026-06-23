@@ -15,7 +15,10 @@ certified internal API foundations, persistence and migration support,
 operator readiness diagnostics, source-safe observability, and CI guardrails.
 
 No external business feature is supported yet. Feature promotion still requires
-live source proof, scheduled-worker deploy proof, certified runtime trust telemetry, data-mesh certification, full Gateway/Workbench live proof, downstream realization proof, supported-feature registration, and evidence on `main`.
+full source-ingestion certification beyond the bounded live-proof artifact,
+certified long-running scheduler proof, certified runtime trust telemetry,
+data-mesh certification, full Gateway/Workbench live proof, downstream
+realization proof, supported-feature registration, and evidence on `main`.
 
 Current implemented foundations include:
 
@@ -33,7 +36,8 @@ Current implemented foundations include:
   readiness diagnostics for accepted internal mutations,
 - runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
   proof, durable repository proof, runtime telemetry candidate-snapshot proof,
-  and Workbench read-path proof consumed by generated and operator API aggregate readiness evidence,
+  bounded live Core source-ingestion proof, and Workbench read-path proof
+  consumed by generated and operator API aggregate readiness evidence,
 - bounded `lotus-gateway` read-only queue/detail routes, including caller
   entitlement-scope forwarding for both published read paths,
 - bounded `lotus-workbench` read-only queue/detail rendering through Gateway,
@@ -216,32 +220,13 @@ flowchart LR
     Feature --> PR --> Main --> Publish
 ```
 
-Feature-lane checks:
-
-```powershell
-make lint
-make typecheck
-make test-unit
-```
-
-PR-grade local checks:
-
-```powershell
-make check
-make postgres-integration-gate
-make security-audit
-make docker-build
-```
-
-Documentation and governance checks:
-
-```powershell
-make documentation-contract-gate
-make implementation-truth-gate
-make quality-scorecard-gate
-make downstream-realization-contract-gate
-make supported-features-gate
-```
+Run `make lint`, `make typecheck`, and `make test-unit` for feature-lane
+feedback; run `make check`, `make postgres-integration-gate`,
+`make security-audit`, and `make docker-build` for PR-grade proof.
+Governance-focused changes should also run `make documentation-contract-gate`,
+`make implementation-truth-gate`, `make quality-scorecard-gate`,
+`make downstream-realization-contract-gate`, and
+`make supported-features-gate`.
 
 The same controls are explained in [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md),
 [quality/ci_quality_gates.md](quality/ci_quality_gates.md), and

@@ -38,9 +38,9 @@ Gateway forwards caller context, caller entitlement-scope, and correlation
 headers to `lotus-idea`, preserves `lotus-idea` ranking, source references,
 durable-storage posture, and unsupported-feature posture, and blocks any upstream
 `supportedFeaturePromoted=true` response. Gateway does not generate, rank,
-enrich, certify, or promote ideas locally. This is not Workbench proof,
-data-product certification, live source proof, client-ready publication, or a
-supported feature.
+enrich, certify, or promote ideas locally. This is not Workbench product proof,
+data-product certification, full source-ingestion certification, client-ready
+publication, or a supported feature.
 
 ## Data Product Dependencies
 

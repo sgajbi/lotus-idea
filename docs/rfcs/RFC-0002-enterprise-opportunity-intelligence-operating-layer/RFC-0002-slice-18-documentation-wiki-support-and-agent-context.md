@@ -77,10 +77,10 @@ durable operating-context enforcement:
     `docs/operations/api-certification.md`, observability and persistence
     guides, quality scorecard, RFC evidence, and wiki source now describe the
     certified internal `POST /api/v1/source-ingestion/run-once` operator action
-    while preserving the boundary that no live Core source certification,
-    scheduled worker deploy-contract proof through that endpoint, certified
-    long-running scheduled runtime, Gateway/Workbench proof, or supported-feature
-    promotion exists.
+    while preserving the boundary that bounded live Core source-ingestion proof
+    is proof evidence only, not live Core source certification, scheduled worker
+    deploy-contract proof through that endpoint, certified long-running
+    scheduled runtime, Gateway/Workbench proof, or supported-feature promotion.
 14. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs,
     RFC evidence, and wiki source now describe the live source-proof artifact

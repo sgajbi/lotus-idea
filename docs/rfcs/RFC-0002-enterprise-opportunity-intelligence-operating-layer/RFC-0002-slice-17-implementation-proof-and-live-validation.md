@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, live source-proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, and bounded Workbench read-path proof available; full live proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, and bounded Workbench read-path proof available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -22,9 +22,9 @@ Prove the complete supported opportunity journey end to end.
    readiness snapshot as repo-native automation evidence without requiring the
    HTTP service to run.
 4. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
-   as an internal operator diagnostic and preserves the no-live-proof,
-   no-Gateway, no-Workbench, no-client-ready-publication, and
-   no-supported-feature-promotion boundary.
+   as an internal operator diagnostic and preserves the no-full-live-journey,
+   no-Gateway-product-support, no-Workbench-product-support,
+   no-client-ready-publication, and no-supported-feature-promotion boundary.
 5. Unit and integration tests prove blocked posture, source-safe output,
    permission denial, timezone validation, unavailable-contract handling, and
    bounded `implementation_proof_readiness_read` operation events.
@@ -54,7 +54,7 @@ Prove the complete supported opportunity journey end to end.
     source-ingestion operator proof surface. It can exercise the configured
     manifest and Core source adapter only when durable repository posture is
     active, returns aggregate decision counts only, and remains not certified
-    until live Core source proof, certified long-running scheduling proof,
+    until bounded live Core source proof, certified long-running scheduling proof,
     data-mesh runtime telemetry, Gateway/Workbench proof, and supported-feature
     promotion evidence exist.
 11. `src/app/application/source_ingestion_live_proof.py`,
@@ -132,7 +132,8 @@ Prove the complete supported opportunity journey end to end.
     record source-safe evidence refs, and keep the API `blocked`,
     `not_certified`, and unpromoted.
 
-This is a proof-control surface, not live proof. It makes missing evidence
+This is a proof-control surface with bounded live source-ingestion evidence
+support, not full live opportunity-journey proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
 without relying on chat memory.
 
@@ -150,8 +151,8 @@ without relying on chat memory.
 
 ## Remaining Gap
 
-1. No canonical live proof run has been captured for the full opportunity
-   journey.
+1. Bounded live Core source-ingestion proof can be captured and consumed, but no
+   canonical live proof run has been captured for the full opportunity journey.
 2. Full Workbench live proof, live broker runtime, and downstream realization
    proof remain pending.
 3. Platform data-mesh certification, runtime trust telemetry, and mesh event
@@ -179,9 +180,10 @@ The source-ingestion run-once operator action narrows the source proof gap from
 durable storage and runtime configuration are present"; it does not close live
 Core source certification or certified long-running scheduled runtime proof.
 The live-proof artifact contract narrows the live Core gap from "no durable
-proof shape" to "operator-captured proof can be validated and wired into
-readiness"; it does not close certified scheduled daemon runtime, platform mesh,
-Gateway/Workbench, downstream, or supported-feature proof.
+proof shape" to "operator-captured bounded live source-ingestion proof can be
+validated and wired into readiness"; it does not close certified scheduled
+daemon runtime, platform mesh, Gateway/Workbench, downstream, or
+supported-feature proof.
 The aggregate block-reason diagnostics further narrow the operator-debugging
 gap for blocked live attempts; they are not source certification and do not
 change the supported-feature posture.
