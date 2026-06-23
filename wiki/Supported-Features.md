@@ -42,8 +42,10 @@ live proof, or supported-feature promotion. The bounded live source-ingestion
 proof artifact is implementation evidence for source-ingestion readiness only;
 it is not live source-worker certification or a supported feature. The AI
 explanation readiness diagnostic is an operator supportability check only; it
-does not invoke `lotus-ai`, prove model-risk dashboards, or promote AI
-explanation support. Source-safe AI explanation lineage persistence has
+does not invoke `lotus-ai`, certify model-risk dashboards/alerts, or promote
+AI explanation support. The enforced AI model-risk operations contract proves
+only that dashboard-control and alert-candidate requirements are source-safe
+and synchronized with implemented telemetry. Source-safe AI explanation lineage persistence has
 PostgreSQL runtime proof for accepted, replayed, and conflicting request ids,
 and the readiness diagnostic reports durable lineage backing when the active
 repository is durable. That proof is repository durability evidence, not

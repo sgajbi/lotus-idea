@@ -14,6 +14,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Idea operation events | Certified internal foundation telemetry | Foundation supportability only |
 | Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
 | Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
+| AI model-risk operations contract | Machine-readable dashboard-control and alert-candidate posture for AI explanation operations | Not dashboard, alert, `lotus-ai`, Workbench, or supported-feature certification |
 
 ## Sensitive-Content Rule
 
@@ -102,6 +103,24 @@ metric vocabulary is implemented, bounded, and synchronized with code. It does n
 dashboard, Prometheus alert, platform mesh product, Gateway/Workbench route, or external supported
 feature.
 
+## AI Model-Risk Operations Contract
+
+`contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` defines
+the current model-risk operations contract for the AI explanation foundation.
+It is validated by `make ai-model-risk-ops-contract-gate` and remains
+explicitly `not_certified`.
+
+| Contract area | Implemented evidence | Boundary |
+| --- | --- | --- |
+| Dashboard controls | AI explanation readiness posture, verifier posture, and lineage durability posture over implemented operation telemetry | Not a certified dashboard |
+| Alert candidates | Unsupported-claim block-rate and readiness-blocked candidates over implemented operation telemetry | Not certified alerting |
+| Source-of-truth paths | AI readiness source, AI API source, operation metric contract, AI governance docs, runbook, and RFC slices | No runtime `lotus-ai` execution proof |
+
+This contract narrows the model-risk operations gap from "missing contract" to
+"not-certified contract exists". It still does not prove a Grafana dashboard,
+Prometheus alert, model-risk operating process, `lotus-ai` runtime execution,
+certified AI lineage store, Workbench product surface, or supported feature.
+
 ## Operator Interpretation
 
 1. `accepted` means the internal foundation recorded a new operation in the active
@@ -120,7 +139,7 @@ feature.
 9. `blocked` means the verifier rejected unsupported AI output, evidence
    replay found stale source posture, the AI explanation readiness diagnostic
    remains blocked until `lotus-ai` runtime execution, certified AI lineage-store proof,
-   model-risk dashboard, runtime trust telemetry, and Workbench proof exist,
+   certified model-risk dashboard and alert evidence, runtime trust telemetry, and Workbench proof exist,
    the mesh-readiness diagnostic remains blocked until runtime trust telemetry
    and platform mesh certification exist, the source-ingestion readiness
    diagnostic is missing run-once worker configuration inputs, the

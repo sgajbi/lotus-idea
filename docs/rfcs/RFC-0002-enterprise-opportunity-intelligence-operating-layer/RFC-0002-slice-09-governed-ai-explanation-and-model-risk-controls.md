@@ -153,9 +153,10 @@ includes:
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
 3. certified runtime AI lineage-store evidence and model-risk operating proof
-   beyond the current PostgreSQL persistence proof,
+   beyond the current PostgreSQL persistence proof and not-certified
+   model-risk operations contract,
 4. Gateway/Workbench proof,
-5. model-risk operations dashboards, trust telemetry, and support runbooks,
+5. certified model-risk dashboards/alerts, trust telemetry, and support runbooks,
 6. supported-feature promotion after runtime proof.
 
 ## Required Work

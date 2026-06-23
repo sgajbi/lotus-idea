@@ -204,6 +204,7 @@ docker compose up --build
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
+| `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk dashboard and alert readiness contract while keeping it not certified. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
 | `make check` | Run the local PR-grade gate set. |
 | `make ci` | Run the broader CI-equivalent local suite. |
@@ -279,6 +280,10 @@ Local controls keep implementation claims grounded:
 - `make operation-metric-contract-gate` keeps the operation metric catalog
   synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
   Gateway/Workbench, or supported-feature overclaims.
+- `make ai-model-risk-ops-contract-gate` keeps the AI model-risk operations
+  contract aligned to implemented AI explanation/readiness telemetry and blocks
+  premature dashboard, alert, `lotus-ai`, Workbench, or supported-feature
+  claims.
 - `make no-sensitive-content-guard` keeps local evidence and output artifacts
   free of sensitive marker names.
 - `make durable-repository-proof-contract-gate` keeps the aggregate

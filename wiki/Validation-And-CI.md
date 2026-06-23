@@ -46,6 +46,7 @@ make monetary-float-guard
 make no-sensitive-content-guard
 make source-observability-contract-gate
 make operation-metric-contract-gate
+make ai-model-risk-ops-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make downstream-realization-contract-gate
@@ -74,6 +75,7 @@ Baseline required checks include lint, format check, typecheck, architecture bou
 repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
 OpenAPI quality, source-observability contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+AI model-risk operations contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
@@ -309,6 +311,14 @@ blocks sensitive labels and prevents the metric catalog from being rewritten as
 dashboard certification, alert certification, data-mesh certification,
 Gateway/Workbench proof, or supported-feature promotion.
 
+The AI model-risk operations contract gate validates
+`contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`
+against implemented AI explanation and readiness telemetry. It blocks missing
+dashboard controls, missing alert candidates, sensitive labels, unsupported
+operation names, missing source-of-truth paths, and premature model-risk
+dashboard, alert, `lotus-ai`, Workbench, or supported-feature certification
+claims.
+
 The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
 and wiki source for unqualified current-state claims that imply demo readiness, production support,
 certification, live source ingestion, Gateway/Workbench support, or client-ready publication while
@@ -390,9 +400,12 @@ client-ready publication, or supported-feature promotion.
 The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
 the diagnostic route only; they do not certify `lotus-ai` runtime execution,
-provider invocation, certified AI lineage-store proof, model-risk dashboard readiness,
-Gateway/Workbench support, data-product promotion, client-ready publication, or
-supported-feature promotion.
+provider invocation, certified AI lineage-store proof, certified model-risk
+dashboard or alert readiness, Gateway/Workbench support, data-product
+promotion, client-ready publication, or supported-feature promotion. The
+AI model-risk operations contract proves only that dashboard-control and
+alert-candidate requirements exist for implemented telemetry; it remains
+`not_certified`.
 
 The internal outbox-delivery-readiness and outbox-delivery-run-once endpoints
 are covered by OpenAPI, endpoint certification, unit tests, and integration
