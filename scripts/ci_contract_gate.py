@@ -333,50 +333,24 @@ def validate_makefile(makefile: str) -> list[str]:
     if "requirements/ci-tooling.lock.txt" not in security_audit:
         errors.append("Makefile security-audit target must audit CI tooling lock")
 
-    source_ingestion_worker_check = _target_block(makefile, "source-ingestion-worker-check")
-    if "scripts/source_ingestion_worker_contract_gate.py" not in source_ingestion_worker_check:
-        errors.append(
-            "Makefile source-ingestion-worker-check target must run "
-            "`scripts/source_ingestion_worker_contract_gate.py`"
-        )
-    source_ingestion_scheduled_worker_check = _target_block(
-        makefile, "source-ingestion-scheduled-worker-check"
-    )
-    if "scripts/source_ingestion_scheduled_worker_contract_gate.py" not in (
-        source_ingestion_scheduled_worker_check
-    ):
-        errors.append(
-            "Makefile source-ingestion-scheduled-worker-check target must run "
-            "`scripts/source_ingestion_scheduled_worker_contract_gate.py`"
-        )
-    source_ingestion_live_proof_check = _target_block(
-        makefile, "source-ingestion-live-proof-contract-gate"
-    )
-    if "scripts/source_ingestion_live_proof_contract_gate.py" not in (
-        source_ingestion_live_proof_check
-    ):
-        errors.append(
-            "Makefile source-ingestion-live-proof-contract-gate target must run "
-            "`scripts/source_ingestion_live_proof_contract_gate.py`"
-        )
-    durable_repository_proof_check = _target_block(
-        makefile, "durable-repository-proof-contract-gate"
-    )
-    if "scripts/durable_repository_proof_contract_gate.py" not in (durable_repository_proof_check):
-        errors.append(
-            "Makefile durable-repository-proof-contract-gate target must run "
-            "`scripts/durable_repository_proof_contract_gate.py`"
-        )
-    runtime_trust_telemetry_proof_check = _target_block(
-        makefile, "runtime-trust-telemetry-proof-contract-gate"
-    )
-    if "scripts/runtime_trust_telemetry_proof_contract_gate.py" not in (
-        runtime_trust_telemetry_proof_check
-    ):
-        errors.append(
-            "Makefile runtime-trust-telemetry-proof-contract-gate target must run "
-            "`scripts/runtime_trust_telemetry_proof_contract_gate.py`"
-        )
+    script_target_expectations = {
+        "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
+        "source-ingestion-scheduled-worker-check": (
+            "scripts/source_ingestion_scheduled_worker_contract_gate.py"
+        ),
+        "source-ingestion-live-proof-contract-gate": (
+            "scripts/source_ingestion_live_proof_contract_gate.py"
+        ),
+        "durable-repository-proof-contract-gate": (
+            "scripts/durable_repository_proof_contract_gate.py"
+        ),
+        "runtime-trust-telemetry-proof-contract-gate": (
+            "scripts/runtime_trust_telemetry_proof_contract_gate.py"
+        ),
+    }
+    for target, script in script_target_expectations.items():
+        if script not in _target_block(makefile, target):
+            errors.append(f"Makefile {target} target must run `{script}`")
     errors.extend(_validate_implementation_proof_readiness_target(makefile))
     runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
     if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
