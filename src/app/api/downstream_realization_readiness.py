@@ -271,8 +271,8 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "blockers": [
                             "advise_live_contract_proof_missing",
                             "manage_live_contract_proof_missing",
+                            "lotus_report_live_intake_route_proof_missing",
                             "report_evidence_pack_live_materialization_proof_missing",
-                            "dedicated_report_idea_evidence_intake_contract_missing",
                         ],
                         "capabilities": [
                             {
@@ -300,10 +300,18 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                 "adapterStatus": "adapter_foundation_present",
                                 "certificationReady": False,
                                 "evidenceRefs": [
-                                    "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"
+                                    "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+                                    (
+                                        "lotus-report/contracts/idea-evidence-intake/"
+                                        "lotus-report-idea-evidence-pack-intake.v1.json"
+                                    ),
                                 ],
                                 "blockers": [
-                                    "dedicated_report_idea_evidence_intake_contract_missing"
+                                    "lotus_report_live_intake_route_proof_missing",
+                                    "report_evidence_pack_live_materialization_proof_missing",
+                                    "rendered_output_creation_missing",
+                                    "archive_record_creation_missing",
+                                    "client_publication_authority_blocked",
                                 ],
                             }
                         ],

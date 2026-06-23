@@ -459,18 +459,30 @@ def _workbench_product_capability() -> ImplementationProofCapabilityReadiness:
 def _downstream_realization_capability(
     snapshot: DownstreamRealizationReadinessSnapshot,
 ) -> ImplementationProofCapabilityReadiness:
+    contract_evidence_refs = tuple(
+        dict.fromkeys(
+            evidence_ref
+            for contract in snapshot.downstream_contracts
+            for evidence_ref in contract.evidence_refs
+        )
+    )
     return _capability(
         "downstream-realization",
         "Advise, Manage, Report, Render, and Archive realization",
         readiness_status=snapshot.readiness_status,
         supportability_status=snapshot.supportability_status,
-        evidence_refs=(
-            "GET /api/v1/downstream-realization/readiness",
-            "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
-            "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
-            "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
-            "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
-            "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
+        evidence_refs=tuple(
+            dict.fromkeys(
+                (
+                    "GET /api/v1/downstream-realization/readiness",
+                    "POST /api/v1/idea-candidates/{candidateId}/conversion-intents",
+                    "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
+                    "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes",
+                    "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs",
+                    "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
+                    *contract_evidence_refs,
+                )
+            )
         ),
         blockers=snapshot.blockers,
     )
