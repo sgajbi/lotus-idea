@@ -26,6 +26,13 @@ def test_data_mesh_readiness_snapshot_reports_not_certified_posture() -> None:
         "data_mesh_not_certified",
         "producer_products_not_active",
         "certified_runtime_trust_telemetry_missing",
+        "platform_source_manifest_inclusion_missing",
+        "platform_catalog_inclusion_missing",
+        "mesh_slo_policy_certification_missing",
+        "mesh_access_policy_certification_missing",
+        "mesh_evidence_policy_certification_missing",
+        "gateway_workbench_discovery_proof_missing",
+        "supported_feature_promotion_missing",
     )
     assert snapshot.source_of_truth == {
         "producer_declaration": "contracts/domain-data-products/lotus-idea-products.v1.json",

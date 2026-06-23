@@ -11,6 +11,16 @@ PRODUCER_DECLARATION_PATH = Path("contracts/domain-data-products/lotus-idea-prod
 MESH_READINESS_PATH = Path("contracts/domain-data-products/mesh-readiness.v1.json")
 TRUST_TELEMETRY_PATH = Path("contracts/trust-telemetry/idea-candidate.telemetry.v1.json")
 
+PLATFORM_MESH_CERTIFICATION_BLOCKERS = (
+    "platform_source_manifest_inclusion_missing",
+    "platform_catalog_inclusion_missing",
+    "mesh_slo_policy_certification_missing",
+    "mesh_access_policy_certification_missing",
+    "mesh_evidence_policy_certification_missing",
+    "gateway_workbench_discovery_proof_missing",
+)
+SUPPORTED_FEATURE_PROMOTION_BLOCKER = "supported_feature_promotion_missing"
+
 
 @dataclass(frozen=True)
 class DataMeshProductReadiness:
@@ -112,4 +122,7 @@ def _readiness_blockers(
         blockers.append("producer_products_not_active")
     if telemetry_blocking.get("blocked") is True:
         blockers.append("certified_runtime_trust_telemetry_missing")
+    if certification_status != "certified":
+        blockers.extend(PLATFORM_MESH_CERTIFICATION_BLOCKERS)
+    blockers.append(SUPPORTED_FEATURE_PROMOTION_BLOCKER)
     return tuple(blockers)
