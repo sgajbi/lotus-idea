@@ -80,8 +80,9 @@ runtime trust telemetry proof contract validation,
 Workbench read-path proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
-deploy-proof artifact consumption in aggregate implementation-proof readiness,
-source-ingestion live-proof artifact contract validation,
+deploy-proof artifact consumption plus source-safe artifact-ref recording in
+aggregate implementation-proof readiness, source-ingestion live-proof artifact
+contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
@@ -148,11 +149,11 @@ Persistence adapter validation:
    and readiness blocker behavior without calling Core in CI.
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
-   implementation-proof readiness artifact, including durable repository proof,
-   runtime trust telemetry proof consumption, and the outbox-delivery proof
-   family, can be generated without starting the service and without exposing
-   candidate, portfolio, client, prompt, outbox event, raw idempotency, broker,
-   or source payload identifiers.
+   implementation-proof readiness artifact, including source-ingestion proof
+   artifact refs, durable repository proof, runtime trust telemetry proof
+   consumption, and the outbox-delivery proof family, can be generated without
+   starting the service and without exposing candidate, portfolio, client,
+   prompt, outbox event, raw idempotency, broker, or source payload identifiers.
 10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
     `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
     runtime telemetry candidate-snapshot proof contract that aggregate readiness
@@ -356,6 +357,10 @@ promotion, Gateway/Workbench support, or supported-feature promotion.
 The scheduled worker deploy-contract artifact is covered separately by
 `make source-ingestion-scheduled-worker-check`; a valid artifact clears only
 the scheduled-worker deploy-proof blocker.
+Aggregate implementation-proof readiness records validated live and scheduled
+source-ingestion proof artifact refs in source-safe capability evidence when
+those blockers clear, so CI evidence remains auditable without exposing source
+payloads.
 The internal source-ingestion-run-once endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the bounded operator action only; they do not certify live Core

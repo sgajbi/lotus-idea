@@ -79,7 +79,10 @@ Prove the complete supported opportunity journey end to end.
     worker deploy-proof artifact under ignored `output/source-ingestion/` and
     passes it explicitly into aggregate proof-readiness generation, so repo-native
     evidence no longer reports a stale scheduled-worker deploy-proof blocker
-    after the deploy contract is validated.
+    after the deploy contract is validated. Aggregate implementation-readiness
+    evidence records validated live and scheduled source-ingestion proof
+    artifact refs in the `source-ingestion` capability when those blockers are
+    cleared.
 14. `src/app/application/durable_repository_proof.py`,
     `scripts/generate_durable_repository_proof.py`, and
     `make durable-repository-proof-contract-gate` now define and enforce a
@@ -114,12 +117,15 @@ Prove the complete supported opportunity journey end to end.
     panel, browser accessibility, canonical demo runtime, data-product, and
     supported-feature blockers.
 18. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
-    the same source-safe artifact-consumption path as the aggregate generator
-    for durable repository, runtime trust telemetry, and Workbench read-path
-    proofs. `tests/unit/test_proof_artifacts.py` and
+    the same source-safe artifact-ref path as the aggregate generator for
+    source-ingestion live proof, source-ingestion scheduled-worker proof,
+    durable repository, runtime trust telemetry, and Workbench read-path
+    proofs. `tests/unit/test_proof_artifacts.py`,
+    `tests/unit/test_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove that
-    configured valid artifacts clear only their intended aggregate blockers and
-    keep the API `blocked`, `not_certified`, and unpromoted.
+    configured valid artifacts clear only their intended aggregate blockers,
+    record source-safe evidence refs, and keep the API `blocked`,
+    `not_certified`, and unpromoted.
 
 This is a proof-control surface, not live proof. It makes missing evidence
 durable and machine-readable so future implementation slices can clear blockers
@@ -196,8 +202,10 @@ full Workbench product proof, browser proof, canonical demo proof, mutation
 affordances, or supported-feature proof.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
-the same configured proof evidence"; it does not certify storage, mesh,
-Workbench, downstream, or supported-feature readiness.
+the same configured proof evidence." It now includes source-ingestion live and
+scheduled proof artifact refs as auditable evidence when those blockers clear;
+it does not certify storage, live scheduler operations, mesh, Workbench,
+downstream, or supported-feature readiness.
 
 ## Acceptance Gate
 
