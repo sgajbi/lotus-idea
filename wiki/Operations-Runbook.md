@@ -112,6 +112,10 @@ Aggregate implementation-proof readiness records the validated live and
 scheduled source-ingestion proof artifact refs in the `source-ingestion`
 capability evidence, so reviewers can trace blocker clearance without exposing
 Core payloads, portfolio identity, or worker source records.
+It also records the AI model-risk operations contract and
+`make ai-model-risk-ops-contract-gate` in the `ai-explanation` capability
+evidence, so reviewers can see dashboard-control and alert-candidate posture
+without treating it as certified model-risk dashboard or alert runtime proof.
 The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, and

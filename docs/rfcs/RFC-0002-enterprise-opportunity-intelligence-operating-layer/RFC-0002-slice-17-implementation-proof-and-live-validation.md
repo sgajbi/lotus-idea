@@ -131,6 +131,13 @@ Prove the complete supported opportunity journey end to end.
     configured valid artifacts clear only their intended aggregate blockers,
     record source-safe evidence refs, and keep the API `blocked`,
     `not_certified`, and unpromoted.
+19. The aggregate `ai-explanation` capability evidence now cites
+    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` and
+    `make ai-model-risk-ops-contract-gate`. This makes the not-certified
+    dashboard-control and alert-candidate posture visible in proof-readiness
+    evidence without clearing the certified dashboard, alert, `lotus-ai`
+    runtime, lineage-store, runtime trust telemetry, Workbench, or
+    supported-feature blockers.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -216,6 +223,11 @@ the same configured proof evidence." It now includes source-ingestion live and
 scheduled proof artifact refs as auditable evidence when those blockers clear;
 it does not certify storage, live scheduler operations, mesh, Workbench,
 downstream, or supported-feature readiness.
+The AI model-risk operations contract refs narrow the model-risk proof index
+gap from "contract exists outside aggregate readiness" to "contract and gate are
+visible in the `ai-explanation` capability evidence." They do not certify a
+dashboard, alert pack, `lotus-ai` runtime workflow, AI lineage store,
+Workbench surface, or supported feature.
 
 ## Acceptance Gate
 
