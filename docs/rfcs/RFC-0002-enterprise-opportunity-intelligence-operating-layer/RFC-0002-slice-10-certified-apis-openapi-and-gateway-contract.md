@@ -51,8 +51,9 @@ conversion intents/outcomes, report evidence-pack summaries, and audit summary
 posture, and does not expose source-system routes, raw source content hashes,
 downstream authority, Workbench proof, data-product certification, or
 supported-feature promotion. The bounded read-only Gateway candidate detail
-publication preserves this source-safe projection; `durableStorageBacked`
-follows the active repository provider.
+publication preserves this source-safe projection and forwards caller
+entitlement-scope headers; `lotus-idea` applies those headers fail-closed before
+returning detail. `durableStorageBacked` follows the active repository provider.
 
 The candidate evidence replay endpoint exposes internal operator replay posture
 over persisted evidence hashes. It requires `idea.candidate.evidence.replay`
@@ -90,9 +91,9 @@ scope-aware projection, and keeps `supportedFeaturePromoted=false`.
 `lotus-gateway` now publishes the first bounded read-only idea routes on main:
 `GET /api/v1/ideas/review-queues/advisor` and
 `GET /api/v1/ideas/candidates/{candidate_id}`. Gateway forwards caller
-context and correlation headers to `lotus-idea`, preserves `lotus-idea`
-ranking, source references, durable-storage posture, and unsupported-feature
-posture, blocks any upstream `supportedFeaturePromoted=true` response, and
+context, caller entitlement-scope, and correlation headers to `lotus-idea`,
+preserves `lotus-idea` ranking, source references, durable-storage posture, and
+unsupported-feature posture, blocks any upstream `supportedFeaturePromoted=true` response, and
 does not generate, rank, enrich, certify, or promote ideas locally. This is
 not Workbench proof, data-product certification, live source proof, client-ready
 publication, or supported-feature promotion.
@@ -135,10 +136,10 @@ Implementation files:
 11. `src/app/application/candidate_lifecycle.py`: application command and
     idempotency payload construction for lifecycle transitions.
 12. `src/app/api/candidate_detail.py`: source-safe candidate detail DTOs,
-    authorization mapping, redacted source projection, product-safe errors,
-    OpenAPI examples, and route registration.
+    authorization and caller-scope mapping, redacted source projection,
+    product-safe errors, OpenAPI examples, and route registration.
 13. `src/app/application/candidate_detail.py`: persisted candidate snapshot
-    lookup through the governed repository port.
+    lookup and access-scope matching through the governed repository port.
 14. `src/app/api/candidate_evidence_replay.py`: evidence replay DTOs,
     authorization mapping, product-safe errors, OpenAPI examples, operation
     events, and route registration.
@@ -208,8 +209,10 @@ Problem Details for permission or validation failures.
 
 The candidate detail endpoint is permissioned by
 `idea.candidate.detail.read` capability or advisor/operator role. It returns
-source-safe details for an existing candidate and product-safe Problem Details
-for permission, validation, or missing-candidate failures.
+source-safe details for an existing candidate only when any provided platform
+caller-context entitlement scope matches the persisted candidate scope, and
+returns product-safe Problem Details for permission, validation, out-of-scope,
+or missing-candidate failures.
 
 The candidate evidence replay endpoint is permissioned by
 `idea.candidate.evidence.replay` plus operator role. It requires non-empty
@@ -373,7 +376,8 @@ PR merge-gate evidence remains required before merge.
 3. Gateway contract tests prove source-owned `lotus-idea` truth is preserved
    before each Gateway route is claimed implemented; the first bounded
    read-only advisor queue and candidate detail routes satisfy this foundation
-   rule but do not complete Workbench or supported-feature promotion.
+   rule, including caller entitlement-scope forwarding, but do not complete
+   Workbench or supported-feature promotion.
 4. No alias or stale endpoint remains without explicit time-boxed justification.
 5. Supported-feature promotion remains blocked until live runtime,
    Gateway/Workbench, data-product, docs/wiki, and certification evidence all

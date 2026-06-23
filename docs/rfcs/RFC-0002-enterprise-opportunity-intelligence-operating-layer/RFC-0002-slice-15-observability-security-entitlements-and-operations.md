@@ -175,6 +175,9 @@ The advisor queue readiness diagnostic is explicitly `not_certified` until
 durable queue posture, Workbench proof, data-product certification, and runtime
 trust telemetry exist. Platform caller-context scope forwarding and direct
 queue enforcement now exist for the first bounded Gateway advisor-queue route.
+The candidate detail route also applies platform caller-context scope headers
+fail-closed against the persisted candidate scope, and the bounded Gateway
+candidate detail route forwards those headers without interpreting them.
 The AI explanation readiness diagnostic is explicitly `not_certified` until
 `lotus-ai` runtime workflow execution, certified AI lineage-store proof,
 workflow-pack runtime certification, model-risk operations dashboards, runtime
@@ -206,8 +209,10 @@ discovery, and supported-feature evidence exist.
 
 The first bounded read-only Gateway publication routes now have caller-context
 forwarding and unsupported-feature blocking proof in `lotus-gateway`. The
-advisor queue route also forwards platform entitlement-scope headers and
-`lotus-idea` enforces them fail-closed against queue query filters. `make
+advisor queue and candidate detail routes also forward platform
+entitlement-scope headers. `lotus-idea` enforces them fail-closed against queue
+query filters and candidate-detail access scope before returning candidate
+detail. `make
 endpoint-certification-gate` requires the `lotus-idea` endpoint ledger to name
 the exact Gateway route without implying Workbench proof, data-product
 certification, client-ready publication, or supported-feature promotion.
@@ -220,7 +225,8 @@ certification, client-ready publication, or supported-feature promotion.
    deployable worker runtime exist.
 3. Add product-scope entitlement proof for Workbench and any broader Gateway
    route set after those surfaces are implemented; the first read-only Gateway
-   advisor queue route remains bounded caller-scope publication proof only.
+   advisor queue and candidate detail routes remain bounded caller-scope
+   publication proof only.
 4. Complete dependency, vulnerability, secret, sensitive-content, metric-label,
    and container reviews for the full supported service surface before any
    supported-feature promotion.

@@ -37,7 +37,8 @@ Current implemented foundations include:
 - runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
   proof, durable repository proof, and runtime telemetry candidate-snapshot
   proof consumed by aggregate readiness evidence,
-- bounded `lotus-gateway` read-only queue/detail routes, including queue scope forwarding.
+- bounded `lotus-gateway` read-only queue/detail routes, including caller
+  entitlement-scope forwarding for both published read paths.
 
 Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
 

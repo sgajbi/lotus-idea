@@ -34,9 +34,9 @@ queue and candidate detail foundations:
 1. `GET /api/v1/ideas/review-queues/advisor`,
 2. `GET /api/v1/ideas/candidates/{candidate_id}`.
 
-Gateway forwards caller context and correlation headers to `lotus-idea`,
-preserves `lotus-idea` ranking, source references, durable-storage posture, and
-unsupported-feature posture, and blocks any upstream
+Gateway forwards caller context, caller entitlement-scope, and correlation
+headers to `lotus-idea`, preserves `lotus-idea` ranking, source references,
+durable-storage posture, and unsupported-feature posture, and blocks any upstream
 `supportedFeaturePromoted=true` response. Gateway does not generate, rank,
 enrich, certify, or promote ideas locally. This is not Workbench proof,
 data-product certification, live source proof, client-ready publication, or a

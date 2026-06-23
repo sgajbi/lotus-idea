@@ -330,7 +330,10 @@ truth; and golden unit/integration coverage for expected ordering and edge
 cases. The advisor queue now parses platform caller-context scope headers,
 applies those entitlements automatically, rejects broader query scopes
 fail-closed, and has bounded read-only Gateway forwarding proof for the queue
-route. This is not yet a supported queue product: database-backed queue
+route. Candidate detail now applies the same caller entitlement-scope headers
+fail-closed before returning persisted candidate detail, and Gateway forwards
+those headers on the published detail route. This is not yet a supported queue
+or candidate-detail product: database-backed queue
 projection proof exists only inside the opt-in PostgreSQL runtime proof.
 Workbench proof, data-product certification, trust telemetry, and
 supported-feature promotion remain planned.
@@ -438,7 +441,8 @@ idempotency/audit repository foundation with accepted, replayed, duplicate, or
 conflict posture. `GET /api/v1/idea-candidates/{candidateId}` exposes a
 source-safe candidate detail projection over persisted snapshots, redacted
 evidence, lifecycle history, review/feedback/conversion/report summaries, and
-audit summary posture without exposing source routes, raw evidence hashes, or
+audit summary posture, applies caller entitlement-scope headers fail-closed
+when present, and avoids exposing source routes, raw evidence hashes, or
 downstream authority. `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
 exposes internal operator replay posture over current source refs and persisted
 evidence hashes with matched, stale-source, hash-mismatch, expired, and
@@ -484,7 +488,7 @@ feedback, conversion intent/outcome, and report evidence-pack request path.
 `lotus-gateway` main now publishes read-only `GET
 /api/v1/ideas/review-queues/advisor` and `GET
 /api/v1/ideas/candidates/{candidate_id}` routes that forward caller
-context/correlation to `lotus-idea`, preserve `lotus-idea` ranking and source
+context, caller entitlement scope, and correlation to `lotus-idea`, preserve `lotus-idea` ranking and source
 refs, and block upstream `supportedFeaturePromoted=true`. This is not yet a
 supported product capability: there are no live source adapters, Workbench
 surfaces, supported database-backed API state beyond the current opt-in
