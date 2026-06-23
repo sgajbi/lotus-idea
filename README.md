@@ -25,7 +25,7 @@ Current implemented foundations include:
 - high-cash evaluation and Core-backed source-ingestion orchestration, including
   run-once and scheduled workers, readiness, and aggregate-only operator APIs,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
-- advisor queue projection and queue readiness diagnostics,
+- advisor queue projection with fail-closed entitlement-scope enforcement and queue readiness,
 - AI explanation governance diagnostics and source-safe lineage persistence with
   PostgreSQL runtime proof, without provider execution,
 - conversion/report foundations plus governed downstream contract-readiness,
@@ -37,8 +37,7 @@ Current implemented foundations include:
 - runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
   proof, durable repository proof, and runtime telemetry candidate-snapshot
   proof consumed by aggregate readiness evidence,
-- bounded `lotus-gateway` read-only routes for advisor queue and candidate
-  detail.
+- bounded `lotus-gateway` read-only queue/detail routes, including queue scope forwarding.
 
 Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
 

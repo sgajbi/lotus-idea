@@ -221,10 +221,11 @@ client-communication authority.
 `GET /api/v1/review-queues/advisor` is the certified internal advisor queue API
 foundation. It projects persisted candidate snapshots through the deterministic
 Slice 07 queue policy, applies optional tenant/book/portfolio/client scope
-filters, and returns ranked items plus exclusions without a durable queue
-store, Workbench surface, or supported-feature promotion. `lotus-gateway`
-publishes this as a bounded read-only route at
-`GET /api/v1/ideas/review-queues/advisor` without generating or ranking ideas.
+filters, applies platform caller-context entitlement scope when provided, and
+returns ranked items plus exclusions without a durable queue store, Workbench
+surface, or supported-feature promotion. `lotus-gateway` publishes this as a
+bounded read-only route at `GET /api/v1/ideas/review-queues/advisor`, forwards
+the caller entitlement-scope headers, and does not generate or rank ideas.
 
 `GET /api/v1/review-queues/advisor/readiness` is the certified internal
 operator diagnostic for queue supportability. It reuses the same Slice 07

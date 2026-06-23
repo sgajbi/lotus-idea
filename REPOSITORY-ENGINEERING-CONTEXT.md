@@ -327,11 +327,13 @@ duplicate exclusion rules; repository-snapshot application orchestration in
 foundation in `src/app/api/review_queues.py`; optional
 tenant/book/portfolio/client access-scope filtering over persisted candidate
 truth; and golden unit/integration coverage for expected ordering and edge
-cases. This is not yet a supported queue product: database-backed queue
-projection proof exists only inside the opt-in PostgreSQL runtime proof, and
-bounded read-only Gateway publication now exists for the advisor queue.
-Workbench proof, platform caller-context entitlement proof, data-product
-certification, trust telemetry, and supported-feature promotion remain planned.
+cases. The advisor queue now parses platform caller-context scope headers,
+applies those entitlements automatically, rejects broader query scopes
+fail-closed, and has bounded read-only Gateway forwarding proof for the queue
+route. This is not yet a supported queue product: database-backed queue
+projection proof exists only inside the opt-in PostgreSQL runtime proof.
+Workbench proof, data-product certification, trust telemetry, and
+supported-feature promotion remain planned.
 
 RFC-0002 Slice 08 is partially implemented as an internal advisor review and
 feedback governance plus certified API foundation in
