@@ -19,6 +19,7 @@ from app.domain import (
 )
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
+    CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
     CoreSourceEntitlementDenied,
@@ -69,6 +70,7 @@ class EvaluateAndPersistHighCashFromCoreCommand:
 class HighCashSignalPersistenceResult:
     evaluation: SignalEvaluationResult
     persistence: CandidatePersistenceResult | None
+    source_diagnostic_codes: tuple[str, ...] = ()
 
 
 DEFAULT_HIGH_CASH_POLICY = HighCashSignalPolicy(
@@ -138,21 +140,7 @@ def evaluate_high_cash_signal_from_core(
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
         )
 
-    return evaluate_high_cash_signal_command(
-        EvaluateHighCashSignalCommand(
-            as_of_date=command.as_of_date,
-            source_reported_cash_weight=evidence.source_reported_cash_weight,
-            portfolio_state_ref=evidence.portfolio_state_ref,
-            holdings_ref=evidence.holdings_ref,
-            cash_movement_ref=evidence.cash_movement_ref,
-            cashflow_projection_ref=evidence.cashflow_projection_ref,
-            evaluated_at_utc=command.evaluated_at_utc,
-            entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=_portfolio_only_scope(command.portfolio_id),
-            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
-        ),
-        policy=policy,
-    )
+    return _evaluate_high_cash_core_evidence(command, evidence, policy=policy)
 
 
 def evaluate_and_persist_high_cash_signal(
@@ -186,13 +174,58 @@ def evaluate_and_persist_high_cash_signal_from_core(
 ) -> HighCashSignalPersistenceResult:
     _require_text(command.idempotency_key, "idempotency_key")
     _require_text(command.actor_subject, "actor_subject")
-    evaluation = evaluate_high_cash_signal_from_core(
-        command.evaluation,
-        core_source=core_source,
-        policy=policy,
-    )
+    try:
+        evidence = core_source.fetch_high_cash_evidence(
+            CoreHighCashEvidenceRequest(
+                portfolio_id=command.evaluation.portfolio_id,
+                as_of_date=command.evaluation.as_of_date,
+                evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                correlation_id=command.evaluation.correlation_id,
+                trace_id=command.evaluation.trace_id,
+            )
+        )
+    except CoreSourceEntitlementDenied:
+        evaluation = evaluate_high_cash_signal_command(
+            EvaluateHighCashSignalCommand(
+                as_of_date=command.evaluation.as_of_date,
+                source_reported_cash_weight=None,
+                portfolio_state_ref=None,
+                holdings_ref=None,
+                cash_movement_ref=None,
+                cashflow_projection_ref=None,
+                evaluated_at_utc=command.evaluation.evaluated_at_utc,
+                entitlement_allowed=False,
+                access_scope=_portfolio_only_scope(command.evaluation.portfolio_id),
+                duplicate_of_candidate_id=command.evaluation.duplicate_of_candidate_id,
+            ),
+            policy=policy,
+        )
+        return HighCashSignalPersistenceResult(
+            evaluation=evaluation,
+            persistence=None,
+            source_diagnostic_codes=("core_source_entitlement_denied",),
+        )
+    except CoreSourceUnavailable as exc:
+        evaluation = SignalEvaluationResult(
+            outcome=SignalEvaluationOutcome.BLOCKED,
+            family=OpportunityFamily.HIGH_CASH,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,),
+        )
+        return HighCashSignalPersistenceResult(
+            evaluation=evaluation,
+            persistence=None,
+            source_diagnostic_codes=(exc.code,),
+        )
+
+    evaluation = _evaluate_high_cash_core_evidence(command.evaluation, evidence, policy=policy)
+    source_diagnostic_codes = _core_source_diagnostic_codes(evidence)
     if evaluation.candidate is None:
-        return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=None)
+        return HighCashSignalPersistenceResult(
+            evaluation=evaluation,
+            persistence=None,
+            source_diagnostic_codes=source_diagnostic_codes,
+        )
 
     persistence = repository.persist_candidate(
         evaluation.candidate,
@@ -201,7 +234,41 @@ def evaluate_and_persist_high_cash_signal_from_core(
         actor_subject=command.actor_subject,
         occurred_at_utc=command.evaluation.evaluated_at_utc,
     )
-    return HighCashSignalPersistenceResult(evaluation=evaluation, persistence=persistence)
+    return HighCashSignalPersistenceResult(
+        evaluation=evaluation,
+        persistence=persistence,
+        source_diagnostic_codes=source_diagnostic_codes,
+    )
+
+
+def _evaluate_high_cash_core_evidence(
+    command: EvaluateHighCashFromCoreCommand,
+    evidence: CoreHighCashEvidence,
+    *,
+    policy: HighCashSignalPolicy,
+) -> SignalEvaluationResult:
+    return evaluate_high_cash_signal_command(
+        EvaluateHighCashSignalCommand(
+            as_of_date=command.as_of_date,
+            source_reported_cash_weight=evidence.source_reported_cash_weight,
+            portfolio_state_ref=evidence.portfolio_state_ref,
+            holdings_ref=evidence.holdings_ref,
+            cash_movement_ref=evidence.cash_movement_ref,
+            cashflow_projection_ref=evidence.cashflow_projection_ref,
+            evaluated_at_utc=command.evaluated_at_utc,
+            entitlement_allowed=evidence.entitlement_allowed,
+            access_scope=_portfolio_only_scope(command.portfolio_id),
+            duplicate_of_candidate_id=command.duplicate_of_candidate_id,
+        ),
+        policy=policy,
+    )
+
+
+def _core_source_diagnostic_codes(evidence: CoreHighCashEvidence) -> tuple[str, ...]:
+    diagnostic = evidence.cash_weight_diagnostic
+    if isinstance(diagnostic, str) and diagnostic.strip():
+        return (diagnostic.strip(),)
+    return ()
 
 
 def _idempotency_payload_for_core_high_cash(

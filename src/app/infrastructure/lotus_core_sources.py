@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -20,6 +21,12 @@ PORTFOLIO_STATE_PRODUCT_ID = "lotus-core:PortfolioStateSnapshot:v1"
 HOLDINGS_PRODUCT_ID = "lotus-core:HoldingsAsOf:v1"
 CASH_MOVEMENT_PRODUCT_ID = "lotus-core:PortfolioCashMovementSummary:v1"
 CASHFLOW_PROJECTION_PRODUCT_ID = "lotus-core:PortfolioCashflowProjection:v1"
+
+
+@dataclass(frozen=True)
+class _CashWeightEvidence:
+    value: Decimal | None
+    diagnostic: str
 
 
 class LotusCoreHighCashSourceAdapter:
@@ -69,8 +76,9 @@ class LotusCoreHighCashSourceAdapter:
                 raise CoreSourceEntitlementDenied from exc
             raise CoreSourceUnavailable(code=exc.code) from exc
 
+        cash_weight_evidence = _source_reported_cash_weight(holdings_payload)
         return CoreHighCashEvidence(
-            source_reported_cash_weight=_source_reported_cash_weight(holdings_payload),
+            source_reported_cash_weight=cash_weight_evidence.value,
             portfolio_state_ref=_source_ref(
                 portfolio_state_payload,
                 product_id=PORTFOLIO_STATE_PRODUCT_ID,
@@ -91,14 +99,18 @@ class LotusCoreHighCashSourceAdapter:
                 product_id=CASHFLOW_PROJECTION_PRODUCT_ID,
                 route="/portfolios/{portfolio_id}/cashflow-projection",
             ),
+            cash_weight_diagnostic=cash_weight_evidence.diagnostic,
         )
 
 
-def _source_reported_cash_weight(payload: dict[str, Any]) -> Decimal | None:
+def _source_reported_cash_weight(payload: dict[str, Any]) -> _CashWeightEvidence:
     for cash_weight_payload in _cash_weight_payloads(payload):
         supportability = _cash_weight_supportability(cash_weight_payload)
         if supportability is not None and supportability != "SUPPORTED":
-            return None
+            return _CashWeightEvidence(
+                value=None,
+                diagnostic=f"core_cash_weight_{supportability.lower()}",
+            )
         for key in (
             "source_reported_cash_weight",
             "sourceReportedCashWeight",
@@ -109,10 +121,17 @@ def _source_reported_cash_weight(payload: dict[str, Any]) -> Decimal | None:
                 continue
             try:
                 value = cash_weight_payload[key]
-                return Decimal(str(value)) if value is not None else None
+                return _CashWeightEvidence(
+                    value=Decimal(str(value)) if value is not None else None,
+                    diagnostic=(
+                        "core_cash_weight_supported"
+                        if value is not None
+                        else "core_cash_weight_missing"
+                    ),
+                )
             except InvalidOperation as exc:
                 raise CoreSourceUnavailable(code="core_cash_weight_malformed") from exc
-    return None
+    return _CashWeightEvidence(value=None, diagnostic="core_cash_weight_missing")
 
 
 def _cash_weight_payloads(payload: dict[str, Any]) -> tuple[dict[str, Any], ...]:

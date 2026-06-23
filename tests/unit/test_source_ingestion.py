@@ -72,6 +72,7 @@ def core_evidence(
     *,
     cash_weight: Decimal | None = Decimal("0.18"),
     holdings_hash: str = "sha256:lotus-core:HoldingsAsOf:v1",
+    cash_weight_diagnostic: str | None = "core_cash_weight_supported",
 ) -> CoreHighCashEvidence:
     return CoreHighCashEvidence(
         source_reported_cash_weight=cash_weight,
@@ -79,6 +80,7 @@ def core_evidence(
         holdings_ref=source_ref("lotus-core:HoldingsAsOf:v1", content_hash=holdings_hash),
         cash_movement_ref=source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
         cashflow_projection_ref=source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        cash_weight_diagnostic=cash_weight_diagnostic,
     )
 
 
@@ -259,6 +261,7 @@ def test_blocks_source_ingestion_when_core_is_unavailable_without_persisting() -
         UnsupportedEvidenceReason.SOURCE_UNAVAILABLE,
     )
     assert result.signal_result.persistence is None
+    assert result.signal_result.source_diagnostic_codes == ("upstream_timeout",)
     assert len(repository.snapshot().candidate_records) == 0
 
 
@@ -275,6 +278,33 @@ def test_blocks_source_ingestion_when_core_denies_entitlement_without_persisting
     assert result.decision is HighCashSourceIngestionDecision.BLOCKED
     assert result.signal_result.evaluation.unsupported_reasons == (
         UnsupportedEvidenceReason.ENTITLEMENT_DENIED,
+    )
+    assert result.signal_result.persistence is None
+    assert result.signal_result.source_diagnostic_codes == ("core_source_entitlement_denied",)
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_blocks_source_ingestion_with_core_cash_weight_diagnostic_without_persisting() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(
+        evidence=core_evidence(
+            cash_weight=None,
+            cash_weight_diagnostic="core_cash_weight_blocked_missing_denominator",
+        )
+    )
+
+    result = ingest_high_cash_signal_from_core(
+        command(),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.decision is HighCashSourceIngestionDecision.BLOCKED
+    assert result.signal_result.evaluation.unsupported_reasons == (
+        UnsupportedEvidenceReason.MISSING_SOURCE,
+    )
+    assert result.signal_result.source_diagnostic_codes == (
+        "core_cash_weight_blocked_missing_denominator",
     )
     assert result.signal_result.persistence is None
     assert len(repository.snapshot().candidate_records) == 0

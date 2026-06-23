@@ -53,6 +53,7 @@ REQUIRED_TOP_LEVEL_KEYS = {
     "proofClosed",
     "totalCount",
     "decisionCounts",
+    "blockReasonCounts",
     "proofBlockers",
     "remainingCertificationBlockers",
     "evidenceRefs",
@@ -84,6 +85,7 @@ def validate_source_ingestion_live_proof_contract() -> list[str]:
                 "blocked": 0,
                 "suppressed": 0,
             },
+            "blockReasonCounts": {},
         },
     )
 
@@ -121,6 +123,7 @@ def validate_source_ingestion_live_proof_contract() -> list[str]:
             "durableStorageBacked": True,
             "totalCount": 0,
             "decisionCounts": {"accepted": 0, "replayed": 0},
+            "blockReasonCounts": {"core_source_unavailable": 1},
             "errorCode": "core_source_unavailable",
         },
     )
