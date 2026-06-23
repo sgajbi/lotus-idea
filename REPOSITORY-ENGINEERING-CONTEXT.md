@@ -436,9 +436,11 @@ plus Advise, Manage, Report, Render, and Archive blockers, source-safe
 downstream application-orchestration and adapter-foundation presence, and planned downstream
 contract-readiness records for Advise, Manage, and Report handoff seams from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
-`make downstream-realization-contract-gate` blocks premature route-existence,
-downstream-execution, supported-feature, and source-authority drift in that
-contract plan. The endpoint emits bounded
+The Report handoff seam now cites the report-owned planned intake contract at
+`lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
+which clears only the prior missing-contract blocker. `make downstream-realization-contract-gate`
+blocks premature route-existence, downstream-execution, supported-feature, and
+source-authority drift in that contract plan. The endpoint emits bounded
 `downstream_realization_readiness_read` operation events and does not call
 downstream services, prove downstream route existence, or promote downstream
 realization.
@@ -582,8 +584,9 @@ summary projection, Report/Render/Archive source-authority refs, retention
 policy references, idempotent repository persistence, safe audit events, and a
 certified internal API for report evidence-pack requests. This is not yet a
 supported report evidence product: PostgreSQL-backed internal request recording
-proof exists only inside the opt-in runtime proof; there is no `lotus-report`
-certified live `lotus-report` package intake proof, no `lotus-render` deterministic output, no
+proof exists only inside the opt-in runtime proof; there is no certified live
+`lotus-report` idea evidence-pack intake route or materialization proof, no
+`lotus-render` deterministic output, no
 `lotus-archive` metadata or access-audit record, no client-ready publication
 authority, no Gateway/Workbench proof, no data-product certification, no runtime
 trust telemetry, and no supported-feature promotion.

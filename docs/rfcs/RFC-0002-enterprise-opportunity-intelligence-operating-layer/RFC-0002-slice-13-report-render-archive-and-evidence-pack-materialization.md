@@ -45,12 +45,18 @@ Implemented in the first Slice 13 foundation:
    `lotus-archive`. It also exposes the planned
    `lotus-idea-to-lotus-report-evidence-pack-intake:v1` contract readiness
    record with `lotus-report` ownership, planned route posture, adapter status,
-   and the dedicated report idea evidence intake blocker.
+   the report-owned planned intake contract evidence ref, and the remaining
+   live intake route/materialization blockers.
 8. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
    is the governed source for that planned report handoff row, and
    `make downstream-realization-contract-gate` keeps it planned,
    source-authority preserving, blocker-backed, and free of route-existence,
    downstream-execution, or supported-feature claims.
+   The report-owned planned intake contract now exists at
+   `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
+   That external contract removes the old missing-contract blocker only; it
+   does not prove a live `lotus-report` route, materialization, render, archive,
+   client-publication authority, or supported feature.
 9. `src/app/ports/downstream_realization.py` and
    `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
    adapter foundation for Report evidence-pack request handoff envelopes. The
@@ -119,10 +125,10 @@ Partially satisfied:
 
 Not yet satisfied:
 
-1. No certified live `lotus-report` package intake contract or acceptance proof
-   exists.
-2. No dedicated `lotus-report` idea evidence-pack intake route or acceptance
-   proof exists.
+1. No certified live `lotus-report` idea evidence-pack intake route or
+   acceptance proof exists.
+2. No `lotus-report` report evidence-pack materialization proof exists for
+   idea evidence.
 3. No `lotus-render` deterministic output projection exists.
 4. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
    record exists.
