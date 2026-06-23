@@ -148,6 +148,38 @@ python scripts/generate_source_ingestion_live_proof.py `
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
 ```
 
+### Repeatable Durable Proof Runs
+
+Live proof uses the same idempotency semantics as the run-once worker. When a
+durable PostgreSQL repository already contains an accepted proof for a prior
+source fingerprint, rerunning the checked-in manifest with the generated
+default key can correctly return `conflict` after the upstream source identity
+changes. Do not reset the database to hide that evidence.
+
+For a new release-proof capture against an existing durable repository, create
+an ignored proof-run manifest under `output/source-ingestion/` with a
+source-safe explicit `idempotencyKey`, then pass that manifest to
+`scripts/generate_source_ingestion_live_proof.py`. Keep the generated manifest
+out of Git; the committed example manifest remains the canonical source-safe
+default.
+
+```powershell
+$proofId = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
+$manifestPath = "output/source-ingestion/live-proof-manifest-$proofId.json"
+
+# Copy docs/examples/source-ingestion/high-cash-worker-manifest.example.json
+# into $manifestPath and set:
+# workItems[0].idempotencyKey =
+#   "signal-ingestion:high-cash:lotus-core:proof-$proofId"
+
+python scripts/generate_source_ingestion_live_proof.py `
+  --manifest $manifestPath `
+  --core-query-base-url http://localhost:8201 `
+  --core-query-control-plane-base-url http://localhost:8202 `
+  --generated-at-utc 2026-06-23T11:10:00Z `
+  --output output/source-ingestion/live-proof.json
+```
+
 Scheduled-worker deploy proof:
 
 ```powershell

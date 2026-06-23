@@ -110,6 +110,15 @@ query-control-plane snapshots can be served by different Core processes.
 `--core-base-url` remains a compatibility fallback for older single-base
 stacks.
 
+When rerunning live proof against an existing durable PostgreSQL repository,
+preserve idempotency history. If the same generated default idempotency key was
+accepted before an upstream Core source fingerprint changed, a later run can
+correctly return `conflict`. Capture a fresh release-proof run with an ignored
+manifest under `output/source-ingestion/` and a source-safe explicit
+`idempotencyKey`; do not reset durable state to force an accepted outcome. The
+checked-in example manifest remains the canonical source-safe default, while
+ignored proof-run manifests are local evidence inputs only.
+
 Scheduled source-ingestion worker deploy proof is captured by
 `scripts/generate_scheduled_source_ingestion_worker_proof.py`. A valid artifact
 referenced through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears

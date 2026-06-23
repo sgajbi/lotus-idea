@@ -96,6 +96,12 @@ live-Core blocker in readiness.
 Blocked proof artifacts can still be useful operator evidence because
 `blockReasonCounts` identifies the bounded source blocker class without
 exposing portfolio, candidate, or source payload data.
+When rerunning live proof against an existing durable PostgreSQL repository,
+preserve idempotency history. If the same generated default idempotency key was
+accepted before an upstream Core source fingerprint changed, a later run can
+correctly return `conflict`. Capture the next release-proof run with an ignored
+manifest under `output/source-ingestion/` and a source-safe explicit
+`idempotencyKey`; do not reset durable state to force an accepted outcome.
 `scripts/generate_scheduled_source_ingestion_worker_proof.py` captures a
 source-safe scheduled worker deploy-contract artifact. Point
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` at a valid artifact to
