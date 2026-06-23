@@ -84,9 +84,10 @@ durable operating-context enforcement:
 14. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/implementation-proof-readiness.md`, quality gate docs,
     RFC evidence, and wiki source now describe the live source-proof artifact
-    contract and `make source-ingestion-live-proof-contract-gate`, while
-    preserving the boundary that a valid artifact clears only the live-Core
-    blocker and does not promote source ingestion as a supported feature.
+    contract, aggregate source-safe `blockReasonCounts`, and
+    `make source-ingestion-live-proof-contract-gate`, while preserving the
+    boundary that a valid artifact clears only the live-Core blocker and does
+    not promote source ingestion as a supported feature.
 15. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/api-certification.md`, `docs/operations/observability.md`,
     `docs/operations/implementation-proof-readiness.md`, demo claims, quality

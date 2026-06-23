@@ -19,8 +19,8 @@ live source proof, scheduled-worker deploy proof, certified runtime trust teleme
 
 Current implemented foundations include:
 
-- high-cash evaluation and Core-backed source-ingestion orchestration, including
-  run-once and scheduled workers, readiness, and aggregate-only operator APIs,
+- high-cash evaluation and Core-backed source-ingestion orchestration with
+  run-once/scheduled workers, readiness, aggregate APIs, and proof diagnostics,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection with fail-closed entitlement-scope enforcement and queue readiness,
 - AI explanation governance diagnostics and source-safe lineage persistence with
@@ -194,7 +194,7 @@ docker compose up --build
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
-| `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, and live-proof artifact contract without calling Core. |
+| `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
 | `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, and source-safe RFC proof-readiness evidence with validated proof artifact refs in capability evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |

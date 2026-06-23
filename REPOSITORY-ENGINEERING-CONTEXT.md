@@ -131,7 +131,11 @@ skipped-not-eligible decisions. `src/app/application/source_ingestion_worker.py`
 and `scripts/run_source_ingestion_worker.py` now add the versioned
 manifest-backed run-once worker entrypoint, product-safe check-only summary,
 and product-safe run summary that redact raw source payloads, portfolio ids,
-and raw idempotency keys. `make source-ingestion-worker-check` validates the
+raw idempotency keys, and candidate identifiers. Run summaries and live-proof
+artifacts now include aggregate `blockReasonCounts`, including bounded Core
+cash-weight diagnostics, so operators can distinguish missing, unavailable,
+entitlement-blocked, or Core-blocked source evidence without reconstructing
+cash weight locally. `make source-ingestion-worker-check` validates the
 example manifest and exact source-safe check-only output contract in the local
 lint path so future agent changes cannot silently break the worker contract or
 leak source-sensitive fields.
@@ -191,7 +195,8 @@ live Core source-ingestion proof artifact contract. A valid artifact referenced
 through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` can clear only the
 `live_core_source_proof_missing` blocker in the source-ingestion readiness
 diagnostic. `make source-ingestion-live-proof-contract-gate` blocks proof
-payload shape drift, source-sensitive fields, and accidental support promotion.
+payload shape drift, source-sensitive fields, missing aggregate block
+diagnostics, and accidental support promotion.
 The runtime boundary now distinguishes Core query-service reads from
 query-control-plane snapshot calls through `LOTUS_CORE_QUERY_BASE_URL` and
 `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, with `LOTUS_CORE_BASE_URL` retained

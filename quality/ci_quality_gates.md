@@ -58,7 +58,8 @@ downstream realization contract validation, migration contract validation,
 migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation,
-source-ingestion live-proof contract validation,
+source-ingestion live-proof contract validation with aggregate blocked-reason
+diagnostics,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 Workbench read-path proof contract validation,
@@ -136,6 +137,11 @@ instead of becoming another unreviewed shell one-liner.
 code must use bounded operation-event emitters or the central request diagnostic helper instead of
 raw `print()`, direct Python logging, or low-level `log_event` calls. Request diagnostics log route
 templates rather than raw URL paths, keeping operator evidence product-safe.
+
+`make source-ingestion-live-proof-contract-gate` also protects the live-proof
+artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof
+failures diagnosable while blocking raw portfolio identifiers, source payloads,
+idempotency keys, candidate identifiers, and premature support claims.
 
 `make downstream-realization-contract-gate` validates
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
