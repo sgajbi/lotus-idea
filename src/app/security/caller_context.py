@@ -10,10 +10,39 @@ from app.errors import problem_response
 
 
 @dataclass(frozen=True)
+class CallerEntitlementScope:
+    tenant_ids: tuple[str, ...] = ()
+    book_ids: tuple[str, ...] = ()
+    portfolio_ids: tuple[str, ...] = ()
+    client_ids: tuple[str, ...] = ()
+
+    @classmethod
+    def from_iterables(
+        cls,
+        *,
+        tenant_ids: Iterable[str] = (),
+        book_ids: Iterable[str] = (),
+        portfolio_ids: Iterable[str] = (),
+        client_ids: Iterable[str] = (),
+    ) -> "CallerEntitlementScope":
+        return cls(
+            tenant_ids=_clean_unique_values(tenant_ids),
+            book_ids=_clean_unique_values(book_ids),
+            portfolio_ids=_clean_unique_values(portfolio_ids),
+            client_ids=_clean_unique_values(client_ids),
+        )
+
+    @property
+    def is_empty(self) -> bool:
+        return not (self.tenant_ids or self.book_ids or self.portfolio_ids or self.client_ids)
+
+
+@dataclass(frozen=True)
 class CallerContext:
     subject: str
     roles: frozenset[str] = field(default_factory=frozenset)
     capabilities: frozenset[str] = field(default_factory=frozenset)
+    entitlement_scope: CallerEntitlementScope = field(default_factory=CallerEntitlementScope)
 
     @classmethod
     def from_iterables(
@@ -22,6 +51,7 @@ class CallerContext:
         subject: str,
         roles: Iterable[str] = (),
         capabilities: Iterable[str] = (),
+        entitlement_scope: CallerEntitlementScope | None = None,
     ) -> "CallerContext":
         return cls(
             subject=subject,
@@ -29,6 +59,7 @@ class CallerContext:
             capabilities=frozenset(
                 capability.strip() for capability in capabilities if capability.strip()
             ),
+            entitlement_scope=entitlement_scope or CallerEntitlementScope(),
         )
 
     def has_role(self, role: str) -> bool:
@@ -87,3 +118,10 @@ def permission_denied_response(_: PermissionDeniedError) -> JSONResponse:
         title="Permission denied",
         detail="The caller is not permitted to perform this action.",
     )
+
+
+def _clean_unique_values(values: Iterable[str]) -> tuple[str, ...]:
+    cleaned = tuple(value.strip() for value in values)
+    if any(not value for value in cleaned):
+        raise ValueError("caller entitlement scope values cannot be blank")
+    return tuple(dict.fromkeys(cleaned))

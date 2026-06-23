@@ -1,7 +1,9 @@
 import pytest
 
+from app.api.caller_headers import caller_context_from_headers
 from app.security.caller_context import (
     CallerContext,
+    CallerEntitlementScope,
     CapabilityPolicy,
     PermissionDeniedError,
     permission_denied_response,
@@ -54,6 +56,66 @@ def test_role_and_capability_requirement_requires_both() -> None:
         require_role_and_capability(
             CallerContext.from_iterables(subject="role-only", roles=("operator",)),
             policy,
+        )
+
+
+def test_caller_context_carries_deduplicated_entitlement_scope() -> None:
+    caller = CallerContext.from_iterables(
+        subject="advisor-001",
+        roles=("advisor",),
+        capabilities=("idea.review.queue.read",),
+        entitlement_scope=CallerEntitlementScope.from_iterables(
+            tenant_ids=("tenant-private-bank-sg", "tenant-private-bank-sg"),
+            book_ids=("book-advisor-001",),
+            portfolio_ids=("PB_SG_GLOBAL_BAL_001", "PB_SG_ALT_BAL_002"),
+            client_ids=("client-001",),
+        ),
+    )
+
+    assert caller.entitlement_scope.tenant_ids == ("tenant-private-bank-sg",)
+    assert caller.entitlement_scope.book_ids == ("book-advisor-001",)
+    assert caller.entitlement_scope.portfolio_ids == (
+        "PB_SG_GLOBAL_BAL_001",
+        "PB_SG_ALT_BAL_002",
+    )
+    assert caller.entitlement_scope.client_ids == ("client-001",)
+
+
+def test_caller_entitlement_scope_rejects_blank_values() -> None:
+    with pytest.raises(ValueError, match="caller entitlement scope values cannot be blank"):
+        CallerEntitlementScope.from_iterables(portfolio_ids=("PB_SG_GLOBAL_BAL_001", " "))
+
+
+def test_caller_context_from_headers_parses_entitlement_scope_headers() -> None:
+    caller = caller_context_from_headers(
+        subject="advisor-001",
+        roles="advisor",
+        capabilities="idea.review.queue.read",
+        tenant_ids="tenant-private-bank-sg",
+        book_ids="book-advisor-001",
+        portfolio_ids="PB_SG_GLOBAL_BAL_001,PB_SG_ALT_BAL_002",
+        client_ids="client-001",
+    )
+
+    assert caller.entitlement_scope.tenant_ids == ("tenant-private-bank-sg",)
+    assert caller.entitlement_scope.book_ids == ("book-advisor-001",)
+    assert caller.entitlement_scope.portfolio_ids == (
+        "PB_SG_GLOBAL_BAL_001",
+        "PB_SG_ALT_BAL_002",
+    )
+    assert caller.entitlement_scope.client_ids == ("client-001",)
+
+
+def test_caller_context_from_headers_rejects_blank_entitlement_scope_header_values() -> None:
+    with pytest.raises(
+        ValueError,
+        match="caller entitlement scope headers cannot contain blank values",
+    ):
+        caller_context_from_headers(
+            subject="advisor-001",
+            roles="advisor",
+            capabilities="idea.review.queue.read",
+            portfolio_ids="PB_SG_GLOBAL_BAL_001, ",
         )
 
 

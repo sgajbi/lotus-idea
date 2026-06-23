@@ -29,6 +29,7 @@ from app.observability import (
 )
 from app.security.caller_context import (
     CapabilityPolicy,
+    CallerContext,
     PermissionDeniedError,
     require_capability,
     require_role_and_capability,
@@ -201,12 +202,32 @@ async def get_advisor_review_queue(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
 ) -> AdvisorReviewQueueResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
+    try:
+        caller = caller_context_from_headers(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+        )
+    except ValueError:
+        _emit_review_queue_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
+            detail="Caller entitlement scope headers cannot contain blank values.",
+        )
     try:
         require_capability(caller, _READ_ADVISOR_QUEUE_POLICY)
     except PermissionDeniedError:
@@ -232,7 +253,7 @@ async def get_advisor_review_queue(
             detail="evaluatedAtUtc must be timezone-aware.",
         )
     try:
-        scope_filter = QueueAccessScopeFilter(
+        requested_scope_filter = QueueAccessScopeFilter(
             tenant_id=tenant_id,
             book_id=book_id,
             portfolio_id=portfolio_id,
@@ -249,13 +270,30 @@ async def get_advisor_review_queue(
             title="Invalid request",
             detail="Scope query fields cannot be blank.",
         )
+    effective_scope_filter = _effective_queue_scope_filter(
+        requested_scope_filter=requested_scope_filter,
+        caller_scope_filter=_caller_queue_scope_filter(caller),
+    )
+    if effective_scope_filter is None:
+        _emit_review_queue_operation_event(
+            OperationOutcome.PERMISSION_DENIED,
+            "permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to read the requested advisor idea review scope.",
+        )
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     queue = build_review_queue_from_repository(
         BuildReviewQueueFromRepositoryCommand(
             evaluated_at_utc=evaluated_at_utc,
-            access_scope_filter=(None if scope_filter.is_empty else scope_filter),
+            access_scope_filter=(
+                None if effective_scope_filter.is_empty else effective_scope_filter
+            ),
         ),
         repository=repository,
     )
@@ -319,6 +357,35 @@ async def get_advisor_review_queue_readiness(
     return ReviewQueueReadinessResponse.from_domain(snapshot)
 
 
+def _caller_queue_scope_filter(caller: CallerContext) -> QueueAccessScopeFilter | None:
+    scope = caller.entitlement_scope
+    if scope.is_empty:
+        return None
+    return QueueAccessScopeFilter(
+        tenant_id=scope.tenant_ids,
+        book_id=scope.book_ids,
+        portfolio_id=scope.portfolio_ids,
+        client_id=scope.client_ids,
+    )
+
+
+def _effective_queue_scope_filter(
+    *,
+    requested_scope_filter: QueueAccessScopeFilter,
+    caller_scope_filter: QueueAccessScopeFilter | None,
+) -> QueueAccessScopeFilter | None:
+    if caller_scope_filter is None:
+        return requested_scope_filter
+    if not requested_scope_filter.is_subset_of(caller_scope_filter):
+        return None
+    return QueueAccessScopeFilter(
+        tenant_id=requested_scope_filter.tenant_id or caller_scope_filter.tenant_id,
+        book_id=requested_scope_filter.book_id or caller_scope_filter.book_id,
+        portfolio_id=requested_scope_filter.portfolio_id or caller_scope_filter.portfolio_id,
+        client_id=requested_scope_filter.client_id or caller_scope_filter.client_id,
+    )
+
+
 def _emit_review_queue_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
@@ -358,8 +425,10 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
     "description": (
         "Returns the deterministic advisor review queue projection over persisted idea "
         "candidate snapshots. Optional tenantId, bookId, portfolioId, and clientId "
-        "query filters constrain results to the requested advisor access scope. This "
-        "is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
+        "query filters constrain results to the requested advisor access scope. "
+        "When platform caller-context scope headers are present, the route applies "
+        "those entitlements automatically and rejects broader query scopes fail-closed. "
+        "This is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
         "with bounded read-only Gateway publication; it does not expose a Workbench "
         "product surface, durable queue store, data-product certification, or "
         "supported feature."
@@ -404,7 +473,10 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         400: {"model": ProblemDetails, "description": "Request validation failed."},
         403: {
             "model": ProblemDetails,
-            "description": "Caller lacks advisor queue read permission.",
+            "description": (
+                "Caller lacks advisor queue read permission or requested scope is outside "
+                "caller entitlements."
+            ),
         },
     },
 }
@@ -456,7 +528,6 @@ ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
                         "certificationReady": False,
                         "certificationBlockers": [
                             "durable_repository_not_configured",
-                            "platform_caller_context_entitlement_proof_missing",
                             "workbench_product_proof_missing",
                             "data_product_certification_missing",
                             "certified_runtime_trust_telemetry_missing",

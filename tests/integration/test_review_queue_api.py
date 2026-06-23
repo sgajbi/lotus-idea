@@ -71,6 +71,23 @@ def queue_headers(capabilities: str = "idea.review.queue.read") -> dict[str, str
     }
 
 
+def scoped_queue_headers(
+    *,
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
+    capabilities: str = "idea.review.queue.read",
+) -> dict[str, str]:
+    headers = queue_headers(capabilities=capabilities)
+    headers.update(
+        {
+            "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+            "X-Caller-Book-Ids": "book-advisor-001",
+            "X-Caller-Portfolio-Ids": portfolio_ids,
+            "X-Caller-Client-Ids": "client-001",
+        }
+    )
+    return headers
+
+
 def readiness_headers(
     *,
     roles: str = "operator",
@@ -178,6 +195,73 @@ def test_advisor_review_queue_api_filters_candidates_by_access_scope() -> None:
     ]
 
 
+def test_advisor_review_queue_api_applies_caller_entitlement_scope_without_query_filters() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    included = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-caller-scope-included",
+        idempotency_key="seed-review-queue-caller-scope-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+    )
+    excluded = persist_candidate(
+        client,
+        cash_weight="0.20",
+        suffix="-caller-scope-excluded",
+        idempotency_key="seed-review-queue-caller-scope-002",
+        candidate_scope=access_scope(portfolio_id="PB_SG_ALT_BAL_002"),
+    )
+
+    response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=scoped_queue_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert [item["candidate"]["candidateId"] for item in payload["items"]] == [included]
+    assert payload["exclusions"] == [
+        {
+            "candidateId": excluded,
+            "reason": "access_scope_mismatch",
+            "detail": "candidate is outside the requested advisor access scope",
+        }
+    ]
+
+
+def test_advisor_review_queue_api_rejects_query_scope_outside_caller_entitlements() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-scope-denied",
+        idempotency_key="seed-review-queue-scope-denied-001",
+        candidate_scope=access_scope(portfolio_id="PB_SG_ALT_BAL_002"),
+    )
+
+    response = client.get(
+        (
+            "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
+            "&tenantId=tenant-private-bank-sg&bookId=book-advisor-001"
+            "&portfolioId=PB_SG_ALT_BAL_002&clientId=client-001"
+        ),
+        headers=scoped_queue_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001"),
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to read the requested advisor idea review scope.",
+    }
+    assert "PB_SG_ALT_BAL_002" not in response.text
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+
+
 def test_advisor_review_queue_api_returns_empty_queue_without_candidates() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
@@ -253,6 +337,25 @@ def test_advisor_review_queue_api_rejects_blank_scope_filter_safely() -> None:
     }
 
 
+def test_advisor_review_queue_api_rejects_blank_caller_scope_header_safely() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=scoped_queue_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001, "),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Caller entitlement scope headers cannot contain blank values.",
+    }
+
+
 def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
@@ -305,7 +408,6 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
         "certificationReady": False,
         "certificationBlockers": [
             "durable_repository_not_configured",
-            "platform_caller_context_entitlement_proof_missing",
             "workbench_product_proof_missing",
             "data_product_certification_missing",
             "certified_runtime_trust_telemetry_missing",
