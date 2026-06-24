@@ -187,6 +187,25 @@ def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_readiness_wir
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_outbox_broker_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--outbox-broker-proof output/outbox/outbox-broker-proof.json",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "outbox broker proof artifact into readiness generation"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_live_source_proof_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
@@ -291,6 +310,25 @@ def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_gate() -> Non
     assert (
         "Makefile workbench-read-path-proof-contract-gate target must run "
         "`scripts/workbench_read_path_proof_contract_gate.py`"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "scripts/outbox_broker_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile outbox-broker-proof-contract-gate target must run "
+        "`scripts/outbox_broker_proof_contract_gate.py`"
     ) in errors
 
 

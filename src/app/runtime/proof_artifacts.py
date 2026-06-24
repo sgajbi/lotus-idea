@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
+from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
@@ -20,6 +21,8 @@ class ConfiguredImplementationProofArtifacts:
     durable_repository_proof_ref: str | None
     runtime_trust_telemetry_proof: dict[str, Any] | None
     runtime_trust_telemetry_proof_ref: str | None
+    outbox_broker_proof: dict[str, Any] | None
+    outbox_broker_proof_ref: str | None
     workbench_read_path_proof: dict[str, Any] | None
     workbench_read_path_proof_ref: str | None
 
@@ -39,6 +42,7 @@ def configured_implementation_proof_artifacts(
         RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
         root=root,
     )
+    outbox_broker_proof_path = _configured_path(OUTBOX_BROKER_PROOF_ENV, root=root)
     workbench_read_path_proof_path = _configured_path(WORKBENCH_READ_PATH_PROOF_ENV, root=root)
     return ConfiguredImplementationProofArtifacts(
         source_ingestion_live_proof_ref=_source_safe_artifact_ref(
@@ -68,6 +72,15 @@ def configured_implementation_proof_artifacts(
             runtime_trust_telemetry_proof_path,
             root=root,
             artifact_name="runtime trust telemetry proof artifact",
+        ),
+        outbox_broker_proof=_read_optional_json_object(
+            outbox_broker_proof_path,
+            artifact_name="outbox broker proof",
+        ),
+        outbox_broker_proof_ref=_source_safe_artifact_ref(
+            outbox_broker_proof_path,
+            root=root,
+            artifact_name="outbox broker proof artifact",
         ),
         workbench_read_path_proof=_read_optional_json_object(
             workbench_read_path_proof_path,

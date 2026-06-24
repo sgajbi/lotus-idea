@@ -16,6 +16,7 @@ from app.application.implementation_proof_readiness import (
     ImplementationProofReadinessSnapshot,
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -56,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
                 workbench_read_path_proof_path,
                 artifact_name="workbench read-path proof",
             )
+            outbox_broker_proof_path = _resolve_optional_path(args.outbox_broker_proof)
+            outbox_broker_proof = _read_optional_json_object(
+                outbox_broker_proof_path,
+                artifact_name="outbox broker proof",
+            )
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
@@ -77,6 +83,11 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_trust_telemetry_proof_ref=_source_safe_artifact_ref(
                     runtime_trust_telemetry_proof_path,
                     artifact_name="runtime trust telemetry proof artifact",
+                ),
+                outbox_broker_proof=outbox_broker_proof,
+                outbox_broker_proof_ref=_source_safe_artifact_ref(
+                    outbox_broker_proof_path,
+                    artifact_name="outbox broker proof artifact",
                 ),
                 workbench_read_path_proof=workbench_read_path_proof,
                 workbench_read_path_proof_ref=_source_safe_artifact_ref(
@@ -205,6 +216,14 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Optional bounded Workbench read-path proof artifact path. "
             f"Defaults to {WORKBENCH_READ_PATH_PROOF_ENV} when set."
+        ),
+    )
+    parser.add_argument(
+        "--outbox-broker-proof",
+        default=os.getenv(OUTBOX_BROKER_PROOF_ENV),
+        help=(
+            "Optional bounded outbox broker runtime proof artifact path. "
+            f"Defaults to {OUTBOX_BROKER_PROOF_ENV} when set."
         ),
     )
     return parser
