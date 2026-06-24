@@ -87,9 +87,22 @@ REQUIRED_SURFACES = (
         60,
         (
             "Current Client-Demo Posture",
+            "Client Demo Pack Template",
             "Claim Classification",
             "Client-Ready Acceptance",
             "Do Not Claim",
+        ),
+    ),
+    DocumentationSurface(
+        "docs/demo/client-demo-pack.template.md",
+        70,
+        (
+            "One-Page Client Brief",
+            "Story Flow",
+            "Claim Ledger",
+            "Do-Not-Claim List",
+            "Client-Ready Acceptance",
+            "Follow-Up Register",
         ),
     ),
     DocumentationSurface(
@@ -303,6 +316,21 @@ POLISHED_SURFACES = (
         ),
         4,
         1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "docs/demo/client-demo-pack.template.md",
+        (
+            "## Demo Control Summary",
+            "## One-Page Client Brief",
+            "## Story Flow",
+            "## Demonstration Sequence",
+            "## Claim Ledger",
+            "## Client-Ready Acceptance",
+            "## Follow-Up Register",
+        ),
+        5,
+        2,
         1,
     ),
 )

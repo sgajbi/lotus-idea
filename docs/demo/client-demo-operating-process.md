@@ -10,6 +10,7 @@ story without overstating current support.
 Use this page with:
 
 - [Demo Claims](demo-claims.md)
+- [Client Demo Pack Template](client-demo-pack.template.md)
 - [Implementation Proof Readiness](../operations/implementation-proof-readiness.md)
 - [Lotus Client Demo Certification Standard](../../../lotus-platform/docs/standards/Lotus%20Client%20Demo%20Certification%20Standard.md)
 - [Lotus Client Demo Operating Process](../../../lotus-platform/docs/demo/client-demo-operating-process.md)
@@ -85,6 +86,10 @@ Every client-facing statement must have one claim state.
 | Unsupported | No governed implementation or owner exists. | Do not claim. |
 
 ## Required Demo Pack
+
+Start from [Client Demo Pack Template](client-demo-pack.template.md) for each
+external or executive-facing session. The completed pack should be stored as a
+session-specific artifact, not by editing the template itself.
 
 | Section | Required content |
 | --- | --- |

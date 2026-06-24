@@ -70,6 +70,8 @@ Every external Lotus Idea demo pack should include:
 
 The app-level process lives in
 [docs/demo/client-demo-operating-process.md](../docs/demo/client-demo-operating-process.md).
+Start each client-specific pack from
+[docs/demo/client-demo-pack.template.md](../docs/demo/client-demo-pack.template.md).
 The current claim ledger lives in [docs/demo/demo-claims.md](../docs/demo/demo-claims.md).
 
 ## Validation
