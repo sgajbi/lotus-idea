@@ -83,6 +83,16 @@ REQUIRED_SURFACES = (
         ("Certified Foundation Endpoints", "Source-Degraded And Reconciliation Endpoints"),
     ),
     DocumentationSurface(
+        "docs/demo/client-demo-operating-process.md",
+        60,
+        (
+            "Current Client-Demo Posture",
+            "Claim Classification",
+            "Client-Ready Acceptance",
+            "Do Not Claim",
+        ),
+    ),
+    DocumentationSurface(
         "docs/operations/mesh-readiness.md",
         40,
         ("Source Truth", "Promotion Rule", "Runtime Diagnostic", "Repo-Native Gate"),
@@ -159,8 +169,8 @@ REQUIRED_SURFACES = (
     ),
     DocumentationSurface(
         "wiki/Demo-Readiness.md",
-        10,
-        ("Current posture", "not"),
+        40,
+        ("Current posture", "Client Demo Flow", "Do Not Claim"),
     ),
     DocumentationSurface(
         "wiki/Roadmap.md",
@@ -265,6 +275,31 @@ POLISHED_SURFACES = (
         "wiki/Validation-And-CI.md",
         ("## Gate Map",),
         1,
+        1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "wiki/Demo-Readiness.md",
+        (
+            "## Current posture",
+            "## Client Demo Flow",
+            "## Claim States",
+            "## Acceptance Checklist",
+        ),
+        3,
+        1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "docs/demo/client-demo-operating-process.md",
+        (
+            "## Current Client-Demo Posture",
+            "## Demo Story",
+            "## Claim Classification",
+            "## Client-Ready Acceptance",
+            "## Do Not Claim",
+        ),
+        4,
         1,
         1,
     ),

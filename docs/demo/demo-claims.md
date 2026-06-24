@@ -5,6 +5,10 @@ This file is the starting demo-readiness ledger for `lotus-idea`.
 Do not promote demo claims from `Planned` until code, tests, endpoint certification, supported
 feature evidence, and validation artifacts exist.
 
+Use [Lotus Idea Client Demo Operating Process](client-demo-operating-process.md) before preparing
+external material. It defines the client-facing story, evidence pack, validation commands,
+acceptance checklist, and do-not-claim boundaries that keep this ledger safe for client demos.
+
 Allowed status vocabulary:
 
 1. `Implemented`
