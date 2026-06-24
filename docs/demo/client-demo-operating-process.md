@@ -56,6 +56,32 @@ flowchart LR
     Proof --> Demo
 ```
 
+## What To Explain First
+
+Start every external or executive-facing demo with the operating model, not the
+internal architecture. The audience should understand the client problem and
+the trust model before seeing proof artifacts.
+
+| Client-facing message | Internal proof that supports it | Current boundary |
+| --- | --- | --- |
+| Lotus connects opportunity discovery to governed advisor review. | Candidate, review, feedback, conversion-intent, and proof-readiness APIs. | Internal foundation and bounded preview only. |
+| Source systems keep official private-banking facts. | Source-authority labels, integration docs, data-mesh readiness, and downstream ownership docs. | `lotus-idea` is not the system of record for portfolio, mandate, suitability, report, render, archive, or publication facts. |
+| Advisors remain accountable for decisions and client communication. | Review and conversion intent surfaces plus do-not-claim gates for autonomous advice, suitability, execution, and client communication. | No autonomous investment advice or client-ready publication is claimed. |
+| Proof controls stop unsupported claims from becoming demo language. | Documentation gates, implementation-truth gate, supported-features gate, and implementation-proof readiness artifacts. | Diagnostics support readiness review; they are not product support certification by themselves. |
+
+## Client Pack Versus Internal Evidence
+
+Keep the client pack polished and concise. Keep raw validation output available
+for reviewers but out of the client-facing narrative unless it has been
+reviewed, redacted, and intentionally summarized.
+
+| Artifact | Audience | Include | Exclude |
+| --- | --- | --- | --- |
+| One-page client brief | Client, executive, sales, marketing | Business problem, Lotus response, visible sequence, trust anchors, current boundary, follow-up path. | Raw logs, raw payloads, raw prompts, CI dumps, internal issue history, sensitive identifiers. |
+| Demo pack | Client-facing team and reviewers | Talk track, sequence, claim ledger, evidence anchors, fallback path, acceptance checklist. | Diagnostic-only screenshots, unsupported claims, speculative roadmap phrased as current support. |
+| Evidence manifest | Engineering, operations, product, security | Command, run ID, artifact paths, blocker state, owner, validation timestamp. | Real client data, secrets, personal data, raw account or portfolio identifiers. |
+| Follow-up register | Sales, product, engineering, operations | Client questions, owner, durable home, client-safe response, next action. | Unreviewed defect details or confidential implementation notes. |
+
 ## Client-Friendly Explanation
 
 Use this plain-language framing when a client asks what Lotus is doing:

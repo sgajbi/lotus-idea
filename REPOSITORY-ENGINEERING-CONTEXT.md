@@ -722,8 +722,9 @@ without promoting any supported business feature.
 `docs/demo/client-facing-lotus-idea-brief.md`,
 `docs/demo/client-demo-pack.template.md`, and `wiki/Demo-Readiness.md` now
 define the app-specific client-demo process, client-facing business narrative,
-claim states, evidence pack template, validation commands, acceptance
-checklist, and do-not-claim boundaries. The process is governed documentation
+claim states, client-pack versus internal-evidence separation, evidence pack
+template, validation commands, acceptance checklist, rehearsal/follow-up
+discipline, and do-not-claim boundaries. The process is governed documentation
 truth only; it does not promote external demo readiness, supported features,
 downstream materialization, client publication, or certified data-mesh status.
 
