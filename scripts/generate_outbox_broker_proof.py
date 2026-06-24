@@ -35,9 +35,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description=(
-            "Generate a source-safe lotus-idea outbox broker runtime proof artifact."
-        )
+        description=("Generate a source-safe lotus-idea outbox broker runtime proof artifact.")
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--output")

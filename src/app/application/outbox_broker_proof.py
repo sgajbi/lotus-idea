@@ -128,8 +128,7 @@ def outbox_broker_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         and proof_checks.get("configuredPublisherRuntimeExercised") is True
         and proof_checks.get("readinessEndpointCertified")
         == "GET /api/v1/outbox-delivery/readiness"
-        and proof_checks.get("runOnceEndpointCertified")
-        == "POST /api/v1/outbox-delivery/run-once"
+        and proof_checks.get("runOnceEndpointCertified") == "POST /api/v1/outbox-delivery/run-once"
     )
 
 

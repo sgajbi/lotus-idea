@@ -71,7 +71,9 @@ def validate_outbox_broker_proof_contract() -> list[str]:
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
         REMAINING_OUTBOX_BROKER_CERTIFICATION_BLOCKERS
     ):
-        errors.append("outbox broker proof must retain downstream, mesh, Workbench, and support blockers")
+        errors.append(
+            "outbox broker proof must retain downstream, mesh, Workbench, and support blockers"
+        )
     if not outbox_broker_proof_is_valid(proof):
         errors.append("outbox broker proof must validate against its contract")
     _validate_forbidden_content(proof, errors)
