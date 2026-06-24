@@ -26,6 +26,10 @@ from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
 )
+from app.application.platform_mesh_onboarding_proof import (
+    PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
+    platform_mesh_onboarding_proof_is_valid,
+)
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,
@@ -106,6 +110,8 @@ def build_implementation_proof_readiness_snapshot(
     runtime_trust_telemetry_proof_ref: str | None = None,
     outbox_broker_proof: Mapping[str, object] | None = None,
     outbox_broker_proof_ref: str | None = None,
+    platform_mesh_onboarding_proof: Mapping[str, object] | None = None,
+    platform_mesh_onboarding_proof_ref: str | None = None,
     workbench_read_path_proof: Mapping[str, object] | None = None,
     workbench_read_path_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
@@ -153,37 +159,19 @@ def build_implementation_proof_readiness_snapshot(
         _downstream_realization_capability(downstream_realization),
         _supported_feature_capability(supported_feature_count),
     )
-    if durable_repository_proof and durable_repository_proof_is_valid(durable_repository_proof):
-        capabilities = tuple(
-            _apply_durable_repository_proof(capability, durable_repository_proof_ref)
-            for capability in capabilities
-        )
-    if runtime_trust_telemetry_proof and runtime_trust_telemetry_proof_is_valid(
-        runtime_trust_telemetry_proof
-    ):
-        capabilities = tuple(
-            _apply_runtime_trust_telemetry_proof(
-                capability,
-                runtime_trust_telemetry_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if outbox_broker_proof and outbox_broker_proof_is_valid(outbox_broker_proof):
-        capabilities = tuple(
-            _apply_outbox_broker_proof(
-                capability,
-                outbox_broker_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof):
-        capabilities = tuple(
-            _apply_workbench_read_path_proof(
-                capability,
-                workbench_read_path_proof_ref,
-            )
-            for capability in capabilities
-        )
+    capabilities = _apply_available_proofs(
+        capabilities=capabilities,
+        durable_repository_proof=durable_repository_proof,
+        durable_repository_proof_ref=durable_repository_proof_ref,
+        runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
+        runtime_trust_telemetry_proof_ref=runtime_trust_telemetry_proof_ref,
+        outbox_broker_proof=outbox_broker_proof,
+        outbox_broker_proof_ref=outbox_broker_proof_ref,
+        platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
+        platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
+        workbench_read_path_proof=workbench_read_path_proof,
+        workbench_read_path_proof_ref=workbench_read_path_proof_ref,
+    )
 
     overall_blockers = tuple(
         dict.fromkeys(blocker for capability in capabilities for blocker in capability.blockers)
@@ -213,6 +201,58 @@ def build_implementation_proof_readiness_snapshot(
         },
         capabilities=capabilities,
     )
+
+
+def _apply_available_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    durable_repository_proof: Mapping[str, object] | None,
+    durable_repository_proof_ref: str | None,
+    runtime_trust_telemetry_proof: Mapping[str, object] | None,
+    runtime_trust_telemetry_proof_ref: str | None,
+    outbox_broker_proof: Mapping[str, object] | None,
+    outbox_broker_proof_ref: str | None,
+    platform_mesh_onboarding_proof: Mapping[str, object] | None,
+    platform_mesh_onboarding_proof_ref: str | None,
+    workbench_read_path_proof: Mapping[str, object] | None,
+    workbench_read_path_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if durable_repository_proof and durable_repository_proof_is_valid(durable_repository_proof):
+        capabilities = tuple(
+            _apply_durable_repository_proof(capability, durable_repository_proof_ref)
+            for capability in capabilities
+        )
+    if runtime_trust_telemetry_proof and runtime_trust_telemetry_proof_is_valid(
+        runtime_trust_telemetry_proof
+    ):
+        capabilities = tuple(
+            _apply_runtime_trust_telemetry_proof(
+                capability,
+                runtime_trust_telemetry_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if outbox_broker_proof and outbox_broker_proof_is_valid(outbox_broker_proof):
+        capabilities = tuple(
+            _apply_outbox_broker_proof(capability, outbox_broker_proof_ref)
+            for capability in capabilities
+        )
+    if platform_mesh_onboarding_proof and platform_mesh_onboarding_proof_is_valid(
+        platform_mesh_onboarding_proof
+    ):
+        capabilities = tuple(
+            _apply_platform_mesh_onboarding_proof(
+                capability,
+                platform_mesh_onboarding_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof):
+        capabilities = tuple(
+            _apply_workbench_read_path_proof(capability, workbench_read_path_proof_ref)
+            for capability in capabilities
+        )
+    return capabilities
 
 
 def _capability(
@@ -323,6 +363,34 @@ def _apply_outbox_broker_proof(
     evidence_refs = capability.evidence_refs
     if outbox_broker_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_broker_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_platform_mesh_onboarding_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    platform_mesh_onboarding_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id not in {
+        "data-mesh-certification",
+        "runtime-trust-telemetry-preview",
+    }:
+        return capability
+    blockers_to_clear = set(PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if platform_mesh_onboarding_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, platform_mesh_onboarding_proof_ref)))
     return _capability(
         capability.capability_id,
         capability.name,

@@ -12,6 +12,11 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
+from app.application.platform_mesh_onboarding_proof import (
+    REQUIRED_CONSUMER_DEPENDENCIES,
+    REQUIRED_PRODUCER_PRODUCTS,
+    build_platform_mesh_onboarding_proof_payload,
+)
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
@@ -370,6 +375,53 @@ def test_implementation_proof_readiness_uses_outbox_broker_proof_without_support
     assert "output/outbox/outbox-broker-proof.json" in outbox_delivery.evidence_refs
 
 
+def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_without_certification(
+    tmp_path: Path,
+) -> None:
+    proof = build_platform_mesh_onboarding_proof_payload(
+        generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        platform_root=_write_platform_mesh_fixture(tmp_path),
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        platform_mesh_onboarding_proof=proof,
+        platform_mesh_onboarding_proof_ref=("output/data-mesh/platform-mesh-onboarding-proof.json"),
+    )
+
+    assert "platform_source_manifest_inclusion_missing" not in snapshot.overall_blockers
+    assert "platform_catalog_inclusion_missing" not in snapshot.overall_blockers
+    assert "data_mesh_not_certified" in snapshot.overall_blockers
+    assert "producer_products_not_active" in snapshot.overall_blockers
+    assert "certified_runtime_trust_telemetry_missing" in snapshot.overall_blockers
+    assert "mesh_slo_policy_certification_missing" in snapshot.overall_blockers
+    assert "gateway_workbench_discovery_proof_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    data_mesh = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "data-mesh-certification"
+    )
+    runtime_telemetry = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "runtime-trust-telemetry-preview"
+    )
+    assert "platform_source_manifest_inclusion_missing" not in data_mesh.blockers
+    assert "platform_catalog_inclusion_missing" not in data_mesh.blockers
+    assert "data_mesh_not_certified" in data_mesh.blockers
+    assert "mesh_slo_policy_certification_missing" in data_mesh.blockers
+    assert "platform_source_manifest_inclusion_missing" not in runtime_telemetry.blockers
+    assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
+    assert "output/data-mesh/platform-mesh-onboarding-proof.json" in data_mesh.evidence_refs
+    assert "output/data-mesh/platform-mesh-onboarding-proof.json" in (
+        runtime_telemetry.evidence_refs
+    )
+
+
 def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         build_implementation_proof_readiness_snapshot(
@@ -416,3 +468,88 @@ def _valid_scheduled_worker_proof() -> dict[str, object]:
         run_once_worker_entrypoint_present=True,
         docker_compose_service_present=True,
     )
+
+
+def _write_platform_mesh_fixture(tmp_path: Path) -> Path:
+    platform_root = tmp_path / "lotus-platform"
+    source_manifest_path = (
+        platform_root
+        / "platform-contracts/domain-data-products/domain-product-source-manifest.v1.json"
+    )
+    catalog_path = platform_root / "generated/domain-product-catalog.json"
+    graph_path = platform_root / "generated/domain-product-dependency-graph.json"
+    maturity_path = platform_root / "generated/enterprise-mesh-maturity-matrix.json"
+    handoff_path = platform_root / "docs/operations/enterprise-mesh-completion-handoff.md"
+    source_manifest_path.parent.mkdir(parents=True)
+    catalog_path.parent.mkdir(parents=True)
+    handoff_path.parent.mkdir(parents=True)
+    source_manifest_path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repository": "lotus-idea",
+                        "source_mode": "repo_native",
+                        "catalog_inclusion": "included",
+                        "repo_native_status": "implemented",
+                        "repo_native_declaration_path": "contracts/domain-data-products",
+                        "platform_declaration_paths": [],
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    catalog_path.write_text(
+        json.dumps(
+            {
+                "products": [
+                    {
+                        "product_id": product_id,
+                        "producer_repository": "lotus-idea",
+                        "lifecycle_status": "proposed",
+                        "current_routes": [],
+                    }
+                    for product_id in REQUIRED_PRODUCER_PRODUCTS
+                ],
+                "consumers": [
+                    {
+                        "consumer_repository": "lotus-idea",
+                        "dependencies": [
+                            {"dependency_id": dependency_id}
+                            for dependency_id in REQUIRED_CONSUMER_DEPENDENCIES
+                        ],
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    graph_path.write_text(
+        '{"contract_id":"lotus-domain-product-dependency-graph"}', encoding="utf-8"
+    )
+    maturity_path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repository": "lotus-idea",
+                        "classification": "deferred",
+                        "mesh_role": "producer",
+                    }
+                ],
+                "products": [
+                    {
+                        "product_id": product_id,
+                        "classification": "deferred",
+                        "maturity_wave": "future_wave",
+                        "lifecycle_status": "proposed",
+                    }
+                    for product_id in REQUIRED_PRODUCER_PRODUCTS
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    handoff_path.write_text("lotus-idea future-wave onboarding proof\n", encoding="utf-8")
+    return platform_root

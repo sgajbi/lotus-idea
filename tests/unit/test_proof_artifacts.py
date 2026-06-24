@@ -7,6 +7,7 @@ import pytest
 
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
+from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
@@ -22,7 +23,8 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     )
     workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
     outbox_path = tmp_path / "output" / "outbox" / "outbox-broker-proof.json"
-    for path in (durable_path, runtime_path, workbench_path, outbox_path):
+    platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-mesh-onboarding-proof.json"
+    for path in (durable_path, runtime_path, workbench_path, outbox_path, platform_mesh_path):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"artifact": path.name}), encoding="utf-8")
 
@@ -41,6 +43,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     monkeypatch.setenv(
         OUTBOX_BROKER_PROOF_ENV,
         "output/outbox/outbox-broker-proof.json",
+    )
+    monkeypatch.setenv(
+        PLATFORM_MESH_ONBOARDING_PROOF_ENV,
+        "output/data-mesh/platform-mesh-onboarding-proof.json",
     )
 
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
@@ -61,6 +67,12 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     )
     assert artifacts.outbox_broker_proof == {"artifact": "outbox-broker-proof.json"}
     assert artifacts.outbox_broker_proof_ref == "output/outbox/outbox-broker-proof.json"
+    assert artifacts.platform_mesh_onboarding_proof == {
+        "artifact": "platform-mesh-onboarding-proof.json"
+    }
+    assert artifacts.platform_mesh_onboarding_proof_ref == (
+        "output/data-mesh/platform-mesh-onboarding-proof.json"
+    )
 
 
 def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
