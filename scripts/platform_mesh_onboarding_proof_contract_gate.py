@@ -71,8 +71,17 @@ def validate_platform_mesh_onboarding_proof_contract(
         REMAINING_PLATFORM_MESH_ONBOARDING_BLOCKERS
     ):
         errors.append("platform mesh onboarding proof must retain certification blockers")
-    if not platform_mesh_onboarding_proof_is_valid(proof):
-        errors.append("platform mesh onboarding proof must validate against sibling platform truth")
+    proof_checks = proof.get("proofChecks")
+    file_evidence_present = (
+        isinstance(proof_checks, Mapping) and proof_checks.get("fileEvidencePresent") is True
+    )
+    if file_evidence_present and not platform_mesh_onboarding_proof_is_valid(proof):
+        errors.append(
+            "platform mesh onboarding proof must validate against sibling platform truth when "
+            "sibling evidence is present"
+        )
+    if not file_evidence_present and proof.get("platformMeshOnboardingProofValid") is not False:
+        errors.append("missing sibling platform evidence must remain an invalid non-proof artifact")
     _validate_forbidden_content(proof, errors)
     return errors
 

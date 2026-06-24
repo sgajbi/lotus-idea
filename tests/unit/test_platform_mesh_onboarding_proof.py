@@ -257,6 +257,37 @@ def test_platform_mesh_onboarding_proof_contract_gate_scans_tuple_content() -> N
     assert errors == ["$[0]: forbidden source-sensitive text `portfolio_id` is present"]
 
 
+def test_platform_mesh_onboarding_proof_contract_gate_allows_missing_sibling_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+
+    errors = module.validate_platform_mesh_onboarding_proof_contract(
+        platform_root=tmp_path / "missing-lotus-platform"
+    )
+
+    assert errors == []
+
+
+def test_platform_mesh_onboarding_proof_contract_gate_rejects_present_sibling_drift(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+    platform_root = _write_platform_fixture(tmp_path)
+    source_manifest_path = (
+        platform_root
+        / "platform-contracts/domain-data-products/domain-product-source-manifest.v1.json"
+    )
+    source_manifest_path.write_text('{"repositories":[]}', encoding="utf-8")
+
+    errors = module.validate_platform_mesh_onboarding_proof_contract(platform_root=platform_root)
+
+    assert (
+        "platform mesh onboarding proof must validate against sibling platform truth "
+        "when sibling evidence is present"
+    ) in errors
+
+
 def _valid_platform_mesh_onboarding_proof(tmp_path: Path) -> dict[str, Any]:
     return build_platform_mesh_onboarding_proof_payload(
         generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
