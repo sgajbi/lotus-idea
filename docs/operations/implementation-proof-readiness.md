@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, report-intake route, outbox broker, and platform mesh onboarding proof artifacts can be consumed; no full live journey, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, default report-intake route, outbox broker, and platform mesh onboarding proof artifacts can be consumed; no full live journey, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -123,7 +123,9 @@ the canonical target instead of a one-off command:
 | `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
 | `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
-| `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` | Passes the validated `lotus-report` idea evidence-pack intake route proof into aggregate readiness. |
+| `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
+| `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/report-intake-route-proof.json`. |
+| `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
 
 When rerunning live proof against an existing durable PostgreSQL repository,
 preserve idempotency history. If the same generated default idempotency key was
@@ -197,11 +199,15 @@ contracts, platform mesh event publication, Gateway/Workbench behavior,
 client-ready publication, or supported-feature promotion.
 
 Report intake route proof is captured by
-`scripts/generate_report_intake_route_proof.py`. A valid artifact referenced
-through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` or passed with
-`--report-intake-route-proof` clears only
-`lotus_report_live_intake_route_proof_missing` inside downstream realization
-and aggregate implementation-proof readiness. It cites the merged
+`scripts/generate_report_intake_route_proof.py`. The repo-native
+`make implementation-proof-readiness-check` target now generates the default
+artifact from `LOTUS_REPORT_ROOT` under
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` and passes it into aggregate
+readiness when `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` is not set. A valid
+artifact clears only `lotus_report_live_intake_route_proof_missing` inside
+downstream realization and aggregate implementation-proof readiness. Missing
+sibling evidence writes an invalid non-proof artifact and keeps the blocker so
+CI remains stable without treating absence as proof. It cites the merged
 `lotus-report` route contract for `POST /reports/idea-evidence-packs`, the
 report-owned intake route modules and tests, the `lotus-idea` downstream
 contract, and the readiness endpoints. It does not create a report job, render
@@ -368,7 +374,8 @@ make implementation-proof-readiness-check
 $env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
 $env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
-$env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF = "output/downstream/report-intake-route-proof.json"
+$env:LOTUS_REPORT_ROOT = "..\lotus-report"
+$env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT = "output/downstream/report-intake-route-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
 

@@ -250,7 +250,7 @@ or supported-feature proof gaps.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and
-scheduled proof artifact refs plus optional report-intake route and platform
+scheduled proof artifact refs plus default report-intake route and platform
 mesh onboarding proof refs as auditable evidence when those blockers clear; it
 does not certify storage, live scheduler operations, mesh, Workbench,
 Report/Render/Archive materialization, or supported-feature readiness.

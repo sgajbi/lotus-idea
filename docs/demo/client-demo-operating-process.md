@@ -54,6 +54,24 @@ flowchart LR
     Proof --> Demo
 ```
 
+## Client-Friendly Explanation
+
+Use this plain-language framing when a client asks what Lotus is doing:
+
+> Lotus Idea turns source-owned portfolio, risk, performance, advisory, and
+> reporting evidence into a governed opportunity-intelligence workflow. It helps
+> private bankers and investment teams see why a client situation may need
+> review, what evidence supports that review, which systems still own the
+> official facts, and which implementation boundaries remain in place before a
+> claim becomes client-ready.
+
+| Client question | Lotus Idea answer | Evidence anchor |
+| --- | --- | --- |
+| Why does this matter? | It creates a controlled path from source evidence to advisor review, feedback, and conversion intent. | Demo claims ledger and implementation proof readiness. |
+| Who owns the facts? | Source applications keep official portfolio, mandate, risk, performance, suitability, report, render, archive, and AI workflow facts. | Architecture, integrations, and data-mesh docs. |
+| What is safe to claim today? | Internal foundation and bounded preview only; no supported external product feature is promoted yet. | Client-demo posture table and do-not-claim list. |
+| How do we know it is real? | Claims must tie back to code, tests, gates, proof artifacts, run IDs, and owning repositories. | Validation commands and generated evidence manifest. |
+
 ## Claim Classification
 
 Every client-facing statement must have one claim state.

@@ -33,7 +33,16 @@ def main(argv: list[str] | None = None) -> int:
         output_path.write_text(f"{rendered}\n", encoding="utf-8")
     else:
         print(rendered)
-    return 0 if payload["reportIntakeRouteProofValid"] else 1
+    if payload["reportIntakeRouteProofValid"]:
+        return 0
+    proof_checks = payload.get("proofChecks")
+    if (
+        args.allow_missing_evidence
+        and isinstance(proof_checks, dict)
+        and proof_checks.get("fileEvidencePresent") is False
+    ):
+        return 0
+    return 1
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -43,6 +52,15 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--report-root")
     parser.add_argument("--output")
+    parser.add_argument(
+        "--allow-missing-evidence",
+        action="store_true",
+        help=(
+            "Write an invalid non-proof artifact and exit 0 when sibling lotus-report "
+            "evidence is absent. Contract drift still exits non-zero once required "
+            "evidence files are present."
+        ),
+    )
     return parser
 
 

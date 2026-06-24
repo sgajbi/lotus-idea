@@ -122,9 +122,13 @@ evidence, so reviewers can see dashboard-control and alert-candidate posture
 without treating it as certified model-risk dashboard or alert runtime proof.
 The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
-`LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, and
-optional `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command
-while allowing live release-proof evidence when the stack is available.
+`LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
+default report-intake route proof through `LOTUS_REPORT_ROOT` and
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, and optional
+`IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command while
+allowing live release-proof evidence when the stack is available. Missing
+sibling report evidence writes an invalid non-proof artifact and keeps the
+route blocker.
 The internal `POST /api/v1/source-ingestion/run-once` action is available for
 operators with `idea.source-ingestion.run` to run one bounded source-ingestion
 pass through the configured manifest, active repository provider, and Core
@@ -193,9 +197,10 @@ The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
 available for operators with `idea.downstream-realization.readiness.read` to
 inspect Advise, Manage, Report, Render, and Archive realization blockers over
 current `lotus-idea` workflow counts and planned Advise/Manage/Report handoff
-contract posture. It can consume a configured source-safe report-intake route
-proof for `POST /reports/idea-evidence-packs`, but it remains `not_certified`
-and `blocked` until downstream materialization contracts, Gateway/Workbench product proof, runtime
+contract posture. It consumes the default generated source-safe report-intake
+route proof for `POST /reports/idea-evidence-packs` when sibling evidence is
+present, but it remains `not_certified` and `blocked` until downstream
+materialization contracts, Gateway/Workbench product proof, runtime
 trust telemetry, and supported-feature evidence exist. Planned contract
 records are not downstream route-existence proof by themselves; the endpoint
 does not call downstream services or create downstream records.
@@ -219,7 +224,7 @@ instead of producing a false support claim.
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths plus source-safe durable repository proof artifact for aggregate readiness evidence | Runtime database configuration, production storage certification, or production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, bounded run-once operator action, and bounded outbox broker proof artifact for accepted internal mutations | Certified external publication, platform mesh event certification, downstream delivery, or supported-feature promotion |
 | Data mesh | Proposed contracts, source-safe readiness diagnostics, and bounded platform source-manifest/catalog onboarding proof | Promoted data product, mesh certification, Gateway/Workbench discovery, or supported-feature promotion |
-| Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, planned Advise/Manage/Report handoff contract posture, and optional Report intake route proof | Advise/Manage materialization, Report job creation, Render output, Archive record creation, client publication, or supported-feature promotion |
+| Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, planned Advise/Manage/Report handoff contract posture, and default Report intake route proof when sibling evidence is present | Advise/Manage materialization, Report job creation, Render output, Archive record creation, client publication, or supported-feature promotion |
 
 ```mermaid
 flowchart LR
@@ -408,7 +413,8 @@ downstream delivery, data-product certification, Workbench proof,
 client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
-artifact, runtime trust telemetry proof artifact, Workbench read-path proof
+artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
+report-intake route proof,
 artifact, and the same source-safe readiness snapshot without running the HTTP
 service. The snapshot records validated proof artifact refs in capability
 evidence. The live operator API also honors valid source-ingestion live,
@@ -418,7 +424,8 @@ Workbench read-path, and report-intake route proof artifact paths configured thr
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
-`LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`, and
+`LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`,
+`LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, and
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, clearing only the matching aggregate
 proof blockers. Use these artifacts as CI or async operator evidence only;
 they are not live scheduler certification, runtime database configuration,

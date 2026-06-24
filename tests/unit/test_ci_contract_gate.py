@@ -175,7 +175,8 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wir
         .read_text(encoding="utf-8")
         .replace(
             "$(if $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),"
-            "--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),) ",
+            "--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),"
+            "--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT)) ",
             "",
         )
     )
@@ -185,6 +186,52 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wir
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
         "report intake route proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_report_intake_route_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_report_intake_route_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "a report intake route proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_report_intake_route_default_output_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "REMOVED_REPORT_PROOF_OUTPUT")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the default "
+        "report intake route proof output into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_strict_default_report_intake_route_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile").read_text(encoding="utf-8").replace(" --allow-missing-evidence", "")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must keep report intake "
+        "route proof generation CI-stable when sibling evidence is absent"
     ) in errors
 
 
