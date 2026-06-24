@@ -9,6 +9,7 @@ from typing import Any
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
+from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
@@ -24,6 +25,8 @@ class ConfiguredImplementationProofArtifacts:
     runtime_trust_telemetry_proof_ref: str | None
     outbox_broker_proof: dict[str, Any] | None
     outbox_broker_proof_ref: str | None
+    report_intake_route_proof: dict[str, Any] | None
+    report_intake_route_proof_ref: str | None
     platform_mesh_onboarding_proof: dict[str, Any] | None
     platform_mesh_onboarding_proof_ref: str | None
     workbench_read_path_proof: dict[str, Any] | None
@@ -46,6 +49,7 @@ def configured_implementation_proof_artifacts(
         root=root,
     )
     outbox_broker_proof_path = _configured_path(OUTBOX_BROKER_PROOF_ENV, root=root)
+    report_intake_route_proof_path = _configured_path(REPORT_INTAKE_ROUTE_PROOF_ENV, root=root)
     platform_mesh_onboarding_proof_path = _configured_path(
         PLATFORM_MESH_ONBOARDING_PROOF_ENV,
         root=root,
@@ -88,6 +92,15 @@ def configured_implementation_proof_artifacts(
             outbox_broker_proof_path,
             root=root,
             artifact_name="outbox broker proof artifact",
+        ),
+        report_intake_route_proof=_read_optional_json_object(
+            report_intake_route_proof_path,
+            artifact_name="report intake route proof",
+        ),
+        report_intake_route_proof_ref=_source_safe_artifact_ref(
+            report_intake_route_proof_path,
+            root=root,
+            artifact_name="report intake route proof artifact",
         ),
         platform_mesh_onboarding_proof=_read_optional_json_object(
             platform_mesh_onboarding_proof_path,

@@ -108,6 +108,8 @@ def build_implementation_proof_readiness_snapshot(
     durable_repository_proof_ref: str | None = None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None = None,
     runtime_trust_telemetry_proof_ref: str | None = None,
+    report_intake_route_proof: Mapping[str, object] | None = None,
+    report_intake_route_proof_ref: str | None = None,
     outbox_broker_proof: Mapping[str, object] | None = None,
     outbox_broker_proof_ref: str | None = None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None = None,
@@ -137,6 +139,8 @@ def build_implementation_proof_readiness_snapshot(
     downstream_realization = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        report_intake_route_proof=report_intake_route_proof,
+        report_intake_route_proof_ref=report_intake_route_proof_ref,
     )
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,

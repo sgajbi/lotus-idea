@@ -168,6 +168,26 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_readiness
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),"
+            "--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "report intake route proof artifact into readiness generation"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_workbench_read_path_proof_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
@@ -291,6 +311,29 @@ def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_proof_gate() ->
     assert (
         "Makefile runtime-trust-telemetry-proof-contract-gate target must run "
         "`scripts/runtime_trust_telemetry_proof_contract_gate.py`"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_report_intake_route_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) report-intake-route-proof-contract-gate\n", "")
+        .replace(
+            "scripts/report_intake_route_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call `$(MAKE) report-intake-route-proof-contract-gate`" in errors
+    )
+    assert (
+        "Makefile report-intake-route-proof-contract-gate target must run "
+        "`scripts/report_intake_route_proof_contract_gate.py`"
     ) in errors
 
 

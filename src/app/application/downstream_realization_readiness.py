@@ -8,6 +8,11 @@ from app.application.downstream_realization_contracts import (
     DownstreamRealizationContractPlanRecord,
     load_downstream_realization_contract_plan,
 )
+from app.application.report_intake_route_proof import (
+    REPORT_INTAKE_ROUTE,
+    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
+    report_intake_route_proof_is_valid,
+)
 from app.ports.idea_repository import CandidateSnapshotRepository
 
 
@@ -86,6 +91,8 @@ def build_downstream_realization_readiness_snapshot(
     *,
     repository: CandidateSnapshotRepository,
     durable_storage_backed: bool,
+    report_intake_route_proof: Mapping[str, object] | None = None,
+    report_intake_route_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
     snapshot = repository.snapshot()
     records = tuple(snapshot.candidate_records.values())
@@ -94,15 +101,30 @@ def build_downstream_realization_readiness_snapshot(
     report_evidence_pack_request_count = sum(
         len(record.report_evidence_packs) for record in records
     )
-    capabilities = (
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...] = (
         _advise_conversion_capability(),
         _manage_conversion_capability(),
         _report_render_archive_capability(),
     )
     contract_plan = load_downstream_realization_contract_plan()
-    downstream_contracts = tuple(
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...] = tuple(
         _downstream_contract_from_plan(record) for record in contract_plan.contracts
     )
+    if report_intake_route_proof and report_intake_route_proof_is_valid(report_intake_route_proof):
+        capabilities = tuple(
+            _apply_report_intake_route_proof_to_capability(
+                capability,
+                report_intake_route_proof_ref,
+            )
+            for capability in capabilities
+        )
+        downstream_contracts = tuple(
+            _apply_report_intake_route_proof_to_contract(
+                contract,
+                report_intake_route_proof_ref,
+            )
+            for contract in downstream_contracts
+        )
     capability_blockers = tuple(
         blocker for capability in capabilities for blocker in capability.blockers
     )
@@ -238,4 +260,51 @@ def _downstream_contract_from_plan(
         adapter_status=record.adapter_status,
         evidence_refs=record.evidence_refs,
         blockers=record.blockers,
+    )
+
+
+def _apply_report_intake_route_proof_to_capability(
+    capability: DownstreamRealizationCapabilityReadiness,
+    report_intake_route_proof_ref: str | None,
+) -> DownstreamRealizationCapabilityReadiness:
+    if capability.capability_id != "report-render-archive-realization":
+        return capability
+    blockers_to_clear = set(REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED)
+    evidence_refs = capability.evidence_refs
+    if report_intake_route_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_intake_route_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        capability.source_authority,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+    )
+
+
+def _apply_report_intake_route_proof_to_contract(
+    contract: DownstreamRealizationContractReadiness,
+    report_intake_route_proof_ref: str | None,
+) -> DownstreamRealizationContractReadiness:
+    if contract.contract_id != "lotus-idea-to-lotus-report-evidence-pack-intake:v1":
+        return contract
+    blockers_to_clear = set(REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(contract.blockers):
+        return contract
+    evidence_refs = contract.evidence_refs
+    if report_intake_route_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_intake_route_proof_ref)))
+    return DownstreamRealizationContractReadiness(
+        contract_id=contract.contract_id,
+        owner_repository=contract.owner_repository,
+        source_authority=contract.source_authority,
+        target_route=REPORT_INTAKE_ROUTE,
+        route_fit_status="route_foundation_proven_not_certified",
+        adapter_status=contract.adapter_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in contract.blockers if blocker not in blockers_to_clear
+        ),
     )
