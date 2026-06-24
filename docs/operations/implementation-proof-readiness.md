@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, outbox broker, and platform mesh onboarding proof artifacts can be consumed; no full live journey, mesh certification, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, report-intake route, outbox broker, and platform mesh onboarding proof artifacts can be consumed; no full live journey, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -123,6 +123,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
 | `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
+| `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` | Passes the validated `lotus-report` idea evidence-pack intake route proof into aggregate readiness. |
 
 When rerunning live proof against an existing durable PostgreSQL repository,
 preserve idempotency history. If the same generated default idempotency key was
@@ -194,6 +195,18 @@ configured-publisher API proof, and `make outbox-broker-proof-contract-gate`.
 It does not certify external broker publication support, downstream consumer
 contracts, platform mesh event publication, Gateway/Workbench behavior,
 client-ready publication, or supported-feature promotion.
+
+Report intake route proof is captured by
+`scripts/generate_report_intake_route_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` or passed with
+`--report-intake-route-proof` clears only
+`lotus_report_live_intake_route_proof_missing` inside downstream realization
+and aggregate implementation-proof readiness. It cites the merged
+`lotus-report` route contract for `POST /reports/idea-evidence-packs`, the
+report-owned intake route modules and tests, the `lotus-idea` downstream
+contract, and the readiness endpoints. It does not create a report job, render
+output, archive record, client publication, suitability decision, mandate
+action, execution instruction, or supported feature.
 
 Platform mesh onboarding proof is captured by
 `scripts/generate_platform_mesh_onboarding_proof.py`. A valid artifact
@@ -304,32 +317,38 @@ Implementation-backed evidence:
     `scripts/generate_outbox_broker_proof.py`,
 27. outbox broker proof contract gate:
     `make outbox-broker-proof-contract-gate`,
-28. outbox broker proof tests:
+28. report intake route proof generator:
+    `scripts/generate_report_intake_route_proof.py`,
+29. report intake route proof contract gate:
+    `make report-intake-route-proof-contract-gate`,
+30. report intake route proof tests:
+    `tests/unit/test_report_intake_route_proof.py`,
+31. outbox broker proof tests:
     `tests/unit/test_outbox_broker_proof.py`,
-29. platform mesh onboarding proof generator:
+32. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
-30. platform mesh onboarding proof contract gate:
+33. platform mesh onboarding proof contract gate:
     `make platform-mesh-onboarding-proof-contract-gate`,
-31. platform mesh onboarding proof tests:
+34. platform mesh onboarding proof tests:
     `tests/unit/test_platform_mesh_onboarding_proof.py`,
-32. Workbench read-path proof tests:
+35. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-33. runtime trust telemetry proof tests:
+36. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-31. outbox delivery run-once endpoint:
+37. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-32. operation event: `implementation_proof_readiness_read`,
-33. endpoint ledger:
+38. operation event: `implementation_proof_readiness_read`,
+39. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-34. runtime artifact loader tests:
+40. runtime artifact loader tests:
     `tests/unit/test_proof_artifacts.py`,
-35. unit tests:
+41. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-36. durable repository proof tests:
+42. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-37. generator tests:
+43. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-38. integration tests:
+44. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations
@@ -349,12 +368,14 @@ make implementation-proof-readiness-check
 $env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
 $env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF = "output/downstream/report-intake-route-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
 
 make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make outbox-broker-proof-contract-gate
+make report-intake-route-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate

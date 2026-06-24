@@ -30,7 +30,9 @@ Current implemented foundations include:
   PostgreSQL runtime proof, without provider execution,
 - conversion/report foundations plus governed downstream contract-readiness,
   submission APIs, and HTTP adapter foundations for Advise, Manage, and Report,
-  without downstream route-existence or execution claims,
+  plus optional source-safe proof consumption for the merged `lotus-report`
+  intake route, without report materialization, render, archive, publication,
+  or supported-feature claims,
 - source-safe outbox records with retry/dead-letter semantics, HTTP
   broker-publisher adapter foundation, readiness diagnostics, and bounded
   outbox broker proof evidence for accepted internal mutations,
@@ -154,7 +156,6 @@ flowchart LR
 ```powershell
 make install
 make lint
-make typecheck
 make check
 ```
 
@@ -199,9 +200,10 @@ docker compose up --build
 | `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, mesh events, or downstream consumers. |
 | `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, AI model-risk contract, and source-safe RFC proof-readiness evidence. Platform mesh onboarding proof is consumed explicitly through `--platform-mesh-onboarding-proof` or `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, AI model-risk contract, and source-safe RFC proof-readiness evidence; optionally consume report-intake route proof through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`. Platform mesh onboarding proof is consumed explicitly through `--platform-mesh-onboarding-proof` or `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
+| `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk dashboard and alert readiness contract while keeping it not certified. |
@@ -289,6 +291,9 @@ Local controls keep implementation claims grounded:
 - `make durable-repository-proof-contract-gate` keeps the aggregate
   proof-readiness storage evidence source-safe and explicit about remaining
   production, mesh, live-source, Workbench, and supported-feature blockers.
+- `make report-intake-route-proof-contract-gate` keeps the bounded
+  `lotus-report` route proof source-safe and prevents it from becoming a
+  false report/render/archive, client-publication, or supported-feature claim.
 - `make repository-hygiene-gate` blocks generated cache, build, dependency,
   environment, and database artifacts.
 - `make clean` removes ignored local byproducts through the governed cleanup
@@ -298,16 +303,9 @@ Local controls keep implementation claims grounded:
 
 ## Documentation Map
 
-- [wiki/Overview.md](wiki/Overview.md): product and current-state summary.
-- [wiki/Architecture.md](wiki/Architecture.md): architecture and flow summary.
-- [wiki/Integrations.md](wiki/Integrations.md): upstream and downstream map.
-- [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md): CI lane model and branch hygiene policy.
-- [wiki/Supported-Features.md](wiki/Supported-Features.md): promotion status.
-- [docs/rfcs/README.md](docs/rfcs/README.md): RFC index and slice evidence.
-- [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md):
-  local enterprise-readiness posture.
-- [docs/operations/api-certification.md](docs/operations/api-certification.md):
-  certified internal endpoint inventory.
+Product and operator overview: [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md), and [wiki/Integrations.md](wiki/Integrations.md).
+Governance and release posture: [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md), [wiki/Supported-Features.md](wiki/Supported-Features.md), and [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md).
+Implementation evidence: [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
 
 Repo-local `wiki/` is the authored source of truth. The GitHub wiki is a
 publication target and should be updated through the platform wiki sync flow

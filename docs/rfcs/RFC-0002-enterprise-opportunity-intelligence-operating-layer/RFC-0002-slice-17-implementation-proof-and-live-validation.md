@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, bounded outbox broker proof artifact, and bounded Workbench read-path proof available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, and bounded Workbench read-path proof available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -154,6 +154,14 @@ Prove the complete supported opportunity journey end to end.
     `platform_catalog_inclusion_missing`, while preserving mesh certification,
     product activation, SLO/access/evidence, Gateway/Workbench, and
     supported-feature blockers.
+21. `src/app/application/report_intake_route_proof.py`,
+    `scripts/generate_report_intake_route_proof.py`, and
+    `make report-intake-route-proof-contract-gate` now define and enforce a
+    source-safe `lotus-report` route-foundation proof artifact. The aggregate
+    implementation-readiness generator and operator API consume that artifact
+    to clear only `lotus_report_live_intake_route_proof_missing`, while
+    preserving report materialization, render output, archive record,
+    client-publication, and supported-feature blockers.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -176,8 +184,9 @@ without relying on chat memory.
 
 1. Bounded live Core source-ingestion proof can be captured and consumed, but no
    canonical live proof run has been captured for the full opportunity journey.
-2. Full Workbench live proof, live broker runtime, and downstream realization
-   proof remain pending.
+2. Full Workbench live proof, live broker runtime, downstream materialization
+   proof, render proof, archive proof, and client-publication proof remain
+   pending.
 3. Platform data-mesh certification, runtime trust telemetry, and mesh event
    certification remain pending.
 4. Supported-feature promotion remains blocked until the readiness diagnostic
@@ -241,10 +250,14 @@ or supported-feature proof gaps.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and
-scheduled proof artifact refs plus optional platform mesh onboarding proof refs
-as auditable evidence when those blockers clear; it does not certify storage,
-live scheduler operations, mesh, Workbench, downstream, or supported-feature
-readiness.
+scheduled proof artifact refs plus optional report-intake route and platform
+mesh onboarding proof refs as auditable evidence when those blockers clear; it
+does not certify storage, live scheduler operations, mesh, Workbench,
+Report/Render/Archive materialization, or supported-feature readiness.
+The report-intake route proof narrows the downstream proof gap from "no
+route-foundation evidence" to "`lotus-report` intake route is source-safely
+proven and linked into readiness." It does not close Report package creation,
+rendered output, archive record, client-publication, or supported-feature proof.
 The AI model-risk operations contract refs narrow the model-risk proof index
 gap from "contract exists outside aggregate readiness" to "contract and gate are
 visible in the `ai-explanation` capability evidence." They do not certify a
