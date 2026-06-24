@@ -12,7 +12,7 @@
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
 | `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Source-safe runtime telemetry candidate-snapshot proof contract. |
-| `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, and RFC-0002 aggregate proof-readiness evidence. |
+| `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, optional report-intake route, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `docker compose up --build` | Local container entrypoint. |

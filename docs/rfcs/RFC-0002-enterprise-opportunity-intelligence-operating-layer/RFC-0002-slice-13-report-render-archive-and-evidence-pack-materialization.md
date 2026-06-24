@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream submission API, application orchestration and adapter foundation, and governed downstream contract-plan gate
+Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream submission API, application orchestration and adapter foundation, governed downstream contract-plan gate, and bounded `lotus-report` intake route proof consumption
 
 ## Outcome
 
@@ -52,11 +52,14 @@ Implemented in the first Slice 13 foundation:
    `make downstream-realization-contract-gate` keeps it planned,
    source-authority preserving, blocker-backed, and free of route-existence,
    downstream-execution, or supported-feature claims.
-   The report-owned planned intake contract now exists at
+   The report-owned intake contract now exists at
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
-   That external contract removes the old missing-contract blocker only; it
-   does not prove a live `lotus-report` route, materialization, render, archive,
-   client-publication authority, or supported feature.
+   The merged `lotus-report` route foundation can now be proven through
+   `scripts/generate_report_intake_route_proof.py` and
+   `make report-intake-route-proof-contract-gate`. A valid artifact clears only
+   `lotus_report_live_intake_route_proof_missing`; it does not prove
+   materialization, render, archive, client-publication authority, or a
+   supported feature.
 9. `src/app/ports/downstream_realization.py` and
    `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
    adapter foundation for Report evidence-pack request handoff envelopes. The
@@ -125,23 +128,22 @@ Partially satisfied:
 
 Not yet satisfied:
 
-1. No certified live `lotus-report` idea evidence-pack intake route or
-   acceptance proof exists.
-2. No `lotus-report` report evidence-pack materialization proof exists for
+1. No `lotus-report` report evidence-pack materialization proof exists for
    idea evidence.
-3. No `lotus-render` deterministic output projection exists.
-4. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
+2. No `lotus-render` deterministic output projection exists.
+3. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
    record exists.
-5. No rendered-output equivalence proof exists.
-6. No Gateway/Workbench product surface, data-product certification, runtime
+4. No rendered-output equivalence proof exists.
+5. No Gateway/Workbench product surface, data-product certification, runtime
    trust telemetry, downstream materialization proof, or supported-feature
    promotion exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
 
 The downstream-realization readiness diagnostic and report submission API are
-certified as internal foundations, but they are not materialization proof or
-downstream route-existence proof. They keep Report/Render/Archive ownership
-outside `lotus-idea` and remain `not_certified` until downstream intake,
+certified as internal foundations. With a valid report-intake route proof, they
+can cite `POST /reports/idea-evidence-packs` as a route-foundation proof, but
+they are still not materialization proof. They keep Report/Render/Archive
+ownership outside `lotus-idea` and remain `not_certified` until downstream intake,
 deterministic rendering, archive metadata, retention/legal-hold, retrieval, and
 access-audit proof are implemented in the owning services.
 

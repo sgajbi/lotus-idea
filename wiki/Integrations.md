@@ -125,10 +125,12 @@ before source-ingestion support or product claims can be promoted.
 The report-owned planned intake contract for future idea evidence-pack
 materialization now exists at
 `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
-That clears only the missing-contract blocker in `lotus-idea` readiness. Live
-`lotus-report` route proof, report evidence-pack materialization, rendered
-output, archive record creation, and client-publication authority remain
-blocked.
+`lotus-report` now also exposes the source-safe route foundation
+`POST /reports/idea-evidence-packs`; `lotus-idea` can consume a generated
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` artifact to clear only
+`lotus_report_live_intake_route_proof_missing`. Report evidence-pack
+materialization, rendered output, archive record creation, client-publication
+authority, and supported-feature promotion remain blocked.
 
 ## Conversion Boundaries
 
@@ -187,6 +189,10 @@ endpoint does not call downstream services or promote any integration claim.
 The submission routes may call configured adapters, but adapter calls are still
 not acceptance, materialization, or route-existence certification from the
 owning downstream repositories.
+When a valid report-intake route proof is configured, the Report contract row
+uses `POST /reports/idea-evidence-packs` and reports
+`route_foundation_proven_not_certified`; it still remains blocked for
+materialization, render, archive, and publication proof.
 
 The planned contract rows are authored in
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json` and

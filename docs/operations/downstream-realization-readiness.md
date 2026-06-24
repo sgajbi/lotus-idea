@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | Internal submission posture only; no downstream realization or supported-feature promotion |
+| Product claim | Internal submission posture plus optional `lotus-report` route-foundation proof; no downstream materialization, client publication, or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -33,7 +33,9 @@ It returns:
    intents and Report evidence-pack requests,
 8. planned downstream contract readiness for the Advise proposal, Manage
    action, and Report evidence-pack handoff seams,
-9. `not_certified` supportability until downstream live contracts and product
+9. optional source-safe proof that `lotus-report` exposes
+   `POST /reports/idea-evidence-packs` for idea evidence-pack intake,
+10. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
 The submission routes are:
@@ -80,11 +82,13 @@ artifact that CI validates.
 | --- | --- | --- | --- |
 | `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | `planned:lotus-advise-proposal-intake` | `not_certified`; adapter foundation present |
 | `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | `planned:lotus-manage-action-intake` | `not_certified`; adapter foundation present |
-| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` | `not_certified`; adapter foundation present; report-owned planned intake contract exists at `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json` |
+| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` by default; `POST /reports/idea-evidence-packs` when a valid report-intake route proof is configured | `not_certified`; adapter foundation present; source-safe route proof can clear only the route-existence blocker |
 
 These contract records are planning and certification evidence only. They are
-not route-existence proof in the downstream repositories and must remain
-blocked until the owning service accepts, tests, and certifies the contract.
+not route-existence proof in the downstream repositories by themselves. A valid
+report-intake route proof generated from the merged `lotus-report` contract can
+clear only `lotus_report_live_intake_route_proof_missing`; materialization,
+render, archive, client-publication, and supported-feature blockers remain.
 
 `make downstream-realization-contract-gate` blocks:
 
@@ -104,15 +108,38 @@ validated through the owning repositories and platform gates:
 1. `lotus-advise` proposal/suitability intake is implemented and certified,
 2. `lotus-manage` action-register or DPM review intake is implemented and
    certified,
-3. `lotus-report` live idea evidence-pack intake route proof is implemented
-   and certified,
-4. `lotus-report`, `lotus-render`, and `lotus-archive` materialization proof
+3. `lotus-report`, `lotus-render`, and `lotus-archive` materialization proof
    exists for an idea evidence pack,
-5. downstream live contract proof is captured,
-6. Gateway/Workbench product proof exists where a product surface consumes the
+4. downstream live contract proof is captured beyond route-foundation posture,
+5. Gateway/Workbench product proof exists where a product surface consumes the
    flow,
-7. data-mesh runtime trust telemetry and platform certification are complete,
-8. supported-feature promotion evidence is present.
+6. data-mesh runtime trust telemetry and platform certification are complete,
+7. supported-feature promotion evidence is present.
+
+## Report Intake Route Proof
+
+`scripts/generate_report_intake_route_proof.py` can read the sibling
+`lotus-report` contract and produce a source-safe artifact such as:
+
+```powershell
+python scripts/generate_report_intake_route_proof.py `
+  --generated-at-utc 2026-06-24T00:00:00Z `
+  --report-root ..\lotus-report `
+  --output output\downstream\report-intake-route-proof.json
+```
+
+Point `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` at that artifact before calling
+the readiness API or pass the same artifact to the aggregate implementation
+proof generator. The artifact proves only that `lotus-report` owns a live
+intake route for source-safe idea evidence-pack handoff. It deliberately keeps
+these blockers:
+
+| Remaining blocker | Why it remains |
+| --- | --- |
+| `report_evidence_pack_live_materialization_proof_missing` | No `lotus-report` report job or report package is created. |
+| `rendered_output_creation_missing` | No `lotus-render` output exists. |
+| `archive_record_creation_missing` | No `lotus-archive` record, retention action, legal hold, or retrieval ref exists. |
+| `client_publication_authority_blocked` | No client-ready communication authority is granted. |
 
 ## Response Shape
 
@@ -163,21 +190,27 @@ Implementation-backed evidence:
 7. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
 8. contract gate: `scripts/downstream_realization_contract_gate.py`,
-9. readiness API route: `src/app/api/downstream_realization_readiness.py`,
-10. operation events:
+9. report route proof generator:
+   `scripts/generate_report_intake_route_proof.py`,
+10. report route proof gate:
+    `scripts/report_intake_route_proof_contract_gate.py`,
+11. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+12. operation events:
    `downstream_realization_readiness_read` and
    `downstream_realization_submission`,
-11. endpoint ledger:
+13. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-12. unit tests:
+14. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-13. application orchestration tests:
+15. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-14. adapter tests:
+16. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-15. gate tests:
+17. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-16. integration tests:
+18. route proof tests:
+    `tests/unit/test_report_intake_route_proof.py`,
+19. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py` and
    `tests/integration/test_downstream_realization_api.py`.
 
@@ -186,6 +219,7 @@ Run:
 ```powershell
 python -m pytest tests/unit/test_downstream_realization_application.py tests/unit/test_downstream_realization_adapters.py tests/unit/test_downstream_realization_readiness.py tests/integration/test_downstream_realization_api.py tests/integration/test_downstream_realization_readiness_api.py -q
 make downstream-realization-contract-gate
+make report-intake-route-proof-contract-gate
 make endpoint-certification-gate
 make openapi-gate
 ```
