@@ -256,56 +256,40 @@ def _target_deps(makefile: str, target: str) -> set[str]:
 def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
     errors: list[str] = []
     target_block = _target_block(makefile, "implementation-proof-readiness-check")
-    if "scripts/generate_scheduled_source_ingestion_worker_proof.py" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must generate "
-            "a scheduled source-ingestion worker proof artifact"
-        )
-    if "scripts/generate_durable_repository_proof.py" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must generate "
-            "a durable repository proof artifact"
-        )
-    if "scripts/generate_runtime_trust_telemetry_proof.py" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must generate "
-            "a runtime trust telemetry proof artifact"
-        )
-    if "scripts/generate_workbench_read_path_proof.py" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must generate "
-            "a Workbench read-path proof artifact"
-        )
-    if "scripts/generate_outbox_broker_proof.py" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must generate "
-            "an outbox broker proof artifact"
-        )
-    if "--source-ingestion-scheduled-worker-proof" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "scheduled source-ingestion worker proof artifact into readiness generation"
-        )
-    if "--durable-repository-proof" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "durable repository proof artifact into readiness generation"
-        )
-    if "--runtime-trust-telemetry-proof" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "runtime trust telemetry proof artifact into readiness generation"
-        )
-    if "--workbench-read-path-proof" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "Workbench read-path proof artifact into readiness generation"
-        )
-    if "--outbox-broker-proof" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "outbox broker proof artifact into readiness generation"
-        )
+    generated_artifacts = (
+        (
+            "scripts/generate_scheduled_source_ingestion_worker_proof.py",
+            "a scheduled source-ingestion worker proof artifact",
+        ),
+        ("scripts/generate_durable_repository_proof.py", "a durable repository proof artifact"),
+        (
+            "scripts/generate_runtime_trust_telemetry_proof.py",
+            "a runtime trust telemetry proof artifact",
+        ),
+        ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
+        ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
+    )
+    passed_artifacts = (
+        (
+            "--source-ingestion-scheduled-worker-proof",
+            "scheduled source-ingestion worker proof artifact",
+        ),
+        ("--durable-repository-proof", "durable repository proof artifact"),
+        ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
+        ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
+        ("--outbox-broker-proof", "outbox broker proof artifact"),
+    )
+    for marker, description in generated_artifacts:
+        if marker not in target_block:
+            errors.append(
+                f"Makefile implementation-proof-readiness-check target must generate {description}"
+            )
+    for marker, description in passed_artifacts:
+        if marker not in target_block:
+            errors.append(
+                "Makefile implementation-proof-readiness-check target must pass the "
+                f"{description} into readiness generation"
+            )
     if "--source-ingestion-manifest" not in target_block:
         errors.append(
             "Makefile implementation-proof-readiness-check target must pass the "
