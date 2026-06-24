@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action, bounded outbox broker proof artifact, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -154,6 +154,13 @@ Implemented first-wave internal scope:
     `idea_outbox_event` table. This is not certified live broker runtime,
     downstream delivery, Gateway event publication, data-product certification,
     or supported-feature promotion.
+    `src/app/application/outbox_broker_proof.py`,
+    `scripts/generate_outbox_broker_proof.py`, and
+    `make outbox-broker-proof-contract-gate` now add a source-safe bounded
+    outbox broker proof artifact for aggregate implementation-readiness
+    evidence. It clears only the aggregate broker configuration/runtime-proof
+    blockers and preserves downstream consumer, platform mesh event,
+    Gateway/Workbench, and supported-feature blockers.
 20. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
@@ -235,8 +242,9 @@ Not implemented yet:
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
-5. certified live broker runtime/downstream consumer proof beyond the aggregate
-   outbox readiness diagnostic and HTTP publisher adapter foundation,
+5. certified external publication, platform mesh event certification, and
+   downstream consumer proof beyond the aggregate outbox readiness diagnostic,
+   HTTP publisher adapter foundation, and bounded outbox broker proof artifact,
 6. Gateway/Workbench/downstream proof,
 7. supported-feature promotion.
 
@@ -269,11 +277,12 @@ requires the `operator` role plus `idea.outbox-delivery.run`, fails closed
 without valid broker configuration, leaves records untouched when blocked, and
 returns aggregate delivery counts without event identifiers, aggregate ids, raw
 idempotency keys, source payloads, broker payloads, or downstream claims. This
-does not certify live broker runtime or downstream consumer contracts. The next
-durable persistence slices must still prove certified long-running scheduled
-daemon behavior, deploy-pipeline migration evidence, live Core source-adapter behavior
-against that service, live broker behavior, downstream consumer contracts,
-platform mesh event certification, and event-publication proof before any
+does not certify external publication, platform mesh event delivery, or
+downstream consumer contracts. The next durable persistence slices must still
+prove certified long-running scheduled daemon behavior, deploy-pipeline
+migration evidence, live Core source-adapter behavior against that service,
+downstream consumer contracts, platform mesh event certification, and
+event-publication proof before any
 supported event publication claim, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,
 not that the idea product is data-mesh certified or supported.

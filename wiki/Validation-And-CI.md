@@ -155,9 +155,10 @@ Persistence adapter validation:
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
-   consumption, and the outbox-delivery proof family, can be generated without
-   starting the service and without exposing candidate, portfolio, client,
-   prompt, outbox event, raw idempotency, broker, or source payload identifiers.
+   consumption, Workbench read-path proof consumption, and bounded outbox
+   broker proof consumption, can be generated without starting the service and
+   without exposing candidate, portfolio, client, prompt, outbox event, raw
+   idempotency, broker, or source payload identifiers.
 10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
     `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
     runtime telemetry candidate-snapshot proof contract that aggregate readiness
@@ -167,7 +168,12 @@ Persistence adapter validation:
     bounded Workbench queue/detail read-path proof contract that aggregate
     readiness consumes to clear only
     `workbench_gateway_bff_consumption_proof_missing`.
-12. `tests/unit/test_runtime_trust_telemetry.py`,
+12. `tests/unit/test_outbox_broker_proof.py` and
+    `make outbox-broker-proof-contract-gate` prove the source-safe bounded
+    outbox broker proof contract that aggregate readiness consumes to clear
+    only `outbox_broker_not_configured` and
+    `external_broker_runtime_proof_missing`.
+13. `tests/unit/test_runtime_trust_telemetry.py`,
    `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
    `tests/integration/test_runtime_trust_telemetry_api.py`,
    `make runtime-trust-telemetry-preview-check`, and
@@ -177,19 +183,19 @@ Persistence adapter validation:
    produced without exposing candidate identifiers, source routes, evidence
    hashes, portfolio identifiers, or client identifiers, and without promoting
    mesh certification.
-13. `tests/unit/test_downstream_realization_contract_gate.py` and
+14. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,
    blocker-backed, and free of route-existence, downstream-execution, or
    supported-feature claims.
-14. `tests/unit/test_downstream_realization_readiness.py` and
+15. `tests/unit/test_downstream_realization_readiness.py` and
    `tests/integration/test_downstream_realization_readiness_api.py` prove the
    downstream realization readiness diagnostic for blocked supportability,
    role plus capability enforcement, product-safe payloads, source-authority
    boundaries, planned downstream contract-readiness records, and bounded
    `not_certified` operation events without calling Advise, Manage, Report,
    Render, or Archive.
-15. `tests/unit/test_source_ingestion_readiness.py` and
+16. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
@@ -198,14 +204,14 @@ Persistence adapter validation:
    without durable storage or runtime configuration, executes the configured
    domain batch path source-safely, enforces operator capability, and emits a
    bounded `source_ingestion_run_once` event.
-12. `tests/unit/test_review_queue_application.py`,
+17. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-13. `tests/unit/test_ai_explanation_readiness.py`,
+18. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
    readiness diagnostic for blocked model-risk posture, operator/capability
@@ -216,7 +222,7 @@ Persistence adapter validation:
    the configured PostgreSQL runtime records, replays, and conflict-checks
    source-safe AI explanation lineage through the API without promoting
    `lotus-ai` runtime execution or AI explanation support.
-14. `tests/unit/test_outbox_delivery_readiness.py` and
+19. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
    outbox delivery readiness diagnostic and run-once operator action for
    aggregate backlog/status posture, durable repository posture, broker

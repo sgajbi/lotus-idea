@@ -25,20 +25,22 @@ Blocking scaffold commands:
 16. `make durable-repository-proof-contract-gate`
 17. `make runtime-trust-telemetry-proof-contract-gate`
 18. `make workbench-read-path-proof-contract-gate`
-19. `make source-ingestion-worker-check`
-20. `make source-ingestion-scheduled-worker-check`
-21. `make source-ingestion-live-proof-contract-gate`
-22. `make implementation-proof-readiness-check` generates the scheduled-worker
+19. `make outbox-broker-proof-contract-gate`
+20. `make source-ingestion-worker-check`
+21. `make source-ingestion-scheduled-worker-check`
+22. `make source-ingestion-live-proof-contract-gate`
+23. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
-    telemetry proof artifact, and Workbench read-path proof artifact, then
-    consumes all four in aggregate RFC proof-readiness evidence.
-23. `make supported-features-gate`
-24. `make endpoint-certification-gate`
-25. `make postgres-integration-gate`
-26. `make openapi-gate`
-27. `make coverage-gate`
-28. `make security-audit`
-29. `make docker-build`
+    telemetry proof artifact, Workbench read-path proof artifact, and outbox
+    broker proof artifact, then consumes all five in aggregate RFC
+    proof-readiness evidence.
+24. `make supported-features-gate`
+25. `make endpoint-certification-gate`
+26. `make postgres-integration-gate`
+27. `make openapi-gate`
+28. `make coverage-gate`
+29. `make security-audit`
+30. `make docker-build`
 
 Cleanup support command:
 
@@ -65,6 +67,7 @@ diagnostics,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 Workbench read-path proof contract validation,
+outbox broker proof contract validation,
 implementation-proof readiness artifact generation, source-observability
 contract validation, operation metric contract validation, AI model-risk
 operations contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
@@ -160,6 +163,13 @@ certification claims.
 artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof
 failures diagnosable while blocking raw portfolio identifiers, source payloads,
 idempotency keys, candidate identifiers, and premature support claims.
+
+`make outbox-broker-proof-contract-gate` validates the bounded outbox broker
+proof artifact used by aggregate implementation-proof readiness. It blocks
+source-sensitive event, aggregate, idempotency, payload, portfolio, client,
+trace, and broker-content leakage while preserving the boundary that external
+publication, downstream consumers, platform mesh events, Gateway/Workbench
+proof, and supported-feature promotion remain uncertified.
 
 `make downstream-realization-contract-gate` validates
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.

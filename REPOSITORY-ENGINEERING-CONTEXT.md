@@ -270,8 +270,10 @@ PostgreSQL persistence of delivery status. `src/app/ports/outbox_publisher.py`
 now owns the outbox publisher port and `src/app/infrastructure/outbox_publisher.py`
 adds a source-safe HTTP broker-publisher adapter foundation that emits bounded
 Lotus event envelopes with trace headers and product-safe failure reasons. It
-is not wired as certified live broker publication until broker runtime proof,
-platform mesh event certification, and downstream consumer contracts exist.
+now has a source-safe outbox broker proof artifact for aggregate RFC
+implementation-readiness evidence, but is not wired as certified external
+broker publication until platform mesh event certification and downstream
+consumer contracts exist.
 `src/app/application/outbox_delivery_readiness.py`
 and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
 operator diagnostic over aggregate outbox status counts, delivery-ready backlog,
@@ -286,6 +288,14 @@ does not mutate pending outbox records in that blocked posture, emits bounded
 `outbox_delivery_run_once` operation events, and returns aggregate counts only.
 This is still not live broker runtime certification, downstream consumer proof,
 Gateway/Workbench support, or supported-feature promotion.
+`src/app/application/outbox_broker_proof.py`,
+`scripts/generate_outbox_broker_proof.py`, and
+`make outbox-broker-proof-contract-gate` define the bounded proof artifact that
+aggregate implementation-proof readiness consumes to clear only broker
+configuration/runtime-proof blockers. The artifact cites implemented adapter
+and API proof, blocks source-sensitive event and payload content, and preserves
+downstream consumer, platform mesh event, Gateway/Workbench, and
+supported-feature blockers.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report
@@ -754,9 +764,10 @@ logs; fix or document the owned warning source instead.
    certification blockers explicit.
    Implementation-proof-readiness orchestration aggregates current RFC-0002
    capability proof blockers across source ingestion, queue, AI, data mesh,
-   runtime trust telemetry preview/snapshot evidence, outbox delivery,
-   Workbench, downstream realization, and supported-feature promotion without leaking source
-   payloads, event identifiers, broker payloads, or promoting support.
+   runtime trust telemetry preview/snapshot evidence, outbox delivery and its
+   bounded broker proof artifact, Workbench, downstream realization, and
+   supported-feature promotion without leaking source payloads, event
+   identifiers, broker payloads, or promoting support.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence

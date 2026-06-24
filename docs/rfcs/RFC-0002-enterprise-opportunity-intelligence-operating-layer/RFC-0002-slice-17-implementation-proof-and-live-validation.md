@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, and bounded Workbench read-path proof available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, bounded outbox broker proof artifact, and bounded Workbench read-path proof available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -41,6 +41,13 @@ Prove the complete supported opportunity journey end to end.
    orchestration surface and fail-closed broker configuration behavior without
    exposing event identifiers, exposing raw idempotency keys, exposing broker
    payloads, or claiming downstream delivery.
+   `scripts/generate_outbox_broker_proof.py` and
+   `make outbox-broker-proof-contract-gate` now generate and validate the
+   bounded outbox broker proof artifact consumed by aggregate
+   implementation-proof readiness. A valid artifact clears only
+   `outbox_broker_not_configured` and
+   `external_broker_runtime_proof_missing`; downstream consumer, platform mesh
+   event, Gateway/Workbench, and supported-feature blockers remain.
 8. `make downstream-realization-contract-gate` now validates the planned
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
@@ -124,8 +131,8 @@ Prove the complete supported opportunity journey end to end.
 18. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
     the same source-safe artifact-ref path as the aggregate generator for
     source-ingestion live proof, source-ingestion scheduled-worker proof,
-    durable repository, runtime trust telemetry, and Workbench read-path
-    proofs. `tests/unit/test_proof_artifacts.py`,
+    durable repository, runtime trust telemetry, Workbench read-path, and
+    outbox broker proofs. `tests/unit/test_proof_artifacts.py`,
     `tests/unit/test_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove that
     configured valid artifacts clear only their intended aggregate blockers,
@@ -200,10 +207,10 @@ worker service, source-safe proof, and aggregate readiness consumption are
 CI-enforced"; it does not close long-running scheduler operations, live Core
 source certification, platform mesh certification, Gateway/Workbench,
 downstream, or supported-feature proof.
-The outbox-delivery readiness diagnostic and run-once operator action do the
-same for broker and event delivery posture; they do not close the external
-publication, platform mesh event certification, or downstream consumer proof
-gap.
+The outbox-delivery readiness diagnostic, run-once operator action, and bounded
+outbox broker proof artifact do the same for broker and event delivery posture;
+they do not close the external publication, platform mesh event certification,
+or downstream consumer proof gap.
 The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench

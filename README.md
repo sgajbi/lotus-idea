@@ -31,9 +31,9 @@ Current implemented foundations include:
 - conversion/report foundations plus governed downstream contract-readiness,
   submission APIs, and HTTP adapter foundations for Advise, Manage, and Report,
   without downstream route-existence or execution claims,
-- source-safe outbox records plus internal retry/dead-letter delivery
-  semantics, a source-safe HTTP broker-publisher adapter foundation, and
-  readiness diagnostics for accepted internal mutations,
+- source-safe outbox records with retry/dead-letter semantics, HTTP
+  broker-publisher adapter foundation, readiness diagnostics, and bounded
+  outbox broker proof evidence for accepted internal mutations,
 - runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
   proof, durable repository proof, runtime telemetry candidate-snapshot proof,
   bounded live Core source-ingestion proof, and Workbench read-path proof
@@ -198,8 +198,9 @@ docker compose up --build
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
+| `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, mesh events, or downstream consumers. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, AI model-risk contract, and source-safe RFC proof-readiness evidence with validated proof artifact refs in capability evidence. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, AI model-risk contract, and source-safe RFC proof-readiness evidence with validated proof artifact refs in capability evidence. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |

@@ -155,9 +155,9 @@ certified AI lineage store, Workbench product surface, or supported feature.
    platform-certified or published through Gateway/Workbench discovery, and the
    aggregate implementation-proof readiness diagnostic when any RFC-0002 proof
    family remains uncertified. It also covers outbox delivery run-once and
-   readiness while broker configuration, live broker runtime proof, downstream
-   consumer contracts, platform mesh event certification, and supported-feature
-   evidence are absent.
+   readiness while external publication certification, downstream consumer
+   contracts, platform mesh event certification, and supported-feature evidence
+   are absent.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not certify a data product, production

@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion proof can be consumed; no full live journey, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion and outbox broker proof artifacts can be consumed; no full live journey, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -76,7 +76,7 @@ validated through the owning repositories and platform gates:
 2. certified long-running scheduled worker runtime proof beyond the current
    deploy-contract artifact,
 3. certified runtime trust telemetry and platform mesh certification,
-4. live broker runtime proof and downstream consumer contracts,
+4. certified downstream consumer contracts and production event-publication evidence,
 5. platform mesh event certification for outbox publication,
 6. Workbench panel and browser proof,
 7. downstream Advise, Manage, Report, Render, and Archive realization,
@@ -182,6 +182,19 @@ path from `lotus-workbench` PR #391. It does not certify a full Workbench
 panel, browser accessibility proof, canonical demo runtime proof, data-product
 certification, client-ready publication, or supported-feature promotion.
 
+Outbox broker proof is captured by
+`scripts/generate_outbox_broker_proof.py`. A valid artifact referenced through
+`LOTUS_IDEA_OUTBOX_BROKER_PROOF` or passed with `--outbox-broker-proof` clears
+only the aggregate `outbox_broker_not_configured` and
+`external_broker_runtime_proof_missing` blockers inside generated
+implementation-proof readiness evidence and the operator API readiness
+snapshot. It cites the implemented outbox delivery orchestration, publisher
+port, HTTP publisher adapter foundation, readiness endpoint, run-once endpoint,
+configured-publisher API proof, and `make outbox-broker-proof-contract-gate`.
+It does not certify external broker publication support, downstream consumer
+contracts, platform mesh event publication, Gateway/Workbench behavior,
+client-ready publication, or supported-feature promotion.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -233,9 +246,9 @@ Implementation-backed evidence:
 3. runtime artifact loader: `src/app/runtime/proof_artifacts.py`,
 4. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
 5. repo-native check that generates and consumes the scheduled-worker
-   deploy-proof, durable repository proof, runtime telemetry proof, and
-   Workbench read-path proof artifacts, and records validated proof refs in
-   capability evidence:
+   deploy-proof, durable repository proof, runtime telemetry proof, Workbench
+   read-path proof, and outbox broker proof artifacts, and records validated
+   proof refs in capability evidence:
    `make implementation-proof-readiness-check`,
 6. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
@@ -276,24 +289,30 @@ Implementation-backed evidence:
     `scripts/generate_workbench_read_path_proof.py`,
 25. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-26. Workbench read-path proof tests:
+26. outbox broker proof generator:
+    `scripts/generate_outbox_broker_proof.py`,
+27. outbox broker proof contract gate:
+    `make outbox-broker-proof-contract-gate`,
+28. outbox broker proof tests:
+    `tests/unit/test_outbox_broker_proof.py`,
+29. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-27. runtime trust telemetry proof tests:
+30. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-28. outbox delivery run-once endpoint:
+31. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-29. operation event: `implementation_proof_readiness_read`,
-30. endpoint ledger:
+32. operation event: `implementation_proof_readiness_read`,
+33. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-31. runtime artifact loader tests:
+34. runtime artifact loader tests:
     `tests/unit/test_proof_artifacts.py`,
-32. unit tests:
+35. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-33. durable repository proof tests:
+36. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-34. generator tests:
+37. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-35. integration tests:
+38. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations
@@ -318,6 +337,7 @@ make implementation-proof-readiness-check
 
 make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
+make outbox-broker-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
