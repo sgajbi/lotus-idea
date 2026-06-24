@@ -9,6 +9,10 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.implementation_proof_readiness as implementation_proof_readiness_api
+from app.application.ai_lineage_store_proof import (
+    AI_LINEAGE_STORE_PROOF_ENV,
+    build_ai_lineage_store_proof_payload,
+)
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_ENV,
     build_durable_repository_proof_payload,
@@ -143,6 +147,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
+    ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
     report_route_proof_path = tmp_path / "report-intake-route-proof.json"
     manifest_path.write_text("{}", encoding="utf-8")
@@ -185,6 +190,15 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         ),
         encoding="utf-8",
     )
+    ai_lineage_proof_path.write_text(
+        json.dumps(
+            build_ai_lineage_store_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
     workbench_proof_path.write_text(
         json.dumps(
             build_workbench_read_path_proof_payload(
@@ -204,6 +218,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
     monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
+    monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
     monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
@@ -221,6 +236,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "scheduled_worker_deploy_proof_missing" not in payload["overallBlockers"]
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
+    assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
     assert "report_evidence_pack_live_materialization_proof_missing" in (payload["overallBlockers"])
@@ -242,6 +258,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         "runtime trust telemetry proof artifact"
         in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
     )
+    assert "AI lineage store proof artifact" in capabilities["ai-explanation"]["evidenceRefs"]
+    assert "lotus_ai_runtime_execution_missing" in capabilities["ai-explanation"]["blockers"]
     assert (
         "workbench read-path proof artifact"
         in capabilities["workbench-product-proof"]["evidenceRefs"]

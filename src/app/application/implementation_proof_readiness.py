@@ -11,6 +11,7 @@ from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
     build_ai_explanation_readiness_snapshot,
 )
+from app.application.ai_lineage_store_proof import ai_lineage_store_proof_is_valid
 from app.application.data_mesh_readiness import (
     DataMeshReadinessSnapshot,
     REPOSITORY_ROOT,
@@ -108,6 +109,8 @@ def build_implementation_proof_readiness_snapshot(
     durable_repository_proof_ref: str | None = None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None = None,
     runtime_trust_telemetry_proof_ref: str | None = None,
+    ai_lineage_store_proof: Mapping[str, object] | None = None,
+    ai_lineage_store_proof_ref: str | None = None,
     report_intake_route_proof: Mapping[str, object] | None = None,
     report_intake_route_proof_ref: str | None = None,
     outbox_broker_proof: Mapping[str, object] | None = None,
@@ -169,6 +172,8 @@ def build_implementation_proof_readiness_snapshot(
         durable_repository_proof_ref=durable_repository_proof_ref,
         runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
         runtime_trust_telemetry_proof_ref=runtime_trust_telemetry_proof_ref,
+        ai_lineage_store_proof=ai_lineage_store_proof,
+        ai_lineage_store_proof_ref=ai_lineage_store_proof_ref,
         outbox_broker_proof=outbox_broker_proof,
         outbox_broker_proof_ref=outbox_broker_proof_ref,
         platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
@@ -214,6 +219,8 @@ def _apply_available_proofs(
     durable_repository_proof_ref: str | None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None,
     runtime_trust_telemetry_proof_ref: str | None,
+    ai_lineage_store_proof: Mapping[str, object] | None,
+    ai_lineage_store_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
     outbox_broker_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
@@ -234,6 +241,11 @@ def _apply_available_proofs(
                 capability,
                 runtime_trust_telemetry_proof_ref,
             )
+            for capability in capabilities
+        )
+    if ai_lineage_store_proof and ai_lineage_store_proof_is_valid(ai_lineage_store_proof):
+        capabilities = tuple(
+            _apply_ai_lineage_store_proof(capability, ai_lineage_store_proof_ref)
             for capability in capabilities
         )
     if outbox_broker_proof and outbox_broker_proof_is_valid(outbox_broker_proof):
@@ -347,6 +359,32 @@ def _apply_workbench_read_path_proof(
             blocker
             for blocker in capability.blockers
             if blocker != "workbench_gateway_bff_consumption_proof_missing"
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_ai_lineage_store_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    ai_lineage_store_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "ai-explanation":
+        return capability
+    if "certified_ai_lineage_store_missing" not in capability.blockers:
+        return capability
+    evidence_refs = capability.evidence_refs
+    if ai_lineage_store_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, ai_lineage_store_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker
+            for blocker in capability.blockers
+            if blocker != "certified_ai_lineage_store_missing"
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )

@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
@@ -23,6 +24,8 @@ class ConfiguredImplementationProofArtifacts:
     durable_repository_proof_ref: str | None
     runtime_trust_telemetry_proof: dict[str, Any] | None
     runtime_trust_telemetry_proof_ref: str | None
+    ai_lineage_store_proof: dict[str, Any] | None
+    ai_lineage_store_proof_ref: str | None
     outbox_broker_proof: dict[str, Any] | None
     outbox_broker_proof_ref: str | None
     report_intake_route_proof: dict[str, Any] | None
@@ -48,6 +51,7 @@ def configured_implementation_proof_artifacts(
         RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
         root=root,
     )
+    ai_lineage_store_proof_path = _configured_path(AI_LINEAGE_STORE_PROOF_ENV, root=root)
     outbox_broker_proof_path = _configured_path(OUTBOX_BROKER_PROOF_ENV, root=root)
     report_intake_route_proof_path = _configured_path(REPORT_INTAKE_ROUTE_PROOF_ENV, root=root)
     platform_mesh_onboarding_proof_path = _configured_path(
@@ -83,6 +87,15 @@ def configured_implementation_proof_artifacts(
             runtime_trust_telemetry_proof_path,
             root=root,
             artifact_name="runtime trust telemetry proof artifact",
+        ),
+        ai_lineage_store_proof=_read_optional_json_object(
+            ai_lineage_store_proof_path,
+            artifact_name="AI lineage store proof",
+        ),
+        ai_lineage_store_proof_ref=_source_safe_artifact_ref(
+            ai_lineage_store_proof_path,
+            root=root,
+            artifact_name="AI lineage store proof artifact",
         ),
         outbox_broker_proof=_read_optional_json_object(
             outbox_broker_proof_path,
