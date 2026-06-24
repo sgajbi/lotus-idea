@@ -17,8 +17,9 @@ capabilities exist.
    `docs/demo/client-demo-operating-process.md`,
    `docs/demo/client-demo-pack.template.md`, and `wiki/Demo-Readiness.md`
    define the client-understandable Lotus Idea story, evidence-pack process,
-   claim states, acceptance checklist, and do-not-claim boundaries without
-   promoting supported external product readiness.
+   claim states, client-pack versus internal-evidence separation, acceptance
+   checklist, rehearsal/follow-up discipline, and do-not-claim boundaries
+   without promoting supported external product readiness.
 3. `GET /api/v1/implementation-proof/readiness` gives operators and demo leads
    a source-safe blocker view across source ingestion, advisor queue, AI
    explanation, data mesh, runtime trust telemetry preview/snapshot evidence,

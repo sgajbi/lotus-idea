@@ -30,6 +30,24 @@ flowchart LR
     Scope --> Claims --> Validate --> Pack --> Rehearse --> Deliver --> FollowUp
 ```
 
+## Where To Start
+
+Use the demo assets in this order:
+
+1. Start with the client-facing brief so the audience understands the
+   private-banking problem, Lotus response, trust anchors, and current boundary.
+2. Build a session-specific pack from the template instead of editing the
+   template itself.
+3. Use the demo claims ledger to classify every spoken or written claim.
+4. Run the validation commands and attach the evidence run ID before any
+   screenshot or live path is treated as client material.
+5. Rehearse the talk track, fallback path, and do-not-claim list before the
+   session.
+
+Client-facing material should explain the workflow and control model first.
+Internal proof artifacts should support the story; they should not replace a
+clear explanation of what Lotus is doing for the client.
+
 ## Client-Friendly Explanation
 
 Use this framing for external audiences:
