@@ -11,6 +11,7 @@ from app.application.implementation_proof_readiness import (
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
@@ -110,6 +111,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "GET /api/v1/outbox-delivery/readiness" in outbox_delivery.evidence_refs
     assert "POST /api/v1/outbox-delivery/run-once" in outbox_delivery.evidence_refs
     assert "src/app/infrastructure/outbox_publisher.py" in outbox_delivery.evidence_refs
+    assert "make outbox-broker-proof-contract-gate" in outbox_delivery.evidence_refs
     assert "outbox_broker_not_configured" in outbox_delivery.blockers
     assert "external_broker_runtime_proof_missing" in outbox_delivery.blockers
     source_ingestion = next(
@@ -327,6 +329,45 @@ def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_p
     assert "workbench_gateway_bff_consumption_proof_missing" not in workbench.blockers
     assert "workbench_panel_missing" in workbench.blockers
     assert "output/workbench/workbench-read-path-proof.json" in workbench.evidence_refs
+
+
+def test_implementation_proof_readiness_uses_outbox_broker_proof_without_support_promotion() -> (
+    None
+):
+    proof = build_outbox_broker_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        outbox_broker_proof=proof,
+        outbox_broker_proof_ref="output/outbox/outbox-broker-proof.json",
+    )
+
+    assert "outbox_broker_not_configured" not in snapshot.overall_blockers
+    assert "external_broker_runtime_proof_missing" not in snapshot.overall_blockers
+    assert "downstream_consumer_contracts_missing" in snapshot.overall_blockers
+    assert "platform_mesh_event_contract_missing" in snapshot.overall_blockers
+    assert "gateway_workbench_proof_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+    outbox_delivery = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "outbox-delivery"
+    )
+    assert "outbox_broker_not_configured" not in outbox_delivery.blockers
+    assert "external_broker_runtime_proof_missing" not in outbox_delivery.blockers
+    assert "downstream_consumer_contracts_missing" in outbox_delivery.blockers
+    assert "platform_mesh_event_contract_missing" in outbox_delivery.blockers
+    assert "gateway_workbench_proof_missing" in outbox_delivery.blockers
+    assert "supported_feature_promotion_missing" in outbox_delivery.blockers
+    assert "output/outbox/outbox-broker-proof.json" in outbox_delivery.evidence_refs
 
 
 def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:

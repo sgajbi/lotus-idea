@@ -41,6 +41,7 @@ REQUIRED_TARGETS = (
     "durable-repository-proof-contract-gate",
     "runtime-trust-telemetry-proof-contract-gate",
     "workbench-read-path-proof-contract-gate",
+    "outbox-broker-proof-contract-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
@@ -79,6 +80,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) durable-repository-proof-contract-gate",
     "$(MAKE) runtime-trust-telemetry-proof-contract-gate",
     "$(MAKE) workbench-read-path-proof-contract-gate",
+    "$(MAKE) outbox-broker-proof-contract-gate",
     "$(MAKE) source-ingestion-worker-check",
     "$(MAKE) source-ingestion-scheduled-worker-check",
     "$(MAKE) source-ingestion-live-proof-contract-gate",
@@ -274,6 +276,11 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
             "Makefile implementation-proof-readiness-check target must generate "
             "a Workbench read-path proof artifact"
         )
+    if "scripts/generate_outbox_broker_proof.py" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must generate "
+            "an outbox broker proof artifact"
+        )
     if "--source-ingestion-scheduled-worker-proof" not in target_block:
         errors.append(
             "Makefile implementation-proof-readiness-check target must pass the "
@@ -293,6 +300,11 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
         errors.append(
             "Makefile implementation-proof-readiness-check target must pass the "
             "Workbench read-path proof artifact into readiness generation"
+        )
+    if "--outbox-broker-proof" not in target_block:
+        errors.append(
+            "Makefile implementation-proof-readiness-check target must pass the "
+            "outbox broker proof artifact into readiness generation"
         )
     if "--source-ingestion-manifest" not in target_block:
         errors.append(
@@ -365,6 +377,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",
         "runtime-trust-telemetry-proof-contract-gate": "scripts/runtime_trust_telemetry_proof_contract_gate.py",
         "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
+        "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
         "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
         "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
     }

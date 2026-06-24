@@ -21,6 +21,7 @@ from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
 from app.application.durable_repository_proof import durable_repository_proof_is_valid
+from app.application.outbox_broker_proof import outbox_broker_proof_is_valid
 from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
@@ -103,6 +104,8 @@ def build_implementation_proof_readiness_snapshot(
     durable_repository_proof_ref: str | None = None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None = None,
     runtime_trust_telemetry_proof_ref: str | None = None,
+    outbox_broker_proof: Mapping[str, object] | None = None,
+    outbox_broker_proof_ref: str | None = None,
     workbench_read_path_proof: Mapping[str, object] | None = None,
     workbench_read_path_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
@@ -162,6 +165,14 @@ def build_implementation_proof_readiness_snapshot(
             _apply_runtime_trust_telemetry_proof(
                 capability,
                 runtime_trust_telemetry_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if outbox_broker_proof and outbox_broker_proof_is_valid(outbox_broker_proof):
+        capabilities = tuple(
+            _apply_outbox_broker_proof(
+                capability,
+                outbox_broker_proof_ref,
             )
             for capability in capabilities
         )
@@ -297,6 +308,34 @@ def _apply_workbench_read_path_proof(
     )
 
 
+def _apply_outbox_broker_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    outbox_broker_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "outbox-delivery":
+        return capability
+    blockers_to_clear = {
+        "outbox_broker_not_configured",
+        "external_broker_runtime_proof_missing",
+    }
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if outbox_broker_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_broker_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
 def _source_ingestion_capability(
     snapshot: SourceIngestionReadinessSnapshot,
     *,
@@ -426,6 +465,7 @@ def _outbox_delivery_capability(
             "src/app/application/outbox_delivery_readiness.py",
             "src/app/ports/outbox_publisher.py",
             "src/app/infrastructure/outbox_publisher.py",
+            "make outbox-broker-proof-contract-gate",
             "GET /api/v1/outbox-delivery/readiness",
             "POST /api/v1/outbox-delivery/run-once",
         ),

@@ -177,6 +177,8 @@ async def get_implementation_proof_readiness(
             durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
             runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry_proof,
             runtime_trust_telemetry_proof_ref=proof_artifacts.runtime_trust_telemetry_proof_ref,
+            outbox_broker_proof=proof_artifacts.outbox_broker_proof,
+            outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
             workbench_read_path_proof=proof_artifacts.workbench_read_path_proof,
             workbench_read_path_proof_ref=proof_artifacts.workbench_read_path_proof_ref,
         )
