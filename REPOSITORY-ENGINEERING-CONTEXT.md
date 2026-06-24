@@ -718,12 +718,12 @@ internal foundation endpoint inventory from
 foundation scope, required capability, and unsupported boundary. This keeps
 operator-facing documentation aligned with endpoint certification evidence
 without promoting any supported business feature.
-`docs/demo/client-demo-operating-process.md` and `wiki/Demo-Readiness.md` now
-define the app-specific client-demo process, claim states, evidence pack,
-validation commands, acceptance checklist, and do-not-claim boundaries. The
-process is governed documentation truth only; it does not promote external demo
-readiness, supported features, downstream materialization, client publication,
-or certified data-mesh status.
+`docs/demo/client-demo-operating-process.md`, `docs/demo/client-demo-pack.template.md`,
+and `wiki/Demo-Readiness.md` now define the app-specific client-demo process,
+claim states, evidence pack template, validation commands, acceptance
+checklist, and do-not-claim boundaries. The process is governed documentation
+truth only; it does not promote external demo readiness, supported features,
+downstream materialization, client publication, or certified data-mesh status.
 
 ## CI And Merge Governance
 
@@ -1023,9 +1023,10 @@ modules.
 `make documentation-contract-gate` is blocking through `make lint`. It protects
 the durable agent and operator context surface: `AGENTS.md`, `README.md`,
 `REPOSITORY-ENGINEERING-CONTEXT.md`, RFC index, enterprise standard, operations
-runbooks, demo operating process, quality evidence, RFC implementation evidence
-guide, and wiki source must remain present, substantive, and anchored to
-validation and governance commands. The gate also enforces a polished
+runbooks, demo operating process, demo pack template, quality evidence, RFC
+implementation evidence guide, and wiki source must remain present,
+substantive, and anchored to validation and governance commands. The gate also
+enforces a polished
 operator-document profile for proof, readiness, and client-demo guides:
 current-truth tables, explicit proof and non-proof boundaries, blocker
 sections, response-shape tables, evidence references, claim-state discipline,
