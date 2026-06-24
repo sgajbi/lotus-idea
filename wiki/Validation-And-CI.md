@@ -56,6 +56,7 @@ make durable-repository-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make report-intake-route-proof-contract-gate
 make workbench-read-path-proof-contract-gate
+make ai-lineage-store-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -83,6 +84,7 @@ durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
+AI lineage store proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption plus source-safe artifact-ref recording in
@@ -159,9 +161,9 @@ Persistence adapter validation:
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, Workbench read-path proof consumption, bounded outbox broker
    proof consumption, default report-intake route proof generation and
-   consumption, and default platform mesh onboarding proof generation and
-   consumption, can
-   be generated without starting the service and
+   consumption, default platform mesh onboarding proof generation and
+   consumption, and AI lineage store proof generation and consumption, can be
+   generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
    idempotency, broker, or source payload identifiers.
 10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
@@ -185,29 +187,35 @@ Persistence adapter validation:
     `lotus-report` intake route proof contract that downstream and aggregate
     readiness consume to clear only
     `lotus_report_live_intake_route_proof_missing`.
-14. `tests/unit/test_runtime_trust_telemetry.py`,
-   `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
-   `tests/integration/test_runtime_trust_telemetry_api.py`,
-   `make runtime-trust-telemetry-preview-check`, and
-   `make runtime-trust-telemetry-snapshot-check` prove the source-safe runtime
-   trust telemetry preview, API-certified contract-shaped snapshot diagnostic,
-   and contract-shaped generated snapshot can be
-   produced without exposing candidate identifiers, source routes, evidence
-   hashes, portfolio identifiers, or client identifiers, and without promoting
-   mesh certification.
-15. `tests/unit/test_downstream_realization_contract_gate.py` and
+14. `tests/unit/test_ai_lineage_store_proof.py` and
+    `make ai-lineage-store-proof-contract-gate` prove the source-safe AI
+    lineage store proof contract that aggregate readiness consumes to clear
+    only `certified_ai_lineage_store_missing`, without leaking prompt,
+    provider response, candidate, portfolio, client, request-body,
+    response-body, or database URL material.
+15. `tests/unit/test_runtime_trust_telemetry.py`,
+    `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
+    `tests/integration/test_runtime_trust_telemetry_api.py`,
+    `make runtime-trust-telemetry-preview-check`, and
+    `make runtime-trust-telemetry-snapshot-check` prove the source-safe runtime
+    trust telemetry preview, API-certified contract-shaped snapshot diagnostic,
+    and contract-shaped generated snapshot can be produced without exposing
+    candidate identifiers, source routes, evidence hashes, portfolio
+    identifiers, or client identifiers, and without promoting mesh
+    certification.
+16. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,
    blocker-backed, and free of route-existence, downstream-execution, or
    supported-feature claims.
-16. `tests/unit/test_downstream_realization_readiness.py` and
+17. `tests/unit/test_downstream_realization_readiness.py` and
    `tests/integration/test_downstream_realization_readiness_api.py` prove the
    downstream realization readiness diagnostic for blocked supportability,
    role plus capability enforcement, product-safe payloads, source-authority
    boundaries, planned downstream contract-readiness records, and bounded
    `not_certified` operation events without calling Advise, Manage, Report,
    Render, or Archive.
-17. `tests/unit/test_source_ingestion_readiness.py` and
+18. `tests/unit/test_source_ingestion_readiness.py` and
    `tests/integration/test_source_ingestion_readiness_api.py` prove the
    operator readiness diagnostic for blocked/configured posture,
    permission-denied behavior, relative manifest resolution, and bounded
@@ -216,14 +224,14 @@ Persistence adapter validation:
    without durable storage or runtime configuration, executes the configured
    domain batch path source-safely, enforces operator capability, and emits a
    bounded `source_ingestion_run_once` event.
-18. `tests/unit/test_review_queue_application.py`,
+19. `tests/unit/test_review_queue_application.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
    access-scope identifiers.
-19. `tests/unit/test_ai_explanation_readiness.py`,
+20. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
    readiness diagnostic for blocked model-risk posture, operator/capability
@@ -234,7 +242,7 @@ Persistence adapter validation:
    the configured PostgreSQL runtime records, replays, and conflict-checks
    source-safe AI explanation lineage through the API without promoting
    `lotus-ai` runtime execution or AI explanation support.
-20. `tests/unit/test_outbox_delivery_readiness.py` and
+21. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
    outbox delivery readiness diagnostic and run-once operator action for
    aggregate backlog/status posture, durable repository posture, broker
@@ -244,7 +252,7 @@ Persistence adapter validation:
    `not_certified` operation events without exposing event identifiers, raw
    idempotency keys, source payloads, broker payloads, or downstream contract
    details.
-21. Runtime API database wiring is opt-in and still requires deploy migration
+22. Runtime API database wiring is opt-in and still requires deploy migration
    evidence, certified long-running scheduled source-worker proof, live Core
    source-worker proof, and mesh/support promotion evidence before any
    supported durable product claim. The scheduled worker deploy-contract proof
@@ -428,12 +436,14 @@ client-ready publication, or supported-feature promotion.
 The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
 the diagnostic route only; they do not certify `lotus-ai` runtime execution,
-provider invocation, certified AI lineage-store proof, certified model-risk
-dashboard or alert readiness, Gateway/Workbench support, data-product
-promotion, client-ready publication, or supported-feature promotion. The
-AI model-risk operations contract proves only that dashboard-control and
-alert-candidate requirements exist for implemented telemetry; it remains
-`not_certified`.
+provider invocation, certified model-risk dashboard or alert readiness,
+Gateway/Workbench support, data-product promotion, client-ready publication,
+or supported-feature promotion. The
+AI lineage store proof is consumed only by aggregate implementation-proof
+readiness, and the AI model-risk operations contract proves only that
+dashboard-control and alert-candidate requirements exist for implemented
+telemetry; both remain `not_certified` for `lotus-ai`, dashboard, alert,
+Workbench, client-ready, and supported-feature claims.
 
 The internal outbox-delivery-readiness and outbox-delivery-run-once endpoints
 are covered by OpenAPI, endpoint certification, unit tests, and integration

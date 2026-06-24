@@ -119,7 +119,9 @@ explicitly `not_certified`.
 This contract narrows the model-risk operations gap from "missing contract" to
 "not-certified contract exists". It still does not prove a Grafana dashboard,
 Prometheus alert, model-risk operating process, `lotus-ai` runtime execution,
-certified AI lineage store, Workbench product surface, or supported feature.
+Workbench product surface, client-ready publication, or supported feature. AI
+lineage store proof is a separate source-safe persistence artifact consumed by
+aggregate implementation-proof readiness.
 
 ## Operator Interpretation
 
@@ -138,8 +140,9 @@ certified AI lineage store, Workbench product surface, or supported feature.
    lifecycle/review/conversion preconditions before retrying.
 9. `blocked` means the verifier rejected unsupported AI output, evidence
    replay found stale source posture, the AI explanation readiness diagnostic
-   remains blocked until `lotus-ai` runtime execution, certified AI lineage-store proof,
-   certified model-risk dashboard and alert evidence, runtime trust telemetry, and Workbench proof exist,
+   remains blocked until `lotus-ai` runtime execution, workflow-pack runtime
+   certification, certified model-risk dashboard and alert evidence, runtime
+   trust telemetry, and Workbench proof exist,
    the mesh-readiness diagnostic remains blocked until runtime trust telemetry
    and platform mesh certification exist, the source-ingestion readiness
    diagnostic is missing run-once worker configuration inputs, the

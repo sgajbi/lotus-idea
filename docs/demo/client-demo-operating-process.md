@@ -141,6 +141,7 @@ Run these commands before any external demo pack is marked client-ready:
 make documentation-contract-gate
 make implementation-truth-gate
 make supported-features-gate
+make ai-lineage-store-proof-contract-gate
 make implementation-proof-readiness-check
 ```
 

@@ -108,12 +108,18 @@ client-ready:
 make documentation-contract-gate
 make implementation-truth-gate
 make supported-features-gate
+make ai-lineage-store-proof-contract-gate
 make implementation-proof-readiness-check
 ```
 
 `GET /api/v1/implementation-proof/readiness` is an internal operator diagnostic.
 It shows which proof families remain blocked; it is not client-demo evidence by
 itself.
+
+The AI lineage store proof gate validates source-safe persistence evidence for
+AI explanation lineage before aggregate proof readiness consumes it. It does
+not make the AI workflow client-ready, call `lotus-ai`, certify a model-risk
+dashboard or alert, prove Workbench behavior, or promote a supported feature.
 
 ## Do Not Claim
 
