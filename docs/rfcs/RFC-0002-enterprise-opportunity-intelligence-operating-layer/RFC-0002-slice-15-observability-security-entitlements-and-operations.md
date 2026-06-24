@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
 
 ## Outcome
 
@@ -212,6 +212,10 @@ The outbox delivery readiness diagnostic and run-once operator action are
 explicitly `not_certified` until live broker runtime proof, downstream consumer
 contracts, platform mesh event certification, Gateway/Workbench proof, and
 supported-feature evidence exist.
+The bounded outbox broker proof artifact is source-safe and clears only
+aggregate broker configuration/runtime-proof blockers in implementation-proof
+readiness. It does not change the endpoint supportability posture or certify
+external event publication.
 The runtime trust telemetry preview and snapshot diagnostics are explicitly
 `not_certified` until platform mesh certification, Gateway/Workbench
 discovery, and supported-feature evidence exist.

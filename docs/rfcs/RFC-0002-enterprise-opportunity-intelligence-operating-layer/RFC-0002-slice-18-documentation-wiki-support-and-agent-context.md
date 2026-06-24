@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded outbox broker proof, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -131,6 +131,13 @@ durable operating-context enforcement:
     artifact paths, records validated source-safe artifact refs in capability
     evidence, and preserves the boundary that only matching aggregate blockers
     are cleared and no certification or supported-feature promotion is implied.
+21. README, repository context,
+    `docs/operations/implementation-proof-readiness.md`,
+    `docs/operations/persistence.md`, quality gate docs, RFC evidence, and wiki
+    source now describe the bounded outbox broker proof artifact, its aggregate
+    blocker-clearance scope, and its remaining external-publication,
+    downstream-consumer, mesh-event, Gateway/Workbench, and supported-feature
+    boundaries.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof only; it does not add full
