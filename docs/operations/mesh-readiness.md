@@ -139,6 +139,13 @@ matrix, and mesh handoff evidence. A valid proof clears only
 `data_mesh_not_certified`, `producer_products_not_active`,
 SLO/access/evidence certification, Gateway/Workbench discovery, and
 supported-feature blockers.
+`make implementation-proof-readiness-check` now generates this default proof
+from `LOTUS_PLATFORM_ROOT=../lotus-platform` into ignored
+`output/data-mesh/platform-mesh-onboarding-proof.json` and consumes it in the
+aggregate readiness artifact unless
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` overrides the path. Missing sibling
+platform evidence writes an invalid non-proof artifact and keeps the blockers;
+drift in present sibling evidence remains a failing contract condition.
 
 `make runtime-trust-telemetry-proof-contract-gate` validates the separate
 source-safe candidate-snapshot proof contract used by aggregate implementation

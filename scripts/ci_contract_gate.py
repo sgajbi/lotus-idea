@@ -43,6 +43,7 @@ REQUIRED_TARGETS = (
     "report-intake-route-proof-contract-gate",
     "workbench-read-path-proof-contract-gate",
     "outbox-broker-proof-contract-gate",
+    "platform-mesh-onboarding-proof-contract-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
@@ -83,6 +84,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) report-intake-route-proof-contract-gate",
     "$(MAKE) workbench-read-path-proof-contract-gate",
     "$(MAKE) outbox-broker-proof-contract-gate",
+    "$(MAKE) platform-mesh-onboarding-proof-contract-gate",
     "$(MAKE) source-ingestion-worker-check",
     "$(MAKE) source-ingestion-scheduled-worker-check",
     "$(MAKE) source-ingestion-live-proof-contract-gate",
@@ -246,6 +248,7 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
     ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
     ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
+    ("scripts/generate_platform_mesh_onboarding_proof.py", "a platform mesh onboarding proof artifact"),
 )
 PASSED_READINESS_ARTIFACTS = (
     ("--source-ingestion-scheduled-worker-proof", "scheduled source-ingestion worker proof artifact"),
@@ -254,11 +257,15 @@ PASSED_READINESS_ARTIFACTS = (
     ("--report-intake-route-proof", "report intake route proof artifact"),
     ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
     ("--outbox-broker-proof", "outbox broker proof artifact"),
+    ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
 )
 REQUIRED_READINESS_WIRING = (
     ("--source-ingestion-manifest", "pass the source-ingestion manifest into readiness generation"),
     ("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "pass the default report intake route proof output into readiness generation"),
-    ("--allow-missing-evidence", "keep report intake route proof generation CI-stable when sibling evidence is absent"),
+    ("LOTUS_PLATFORM_ROOT", "support default platform root wiring for platform mesh onboarding proof generation"),
+    ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT", "pass the default platform mesh onboarding proof output into readiness generation"),
+    ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF", "support optional platform mesh onboarding proof artifact wiring"),
+    ("--allow-missing-evidence", "keep cross-repo proof generation CI-stable when sibling evidence is absent"),
     ("--source-ingestion-live-proof", "support optional live source-ingestion proof artifact wiring"),
     ("--core-query-base-url", "support optional Core query-service URL wiring"),
     ("--core-query-control-plane-base-url", "support optional Core query-control-plane URL wiring"),
@@ -298,6 +305,11 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
     for marker, requirement in REQUIRED_READINESS_WIRING:
         if marker not in target_block:
             errors.append(f"{READINESS_TARGET} must {requirement}")
+    if target_block.count("--allow-missing-evidence") < 2:
+        errors.append(
+            f"{READINESS_TARGET} must keep both cross-repo proof generators CI-stable when "
+            "sibling evidence is absent"
+        )
     return errors
 
 

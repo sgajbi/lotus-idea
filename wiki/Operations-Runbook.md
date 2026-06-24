@@ -124,11 +124,13 @@ The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
 default report-intake route proof through `LOTUS_REPORT_ROOT` and
-`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, and optional
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, default platform mesh onboarding
+proof through `LOTUS_PLATFORM_ROOT` and
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, and optional
 `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command while
 allowing live release-proof evidence when the stack is available. Missing
-sibling report evidence writes an invalid non-proof artifact and keeps the
-route blocker.
+sibling report or platform evidence writes an invalid non-proof artifact and
+keeps the corresponding blocker.
 The internal `POST /api/v1/source-ingestion/run-once` action is available for
 operators with `idea.source-ingestion.run` to run one bounded source-ingestion
 pass through the configured manifest, active repository provider, and Core
@@ -414,24 +416,27 @@ client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
-report-intake route proof,
-artifact, and the same source-safe readiness snapshot without running the HTTP
+report-intake route proof artifact, platform mesh onboarding proof artifact,
+and the same source-safe readiness snapshot without running the HTTP
 service. The snapshot records validated proof artifact refs in capability
 evidence. The live operator API also honors valid source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path, and report-intake route proof artifact paths configured through
+Workbench read-path, report-intake route, and platform mesh onboarding proof
+artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`,
 `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, and
-`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, clearing only the matching aggregate
-proof blockers. Use these artifacts as CI or async operator evidence only;
-they are not live scheduler certification, runtime database configuration,
-production storage certification, production recovery readiness, platform mesh
-certification, report/render/archive materialization, full Workbench proof, or
-supported-feature promotion.
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_PLATFORM_ROOT`,
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, and
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, clearing only the matching
+aggregate proof blockers. Use these artifacts as CI or async operator evidence
+only; they are not live scheduler certification, runtime database
+configuration, production storage certification, production recovery readiness,
+platform mesh certification, report/render/archive materialization, full
+Workbench proof, or supported-feature promotion.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

@@ -138,6 +138,14 @@ durable operating-context enforcement:
     blocker-clearance scope, and its remaining external-publication,
     downstream-consumer, mesh-event, Gateway/Workbench, and supported-feature
     boundaries.
+22. README, repository context,
+    `docs/operations/implementation-proof-readiness.md`,
+    `docs/operations/mesh-readiness.md`, service runbooks, quality gate docs,
+    RFC evidence, and wiki source now describe default platform mesh onboarding
+    proof generation and aggregate consumption while preserving the boundary
+    that missing sibling evidence is a non-proof artifact and no platform mesh
+    certification, active product declaration, Gateway/Workbench discovery, or
+    supported-feature promotion is implied.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof only; it does not add full

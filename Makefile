@@ -13,6 +13,9 @@ LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF ?=
 LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF ?=
 LOTUS_REPORT_ROOT ?= ../lotus-report
 LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT ?= output/downstream/report-intake-route-proof.json
+LOTUS_PLATFORM_ROOT ?= ../lotus-platform
+LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF ?=
+LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT ?= output/data-mesh/platform-mesh-onboarding-proof.json
 
 ifeq ($(OS),Windows_NT)
 VENV_PYTHON := $(VENV_DIR)/Scripts/python.exe
@@ -48,6 +51,7 @@ lint:
 	$(MAKE) report-intake-route-proof-contract-gate
 	$(MAKE) workbench-read-path-proof-contract-gate
 	$(MAKE) outbox-broker-proof-contract-gate
+	$(MAKE) platform-mesh-onboarding-proof-contract-gate
 	$(MAKE) source-ingestion-worker-check
 	$(MAKE) source-ingestion-scheduled-worker-check
 	$(MAKE) source-ingestion-live-proof-contract-gate
@@ -137,7 +141,8 @@ implementation-proof-readiness-check:
 	$(VENV_PYTHON) scripts/generate_workbench_read_path_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/workbench/workbench-read-path-proof.json
 	$(VENV_PYTHON) scripts/generate_outbox_broker_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --output output/outbox/outbox-broker-proof.json
 	$(VENV_PYTHON) scripts/generate_report_intake_route_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --report-root $(LOTUS_REPORT_ROOT) --output $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT) --allow-missing-evidence
-	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json $(if $(IMPLEMENTATION_PROOF_OUTPUT),--output $(IMPLEMENTATION_PROOF_OUTPUT),) $(if $(LOTUS_CORE_BASE_URL),--core-base-url $(LOTUS_CORE_BASE_URL),) $(if $(LOTUS_CORE_QUERY_BASE_URL),--core-query-base-url $(LOTUS_CORE_QUERY_BASE_URL),) $(if $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),--core-query-control-plane-base-url $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),) $(if $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),--source-ingestion-live-proof $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),) $(if $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT)) --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json --durable-repository-proof output/persistence/durable-repository-proof.json --runtime-trust-telemetry-proof output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json --workbench-read-path-proof output/workbench/workbench-read-path-proof.json --outbox-broker-proof output/outbox/outbox-broker-proof.json
+	$(VENV_PYTHON) scripts/generate_platform_mesh_onboarding_proof.py --generated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --platform-root $(LOTUS_PLATFORM_ROOT) --output $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT) --allow-missing-evidence
+	$(VENV_PYTHON) scripts/generate_implementation_proof_readiness.py --evaluated-at-utc $(IMPLEMENTATION_PROOF_EVALUATED_AT_UTC) --source-ingestion-manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json $(if $(IMPLEMENTATION_PROOF_OUTPUT),--output $(IMPLEMENTATION_PROOF_OUTPUT),) $(if $(LOTUS_CORE_BASE_URL),--core-base-url $(LOTUS_CORE_BASE_URL),) $(if $(LOTUS_CORE_QUERY_BASE_URL),--core-query-base-url $(LOTUS_CORE_QUERY_BASE_URL),) $(if $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),--core-query-control-plane-base-url $(LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL),) $(if $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),--source-ingestion-live-proof $(LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF),) $(if $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF),--report-intake-route-proof $(LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT)) $(if $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF),--platform-mesh-onboarding-proof $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF),--platform-mesh-onboarding-proof $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT)) --source-ingestion-scheduled-worker-proof output/source-ingestion/scheduled-worker-proof.json --durable-repository-proof output/persistence/durable-repository-proof.json --runtime-trust-telemetry-proof output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json --workbench-read-path-proof output/workbench/workbench-read-path-proof.json --outbox-broker-proof output/outbox/outbox-broker-proof.json
 
 runtime-trust-telemetry-preview-check:
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc 2026-06-21T10:10:00Z

@@ -169,6 +169,85 @@ def test_platform_mesh_onboarding_proof_cli_writes_valid_artifact(tmp_path: Path
     assert platform_mesh_onboarding_proof_is_valid(proof) is True
 
 
+def test_platform_mesh_onboarding_proof_cli_fails_missing_evidence_without_allow_flag(
+    tmp_path: Path,
+) -> None:
+    module = _load_generator_script()
+    output_path = tmp_path / "proof" / "missing-platform-proof.json"
+
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-06-24T00:00:00Z",
+            "--platform-root",
+            str(tmp_path / "missing-lotus-platform"),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 1
+    proof = json.loads(output_path.read_text(encoding="utf-8"))
+    assert proof["proofChecks"]["fileEvidencePresent"] is False
+    assert platform_mesh_onboarding_proof_is_valid(proof) is False
+
+
+def test_platform_mesh_onboarding_proof_cli_allows_missing_evidence_when_requested(
+    tmp_path: Path,
+) -> None:
+    module = _load_generator_script()
+    output_path = tmp_path / "proof" / "missing-platform-proof.json"
+
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-06-24T00:00:00Z",
+            "--platform-root",
+            str(tmp_path / "missing-lotus-platform"),
+            "--output",
+            str(output_path),
+            "--allow-missing-evidence",
+        ]
+    )
+
+    assert result == 0
+    proof = json.loads(output_path.read_text(encoding="utf-8"))
+    assert proof["platformMeshOnboardingProofValid"] is False
+    assert proof["proofChecks"]["fileEvidencePresent"] is False
+    assert platform_mesh_onboarding_proof_is_valid(proof) is False
+
+
+def test_platform_mesh_onboarding_proof_cli_rejects_contract_drift_with_allow_flag(
+    tmp_path: Path,
+) -> None:
+    module = _load_generator_script()
+    platform_root = _write_platform_fixture(tmp_path)
+    source_manifest_path = (
+        platform_root
+        / "platform-contracts/domain-data-products/domain-product-source-manifest.v1.json"
+    )
+    source_manifest_path.write_text('{"repositories":[]}', encoding="utf-8")
+    output_path = tmp_path / "proof" / "drifted-platform-proof.json"
+
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-06-24T00:00:00Z",
+            "--platform-root",
+            str(platform_root),
+            "--output",
+            str(output_path),
+            "--allow-missing-evidence",
+        ]
+    )
+
+    assert result == 1
+    proof = json.loads(output_path.read_text(encoding="utf-8"))
+    assert proof["proofChecks"]["fileEvidencePresent"] is True
+    assert proof["proofChecks"]["platformSourceManifestIncludesIdea"] is False
+    assert platform_mesh_onboarding_proof_is_valid(proof) is False
+
+
 def test_platform_mesh_onboarding_proof_contract_gate_scans_tuple_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []

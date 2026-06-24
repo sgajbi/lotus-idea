@@ -148,8 +148,12 @@ Prove the complete supported opportunity journey end to end.
 20. `src/app/application/platform_mesh_onboarding_proof.py`,
     `scripts/generate_platform_mesh_onboarding_proof.py`, and
     `make platform-mesh-onboarding-proof-contract-gate` now define and enforce
-    a bounded cross-repo platform onboarding proof. The aggregate readiness
-    generator consumes that artifact to clear only
+    a bounded cross-repo platform onboarding proof. The repo-native
+    `make implementation-proof-readiness-check` target generates the default
+    artifact from `LOTUS_PLATFORM_ROOT`, tolerates absent sibling evidence by
+    writing an invalid non-proof artifact, and passes it into aggregate
+    readiness unless `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` overrides the
+    path. The aggregate readiness generator consumes that artifact to clear only
     `platform_source_manifest_inclusion_missing` and
     `platform_catalog_inclusion_missing`, while preserving mesh certification,
     product activation, SLO/access/evidence, Gateway/Workbench, and
@@ -242,11 +246,12 @@ The Workbench read-path proof artifact narrows the aggregate readiness gap from
 queue/detail consumption has a source-safe proof artifact"; it does not close
 full Workbench product proof, browser proof, canonical demo proof, mutation
 affordances, or supported-feature proof.
-The platform mesh onboarding proof narrows the aggregate readiness gap from
-"no platform source-manifest/catalog proof" to "catalog-visible proposed
-products and consumer dependencies are proven"; it does not close mesh
-certification, active product, Gateway/Workbench discovery, SLO/access/evidence,
-or supported-feature proof gaps.
+The default platform mesh onboarding proof narrows the aggregate readiness gap
+from "no platform source-manifest/catalog proof" to "catalog-visible proposed
+products and consumer dependencies can be generated and consumed through the
+canonical readiness command"; it does not close mesh certification, active
+product, Gateway/Workbench discovery, SLO/access/evidence, or
+supported-feature proof gaps.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and

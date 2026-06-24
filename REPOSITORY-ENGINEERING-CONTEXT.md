@@ -187,6 +187,15 @@ foundation and clears only `lotus_report_live_intake_route_proof_missing`;
 missing sibling evidence writes an invalid non-proof artifact and keeps the
 blocker. Report materialization, render output, archive record, client
 publication, and supported-feature blockers remain.
+It also generates a source-safe platform mesh onboarding proof artifact under
+ignored `output/data-mesh/` from the sibling checkout configured by
+`LOTUS_PLATFORM_ROOT`, then passes the artifact into aggregate proof-readiness
+generation unless `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` overrides it. A
+valid artifact clears only `platform_source_manifest_inclusion_missing` and
+`platform_catalog_inclusion_missing`; missing sibling evidence writes an
+invalid non-proof artifact and keeps the corresponding blockers. Mesh
+certification, active producer products, SLO/access/evidence certification,
+Gateway/Workbench discovery, and supported-feature blockers remain.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -937,12 +946,14 @@ owned by upstream services.
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
     `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
     `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
-    `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
+    `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_PLATFORM_ROOT`,
+    `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`,
+    `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
     `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC`, and
     `IMPLEMENTATION_PROOF_OUTPUT` when release reviewers are validating against
-    a running Core stack or merged sibling route-proof artifact. Missing
-    sibling report evidence leaves the generated report proof invalid and keeps
-    the corresponding blockers.
+    a running Core stack or merged sibling route-proof/platform proof
+    artifacts. Missing sibling report or platform evidence leaves the generated
+    proof invalid and keeps the corresponding blockers.
 36. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
 37. runtime trust telemetry snapshot generator:
