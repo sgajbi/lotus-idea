@@ -146,6 +146,11 @@ durable operating-context enforcement:
     that missing sibling evidence is a non-proof artifact and no platform mesh
     certification, active product declaration, Gateway/Workbench discovery, or
     supported-feature promotion is implied.
+23. `docs/demo/README.md` now gives client-demo teams a governed entry point
+    for explaining what Lotus Idea is doing, choosing the right process
+    artifact, tying claims to proof, and keeping unsupported autonomy,
+    suitability, execution, publication, downstream materialization, and
+    certified data-product claims out of client material.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof only; it does not add full
