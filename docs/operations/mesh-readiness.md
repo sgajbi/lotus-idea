@@ -1,7 +1,8 @@
 # Data Mesh Readiness
 
 Status: Planned data-mesh posture with internal readiness, runtime telemetry
-preview, and source-safe runtime snapshot diagnostics.
+preview, source-safe runtime snapshot diagnostics, and bounded platform
+source-manifest/catalog onboarding proof.
 
 Certification status: not certified.
 
@@ -22,6 +23,9 @@ runtime behavior is intentionally not implemented.
 5. SLO, access, and evidence policies:
    `contracts/mesh-slo/`, `contracts/mesh-access/`, and
    `contracts/mesh-evidence/`.
+6. Platform data mesh standard:
+   `../../../lotus-platform/docs/standards/Lotus Data Mesh Standard.md` from the
+   sibling checkout.
 
 ## Promotion Rule
 
@@ -39,8 +43,16 @@ The static telemetry snapshot is deliberately blocked so operators and future
 agents cannot treat the day-one contract baseline as runtime certification.
 The runtime telemetry preview and generated snapshot described below are
 implementation-backed diagnostic evidence, but they remain pre-certification
-evidence until platform source-manifest inclusion, mesh certification, Gateway
-discovery, Workbench discovery, and supported-feature promotion evidence exist.
+evidence until mesh certification, Gateway discovery, Workbench discovery, and
+supported-feature promotion evidence exist. The platform onboarding proof path
+can validate source-manifest and catalog inclusion separately; that is catalog
+visibility, not mesh certification.
+
+The controlling platform standard is
+[Lotus Data Mesh Standard](../../../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md).
+`lotus-idea` follows it as a future-wave, catalog-visible onboarding participant
+until runtime trust telemetry, policy, Gateway, Workbench, evidence, and
+supported-feature proof are complete.
 
 ## Runtime Diagnostic
 
@@ -117,7 +129,16 @@ the preview and emit platform-compatible trust telemetry fields for
 `lotus-idea:IdeaCandidate:v1`. They are source-safe and remain blocked with
 explicit certification blockers. The generated file is ignored by Git. Neither
 surface replaces the checked-in static fallback contract, promotes producer
-products, or includes `lotus-idea` in the platform source manifest.
+products, or certifies the platform mesh.
+
+`scripts/generate_platform_mesh_onboarding_proof.py` reads sibling
+`lotus-platform` source-manifest, generated catalog, dependency graph, maturity
+matrix, and mesh handoff evidence. A valid proof clears only
+`platform_source_manifest_inclusion_missing` and
+`platform_catalog_inclusion_missing` in aggregate readiness. It preserves
+`data_mesh_not_certified`, `producer_products_not_active`,
+SLO/access/evidence certification, Gateway/Workbench discovery, and
+supported-feature blockers.
 
 `make runtime-trust-telemetry-proof-contract-gate` validates the separate
 source-safe candidate-snapshot proof contract used by aggregate implementation
@@ -136,6 +157,7 @@ Run:
 
 ```powershell
 make data-mesh-contract-gate
+make platform-mesh-onboarding-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check
@@ -152,7 +174,8 @@ The gate validates:
 5. SLO, access, and evidence policies stay coherent for
    `lotus-idea:IdeaCandidate:v1`,
 6. optional sibling `lotus-platform` catalog/source-manifest evidence catches
-   source-product drift or premature `lotus-idea` source-manifest inclusion.
+   source-product drift and validates governed `lotus-idea` onboarding without
+   treating catalog visibility as certification.
 7. the runtime telemetry preview generator still emits source-safe
    not-certified evidence from the active repository provider.
 8. the runtime telemetry snapshot endpoint and generator still emit

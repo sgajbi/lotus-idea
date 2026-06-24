@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, and runtime telemetry proof contract
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, and bounded platform onboarding proof
 
 ## Outcome
 
@@ -61,6 +61,12 @@ This slice now has internal operator diagnostic foundations only:
     readiness. The proof clears only `runtime_candidate_snapshot_missing` and
     keeps platform source-manifest, mesh certification, Gateway/Workbench
     discovery, and supported-feature blockers in place.
+16. `src/app/application/platform_mesh_onboarding_proof.py`,
+    `scripts/generate_platform_mesh_onboarding_proof.py`, and
+    `make platform-mesh-onboarding-proof-contract-gate` validate bounded
+    sibling `lotus-platform` source-manifest, generated catalog, dependency
+    graph, maturity matrix, and handoff evidence. The proof clears only
+    source-manifest and catalog-inclusion blockers from aggregate readiness.
 
 Evidence:
 
@@ -75,11 +81,14 @@ Evidence:
 9. `scripts/openapi_quality_gate.py`
 10. `tests/unit/test_runtime_trust_telemetry_proof.py`
 11. `scripts/runtime_trust_telemetry_proof_contract_gate.py`
+12. `tests/unit/test_platform_mesh_onboarding_proof.py`
+13. `scripts/platform_mesh_onboarding_proof_contract_gate.py`
 
 ## Current Non-Goals
 
 1. No producer product is promoted from `proposed`.
-2. No platform source-manifest inclusion is claimed.
+2. Platform source-manifest/catalog onboarding can be proven, but it is not
+   mesh certification and does not activate producer products.
 3. No runtime trust telemetry preview, runtime snapshot endpoint, or generated
    runtime snapshot replaces the blocked static fallback for platform
    certification.
@@ -112,16 +121,15 @@ Evidence:
 
 The diagnostic endpoints deliberately report blocked / not-certified posture.
 The runtime telemetry preview, runtime snapshot endpoint, generated
-snapshot, and runtime telemetry proof contract are implementation-backed
-pre-certification evidence, but they do not
+snapshot, runtime telemetry proof contract, and platform onboarding proof are
+implementation-backed pre-certification evidence, but they do not
 activate producer declarations or replace the blocked static fallback for
-platform mesh certification. Full Slice
-14 completion still requires implementation-backed active product declarations,
-platform catalog/source-manifest inclusion, Gateway/Workbench discovery proof,
-certified consumer contracts, platform mesh certification, and supported-feature
-evidence. Until those exist, `lotus-idea` remains a planned data-mesh
-producer/consumer with repo-native anti-drift controls and source-safe runtime
-telemetry evidence only.
+platform mesh certification. Full Slice 14 completion still requires
+implementation-backed active product declarations, Gateway/Workbench discovery
+proof, certified consumer contracts, platform mesh certification, and
+supported-feature evidence. Until those exist, `lotus-idea` remains a planned
+data-mesh producer/consumer with repo-native anti-drift controls, source-safe
+runtime telemetry evidence, and bounded platform onboarding proof only.
 
 ## Acceptance Gate
 
