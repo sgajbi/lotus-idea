@@ -357,11 +357,28 @@ def validate_against_platform_source_manifest(
     ]
     if not lotus_idea_entries:
         return []
-    if readiness.get("certification_status") != "certified":
-        return [
-            "platform source manifest must not include lotus-idea before repo mesh readiness is certified"
-        ]
-    return []
+    errors: list[str] = []
+    for entry in lotus_idea_entries:
+        if entry.get("source_mode") != "repo_native":
+            errors.append("platform source manifest lotus-idea source_mode must be repo_native")
+        if entry.get("catalog_inclusion") != "included":
+            errors.append("platform source manifest lotus-idea catalog_inclusion must be included")
+        if entry.get("repo_native_status") != "implemented":
+            errors.append(
+                "platform source manifest lotus-idea repo_native_status must be implemented"
+            )
+        if entry.get("repo_native_declaration_path") != "contracts/domain-data-products":
+            errors.append(
+                "platform source manifest lotus-idea repo_native_declaration_path must be "
+                "contracts/domain-data-products"
+            )
+        if entry.get("platform_declaration_paths") != []:
+            errors.append(
+                "platform source manifest lotus-idea platform_declaration_paths must stay empty"
+            )
+    if readiness.get("certification_status") == "certified":
+        errors.append("mesh readiness must not be certified from source-manifest inclusion alone")
+    return errors
 
 
 def validate_data_mesh_contracts(

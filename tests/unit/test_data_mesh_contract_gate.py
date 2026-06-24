@@ -186,16 +186,45 @@ def test_platform_catalog_gate_accepts_current_source_products_when_catalog_exis
     assert module.validate_against_platform_catalog(consumer, catalog) == []
 
 
-def test_platform_source_manifest_gate_blocks_premature_lotus_idea_inclusion() -> None:
+def test_platform_source_manifest_gate_accepts_governed_lotus_idea_onboarding() -> None:
     module = _load_data_mesh_contract_gate()
     readiness = module._read_json(module.MESH_READINESS_PATH)
-    manifest = {"repositories": [{"repository": "lotus-idea", "catalog_inclusion": "included"}]}
+    manifest = {
+        "repositories": [
+            {
+                "repository": "lotus-idea",
+                "source_mode": "repo_native",
+                "catalog_inclusion": "included",
+                "repo_native_status": "implemented",
+                "repo_native_declaration_path": "contracts/domain-data-products",
+                "platform_declaration_paths": [],
+            }
+        ]
+    }
+
+    assert module.validate_against_platform_source_manifest(readiness, manifest) == []
+
+
+def test_platform_source_manifest_gate_blocks_certification_from_inclusion() -> None:
+    module = _load_data_mesh_contract_gate()
+    readiness = module._read_json(module.MESH_READINESS_PATH)
+    readiness["certification_status"] = "certified"
+    manifest = {
+        "repositories": [
+            {
+                "repository": "lotus-idea",
+                "source_mode": "repo_native",
+                "catalog_inclusion": "included",
+                "repo_native_status": "implemented",
+                "repo_native_declaration_path": "contracts/domain-data-products",
+                "platform_declaration_paths": [],
+            }
+        ]
+    }
 
     errors = module.validate_against_platform_source_manifest(readiness, manifest)
 
-    assert errors == [
-        "platform source manifest must not include lotus-idea before repo mesh readiness is certified"
-    ]
+    assert errors == ["mesh readiness must not be certified from source-manifest inclusion alone"]
 
 
 def test_platform_source_manifest_gate_ignores_other_repositories() -> None:

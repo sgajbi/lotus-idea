@@ -17,6 +17,9 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
+from app.application.platform_mesh_onboarding_proof import (
+    PLATFORM_MESH_ONBOARDING_PROOF_ENV,
+)
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -62,6 +65,13 @@ def main(argv: list[str] | None = None) -> int:
                 outbox_broker_proof_path,
                 artifact_name="outbox broker proof",
             )
+            platform_mesh_onboarding_proof_path = _resolve_optional_path(
+                args.platform_mesh_onboarding_proof
+            )
+            platform_mesh_onboarding_proof = _read_optional_json_object(
+                platform_mesh_onboarding_proof_path,
+                artifact_name="platform mesh onboarding proof",
+            )
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
@@ -88,6 +98,11 @@ def main(argv: list[str] | None = None) -> int:
                 outbox_broker_proof_ref=_source_safe_artifact_ref(
                     outbox_broker_proof_path,
                     artifact_name="outbox broker proof artifact",
+                ),
+                platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
+                platform_mesh_onboarding_proof_ref=_source_safe_artifact_ref(
+                    platform_mesh_onboarding_proof_path,
+                    artifact_name="platform mesh onboarding proof artifact",
                 ),
                 workbench_read_path_proof=workbench_read_path_proof,
                 workbench_read_path_proof_ref=_source_safe_artifact_ref(
@@ -224,6 +239,14 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Optional bounded outbox broker runtime proof artifact path. "
             f"Defaults to {OUTBOX_BROKER_PROOF_ENV} when set."
+        ),
+    )
+    parser.add_argument(
+        "--platform-mesh-onboarding-proof",
+        default=os.getenv(PLATFORM_MESH_ONBOARDING_PROOF_ENV),
+        help=(
+            "Optional platform source-manifest and catalog onboarding proof artifact path. "
+            f"Defaults to {PLATFORM_MESH_ONBOARDING_PROOF_ENV} when set."
         ),
     )
     return parser
