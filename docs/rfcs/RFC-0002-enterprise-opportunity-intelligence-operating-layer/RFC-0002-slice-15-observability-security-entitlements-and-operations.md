@@ -196,11 +196,13 @@ The candidate detail route also applies platform caller-context scope headers
 fail-closed against the persisted candidate scope, and the bounded Gateway
 candidate detail route forwards those headers without interpreting them.
 The AI explanation readiness diagnostic is explicitly `not_certified` until
-`lotus-ai` runtime workflow execution, certified AI lineage-store proof,
-workflow-pack runtime certification, certified model-risk operations dashboards
-and alerts, runtime trust telemetry, and Workbench proof exist. The current
-AI model-risk operations contract narrows the prior dashboard gap to a
-not-certified contract posture; it is not certification evidence.
+`lotus-ai` runtime workflow execution, workflow-pack runtime certification,
+certified model-risk operations dashboards and alerts, runtime trust telemetry,
+and Workbench proof exist. The current AI lineage store proof clears only the
+aggregate lineage-store blocker, and the current AI model-risk operations
+contract narrows the prior dashboard gap to a not-certified contract posture;
+neither is `lotus-ai` runtime, dashboard, alert, Workbench, or supported
+feature certification evidence.
 The implementation-proof readiness diagnostic is explicitly `not_certified`
 until every reported proof family has implementation-backed live evidence and
 supported-feature promotion evidence where applicable.

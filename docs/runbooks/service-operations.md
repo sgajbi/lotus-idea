@@ -12,7 +12,8 @@
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
 | `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Source-safe runtime telemetry candidate-snapshot proof contract. |
-| `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, default report-intake route, default platform mesh onboarding, and RFC-0002 aggregate proof-readiness evidence. |
+| `make ai-lineage-store-proof-contract-gate` | Source-safe AI lineage store proof contract without `lotus-ai` runtime or model-risk dashboard certification. |
+| `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, default report-intake route, default platform mesh onboarding, AI lineage store, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `docker compose up --build` | Local container entrypoint. |

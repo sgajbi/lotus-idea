@@ -120,13 +120,19 @@ It also records the AI model-risk operations contract and
 `make ai-model-risk-ops-contract-gate` in the `ai-explanation` capability
 evidence, so reviewers can see dashboard-control and alert-candidate posture
 without treating it as certified model-risk dashboard or alert runtime proof.
+It also records the generated AI lineage store proof when
+`make ai-lineage-store-proof-contract-gate` passes, clearing only
+`certified_ai_lineage_store_missing` while preserving `lotus-ai` runtime,
+model-risk dashboard/alert, Workbench, blocked client publication, and
+supported-feature blockers.
 The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
 default report-intake route proof through `LOTUS_REPORT_ROOT` and
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, default platform mesh onboarding
 proof through `LOTUS_PLATFORM_ROOT` and
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, and optional
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, default AI lineage store
+proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, and optional
 `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command while
 allowing live release-proof evidence when the stack is available. Missing
 sibling report or platform evidence writes an invalid non-proof artifact and
@@ -180,11 +186,11 @@ explanation guardrail availability, model-risk supportability posture, and
 remaining certification blockers without invoking `lotus-ai`, exposing prompts,
 provider payloads, candidate identifiers, source routes, portfolio identifiers,
 or client identifiers. It remains `not_certified` until `lotus-ai` runtime
-workflow execution, certified AI lineage-store proof, workflow-pack runtime
-certification, certified model-risk dashboard and alert evidence, runtime trust
-telemetry, and Workbench proof exist. The current AI model-risk operations
-contract is enforced and source-safe, but it is not dashboard or alert
-certification.
+workflow execution, workflow-pack runtime certification, certified model-risk
+dashboard and alert evidence, runtime trust telemetry, and Workbench proof
+exist. The current AI lineage store proof and AI model-risk operations contract
+are enforced and source-safe, but they are not `lotus-ai` runtime,
+dashboard, alert, Workbench, client-ready, or supported-feature certification.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
@@ -321,8 +327,8 @@ Current outcomes:
    explanation precondition failed.
 10. `blocked`: verifier rejected unsupported AI output, candidate evidence
     replay found stale source posture, AI explanation readiness is missing
-    `lotus-ai` runtime execution, certified AI lineage-store proof, certified
-    model-risk dashboard/alert evidence, runtime trust telemetry, or Workbench proof, expected current
+    `lotus-ai` runtime execution, certified model-risk dashboard/alert
+    evidence, runtime trust telemetry, or Workbench proof, expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
     certification remain absent, runtime trust telemetry snapshot generation
     is blocked by platform certification and discovery proof gaps,

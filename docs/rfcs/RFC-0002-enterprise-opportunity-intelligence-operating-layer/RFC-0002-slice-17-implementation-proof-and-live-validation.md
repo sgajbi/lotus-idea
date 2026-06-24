@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, and bounded Workbench read-path proof available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, platform mesh onboarding proof artifact, and AI lineage store proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -132,7 +132,7 @@ Prove the complete supported opportunity journey end to end.
     the same source-safe artifact-ref path as the aggregate generator for
     source-ingestion live proof, source-ingestion scheduled-worker proof,
     durable repository, runtime trust telemetry, Workbench read-path, outbox
-    broker, and platform mesh onboarding proofs. `tests/unit/test_proof_artifacts.py`,
+    broker, platform mesh onboarding, and AI lineage store proofs. `tests/unit/test_proof_artifacts.py`,
     `tests/unit/test_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove that
     configured valid artifacts clear only their intended aggregate blockers,
@@ -143,9 +143,18 @@ Prove the complete supported opportunity journey end to end.
     `make ai-model-risk-ops-contract-gate`. This makes the not-certified
     dashboard-control and alert-candidate posture visible in proof-readiness
     evidence without clearing the certified dashboard, alert, `lotus-ai`
-    runtime, lineage-store, runtime trust telemetry, Workbench, or
+    runtime, runtime trust telemetry, Workbench, or
     supported-feature blockers.
-20. `src/app/application/platform_mesh_onboarding_proof.py`,
+20. `src/app/application/ai_lineage_store_proof.py`,
+    `scripts/generate_ai_lineage_store_proof.py`, and
+    `make ai-lineage-store-proof-contract-gate` now define and enforce a
+    source-safe AI lineage store proof artifact. The aggregate
+    implementation-readiness generator and operator API consume that artifact
+    to clear only `certified_ai_lineage_store_missing`, while preserving
+    `lotus-ai` runtime execution, workflow-pack runtime, model-risk
+    dashboard/alert, runtime trust telemetry, Workbench, client-ready
+    publication, and supported-feature blockers.
+21. `src/app/application/platform_mesh_onboarding_proof.py`,
     `scripts/generate_platform_mesh_onboarding_proof.py`, and
     `make platform-mesh-onboarding-proof-contract-gate` now define and enforce
     a bounded cross-repo platform onboarding proof. The repo-native
@@ -158,7 +167,7 @@ Prove the complete supported opportunity journey end to end.
     `platform_catalog_inclusion_missing`, while preserving mesh certification,
     product activation, SLO/access/evidence, Gateway/Workbench, and
     supported-feature blockers.
-21. `src/app/application/report_intake_route_proof.py`,
+22. `src/app/application/report_intake_route_proof.py`,
     `scripts/generate_report_intake_route_proof.py`, and
     `make report-intake-route-proof-contract-gate` now define and enforce a
     source-safe `lotus-report` route-foundation proof artifact. The aggregate
@@ -205,6 +214,10 @@ without relying on chat memory.
    but full Workbench panel proof, browser accessibility proof, canonical demo
    runtime proof, entitlement-denied proof, mutation affordances, and
    supported-feature promotion remain pending.
+8. AI lineage store proof is now explicit in aggregate readiness evidence, but
+   `lotus-ai` runtime execution, workflow-pack runtime certification,
+   model-risk dashboard/alert certification, runtime trust telemetry,
+   Workbench proof, and supported-feature promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

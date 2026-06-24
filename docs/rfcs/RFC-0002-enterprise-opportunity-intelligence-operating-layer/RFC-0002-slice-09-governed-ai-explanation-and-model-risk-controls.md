@@ -152,9 +152,9 @@ includes:
 1. `lotus-ai` workflow-pack registration and runtime execution,
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
-3. certified runtime AI lineage-store evidence and model-risk operating proof
-   beyond the current PostgreSQL persistence proof and not-certified
-   model-risk operations contract,
+3. `lotus-ai` runtime execution, workflow-pack runtime certification, and
+   model-risk operating proof beyond the current source-safe AI lineage store
+   proof and not-certified model-risk operations contract,
 4. Gateway/Workbench proof,
 5. certified model-risk dashboards/alerts, trust telemetry, and support runbooks,
 6. supported-feature promotion after runtime proof.

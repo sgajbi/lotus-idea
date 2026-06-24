@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, default report-intake route, outbox broker, and platform mesh onboarding proof artifacts can be consumed; no full live journey, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, default report-intake route, outbox broker, platform mesh onboarding, and AI lineage store proof artifacts can be consumed; no full live journey, `lotus-ai` runtime execution, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -53,7 +53,7 @@ The diagnostic is deliberately not full live journey proof. It does not:
 1. call `lotus-core`,
 2. certify source-ingestion as a supported live source product beyond a
    configured bounded proof artifact,
-3. call `lotus-ai`,
+3. call `lotus-ai` or execute provider/RAG workflows,
 4. certify data products or runtime trust telemetry,
 5. prove Gateway or Workbench product behavior,
 6. create downstream proposals, manage actions, reports, rendered output, or
@@ -78,9 +78,10 @@ validated through the owning repositories and platform gates:
 3. certified runtime trust telemetry and platform mesh certification,
 4. certified downstream consumer contracts and production event-publication evidence,
 5. platform mesh event certification for outbox publication,
-6. Workbench panel and browser proof,
-7. downstream Advise, Manage, Report, Render, and Archive realization,
-8. supported-feature promotion evidence.
+6. `lotus-ai` runtime execution and model-risk operations certification,
+7. Workbench panel and browser proof,
+8. downstream Advise, Manage, Report, Render, and Archive realization,
+9. supported-feature promotion evidence.
 
 Downstream realization blockers are backed by
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
@@ -129,6 +130,8 @@ the canonical target instead of a one-off command:
 | `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` | Selects the default generated platform mesh onboarding proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-mesh-onboarding-proof.json`. |
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
+| `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` | Overrides the default generated AI lineage store proof artifact passed into aggregate readiness. |
 
 When rerunning live proof against an existing durable PostgreSQL repository,
 preserve idempotency history. If the same generated default idempotency key was
@@ -233,6 +236,22 @@ prove Gateway/Workbench discovery, or promote a supported feature.
 Missing sibling evidence writes an invalid non-proof artifact and keeps the
 blockers so CI remains stable without treating absence as proof; drift in
 present sibling evidence still exits non-zero.
+
+AI lineage store proof is captured by
+`scripts/generate_ai_lineage_store_proof.py`. The repo-native
+`make implementation-proof-readiness-check` target now generates the default
+artifact under `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` and passes it into
+aggregate readiness when `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` is not set. A
+valid artifact clears only `certified_ai_lineage_store_missing` from the
+AI explanation capability. It cites the AI explanation lineage migration,
+rollback, governance code, persistence port, PostgreSQL adapter, PostgreSQL
+runtime proof tests, and the required GitHub PostgreSQL runtime proof lane.
+It does not execute `lotus-ai`, call an AI provider, expose prompts or provider
+responses, certify model-risk dashboard/alert operations, prove Workbench
+behavior, authorize client-ready publication, or promote a supported feature.
+`make ai-lineage-store-proof-contract-gate` validates the artifact shape and
+blocks source-sensitive content before the proof is consumed by aggregate
+readiness.
 
 ## Response Shape
 

@@ -119,10 +119,12 @@ client ids, request bodies, response bodies, and free-form source payloads.
 `lotus-ai` remains the owner for runtime workflow execution, prompt registry,
 RAG context construction, provider telemetry, evaluation telemetry, and
 model-risk operating evidence. Durable repository-backed lineage persistence
-is necessary proof, but it is not sufficient certification. The readiness
-diagnostic therefore remains `not_certified` until runtime execution, certified
-AI lineage-store evidence, certified model-risk dashboards and alerts, runtime
-trust telemetry, and Workbench proof exist.
+is necessary proof, but it is not sufficient certification. The source-safe AI
+lineage store proof can clear only the lineage-store blocker in aggregate proof
+readiness. The readiness diagnostic therefore remains `not_certified` until
+`lotus-ai` runtime execution, workflow-pack runtime certification, certified
+model-risk dashboards and alerts, runtime trust telemetry, and Workbench proof
+exist.
 
 ## API Behavior
 

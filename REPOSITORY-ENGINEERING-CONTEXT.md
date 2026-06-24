@@ -438,10 +438,14 @@ authority, reports durable lineage-store backing from the active repository,
 and does not expose prompts, provider payloads, candidate identifiers, source
 routes, portfolio identifiers, or client identifiers. This
 is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
-execution, prompt/RAG/provider integration, certified AI lineage-store proof,
-certified model-risk dashboard/alert evidence, Workbench proof, trust
-telemetry, or supported-feature promotion exists. The repo-owned AI
-model-risk operations contract is enforced by
+execution, prompt/RAG/provider integration, certified model-risk
+dashboard/alert evidence, Workbench proof, trust telemetry, or
+supported-feature promotion exists. The repo-owned AI lineage store proof is
+enforced by `make ai-lineage-store-proof-contract-gate` and can clear only the
+`certified_ai_lineage_store_missing` blocker in aggregate proof readiness; it
+does not certify `lotus-ai` execution, provider calls, model-risk dashboards,
+alerts, Workbench, client-ready publication, or supported-feature promotion.
+The repo-owned AI model-risk operations contract is enforced by
 `make ai-model-risk-ops-contract-gate`, but it is explicitly not dashboard,
 alert, `lotus-ai`, Workbench, or supported-feature certification.
 `GET /api/v1/implementation-proof/readiness` now exposes a certified internal
@@ -481,9 +485,10 @@ or promote downstream realization.
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
 and operator handoff. The generator accepts explicit source-ingestion manifest,
 live-proof, scheduled-worker proof, durable repository proof, runtime trust
-telemetry proof, report-intake route proof, and Workbench read-path proof paths
-for deterministic CI evidence without requiring ambient process environment
-mutation. The Makefile generates the default report-intake route proof under
+telemetry proof, report-intake route proof, Workbench read-path proof, and AI
+lineage store proof paths for deterministic CI evidence without requiring
+ambient process environment mutation. The Makefile generates the default
+report-intake route proof under
 ignored `output/downstream/` and keeps CI stable when sibling `lotus-report`
 evidence is absent by preserving the downstream blocker instead of failing the
 aggregate proof snapshot. The
@@ -494,15 +499,23 @@ The AI explanation capability evidence includes the AI model-risk operations
 contract and gate refs so release reviewers can see the not-certified
 dashboard-control and alert-candidate posture without clearing model-risk
 dashboard or alert blockers.
+The same capability now includes a generated source-safe AI lineage store proof
+artifact under ignored `output/ai/` when the artifact passes
+`make ai-lineage-store-proof-contract-gate`. That proof clears only the stale
+lineage-store blocker and leaves `lotus-ai` runtime execution, model-risk
+dashboard/alert certification, Workbench proof, client-ready publication, and
+supported-feature promotion blocked.
 The live operator API also consumes configured source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path, and report-intake route proof artifact paths through
+Workbench read-path, report-intake route, and AI lineage store proof artifact
+paths through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`, and
-`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`. The repo-native Makefile default
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, and
+`LOTUS_IDEA_AI_LINEAGE_STORE_PROOF`. The repo-native Makefile default
 generates `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` from `LOTUS_REPORT_ROOT`
 and consumes that artifact when no override is set, clearing only the matching
 aggregate proof blockers while preserving all certification and
@@ -940,7 +953,9 @@ owned by upstream services.
     `make source-ingestion-scheduled-worker-check`
 34. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-35. implementation proof readiness generator:
+35. AI lineage store proof contract gate:
+    `make ai-lineage-store-proof-contract-gate`
+36. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
@@ -949,20 +964,22 @@ owned by upstream services.
     `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_PLATFORM_ROOT`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
+    `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`,
+    `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF`,
     `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC`, and
     `IMPLEMENTATION_PROOF_OUTPUT` when release reviewers are validating against
     a running Core stack or merged sibling route-proof/platform proof
     artifacts. Missing sibling report or platform evidence leaves the generated
     proof invalid and keeps the corresponding blockers.
-36. runtime trust telemetry preview generator:
+37. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
-37. runtime trust telemetry snapshot generator:
+38. runtime trust telemetry snapshot generator:
     `make runtime-trust-telemetry-snapshot-check`
-38. PostgreSQL runtime proof with configured integration URL:
+39. PostgreSQL runtime proof with configured integration URL:
     `make postgres-integration-gate`
-39. apply migrations with configured PostgreSQL URL: `make migrate`
-38. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
-39. remove ignored generated local artifacts: `make clean`
+40. apply migrations with configured PostgreSQL URL: `make migrate`
+41. rollback migrations with configured PostgreSQL URL: `make migrate-rollback`
+42. remove ignored generated local artifacts: `make clean`
 
 ## Validation And CI Expectations
 
@@ -988,6 +1005,7 @@ durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
+AI lineage store proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, e2e tests,
@@ -1091,6 +1109,15 @@ truth paths, and explicit non-proof boundaries. It narrows the prior
 model-risk operations gap from missing contract to not-certified contract
 posture; it does not certify a dashboard, alert, `lotus-ai` runtime execution,
 AI lineage store, Workbench surface, or supported feature.
+
+`make ai-lineage-store-proof-contract-gate` is blocking through `make lint`.
+It validates the source-safe AI lineage store proof artifact that aggregate
+implementation-proof readiness consumes to clear only
+`certified_ai_lineage_store_missing`. The gate blocks prompt, provider
+response, candidate, portfolio, client, database URL, request-body, and
+response-body leakage, and preserves the no-`lotus-ai`-runtime,
+no-model-risk-dashboard, no-Workbench, no-client-ready-publication, and
+no-supported-feature-promotion boundaries.
 
 `make implementation-truth-gate` is blocking through `make lint`. It scans the
 durable current-state surfaces (`README.md`, repository context, operations and

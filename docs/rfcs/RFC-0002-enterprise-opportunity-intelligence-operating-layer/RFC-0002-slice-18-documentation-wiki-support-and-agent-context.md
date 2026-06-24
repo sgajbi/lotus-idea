@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded outbox broker proof, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded outbox broker proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -28,8 +28,10 @@ durable operating-context enforcement:
    same slice when documentation truth changes.
 5. `docs/operations/ai-governance.md` now describes the certified internal AI
    evaluator API while preserving the unsupported boundary around provider
-   execution, certified AI lineage-store proof, Gateway/Workbench proof, and supported
-   feature promotion.
+   execution, workflow-pack runtime, certified model-risk operations,
+   Gateway/Workbench proof, and supported feature promotion. The source-safe
+   AI lineage store proof clears only the aggregate lineage-store blocker and
+   does not certify `lotus-ai` runtime execution or external AI support.
 6. `make documentation-contract-gate` now runs through `make lint` and blocks
    removal, thinning, missing anchors, or placeholder erosion across the
    required README, repository context, enterprise standard, runbook, RFC
@@ -59,7 +61,15 @@ durable operating-context enforcement:
     engineering, operations, release, and demo reviewers without overclaiming
     live proof, certified live broker runtime, downstream delivery, or
     supported-feature promotion.
-11. README, repository context, `docs/operations/api-certification.md`,
+11. `docs/demo/README.md`, `docs/demo/client-demo-operating-process.md`,
+    `docs/demo/client-facing-lotus-idea-brief.md`,
+    `docs/demo/client-demo-pack.template.md`, `docs/demo/demo-claims.md`, and
+    `wiki/Demo-Readiness.md` now give client, sales, marketing, product,
+    operations, and engineering reviewers a polished process for explaining
+    what Lotus is doing, which claims are implementation-backed, and which
+    boundaries remain blocked before any client-facing pack is marked
+    client-ready.
+12. README, repository context, `docs/operations/api-certification.md`,
     `docs/operations/persistence.md`, `docs/operations/observability.md`, RFC
     index, quality scorecard, and wiki source now describe the certified
     internal outbox delivery readiness diagnostic, bounded run-once operator
@@ -67,7 +77,7 @@ durable operating-context enforcement:
     that no certified live broker runtime, downstream delivery, platform mesh
     event certification, Gateway/Workbench proof, or supported-feature
     promotion exists.
-12. README, repository context, `docs/operations/downstream-realization-readiness.md`,
+13. README, repository context, `docs/operations/downstream-realization-readiness.md`,
     `docs/operations/api-certification.md`, quality guides, RFC evidence, and
     wiki source now describe the governed downstream contract plan and
     `make downstream-realization-contract-gate` while preserving the boundary
