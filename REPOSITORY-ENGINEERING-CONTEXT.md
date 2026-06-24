@@ -632,6 +632,19 @@ generated evidence to
 These endpoints and generated artifacts are diagnostic evidence only; they are
 not data-product certification, platform source-manifest inclusion,
 Gateway/Workbench discovery, raw lineage export, or supported mesh promotion.
+`src/app/application/platform_mesh_onboarding_proof.py`,
+`scripts/generate_platform_mesh_onboarding_proof.py`, and
+`make platform-mesh-onboarding-proof-contract-gate` now validate bounded sibling
+`lotus-platform` source-manifest/catalog onboarding evidence. A valid artifact
+can clear only `platform_source_manifest_inclusion_missing` and
+`platform_catalog_inclusion_missing` in aggregate implementation-proof
+readiness. It deliberately leaves `data_mesh_not_certified`,
+`producer_products_not_active`, certified runtime telemetry, SLO/access/evidence
+certification, Gateway/Workbench discovery, and supported-feature blockers in
+place.
+The controlling platform standard for this boundary is
+`../lotus-platform/docs/standards/Lotus Data Mesh Standard.md`; catalog-visible
+onboarding is not mesh certification.
 
 RFC-0002 Slice 15 is partially implemented as a bounded operation observability
 foundation. `src/app/observability/logging.py` now defines the

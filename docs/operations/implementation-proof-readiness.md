@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion and outbox broker proof artifacts can be consumed; no full live journey, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, outbox broker, and platform mesh onboarding proof artifacts can be consumed; no full live journey, mesh certification, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -195,6 +195,17 @@ It does not certify external broker publication support, downstream consumer
 contracts, platform mesh event publication, Gateway/Workbench behavior,
 client-ready publication, or supported-feature promotion.
 
+Platform mesh onboarding proof is captured by
+`scripts/generate_platform_mesh_onboarding_proof.py`. A valid artifact
+referenced through `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` or passed with
+`--platform-mesh-onboarding-proof` clears only
+`platform_source_manifest_inclusion_missing` and
+`platform_catalog_inclusion_missing` from data-mesh aggregate readiness. It
+cites sibling `lotus-platform` source-manifest, generated catalog, dependency
+graph, maturity matrix, and mesh handoff evidence. It does not certify the
+platform mesh, activate producer products, certify SLO/access/evidence policy,
+prove Gateway/Workbench discovery, or promote a supported feature.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -295,9 +306,15 @@ Implementation-backed evidence:
     `make outbox-broker-proof-contract-gate`,
 28. outbox broker proof tests:
     `tests/unit/test_outbox_broker_proof.py`,
-29. Workbench read-path proof tests:
+29. platform mesh onboarding proof generator:
+    `scripts/generate_platform_mesh_onboarding_proof.py`,
+30. platform mesh onboarding proof contract gate:
+    `make platform-mesh-onboarding-proof-contract-gate`,
+31. platform mesh onboarding proof tests:
+    `tests/unit/test_platform_mesh_onboarding_proof.py`,
+32. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-30. runtime trust telemetry proof tests:
+33. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
 31. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,

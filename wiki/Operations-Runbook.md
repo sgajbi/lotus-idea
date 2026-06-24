@@ -66,8 +66,12 @@ The internal `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`
 diagnostic is available for operators with
 `idea.mesh.trust-telemetry.preview.read` to inspect aggregate runtime telemetry
 preview counts from the active repository provider. It remains
-`not_certified` until platform source-manifest inclusion, mesh certification,
-Gateway/Workbench discovery, and supported-feature evidence exist.
+`not_certified` until mesh certification, Gateway/Workbench discovery, and
+supported-feature evidence exist. Platform source-manifest and generated
+catalog onboarding can be proven separately by
+`scripts/generate_platform_mesh_onboarding_proof.py`; that proof clears only
+platform inclusion blockers in aggregate readiness and does not certify the
+mesh.
 `make runtime-trust-telemetry-snapshot-check` generates the corresponding
 source-safe runtime snapshot under
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
@@ -205,7 +209,7 @@ instead of producing a false support claim.
 | Source ingestion | Manifest plus source-safe check-only output gate, scheduled-worker deploy-contract gate, live-proof artifact contract, internal run-once foundation, and aggregate-only operator route | Live source certification, mesh certification, Gateway/Workbench support, downstream proof, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths plus source-safe durable repository proof artifact for aggregate readiness evidence | Runtime database configuration, production storage certification, or production recovery readiness |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, bounded run-once operator action, and bounded outbox broker proof artifact for accepted internal mutations | Certified external publication, platform mesh event certification, downstream delivery, or supported-feature promotion |
-| Data mesh | Proposed contracts and source-safe readiness diagnostics | Promoted data product or platform catalog publication |
+| Data mesh | Proposed contracts, source-safe readiness diagnostics, and bounded platform source-manifest/catalog onboarding proof | Promoted data product, mesh certification, Gateway/Workbench discovery, or supported-feature promotion |
 | Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, and planned Advise/Manage/Report handoff contract posture | Advise/Manage/Report/Render/Archive materialization or downstream route-existence proof |
 
 ```mermaid

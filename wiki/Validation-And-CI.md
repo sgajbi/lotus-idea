@@ -352,17 +352,24 @@ Data-mesh foundation checks:
 3. planned trust telemetry must remain blocked and `not_certified`,
 4. SLO, access, and evidence policies must be present before promotion work,
 5. optional sibling platform catalog/source-manifest evidence is used to catch
-   source-product drift or premature `lotus-idea` source-manifest inclusion,
-6. platform mesh certification is required before any supported mesh claim.
+   source-product drift and validate governed `lotus-idea` onboarding without
+   treating catalog visibility as certification,
+6. `make platform-mesh-onboarding-proof-contract-gate` validates the bounded
+   cross-repo proof when a sibling `lotus-platform` checkout is available,
+7. the sibling [Lotus Data Mesh Standard](../../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
+   remains the controlling platform rule,
+8. platform mesh certification is required before any supported mesh claim.
 
 The internal data-mesh-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify the
 diagnostic route only; they do not certify the data products it reports as
 blocked. The endpoint's blocker contract is part of the anti-promotion control
-and must continue to name missing platform source-manifest inclusion, catalog
-inclusion, SLO certification, access-policy certification, evidence-policy
-certification, Gateway/Workbench discovery proof, and supported-feature
-promotion until those are implementation-backed and platform-certified.
+and must continue to name SLO certification, access-policy certification,
+evidence-policy certification, Gateway/Workbench discovery proof, and
+supported-feature promotion until those are implementation-backed and
+platform-certified. Source-manifest and catalog-inclusion blockers may be
+cleared only by the bounded platform mesh onboarding proof; that proof is not
+mesh certification.
 
 The internal runtime trust telemetry preview endpoint is covered by OpenAPI,
 endpoint certification, unit tests, integration tests, and a repo-native

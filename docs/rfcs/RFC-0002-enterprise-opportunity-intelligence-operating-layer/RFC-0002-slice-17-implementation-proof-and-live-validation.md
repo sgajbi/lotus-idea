@@ -131,8 +131,8 @@ Prove the complete supported opportunity journey end to end.
 18. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
     the same source-safe artifact-ref path as the aggregate generator for
     source-ingestion live proof, source-ingestion scheduled-worker proof,
-    durable repository, runtime trust telemetry, Workbench read-path, and
-    outbox broker proofs. `tests/unit/test_proof_artifacts.py`,
+    durable repository, runtime trust telemetry, Workbench read-path, outbox
+    broker, and platform mesh onboarding proofs. `tests/unit/test_proof_artifacts.py`,
     `tests/unit/test_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` prove that
     configured valid artifacts clear only their intended aggregate blockers,
@@ -144,6 +144,15 @@ Prove the complete supported opportunity journey end to end.
     dashboard-control and alert-candidate posture visible in proof-readiness
     evidence without clearing the certified dashboard, alert, `lotus-ai`
     runtime, lineage-store, runtime trust telemetry, Workbench, or
+    supported-feature blockers.
+20. `src/app/application/platform_mesh_onboarding_proof.py`,
+    `scripts/generate_platform_mesh_onboarding_proof.py`, and
+    `make platform-mesh-onboarding-proof-contract-gate` now define and enforce
+    a bounded cross-repo platform onboarding proof. The aggregate readiness
+    generator consumes that artifact to clear only
+    `platform_source_manifest_inclusion_missing` and
+    `platform_catalog_inclusion_missing`, while preserving mesh certification,
+    product activation, SLO/access/evidence, Gateway/Workbench, and
     supported-feature blockers.
 
 This is a proof-control surface with bounded live source-ingestion evidence
@@ -224,12 +233,18 @@ The Workbench read-path proof artifact narrows the aggregate readiness gap from
 queue/detail consumption has a source-safe proof artifact"; it does not close
 full Workbench product proof, browser proof, canonical demo proof, mutation
 affordances, or supported-feature proof.
+The platform mesh onboarding proof narrows the aggregate readiness gap from
+"no platform source-manifest/catalog proof" to "catalog-visible proposed
+products and consumer dependencies are proven"; it does not close mesh
+certification, active product, Gateway/Workbench discovery, SLO/access/evidence,
+or supported-feature proof gaps.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and
-scheduled proof artifact refs as auditable evidence when those blockers clear;
-it does not certify storage, live scheduler operations, mesh, Workbench,
-downstream, or supported-feature readiness.
+scheduled proof artifact refs plus optional platform mesh onboarding proof refs
+as auditable evidence when those blockers clear; it does not certify storage,
+live scheduler operations, mesh, Workbench, downstream, or supported-feature
+readiness.
 The AI model-risk operations contract refs narrow the model-risk proof index
 gap from "contract exists outside aggregate readiness" to "contract and gate are
 visible in the `ai-explanation` capability evidence." They do not certify a

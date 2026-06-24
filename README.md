@@ -34,16 +34,13 @@ Current implemented foundations include:
 - source-safe outbox records with retry/dead-letter semantics, HTTP
   broker-publisher adapter foundation, readiness diagnostics, and bounded
   outbox broker proof evidence for accepted internal mutations,
-- runtime trust telemetry, data-mesh readiness, PostgreSQL schema/migration
-  proof, durable repository proof, runtime telemetry candidate-snapshot proof,
-  bounded live Core source-ingestion proof, and Workbench read-path proof
-  consumed by generated and operator API aggregate readiness evidence,
+- runtime trust telemetry, data-mesh readiness, PostgreSQL/migration, durable
+  repository, live Core, Workbench, outbox, and optional platform mesh proof
+  evidence for aggregate readiness,
 - bounded `lotus-gateway` read-only queue/detail routes, including caller
   entitlement-scope forwarding for both published read paths,
 - bounded `lotus-workbench` read-only queue/detail rendering through Gateway,
   with stricter live validation before demo evidence is accepted.
-
-Detailed current-state inventory lives in [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
 
 ## Product Boundary
 
@@ -104,10 +101,11 @@ day one. Repo-owned source truth starts in:
 - [contracts/domain-data-products/lotus-idea-consumers.v1.json](contracts/domain-data-products/lotus-idea-consumers.v1.json)
 - [contracts/domain-data-products/mesh-readiness.v1.json](contracts/domain-data-products/mesh-readiness.v1.json)
 - [docs/operations/mesh-readiness.md](docs/operations/mesh-readiness.md)
+- [Lotus Data Mesh Standard](../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
 
-All products remain proposed and not certified until runtime behavior,
-telemetry, platform catalog inclusion, full Gateway and Workbench live proof,
-certification evidence, and supported-feature promotion are complete.
+All products remain proposed and not certified until runtime behavior, telemetry, platform
+certification, Gateway/Workbench proof, and supported-feature promotion are complete. Optional
+platform onboarding proof validates catalog visibility only; certification and support stay blocked.
 
 ## Architecture At A Glance
 
@@ -199,8 +197,9 @@ docker compose up --build
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
 | `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, mesh events, or downstream consumers. |
+| `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, AI model-risk contract, and source-safe RFC proof-readiness evidence with validated proof artifact refs in capability evidence. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, AI model-risk contract, and source-safe RFC proof-readiness evidence. Platform mesh onboarding proof is consumed explicitly through `--platform-mesh-onboarding-proof` or `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
