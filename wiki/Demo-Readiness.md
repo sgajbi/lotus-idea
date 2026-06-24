@@ -30,6 +30,21 @@ flowchart LR
     Scope --> Claims --> Validate --> Pack --> Rehearse --> Deliver --> FollowUp
 ```
 
+## Client-Friendly Explanation
+
+Use this framing for external audiences:
+
+> Lotus Idea creates a governed opportunity-intelligence layer for private
+> banking. It connects source-owned evidence to advisor review and downstream
+> realization intent while keeping official facts, suitability, reporting,
+> rendering, archive, and client publication with the owning Lotus apps.
+
+| Client question | Current answer |
+| --- | --- |
+| What is Lotus doing here? | Showing how opportunity intelligence can be governed from source evidence through review posture and proof readiness. |
+| Why should a client trust the story? | Every current claim must link to an owner, command, run ID, artifact, and validation gate. |
+| What is not being claimed? | Production support, client-ready publication, suitability approval, execution, report materialization, archive creation, autonomous advice, and certified data-product status. |
+
 ## Claim States
 
 | Claim state | Meaning | Demo rule |

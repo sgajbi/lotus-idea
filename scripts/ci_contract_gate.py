@@ -237,6 +237,35 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
     "merged-pr-main-releasability.yml": ("continue-on-error:",),
 }
 
+READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
+# fmt: off
+GENERATED_READINESS_ARTIFACTS = (
+    ("scripts/generate_scheduled_source_ingestion_worker_proof.py", "a scheduled source-ingestion worker proof artifact"),
+    ("scripts/generate_durable_repository_proof.py", "a durable repository proof artifact"),
+    ("scripts/generate_runtime_trust_telemetry_proof.py", "a runtime trust telemetry proof artifact"),
+    ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
+    ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
+    ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
+)
+PASSED_READINESS_ARTIFACTS = (
+    ("--source-ingestion-scheduled-worker-proof", "scheduled source-ingestion worker proof artifact"),
+    ("--durable-repository-proof", "durable repository proof artifact"),
+    ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
+    ("--report-intake-route-proof", "report intake route proof artifact"),
+    ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
+    ("--outbox-broker-proof", "outbox broker proof artifact"),
+)
+REQUIRED_READINESS_WIRING = (
+    ("--source-ingestion-manifest", "pass the source-ingestion manifest into readiness generation"),
+    ("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "pass the default report intake route proof output into readiness generation"),
+    ("--allow-missing-evidence", "keep report intake route proof generation CI-stable when sibling evidence is absent"),
+    ("--source-ingestion-live-proof", "support optional live source-ingestion proof artifact wiring"),
+    ("--core-query-base-url", "support optional Core query-service URL wiring"),
+    ("--core-query-control-plane-base-url", "support optional Core query-control-plane URL wiring"),
+    ("IMPLEMENTATION_PROOF_OUTPUT", "support optional implementation proof output artifact wiring"),
+)
+# fmt: on
+
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -258,55 +287,17 @@ def _target_deps(makefile: str, target: str) -> set[str]:
 def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
     errors: list[str] = []
     target_block = _target_block(makefile, "implementation-proof-readiness-check")
-    generated_artifacts = (
-        (
-            "scripts/generate_scheduled_source_ingestion_worker_proof.py",
-            "a scheduled source-ingestion worker proof artifact",
-        ),
-        ("scripts/generate_durable_repository_proof.py", "a durable repository proof artifact"),
-        (
-            "scripts/generate_runtime_trust_telemetry_proof.py",
-            "a runtime trust telemetry proof artifact",
-        ),
-        ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
-        ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
-    )
-    passed_artifacts = (
-        (
-            "--source-ingestion-scheduled-worker-proof",
-            "scheduled source-ingestion worker proof artifact",
-        ),
-        ("--durable-repository-proof", "durable repository proof artifact"),
-        ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
-        ("--report-intake-route-proof", "report intake route proof artifact"),
-        ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
-        ("--outbox-broker-proof", "outbox broker proof artifact"),
-    )
-    for marker, description in generated_artifacts:
+    for marker, description in GENERATED_READINESS_ARTIFACTS:
+        if marker not in target_block:
+            errors.append(f"{READINESS_TARGET} must generate {description}")
+    for marker, description in PASSED_READINESS_ARTIFACTS:
         if marker not in target_block:
             errors.append(
-                f"Makefile implementation-proof-readiness-check target must generate {description}"
+                f"{READINESS_TARGET} must pass the {description} into readiness generation"
             )
-    for marker, description in passed_artifacts:
+    for marker, requirement in REQUIRED_READINESS_WIRING:
         if marker not in target_block:
-            errors.append(
-                "Makefile implementation-proof-readiness-check target must pass the "
-                f"{description} into readiness generation"
-            )
-    if "--source-ingestion-manifest" not in target_block:
-        errors.append(
-            "Makefile implementation-proof-readiness-check target must pass the "
-            "source-ingestion manifest into readiness generation"
-        )
-    for marker, description in (
-        ("--source-ingestion-live-proof", "live source-ingestion proof artifact"),
-        ("--core-query-base-url", "Core query-service URL"),
-        ("--core-query-control-plane-base-url", "Core query-control-plane URL"),
-        ("IMPLEMENTATION_PROOF_OUTPUT", "implementation proof output artifact"),
-    ):
-        if marker not in target_block:
-            message = "Makefile implementation-proof-readiness-check target must support "
-            errors.append(f"{message}optional {description} wiring")
+            errors.append(f"{READINESS_TARGET} must {requirement}")
     return errors
 
 

@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | Internal submission posture plus optional `lotus-report` route-foundation proof; no downstream materialization, client publication, or supported-feature promotion |
+| Product claim | Internal submission posture plus default source-safe `lotus-report` route-foundation proof when sibling evidence is present; no downstream materialization, client publication, or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -33,7 +33,7 @@ It returns:
    intents and Report evidence-pack requests,
 8. planned downstream contract readiness for the Advise proposal, Manage
    action, and Report evidence-pack handoff seams,
-9. optional source-safe proof that `lotus-report` exposes
+9. default source-safe proof that `lotus-report` exposes
    `POST /reports/idea-evidence-packs` for idea evidence-pack intake,
 10. `not_certified` supportability until downstream live contracts and product
    proof exist.
@@ -82,7 +82,7 @@ artifact that CI validates.
 | --- | --- | --- | --- |
 | `lotus-idea-to-lotus-advise-proposal-intake:v1` | `lotus-advise` | `planned:lotus-advise-proposal-intake` | `not_certified`; adapter foundation present |
 | `lotus-idea-to-lotus-manage-action-intake:v1` | `lotus-manage` | `planned:lotus-manage-action-intake` | `not_certified`; adapter foundation present |
-| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` by default; `POST /reports/idea-evidence-packs` when a valid report-intake route proof is configured | `not_certified`; adapter foundation present; source-safe route proof can clear only the route-existence blocker |
+| `lotus-idea-to-lotus-report-evidence-pack-intake:v1` | `lotus-report` | `planned:lotus-report-idea-evidence-pack-intake` when proof is invalid or absent; `POST /reports/idea-evidence-packs` when the generated or overridden report-intake route proof is valid | `not_certified`; adapter foundation present; source-safe route proof can clear only the route-existence blocker |
 
 These contract records are planning and certification evidence only. They are
 not route-existence proof in the downstream repositories by themselves. A valid
@@ -128,11 +128,15 @@ python scripts/generate_report_intake_route_proof.py `
   --output output\downstream\report-intake-route-proof.json
 ```
 
-Point `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` at that artifact before calling
-the readiness API or pass the same artifact to the aggregate implementation
-proof generator. The artifact proves only that `lotus-report` owns a live
-intake route for source-safe idea evidence-pack handoff. It deliberately keeps
-these blockers:
+`make implementation-proof-readiness-check` generates this artifact by default
+from `LOTUS_REPORT_ROOT=../lotus-report` into
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT=output/downstream/report-intake-route-proof.json`
+and passes it to aggregate readiness. Set
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` only when you need to override that
+artifact. Missing sibling evidence writes an invalid non-proof artifact and
+keeps the route blocker. A valid artifact proves only that `lotus-report` owns
+a live intake route for source-safe idea evidence-pack handoff. It deliberately
+keeps these blockers:
 
 | Remaining blocker | Why it remains |
 | --- | --- |

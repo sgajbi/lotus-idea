@@ -180,6 +180,63 @@ def test_report_intake_route_proof_cli_writes_valid_artifact(tmp_path: Path) -> 
     assert report_intake_route_proof_is_valid(proof) is True
 
 
+def test_report_intake_route_proof_cli_allows_missing_sibling_evidence_for_default_readiness(
+    tmp_path: Path,
+) -> None:
+    module = _load_generator_script()
+    output_path = tmp_path / "proof" / "report-intake-route-proof.json"
+
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-06-24T00:00:00Z",
+            "--report-root",
+            str(tmp_path / "missing-lotus-report"),
+            "--output",
+            str(output_path),
+            "--allow-missing-evidence",
+        ]
+    )
+
+    assert result == 0
+    proof = json.loads(output_path.read_text(encoding="utf-8"))
+    assert proof["reportIntakeRouteProofValid"] is False
+    assert proof["proofChecks"]["fileEvidencePresent"] is False
+    assert report_intake_route_proof_is_valid(proof) is False
+
+
+def test_report_intake_route_proof_cli_still_fails_contract_drift_when_evidence_exists(
+    tmp_path: Path,
+) -> None:
+    module = _load_generator_script()
+    report_root = _write_report_fixture(tmp_path)
+    contract_path = (
+        report_root
+        / "contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json"
+    )
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    contract["supported_feature_promoted"] = True
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+    output_path = tmp_path / "proof" / "report-intake-route-proof.json"
+
+    result = module.main(
+        [
+            "--generated-at-utc",
+            "2026-06-24T00:00:00Z",
+            "--report-root",
+            str(report_root),
+            "--output",
+            str(output_path),
+            "--allow-missing-evidence",
+        ]
+    )
+
+    assert result == 1
+    proof = json.loads(output_path.read_text(encoding="utf-8"))
+    assert proof["proofChecks"]["fileEvidencePresent"] is True
+    assert proof["proofChecks"]["reportContractProvesRoute"] is False
+
+
 def test_report_intake_route_proof_contract_gate_scans_tuple_content() -> None:
     module = _load_contract_gate_script()
     errors: list[str] = []

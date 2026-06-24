@@ -283,6 +283,7 @@ POLISHED_SURFACES = (
         (
             "## Current posture",
             "## Client Demo Flow",
+            "## Client-Friendly Explanation",
             "## Claim States",
             "## Acceptance Checklist",
         ),
@@ -295,6 +296,7 @@ POLISHED_SURFACES = (
         (
             "## Current Client-Demo Posture",
             "## Demo Story",
+            "## Client-Friendly Explanation",
             "## Claim Classification",
             "## Client-Ready Acceptance",
             "## Do Not Claim",

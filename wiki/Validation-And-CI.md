@@ -158,7 +158,8 @@ Persistence adapter validation:
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, Workbench read-path proof consumption, bounded outbox broker
-   proof consumption, and optional report-intake route proof consumption, can
+   proof consumption, and default report-intake route proof generation and
+   consumption, can
    be generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
    idempotency, broker, or source payload identifiers.
