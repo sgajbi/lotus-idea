@@ -94,6 +94,18 @@ REQUIRED_SURFACES = (
         ),
     ),
     DocumentationSurface(
+        "docs/demo/client-facing-lotus-idea-brief.md",
+        65,
+        (
+            "What Lotus Is Doing",
+            "Client Problem",
+            "What The Client Can See Today",
+            "Why It Is Trustworthy",
+            "How To Talk About It",
+            "Evidence To Include In A Demo Pack",
+        ),
+    ),
+    DocumentationSurface(
         "docs/demo/client-demo-pack.template.md",
         70,
         (
@@ -316,6 +328,20 @@ POLISHED_SURFACES = (
         ),
         4,
         1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "docs/demo/client-facing-lotus-idea-brief.md",
+        (
+            "## What Lotus Is Doing",
+            "## Client Problem",
+            "## What The Client Can See Today",
+            "## Why It Is Trustworthy",
+            "## How To Talk About It",
+            "## Evidence To Include In A Demo Pack",
+        ),
+        4,
+        0,
         1,
     ),
     PolishedDocumentationSurface(

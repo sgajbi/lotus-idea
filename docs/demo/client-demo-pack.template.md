@@ -6,6 +6,7 @@ supporting evidence, and current boundaries visible.
 
 Source process:
 
+- [Client-Facing Lotus Idea Brief](client-facing-lotus-idea-brief.md)
 - [Lotus Idea Client Demo Operating Process](client-demo-operating-process.md)
 - [Demo Claims](demo-claims.md)
 - [Implementation Proof Readiness](../operations/implementation-proof-readiness.md)
