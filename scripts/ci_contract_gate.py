@@ -4,13 +4,11 @@ import re
 import sys
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE_PATH = ROOT / "Makefile"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
 ACTION_USE_RE = re.compile(r"uses:\s+(?P<action>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@(?P<ref>[^ \t#]+)")
 FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-
 
 PINNED_ACTIONS: dict[str, tuple[str, str]] = {
     "actions/checkout": ("9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0", "v7.0.0"),
@@ -20,7 +18,6 @@ PINNED_ACTIONS: dict[str, tuple[str, str]] = {
     "docker/setup-buildx-action": ("d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5", "v4.1.0"),
     "reviewdog/action-actionlint": ("6fb7acc99f4a1008869fa8a0f09cfca740837d9d", "v1.72.0"),
 }
-
 
 REQUIRED_TARGETS = (
     "ci-contract-gate",
@@ -40,6 +37,7 @@ REQUIRED_TARGETS = (
     "migration-execution-gate",
     "durable-repository-proof-contract-gate",
     "runtime-trust-telemetry-proof-contract-gate",
+    "ai-lineage-store-proof-contract-gate",
     "report-intake-route-proof-contract-gate",
     "workbench-read-path-proof-contract-gate",
     "outbox-broker-proof-contract-gate",
@@ -62,7 +60,6 @@ REQUIRED_TARGETS = (
     "security-audit",
     "docker-build",
 )
-
 REQUIRED_LINT_CALLS = (
     "$(MAKE) ci-contract-gate",
     "$(MAKE) repository-hygiene-gate",
@@ -81,6 +78,7 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) migration-execution-gate",
     "$(MAKE) durable-repository-proof-contract-gate",
     "$(MAKE) runtime-trust-telemetry-proof-contract-gate",
+    "$(MAKE) ai-lineage-store-proof-contract-gate",
     "$(MAKE) report-intake-route-proof-contract-gate",
     "$(MAKE) workbench-read-path-proof-contract-gate",
     "$(MAKE) outbox-broker-proof-contract-gate",
@@ -92,7 +90,6 @@ REQUIRED_LINT_CALLS = (
     "$(MAKE) supported-features-gate",
     "$(MAKE) endpoint-certification-gate",
 )
-
 REQUIRED_CHECK_DEPS = (
     "lint",
     "typecheck",
@@ -104,7 +101,6 @@ REQUIRED_CHECK_DEPS = (
     "endpoint-certification-gate",
     "test",
 )
-
 REQUIRED_CI_DEPS = (
     "lint",
     "typecheck",
@@ -119,7 +115,6 @@ REQUIRED_CI_DEPS = (
     "test-coverage",
     "security-audit",
 )
-
 REQUIRED_TEST_SELECTORS = {
     "UNIT_TESTS ?= tests/unit": "Makefile must define UNIT_TESTS for scoped unit validation",
     "INTEGRATION_TESTS ?= tests/integration": (
@@ -245,6 +240,7 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_scheduled_source_ingestion_worker_proof.py", "a scheduled source-ingestion worker proof artifact"),
     ("scripts/generate_durable_repository_proof.py", "a durable repository proof artifact"),
     ("scripts/generate_runtime_trust_telemetry_proof.py", "a runtime trust telemetry proof artifact"),
+    ("scripts/generate_ai_lineage_store_proof.py", "an AI lineage store proof artifact"),
     ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
     ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
     ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
@@ -254,6 +250,7 @@ PASSED_READINESS_ARTIFACTS = (
     ("--source-ingestion-scheduled-worker-proof", "scheduled source-ingestion worker proof artifact"),
     ("--durable-repository-proof", "durable repository proof artifact"),
     ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
+    ("--ai-lineage-store-proof", "AI lineage store proof artifact"),
     ("--report-intake-route-proof", "report intake route proof artifact"),
     ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
     ("--outbox-broker-proof", "outbox broker proof artifact"),
@@ -261,6 +258,8 @@ PASSED_READINESS_ARTIFACTS = (
 )
 REQUIRED_READINESS_WIRING = (
     ("--source-ingestion-manifest", "pass the source-ingestion manifest into readiness generation"),
+    ("LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT", "pass the default AI lineage store proof output into readiness generation"),
+    ("LOTUS_IDEA_AI_LINEAGE_STORE_PROOF", "support optional AI lineage store proof artifact wiring"),
     ("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "pass the default report intake route proof output into readiness generation"),
     ("LOTUS_PLATFORM_ROOT", "support default platform root wiring for platform mesh onboarding proof generation"),
     ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT", "pass the default platform mesh onboarding proof output into readiness generation"),
@@ -366,6 +365,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "source-ingestion-live-proof-contract-gate": "scripts/source_ingestion_live_proof_contract_gate.py",
         "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",
         "runtime-trust-telemetry-proof-contract-gate": "scripts/runtime_trust_telemetry_proof_contract_gate.py",
+        "ai-lineage-store-proof-contract-gate": "scripts/ai_lineage_store_proof_contract_gate.py",
         "report-intake-route-proof-contract-gate": "scripts/report_intake_route_proof_contract_gate.py",
         "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
         "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",

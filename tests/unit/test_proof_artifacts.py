@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
@@ -21,10 +22,18 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     runtime_path = (
         tmp_path / "output" / "trust-telemetry" / "runtime" / "runtime-trust-telemetry-proof.json"
     )
+    ai_lineage_path = tmp_path / "output" / "ai" / "ai-lineage-store-proof.json"
     workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
     outbox_path = tmp_path / "output" / "outbox" / "outbox-broker-proof.json"
     platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-mesh-onboarding-proof.json"
-    for path in (durable_path, runtime_path, workbench_path, outbox_path, platform_mesh_path):
+    for path in (
+        durable_path,
+        runtime_path,
+        ai_lineage_path,
+        workbench_path,
+        outbox_path,
+        platform_mesh_path,
+    ):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"artifact": path.name}), encoding="utf-8")
 
@@ -35,6 +44,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     monkeypatch.setenv(
         RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
         "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json",
+    )
+    monkeypatch.setenv(
+        AI_LINEAGE_STORE_PROOF_ENV,
+        "output/ai/ai-lineage-store-proof.json",
     )
     monkeypatch.setenv(
         WORKBENCH_READ_PATH_PROOF_ENV,
@@ -61,6 +74,8 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     assert artifacts.runtime_trust_telemetry_proof_ref == (
         "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
     )
+    assert artifacts.ai_lineage_store_proof == {"artifact": "ai-lineage-store-proof.json"}
+    assert artifacts.ai_lineage_store_proof_ref == "output/ai/ai-lineage-store-proof.json"
     assert artifacts.workbench_read_path_proof == {"artifact": "workbench-read-path-proof.json"}
     assert (
         artifacts.workbench_read_path_proof_ref == "output/workbench/workbench-read-path-proof.json"

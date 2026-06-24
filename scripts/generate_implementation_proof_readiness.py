@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.implementation_proof_readiness import (
     ImplementationProofCapabilityReadiness,
@@ -56,6 +57,11 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_trust_telemetry_proof_path,
                 artifact_name="runtime trust telemetry proof",
             )
+            ai_lineage_store_proof_path = _resolve_optional_path(args.ai_lineage_store_proof)
+            ai_lineage_store_proof = _read_optional_json_object(
+                ai_lineage_store_proof_path,
+                artifact_name="AI lineage store proof",
+            )
             report_intake_route_proof_path = _resolve_optional_path(args.report_intake_route_proof)
             report_intake_route_proof = _read_optional_json_object(
                 report_intake_route_proof_path,
@@ -99,6 +105,11 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_trust_telemetry_proof_ref=_source_safe_artifact_ref(
                     runtime_trust_telemetry_proof_path,
                     artifact_name="runtime trust telemetry proof artifact",
+                ),
+                ai_lineage_store_proof=ai_lineage_store_proof,
+                ai_lineage_store_proof_ref=_source_safe_artifact_ref(
+                    ai_lineage_store_proof_path,
+                    artifact_name="AI lineage store proof artifact",
                 ),
                 report_intake_route_proof=report_intake_route_proof,
                 report_intake_route_proof_ref=_source_safe_artifact_ref(
@@ -234,6 +245,14 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Optional runtime trust telemetry candidate snapshot proof artifact path. "
             f"Defaults to {RUNTIME_TRUST_TELEMETRY_PROOF_ENV} when set."
+        ),
+    )
+    parser.add_argument(
+        "--ai-lineage-store-proof",
+        default=os.getenv(AI_LINEAGE_STORE_PROOF_ENV),
+        help=(
+            "Optional durable AI explanation lineage store proof artifact path. "
+            f"Defaults to {AI_LINEAGE_STORE_PROOF_ENV} when set."
         ),
     )
     parser.add_argument(
