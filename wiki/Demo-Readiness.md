@@ -1,23 +1,96 @@
 # Demo Readiness
 
-Current posture: not demo-ready for business behavior.
+## Current posture
 
-Demo readiness requires:
+`lotus-idea` is not client-demo-ready for supported external business behavior.
+It is suitable for a controlled foundation walkthrough only when the audience is
+told that current proof is internal, bounded, and not a supported product
+promotion.
 
-1. implemented opportunity family,
-2. source-backed evidence,
-3. certified APIs,
-4. bounded Gateway route for the claimed product surface,
-5. Workbench panel proof,
-6. review and conversion evidence,
-7. supported-feature registration,
-8. demo claim ledger update,
-9. canonical live validation,
-10. security and sensitive-content review.
+| Demo area | Current truth | Client-facing handling |
+| --- | --- | --- |
+| Opportunity intelligence | Internal candidate, review, feedback, conversion, and proof foundations exist. | Explain the governed operating model and current boundaries. |
+| Supported features | No external supported feature is promoted. | Do not claim production availability or client-ready publication. |
+| Workbench | Bounded read-only proof exists, but full product-surface certification is blocked. | Show only after validation and with explicit bounded-preview language. |
+| Downstream realization | Advise, Manage, Report, Render, and Archive ownership is modeled, not fully materialized. | Describe domain boundaries; do not claim downstream creation. |
+| Data mesh | Proposed products and readiness diagnostics exist. | Present as day-one governance foundation, not certified data-product status. |
 
-`GET /api/v1/implementation-proof/readiness` is available as an internal
-operator diagnostic to show which proof families remain blocked. It is a
-readiness aid, not demo evidence by itself.
+## Client Demo Flow
+
+```mermaid
+flowchart LR
+    Scope["Scope<br/>audience and buying question"]
+    Claims["Claim discipline<br/>implemented, preview, planned"]
+    Validate["Validation<br/>gates and proof artifacts"]
+    Pack["Demo pack<br/>story, evidence, boundaries"]
+    Rehearse["Rehearsal<br/>talk track and fallback"]
+    Deliver["Client delivery<br/>business story first"]
+    FollowUp["Follow-up<br/>issues, evidence, owners"]
+
+    Scope --> Claims --> Validate --> Pack --> Rehearse --> Deliver --> FollowUp
+```
+
+## Claim States
+
+| Claim state | Meaning | Demo rule |
+| --- | --- | --- |
+| Implementation-backed | Code, tests, docs, proof artifact, and gate evidence exist on `main`. | Can be shown as current internal foundation. |
+| Bounded preview | Real implementation exists with explicit limits. | Can be shown only with the boundary stated. |
+| Planned | RFC, contract, or roadmap exists without runtime proof. | Mention as roadmap only. |
+| Diagnostic | Evidence exists for troubleshooting or readiness analysis. | Keep out of client material. |
+| Unsupported | No governed implementation or owner exists. | Do not claim or imply. |
+
+## Required Pack
+
+Every external Lotus Idea demo pack should include:
+
+1. audience, objective, sensitivity level, and buying question,
+2. private-banking business story in client language,
+3. ordered demo sequence and fallback path,
+4. implementation-backed claims with owner, command, run ID, and artifact,
+5. explicit bounded-preview and planned items,
+6. do-not-claim list,
+7. reviewed evidence manifest and screenshot pack location when screenshots are used,
+8. product, engineering, operations, security, commercial, and marketing follow-up owners.
+
+The app-level process lives in
+[docs/demo/client-demo-operating-process.md](../docs/demo/client-demo-operating-process.md).
+The current claim ledger lives in [docs/demo/demo-claims.md](../docs/demo/demo-claims.md).
+
+## Validation
+
+Run the documentation, truth, feature, and proof gates before marking a pack as
+client-ready:
+
+```powershell
+make documentation-contract-gate
+make implementation-truth-gate
+make supported-features-gate
+make implementation-proof-readiness-check
+```
+
+`GET /api/v1/implementation-proof/readiness` is an internal operator diagnostic.
+It shows which proof families remain blocked; it is not client-demo evidence by
+itself.
+
+## Do Not Claim
+
+Until proof-readiness blockers are cleared by implementation-backed evidence,
+do not claim autonomous advice, suitability approval, mandate compliance,
+rebalance execution, report materialization, rendered client output, archive
+record creation, client-ready publication, certified data-mesh product status,
+or supported external product availability.
+
+## Acceptance Checklist
+
+| Acceptance item | Required posture |
+| --- | --- |
+| Story clarity | A non-technical client can understand the workflow, value, controls, and current boundary. |
+| Claim discipline | Every statement maps to implementation-backed, bounded preview, planned, diagnostic, or unsupported. |
+| Evidence tie-out | Each current-state claim links to owner, command, run ID, and artifact. |
+| Data safety | No real client data, secrets, raw prompts, raw payloads, or sensitive identifiers are present. |
+| Runtime proof | Screenshots or live paths were captured only after relevant validation passed. |
+| Follow-up ownership | Product, engineering, operations, security, commercial, and marketing owners are named. |
 
 Screenshots or client-demo material must not be promoted before validation
-passes.
+passes. Pre-validation captures are diagnostic only.
