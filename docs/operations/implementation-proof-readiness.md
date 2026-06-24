@@ -126,6 +126,9 @@ the canonical target instead of a one-off command:
 | `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/report-intake-route-proof.json`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
+| `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
+| `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` | Selects the default generated platform mesh onboarding proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-mesh-onboarding-proof.json`. |
+| `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
 
 When rerunning live proof against an existing durable PostgreSQL repository,
 preserve idempotency history. If the same generated default idempotency key was
@@ -215,15 +218,21 @@ output, archive record, client publication, suitability decision, mandate
 action, execution instruction, or supported feature.
 
 Platform mesh onboarding proof is captured by
-`scripts/generate_platform_mesh_onboarding_proof.py`. A valid artifact
-referenced through `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` or passed with
-`--platform-mesh-onboarding-proof` clears only
+`scripts/generate_platform_mesh_onboarding_proof.py`. The repo-native
+`make implementation-proof-readiness-check` target now generates the default
+artifact from `LOTUS_PLATFORM_ROOT` under
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` and passes it into aggregate
+readiness when `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` is not set. A valid
+artifact clears only
 `platform_source_manifest_inclusion_missing` and
 `platform_catalog_inclusion_missing` from data-mesh aggregate readiness. It
 cites sibling `lotus-platform` source-manifest, generated catalog, dependency
 graph, maturity matrix, and mesh handoff evidence. It does not certify the
 platform mesh, activate producer products, certify SLO/access/evidence policy,
 prove Gateway/Workbench discovery, or promote a supported feature.
+Missing sibling evidence writes an invalid non-proof artifact and keeps the
+blockers so CI remains stable without treating absence as proof; drift in
+present sibling evidence still exits non-zero.
 
 ## Response Shape
 

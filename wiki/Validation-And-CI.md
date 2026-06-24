@@ -158,7 +158,8 @@ Persistence adapter validation:
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, Workbench read-path proof consumption, bounded outbox broker
-   proof consumption, and default report-intake route proof generation and
+   proof consumption, default report-intake route proof generation and
+   consumption, and default platform mesh onboarding proof generation and
    consumption, can
    be generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
@@ -367,6 +368,9 @@ Data-mesh foundation checks:
    treating catalog visibility as certification,
 6. `make platform-mesh-onboarding-proof-contract-gate` validates the bounded
    cross-repo proof when a sibling `lotus-platform` checkout is available,
+   while `make implementation-proof-readiness-check` generates an invalid
+   non-proof artifact and keeps blockers when sibling platform evidence is
+   absent,
 7. the sibling [Lotus Data Mesh Standard](../../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
    remains the controlling platform rule,
 8. platform mesh certification is required before any supported mesh claim.

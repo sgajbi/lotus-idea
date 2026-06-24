@@ -230,8 +230,12 @@ def test_ci_contract_gate_blocks_strict_default_report_intake_route_generation()
     errors = module.validate_makefile(makefile)
 
     assert (
-        "Makefile implementation-proof-readiness-check target must keep report intake "
-        "route proof generation CI-stable when sibling evidence is absent"
+        "Makefile implementation-proof-readiness-check target must keep cross-repo "
+        "proof generation CI-stable when sibling evidence is absent"
+    ) in errors
+    assert (
+        "Makefile implementation-proof-readiness-check target must keep both cross-repo "
+        "proof generators CI-stable when sibling evidence is absent"
     ) in errors
 
 
@@ -270,6 +274,78 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_readiness_wiring() 
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
         "outbox broker proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_platform_mesh_onboarding_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "a platform mesh onboarding proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF),"
+            "--platform-mesh-onboarding-proof "
+            "$(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF),"
+            "--platform-mesh-onboarding-proof "
+            "$(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT)) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "platform mesh onboarding proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_output_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT",
+            "REMOVED_PLATFORM_MESH_PROOF_OUTPUT",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the default "
+        "platform mesh onboarding proof output into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_platform_mesh_root_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile").read_text(encoding="utf-8").replace("LOTUS_PLATFORM_ROOT", "REMOVED")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support default "
+        "platform root wiring for platform mesh onboarding proof generation"
     ) in errors
 
 
