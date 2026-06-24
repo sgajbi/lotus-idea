@@ -83,6 +83,17 @@ REQUIRED_SURFACES = (
         ("Certified Foundation Endpoints", "Source-Degraded And Reconciliation Endpoints"),
     ),
     DocumentationSurface(
+        "docs/demo/README.md",
+        55,
+        (
+            "Client Understanding Flow",
+            "Client-Friendly Message",
+            "Client Pack Rules",
+            "Required Validation",
+            "Do Not Claim",
+        ),
+    ),
+    DocumentationSurface(
         "docs/demo/client-demo-operating-process.md",
         60,
         (
@@ -311,6 +322,20 @@ POLISHED_SURFACES = (
             "## Client-Friendly Explanation",
             "## Claim States",
             "## Acceptance Checklist",
+        ),
+        3,
+        1,
+        1,
+    ),
+    PolishedDocumentationSurface(
+        "docs/demo/README.md",
+        (
+            "## Client Understanding Flow",
+            "## Start Here",
+            "## Client-Friendly Message",
+            "## Client Pack Rules",
+            "## Required Validation",
+            "## Do Not Claim",
         ),
         3,
         1,

@@ -13,10 +13,11 @@ capabilities exist.
    foundation posture and keeps demo claims blocked until live proof,
    Workbench proof, data-product certification, downstream realization, and
    supported-feature evidence exist.
-2. `docs/demo/client-facing-lotus-idea-brief.md`,
+2. `docs/demo/README.md`, `docs/demo/client-facing-lotus-idea-brief.md`,
    `docs/demo/client-demo-operating-process.md`,
    `docs/demo/client-demo-pack.template.md`, and `wiki/Demo-Readiness.md`
-   define the client-understandable Lotus Idea story, evidence-pack process,
+   define the client-demo entry point, client-understandable Lotus Idea story,
+   evidence-pack process,
    claim states, client-pack versus internal-evidence separation, acceptance
    checklist, rehearsal/follow-up discipline, and do-not-claim boundaries
    without promoting supported external product readiness.

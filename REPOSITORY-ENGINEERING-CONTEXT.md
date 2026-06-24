@@ -727,11 +727,11 @@ internal foundation endpoint inventory from
 foundation scope, required capability, and unsupported boundary. This keeps
 operator-facing documentation aligned with endpoint certification evidence
 without promoting any supported business feature.
-`docs/demo/client-demo-operating-process.md`,
+`docs/demo/README.md`, `docs/demo/client-demo-operating-process.md`,
 `docs/demo/client-facing-lotus-idea-brief.md`,
 `docs/demo/client-demo-pack.template.md`, and `wiki/Demo-Readiness.md` now
-define the app-specific client-demo process, client-facing business narrative,
-claim states, client-pack versus internal-evidence separation, evidence pack
+define the app-specific client-demo hub, client-facing business narrative,
+claim states, client-pack versus internal-evidence separation, evidence-pack
 template, validation commands, acceptance checklist, rehearsal/follow-up
 discipline, and do-not-claim boundaries. The process is governed documentation
 truth only; it does not promote external demo readiness, supported features,

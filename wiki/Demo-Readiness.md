@@ -34,14 +34,16 @@ flowchart LR
 
 Use the demo assets in this order:
 
-1. Start with the client-facing brief so the audience understands the
+1. Start with the [demo hub](../docs/demo/README.md) to understand the
+   client-facing process, proof anchors, and current do-not-claim boundary.
+2. Use the client-facing brief so the audience understands the
    private-banking problem, Lotus response, trust anchors, and current boundary.
-2. Build a session-specific pack from the template instead of editing the
+3. Build a session-specific pack from the template instead of editing the
    template itself.
-3. Use the demo claims ledger to classify every spoken or written claim.
-4. Run the validation commands and attach the evidence run ID before any
+4. Use the demo claims ledger to classify every spoken or written claim.
+5. Run the validation commands and attach the evidence run ID before any
    screenshot or live path is treated as client material.
-5. Rehearse the talk track, fallback path, and do-not-claim list before the
+6. Rehearse the talk track, fallback path, and do-not-claim list before the
    session.
 
 Client-facing material should explain the workflow and control model first.
@@ -87,6 +89,7 @@ Every external Lotus Idea demo pack should include:
 8. product, engineering, operations, security, commercial, and marketing follow-up owners.
 
 The app-level process lives in
+[docs/demo/README.md](../docs/demo/README.md) and
 [docs/demo/client-demo-operating-process.md](../docs/demo/client-demo-operating-process.md).
 Use the client-facing opening brief at
 [docs/demo/client-facing-lotus-idea-brief.md](../docs/demo/client-facing-lotus-idea-brief.md)
