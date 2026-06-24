@@ -17,6 +17,14 @@ from app.application.runtime_trust_telemetry_proof import (
     RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.report_intake_route_proof import (
+    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+    REPORT_INTAKE_ROUTE,
+    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_PROOF_ENV,
+    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+)
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
 )
@@ -71,6 +79,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(DURABLE_REPOSITORY_PROOF_ENV, raising=False)
     monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_PROOF_ENV, raising=False)
+    monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
     client = TestClient(app)
 
@@ -135,6 +144,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
+    report_route_proof_path = tmp_path / "report-intake-route-proof.json"
     manifest_path.write_text("{}", encoding="utf-8")
     live_proof_path.write_text(
         json.dumps(
@@ -184,6 +194,10 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         ),
         encoding="utf-8",
     )
+    report_route_proof_path.write_text(
+        json.dumps(_valid_report_intake_route_proof()),
+        encoding="utf-8",
+    )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
     monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof_path))
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
@@ -191,6 +205,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
     monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
     monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
+    monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
     reset_idea_repository_for_tests()
     client = TestClient(app)
@@ -207,6 +222,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
+    assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
+    assert "report_evidence_pack_live_materialization_proof_missing" in (payload["overallBlockers"])
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "platform_mesh_certification_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
@@ -228,6 +245,9 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert (
         "workbench read-path proof artifact"
         in capabilities["workbench-product-proof"]["evidenceRefs"]
+    )
+    assert "report intake route proof artifact" in " ".join(
+        capabilities["downstream-realization"]["evidenceRefs"]
     )
 
 
@@ -358,3 +378,31 @@ def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, ob
         run_once_worker_entrypoint_present=True,
         docker_compose_service_present=True,
     )
+
+
+def _valid_report_intake_route_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-06-24T00:00:00+00:00",
+        "proofType": "lotus_report_idea_evidence_intake_route_contract",
+        "proofScope": "source_safe_report_intake_route_only",
+        "reportIntakeRouteProofValid": True,
+        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+        "targetRoute": REPORT_INTAKE_ROUTE,
+        "proofChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "fileEvidencePresent": True,
+            "reportContractProvesRoute": True,
+            "reportContractPreservesNonProofBoundaries": True,
+            "reportContractRetainsMaterializationBlockers": True,
+        },
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+        "reportMaterializationProven": False,
+        "renderedOutputCreated": False,
+        "archiveRecordCreated": False,
+        "clientPublicationAuthorityGranted": False,
+        "supportedFeaturePromoted": False,
+        "proofClosed": False,
+    }

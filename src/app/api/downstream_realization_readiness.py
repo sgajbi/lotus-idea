@@ -15,6 +15,7 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
+from app.application.report_intake_route_proof import load_report_intake_route_proof_from_env
 from app.errors import ProblemDetails, problem_response
 from app.observability import (
     IdeaOperation,
@@ -187,9 +188,14 @@ async def get_downstream_realization_readiness(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    report_intake_route_proof, report_intake_route_proof_ref = (
+        load_report_intake_route_proof_from_env()
+    )
     snapshot = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        report_intake_route_proof=report_intake_route_proof,
+        report_intake_route_proof_ref=report_intake_route_proof_ref,
     )
     _emit_downstream_realization_readiness_event(
         OperationOutcome.ACCEPTED if snapshot.certification_ready else OperationOutcome.BLOCKED,
@@ -231,9 +237,10 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
         "The endpoint reports lotus-idea-owned conversion intent, conversion outcome, "
         "report evidence-pack request counts, planned Advise/Manage/Report downstream "
         "contract posture, source-safe adapter-foundation presence, and explicit "
-        "downstream blockers. It does not call downstream systems, create proposals, "
-        "create manage actions, prove downstream route existence, render documents, "
-        "archive records, authorize client publication, or promote a supported feature."
+        "downstream blockers. A configured report intake route proof can clear only "
+        "the lotus-report live intake route blocker. It does not call downstream systems, "
+        "create proposals, create manage actions, render documents, archive records, "
+        "authorize client publication, or promote a supported feature."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": DownstreamRealizationReadinessResponse,
@@ -271,7 +278,6 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                         "blockers": [
                             "advise_live_contract_proof_missing",
                             "manage_live_contract_proof_missing",
-                            "lotus_report_live_intake_route_proof_missing",
                             "report_evidence_pack_live_materialization_proof_missing",
                         ],
                         "capabilities": [
@@ -295,8 +301,8 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                 ),
                                 "ownerRepository": "lotus-report",
                                 "sourceAuthority": "lotus-report",
-                                "targetRoute": "planned:lotus-report-idea-evidence-pack-intake",
-                                "routeFitStatus": "not_certified",
+                                "targetRoute": "POST /reports/idea-evidence-packs",
+                                "routeFitStatus": "route_foundation_proven_not_certified",
                                 "adapterStatus": "adapter_foundation_present",
                                 "certificationReady": False,
                                 "evidenceRefs": [
@@ -307,7 +313,6 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                                     ),
                                 ],
                                 "blockers": [
-                                    "lotus_report_live_intake_route_proof_missing",
                                     "report_evidence_pack_live_materialization_proof_missing",
                                     "rendered_output_creation_missing",
                                     "archive_record_creation_missing",

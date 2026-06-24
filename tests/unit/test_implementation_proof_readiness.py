@@ -17,6 +17,13 @@ from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_PRODUCER_PRODUCTS,
     build_platform_mesh_onboarding_proof_payload,
 )
+from app.application.report_intake_route_proof import (
+    REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+    REPORT_INTAKE_ROUTE,
+    REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
+    REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+    REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+)
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
@@ -422,6 +429,39 @@ def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_with
     )
 
 
+def test_implementation_proof_readiness_uses_report_intake_route_proof_without_materialization() -> (
+    None
+):
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        report_intake_route_proof=_valid_report_intake_route_proof(),
+        report_intake_route_proof_ref="output/downstream/report-intake-route-proof.json",
+    )
+
+    assert "lotus_report_live_intake_route_proof_missing" not in snapshot.overall_blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in snapshot.overall_blockers
+    assert "rendered_output_creation_missing" in snapshot.overall_blockers
+    assert "archive_record_creation_missing" in snapshot.overall_blockers
+    assert "client_publication_authority_blocked" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+    downstream = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "downstream-realization"
+    )
+    assert "lotus_report_live_intake_route_proof_missing" not in downstream.blockers
+    assert "report_evidence_pack_live_materialization_proof_missing" in downstream.blockers
+    assert "rendered_output_creation_missing" in downstream.blockers
+    assert "archive_record_creation_missing" in downstream.blockers
+    assert "client_publication_authority_blocked" in downstream.blockers
+    assert "output/downstream/report-intake-route-proof.json" in downstream.evidence_refs
+
+
 def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         build_implementation_proof_readiness_snapshot(
@@ -553,3 +593,31 @@ def _write_platform_mesh_fixture(tmp_path: Path) -> Path:
     )
     handoff_path.write_text("lotus-idea future-wave onboarding proof\n", encoding="utf-8")
     return platform_root
+
+
+def _valid_report_intake_route_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-06-24T00:00:00+00:00",
+        "proofType": "lotus_report_idea_evidence_intake_route_contract",
+        "proofScope": "source_safe_report_intake_route_only",
+        "reportIntakeRouteProofValid": True,
+        "aggregateBlockersCleared": REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
+        "evidenceRefs": REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+        "targetRoute": REPORT_INTAKE_ROUTE,
+        "proofChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "fileEvidencePresent": True,
+            "reportContractProvesRoute": True,
+            "reportContractPreservesNonProofBoundaries": True,
+            "reportContractRetainsMaterializationBlockers": True,
+        },
+        "remainingCertificationBlockers": REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
+        "reportMaterializationProven": False,
+        "renderedOutputCreated": False,
+        "archiveRecordCreated": False,
+        "clientPublicationAuthorityGranted": False,
+        "supportedFeaturePromoted": False,
+        "proofClosed": False,
+    }

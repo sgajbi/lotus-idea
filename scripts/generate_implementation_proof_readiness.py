@@ -20,6 +20,7 @@ from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_PROOF_ENV,
 )
+from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -54,6 +55,11 @@ def main(argv: list[str] | None = None) -> int:
             runtime_trust_telemetry_proof = _read_optional_json_object(
                 runtime_trust_telemetry_proof_path,
                 artifact_name="runtime trust telemetry proof",
+            )
+            report_intake_route_proof_path = _resolve_optional_path(args.report_intake_route_proof)
+            report_intake_route_proof = _read_optional_json_object(
+                report_intake_route_proof_path,
+                artifact_name="report intake route proof",
             )
             workbench_read_path_proof_path = _resolve_optional_path(args.workbench_read_path_proof)
             workbench_read_path_proof = _read_optional_json_object(
@@ -93,6 +99,11 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_trust_telemetry_proof_ref=_source_safe_artifact_ref(
                     runtime_trust_telemetry_proof_path,
                     artifact_name="runtime trust telemetry proof artifact",
+                ),
+                report_intake_route_proof=report_intake_route_proof,
+                report_intake_route_proof_ref=_source_safe_artifact_ref(
+                    report_intake_route_proof_path,
+                    artifact_name="report intake route proof artifact",
                 ),
                 outbox_broker_proof=outbox_broker_proof,
                 outbox_broker_proof_ref=_source_safe_artifact_ref(
@@ -223,6 +234,14 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Optional runtime trust telemetry candidate snapshot proof artifact path. "
             f"Defaults to {RUNTIME_TRUST_TELEMETRY_PROOF_ENV} when set."
+        ),
+    )
+    parser.add_argument(
+        "--report-intake-route-proof",
+        default=os.getenv(REPORT_INTAKE_ROUTE_PROOF_ENV),
+        help=(
+            "Optional lotus-report idea evidence intake route proof artifact path. "
+            f"Defaults to {REPORT_INTAKE_ROUTE_PROOF_ENV} when set."
         ),
     )
     parser.add_argument(

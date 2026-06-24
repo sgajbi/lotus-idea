@@ -179,6 +179,8 @@ async def get_implementation_proof_readiness(
             runtime_trust_telemetry_proof_ref=proof_artifacts.runtime_trust_telemetry_proof_ref,
             outbox_broker_proof=proof_artifacts.outbox_broker_proof,
             outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
+            report_intake_route_proof=proof_artifacts.report_intake_route_proof,
+            report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,
             platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding_proof,
             platform_mesh_onboarding_proof_ref=(proof_artifacts.platform_mesh_onboarding_proof_ref),
             workbench_read_path_proof=proof_artifacts.workbench_read_path_proof,
