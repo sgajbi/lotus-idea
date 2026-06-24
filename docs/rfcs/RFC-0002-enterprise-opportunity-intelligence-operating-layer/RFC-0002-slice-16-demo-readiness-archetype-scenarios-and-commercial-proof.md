@@ -13,12 +13,18 @@ capabilities exist.
    foundation posture and keeps demo claims blocked until live proof,
    Workbench proof, data-product certification, downstream realization, and
    supported-feature evidence exist.
-2. `GET /api/v1/implementation-proof/readiness` gives operators and demo leads
+2. `docs/demo/client-facing-lotus-idea-brief.md`,
+   `docs/demo/client-demo-operating-process.md`,
+   `docs/demo/client-demo-pack.template.md`, and `wiki/Demo-Readiness.md`
+   define the client-understandable Lotus Idea story, evidence-pack process,
+   claim states, acceptance checklist, and do-not-claim boundaries without
+   promoting supported external product readiness.
+3. `GET /api/v1/implementation-proof/readiness` gives operators and demo leads
    a source-safe blocker view across source ingestion, advisor queue, AI
    explanation, data mesh, runtime trust telemetry preview/snapshot evidence,
    outbox delivery, Workbench, downstream realization, and supported-feature
    promotion.
-3. `docs/operations/implementation-proof-readiness.md` documents how to call
+4. `docs/operations/implementation-proof-readiness.md` documents how to call
    and interpret the diagnostic as a readiness aid, not as demo evidence.
 
 This slice does not create demo-ready material. It deliberately prevents

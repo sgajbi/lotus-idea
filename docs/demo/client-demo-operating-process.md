@@ -9,6 +9,7 @@ story without overstating current support.
 
 Use this page with:
 
+- [Client-Facing Lotus Idea Brief](client-facing-lotus-idea-brief.md)
 - [Demo Claims](demo-claims.md)
 - [Client Demo Pack Template](client-demo-pack.template.md)
 - [Implementation Proof Readiness](../operations/implementation-proof-readiness.md)
@@ -72,6 +73,11 @@ Use this plain-language framing when a client asks what Lotus is doing:
 | Who owns the facts? | Source applications keep official portfolio, mandate, risk, performance, suitability, report, render, archive, and AI workflow facts. | Architecture, integrations, and data-mesh docs. |
 | What is safe to claim today? | Internal foundation and bounded preview only; no supported external product feature is promoted yet. | Client-demo posture table and do-not-claim list. |
 | How do we know it is real? | Claims must tie back to code, tests, gates, proof artifacts, run IDs, and owning repositories. | Validation commands and generated evidence manifest. |
+
+Start external packs with the
+[Client-Facing Lotus Idea Brief](client-facing-lotus-idea-brief.md) so the
+audience sees the business problem, Lotus response, trust anchors, current
+boundaries, and do-not-claim language before internal evidence links.
 
 ## Claim Classification
 
