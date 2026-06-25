@@ -8,6 +8,9 @@ from pathlib import Path
 import pytest
 import scripts.generate_implementation_proof_readiness as proof_report
 from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_payload
+from app.application.ai_workflow_pack_registration_proof import (
+    build_ai_workflow_pack_registration_proof_payload,
+)
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
@@ -332,6 +335,48 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_lineage_store_
     assert "lotus_ai_runtime_execution_missing" in ai_explanation["blockers"]
     assert "workflow_pack_runtime_contract_not_certified" in ai_explanation["blockers"]
     assert "AI lineage store proof artifact" in ai_explanation["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_registration_proof(
+    tmp_path: Path,
+) -> None:
+    ai_workflow_pack_proof = tmp_path / "ai-workflow-pack-registration-proof.json"
+    ai_workflow_pack_proof.write_text(
+        json.dumps(
+            build_ai_workflow_pack_registration_proof_payload(
+                generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+                lotus_ai_root=Path(__file__).resolve().parents[2].parent / "lotus-ai",
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-25T00:00:00Z",
+            "--ai-workflow-pack-registration-proof",
+            str(ai_workflow_pack_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    ai_explanation = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "ai-explanation"
+    )
+    assert "workflow_pack_runtime_contract_not_certified" not in ai_explanation["blockers"]
+    assert "workflow_pack_runtime_contract_not_certified" not in payload["overallBlockers"]
+    assert "lotus_ai_runtime_execution_missing" in ai_explanation["blockers"]
+    assert "AI workflow-pack registration proof artifact" in ai_explanation["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

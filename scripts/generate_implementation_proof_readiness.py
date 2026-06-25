@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Any
 
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
+from app.application.ai_workflow_pack_registration_proof import (
+    AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.implementation_proof_readiness import (
     ImplementationProofCapabilityReadiness,
@@ -62,6 +65,13 @@ def main(argv: list[str] | None = None) -> int:
                 ai_lineage_store_proof_path,
                 artifact_name="AI lineage store proof",
             )
+            ai_workflow_pack_registration_proof_path = _resolve_optional_path(
+                args.ai_workflow_pack_registration_proof
+            )
+            ai_workflow_pack_registration_proof = _read_optional_json_object(
+                ai_workflow_pack_registration_proof_path,
+                artifact_name="AI workflow-pack registration proof",
+            )
             report_intake_route_proof_path = _resolve_optional_path(args.report_intake_route_proof)
             report_intake_route_proof = _read_optional_json_object(
                 report_intake_route_proof_path,
@@ -110,6 +120,11 @@ def main(argv: list[str] | None = None) -> int:
                 ai_lineage_store_proof_ref=_source_safe_artifact_ref(
                     ai_lineage_store_proof_path,
                     artifact_name="AI lineage store proof artifact",
+                ),
+                ai_workflow_pack_registration_proof=ai_workflow_pack_registration_proof,
+                ai_workflow_pack_registration_proof_ref=_source_safe_artifact_ref(
+                    ai_workflow_pack_registration_proof_path,
+                    artifact_name="AI workflow-pack registration proof artifact",
                 ),
                 report_intake_route_proof=report_intake_route_proof,
                 report_intake_route_proof_ref=_source_safe_artifact_ref(
@@ -253,6 +268,14 @@ def _parser() -> argparse.ArgumentParser:
         help=(
             "Optional durable AI explanation lineage store proof artifact path. "
             f"Defaults to {AI_LINEAGE_STORE_PROOF_ENV} when set."
+        ),
+    )
+    parser.add_argument(
+        "--ai-workflow-pack-registration-proof",
+        default=os.getenv(AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV),
+        help=(
+            "Optional lotus-ai idea workflow-pack registration proof artifact path. "
+            f"Defaults to {AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV} when set."
         ),
     )
     parser.add_argument(

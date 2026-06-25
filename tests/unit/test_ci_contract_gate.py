@@ -226,6 +226,99 @@ def test_ci_contract_gate_blocks_missing_ai_lineage_store_proof_gate() -> None:
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF),"
+            "--ai-workflow-pack-registration-proof "
+            "$(LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF),"
+            "--ai-workflow-pack-registration-proof "
+            "$(LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT)) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "AI workflow-pack registration proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_ai_workflow_pack_registration_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "an AI workflow-pack registration proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_ai_workflow_pack_default_output_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT",
+            "REMOVED_AI_WORKFLOW_PACK_PROOF_OUTPUT",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the default "
+        "AI workflow-pack registration proof output into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_ai_workflow_pack_root_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8").replace("LOTUS_AI_ROOT", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support default "
+        "lotus-ai root wiring for AI workflow-pack registration proof generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_ai_workflow_pack_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) ai-workflow-pack-registration-proof-contract-gate\n", "")
+        .replace(
+            "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call `$(MAKE) ai-workflow-pack-registration-proof-contract-gate`"
+    ) in errors
+    assert (
+        "Makefile ai-workflow-pack-registration-proof-contract-gate target must run "
+        "`scripts/ai_workflow_pack_registration_proof_contract_gate.py`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (
@@ -292,7 +385,7 @@ def test_ci_contract_gate_blocks_strict_default_report_intake_route_generation()
         "proof generation CI-stable when sibling evidence is absent"
     ) in errors
     assert (
-        "Makefile implementation-proof-readiness-check target must keep both cross-repo "
+        "Makefile implementation-proof-readiness-check target must keep all cross-repo "
         "proof generators CI-stable when sibling evidence is absent"
     ) in errors
 

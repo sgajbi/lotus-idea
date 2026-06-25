@@ -188,9 +188,10 @@ provider payloads, candidate identifiers, source routes, portfolio identifiers,
 or client identifiers. It remains `not_certified` until `lotus-ai` runtime
 workflow execution, workflow-pack runtime certification, certified model-risk
 dashboard and alert evidence, runtime trust telemetry, and Workbench proof
-exist. The current AI lineage store proof and AI model-risk operations contract
-are enforced and source-safe, but they are not `lotus-ai` runtime,
-dashboard, alert, Workbench, client-ready, or supported-feature certification.
+exist. The current AI lineage store proof, AI workflow-pack registration proof,
+and AI model-risk operations contract are enforced and source-safe, but they
+are not `lotus-ai` runtime, provider-call, dashboard, alert, Workbench,
+client-ready, or supported-feature certification.
 The internal `GET /api/v1/implementation-proof/readiness` diagnostic is
 available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
@@ -423,21 +424,28 @@ client-ready publication, or supported-feature promotion.
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
 report-intake route proof artifact, platform mesh onboarding proof artifact,
-and the same source-safe readiness snapshot without running the HTTP
-service. The snapshot records validated proof artifact refs in capability
+AI lineage store proof artifact, AI workflow-pack registration proof artifact,
+and the same source-safe readiness snapshot without running the HTTP service.
+The snapshot records validated proof artifact refs in capability
 evidence. The live operator API also honors valid source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path, report-intake route, and platform mesh onboarding proof
+Workbench read-path, report-intake route, platform mesh onboarding, AI lineage
+store, and AI workflow-pack registration proof
 artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`,
-`LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, and
-`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_PLATFORM_ROOT`,
+`LOTUS_REPORT_ROOT`,
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
+`LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
+`LOTUS_PLATFORM_ROOT`,
 `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, and
-`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, clearing only the matching
+`LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
+`LOTUS_AI_ROOT`,
+`LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT`, and
+`LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, clearing only the matching
 aggregate proof blockers. Use these artifacts as CI or async operator evidence
 only; they are not live scheduler certification, runtime database
 configuration, production storage certification, production recovery readiness,

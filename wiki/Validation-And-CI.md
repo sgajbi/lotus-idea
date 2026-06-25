@@ -57,6 +57,7 @@ make runtime-trust-telemetry-proof-contract-gate
 make report-intake-route-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make ai-lineage-store-proof-contract-gate
+make ai-workflow-pack-registration-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -85,6 +86,7 @@ runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
 AI lineage store proof contract validation,
+AI workflow-pack registration proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption plus source-safe artifact-ref recording in
@@ -162,7 +164,8 @@ Persistence adapter validation:
    consumption, Workbench read-path proof consumption, bounded outbox broker
    proof consumption, default report-intake route proof generation and
    consumption, default platform mesh onboarding proof generation and
-   consumption, and AI lineage store proof generation and consumption, can be
+   consumption, AI lineage store proof generation and consumption, and AI
+   workflow-pack registration proof generation and consumption, can be
    generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
    idempotency, broker, or source payload identifiers.
@@ -193,7 +196,14 @@ Persistence adapter validation:
     only `certified_ai_lineage_store_missing`, without leaking prompt,
     provider response, candidate, portfolio, client, request-body,
     response-body, or database URL material.
-15. `tests/unit/test_runtime_trust_telemetry.py`,
+15. `tests/unit/test_ai_workflow_pack_registration_proof.py` and
+    `make ai-workflow-pack-registration-proof-contract-gate` prove the bounded
+    sibling `lotus-ai` workflow-pack registration proof contract. A valid
+    artifact clears only `workflow_pack_runtime_contract_not_certified` in
+    aggregate readiness while preserving `lotus-ai` runtime execution,
+    provider-call, model-risk dashboard/alert, Workbench, client-ready, and
+    supported-feature blockers.
+16. `tests/unit/test_runtime_trust_telemetry.py`,
     `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
     `tests/integration/test_runtime_trust_telemetry_api.py`,
     `make runtime-trust-telemetry-preview-check`, and
@@ -344,6 +354,14 @@ dashboard controls, missing alert candidates, sensitive labels, unsupported
 operation names, missing source-of-truth paths, and premature model-risk
 dashboard, alert, `lotus-ai`, Workbench, or supported-feature certification
 claims.
+
+The AI workflow-pack registration proof contract gate validates the bounded
+cross-repo `lotus-ai` workflow-pack registration proof consumed by aggregate
+implementation-proof readiness. It checks source-safe evidence refs, sibling
+registry/binding/queue-policy/supportability/test coverage, and one-blocker
+clearance so registration cannot be mistaken for `lotus-ai` runtime execution,
+provider invocation, model-risk operations certification, Workbench proof, or
+supported-feature promotion.
 
 The implementation-truth gate scans README, repository context, operations/demo docs, quality docs,
 and wiki source for unqualified current-state claims that imply demo readiness, production support,

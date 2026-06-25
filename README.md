@@ -26,7 +26,9 @@ Current implemented foundations include:
   run-once/scheduled workers, readiness, aggregate APIs, and proof diagnostics,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection with fail-closed entitlement-scope enforcement and queue readiness,
-- AI explanation governance diagnostics and source-safe lineage persistence with PostgreSQL runtime proof plus a source-safe AI lineage store proof artifact, without provider execution,
+- AI explanation governance diagnostics, source-safe lineage persistence, AI
+  lineage store proof, and bounded `lotus-ai` workflow-pack registration proof,
+  without provider execution,
 - conversion/report foundations plus governed downstream contract-readiness, submission APIs, HTTP adapter foundations for Advise, Manage, and Report, and optional source-safe proof consumption for the merged `lotus-report` intake route, without report materialization, render, archive, publication, or supported-feature claims,
 - source-safe outbox records with retry/dead-letter semantics, HTTP
   broker-publisher adapter foundation, readiness diagnostics, and bounded
@@ -195,8 +197,9 @@ docker compose up --build
 | `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, mesh events, or downstream consumers. |
 | `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
 | `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without certifying `lotus-ai` runtime execution, model-risk dashboards, Workbench, or supported-feature promotion. |
+| `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI model-risk contract, and source-safe RFC proof-readiness evidence. Cross-repo report and platform proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` and `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI workflow-pack registration, AI model-risk contract, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
@@ -262,19 +265,13 @@ Operator details live in:
 
 ## Governance
 
-Day-one governing standard:
-
-- `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
+Day-one governing standard: `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
 
 Local controls keep implementation claims grounded:
 
-- `make implementation-truth-gate` blocks unqualified claims that imply support,
-  certification, live source ingestion, Gateway or Workbench support, or
-  client-ready publication while no supported feature is promoted.
-- `make documentation-contract-gate` protects the README, repo context, docs,
-  quality pages, evidence guide, and wiki pages that operators and agents need.
-- `make source-observability-contract-gate` prevents raw logs, raw `print()`,
-  direct Python logging, and unsafe observability bypasses.
+- `make implementation-truth-gate` blocks unqualified support, certification, live-source, Gateway/Workbench, and client-ready claims.
+- `make documentation-contract-gate` protects the README, repo context, docs, quality pages, evidence guide, and wiki pages.
+- `make source-observability-contract-gate` prevents raw logs, raw `print()`, direct Python logging, and unsafe observability bypasses.
 - `make operation-metric-contract-gate` keeps the operation metric catalog
   synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
   Gateway/Workbench, or supported-feature overclaims.
@@ -286,6 +283,9 @@ Local controls keep implementation claims grounded:
   artifact source-safe and prevents durable persistence evidence from becoming
   a false `lotus-ai` runtime, model-risk dashboard, Workbench, client-demo, or
   supported-feature claim.
+- `make ai-workflow-pack-registration-proof-contract-gate` keeps sibling `lotus-ai`
+  registration evidence source-safe and blocks false runtime, provider, model-risk,
+  Workbench, client-demo, or supported-feature claims.
 - `make no-sensitive-content-guard` keeps local evidence and output artifacts
   free of sensitive marker names.
 - `make durable-repository-proof-contract-gate` keeps the aggregate

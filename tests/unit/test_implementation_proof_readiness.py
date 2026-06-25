@@ -7,6 +7,9 @@ from pathlib import Path
 import pytest
 
 from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_payload
+from app.application.ai_workflow_pack_registration_proof import (
+    build_ai_workflow_pack_registration_proof_payload,
+)
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
     _supported_feature_count,
@@ -173,6 +176,9 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         in ai_explanation.evidence_refs
     )
     assert "make ai-model-risk-ops-contract-gate" in ai_explanation.evidence_refs
+    assert "make ai-workflow-pack-registration-proof-contract-gate" in (
+        ai_explanation.evidence_refs
+    )
     assert "model_risk_operations_dashboard_not_certified" in ai_explanation.blockers
     assert "model_risk_operations_alerts_not_certified" in ai_explanation.blockers
     serialized = repr(snapshot)
@@ -344,6 +350,45 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
     assert "lotus_ai_runtime_execution_missing" in ai_explanation.blockers
     assert "workflow_pack_runtime_contract_not_certified" in ai_explanation.blockers
     assert "output/ai/ai-lineage-store-proof.json" in ai_explanation.evidence_refs
+
+
+def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof_without_runtime_claim() -> (
+    None
+):
+    proof = build_ai_workflow_pack_registration_proof_payload(
+        generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        lotus_ai_root=ROOT.parent / "lotus-ai",
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        ai_workflow_pack_registration_proof=proof,
+        ai_workflow_pack_registration_proof_ref=(
+            "output/ai/ai-workflow-pack-registration-proof.json"
+        ),
+    )
+
+    assert "workflow_pack_runtime_contract_not_certified" not in snapshot.overall_blockers
+    assert "certified_ai_lineage_store_missing" in snapshot.overall_blockers
+    assert "lotus_ai_runtime_execution_missing" in snapshot.overall_blockers
+    assert "model_risk_operations_dashboard_not_certified" in snapshot.overall_blockers
+    assert "model_risk_operations_alerts_not_certified" in snapshot.overall_blockers
+    assert "workbench_panel_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+    ai_explanation = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "ai-explanation"
+    )
+    assert "workflow_pack_runtime_contract_not_certified" not in ai_explanation.blockers
+    assert "lotus_ai_runtime_execution_missing" in ai_explanation.blockers
+    assert "output/ai/ai-workflow-pack-registration-proof.json" in (ai_explanation.evidence_refs)
 
 
 def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:
