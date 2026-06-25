@@ -24,25 +24,28 @@ Blocking scaffold commands:
 15. `make migration-execution-gate`
 16. `make durable-repository-proof-contract-gate`
 17. `make runtime-trust-telemetry-proof-contract-gate`
-18. `make workbench-read-path-proof-contract-gate`
-19. `make outbox-broker-proof-contract-gate`
-20. `make platform-mesh-onboarding-proof-contract-gate`
-21. `make source-ingestion-worker-check`
-22. `make source-ingestion-scheduled-worker-check`
-23. `make source-ingestion-live-proof-contract-gate`
-24. `make implementation-proof-readiness-check` generates the scheduled-worker
+18. `make ai-lineage-store-proof-contract-gate`
+19. `make ai-workflow-pack-registration-proof-contract-gate`
+20. `make workbench-read-path-proof-contract-gate`
+21. `make outbox-broker-proof-contract-gate`
+22. `make platform-mesh-onboarding-proof-contract-gate`
+23. `make source-ingestion-worker-check`
+24. `make source-ingestion-scheduled-worker-check`
+25. `make source-ingestion-live-proof-contract-gate`
+26. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact, outbox
     broker proof artifact, default report-intake route proof artifact, and
-    default platform mesh onboarding proof artifact, then consumes all seven in
+    default platform mesh onboarding proof artifact, plus AI lineage store and
+    AI workflow-pack registration proof artifacts, then consumes all nine in
     aggregate RFC proof-readiness evidence.
-25. `make supported-features-gate`
-26. `make endpoint-certification-gate`
-27. `make postgres-integration-gate`
-28. `make openapi-gate`
-29. `make coverage-gate`
-30. `make security-audit`
-31. `make docker-build`
+27. `make supported-features-gate`
+28. `make endpoint-certification-gate`
+29. `make postgres-integration-gate`
+30. `make openapi-gate`
+31. `make coverage-gate`
+32. `make security-audit`
+33. `make docker-build`
 
 Cleanup support command:
 
@@ -68,6 +71,8 @@ source-ingestion live-proof contract validation with aggregate blocked-reason
 diagnostics,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
+AI lineage store proof contract validation,
+AI workflow-pack registration proof contract validation,
 Workbench read-path proof contract validation,
 outbox broker proof contract validation,
 implementation-proof readiness artifact generation, source-observability
@@ -160,6 +165,14 @@ blocks missing dashboard controls, missing alert candidates, sensitive labels,
 unsupported operation names, missing source-of-truth paths, and premature
 model-risk dashboard, alert, `lotus-ai`, Workbench, or supported-feature
 certification claims.
+
+`make ai-workflow-pack-registration-proof-contract-gate` validates the bounded
+sibling `lotus-ai` workflow-pack registration proof used by aggregate
+implementation-proof readiness. It blocks source-unsafe evidence refs, missing
+registry/binding/queue-policy/supportability/test proof, and any attempt to
+treat registration as `lotus-ai` runtime execution, provider invocation,
+model-risk dashboard/alert certification, Workbench proof, or
+supported-feature promotion.
 
 `make source-ingestion-live-proof-contract-gate` also protects the live-proof
 artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof

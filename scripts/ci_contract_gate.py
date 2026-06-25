@@ -19,7 +19,7 @@ PINNED_ACTIONS: dict[str, tuple[str, str]] = {
     "reviewdog/action-actionlint": ("6fb7acc99f4a1008869fa8a0f09cfca740837d9d", "v1.72.0"),
 }
 
-REQUIRED_TARGETS = (
+REQUIRED_LINT_TARGETS = (
     "ci-contract-gate",
     "repository-hygiene-gate",
     "maintainability-gate",
@@ -38,6 +38,7 @@ REQUIRED_TARGETS = (
     "durable-repository-proof-contract-gate",
     "runtime-trust-telemetry-proof-contract-gate",
     "ai-lineage-store-proof-contract-gate",
+    "ai-workflow-pack-registration-proof-contract-gate",
     "report-intake-route-proof-contract-gate",
     "workbench-read-path-proof-contract-gate",
     "outbox-broker-proof-contract-gate",
@@ -48,6 +49,9 @@ REQUIRED_TARGETS = (
     "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
     "endpoint-certification-gate",
+)
+REQUIRED_TARGETS = (
+    *REQUIRED_LINT_TARGETS,
     "postgres-integration-gate",
     "typecheck",
     "architecture-boundary-gate",
@@ -60,36 +64,7 @@ REQUIRED_TARGETS = (
     "security-audit",
     "docker-build",
 )
-REQUIRED_LINT_CALLS = (
-    "$(MAKE) ci-contract-gate",
-    "$(MAKE) repository-hygiene-gate",
-    "$(MAKE) maintainability-gate",
-    "$(MAKE) documentation-contract-gate",
-    "$(MAKE) quality-scorecard-gate",
-    "$(MAKE) monetary-float-guard",
-    "$(MAKE) no-sensitive-content-guard",
-    "$(MAKE) source-observability-contract-gate",
-    "$(MAKE) operation-metric-contract-gate",
-    "$(MAKE) ai-model-risk-ops-contract-gate",
-    "$(MAKE) implementation-truth-gate",
-    "$(MAKE) data-mesh-contract-gate",
-    "$(MAKE) downstream-realization-contract-gate",
-    "$(MAKE) migration-contract-gate",
-    "$(MAKE) migration-execution-gate",
-    "$(MAKE) durable-repository-proof-contract-gate",
-    "$(MAKE) runtime-trust-telemetry-proof-contract-gate",
-    "$(MAKE) ai-lineage-store-proof-contract-gate",
-    "$(MAKE) report-intake-route-proof-contract-gate",
-    "$(MAKE) workbench-read-path-proof-contract-gate",
-    "$(MAKE) outbox-broker-proof-contract-gate",
-    "$(MAKE) platform-mesh-onboarding-proof-contract-gate",
-    "$(MAKE) source-ingestion-worker-check",
-    "$(MAKE) source-ingestion-scheduled-worker-check",
-    "$(MAKE) source-ingestion-live-proof-contract-gate",
-    "$(MAKE) runtime-trust-telemetry-snapshot-check",
-    "$(MAKE) supported-features-gate",
-    "$(MAKE) endpoint-certification-gate",
-)
+REQUIRED_LINT_CALLS = tuple(f"$(MAKE) {target}" for target in REQUIRED_LINT_TARGETS)
 REQUIRED_CHECK_DEPS = (
     "lint",
     "typecheck",
@@ -241,6 +216,7 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_durable_repository_proof.py", "a durable repository proof artifact"),
     ("scripts/generate_runtime_trust_telemetry_proof.py", "a runtime trust telemetry proof artifact"),
     ("scripts/generate_ai_lineage_store_proof.py", "an AI lineage store proof artifact"),
+    ("scripts/generate_ai_workflow_pack_registration_proof.py", "an AI workflow-pack registration proof artifact"),
     ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
     ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
     ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
@@ -251,6 +227,7 @@ PASSED_READINESS_ARTIFACTS = (
     ("--durable-repository-proof", "durable repository proof artifact"),
     ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
     ("--ai-lineage-store-proof", "AI lineage store proof artifact"),
+    ("--ai-workflow-pack-registration-proof", "AI workflow-pack registration proof artifact"),
     ("--report-intake-route-proof", "report intake route proof artifact"),
     ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
     ("--outbox-broker-proof", "outbox broker proof artifact"),
@@ -260,6 +237,9 @@ REQUIRED_READINESS_WIRING = (
     ("--source-ingestion-manifest", "pass the source-ingestion manifest into readiness generation"),
     ("LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT", "pass the default AI lineage store proof output into readiness generation"),
     ("LOTUS_IDEA_AI_LINEAGE_STORE_PROOF", "support optional AI lineage store proof artifact wiring"),
+    ("LOTUS_AI_ROOT", "support default lotus-ai root wiring for AI workflow-pack registration proof generation"),
+    ("LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT", "pass the default AI workflow-pack registration proof output into readiness generation"),
+    ("LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF", "support optional AI workflow-pack registration proof artifact wiring"),
     ("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "pass the default report intake route proof output into readiness generation"),
     ("LOTUS_PLATFORM_ROOT", "support default platform root wiring for platform mesh onboarding proof generation"),
     ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT", "pass the default platform mesh onboarding proof output into readiness generation"),
@@ -304,9 +284,9 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
     for marker, requirement in REQUIRED_READINESS_WIRING:
         if marker not in target_block:
             errors.append(f"{READINESS_TARGET} must {requirement}")
-    if target_block.count("--allow-missing-evidence") < 2:
+    if target_block.count("--allow-missing-evidence") < 3:
         errors.append(
-            f"{READINESS_TARGET} must keep both cross-repo proof generators CI-stable when "
+            f"{READINESS_TARGET} must keep all cross-repo proof generators CI-stable when "
             "sibling evidence is absent"
         )
     return errors
@@ -366,6 +346,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",
         "runtime-trust-telemetry-proof-contract-gate": "scripts/runtime_trust_telemetry_proof_contract_gate.py",
         "ai-lineage-store-proof-contract-gate": "scripts/ai_lineage_store_proof_contract_gate.py",
+        "ai-workflow-pack-registration-proof-contract-gate": "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
         "report-intake-route-proof-contract-gate": "scripts/report_intake_route_proof_contract_gate.py",
         "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
         "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
