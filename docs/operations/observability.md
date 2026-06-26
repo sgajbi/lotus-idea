@@ -14,7 +14,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Idea operation events | Certified internal foundation telemetry | Foundation supportability only |
 | Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
 | Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
-| AI model-risk operations contract | Machine-readable dashboard-control and alert-candidate posture for AI explanation operations | Not dashboard, alert, `lotus-ai`, Workbench, or supported-feature certification |
+| AI model-risk operations contract | Machine-readable dashboard-control and alert posture for AI explanation operations, backed by repo-owned dashboard/rule/runbook artifacts | Not `lotus-ai`, Workbench, data-mesh, client-ready, or supported-feature certification |
 
 ## Sensitive-Content Rule
 
@@ -107,21 +107,22 @@ feature.
 
 `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` defines
 the current model-risk operations contract for the AI explanation foundation.
-It is validated by `make ai-model-risk-ops-contract-gate` and remains
-explicitly `not_certified`.
+It is validated by `make ai-model-risk-ops-contract-gate`. The concrete
+dashboard, alert rules, and runbook are certified by
+`make ai-model-risk-operations-proof-contract-gate`.
 
 | Contract area | Implemented evidence | Boundary |
 | --- | --- | --- |
-| Dashboard controls | AI explanation readiness posture, verifier posture, and lineage durability posture over implemented operation telemetry | Not a certified dashboard |
-| Alert candidates | Unsupported-claim block-rate and readiness-blocked candidates over implemented operation telemetry | Not certified alerting |
+| Dashboard controls | AI explanation readiness posture, verifier posture, and lineage durability posture over implemented operation telemetry | Certified source-safe dashboard artifact |
+| Alert rules | Unsupported-claim block-rate and readiness-blocked rules over implemented operation telemetry | Certified source-safe alert artifact |
 | Source-of-truth paths | AI readiness source, AI API source, operation metric contract, AI governance docs, runbook, and RFC slices | No runtime `lotus-ai` execution proof |
 
-This contract narrows the model-risk operations gap from "missing contract" to
-"not-certified contract exists". It still does not prove a Grafana dashboard,
-Prometheus alert, model-risk operating process, `lotus-ai` runtime execution,
-Workbench product surface, client-ready publication, or supported feature. AI
-lineage store proof is a separate source-safe persistence artifact consumed by
-aggregate implementation-proof readiness.
+This contract narrows the model-risk operations gap from "candidate controls"
+to certified source-safe dashboard and alert artifacts. It still does not prove
+`lotus-ai` runtime execution, Workbench product surface, data-mesh
+certification, client-ready publication, or supported-feature promotion. AI
+lineage store proof remains a separate source-safe persistence artifact
+consumed by aggregate implementation-proof readiness.
 
 ## Operator Interpretation
 
@@ -141,8 +142,7 @@ aggregate implementation-proof readiness.
 9. `blocked` means the verifier rejected unsupported AI output, evidence
    replay found stale source posture, the AI explanation readiness diagnostic
    remains blocked until `lotus-ai` runtime execution, workflow-pack runtime
-   certification, certified model-risk dashboard and alert evidence, runtime
-   trust telemetry, and Workbench proof exist,
+   certification, runtime trust telemetry, and Workbench proof exist,
    the mesh-readiness diagnostic remains blocked until runtime trust telemetry
    and platform mesh certification exist, the source-ingestion readiness
    diagnostic is missing run-once worker configuration inputs, the

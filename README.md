@@ -15,10 +15,8 @@ certified internal API foundations, persistence and migration support,
 operator readiness diagnostics, source-safe observability, and CI guardrails.
 
 No external business feature is supported yet. Feature promotion still requires
-full source-ingestion certification beyond the bounded live-proof artifact,
-certified long-running scheduler proof, certified runtime trust telemetry,
-data-mesh certification, full Gateway/Workbench live proof, downstream
-realization proof, supported-feature registration, and evidence on `main`.
+certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbench,
+downstream realization, supported-feature registration, and evidence on `main`.
 
 Current implemented foundations include:
 
@@ -26,14 +24,12 @@ Current implemented foundations include:
   run-once/scheduled workers, readiness, aggregate APIs, and proof diagnostics,
 - candidate persistence, replay, idempotency, lifecycle, review, and feedback,
 - advisor queue projection with fail-closed entitlement-scope enforcement and queue readiness,
-- AI explanation governance diagnostics, source-safe lineage persistence, AI
-  lineage store proof, and bounded `lotus-ai` workflow-pack registration proof,
-  plus bounded deterministic runtime execution proof, without live provider
-  execution, provider rollout certification, or client-ready publication,
+- AI explanation diagnostics, source-safe lineage persistence, model-risk
+  operations proof, and bounded `lotus-ai` workflow-pack registration/runtime
+  proof without live provider rollout or client-ready publication,
 - conversion/report foundations plus governed downstream contract-readiness, submission APIs, HTTP adapter foundations for Advise, Manage, and Report, and optional source-safe proof consumption for the merged `lotus-report` intake route, without report materialization, render, archive, publication, or supported-feature claims,
-- source-safe outbox records with retry/dead-letter semantics, HTTP
-  broker-publisher adapter foundation, readiness diagnostics, and bounded
-  outbox broker proof evidence for accepted internal mutations,
+- source-safe outbox records, HTTP broker-publisher adapter foundation,
+  readiness diagnostics, and bounded broker proof evidence,
 - runtime trust telemetry, data-mesh readiness, PostgreSQL/migration, durable
   repository, live Core, Workbench, outbox, and optional platform mesh proof
   evidence for aggregate readiness,
@@ -197,17 +193,18 @@ docker compose up --build
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
 | `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, mesh events, or downstream consumers. |
 | `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
-| `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without certifying `lotus-ai` runtime execution, model-risk dashboards, Workbench, or supported-feature promotion. |
+| `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without, by itself, certifying `lotus-ai` runtime execution, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-runtime-execution-proof-contract-gate` | Validate the bounded sibling `lotus-ai` deterministic runtime execution proof without certifying live provider execution, model-risk operations, Workbench, client-ready publication, or supported-feature promotion. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk contract, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
 | `make runtime-trust-telemetry-snapshot-check` | Generate a source-safe runtime trust telemetry snapshot under ignored `output/trust-telemetry/runtime/`. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
-| `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk dashboard and alert readiness contract while keeping it not certified. |
+| `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
+| `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
 | `make check` | Run the local PR-grade gate set. |
 | `make ci` | Run the broader CI-equivalent local suite. |
@@ -271,13 +268,16 @@ Local controls keep implementation claims grounded:
   synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
   Gateway/Workbench, or supported-feature overclaims.
 - `make ai-model-risk-ops-contract-gate` keeps the AI model-risk operations
-  contract aligned to implemented AI explanation/readiness telemetry and blocks
-  premature dashboard, alert, `lotus-ai`, Workbench, or supported-feature
-  claims.
+  contract aligned to implemented AI explanation/readiness telemetry and
+  certified dashboard/alert artifact references.
+- `make ai-model-risk-operations-proof-contract-gate` proves the repo-owned
+  dashboard, alert rules, and runbook reference only implemented, bounded
+  operation telemetry while still blocking `lotus-ai`, Workbench,
+  data-mesh, client-ready, and supported-feature overclaims.
 - `make ai-lineage-store-proof-contract-gate` keeps the AI lineage store proof
   artifact source-safe and prevents durable persistence evidence from becoming
-  a false `lotus-ai` runtime, model-risk dashboard, Workbench, client-demo, or
-  supported-feature claim.
+  a false `lotus-ai` runtime, Workbench, client-demo, or supported-feature
+  claim.
 - `make ai-workflow-pack-registration-proof-contract-gate` keeps sibling `lotus-ai`
   registration evidence source-safe and blocks false runtime, provider, model-risk,
   Workbench, client-demo, or supported-feature claims.

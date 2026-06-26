@@ -87,7 +87,7 @@ supported feature.
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, bounded run-once operator action, and source-safe outbox broker proof artifact for accepted internal mutations | No certified external publication, platform mesh event delivery, or downstream consumer support |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
-| AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, certified model-risk dashboard/alert proof, or supported product claim |
+| AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |
 | Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay and AI explanation lineage accepted/replayed/conflict behavior | Not supported-feature promotion |
 | Durable repository proof artifact | Source-safe aggregate readiness artifact citing migration, adapter, and CI runtime proof evidence | Not live runtime configuration or production storage certification |
 

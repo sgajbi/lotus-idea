@@ -169,19 +169,20 @@ foundation:
     vocabulary, and blocks premature dashboard, alert, mesh,
     Gateway/Workbench, or supported-feature claims.
 34. `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
-    `scripts/ai_model_risk_operations_contract_gate.py`, and
-    `make ai-model-risk-ops-contract-gate` now define and enforce the
-    not-certified AI model-risk operations contract for implemented AI
-    explanation and readiness telemetry. The gate requires dashboard controls,
-    alert candidates, source-of-truth paths, code-owned operation names,
-    bounded metric labels, and non-proof boundaries, while blocking premature
-    model-risk dashboard, alert, `lotus-ai`, Workbench, or supported-feature
-    certification claims.
+    `scripts/ai_model_risk_operations_contract_gate.py`,
+    `scripts/ai_model_risk_operations_proof_contract_gate.py`,
+    `monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json`,
+    `monitoring/prometheus/rules/lotus-idea-ai-model-risk-operations.rules.yml`,
+    and `make ai-model-risk-operations-proof-contract-gate` now define and
+    enforce certified repo-owned AI model-risk dashboard, alert-rule, and
+    runbook artifacts for implemented AI explanation and readiness telemetry.
+    The proof blocks premature `lotus-ai`, Workbench, client-ready, data-mesh,
+    or supported-feature certification claims.
 
 This foundation remains internal and `foundation_only`. It does not prove
 production durable-storage certification, data-product certification,
 downstream Report/Render/Archive realization, Gateway/Workbench proof,
-dashboard/alert certification, or supported-feature promotion.
+client-ready publication, or supported-feature promotion.
 The source-ingestion readiness diagnostic and run-once operator action are
 explicitly `not_certified` until live Core source proof, certified long-running
 scheduled runtime proof, runtime data-mesh telemetry, Gateway/Workbench proof,

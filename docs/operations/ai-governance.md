@@ -5,8 +5,11 @@ implementation is an internal domain and API foundation; it does not call
 providers, does not execute `lotus-ai` runtime workflows, and does not promote
 AI-assisted explanation as a supported feature. The evaluator now records
 source-safe lineage through the repository port; when PostgreSQL is configured
-that lineage is stored durably, but it is not certified `lotus-ai` runtime
-lineage or certified model-risk dashboard/alert proof.
+that lineage is stored durably. The repo now also carries certified
+source-safe model-risk operations dashboard and alert artifacts over
+implemented AI explanation telemetry. None of this is certified `lotus-ai`
+runtime lineage, live-provider execution, Workbench product proof, or
+supported-feature promotion.
 
 ## Current Implementation
 
@@ -68,8 +71,8 @@ It also returns explicit model-risk operations posture:
 | `modelRiskOperationsContractAvailable` | `true` | A repo-owned model-risk operations contract exists and is validated by `make ai-model-risk-ops-contract-gate`. |
 | `modelRiskDashboardContractAvailable` | `true` | Dashboard control requirements are declared for implemented AI explanation/readiness telemetry. |
 | `modelRiskAlertContractAvailable` | `true` | Alert candidate requirements are declared for implemented AI explanation/readiness telemetry. |
-| `modelRiskDashboardCertified` | `false` | No certified model-risk dashboard exists yet. |
-| `modelRiskAlertCertified` | `false` | No certified model-risk alert pack exists yet. |
+| `modelRiskDashboardCertified` | `true` | The repo-owned Grafana dashboard references only implemented, bounded AI explanation telemetry. |
+| `modelRiskAlertCertified` | `true` | The repo-owned Prometheus alert rules reference only implemented, bounded AI explanation telemetry and runbook anchors. |
 
 It requires both the `operator` role and
 `idea.ai-explanation.readiness.read` capability.
@@ -77,22 +80,22 @@ It requires both the `operator` role and
 ## Model-Risk Operations Contract
 
 `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json` defines
-the current not-certified operating contract for AI explanation supportability.
-It maps implemented telemetry and endpoints to the dashboard controls and alert
-candidates operators will eventually need.
+the current operating contract for AI explanation supportability. It maps
+implemented telemetry and endpoints to certified source-safe dashboard controls
+and alert rules.
 
 | Control | Implemented source | Current certification |
 | --- | --- | --- |
-| AI explanation readiness posture | `GET /api/v1/ai-explanations/readiness`, `ai_explanation_readiness_read` events | `not_certified` |
-| AI output verifier posture | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`, `ai_explanation` events | `not_certified` |
-| AI lineage durability posture | `durable_storage_backed` telemetry label and readiness response | `not_certified` |
+| AI explanation readiness posture | `GET /api/v1/ai-explanations/readiness`, `ai_explanation_readiness_read` events | `certified` |
+| AI output verifier posture | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`, `ai_explanation` events | `certified` |
+| AI lineage durability posture | `durable_storage_backed` telemetry label and readiness response | `certified` |
 
 The contract is validated by `make ai-model-risk-ops-contract-gate`, which
 blocks sensitive labels, unowned operations, missing source-of-truth paths, and
-premature certification flags. Passing this gate proves only that the operating
-contract is present, source-safe, and synchronized with implemented telemetry.
-It is not `lotus-ai` runtime proof, model-risk dashboard certification, alert
-certification, Workbench proof, or supported-feature promotion.
+product-support overclaims. `make ai-model-risk-operations-proof-contract-gate`
+certifies the dashboard, alert rules, and runbook artifacts. Passing these
+gates is still not `lotus-ai` runtime proof, Workbench proof, data-mesh
+certification, client-ready publication, or supported-feature promotion.
 
 ## Allowed Current Purposes
 
@@ -122,9 +125,8 @@ model-risk operating evidence. Durable repository-backed lineage persistence
 is necessary proof, but it is not sufficient certification. The source-safe AI
 lineage store proof can clear only the lineage-store blocker in aggregate proof
 readiness. The readiness diagnostic therefore remains `not_certified` until
-`lotus-ai` runtime execution, workflow-pack runtime certification, certified
-model-risk dashboards and alerts, runtime trust telemetry, and Workbench proof
-exist.
+`lotus-ai` runtime execution, workflow-pack runtime certification, runtime
+trust telemetry, and Workbench proof exist.
 
 ## API Behavior
 

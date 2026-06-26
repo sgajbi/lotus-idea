@@ -203,15 +203,13 @@ Persistence adapter validation:
     sibling `lotus-ai` workflow-pack registration proof contract. A valid
     artifact clears only `workflow_pack_runtime_contract_not_certified` in
     aggregate readiness while preserving `lotus-ai` runtime execution,
-    provider-call, model-risk dashboard/alert, Workbench, client-ready, and
-    supported-feature blockers.
+    provider-call, Workbench, client-ready, and supported-feature blockers.
 16. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py` and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` prove the
     bounded sibling `lotus-ai` deterministic runtime execution proof contract.
     A valid artifact clears only `lotus_ai_runtime_execution_missing` in
     aggregate readiness while preserving workflow-pack registration, live
-    provider, model-risk dashboard/alert, Workbench, client-ready, and
-    supported-feature blockers.
+    provider, Workbench, client-ready, and supported-feature blockers.
 16. `tests/unit/test_runtime_trust_telemetry.py`,
     `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,
     `tests/integration/test_runtime_trust_telemetry_api.py`,
@@ -463,14 +461,13 @@ client-ready publication, or supported-feature promotion.
 The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
 the diagnostic route only; they do not certify `lotus-ai` runtime execution,
-provider invocation, certified model-risk dashboard or alert readiness,
-Gateway/Workbench support, data-product promotion, client-ready publication,
-or supported-feature promotion. The
-AI lineage store proof is consumed only by aggregate implementation-proof
-readiness, and the AI model-risk operations contract proves only that
-dashboard-control and alert-candidate requirements exist for implemented
-telemetry; both remain `not_certified` for `lotus-ai`, dashboard, alert,
-Workbench, client-ready, and supported-feature claims.
+provider invocation, Gateway/Workbench support, data-product promotion,
+client-ready publication, or supported-feature promotion. The AI lineage store
+proof is consumed only by aggregate implementation-proof readiness. The AI
+model-risk operations proof certifies repo-owned dashboard, alert-rule, and
+runbook artifacts against implemented operation telemetry while still leaving
+`lotus-ai` runtime, live provider, Workbench, client-ready, and supported-feature
+gaps unpromoted.
 
 The internal outbox-delivery-readiness and outbox-delivery-run-once endpoints
 are covered by OpenAPI, endpoint certification, unit tests, and integration
