@@ -39,6 +39,7 @@ from app.application.source_ingestion_worker import (
 )
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
+from tests.support.ai_workflow_pack_fixture import write_lotus_ai_workflow_pack_fixture
 
 
 def test_implementation_proof_readiness_payload_is_source_safe() -> None:
@@ -348,7 +349,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_
             build_ai_workflow_pack_registration_proof_payload(
                 generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
                 repository_root=Path(__file__).resolve().parents[2],
-                lotus_ai_root=Path(__file__).resolve().parents[2].parent / "lotus-ai",
+                lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
             )
         ),
         encoding="utf-8",

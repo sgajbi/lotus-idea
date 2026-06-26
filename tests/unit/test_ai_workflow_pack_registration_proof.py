@@ -17,16 +17,16 @@ from app.application.ai_workflow_pack_registration_proof import (
     ai_workflow_pack_registration_proof_is_valid,
     build_ai_workflow_pack_registration_proof_payload,
 )
+from tests.support.ai_workflow_pack_fixture import write_lotus_ai_workflow_pack_fixture
 
 ROOT = Path(__file__).resolve().parents[2]
-LOTUS_AI_ROOT = ROOT.parent / "lotus-ai"
 
 
-def test_builds_source_safe_ai_workflow_pack_registration_proof() -> None:
+def test_builds_source_safe_ai_workflow_pack_registration_proof(tmp_path: Path) -> None:
     proof = build_ai_workflow_pack_registration_proof_payload(
         generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
-        lotus_ai_root=LOTUS_AI_ROOT,
+        lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
     )
 
     assert proof["schemaVersion"] == AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION
@@ -76,11 +76,13 @@ def test_rejects_ai_workflow_pack_registration_proof_when_ai_evidence_is_missing
     assert ai_workflow_pack_registration_proof_is_valid(proof) is False
 
 
-def test_rejects_ai_workflow_pack_registration_proof_with_naive_timestamp() -> None:
+def test_rejects_ai_workflow_pack_registration_proof_with_naive_timestamp(
+    tmp_path: Path,
+) -> None:
     proof = build_ai_workflow_pack_registration_proof_payload(
         generated_at_utc=datetime(2026, 6, 25, 0, 0),
         repository_root=ROOT,
-        lotus_ai_root=LOTUS_AI_ROOT,
+        lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
     )
 
     assert proof["aiWorkflowPackRegistrationProofValid"] is False
@@ -114,8 +116,9 @@ def test_rejects_ai_workflow_pack_registration_proof_with_naive_timestamp() -> N
 def test_rejects_ai_workflow_pack_registration_proof_with_invalid_top_level_fields(
     field_name: str,
     bad_value: object,
+    tmp_path: Path,
 ) -> None:
-    proof = _valid_ai_workflow_pack_registration_proof()
+    proof = _valid_ai_workflow_pack_registration_proof(tmp_path)
     proof[field_name] = bad_value
 
     assert ai_workflow_pack_registration_proof_is_valid(proof) is False
@@ -133,8 +136,9 @@ def test_rejects_ai_workflow_pack_registration_proof_with_invalid_top_level_fiel
 def test_rejects_ai_workflow_pack_registration_proof_with_invalid_contract_fields(
     field_name: str,
     bad_value: object,
+    tmp_path: Path,
 ) -> None:
-    proof = _valid_ai_workflow_pack_registration_proof()
+    proof = _valid_ai_workflow_pack_registration_proof(tmp_path)
     proof[field_name] = bad_value
 
     assert ai_workflow_pack_registration_proof_is_valid(proof) is False
@@ -156,8 +160,9 @@ def test_rejects_ai_workflow_pack_registration_proof_with_invalid_contract_field
 )
 def test_rejects_ai_workflow_pack_registration_proof_with_invalid_proof_checks(
     check_name: str,
+    tmp_path: Path,
 ) -> None:
-    proof = _valid_ai_workflow_pack_registration_proof()
+    proof = _valid_ai_workflow_pack_registration_proof(tmp_path)
     proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
     proof_checks[check_name] = False
     proof["proofChecks"] = proof_checks
@@ -174,7 +179,7 @@ def test_ai_workflow_pack_registration_proof_cli_writes_valid_artifact(tmp_path:
             "--generated-at-utc",
             "2026-06-25T00:00:00Z",
             "--lotus-ai-root",
-            str(LOTUS_AI_ROOT),
+            str(write_lotus_ai_workflow_pack_fixture(tmp_path)),
             "--output",
             str(output_path),
         ]
@@ -231,11 +236,11 @@ def test_ai_workflow_pack_registration_proof_contract_gate_allows_missing_siblin
     assert errors == []
 
 
-def _valid_ai_workflow_pack_registration_proof() -> dict[str, object]:
+def _valid_ai_workflow_pack_registration_proof(tmp_path: Path) -> dict[str, object]:
     return build_ai_workflow_pack_registration_proof_payload(
         generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
-        lotus_ai_root=LOTUS_AI_ROOT,
+        lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
     )
 
 
