@@ -24,8 +24,6 @@ AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED = ("workflow_pack_runtime_contrac
 REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS = (
     "certified_ai_lineage_store_missing",
     "lotus_ai_runtime_execution_missing",
-    "model_risk_operations_dashboard_not_certified",
-    "model_risk_operations_alerts_not_certified",
     "certified_runtime_trust_telemetry_missing",
     "workbench_product_proof_missing",
     "supported_feature_promotion_missing",

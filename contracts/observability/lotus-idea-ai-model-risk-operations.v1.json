@@ -5,13 +5,17 @@
   "lifecycle_status": "implemented_internal_foundation",
   "supportability_status": "not_certified",
   "supported_feature_promoted": false,
-  "dashboard_certified": false,
-  "alert_certified": false,
+  "dashboard_certified": true,
+  "alert_certified": true,
   "source_of_truth": {
     "ai_readiness_source": "src/app/application/ai_governance.py",
     "ai_api_source": "src/app/api/ai_governance.py",
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
     "contract_gate": "scripts/ai_model_risk_operations_contract_gate.py",
+    "proof_contract_gate": "scripts/ai_model_risk_operations_proof_contract_gate.py",
+    "dashboard": "monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json",
+    "alert_rules": "monitoring/prometheus/rules/lotus-idea-ai-model-risk-operations.rules.yml",
+    "model_risk_runbook": "docs/runbooks/ai-model-risk-operations.md",
     "operations_doc": "docs/operations/observability.md",
     "ai_governance_doc": "docs/operations/ai-governance.md",
     "operations_runbook": "wiki/Operations-Runbook.md",
@@ -35,7 +39,7 @@
         "supported_feature_promoted"
       ],
       "required_endpoint": "GET /api/v1/ai-explanations/readiness",
-      "certification_status": "not_certified"
+      "certification_status": "certified"
     },
     {
       "control_id": "ai-output-verifier-posture",
@@ -53,7 +57,7 @@
         "supported_feature_promoted"
       ],
       "required_endpoint": "POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
-      "certification_status": "not_certified"
+      "certification_status": "certified"
     },
     {
       "control_id": "ai-lineage-durability-posture",
@@ -68,7 +72,7 @@
         "supported_feature_promoted"
       ],
       "required_endpoint": "GET /api/v1/ai-explanations/readiness",
-      "certification_status": "not_certified"
+      "certification_status": "certified"
     }
   ],
   "model_risk_alert_candidates": [
@@ -82,7 +86,7 @@
         "blocked"
       ],
       "operator_response": "Investigate whether workflow-pack output is citing unsupported source products or proposing prohibited actions. Do not inspect prompts or provider payloads in this service.",
-      "certification_status": "not_certified"
+      "certification_status": "certified"
     },
     {
       "alert_id": "ai-explanation-readiness-remains-blocked",
@@ -94,12 +98,10 @@
         "blocked"
       ],
       "operator_response": "Use the readiness endpoint to inspect lotus-ai runtime, lineage-store, workflow-pack, trust-telemetry, and Workbench blockers before any support promotion.",
-      "certification_status": "not_certified"
+      "certification_status": "certified"
     }
   ],
   "non_proof_boundaries": [
-    "This contract is not model-risk dashboard certification.",
-    "This contract is not alert certification.",
     "This contract is not lotus-ai runtime execution proof.",
     "This contract is not certified AI lineage-store proof.",
     "This contract is not Gateway or Workbench proof.",

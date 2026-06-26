@@ -23,8 +23,6 @@ AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS_CLEARED = ("lotus_ai_runtime_executi
 REMAINING_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_BLOCKERS = (
     "certified_ai_lineage_store_missing",
     "workflow_pack_runtime_contract_not_certified",
-    "model_risk_operations_dashboard_not_certified",
-    "model_risk_operations_alerts_not_certified",
     "certified_runtime_trust_telemetry_missing",
     "workbench_product_proof_missing",
     "supported_feature_promotion_missing",

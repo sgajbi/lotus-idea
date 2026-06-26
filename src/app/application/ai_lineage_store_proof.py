@@ -25,8 +25,6 @@ REQUIRED_AI_LINEAGE_STORE_EVIDENCE_REFS = (
 REMAINING_AI_LINEAGE_STORE_CERTIFICATION_BLOCKERS = (
     "lotus_ai_runtime_execution_missing",
     "workflow_pack_runtime_contract_not_certified",
-    "model_risk_operations_dashboard_not_certified",
-    "model_risk_operations_alerts_not_certified",
     "certified_runtime_trust_telemetry_missing",
     "workbench_product_proof_missing",
     "supported_feature_promotion_missing",

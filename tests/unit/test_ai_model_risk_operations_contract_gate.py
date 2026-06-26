@@ -47,15 +47,17 @@ def test_ai_model_risk_operations_contract_gate_cli_reports_success(
     assert "AI model-risk operations contract gate passed" in capsys.readouterr().out
 
 
-def test_ai_model_risk_operations_contract_gate_blocks_premature_certification() -> None:
+def test_ai_model_risk_operations_contract_gate_blocks_product_promotion_and_uncertified_artifacts() -> (
+    None
+):
     module = _load_gate()
     payload = _current_payload(module)
     payload["supportability_status"] = "supported"
     payload["supported_feature_promoted"] = True
-    payload["dashboard_certified"] = True
-    payload["alert_certified"] = True
-    payload["model_risk_dashboard_controls"][0]["certification_status"] = "certified"
-    payload["model_risk_alert_candidates"][0]["certification_status"] = "certified"
+    payload["dashboard_certified"] = False
+    payload["alert_certified"] = False
+    payload["model_risk_dashboard_controls"][0]["certification_status"] = "not_certified"
+    payload["model_risk_alert_candidates"][0]["certification_status"] = "not_certified"
 
     errors = module.validate_ai_model_risk_operations_contract_payload(payload)
 
@@ -63,9 +65,9 @@ def test_ai_model_risk_operations_contract_gate_blocks_premature_certification()
         "AI model-risk operations contract supportability_status must be 'not_certified'" in errors
     )
     assert "AI model-risk operations contract supported_feature_promoted must be False" in errors
-    assert "AI model-risk operations contract dashboard_certified must be False" in errors
-    assert "AI model-risk operations contract alert_certified must be False" in errors
-    assert any("certification_status must remain not_certified" in error for error in errors)
+    assert "AI model-risk operations contract dashboard_certified must be True" in errors
+    assert "AI model-risk operations contract alert_certified must be True" in errors
+    assert any("certification_status must be certified" in error for error in errors)
 
 
 def test_ai_model_risk_operations_contract_gate_blocks_control_drift() -> None:

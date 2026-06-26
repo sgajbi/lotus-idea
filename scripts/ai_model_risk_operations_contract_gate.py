@@ -32,8 +32,6 @@ REQUIRED_ALERT_CANDIDATES = {
     "ai-explanation-readiness-remains-blocked",
 }
 REQUIRED_NON_PROOF_BOUNDARIES = {
-    "This contract is not model-risk dashboard certification.",
-    "This contract is not alert certification.",
     "This contract is not lotus-ai runtime execution proof.",
     "This contract is not certified AI lineage-store proof.",
     "This contract is not Gateway or Workbench proof.",
@@ -84,8 +82,8 @@ def _validate_header(payload: dict[str, Any]) -> list[str]:
         "lifecycle_status": "implemented_internal_foundation",
         "supportability_status": "not_certified",
         "supported_feature_promoted": False,
-        "dashboard_certified": False,
-        "alert_certified": False,
+        "dashboard_certified": True,
+        "alert_certified": True,
     }
     for key, value in expected.items():
         if payload.get(key) != value:
@@ -104,6 +102,10 @@ def _validate_source_of_truth(
         "ai_api_source",
         "operation_metric_contract",
         "contract_gate",
+        "proof_contract_gate",
+        "dashboard",
+        "alert_rules",
+        "model_risk_runbook",
         "operations_doc",
         "ai_governance_doc",
         "operations_runbook",
@@ -156,8 +158,8 @@ def _validate_dashboard_controls(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{control_id}: operator_question is required")
         if control.get("implemented_metric_family") != EXPECTED_METRIC_NAME:
             errors.append(f"{control_id}: implemented_metric_family must be {EXPECTED_METRIC_NAME}")
-        if control.get("certification_status") != "not_certified":
-            errors.append(f"{control_id}: certification_status must remain not_certified")
+        if control.get("certification_status") != "certified":
+            errors.append(f"{control_id}: certification_status must be certified")
         if not control.get("required_endpoint"):
             errors.append(f"{control_id}: required_endpoint is required")
         errors.extend(_validate_operations(control_id, control.get("required_operations")))
@@ -195,8 +197,8 @@ def _validate_alert_candidates(payload: dict[str, Any]) -> list[str]:
         observed.add(alert_id)
         if alert.get("implemented_metric_family") != EXPECTED_METRIC_NAME:
             errors.append(f"{alert_id}: implemented_metric_family must be {EXPECTED_METRIC_NAME}")
-        if alert.get("certification_status") != "not_certified":
-            errors.append(f"{alert_id}: certification_status must remain not_certified")
+        if alert.get("certification_status") != "certified":
+            errors.append(f"{alert_id}: certification_status must be certified")
         if not alert.get("operator_response"):
             errors.append(f"{alert_id}: operator_response is required")
         errors.extend(_validate_operations(alert_id, alert.get("required_operations")))

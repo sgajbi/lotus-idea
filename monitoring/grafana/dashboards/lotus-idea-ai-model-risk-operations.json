@@ -1,0 +1,124 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "targetBlank": true,
+      "title": "AI Model-Risk Operations Runbook",
+      "type": "link",
+      "url": "docs/runbooks/ai-model-risk-operations.md"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum by (supportability_status, durable_storage_backed, supported_feature_promoted) (increase(lotus_idea_operation_events_total{operation=\"ai_explanation_readiness_read\"}[15m]))",
+          "legendFormat": "readiness {{supportability_status}} durable={{durable_storage_backed}} promoted={{supported_feature_promoted}}",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Explanation Readiness Posture",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum by (outcome, supportability_status) (increase(lotus_idea_operation_events_total{operation=\"ai_explanation\"}[15m]))",
+          "legendFormat": "evaluate {{outcome}} {{supportability_status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Output Verifier Outcomes",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum by (durable_storage_backed, supported_feature_promoted) (lotus_idea_operation_events_total{operation=~\"ai_explanation|ai_explanation_readiness_read\"})",
+          "legendFormat": "durable={{durable_storage_backed}} promoted={{supported_feature_promoted}}",
+          "refId": "A"
+        }
+      ],
+      "title": "AI Lineage Durability And Promotion Guardrail",
+      "type": "stat"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "lotus-idea",
+    "ai-governance",
+    "model-risk",
+    "private-banking"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Lotus Idea AI Model-Risk Operations",
+  "uid": "lotus-idea-ai-model-risk-operations",
+  "version": 1,
+  "weekStart": ""
+}
