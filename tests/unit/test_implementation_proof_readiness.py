@@ -52,6 +52,7 @@ from app.application.source_ingestion_worker import (
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
+from tests.support.ai_workflow_pack_fixture import write_lotus_ai_workflow_pack_fixture
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -352,13 +353,13 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
     assert "output/ai/ai-lineage-store-proof.json" in ai_explanation.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof_without_runtime_claim() -> (
-    None
-):
+def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof_without_runtime_claim(
+    tmp_path: Path,
+) -> None:
     proof = build_ai_workflow_pack_registration_proof_payload(
         generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
-        lotus_ai_root=ROOT.parent / "lotus-ai",
+        lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
