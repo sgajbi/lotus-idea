@@ -12,6 +12,9 @@ from pathlib import Path
 from typing import Any
 
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
+from app.application.ai_model_risk_operations_proof import (
+    AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
+)
 from app.application.ai_workflow_pack_registration_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
@@ -61,6 +64,7 @@ class ProofArtifactInputs:
     durable_repository: ProofArtifactInput
     runtime_trust_telemetry: ProofArtifactInput
     ai_lineage_store: ProofArtifactInput
+    ai_model_risk_operations: ProofArtifactInput
     ai_workflow_pack_registration: ProofArtifactInput
     ai_workflow_pack_runtime_execution: ProofArtifactInput
     report_intake_route: ProofArtifactInput
@@ -97,6 +101,10 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 ai_lineage_store_proof=proof_artifacts.ai_lineage_store.payload,
                 ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store.source_safe_ref,
+                ai_model_risk_operations_proof=(proof_artifacts.ai_model_risk_operations.payload),
+                ai_model_risk_operations_proof_ref=(
+                    proof_artifacts.ai_model_risk_operations.source_safe_ref
+                ),
                 ai_workflow_pack_registration_proof=(
                     proof_artifacts.ai_workflow_pack_registration.payload
                 ),
@@ -200,6 +208,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
             args.ai_lineage_store_proof,
             artifact_name="AI lineage store proof",
             ref_name="AI lineage store proof artifact",
+        ),
+        ai_model_risk_operations=_proof_artifact_input(
+            args.ai_model_risk_operations_proof,
+            artifact_name="AI model-risk operations proof",
+            ref_name="AI model-risk operations proof artifact",
         ),
         ai_workflow_pack_registration=_proof_artifact_input(
             args.ai_workflow_pack_registration_proof,
@@ -307,6 +320,11 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--ai-lineage-store-proof",
             AI_LINEAGE_STORE_PROOF_ENV,
             "Optional durable AI explanation lineage store proof artifact path.",
+        ),
+        (
+            "--ai-model-risk-operations-proof",
+            AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
+            "Optional AI model-risk operations dashboard and alert proof artifact path.",
         ),
         (
             "--ai-workflow-pack-registration-proof",

@@ -12,6 +12,9 @@ from app.application.ai_governance import (
     build_ai_explanation_readiness_snapshot,
 )
 from app.application.ai_lineage_store_proof import ai_lineage_store_proof_is_valid
+from app.application.ai_model_risk_operations_proof import (
+    ai_model_risk_operations_proof_is_valid,
+)
 from app.application.ai_workflow_pack_registration_proof import (
     ai_workflow_pack_registration_proof_is_valid,
 )
@@ -117,6 +120,8 @@ def build_implementation_proof_readiness_snapshot(
     runtime_trust_telemetry_proof_ref: str | None = None,
     ai_lineage_store_proof: Mapping[str, object] | None = None,
     ai_lineage_store_proof_ref: str | None = None,
+    ai_model_risk_operations_proof: Mapping[str, object] | None = None,
+    ai_model_risk_operations_proof_ref: str | None = None,
     ai_workflow_pack_registration_proof: Mapping[str, object] | None = None,
     ai_workflow_pack_registration_proof_ref: str | None = None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None = None,
@@ -184,6 +189,8 @@ def build_implementation_proof_readiness_snapshot(
         runtime_trust_telemetry_proof_ref=runtime_trust_telemetry_proof_ref,
         ai_lineage_store_proof=ai_lineage_store_proof,
         ai_lineage_store_proof_ref=ai_lineage_store_proof_ref,
+        ai_model_risk_operations_proof=ai_model_risk_operations_proof,
+        ai_model_risk_operations_proof_ref=ai_model_risk_operations_proof_ref,
         ai_workflow_pack_registration_proof=ai_workflow_pack_registration_proof,
         ai_workflow_pack_registration_proof_ref=ai_workflow_pack_registration_proof_ref,
         ai_workflow_pack_runtime_execution_proof=ai_workflow_pack_runtime_execution_proof,
@@ -235,6 +242,8 @@ def _apply_available_proofs(
     runtime_trust_telemetry_proof_ref: str | None,
     ai_lineage_store_proof: Mapping[str, object] | None,
     ai_lineage_store_proof_ref: str | None,
+    ai_model_risk_operations_proof: Mapping[str, object] | None,
+    ai_model_risk_operations_proof_ref: str | None,
     ai_workflow_pack_registration_proof: Mapping[str, object] | None,
     ai_workflow_pack_registration_proof_ref: str | None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
@@ -264,6 +273,16 @@ def _apply_available_proofs(
     if ai_lineage_store_proof and ai_lineage_store_proof_is_valid(ai_lineage_store_proof):
         capabilities = tuple(
             _apply_ai_lineage_store_proof(capability, ai_lineage_store_proof_ref)
+            for capability in capabilities
+        )
+    if ai_model_risk_operations_proof and ai_model_risk_operations_proof_is_valid(
+        ai_model_risk_operations_proof
+    ):
+        capabilities = tuple(
+            _apply_ai_model_risk_operations_proof(
+                capability,
+                ai_model_risk_operations_proof_ref,
+            )
             for capability in capabilities
         )
     if ai_workflow_pack_registration_proof and ai_workflow_pack_registration_proof_is_valid(
@@ -426,6 +445,32 @@ def _apply_ai_lineage_store_proof(
             blocker
             for blocker in capability.blockers
             if blocker != "certified_ai_lineage_store_missing"
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_ai_model_risk_operations_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    ai_model_risk_operations_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "ai-explanation":
+        return capability
+    blockers_to_clear = {
+        "model_risk_operations_dashboard_not_certified",
+        "model_risk_operations_alerts_not_certified",
+    }
+    evidence_refs = capability.evidence_refs
+    if ai_model_risk_operations_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, ai_model_risk_operations_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )
@@ -609,6 +654,7 @@ def _ai_explanation_capability(
             "src/app/application/ai_governance.py",
             "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json",
             "make ai-model-risk-ops-contract-gate",
+            "make ai-model-risk-operations-proof-contract-gate",
             "make ai-workflow-pack-registration-proof-contract-gate",
             "make ai-workflow-pack-runtime-execution-proof-contract-gate",
             "POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",

@@ -1,0 +1,23 @@
+groups:
+  - name: lotus-idea-ai-model-risk-operations
+    rules:
+      - alert: LotusIdeaAIExplanationUnsupportedClaimBlockRate
+        expr: sum(increase(lotus_idea_operation_events_total{operation="ai_explanation",outcome="blocked"}[15m])) > 0
+        for: 10m
+        labels:
+          alert_id: ai-explanation-unsupported-claim-block-rate
+          severity: P2
+          owner_repo: lotus-idea
+        annotations:
+          summary: AI explanation verifier blocked unsupported source claims or prohibited actions.
+          runbook: docs/runbooks/ai-model-risk-operations.md#ai-explanation-unsupported-claim-block-rate
+      - alert: LotusIdeaAIExplanationReadinessRemainsBlocked
+        expr: sum(increase(lotus_idea_operation_events_total{operation="ai_explanation_readiness_read",outcome="blocked"}[30m])) > 0
+        for: 30m
+        labels:
+          alert_id: ai-explanation-readiness-remains-blocked
+          severity: P3
+          owner_repo: lotus-idea
+        annotations:
+          summary: AI explanation readiness remains blocked and requires operator review before promotion.
+          runbook: docs/runbooks/ai-model-risk-operations.md#ai-explanation-readiness-remains-blocked

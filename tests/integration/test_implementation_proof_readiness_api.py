@@ -13,6 +13,10 @@ from app.application.ai_lineage_store_proof import (
     AI_LINEAGE_STORE_PROOF_ENV,
     build_ai_lineage_store_proof_payload,
 )
+from app.application.ai_model_risk_operations_proof import (
+    AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
+    build_ai_model_risk_operations_proof_payload,
+)
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_ENV,
     build_durable_repository_proof_payload,
@@ -82,6 +86,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
     monkeypatch.delenv(DURABLE_REPOSITORY_PROOF_ENV, raising=False)
     monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, raising=False)
+    monkeypatch.delenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_PROOF_ENV, raising=False)
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
@@ -128,11 +133,13 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     )
     assert "make ai-model-risk-ops-contract-gate" in capabilities["ai-explanation"]["evidenceRefs"]
     assert (
-        "model_risk_operations_dashboard_not_certified"
-        in capabilities["ai-explanation"]["blockers"]
+        "make ai-model-risk-operations-proof-contract-gate"
+        in (capabilities["ai-explanation"]["evidenceRefs"])
     )
     ai_explanation_blockers = capabilities["ai-explanation"]["blockers"]
-    assert "model_risk_operations_alerts_not_certified" in ai_explanation_blockers
+    assert "model_risk_operations_dashboard_not_certified" not in ai_explanation_blockers
+    assert "model_risk_operations_alerts_not_certified" not in ai_explanation_blockers
+    assert "certified_runtime_trust_telemetry_missing" in ai_explanation_blockers
     assert "portfolio_id" not in response.text
     assert "client_id" not in response.text
 
@@ -148,6 +155,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     durable_proof_path = tmp_path / "durable-repository-proof.json"
     runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
     ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
+    ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-proof.json"
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
     report_route_proof_path = tmp_path / "report-intake-route-proof.json"
     manifest_path.write_text("{}", encoding="utf-8")
@@ -199,6 +207,15 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         ),
         encoding="utf-8",
     )
+    ai_model_risk_proof_path.write_text(
+        json.dumps(
+            build_ai_model_risk_operations_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
     workbench_proof_path.write_text(
         json.dumps(
             build_workbench_read_path_proof_payload(
@@ -219,6 +236,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
     monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
     monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
+    monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
     monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
@@ -259,6 +277,10 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
     )
     assert "AI lineage store proof artifact" in capabilities["ai-explanation"]["evidenceRefs"]
+    assert (
+        "AI model-risk operations proof artifact"
+        in (capabilities["ai-explanation"]["evidenceRefs"])
+    )
     assert "lotus_ai_runtime_execution_missing" in capabilities["ai-explanation"]["blockers"]
     assert (
         "workbench read-path proof artifact"

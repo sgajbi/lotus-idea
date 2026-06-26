@@ -179,6 +179,8 @@ async def get_implementation_proof_readiness(
             runtime_trust_telemetry_proof_ref=proof_artifacts.runtime_trust_telemetry_proof_ref,
             ai_lineage_store_proof=proof_artifacts.ai_lineage_store_proof,
             ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store_proof_ref,
+            ai_model_risk_operations_proof=(proof_artifacts.ai_model_risk_operations_proof),
+            ai_model_risk_operations_proof_ref=(proof_artifacts.ai_model_risk_operations_proof_ref),
             ai_workflow_pack_registration_proof=(
                 proof_artifacts.ai_workflow_pack_registration_proof
             ),
