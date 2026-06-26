@@ -10,6 +10,9 @@ from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.ai_workflow_pack_registration_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
 )
+from app.application.ai_workflow_pack_runtime_execution_proof import (
+    AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
+)
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
@@ -31,6 +34,8 @@ class ConfiguredImplementationProofArtifacts:
     ai_lineage_store_proof_ref: str | None
     ai_workflow_pack_registration_proof: dict[str, Any] | None
     ai_workflow_pack_registration_proof_ref: str | None
+    ai_workflow_pack_runtime_execution_proof: dict[str, Any] | None
+    ai_workflow_pack_runtime_execution_proof_ref: str | None
     outbox_broker_proof: dict[str, Any] | None
     outbox_broker_proof_ref: str | None
     report_intake_route_proof: dict[str, Any] | None
@@ -59,6 +64,10 @@ def configured_implementation_proof_artifacts(
     ai_lineage_store_proof_path = _configured_path(AI_LINEAGE_STORE_PROOF_ENV, root=root)
     ai_workflow_pack_registration_proof_path = _configured_path(
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
+        root=root,
+    )
+    ai_workflow_pack_runtime_execution_proof_path = _configured_path(
+        AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
         root=root,
     )
     outbox_broker_proof_path = _configured_path(OUTBOX_BROKER_PROOF_ENV, root=root)
@@ -114,6 +123,15 @@ def configured_implementation_proof_artifacts(
             ai_workflow_pack_registration_proof_path,
             root=root,
             artifact_name="AI workflow-pack registration proof artifact",
+        ),
+        ai_workflow_pack_runtime_execution_proof=_read_optional_json_object(
+            ai_workflow_pack_runtime_execution_proof_path,
+            artifact_name="AI workflow-pack runtime execution proof",
+        ),
+        ai_workflow_pack_runtime_execution_proof_ref=_source_safe_artifact_ref(
+            ai_workflow_pack_runtime_execution_proof_path,
+            root=root,
+            artifact_name="AI workflow-pack runtime execution proof artifact",
         ),
         outbox_broker_proof=_read_optional_json_object(
             outbox_broker_proof_path,

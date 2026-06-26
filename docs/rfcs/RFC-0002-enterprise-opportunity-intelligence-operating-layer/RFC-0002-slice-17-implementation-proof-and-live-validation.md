@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, and AI workflow-pack registration proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -185,6 +185,16 @@ Prove the complete supported opportunity journey end to end.
     `lotus-ai` runtime execution, provider invocation, model-risk
     dashboard/alert certification, runtime trust telemetry, Workbench,
     client-publication, and supported-feature blockers.
+24. `src/app/application/ai_workflow_pack_runtime_execution_proof.py`,
+    `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`, and
+    `make ai-workflow-pack-runtime-execution-proof-contract-gate` now define
+    and enforce a source-safe sibling `lotus-ai` workflow-pack runtime execution
+    proof artifact. The aggregate implementation-readiness generator and
+    operator API consume that artifact to clear only
+    `lotus_ai_runtime_execution_missing`, while preserving workflow-pack
+    registration, live provider execution, provider rollout, model-risk
+    dashboard/alert certification, runtime trust telemetry, Workbench,
+    client-publication, and supported-feature blockers.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -225,15 +235,22 @@ without relying on chat memory.
    runtime proof, entitlement-denied proof, mutation affordances, and
    supported-feature promotion remain pending.
 8. AI lineage store proof is now explicit in aggregate readiness evidence, but
-   `lotus-ai` runtime execution, workflow-pack runtime certification,
-   model-risk dashboard/alert certification, runtime trust telemetry,
-   Workbench proof, and supported-feature promotion remain pending.
+   `lotus-ai` workflow-pack registration/runtime execution, live provider
+   execution, model-risk dashboard/alert certification, runtime trust
+   telemetry, Workbench proof, and supported-feature promotion remain pending
+   unless corresponding sibling proof artifacts are present and valid.
 9. AI workflow-pack registration proof is now explicit in aggregate readiness
    evidence, but it proves only the governed sibling registration,
    binding, queue policy, supportability, and test coverage for
-   `idea_explanation.pack@v1`; `lotus-ai` runtime execution, provider calls,
-   model-risk operations certification, runtime trust telemetry, Workbench
-   proof, and supported-feature promotion remain pending.
+   `idea_explanation.pack@v1`; runtime execution, provider calls, model-risk
+   operations certification, runtime trust telemetry, Workbench proof, and
+   supported-feature promotion remain pending unless separately proven.
+10. AI workflow-pack runtime execution proof is now explicit in aggregate
+    readiness evidence, but it proves only deterministic sibling runtime
+    execution with source-safe guardrails, stub-provider routing, and restricted
+    `lotus-idea` caller policy; live provider execution, provider rollout,
+    model-risk operations certification, runtime trust telemetry, Workbench
+    proof, and supported-feature promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close
@@ -303,6 +320,12 @@ is registered, bound, queue-governed, supportability-visible, and test-backed
 in `lotus-ai`." It does not close runtime workflow execution, provider
 invocation, certified model-risk operations, Workbench proof, or supported
 feature proof.
+The AI workflow-pack runtime execution proof narrows the execution gap from
+"no durable `lotus-ai` runtime evidence" to "deterministic review-gated
+`idea_explanation.pack@v1` execution is guardrail-validated, stub-routed,
+caller-policy restricted, and test-backed in `lotus-ai`." It does not close
+live provider execution, provider rollout, certified model-risk operations,
+Workbench proof, or supported-feature proof.
 
 ## Acceptance Gate
 

@@ -58,6 +58,7 @@ make report-intake-route-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make ai-lineage-store-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
+make ai-workflow-pack-runtime-execution-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
@@ -87,6 +88,7 @@ report-intake route proof contract validation,
 Workbench read-path proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
+AI workflow-pack runtime execution proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption plus source-safe artifact-ref recording in
@@ -165,7 +167,7 @@ Persistence adapter validation:
    proof consumption, default report-intake route proof generation and
    consumption, default platform mesh onboarding proof generation and
    consumption, AI lineage store proof generation and consumption, and AI
-   workflow-pack registration proof generation and consumption, can be
+   workflow-pack registration/runtime execution proof generation and consumption, can be
    generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
    idempotency, broker, or source payload identifiers.
@@ -202,6 +204,13 @@ Persistence adapter validation:
     artifact clears only `workflow_pack_runtime_contract_not_certified` in
     aggregate readiness while preserving `lotus-ai` runtime execution,
     provider-call, model-risk dashboard/alert, Workbench, client-ready, and
+    supported-feature blockers.
+16. `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py` and
+    `make ai-workflow-pack-runtime-execution-proof-contract-gate` prove the
+    bounded sibling `lotus-ai` deterministic runtime execution proof contract.
+    A valid artifact clears only `lotus_ai_runtime_execution_missing` in
+    aggregate readiness while preserving workflow-pack registration, live
+    provider, model-risk dashboard/alert, Workbench, client-ready, and
     supported-feature blockers.
 16. `tests/unit/test_runtime_trust_telemetry.py`,
     `tests/unit/test_generate_runtime_trust_telemetry_snapshot.py`,

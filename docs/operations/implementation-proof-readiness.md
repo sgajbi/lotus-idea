@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, default report-intake route, outbox broker, platform mesh onboarding, AI lineage store, and AI workflow-pack registration proof artifacts can be consumed; no full live journey, `lotus-ai` runtime execution, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, default report-intake route, outbox broker, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -53,7 +53,7 @@ The diagnostic is deliberately not full live journey proof. It does not:
 1. call `lotus-core`,
 2. certify source-ingestion as a supported live source product beyond a
    configured bounded proof artifact,
-3. call `lotus-ai` or execute provider/RAG workflows,
+3. live-call `lotus-ai`, execute live provider/RAG workflows, or certify provider rollout,
 4. certify data products or runtime trust telemetry,
 5. prove Gateway or Workbench product behavior,
 6. create downstream proposals, manage actions, reports, rendered output, or
@@ -78,7 +78,7 @@ validated through the owning repositories and platform gates:
 3. certified runtime trust telemetry and platform mesh certification,
 4. certified downstream consumer contracts and production event-publication evidence,
 5. platform mesh event certification for outbox publication,
-6. `lotus-ai` runtime execution and model-risk operations certification,
+6. `lotus-ai` model-risk operations, live-provider rollout, and runtime trust certification,
 7. Workbench panel and browser proof,
 8. downstream Advise, Manage, Report, Render, and Archive realization,
 9. supported-feature promotion evidence.
@@ -132,9 +132,11 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` | Overrides the default generated AI lineage store proof artifact passed into aggregate readiness. |
-| `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate the default workflow-pack registration proof. Defaults to `../lotus-ai`. |
+| `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate default workflow-pack registration and runtime execution proof artifacts. Defaults to `../lotus-ai`. |
 | `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT` | Selects the default generated AI workflow-pack registration proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-workflow-pack-registration-proof.json`. |
 | `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF` | Overrides the default generated AI workflow-pack registration proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` | Selects the default generated AI workflow-pack runtime execution proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-workflow-pack-runtime-execution-proof.json`. |
+| `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF` | Overrides the default generated AI workflow-pack runtime execution proof artifact passed into aggregate readiness. |
 
 When rerunning live proof against an existing durable PostgreSQL repository,
 preserve idempotency history. If the same generated default idempotency key was
@@ -277,6 +279,26 @@ present sibling evidence still exits non-zero.
 shape, source-safe evidence refs, and one-blocker clearance boundary before the
 proof is consumed by aggregate readiness.
 
+AI workflow-pack runtime execution proof is captured by
+`scripts/generate_ai_workflow_pack_runtime_execution_proof.py`. The repo-native
+`make implementation-proof-readiness-check` target now generates the default
+artifact from `LOTUS_AI_ROOT` under
+`LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` and passes it into
+aggregate readiness when `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`
+is not set. A valid artifact clears only
+`lotus_ai_runtime_execution_missing` from the AI explanation capability. It
+cites the sibling `lotus-ai` deterministic idea explanation stub, source-safe
+guardrails, workflow-pack execution path, stub provider routing, restricted
+`lotus-idea` caller policy, migration seed, and tests. It does not execute a
+live AI provider, certify provider rollout, certify model-risk dashboard/alert
+operations, certify runtime trust telemetry, prove Workbench behavior,
+authorize client-ready publication, or promote a supported feature. Missing
+sibling evidence writes an invalid non-proof artifact and keeps the blocker so
+CI remains stable without treating absence as proof; drift in present sibling
+evidence still exits non-zero. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
+validates the artifact shape, source-safe evidence refs, and one-blocker
+clearance boundary before the proof is consumed by aggregate readiness.
+
 ## Response Shape
 
 The success response is intentionally aggregate and source-safe:
@@ -412,7 +434,13 @@ Implementation-backed evidence:
     `make ai-workflow-pack-registration-proof-contract-gate`,
 46. AI workflow-pack registration proof tests:
     `tests/unit/test_ai_workflow_pack_registration_proof.py`,
-47. integration tests:
+47. AI workflow-pack runtime execution proof generator:
+    `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`,
+48. AI workflow-pack runtime execution proof contract gate:
+    `make ai-workflow-pack-runtime-execution-proof-contract-gate`,
+49. AI workflow-pack runtime execution proof tests:
+    `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
+50. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations

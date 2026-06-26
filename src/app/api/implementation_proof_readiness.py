@@ -185,6 +185,12 @@ async def get_implementation_proof_readiness(
             ai_workflow_pack_registration_proof_ref=(
                 proof_artifacts.ai_workflow_pack_registration_proof_ref
             ),
+            ai_workflow_pack_runtime_execution_proof=(
+                proof_artifacts.ai_workflow_pack_runtime_execution_proof
+            ),
+            ai_workflow_pack_runtime_execution_proof_ref=(
+                proof_artifacts.ai_workflow_pack_runtime_execution_proof_ref
+            ),
             outbox_broker_proof=proof_artifacts.outbox_broker_proof,
             outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
             report_intake_route_proof=proof_artifacts.report_intake_route_proof,

@@ -10,6 +10,9 @@ from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_
 from app.application.ai_workflow_pack_registration_proof import (
     build_ai_workflow_pack_registration_proof_payload,
 )
+from app.application.ai_workflow_pack_runtime_execution_proof import (
+    build_ai_workflow_pack_runtime_execution_proof_payload,
+)
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
     _supported_feature_count,
@@ -52,7 +55,10 @@ from app.application.source_ingestion_worker import (
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
-from tests.support.ai_workflow_pack_fixture import write_lotus_ai_workflow_pack_fixture
+from tests.support.ai_workflow_pack_fixture import (
+    write_lotus_ai_workflow_pack_fixture,
+    write_lotus_ai_workflow_pack_runtime_execution_fixture,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -178,6 +184,9 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     )
     assert "make ai-model-risk-ops-contract-gate" in ai_explanation.evidence_refs
     assert "make ai-workflow-pack-registration-proof-contract-gate" in (
+        ai_explanation.evidence_refs
+    )
+    assert "make ai-workflow-pack-runtime-execution-proof-contract-gate" in (
         ai_explanation.evidence_refs
     )
     assert "model_risk_operations_dashboard_not_certified" in ai_explanation.blockers
@@ -390,6 +399,47 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof
     assert "workflow_pack_runtime_contract_not_certified" not in ai_explanation.blockers
     assert "lotus_ai_runtime_execution_missing" in ai_explanation.blockers
     assert "output/ai/ai-workflow-pack-registration-proof.json" in (ai_explanation.evidence_refs)
+
+
+def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_proof_without_publication_claim(
+    tmp_path: Path,
+) -> None:
+    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
+        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        ai_workflow_pack_runtime_execution_proof=proof,
+        ai_workflow_pack_runtime_execution_proof_ref=(
+            "output/ai/ai-workflow-pack-runtime-execution-proof.json"
+        ),
+    )
+
+    assert "lotus_ai_runtime_execution_missing" not in snapshot.overall_blockers
+    assert "certified_ai_lineage_store_missing" in snapshot.overall_blockers
+    assert "workflow_pack_runtime_contract_not_certified" in snapshot.overall_blockers
+    assert "model_risk_operations_dashboard_not_certified" in snapshot.overall_blockers
+    assert "model_risk_operations_alerts_not_certified" in snapshot.overall_blockers
+    assert "workbench_panel_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
+    ai_explanation = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "ai-explanation"
+    )
+    assert "lotus_ai_runtime_execution_missing" not in ai_explanation.blockers
+    assert "workflow_pack_runtime_contract_not_certified" in ai_explanation.blockers
+    assert "output/ai/ai-workflow-pack-runtime-execution-proof.json" in (
+        ai_explanation.evidence_refs
+    )
 
 
 def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:

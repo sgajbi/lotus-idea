@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from datetime import UTC, datetime
 import json
 import os
@@ -13,6 +14,9 @@ from typing import Any
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.ai_workflow_pack_registration_proof import (
     AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
+)
+from app.application.ai_workflow_pack_runtime_execution_proof import (
+    AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.implementation_proof_readiness import (
@@ -41,6 +45,30 @@ from app.runtime.repository_state import (
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 
 
+@dataclass(frozen=True)
+class ProofArtifactInput:
+    payload: dict[str, Any] | None
+    path: Path | None
+    ref_name: str
+
+    @property
+    def source_safe_ref(self) -> str | None:
+        return _source_safe_artifact_ref(self.path, artifact_name=self.ref_name)
+
+
+@dataclass(frozen=True)
+class ProofArtifactInputs:
+    durable_repository: ProofArtifactInput
+    runtime_trust_telemetry: ProofArtifactInput
+    ai_lineage_store: ProofArtifactInput
+    ai_workflow_pack_registration: ProofArtifactInput
+    ai_workflow_pack_runtime_execution: ProofArtifactInput
+    report_intake_route: ProofArtifactInput
+    workbench_read_path: ProofArtifactInput
+    outbox_broker: ProofArtifactInput
+    platform_mesh_onboarding: ProofArtifactInput
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
@@ -48,52 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         evaluated_at_utc = _parse_evaluated_at_utc(args.evaluated_at_utc)
         with _temporary_environment(_readiness_environment_overrides(args)):
             repository = get_idea_repository()
-            durable_repository_proof_path = _resolve_optional_path(args.durable_repository_proof)
-            durable_repository_proof = _read_optional_json_object(
-                durable_repository_proof_path,
-                artifact_name="durable repository proof",
-            )
-            runtime_trust_telemetry_proof_path = _resolve_optional_path(
-                args.runtime_trust_telemetry_proof
-            )
-            runtime_trust_telemetry_proof = _read_optional_json_object(
-                runtime_trust_telemetry_proof_path,
-                artifact_name="runtime trust telemetry proof",
-            )
-            ai_lineage_store_proof_path = _resolve_optional_path(args.ai_lineage_store_proof)
-            ai_lineage_store_proof = _read_optional_json_object(
-                ai_lineage_store_proof_path,
-                artifact_name="AI lineage store proof",
-            )
-            ai_workflow_pack_registration_proof_path = _resolve_optional_path(
-                args.ai_workflow_pack_registration_proof
-            )
-            ai_workflow_pack_registration_proof = _read_optional_json_object(
-                ai_workflow_pack_registration_proof_path,
-                artifact_name="AI workflow-pack registration proof",
-            )
-            report_intake_route_proof_path = _resolve_optional_path(args.report_intake_route_proof)
-            report_intake_route_proof = _read_optional_json_object(
-                report_intake_route_proof_path,
-                artifact_name="report intake route proof",
-            )
-            workbench_read_path_proof_path = _resolve_optional_path(args.workbench_read_path_proof)
-            workbench_read_path_proof = _read_optional_json_object(
-                workbench_read_path_proof_path,
-                artifact_name="workbench read-path proof",
-            )
-            outbox_broker_proof_path = _resolve_optional_path(args.outbox_broker_proof)
-            outbox_broker_proof = _read_optional_json_object(
-                outbox_broker_proof_path,
-                artifact_name="outbox broker proof",
-            )
-            platform_mesh_onboarding_proof_path = _resolve_optional_path(
-                args.platform_mesh_onboarding_proof
-            )
-            platform_mesh_onboarding_proof = _read_optional_json_object(
-                platform_mesh_onboarding_proof_path,
-                artifact_name="platform mesh onboarding proof",
-            )
+            proof_artifacts = _proof_artifact_inputs(args)
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
@@ -106,46 +89,36 @@ def main(argv: list[str] | None = None) -> int:
                     _resolve_optional_path(args.source_ingestion_scheduled_worker_proof),
                     artifact_name="source ingestion scheduled-worker proof artifact",
                 ),
-                durable_repository_proof=durable_repository_proof,
-                durable_repository_proof_ref=_source_safe_artifact_ref(
-                    durable_repository_proof_path,
-                    artifact_name="durable repository proof artifact",
+                durable_repository_proof=proof_artifacts.durable_repository.payload,
+                durable_repository_proof_ref=proof_artifacts.durable_repository.source_safe_ref,
+                runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry.payload,
+                runtime_trust_telemetry_proof_ref=(
+                    proof_artifacts.runtime_trust_telemetry.source_safe_ref
                 ),
-                runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
-                runtime_trust_telemetry_proof_ref=_source_safe_artifact_ref(
-                    runtime_trust_telemetry_proof_path,
-                    artifact_name="runtime trust telemetry proof artifact",
+                ai_lineage_store_proof=proof_artifacts.ai_lineage_store.payload,
+                ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store.source_safe_ref,
+                ai_workflow_pack_registration_proof=(
+                    proof_artifacts.ai_workflow_pack_registration.payload
                 ),
-                ai_lineage_store_proof=ai_lineage_store_proof,
-                ai_lineage_store_proof_ref=_source_safe_artifact_ref(
-                    ai_lineage_store_proof_path,
-                    artifact_name="AI lineage store proof artifact",
+                ai_workflow_pack_registration_proof_ref=(
+                    proof_artifacts.ai_workflow_pack_registration.source_safe_ref
                 ),
-                ai_workflow_pack_registration_proof=ai_workflow_pack_registration_proof,
-                ai_workflow_pack_registration_proof_ref=_source_safe_artifact_ref(
-                    ai_workflow_pack_registration_proof_path,
-                    artifact_name="AI workflow-pack registration proof artifact",
+                ai_workflow_pack_runtime_execution_proof=(
+                    proof_artifacts.ai_workflow_pack_runtime_execution.payload
                 ),
-                report_intake_route_proof=report_intake_route_proof,
-                report_intake_route_proof_ref=_source_safe_artifact_ref(
-                    report_intake_route_proof_path,
-                    artifact_name="report intake route proof artifact",
+                ai_workflow_pack_runtime_execution_proof_ref=(
+                    proof_artifacts.ai_workflow_pack_runtime_execution.source_safe_ref
                 ),
-                outbox_broker_proof=outbox_broker_proof,
-                outbox_broker_proof_ref=_source_safe_artifact_ref(
-                    outbox_broker_proof_path,
-                    artifact_name="outbox broker proof artifact",
+                report_intake_route_proof=proof_artifacts.report_intake_route.payload,
+                report_intake_route_proof_ref=proof_artifacts.report_intake_route.source_safe_ref,
+                outbox_broker_proof=proof_artifacts.outbox_broker.payload,
+                outbox_broker_proof_ref=proof_artifacts.outbox_broker.source_safe_ref,
+                platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding.payload,
+                platform_mesh_onboarding_proof_ref=(
+                    proof_artifacts.platform_mesh_onboarding.source_safe_ref
                 ),
-                platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
-                platform_mesh_onboarding_proof_ref=_source_safe_artifact_ref(
-                    platform_mesh_onboarding_proof_path,
-                    artifact_name="platform mesh onboarding proof artifact",
-                ),
-                workbench_read_path_proof=workbench_read_path_proof,
-                workbench_read_path_proof_ref=_source_safe_artifact_ref(
-                    workbench_read_path_proof_path,
-                    artifact_name="workbench read-path proof artifact",
-                ),
+                workbench_read_path_proof=proof_artifacts.workbench_read_path.payload,
+                workbench_read_path_proof_ref=proof_artifacts.workbench_read_path.source_safe_ref,
             )
         payload = implementation_proof_readiness_payload(snapshot)
         rendered = json.dumps(payload, indent=2, sort_keys=True)
@@ -197,6 +170,70 @@ def _capability_payload(
     }
 
 
+def _proof_artifact_input(
+    path_value: str | None,
+    *,
+    artifact_name: str,
+    ref_name: str,
+) -> ProofArtifactInput:
+    path = _resolve_optional_path(path_value)
+    return ProofArtifactInput(
+        payload=_read_optional_json_object(path, artifact_name=artifact_name),
+        path=path,
+        ref_name=ref_name,
+    )
+
+
+def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
+    return ProofArtifactInputs(
+        durable_repository=_proof_artifact_input(
+            args.durable_repository_proof,
+            artifact_name="durable repository proof",
+            ref_name="durable repository proof artifact",
+        ),
+        runtime_trust_telemetry=_proof_artifact_input(
+            args.runtime_trust_telemetry_proof,
+            artifact_name="runtime trust telemetry proof",
+            ref_name="runtime trust telemetry proof artifact",
+        ),
+        ai_lineage_store=_proof_artifact_input(
+            args.ai_lineage_store_proof,
+            artifact_name="AI lineage store proof",
+            ref_name="AI lineage store proof artifact",
+        ),
+        ai_workflow_pack_registration=_proof_artifact_input(
+            args.ai_workflow_pack_registration_proof,
+            artifact_name="AI workflow-pack registration proof",
+            ref_name="AI workflow-pack registration proof artifact",
+        ),
+        ai_workflow_pack_runtime_execution=_proof_artifact_input(
+            args.ai_workflow_pack_runtime_execution_proof,
+            artifact_name="AI workflow-pack runtime execution proof",
+            ref_name="AI workflow-pack runtime execution proof artifact",
+        ),
+        report_intake_route=_proof_artifact_input(
+            args.report_intake_route_proof,
+            artifact_name="report intake route proof",
+            ref_name="report intake route proof artifact",
+        ),
+        workbench_read_path=_proof_artifact_input(
+            args.workbench_read_path_proof,
+            artifact_name="workbench read-path proof",
+            ref_name="workbench read-path proof artifact",
+        ),
+        outbox_broker=_proof_artifact_input(
+            args.outbox_broker_proof,
+            artifact_name="outbox broker proof",
+            ref_name="outbox broker proof artifact",
+        ),
+        platform_mesh_onboarding=_proof_artifact_input(
+            args.platform_mesh_onboarding_proof,
+            artifact_name="platform mesh onboarding proof",
+            ref_name="platform mesh onboarding proof artifact",
+        ),
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Generate the source-safe lotus-idea RFC-0002 implementation proof readiness snapshot."
@@ -210,6 +247,12 @@ def _parser() -> argparse.ArgumentParser:
         "--output",
         help="Optional JSON output path. Parent directories are created when needed.",
     )
+    _add_runtime_context_args(parser)
+    _add_proof_artifact_args(parser)
+    return parser
+
+
+def _add_runtime_context_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--source-ingestion-manifest",
         help=(
@@ -246,71 +289,62 @@ def _parser() -> argparse.ArgumentParser:
             f"{SCHEDULED_WORKER_PROOF_ENV}."
         ),
     )
-    parser.add_argument(
-        "--durable-repository-proof",
-        default=os.getenv(DURABLE_REPOSITORY_PROOF_ENV),
-        help=(
-            "Optional durable PostgreSQL repository proof artifact path. "
-            f"Defaults to {DURABLE_REPOSITORY_PROOF_ENV} when set."
+
+
+def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
+    proof_args = (
+        (
+            "--durable-repository-proof",
+            DURABLE_REPOSITORY_PROOF_ENV,
+            "Optional durable PostgreSQL repository proof artifact path.",
+        ),
+        (
+            "--runtime-trust-telemetry-proof",
+            RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
+            "Optional runtime trust telemetry candidate snapshot proof artifact path.",
+        ),
+        (
+            "--ai-lineage-store-proof",
+            AI_LINEAGE_STORE_PROOF_ENV,
+            "Optional durable AI explanation lineage store proof artifact path.",
+        ),
+        (
+            "--ai-workflow-pack-registration-proof",
+            AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
+            "Optional lotus-ai idea workflow-pack registration proof artifact path.",
+        ),
+        (
+            "--ai-workflow-pack-runtime-execution-proof",
+            AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
+            "Optional lotus-ai idea workflow-pack runtime execution proof artifact path.",
+        ),
+        (
+            "--report-intake-route-proof",
+            REPORT_INTAKE_ROUTE_PROOF_ENV,
+            "Optional lotus-report idea evidence intake route proof artifact path.",
+        ),
+        (
+            "--workbench-read-path-proof",
+            WORKBENCH_READ_PATH_PROOF_ENV,
+            "Optional bounded Workbench read-path proof artifact path.",
+        ),
+        (
+            "--outbox-broker-proof",
+            OUTBOX_BROKER_PROOF_ENV,
+            "Optional bounded outbox broker runtime proof artifact path.",
+        ),
+        (
+            "--platform-mesh-onboarding-proof",
+            PLATFORM_MESH_ONBOARDING_PROOF_ENV,
+            "Optional platform source-manifest and catalog onboarding proof artifact path.",
         ),
     )
-    parser.add_argument(
-        "--runtime-trust-telemetry-proof",
-        default=os.getenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV),
-        help=(
-            "Optional runtime trust telemetry candidate snapshot proof artifact path. "
-            f"Defaults to {RUNTIME_TRUST_TELEMETRY_PROOF_ENV} when set."
-        ),
-    )
-    parser.add_argument(
-        "--ai-lineage-store-proof",
-        default=os.getenv(AI_LINEAGE_STORE_PROOF_ENV),
-        help=(
-            "Optional durable AI explanation lineage store proof artifact path. "
-            f"Defaults to {AI_LINEAGE_STORE_PROOF_ENV} when set."
-        ),
-    )
-    parser.add_argument(
-        "--ai-workflow-pack-registration-proof",
-        default=os.getenv(AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV),
-        help=(
-            "Optional lotus-ai idea workflow-pack registration proof artifact path. "
-            f"Defaults to {AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV} when set."
-        ),
-    )
-    parser.add_argument(
-        "--report-intake-route-proof",
-        default=os.getenv(REPORT_INTAKE_ROUTE_PROOF_ENV),
-        help=(
-            "Optional lotus-report idea evidence intake route proof artifact path. "
-            f"Defaults to {REPORT_INTAKE_ROUTE_PROOF_ENV} when set."
-        ),
-    )
-    parser.add_argument(
-        "--workbench-read-path-proof",
-        default=os.getenv(WORKBENCH_READ_PATH_PROOF_ENV),
-        help=(
-            "Optional bounded Workbench read-path proof artifact path. "
-            f"Defaults to {WORKBENCH_READ_PATH_PROOF_ENV} when set."
-        ),
-    )
-    parser.add_argument(
-        "--outbox-broker-proof",
-        default=os.getenv(OUTBOX_BROKER_PROOF_ENV),
-        help=(
-            "Optional bounded outbox broker runtime proof artifact path. "
-            f"Defaults to {OUTBOX_BROKER_PROOF_ENV} when set."
-        ),
-    )
-    parser.add_argument(
-        "--platform-mesh-onboarding-proof",
-        default=os.getenv(PLATFORM_MESH_ONBOARDING_PROOF_ENV),
-        help=(
-            "Optional platform source-manifest and catalog onboarding proof artifact path. "
-            f"Defaults to {PLATFORM_MESH_ONBOARDING_PROOF_ENV} when set."
-        ),
-    )
-    return parser
+    for flag, env_name, description in proof_args:
+        parser.add_argument(
+            flag,
+            default=os.getenv(env_name),
+            help=f"{description} Defaults to {env_name} when set.",
+        )
 
 
 def _parse_evaluated_at_utc(value: str) -> datetime:

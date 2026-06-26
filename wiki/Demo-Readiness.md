@@ -110,6 +110,7 @@ make implementation-truth-gate
 make supported-features-gate
 make ai-lineage-store-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
+make ai-workflow-pack-runtime-execution-proof-contract-gate
 make implementation-proof-readiness-check
 ```
 
@@ -127,6 +128,12 @@ has a governed `idea_explanation.pack@v1` registration, binding, queue policy,
 supportability surface, and test evidence. It still does not execute
 `lotus-ai`, invoke a provider, certify model-risk operations, prove Workbench
 behavior, or make an AI explanation claim client-ready.
+
+The AI workflow-pack runtime execution proof gate validates deterministic
+review-gated sibling `lotus-ai` execution, guardrails, stub-provider routing,
+and restricted `lotus-idea` caller policy. It still does not certify live AI
+provider rollout, model-risk operations, Workbench behavior, client-ready
+publication, or supported-feature promotion.
 
 ## Do Not Claim
 

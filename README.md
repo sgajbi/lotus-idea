@@ -28,7 +28,8 @@ Current implemented foundations include:
 - advisor queue projection with fail-closed entitlement-scope enforcement and queue readiness,
 - AI explanation governance diagnostics, source-safe lineage persistence, AI
   lineage store proof, and bounded `lotus-ai` workflow-pack registration proof,
-  without provider execution,
+  plus bounded deterministic runtime execution proof, without live provider
+  execution, provider rollout certification, or client-ready publication,
 - conversion/report foundations plus governed downstream contract-readiness, submission APIs, HTTP adapter foundations for Advise, Manage, and Report, and optional source-safe proof consumption for the merged `lotus-report` intake route, without report materialization, render, archive, publication, or supported-feature claims,
 - source-safe outbox records with retry/dead-letter semantics, HTTP
   broker-publisher adapter foundation, readiness diagnostics, and bounded
@@ -198,8 +199,9 @@ docker compose up --build
 | `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
 | `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without certifying `lotus-ai` runtime execution, model-risk dashboards, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
+| `make ai-workflow-pack-runtime-execution-proof-contract-gate` | Validate the bounded sibling `lotus-ai` deterministic runtime execution proof without certifying live provider execution, model-risk operations, Workbench, client-ready publication, or supported-feature promotion. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI workflow-pack registration, AI model-risk contract, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk contract, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
 | `make runtime-trust-telemetry-preview-check` | Generate source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime telemetry candidate-snapshot proof contract. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
@@ -254,14 +256,7 @@ Operational entrypoints:
 - runtime trust telemetry preview: `/api/v1/data-mesh/trust-telemetry/runtime-preview`
 - runtime trust telemetry snapshot: `/api/v1/data-mesh/trust-telemetry/runtime-snapshot` and `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`
 
-Operator details live in:
-
-- [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md)
-- [docs/operations/observability.md](docs/operations/observability.md)
-- [docs/operations/persistence.md](docs/operations/persistence.md)
-- [docs/operations/source-ingestion-run-once.md](docs/operations/source-ingestion-run-once.md)
-- [docs/operations/implementation-proof-readiness.md](docs/operations/implementation-proof-readiness.md)
-- [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md)
+Operator details live in [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md), [docs/operations/observability.md](docs/operations/observability.md), [docs/operations/persistence.md](docs/operations/persistence.md), and [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
 
 ## Governance
 
@@ -286,6 +281,9 @@ Local controls keep implementation claims grounded:
 - `make ai-workflow-pack-registration-proof-contract-gate` keeps sibling `lotus-ai`
   registration evidence source-safe and blocks false runtime, provider, model-risk,
   Workbench, client-demo, or supported-feature claims.
+- `make ai-workflow-pack-runtime-execution-proof-contract-gate` keeps sibling `lotus-ai`
+  deterministic runtime execution evidence source-safe and blocks false live provider,
+  model-risk operations, Workbench, client-demo, or supported-feature claims.
 - `make no-sensitive-content-guard` keeps local evidence and output artifacts
   free of sensitive marker names.
 - `make durable-repository-proof-contract-gate` keeps the aggregate
