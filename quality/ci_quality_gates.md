@@ -17,18 +17,20 @@ Blocking scaffold commands:
 8. `make source-observability-contract-gate`
 9. `make operation-metric-contract-gate`
 10. `make ai-model-risk-ops-contract-gate`
-11. `make implementation-truth-gate`
-12. `make data-mesh-contract-gate`
-13. `make downstream-realization-contract-gate`
-14. `make migration-contract-gate`
-15. `make migration-execution-gate`
-16. `make durable-repository-proof-contract-gate`
-17. `make runtime-trust-telemetry-proof-contract-gate`
-18. `make ai-lineage-store-proof-contract-gate`
-19. `make ai-workflow-pack-registration-proof-contract-gate`
-20. `make workbench-read-path-proof-contract-gate`
-21. `make outbox-broker-proof-contract-gate`
-22. `make platform-mesh-onboarding-proof-contract-gate`
+11. `make ai-model-risk-operations-proof-contract-gate`
+12. `make implementation-truth-gate`
+13. `make data-mesh-contract-gate`
+14. `make downstream-realization-contract-gate`
+15. `make migration-contract-gate`
+16. `make migration-execution-gate`
+17. `make durable-repository-proof-contract-gate`
+18. `make runtime-trust-telemetry-proof-contract-gate`
+19. `make ai-lineage-store-proof-contract-gate`
+20. `make ai-workflow-pack-registration-proof-contract-gate`
+21. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
+22. `make workbench-read-path-proof-contract-gate`
+23. `make outbox-broker-proof-contract-gate`
+24. `make platform-mesh-onboarding-proof-contract-gate`
 23. `make source-ingestion-worker-check`
 24. `make source-ingestion-scheduled-worker-check`
 25. `make source-ingestion-live-proof-contract-gate`
@@ -161,18 +163,25 @@ promotion.
 `make ai-model-risk-ops-contract-gate` validates
 `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`
 against implemented AI explanation and readiness operation telemetry. It
-blocks missing dashboard controls, missing alert candidates, sensitive labels,
-unsupported operation names, missing source-of-truth paths, and premature
-model-risk dashboard, alert, `lotus-ai`, Workbench, or supported-feature
-certification claims.
+blocks missing dashboard controls, missing alert rules, sensitive labels,
+unsupported operation names, missing source-of-truth paths, and product-support
+overclaims.
+
+`make ai-model-risk-operations-proof-contract-gate` validates the repo-owned
+Grafana dashboard, Prometheus alert rules, and model-risk runbook against
+implemented AI explanation telemetry. It blocks sensitive identifiers,
+unimplemented metrics, missing alert runbook anchors, and any attempt to treat
+operations monitoring as `lotus-ai`, Workbench, data-mesh, client-ready, or
+supported-feature certification.
 
 `make ai-workflow-pack-registration-proof-contract-gate` validates the bounded
 sibling `lotus-ai` workflow-pack registration proof used by aggregate
 implementation-proof readiness. It blocks source-unsafe evidence refs, missing
 registry/binding/queue-policy/supportability/test proof, and any attempt to
 treat registration as `lotus-ai` runtime execution, provider invocation,
-model-risk dashboard/alert certification, Workbench proof, or
-supported-feature promotion.
+Workbench proof, or supported-feature promotion. Model-risk dashboard and
+alert artifact certification remains owned by
+`make ai-model-risk-operations-proof-contract-gate`.
 
 `make source-ingestion-live-proof-contract-gate` also protects the live-proof
 artifact's aggregate `blockReasonCounts`. This keeps Core-runtime proof

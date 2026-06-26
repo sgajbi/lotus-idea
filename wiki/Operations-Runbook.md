@@ -119,12 +119,15 @@ Core payloads, portfolio identity, or worker source records.
 It also records the AI model-risk operations contract and
 `make ai-model-risk-ops-contract-gate` in the `ai-explanation` capability
 evidence, so reviewers can see dashboard-control and alert-candidate posture
-without treating it as certified model-risk dashboard or alert runtime proof.
+without treating the readiness endpoint itself as product support proof.
+`make ai-model-risk-operations-proof-contract-gate` now certifies the repo-owned
+dashboard, alert-rule, and runbook artifacts against implemented operation
+telemetry while leaving `lotus-ai`, Workbench, client-ready, and
+supported-feature blockers intact.
 It also records the generated AI lineage store proof when
 `make ai-lineage-store-proof-contract-gate` passes, clearing only
 `certified_ai_lineage_store_missing` while preserving `lotus-ai` runtime,
-model-risk dashboard/alert, Workbench, blocked client publication, and
-supported-feature blockers.
+Workbench, blocked client publication, and supported-feature blockers.
 The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
@@ -325,11 +328,11 @@ Current outcomes:
 7. `permission_denied`: caller capability failed closed.
 8. `invalid_request`: request shape, timestamp, or idempotency key is invalid.
 9. `invalid_state`: lifecycle, review, target authority, report intent, or AI
-   explanation precondition failed.
+    explanation precondition failed.
 10. `blocked`: verifier rejected unsupported AI output, candidate evidence
     replay found stale source posture, AI explanation readiness is missing
-    `lotus-ai` runtime execution, certified model-risk dashboard/alert
-    evidence, runtime trust telemetry, or Workbench proof, expected current
+    `lotus-ai` runtime execution, runtime trust telemetry, or Workbench proof,
+    expected current
     data-mesh-readiness posture while runtime trust telemetry and platform
     certification remain absent, runtime trust telemetry snapshot generation
     is blocked by platform certification and discovery proof gaps,
@@ -406,8 +409,9 @@ promotion.
 explanation readiness diagnostic. It returns guardrail availability and
 certification blockers for operators without exposing prompts, provider
 payloads, candidate identifiers, source routes, portfolio identifiers, or
-client identifiers. It is not `lotus-ai` runtime proof, certified AI lineage-store
-certification, certified model-risk dashboard/alert proof, Gateway/Workbench support,
+client identifiers. It reports the repo-owned model-risk dashboard/alert
+artifact certification posture, but it is not `lotus-ai` runtime proof,
+certified AI lineage-store certification, Gateway/Workbench support,
 data-product certification, client-ready publication, or supported-feature
 promotion.
 

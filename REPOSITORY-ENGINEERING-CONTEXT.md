@@ -438,16 +438,19 @@ authority, reports durable lineage-store backing from the active repository,
 and does not expose prompts, provider payloads, candidate identifiers, source
 routes, portfolio identifiers, or client identifiers. This
 is not yet a supported AI explanation product: no `lotus-ai` runtime workflow
-execution, prompt/RAG/provider integration, certified model-risk
-dashboard/alert evidence, Workbench proof, trust telemetry, or
-supported-feature promotion exists. The repo-owned AI lineage store proof is
+execution, prompt/RAG/provider integration, Workbench proof, trust telemetry,
+or supported-feature promotion exists. The repo-owned AI lineage store proof is
 enforced by `make ai-lineage-store-proof-contract-gate` and can clear only the
 `certified_ai_lineage_store_missing` blocker in aggregate proof readiness; it
-does not certify `lotus-ai` execution, provider calls, model-risk dashboards,
-alerts, Workbench, client-ready publication, or supported-feature promotion.
+does not certify `lotus-ai` execution, provider calls, Workbench, client-ready
+publication, or supported-feature promotion.
 The repo-owned AI model-risk operations contract is enforced by
-`make ai-model-risk-ops-contract-gate`, but it is explicitly not dashboard,
-alert, `lotus-ai`, Workbench, or supported-feature certification.
+`make ai-model-risk-ops-contract-gate`; the repo-owned Grafana dashboard,
+Prometheus alert rules, and runbook are certified by
+`make ai-model-risk-operations-proof-contract-gate` over implemented
+AI explanation telemetry only. That proof is not `lotus-ai` runtime execution,
+Workbench product proof, data-mesh certification, client-ready publication, or
+supported-feature promotion.
 `GET /api/v1/implementation-proof/readiness` now exposes a certified internal
 operator diagnostic for aggregate RFC-0002 proof posture. It requires the
 `operator` role and `idea.implementation-proof.readiness.read`, returns
@@ -502,9 +505,8 @@ dashboard or alert blockers.
 The same capability now includes a generated source-safe AI lineage store proof
 artifact under ignored `output/ai/` when the artifact passes
 `make ai-lineage-store-proof-contract-gate`. That proof clears only the stale
-lineage-store blocker and leaves `lotus-ai` runtime execution, model-risk
-dashboard/alert certification, Workbench proof, client-ready publication, and
-supported-feature promotion blocked.
+lineage-store blocker and leaves `lotus-ai` runtime execution, Workbench proof,
+client-ready publication, and supported-feature promotion blocked.
 The same capability now also includes a generated source-safe sibling
 `lotus-ai` workflow-pack registration proof artifact under ignored
 `output/ai/` when the artifact passes
@@ -512,9 +514,8 @@ The same capability now also includes a generated source-safe sibling
 only `workflow_pack_runtime_contract_not_certified` after `lotus-ai` exposes
 the governed `idea_explanation.pack@v1` registration, binding, queue policy,
 supportability surface, and test coverage. It leaves `lotus-ai` runtime
-execution, provider calls, model-risk dashboard/alert certification, runtime
-trust telemetry, Workbench proof, client-ready publication, and
-supported-feature promotion blocked.
+execution, provider calls, runtime trust telemetry, Workbench proof,
+client-ready publication, and supported-feature promotion blocked.
 The same capability now also includes a generated source-safe sibling
 `lotus-ai` workflow-pack runtime execution proof artifact under ignored
 `output/ai/` when the artifact passes
@@ -523,13 +524,13 @@ clears only `lotus_ai_runtime_execution_missing` after `lotus-ai` exposes the
 deterministic idea explanation stub, source-safe guardrails, workflow-pack
 execution path, stub-provider routing, restricted `lotus-idea` caller policy,
 and test coverage. It leaves workflow-pack registration, live provider
-execution, provider rollout, model-risk dashboard/alert certification, runtime
-trust telemetry, Workbench proof, client-ready publication, and
-supported-feature promotion blocked.
+execution, provider rollout, runtime trust telemetry, Workbench proof,
+client-ready publication, and supported-feature promotion blocked.
 The live operator API also consumes configured source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path, report-intake route, AI lineage store, and AI
-workflow-pack registration/runtime execution proof artifact paths through
+Workbench read-path, report-intake route, AI lineage store, AI model-risk
+operations, and AI workflow-pack registration/runtime execution proof artifact
+paths through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
@@ -959,15 +960,17 @@ owned by upstream services.
     `make operation-metric-contract-gate`
 22. AI model-risk operations contract gate:
     `make ai-model-risk-ops-contract-gate`
-23. implementation-truth gate: `make implementation-truth-gate`
-24. data-mesh contract gate: `make data-mesh-contract-gate`
-25. downstream realization contract gate:
+23. AI model-risk operations proof gate:
+    `make ai-model-risk-operations-proof-contract-gate`
+24. implementation-truth gate: `make implementation-truth-gate`
+25. data-mesh contract gate: `make data-mesh-contract-gate`
+26. downstream realization contract gate:
     `make downstream-realization-contract-gate`
-26. migration contract gate: `make migration-contract-gate`
-27. migration execution dry-run gate: `make migration-execution-gate`
-28. durable repository proof contract gate:
+27. migration contract gate: `make migration-contract-gate`
+28. migration execution dry-run gate: `make migration-execution-gate`
+29. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`
-29. runtime trust telemetry proof contract gate:
+30. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`
 30. report-intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`
@@ -1144,11 +1147,16 @@ Gateway/Workbench, or supported-feature certification claims.
 validates
 `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`
 against implemented AI explanation and AI readiness operation telemetry,
-required model-risk dashboard controls, required alert candidates, source-of-
-truth paths, and explicit non-proof boundaries. It narrows the prior
-model-risk operations gap from missing contract to not-certified contract
-posture; it does not certify a dashboard, alert, `lotus-ai` runtime execution,
-AI lineage store, Workbench surface, or supported feature.
+required model-risk dashboard controls, required alert rules, source-of-truth
+paths, and explicit non-proof boundaries.
+
+`make ai-model-risk-operations-proof-contract-gate` is blocking through
+`make lint`. It validates the source-safe dashboard, Prometheus alert rules,
+and model-risk operations runbook against implemented
+`lotus_idea_operation_events_total` telemetry. It clears only model-risk
+dashboard/alert operations blockers; it does not certify `lotus-ai` runtime
+execution, AI lineage store, Workbench surface, data-mesh certification, or
+supported-feature promotion.
 
 `make ai-lineage-store-proof-contract-gate` is blocking through `make lint`.
 It validates the source-safe AI lineage store proof artifact that aggregate

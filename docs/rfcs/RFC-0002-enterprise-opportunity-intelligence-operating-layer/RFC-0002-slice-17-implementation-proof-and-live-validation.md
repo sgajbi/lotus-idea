@@ -182,9 +182,10 @@ Prove the complete supported opportunity journey end to end.
     artifact. The aggregate implementation-readiness generator and operator
     API consume that artifact to clear only
     `workflow_pack_runtime_contract_not_certified`, while preserving
-    `lotus-ai` runtime execution, provider invocation, model-risk
-    dashboard/alert certification, runtime trust telemetry, Workbench,
-    client-publication, and supported-feature blockers.
+    `lotus-ai` runtime execution, provider invocation, runtime trust telemetry,
+    Workbench, client-publication, and supported-feature blockers. Model-risk
+    dashboard and alert artifact certification is handled by the separate
+    model-risk operations proof gate.
 24. `src/app/application/ai_workflow_pack_runtime_execution_proof.py`,
     `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`, and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` now define
@@ -192,9 +193,10 @@ Prove the complete supported opportunity journey end to end.
     proof artifact. The aggregate implementation-readiness generator and
     operator API consume that artifact to clear only
     `lotus_ai_runtime_execution_missing`, while preserving workflow-pack
-    registration, live provider execution, provider rollout, model-risk
-    dashboard/alert certification, runtime trust telemetry, Workbench,
-    client-publication, and supported-feature blockers.
+    registration, live provider execution, provider rollout, runtime trust
+    telemetry, Workbench, client-publication, and supported-feature blockers.
+    Model-risk dashboard and alert artifact certification is handled by the
+    separate model-risk operations proof gate.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -236,9 +238,10 @@ without relying on chat memory.
    supported-feature promotion remain pending.
 8. AI lineage store proof is now explicit in aggregate readiness evidence, but
    `lotus-ai` workflow-pack registration/runtime execution, live provider
-   execution, model-risk dashboard/alert certification, runtime trust
-   telemetry, Workbench proof, and supported-feature promotion remain pending
-   unless corresponding sibling proof artifacts are present and valid.
+   execution, runtime trust telemetry, Workbench proof, and supported-feature
+   promotion remain pending unless corresponding sibling proof artifacts are
+   present and valid. Repo-owned model-risk dashboard/alert artifact
+   certification is now covered by the model-risk operations proof gate.
 9. AI workflow-pack registration proof is now explicit in aggregate readiness
    evidence, but it proves only the governed sibling registration,
    binding, queue policy, supportability, and test coverage for

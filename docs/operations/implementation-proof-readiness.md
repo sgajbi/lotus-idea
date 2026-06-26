@@ -78,7 +78,7 @@ validated through the owning repositories and platform gates:
 3. certified runtime trust telemetry and platform mesh certification,
 4. certified downstream consumer contracts and production event-publication evidence,
 5. platform mesh event certification for outbox publication,
-6. `lotus-ai` model-risk operations, live-provider rollout, and runtime trust certification,
+6. `lotus-ai` live-provider rollout and runtime trust certification,
 7. Workbench panel and browser proof,
 8. downstream Advise, Manage, Report, Render, and Archive realization,
 9. supported-feature promotion evidence.
@@ -252,8 +252,8 @@ AI explanation capability. It cites the AI explanation lineage migration,
 rollback, governance code, persistence port, PostgreSQL adapter, PostgreSQL
 runtime proof tests, and the required GitHub PostgreSQL runtime proof lane.
 It does not execute `lotus-ai`, call an AI provider, expose prompts or provider
-responses, certify model-risk dashboard/alert operations, prove Workbench
-behavior, authorize client-ready publication, or promote a supported feature.
+responses, prove Workbench behavior, authorize client-ready publication, or
+promote a supported feature.
 `make ai-lineage-store-proof-contract-gate` validates the artifact shape and
 blocks source-sensitive content before the proof is consumed by aggregate
 readiness.
@@ -269,9 +269,9 @@ not set. A valid artifact clears only
 capability. It cites the sibling `lotus-ai` workflow-pack phase-one spec,
 registry seed, execution binding, queue policy catalog, supportability surface,
 and registry/API/runtime tests for `idea_explanation.pack@v1`.
-It does not execute `lotus-ai`, call an AI provider, certify model-risk
-dashboard/alert operations, certify runtime trust telemetry, prove Workbench
-behavior, authorize client-ready publication, or promote a supported feature.
+It does not execute `lotus-ai`, call an AI provider, certify runtime trust
+telemetry, prove Workbench behavior, authorize client-ready publication, or
+promote a supported feature.
 Missing sibling evidence writes an invalid non-proof artifact and keeps the
 blocker so CI remains stable without treating absence as proof; drift in
 present sibling evidence still exits non-zero.
@@ -290,8 +290,8 @@ is not set. A valid artifact clears only
 cites the sibling `lotus-ai` deterministic idea explanation stub, source-safe
 guardrails, workflow-pack execution path, stub provider routing, restricted
 `lotus-idea` caller policy, migration seed, and tests. It does not execute a
-live AI provider, certify provider rollout, certify model-risk dashboard/alert
-operations, certify runtime trust telemetry, prove Workbench behavior,
+live AI provider, certify provider rollout, certify runtime trust telemetry,
+prove Workbench behavior,
 authorize client-ready publication, or promote a supported feature. Missing
 sibling evidence writes an invalid non-proof artifact and keeps the blocker so
 CI remains stable without treating absence as proof; drift in present sibling
@@ -358,10 +358,12 @@ Implementation-backed evidence:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
 7. AI model-risk operations contract gate:
    `make ai-model-risk-ops-contract-gate`,
-8. downstream contract check: `make downstream-realization-contract-gate`,
-9. report-owned planned intake contract:
+8. AI model-risk operations proof gate:
+   `make ai-model-risk-operations-proof-contract-gate`,
+9. downstream contract check: `make downstream-realization-contract-gate`,
+10. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
-10. runtime trust telemetry snapshot check:
+11. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
 11. runtime trust telemetry snapshot endpoint:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
@@ -444,12 +446,11 @@ Implementation-backed evidence:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations
-contract and gate so proof reviewers can see that dashboard-control and
-alert-candidate requirements are source-safe and synchronized with implemented
-AI explanation telemetry. Those refs do not clear
-`model_risk_operations_dashboard_not_certified` or
-`model_risk_operations_alerts_not_certified`; certified dashboard and alert
-runtime evidence remains required.
+contract, certified dashboard, certified Prometheus alert rules, runbook, and
+proof gate. Those refs clear only the model-risk dashboard/alert operations
+blockers. They do not clear `lotus-ai` runtime execution, runtime trust
+telemetry, Workbench product proof, client-ready publication, or
+supported-feature promotion.
 
 Run:
 
