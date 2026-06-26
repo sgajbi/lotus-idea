@@ -54,6 +54,11 @@ AI workflow-pack registration proof validates sibling `lotus-ai`
 `idea_explanation.pack@v1` registration, binding, queue policy,
 supportability, and tests only; it is not provider execution, model-risk
 operations certification, Workbench proof, or supported-feature promotion. The
+bounded AI workflow-pack runtime execution proof validates deterministic
+review-gated execution, guardrails, stub-provider routing, and restricted
+`lotus-idea` caller policy only; it is not live provider execution, provider
+rollout certification, model-risk operations certification, Workbench proof,
+client-ready publication, or supported-feature promotion. The
 downstream realization readiness diagnostic is an operator supportability
 check only; it reports workflow counts, planned Advise/Manage/Report contract
 posture, and Advise/Manage/Report/Render/Archive blockers without calling

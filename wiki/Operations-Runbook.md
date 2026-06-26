@@ -425,12 +425,13 @@ source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
 report-intake route proof artifact, platform mesh onboarding proof artifact,
 AI lineage store proof artifact, AI workflow-pack registration proof artifact,
+AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
 The snapshot records validated proof artifact refs in capability
 evidence. The live operator API also honors valid source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
 Workbench read-path, report-intake route, platform mesh onboarding, AI lineage
-store, and AI workflow-pack registration proof
+store, AI workflow-pack registration proof, and AI workflow-pack runtime execution proof
 artifact paths configured through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
@@ -445,12 +446,15 @@ artifact paths configured through
 `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
 `LOTUS_AI_ROOT`,
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT`, and
-`LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, clearing only the matching
+`LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`,
+`LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT`, and
+`LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`, clearing only the matching
 aggregate proof blockers. Use these artifacts as CI or async operator evidence
 only; they are not live scheduler certification, runtime database
 configuration, production storage certification, production recovery readiness,
-platform mesh certification, report/render/archive materialization, full
-Workbench proof, or supported-feature promotion.
+platform mesh certification, live AI provider execution, model-risk operations
+certification, report/render/archive materialization, full Workbench proof, or
+supported-feature promotion.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

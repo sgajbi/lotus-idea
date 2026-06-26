@@ -5,6 +5,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    read_text,
+    required_file_evidence_present,
+    required_make_target_evidence_present,
+    text_file_contains_all,
+)
+
 
 AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV = "LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF"
 AI_WORKFLOW_PACK_REGISTRATION_PROOF_SCHEMA_VERSION = (
@@ -54,12 +62,13 @@ def build_ai_workflow_pack_registration_proof_payload(
         generated_at_utc.tzinfo is not None and generated_at_utc.utcoffset() is not None
     )
     evidence_refs = tuple(REQUIRED_AI_WORKFLOW_PACK_EVIDENCE_REFS)
-    file_evidence_present = _required_file_evidence_present(
+    file_evidence_present = required_file_evidence_present(
         repository_root=repository_root,
-        lotus_ai_root=lotus_ai_root,
+        sibling_roots={"../lotus-ai/": lotus_ai_root},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("make ", "lotus-ai make ", "lotus-ai PR Merge Gate /"),
     )
-    make_target_evidence_present = _required_make_target_evidence_present(
+    make_target_evidence_present = required_make_target_evidence_present(
         repository_root=repository_root,
         evidence_refs=evidence_refs,
     )
@@ -67,15 +76,15 @@ def build_ai_workflow_pack_registration_proof_payload(
     registry_seed_declares_idea_registration = _registry_seed_declares_idea_registration(
         lotus_ai_root
     )
-    binding_registry_includes_idea_pack = _text_file_contains_all(
+    binding_registry_includes_idea_pack = text_file_contains_all(
         lotus_ai_root / "src/app/services/workflow_pack_bindings.py",
         ("IDEA_EXPLANATION_V1_SPEC", "_build_execution_binding_from_spec"),
     )
-    queue_policy_includes_idea_pack = _text_file_contains_all(
+    queue_policy_includes_idea_pack = text_file_contains_all(
         lotus_ai_root / "src/app/services/workflow_pack_queue_policy_catalog.py",
         ("_review_support_idea_explanation_policy", "queue-policy.idea-explanation.v1"),
     )
-    supportability_surface_includes_idea_pack = _text_file_contains_all(
+    supportability_surface_includes_idea_pack = text_file_contains_all(
         lotus_ai_root / "src/app/services/ai_surface_supportability.py",
         ("idea_explanation.pack@v1", "lotus-idea"),
     )
@@ -162,7 +171,7 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
         return False
     if payload.get("proofClosed") is not False:
         return False
-    if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
+    if not is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     if tuple(payload.get("aggregateBlockersCleared") or ()) != (
         AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS_CLEARED
@@ -193,44 +202,8 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
     )
 
 
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    lotus_ai_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("make ", "lotus-ai make ", "lotus-ai PR Merge Gate /")):
-            continue
-        if ref.startswith("../lotus-ai/"):
-            path = lotus_ai_root / ref.removeprefix("../lotus-ai/")
-        else:
-            path = repository_root / ref
-        if not path.is_file():
-            return False
-    return True
-
-
-def _required_make_target_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    try:
-        makefile_text = (repository_root / "Makefile").read_text(encoding="utf-8")
-    except OSError:
-        return False
-    for ref in evidence_refs:
-        if not ref.startswith("make "):
-            continue
-        target = f"{ref.removeprefix('make ')}:"
-        if target not in makefile_text:
-            return False
-    return True
-
-
 def _phase1_spec_declares_idea_authority(lotus_ai_root: Path) -> bool:
-    return _text_file_contains_all(
+    return text_file_contains_all(
         lotus_ai_root / "src/app/services/workflow_pack_phase1_specs.py",
         (
             "IDEA_EXPLANATION_V1_SPEC",
@@ -250,7 +223,7 @@ def _phase1_spec_declares_idea_authority(lotus_ai_root: Path) -> bool:
 
 
 def _registry_seed_declares_idea_registration(lotus_ai_root: Path) -> bool:
-    return _text_file_contains_all(
+    return text_file_contains_all(
         lotus_ai_root / "src/app/services/workflow_pack_registry_seed.py",
         (
             "IDEA_EXPLANATION_V1_SPEC",
@@ -269,15 +242,15 @@ def _registry_seed_declares_idea_registration(lotus_ai_root: Path) -> bool:
 
 
 def _tests_cover_idea_pack(lotus_ai_root: Path) -> bool:
-    registry_text = _read_text(lotus_ai_root / "tests/unit/test_workflow_pack_registry.py")
-    binding_text = _read_text(lotus_ai_root / "tests/unit/test_workflow_pack_bindings.py")
-    queue_policy_text = _read_text(
+    registry_text = read_text(lotus_ai_root / "tests/unit/test_workflow_pack_registry.py")
+    binding_text = read_text(lotus_ai_root / "tests/unit/test_workflow_pack_bindings.py")
+    queue_policy_text = read_text(
         lotus_ai_root / "tests/unit/test_workflow_pack_queue_policy_catalog.py"
     )
-    runtime_status_text = _read_text(
+    runtime_status_text = read_text(
         lotus_ai_root / "tests/unit/test_workflow_pack_runtime_status.py"
     )
-    integration_text = _read_text(
+    integration_text = read_text(
         lotus_ai_root / "tests/integration/test_workflow_pack_registry_api_contract.py"
     )
     return (
@@ -289,25 +262,3 @@ def _tests_cover_idea_pack(lotus_ai_root: Path) -> bool:
         and "idea_explanation.pack" in integration_text
         and "default_registration_ref" in integration_text
     )
-
-
-def _text_file_contains_all(path: Path, fragments: tuple[str, ...]) -> bool:
-    text = _read_text(path)
-    return bool(text) and all(fragment in text for fragment in fragments)
-
-
-def _read_text(path: Path) -> str:
-    try:
-        return path.read_text(encoding="utf-8")
-    except OSError:
-        return ""
-
-
-def _is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None

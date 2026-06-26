@@ -11,6 +11,9 @@ from app.application.ai_lineage_store_proof import build_ai_lineage_store_proof_
 from app.application.ai_workflow_pack_registration_proof import (
     build_ai_workflow_pack_registration_proof_payload,
 )
+from app.application.ai_workflow_pack_runtime_execution_proof import (
+    build_ai_workflow_pack_runtime_execution_proof_payload,
+)
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
@@ -39,7 +42,10 @@ from app.application.source_ingestion_worker import (
 )
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
-from tests.support.ai_workflow_pack_fixture import write_lotus_ai_workflow_pack_fixture
+from tests.support.ai_workflow_pack_fixture import (
+    write_lotus_ai_workflow_pack_fixture,
+    write_lotus_ai_workflow_pack_runtime_execution_fixture,
+)
 
 
 def test_implementation_proof_readiness_payload_is_source_safe() -> None:
@@ -378,6 +384,48 @@ def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_
     assert "workflow_pack_runtime_contract_not_certified" not in payload["overallBlockers"]
     assert "lotus_ai_runtime_execution_missing" in ai_explanation["blockers"]
     assert "AI workflow-pack registration proof artifact" in ai_explanation["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_ai_workflow_pack_runtime_execution_proof(
+    tmp_path: Path,
+) -> None:
+    ai_runtime_proof = tmp_path / "ai-workflow-pack-runtime-execution-proof.json"
+    ai_runtime_proof.write_text(
+        json.dumps(
+            build_ai_workflow_pack_runtime_execution_proof_payload(
+                generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+                lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-26T00:00:00Z",
+            "--ai-workflow-pack-runtime-execution-proof",
+            str(ai_runtime_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    ai_explanation = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "ai-explanation"
+    )
+    assert "lotus_ai_runtime_execution_missing" not in ai_explanation["blockers"]
+    assert "lotus_ai_runtime_execution_missing" not in payload["overallBlockers"]
+    assert "workflow_pack_runtime_contract_not_certified" in ai_explanation["blockers"]
+    assert "AI workflow-pack runtime execution proof artifact" in ai_explanation["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
