@@ -110,7 +110,8 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
     assert "opportunity_archetype_live_risk_source_proof_missing" in payload["overallBlockers"]
     assert (
-        "opportunity_archetype_risk_source_consumer_approval_missing" in payload["overallBlockers"]
+        "opportunity_archetype_risk_source_consumer_approval_missing"
+        not in payload["overallBlockers"]
     )
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
@@ -159,8 +160,9 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     )
     assert (
         "opportunity_archetype_risk_source_consumer_approval_missing"
-        in (archetype_scenarios["blockers"])
+        not in (archetype_scenarios["blockers"])
     )
+    assert "opportunity_archetype_data_mesh_not_certified" in (archetype_scenarios["blockers"])
     assert (
         "opportunity_archetype_supported_feature_promotion_missing"
         in (archetype_scenarios["blockers"])

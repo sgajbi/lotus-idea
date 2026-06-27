@@ -130,13 +130,18 @@ Additional implemented concentration-risk foundation:
 
 Not implemented yet:
 
-1. live Risk concentration source proof and upstream Risk consumer approval,
+1. live Risk concentration source proof,
 2. source-worker certification beyond bounded live Core source-ingestion proof,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
 4. Gateway/Workbench proof,
 5. supported-feature promotion,
 7. data-product certification.
+
+Upstream Risk consumer approval for
+`lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the
+approval blocker; live Risk source proof, data-product certification,
+Gateway/Workbench proof, and supported-feature promotion remain blocked.
 
 ## Golden Scenarios
 

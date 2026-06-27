@@ -339,10 +339,10 @@ without relying on chat memory.
     proof, and supported-feature promotion remain pending.
 12. Opportunity archetype scenario readiness is now explicit in aggregate
     readiness, but it proves only governed taxonomy, bounded concentration
-    source/policy foundation, and visible scenario blockers. Live source-backed
-    archetype replay, upstream consumer approval where required, full Workbench
-    product proof, data-mesh certification, and supported-feature promotion
-    remain pending.
+    source/policy foundation, and visible scenario blockers. Upstream consumer
+    approval for `lotus-risk:ConcentrationRiskReport:v1` is source-approved;
+    live source-backed archetype replay, full Workbench product proof,
+    data-mesh certification, and supported-feature promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

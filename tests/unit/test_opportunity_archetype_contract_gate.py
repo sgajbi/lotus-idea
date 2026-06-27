@@ -62,7 +62,9 @@ def test_opportunity_archetype_contract_records_concentration_foundation_without
     assert concentration.first_supported_journey is False
     assert "lotus-risk:ConcentrationRiskReport:v1" in concentration.source_products
     assert "live_risk_source_proof_missing" in concentration.blockers
-    assert "risk_source_consumer_approval_missing" in concentration.blockers
+    assert "risk_source_consumer_approval_missing" not in concentration.blockers
+    assert "data_mesh_not_certified" in concentration.blockers
+    assert "supported_feature_promotion_missing" in concentration.blockers
     assert concentration.canonical_scenarios[0].scenario_status == "bounded_foundation"
     assert concentration.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
