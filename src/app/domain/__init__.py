@@ -143,10 +143,13 @@ from app.domain.scoring import (
     score_inputs,
 )
 from app.domain.signal_evaluation import (
+    ConcentrationRiskSignalInput,
+    ConcentrationRiskSignalPolicy,
     HighCashSignalInput,
     HighCashSignalPolicy,
     SignalEvaluationOutcome,
     SignalEvaluationResult,
+    evaluate_concentration_risk_signal,
     evaluate_high_cash_signal,
 )
 
@@ -218,6 +221,8 @@ __all__ = [
     "SuppressionReason",
     "UnsupportedEvidenceReason",
     "transition_candidate",
+    "ConcentrationRiskSignalInput",
+    "ConcentrationRiskSignalPolicy",
     "HighCashSignalInput",
     "HighCashSignalPolicy",
     "CandidatePersistenceDecision",
@@ -251,6 +256,7 @@ __all__ = [
     "ReportEvidencePackResult",
     "ReportEvidenceSourceSummary",
     "request_report_evidence_pack",
+    "evaluate_concentration_risk_signal",
     "evaluate_high_cash_signal",
     "DEFAULT_REVIEW_ACTION_POLICY",
     "FeedbackCommand",

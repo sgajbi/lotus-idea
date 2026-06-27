@@ -48,6 +48,26 @@ class HighCashSignalPolicy:
 
 
 @dataclass(frozen=True)
+class ConcentrationRiskSignalPolicy:
+    policy_version: str
+    top_position_weight_threshold: Decimal
+    top_issuer_weight_threshold: Decimal
+    candidate_score: Decimal
+
+    def __post_init__(self) -> None:
+        if not self.policy_version.strip():
+            raise ValueError("policy_version is required")
+        for field_name, threshold in (
+            ("top_position_weight_threshold", self.top_position_weight_threshold),
+            ("top_issuer_weight_threshold", self.top_issuer_weight_threshold),
+        ):
+            if threshold < Decimal("0") or threshold > Decimal("1"):
+                raise ValueError(f"{field_name} must be between 0 and 1")
+        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
+            raise ValueError("candidate_score must be between 0 and 100")
+
+
+@dataclass(frozen=True)
 class HighCashSignalInput:
     as_of_date: date
     source_reported_cash_weight: Decimal | None
@@ -55,6 +75,19 @@ class HighCashSignalInput:
     holdings_ref: SourceRef | None
     cash_movement_ref: SourceRef | None
     cashflow_projection_ref: SourceRef | None
+    evaluated_at_utc: datetime
+    entitlement_allowed: bool = True
+    access_scope: ReviewAccessScope | None = None
+    duplicate_of_candidate_id: str | None = None
+
+
+@dataclass(frozen=True)
+class ConcentrationRiskSignalInput:
+    as_of_date: date
+    top_position_weight_current: Decimal | None
+    top_issuer_weight_current: Decimal | None
+    issuer_coverage_status: str | None
+    concentration_ref: SourceRef | None
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
@@ -82,11 +115,13 @@ def evaluate_high_cash_signal(
     missing_reasons = _missing_required_sources(source_input)
     if not source_input.entitlement_allowed:
         return _blocked(
+            family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if missing_reasons:
         return _blocked(
+            family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=missing_reasons,
         )
@@ -97,6 +132,7 @@ def evaluate_high_cash_signal(
     ]
     if stale_sources:
         return _blocked(
+            family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
@@ -108,6 +144,7 @@ def evaluate_high_cash_signal(
         )
     if source_input.source_reported_cash_weight is None:
         return _blocked(
+            family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
@@ -172,14 +209,132 @@ def evaluate_high_cash_signal(
     )
 
 
+def evaluate_concentration_risk_signal(
+    source_input: ConcentrationRiskSignalInput,
+    policy: ConcentrationRiskSignalPolicy,
+) -> SignalEvaluationResult:
+    if source_input.evaluated_at_utc.tzinfo is None:
+        raise ValueError("evaluated_at_utc must be timezone-aware")
+
+    if not source_input.entitlement_allowed:
+        return _blocked(
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
+        )
+    if source_input.concentration_ref is None:
+        return _blocked(
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if source_input.concentration_ref.freshness is not EvidenceFreshness.CURRENT:
+        return _blocked(
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.SOURCE_STALE,),
+            unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
+        )
+    if source_input.issuer_coverage_status is None:
+        return _blocked(
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if source_input.issuer_coverage_status.lower() != "complete":
+        return _blocked(
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
+        )
+    if source_input.duplicate_of_candidate_id is not None:
+        return SignalEvaluationResult(
+            outcome=SignalEvaluationOutcome.SUPPRESSED,
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
+        )
+
+    top_position_weight = _bounded_optional_weight(
+        source_input.top_position_weight_current,
+        "top_position_weight_current",
+    )
+    top_issuer_weight = _bounded_optional_weight(
+        source_input.top_issuer_weight_current,
+        "top_issuer_weight_current",
+    )
+    if top_position_weight is None and top_issuer_weight is None:
+        return _blocked(
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if (
+        top_position_weight is None or top_position_weight < policy.top_position_weight_threshold
+    ) and (top_issuer_weight is None or top_issuer_weight < policy.top_issuer_weight_threshold):
+        return SignalEvaluationResult(
+            outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+            family=OpportunityFamily.CONCENTRATION,
+            reason_codes=(ReasonCode.BELOW_MATERIALITY,),
+        )
+
+    source_refs = (source_input.concentration_ref,)
+    identity = _stable_concentration_identity(source_input, policy, source_refs)
+    signal = OpportunitySignal(
+        signal_id=f"signal_concentration_{identity}",
+        family=OpportunityFamily.CONCENTRATION,
+        source_refs=source_refs,
+        reason_codes=(ReasonCode.CONCENTRATION_ATTENTION,),
+        detected_at_utc=source_input.evaluated_at_utc,
+    )
+    lineage = LineageRef(
+        lineage_id=f"lineage:lotus-idea:concentration:{identity}",
+        source_refs=source_refs,
+        content_hash=f"sha256:{identity}",
+    )
+    evidence_packet = IdeaEvidencePacket(
+        evidence_packet_id=f"iep_concentration_{identity}",
+        supportability=EvidenceSupportability.READY,
+        source_refs=source_refs,
+        lineage_ref=lineage,
+        reason_codes=(
+            ReasonCode.CONCENTRATION_ATTENTION,
+            ReasonCode.REVIEW_REQUIRED,
+        ),
+        created_at_utc=source_input.evaluated_at_utc,
+    )
+    candidate = IdeaCandidate(
+        candidate_id=f"idea_concentration_{identity}",
+        family=OpportunityFamily.CONCENTRATION,
+        lifecycle_status=IdeaLifecycleStatus.GENERATED,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+        evidence_packet=evidence_packet,
+        source_signal_ids=(signal.signal_id,),
+        score=IdeaScore(
+            policy_version=policy.policy_version,
+            score=policy.candidate_score,
+            reason_codes=(ReasonCode.CONCENTRATION_ATTENTION, ReasonCode.REVIEW_REQUIRED),
+        ),
+        access_scope=source_input.access_scope,
+        created_at_utc=source_input.evaluated_at_utc,
+        updated_at_utc=source_input.evaluated_at_utc,
+    )
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
+        family=OpportunityFamily.CONCENTRATION,
+        reason_codes=evidence_packet.reason_codes,
+        signal=signal,
+        candidate=candidate,
+    )
+
+
 def _blocked(
     *,
+    family: OpportunityFamily,
     reason_codes: tuple[ReasonCode, ...],
     unsupported_reasons: tuple[UnsupportedEvidenceReason, ...],
 ) -> SignalEvaluationResult:
     return SignalEvaluationResult(
         outcome=SignalEvaluationOutcome.BLOCKED,
-        family=OpportunityFamily.HIGH_CASH,
+        family=family,
         reason_codes=reason_codes,
         unsupported_reasons=unsupported_reasons,
     )
@@ -215,6 +370,50 @@ def _stable_identity(
         "cash_weight": str(source_input.source_reported_cash_weight),
         "family": OpportunityFamily.HIGH_CASH.value,
         "policy_version": policy.policy_version,
+        "access_scope": (
+            {
+                "tenant_id": source_input.access_scope.tenant_id,
+                "book_id": source_input.access_scope.book_id,
+                "portfolio_id": source_input.access_scope.portfolio_id,
+                "client_id": source_input.access_scope.client_id,
+            }
+            if source_input.access_scope is not None
+            else None
+        ),
+        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
+    }
+    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+
+
+def _bounded_optional_weight(value: Decimal | None, field_name: str) -> Decimal | None:
+    if value is None:
+        return None
+    if value < Decimal("0") or value > Decimal("1"):
+        raise ValueError(f"{field_name} must be between 0 and 1")
+    return value
+
+
+def _stable_concentration_identity(
+    source_input: ConcentrationRiskSignalInput,
+    policy: ConcentrationRiskSignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> str:
+    identity_payload = {
+        "as_of_date": source_input.as_of_date.isoformat(),
+        "family": OpportunityFamily.CONCENTRATION.value,
+        "issuer_coverage_status": source_input.issuer_coverage_status,
+        "policy_version": policy.policy_version,
+        "top_issuer_weight_current": (
+            str(source_input.top_issuer_weight_current)
+            if source_input.top_issuer_weight_current is not None
+            else None
+        ),
+        "top_position_weight_current": (
+            str(source_input.top_position_weight_current)
+            if source_input.top_position_weight_current is not None
+            else None
+        ),
         "access_scope": (
             {
                 "tenant_id": source_input.access_scope.tenant_id,
