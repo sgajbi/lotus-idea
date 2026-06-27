@@ -16,6 +16,9 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
+from app.application.outbox_platform_mesh_event_publication_proof import (
+    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+)
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
@@ -41,6 +44,8 @@ class ConfiguredImplementationProofArtifacts:
     ai_workflow_pack_runtime_execution_proof_ref: str | None
     outbox_broker_proof: dict[str, Any] | None
     outbox_broker_proof_ref: str | None
+    outbox_platform_mesh_event_publication_proof: dict[str, Any] | None
+    outbox_platform_mesh_event_publication_proof_ref: str | None
     report_intake_route_proof: dict[str, Any] | None
     report_intake_route_proof_ref: str | None
     platform_mesh_onboarding_proof: dict[str, Any] | None
@@ -104,6 +109,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "outbox_broker_proof",
         "outbox_broker_proof_ref",
         "outbox broker proof",
+    ),
+    (
+        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+        "outbox_platform_mesh_event_publication_proof",
+        "outbox_platform_mesh_event_publication_proof_ref",
+        "outbox platform mesh event publication proof",
     ),
     (
         REPORT_INTAKE_ROUTE_PROOF_ENV,

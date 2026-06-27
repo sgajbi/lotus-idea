@@ -22,6 +22,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/generate_outbox_consumer_runtime_proof.py",
         "an outbox consumer runtime proof artifact",
     ),
+    (
+        "scripts/generate_outbox_platform_mesh_event_publication_proof.py",
+        "an outbox platform mesh event publication proof artifact",
+    ),
     ("scripts/generate_advise_proposal_route_proof.py", "an Advise proposal route proof artifact"),
     ("scripts/generate_manage_action_route_proof.py", "a Manage action route proof artifact"),
     ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
@@ -54,6 +58,10 @@ PASSED_READINESS_ARTIFACTS = (
     ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
     ("--outbox-broker-proof", "outbox broker proof artifact"),
     ("--outbox-consumer-runtime-proof", "outbox consumer runtime proof artifact"),
+    (
+        "--outbox-platform-mesh-event-publication-proof",
+        "outbox platform mesh event publication proof artifact",
+    ),
     ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
 )
 
@@ -100,6 +108,14 @@ REQUIRED_READINESS_WIRING = (
     ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF", "support optional onboarding proof"),
     ("LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT", "pass default outbox proof"),
     ("LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF", "support optional outbox proof"),
+    (
+        "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT",
+        "pass default outbox platform mesh event publication proof",
+    ),
+    (
+        "LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF",
+        "support optional outbox platform mesh event publication proof",
+    ),
     (
         "--allow-missing-evidence",
         "keep cross-repo proof generation CI-stable when sibling evidence is absent",

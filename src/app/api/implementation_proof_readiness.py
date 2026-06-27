@@ -195,6 +195,12 @@ async def get_implementation_proof_readiness(
             ),
             outbox_broker_proof=proof_artifacts.outbox_broker_proof,
             outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
+            outbox_platform_mesh_event_publication_proof=(
+                proof_artifacts.outbox_platform_mesh_event_publication_proof
+            ),
+            outbox_platform_mesh_event_publication_proof_ref=(
+                proof_artifacts.outbox_platform_mesh_event_publication_proof_ref
+            ),
             report_intake_route_proof=proof_artifacts.report_intake_route_proof,
             report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,
             platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding_proof,
