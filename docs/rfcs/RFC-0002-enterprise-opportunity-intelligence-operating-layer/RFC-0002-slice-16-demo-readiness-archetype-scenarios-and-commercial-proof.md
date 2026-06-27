@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic available; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic and governed archetype/scenario contract available; demo claims remain blocked
 
 ## Outcome
 
@@ -28,14 +28,21 @@ capabilities exist.
    promotion.
 4. `docs/operations/implementation-proof-readiness.md` documents how to call
    and interpret the diagnostic as a readiness aid, not as demo evidence.
+5. `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
+   now records the governed opportunity archetype and scenario taxonomy for the
+   first high-cash / idle-liquidity journey plus planned concentration,
+   underperformance, allocation-drift, bond-maturity, and missing-suitability
+   journeys. `make opportunity-archetype-contract-gate` protects the contract
+   from unsupported demo, client-publication, data-mesh certification, or
+   supported-feature promotion claims.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.
 
 ## Required Work
 
-1. Define canonical and archetype scenarios for the supported opportunity
-   families.
+1. Add live source-backed replay evidence for canonical and archetype scenarios
+   before promoting any scenario beyond contract foundation.
 2. Add deterministic seed/replay commands and expected evidence.
 3. Update `docs/demo/demo-claims.md` only for supported claims.
 4. Create RFP-safe and demo-safe material that explains supported, gated,
@@ -49,10 +56,13 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    evidence.
 3. RFP-safe language must remain blocked until supported-feature promotion
    evidence exists.
+4. Planned non-high-cash archetypes still require source adapters, deterministic
+   signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate
 
-1. Demo claims map to endpoint, UI, data-product, and live evidence.
+1. Demo claims map to endpoint, UI, data-product, archetype-contract, and live
+   evidence.
 2. No fake calculations, fake source refs, or ungrounded AI narratives exist.
 3. Canonical proof uses governed data and validation.
 4. Commercial language does not imply bank adoption or unsupported production

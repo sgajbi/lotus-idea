@@ -50,6 +50,7 @@ make ai-model-risk-ops-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make mesh-policy-proof-contract-gate
+make opportunity-archetype-contract-gate
 make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
@@ -259,6 +260,12 @@ Persistence adapter validation:
     candidate identifiers, source routes, evidence hashes, portfolio
     identifiers, or client identifiers, and without promoting mesh
     certification.
+16. `tests/unit/test_opportunity_archetype_contract_gate.py` and
+    `make opportunity-archetype-contract-gate` prove the governed opportunity
+    archetype/scenario contract preserves source-authority ownership, keeps
+    high cash / idle liquidity as the first partially implemented journey, and
+    blocks external demo promotion, client-publication,
+    data-mesh-certification, and supported-feature claims.
 16. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,

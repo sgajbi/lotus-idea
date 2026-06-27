@@ -21,24 +21,25 @@ Blocking scaffold commands:
 12. `make implementation-truth-gate`
 13. `make data-mesh-contract-gate`
 14. `make mesh-policy-proof-contract-gate`
-15. `make downstream-realization-contract-gate`
-16. `make migration-contract-gate`
-17. `make migration-execution-gate`
-18. `make durable-repository-proof-contract-gate`
-19. `make runtime-trust-telemetry-proof-contract-gate`
-20. `make ai-lineage-store-proof-contract-gate`
-21. `make ai-workflow-pack-registration-proof-contract-gate`
-22. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-23. `make workbench-read-path-proof-contract-gate`
-24. `make gateway-workbench-operational-proof-contract-gate`
-25. `make gateway-workbench-discovery-proof-contract-gate`
-26. `make outbox-broker-proof-contract-gate`
-27. `make platform-mesh-onboarding-proof-contract-gate`
-28. `make downstream-route-contract-proof-gate`
-29. `make source-ingestion-worker-check`
-30. `make source-ingestion-scheduled-worker-check`
-31. `make source-ingestion-live-proof-contract-gate`
-32. `make implementation-proof-readiness-check` generates the scheduled-worker
+15. `make opportunity-archetype-contract-gate`
+16. `make downstream-realization-contract-gate`
+17. `make migration-contract-gate`
+18. `make migration-execution-gate`
+19. `make durable-repository-proof-contract-gate`
+20. `make runtime-trust-telemetry-proof-contract-gate`
+21. `make ai-lineage-store-proof-contract-gate`
+22. `make ai-workflow-pack-registration-proof-contract-gate`
+23. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
+24. `make workbench-read-path-proof-contract-gate`
+25. `make gateway-workbench-operational-proof-contract-gate`
+26. `make gateway-workbench-discovery-proof-contract-gate`
+27. `make outbox-broker-proof-contract-gate`
+28. `make platform-mesh-onboarding-proof-contract-gate`
+29. `make downstream-route-contract-proof-gate`
+30. `make source-ingestion-worker-check`
+31. `make source-ingestion-scheduled-worker-check`
+32. `make source-ingestion-live-proof-contract-gate`
+33. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
@@ -48,13 +49,13 @@ Blocking scaffold commands:
     mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
     registration proof artifacts, then consumes all in
     aggregate RFC proof-readiness evidence.
-33. `make supported-features-gate`
-34. `make endpoint-certification-gate`
-35. `make postgres-integration-gate`
-36. `make openapi-gate`
-37. `make coverage-gate`
-38. `make security-audit`
-39. `make docker-build`
+34. `make supported-features-gate`
+35. `make endpoint-certification-gate`
+36. `make postgres-integration-gate`
+37. `make openapi-gate`
+38. `make coverage-gate`
+39. `make security-audit`
+40. `make docker-build`
 
 Cleanup support command:
 
@@ -73,6 +74,7 @@ the Makefile and GitHub workflow lanes still include architecture boundaries, ma
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
 mesh policy proof contract validation,
+opportunity archetype contract validation,
 downstream realization contract validation, migration contract validation,
 migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,

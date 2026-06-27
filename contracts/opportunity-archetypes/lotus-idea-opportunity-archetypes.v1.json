@@ -1,0 +1,291 @@
+{
+  "contract_id": "lotus-idea-opportunity-archetype-scenario-contract",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "governed_by_rfcs": [
+    "RFC-0002"
+  ],
+  "lifecycle_status": "foundation",
+  "supportability_status": "not_certified",
+  "canonical_portfolio_ref": "PB_SG_GLOBAL_BAL_001",
+  "demo_ready": false,
+  "client_publication_ready": false,
+  "supported_feature_promoted": false,
+  "data_mesh_certified": false,
+  "source_of_truth": {
+    "blueprint": "C:/Users/Sandeep/Downloads/LOTUS_IDEA_BLUEPRINT.md",
+    "rfc_main": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
+    "rfc_slice_00": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+    "rfc_slice_05": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-05-deterministic-signal-evaluation-and-candidate-generation.md",
+    "rfc_slice_16": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-16-demo-readiness-archetype-scenarios-and-commercial-proof.md",
+    "contract_loader": "src/app/application/opportunity_archetype_contracts.py",
+    "contract_gate": "scripts/opportunity_archetype_contract_gate.py",
+    "demo_claims": "docs/demo/demo-claims.md",
+    "wiki_demo_readiness": "wiki/Demo-Readiness.md"
+  },
+  "archetypes": [
+    {
+      "archetype_id": "high-cash-idle-liquidity",
+      "display_name": "High cash / idle liquidity",
+      "implementation_status": "partially_implemented",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": true,
+      "advisor_audience": "relationship_manager",
+      "source_products": [
+        "lotus-core:PortfolioStateSnapshot:v1",
+        "lotus-core:HoldingsAsOf:v1",
+        "lotus-core:PortfolioCashMovementSummary:v1",
+        "lotus-core:PortfolioCashflowProjection:v1"
+      ],
+      "lotus_idea_responsibility": "Detect source-backed idle-liquidity candidates, preserve source refs, apply deterministic eligibility policy, and route for advisor review.",
+      "evidence_refs": [
+        "src/app/domain/signal_evaluation.py",
+        "src/app/application/source_ingestion.py",
+        "src/app/application/source_ingestion_worker.py",
+        "docs/examples/source-ingestion/high-cash-worker-manifest.example.json",
+        "make source-ingestion-worker-check",
+        "make source-ingestion-live-proof-contract-gate",
+        "GET /api/v1/source-ingestion/readiness",
+        "POST /api/v1/source-ingestion/run-once"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "advisor-daily-high-cash-review",
+          "scenario_status": "bounded_foundation",
+          "scenario_type": "advisor_daily_opportunity_feed",
+          "audience": "advisor",
+          "proof_status": "not_client_demo_ready",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "source-reported cash weight",
+            "Core source refs",
+            "source freshness",
+            "advisor review posture",
+            "implementation proof readiness blockers"
+          ],
+          "remaining_blockers": [
+            "live_core_source_proof_missing",
+            "workbench_product_proof_missing",
+            "data_mesh_not_certified",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "live_core_source_proof_missing",
+        "workbench_product_proof_missing",
+        "data_mesh_not_certified",
+        "supported_feature_promotion_missing"
+      ]
+    },
+    {
+      "archetype_id": "concentration-risk-review",
+      "display_name": "Concentration risk review",
+      "implementation_status": "planned",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "advisor",
+      "source_products": [
+        "lotus-risk:RiskMetricsReport:v1"
+      ],
+      "lotus_idea_responsibility": "Queue source-owned concentration evidence for review without recalculating risk.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "risk-concentration-attention-review",
+          "scenario_status": "planned",
+          "scenario_type": "portfolio_health_review",
+          "audience": "advisor",
+          "proof_status": "not_implemented",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "risk-owned concentration evidence",
+            "source supportability",
+            "advisor review posture"
+          ],
+          "remaining_blockers": [
+            "risk_source_adapter_missing",
+            "risk_signal_policy_missing",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "risk_source_adapter_missing",
+        "risk_signal_policy_missing",
+        "supported_feature_promotion_missing"
+      ]
+    },
+    {
+      "archetype_id": "underperformance-review",
+      "display_name": "Underperformance review",
+      "implementation_status": "planned",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "advisor",
+      "source_products": [
+        "lotus-performance:ReturnsSeriesBundle:v1",
+        "lotus-performance:MandatePerformanceHealthContext:v1",
+        "lotus-core:BenchmarkAssignment:v1"
+      ],
+      "lotus_idea_responsibility": "Convert source-owned performance concern into an idea candidate with explicit stale or partial benchmark evidence handling.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "advisor-underperformance-review-prep",
+          "scenario_status": "planned",
+          "scenario_type": "portfolio_review_preparation",
+          "audience": "advisor",
+          "proof_status": "not_implemented",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "performance-owned return evidence",
+            "benchmark assignment",
+            "source supportability",
+            "advisor review posture"
+          ],
+          "remaining_blockers": [
+            "performance_source_adapter_missing",
+            "benchmark_degraded_posture_missing",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "performance_source_adapter_missing",
+        "benchmark_degraded_posture_missing",
+        "supported_feature_promotion_missing"
+      ]
+    },
+    {
+      "archetype_id": "allocation-drift-mandate-review",
+      "display_name": "Allocation drift / mandate review",
+      "implementation_status": "planned",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "portfolio_manager",
+      "source_products": [
+        "lotus-manage:PortfolioActionRegister:v1",
+        "lotus-performance:MandatePerformanceHealthContext:v1",
+        "lotus-risk:MandateRiskHealthContext:v1",
+        "lotus-core:PortfolioStateSnapshot:v1"
+      ],
+      "lotus_idea_responsibility": "Detect cross-domain opportunity posture and create review-gated conversion intent without creating DPM action state.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "pm-mandate-drift-review",
+          "scenario_status": "planned",
+          "scenario_type": "portfolio_health_review",
+          "audience": "portfolio_manager",
+          "proof_status": "not_implemented",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "manage-owned action register posture",
+            "mandate performance health",
+            "mandate risk health",
+            "Core portfolio state"
+          ],
+          "remaining_blockers": [
+            "manage_source_adapter_missing",
+            "mandate_health_signal_policy_missing",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "manage_source_adapter_missing",
+        "mandate_health_signal_policy_missing",
+        "supported_feature_promotion_missing"
+      ]
+    },
+    {
+      "archetype_id": "bond-maturity-reinvestment",
+      "display_name": "Bond maturity / reinvestment",
+      "implementation_status": "planned",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "advisor",
+      "source_products": [
+        "lotus-core:PortfolioStateSnapshot:v1",
+        "lotus-core:HoldingsAsOf:v1"
+      ],
+      "lotus_idea_responsibility": "Keep maturity opportunity generation blocked until maturity fields or a maturity-specific source product are explicitly proven.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "advisor-bond-maturity-reinvestment-review",
+          "scenario_status": "planned",
+          "scenario_type": "product_lifecycle_review",
+          "audience": "advisor",
+          "proof_status": "not_implemented",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "instrument maturity facts",
+            "holding source refs",
+            "advisor review posture"
+          ],
+          "remaining_blockers": [
+            "maturity_source_contract_missing",
+            "maturity_signal_policy_missing",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "maturity_source_contract_missing",
+        "maturity_signal_policy_missing",
+        "supported_feature_promotion_missing"
+      ]
+    },
+    {
+      "archetype_id": "missing-suitability-context",
+      "display_name": "Missing suitability context",
+      "implementation_status": "planned",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "advisor",
+      "source_products": [
+        "lotus-advise:AdvisoryProposalLifecycleRecord:v1",
+        "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
+      ],
+      "lotus_idea_responsibility": "Block advisory conversion or mark missing-evidence posture without approving suitability or policy.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "advisor-missing-suitability-context-review",
+          "scenario_status": "planned",
+          "scenario_type": "governance_gap_review",
+          "audience": "advisor",
+          "proof_status": "not_implemented",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "advise-owned policy evidence",
+            "proposal lifecycle posture",
+            "blocked conversion reason"
+          ],
+          "remaining_blockers": [
+            "advise_policy_source_adapter_missing",
+            "suitability_authority_boundary_proof_missing",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "advise_policy_source_adapter_missing",
+        "suitability_authority_boundary_proof_missing",
+        "supported_feature_promotion_missing"
+      ]
+    }
+  ]
+}
