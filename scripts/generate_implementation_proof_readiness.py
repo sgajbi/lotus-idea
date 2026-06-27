@@ -37,6 +37,7 @@ from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_PROOF_ENV,
 )
 from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
+from app.application.report_materialization_proof import REPORT_MATERIALIZATION_PROOF_ENV
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -59,10 +60,6 @@ class ProofArtifactInput:
     path: Path | None
     ref_name: str
 
-    @property
-    def source_safe_ref(self) -> str | None:
-        return _source_safe_artifact_ref(self.path, artifact_name=self.ref_name)
-
 
 @dataclass(frozen=True)
 class ProofArtifactInputs:
@@ -75,6 +72,7 @@ class ProofArtifactInputs:
     advise_proposal_route: ProofArtifactInput
     manage_action_route: ProofArtifactInput
     report_intake_route: ProofArtifactInput
+    report_materialization: ProofArtifactInput
     mesh_policy: ProofArtifactInput
     workbench_read_path: ProofArtifactInput
     outbox_broker: ProofArtifactInput
@@ -102,47 +100,49 @@ def main(argv: list[str] | None = None) -> int:
                     artifact_name="source ingestion scheduled-worker proof artifact",
                 ),
                 durable_repository_proof=proof_artifacts.durable_repository.payload,
-                durable_repository_proof_ref=proof_artifacts.durable_repository.source_safe_ref,
+                durable_repository_proof_ref=_proof_ref(proof_artifacts.durable_repository),
                 runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry.payload,
                 runtime_trust_telemetry_proof_ref=(
-                    proof_artifacts.runtime_trust_telemetry.source_safe_ref
+                    _proof_ref(proof_artifacts.runtime_trust_telemetry)
                 ),
                 ai_lineage_store_proof=proof_artifacts.ai_lineage_store.payload,
-                ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store.source_safe_ref,
+                ai_lineage_store_proof_ref=_proof_ref(proof_artifacts.ai_lineage_store),
                 ai_model_risk_operations_proof=(proof_artifacts.ai_model_risk_operations.payload),
                 ai_model_risk_operations_proof_ref=(
-                    proof_artifacts.ai_model_risk_operations.source_safe_ref
+                    _proof_ref(proof_artifacts.ai_model_risk_operations)
                 ),
                 ai_workflow_pack_registration_proof=(
                     proof_artifacts.ai_workflow_pack_registration.payload
                 ),
                 ai_workflow_pack_registration_proof_ref=(
-                    proof_artifacts.ai_workflow_pack_registration.source_safe_ref
+                    _proof_ref(proof_artifacts.ai_workflow_pack_registration)
                 ),
                 ai_workflow_pack_runtime_execution_proof=(
                     proof_artifacts.ai_workflow_pack_runtime_execution.payload
                 ),
                 ai_workflow_pack_runtime_execution_proof_ref=(
-                    proof_artifacts.ai_workflow_pack_runtime_execution.source_safe_ref
+                    _proof_ref(proof_artifacts.ai_workflow_pack_runtime_execution)
                 ),
                 advise_proposal_route_proof=proof_artifacts.advise_proposal_route.payload,
-                advise_proposal_route_proof_ref=(
-                    proof_artifacts.advise_proposal_route.source_safe_ref
-                ),
+                advise_proposal_route_proof_ref=(_proof_ref(proof_artifacts.advise_proposal_route)),
                 manage_action_route_proof=proof_artifacts.manage_action_route.payload,
-                manage_action_route_proof_ref=proof_artifacts.manage_action_route.source_safe_ref,
+                manage_action_route_proof_ref=_proof_ref(proof_artifacts.manage_action_route),
                 report_intake_route_proof=proof_artifacts.report_intake_route.payload,
-                report_intake_route_proof_ref=proof_artifacts.report_intake_route.source_safe_ref,
+                report_intake_route_proof_ref=_proof_ref(proof_artifacts.report_intake_route),
+                report_materialization_proof=proof_artifacts.report_materialization.payload,
+                report_materialization_proof_ref=(
+                    _proof_ref(proof_artifacts.report_materialization)
+                ),
                 mesh_policy_proof=proof_artifacts.mesh_policy.payload,
-                mesh_policy_proof_ref=proof_artifacts.mesh_policy.source_safe_ref,
+                mesh_policy_proof_ref=_proof_ref(proof_artifacts.mesh_policy),
                 outbox_broker_proof=proof_artifacts.outbox_broker.payload,
-                outbox_broker_proof_ref=proof_artifacts.outbox_broker.source_safe_ref,
+                outbox_broker_proof_ref=_proof_ref(proof_artifacts.outbox_broker),
                 platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding.payload,
                 platform_mesh_onboarding_proof_ref=(
-                    proof_artifacts.platform_mesh_onboarding.source_safe_ref
+                    _proof_ref(proof_artifacts.platform_mesh_onboarding)
                 ),
                 workbench_read_path_proof=proof_artifacts.workbench_read_path.payload,
-                workbench_read_path_proof_ref=proof_artifacts.workbench_read_path.source_safe_ref,
+                workbench_read_path_proof_ref=_proof_ref(proof_artifacts.workbench_read_path),
             )
         payload = implementation_proof_readiness_payload(snapshot)
         rendered = json.dumps(payload, indent=2, sort_keys=True)
@@ -208,6 +208,10 @@ def _proof_artifact_input(
     )
 
 
+def _proof_ref(input_: ProofArtifactInput) -> str | None:
+    return _source_safe_artifact_ref(input_.path, artifact_name=input_.ref_name)
+
+
 def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
     return ProofArtifactInputs(
         durable_repository=_proof_artifact_input(
@@ -255,6 +259,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
             artifact_name="report intake route proof",
             ref_name="report intake route proof artifact",
         ),
+        report_materialization=_proof_artifact_input(
+            args.report_materialization_proof,
+            artifact_name="report materialization proof",
+            ref_name="report materialization proof artifact",
+        ),
         mesh_policy=_proof_artifact_input(
             args.mesh_policy_proof,
             artifact_name="mesh policy proof",
@@ -280,17 +289,14 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate the source-safe lotus-idea RFC-0002 implementation proof readiness snapshot."
+        description="Generate lotus-idea RFC-0002 proof readiness JSON."
     )
     parser.add_argument(
         "--evaluated-at-utc",
         required=True,
         help="Timezone-aware evaluation instant, for example 2026-06-21T10:10:00Z.",
     )
-    parser.add_argument(
-        "--output",
-        help="Optional JSON output path. Parent directories are created when needed.",
-    )
+    parser.add_argument("--output", help="Optional JSON output path.")
     _add_runtime_context_args(parser)
     _add_proof_artifact_args(parser)
     return parser
@@ -381,6 +387,11 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--report-intake-route-proof",
             REPORT_INTAKE_ROUTE_PROOF_ENV,
             "Optional lotus-report idea evidence intake route proof artifact path.",
+        ),
+        (
+            "--report-materialization-proof",
+            REPORT_MATERIALIZATION_PROOF_ENV,
+            "Optional lotus-report idea evidence materialization proof artifact path.",
         ),
         (
             "--mesh-policy-proof",

@@ -11,8 +11,8 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from app.application.report_intake_route_proof import (  # noqa: E402
-    build_report_intake_route_proof_payload,
+from app.application.report_materialization_proof import (  # noqa: E402
+    build_report_materialization_proof_payload,
 )
 
 
@@ -20,13 +20,13 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        payload = build_report_intake_route_proof_payload(
+        payload = build_report_materialization_proof_payload(
             generated_at_utc=_aware_datetime(args.generated_at_utc),
             repository_root=ROOT,
             report_root=Path(args.report_root) if args.report_root else None,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
-        print(f"report intake route proof error: {exc}", file=sys.stderr)
+        print(f"report materialization proof error: {exc}", file=sys.stderr)
         return 2
 
     rendered = json.dumps(payload, indent=2, sort_keys=True)
@@ -36,7 +36,7 @@ def main(argv: list[str] | None = None) -> int:
         output_path.write_text(f"{rendered}\n", encoding="utf-8")
     else:
         print(rendered)
-    if payload["reportIntakeRouteProofValid"]:
+    if payload["reportMaterializationProofValid"]:
         return 0
     proof_checks = payload.get("proofChecks")
     if (
@@ -50,7 +50,10 @@ def main(argv: list[str] | None = None) -> int:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate a source-safe lotus-idea proof for the lotus-report intake route."
+        description=(
+            "Generate a source-safe lotus-idea proof for lotus-report idea evidence "
+            "materialization."
+        )
     )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--report-root")

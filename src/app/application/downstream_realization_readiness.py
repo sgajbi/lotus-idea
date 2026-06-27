@@ -21,6 +21,11 @@ from app.application.report_intake_route_proof import (
     REPORT_INTAKE_ROUTE_BLOCKERS_CLEARED,
     report_intake_route_proof_is_valid,
 )
+from app.application.report_materialization_proof import (
+    REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+    REPORT_MATERIALIZATION_ROUTE,
+    report_materialization_proof_is_valid,
+)
 from app.ports.idea_repository import CandidateSnapshotRepository
 
 
@@ -105,6 +110,8 @@ def build_downstream_realization_readiness_snapshot(
     manage_action_route_proof_ref: str | None = None,
     report_intake_route_proof: Mapping[str, object] | None = None,
     report_intake_route_proof_ref: str | None = None,
+    report_materialization_proof: Mapping[str, object] | None = None,
+    report_materialization_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
     snapshot = repository.snapshot()
     records = tuple(snapshot.candidate_records.values())
@@ -122,63 +129,18 @@ def build_downstream_realization_readiness_snapshot(
     downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...] = tuple(
         _downstream_contract_from_plan(record) for record in contract_plan.contracts
     )
-    if advise_proposal_route_proof and advise_proposal_route_proof_is_valid(
-        advise_proposal_route_proof
-    ):
-        capabilities = tuple(
-            _apply_route_proof_to_capability(
-                capability,
-                capability_id="advise-proposal-realization",
-                blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
-                proof_ref=advise_proposal_route_proof_ref,
-            )
-            for capability in capabilities
-        )
-        downstream_contracts = tuple(
-            _apply_route_proof_to_contract(
-                contract,
-                contract_id="lotus-idea-to-lotus-advise-proposal-intake:v1",
-                blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
-                proof_ref=advise_proposal_route_proof_ref,
-                target_route=ADVISE_PROPOSAL_ROUTE,
-            )
-            for contract in downstream_contracts
-        )
-    if manage_action_route_proof and manage_action_route_proof_is_valid(manage_action_route_proof):
-        capabilities = tuple(
-            _apply_route_proof_to_capability(
-                capability,
-                capability_id="manage-action-realization",
-                blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
-                proof_ref=manage_action_route_proof_ref,
-            )
-            for capability in capabilities
-        )
-        downstream_contracts = tuple(
-            _apply_route_proof_to_contract(
-                contract,
-                contract_id="lotus-idea-to-lotus-manage-action-intake:v1",
-                blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
-                proof_ref=manage_action_route_proof_ref,
-                target_route=MANAGE_ACTION_ROUTE,
-            )
-            for contract in downstream_contracts
-        )
-    if report_intake_route_proof and report_intake_route_proof_is_valid(report_intake_route_proof):
-        capabilities = tuple(
-            _apply_report_intake_route_proof_to_capability(
-                capability,
-                report_intake_route_proof_ref,
-            )
-            for capability in capabilities
-        )
-        downstream_contracts = tuple(
-            _apply_report_intake_route_proof_to_contract(
-                contract,
-                report_intake_route_proof_ref,
-            )
-            for contract in downstream_contracts
-        )
+    capabilities, downstream_contracts = _apply_available_downstream_proofs(
+        capabilities=capabilities,
+        downstream_contracts=downstream_contracts,
+        advise_proposal_route_proof=advise_proposal_route_proof,
+        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
+        manage_action_route_proof=manage_action_route_proof,
+        manage_action_route_proof_ref=manage_action_route_proof_ref,
+        report_intake_route_proof=report_intake_route_proof,
+        report_intake_route_proof_ref=report_intake_route_proof_ref,
+        report_materialization_proof=report_materialization_proof,
+        report_materialization_proof_ref=report_materialization_proof_ref,
+    )
     capability_blockers = tuple(
         blocker for capability in capabilities for blocker in capability.blockers
     )
@@ -223,6 +185,115 @@ def build_downstream_realization_readiness_snapshot(
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
         supported_feature_promoted=False,
+    )
+
+
+def _apply_available_downstream_proofs(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    advise_proposal_route_proof: Mapping[str, object] | None,
+    advise_proposal_route_proof_ref: str | None,
+    manage_action_route_proof: Mapping[str, object] | None,
+    manage_action_route_proof_ref: str | None,
+    report_intake_route_proof: Mapping[str, object] | None,
+    report_intake_route_proof_ref: str | None,
+    report_materialization_proof: Mapping[str, object] | None,
+    report_materialization_proof_ref: str | None,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    if advise_proposal_route_proof and advise_proposal_route_proof_is_valid(
+        advise_proposal_route_proof
+    ):
+        capabilities, downstream_contracts = _apply_downstream_route_proof(
+            capabilities=capabilities,
+            downstream_contracts=downstream_contracts,
+            capability_id="advise-proposal-realization",
+            contract_id="lotus-idea-to-lotus-advise-proposal-intake:v1",
+            blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
+            proof_ref=advise_proposal_route_proof_ref,
+            target_route=ADVISE_PROPOSAL_ROUTE,
+        )
+    if manage_action_route_proof and manage_action_route_proof_is_valid(manage_action_route_proof):
+        capabilities, downstream_contracts = _apply_downstream_route_proof(
+            capabilities=capabilities,
+            downstream_contracts=downstream_contracts,
+            capability_id="manage-action-realization",
+            contract_id="lotus-idea-to-lotus-manage-action-intake:v1",
+            blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
+            proof_ref=manage_action_route_proof_ref,
+            target_route=MANAGE_ACTION_ROUTE,
+        )
+    if report_intake_route_proof and report_intake_route_proof_is_valid(report_intake_route_proof):
+        capabilities = tuple(
+            _apply_report_intake_route_proof_to_capability(
+                capability,
+                report_intake_route_proof_ref,
+            )
+            for capability in capabilities
+        )
+        downstream_contracts = tuple(
+            _apply_report_intake_route_proof_to_contract(
+                contract,
+                report_intake_route_proof_ref,
+            )
+            for contract in downstream_contracts
+        )
+    if report_materialization_proof and report_materialization_proof_is_valid(
+        report_materialization_proof
+    ):
+        capabilities = tuple(
+            _apply_report_materialization_proof_to_capability(
+                capability,
+                report_materialization_proof_ref,
+            )
+            for capability in capabilities
+        )
+        downstream_contracts = tuple(
+            _apply_report_materialization_proof_to_contract(
+                contract,
+                report_materialization_proof_ref,
+            )
+            for contract in downstream_contracts
+        )
+    return capabilities, downstream_contracts
+
+
+def _apply_downstream_route_proof(
+    *,
+    capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...],
+    downstream_contracts: tuple[DownstreamRealizationContractReadiness, ...],
+    capability_id: str,
+    contract_id: str,
+    blockers_cleared: tuple[str, ...],
+    proof_ref: str | None,
+    target_route: str,
+) -> tuple[
+    tuple[DownstreamRealizationCapabilityReadiness, ...],
+    tuple[DownstreamRealizationContractReadiness, ...],
+]:
+    return (
+        tuple(
+            _apply_route_proof_to_capability(
+                capability,
+                capability_id=capability_id,
+                blockers_cleared=blockers_cleared,
+                proof_ref=proof_ref,
+            )
+            for capability in capabilities
+        ),
+        tuple(
+            _apply_route_proof_to_contract(
+                contract,
+                contract_id=contract_id,
+                blockers_cleared=blockers_cleared,
+                proof_ref=proof_ref,
+                target_route=target_route,
+            )
+            for contract in downstream_contracts
+        ),
     )
 
 
@@ -410,6 +481,53 @@ def _apply_report_intake_route_proof_to_contract(
         source_authority=contract.source_authority,
         target_route=REPORT_INTAKE_ROUTE,
         route_fit_status="route_foundation_proven_not_certified",
+        adapter_status=contract.adapter_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in contract.blockers if blocker not in blockers_to_clear
+        ),
+    )
+
+
+def _apply_report_materialization_proof_to_capability(
+    capability: DownstreamRealizationCapabilityReadiness,
+    report_materialization_proof_ref: str | None,
+) -> DownstreamRealizationCapabilityReadiness:
+    if capability.capability_id != "report-render-archive-realization":
+        return capability
+    blockers_to_clear = set(REPORT_MATERIALIZATION_BLOCKERS_CLEARED)
+    evidence_refs = capability.evidence_refs
+    if report_materialization_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_materialization_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        capability.source_authority,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+    )
+
+
+def _apply_report_materialization_proof_to_contract(
+    contract: DownstreamRealizationContractReadiness,
+    report_materialization_proof_ref: str | None,
+) -> DownstreamRealizationContractReadiness:
+    if contract.contract_id != "lotus-idea-to-lotus-report-evidence-pack-intake:v1":
+        return contract
+    blockers_to_clear = set(REPORT_MATERIALIZATION_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(contract.blockers):
+        return contract
+    evidence_refs = contract.evidence_refs
+    if report_materialization_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_materialization_proof_ref)))
+    return DownstreamRealizationContractReadiness(
+        contract_id=contract.contract_id,
+        owner_repository=contract.owner_repository,
+        source_authority=contract.source_authority,
+        target_route=REPORT_MATERIALIZATION_ROUTE,
+        route_fit_status="materialization_proven_not_certified",
         adapter_status=contract.adapter_status,
         evidence_refs=evidence_refs,
         blockers=tuple(
