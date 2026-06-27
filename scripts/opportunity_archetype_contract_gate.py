@@ -25,6 +25,7 @@ REQUIRED_ARCHETYPES = {
     "allocation-drift-mandate-review",
     "high-volatility-drawdown-review",
     "bond-maturity-reinvestment",
+    "low-income-liquidity-shortfall",
     "missing-suitability-context",
 }
 REQUIRED_SOURCE_OF_TRUTH = {
@@ -128,6 +129,16 @@ REQUIRED_MISSING_SUITABILITY_EVIDENCE = {
     "tests/unit/test_lotus_advise_sources.py",
     "tests/unit/test_missing_suitability_live_proof.py",
 }
+REQUIRED_LOW_INCOME_EVIDENCE = {
+    "src/app/domain/low_income_signal.py",
+    "src/app/application/low_income_signal.py",
+    "src/app/ports/core_sources.py",
+    "src/app/infrastructure/lotus_core_sources.py",
+    "tests/unit/test_low_income_signal_evaluation.py",
+    "tests/unit/test_low_income_application.py",
+    "tests/unit/test_lotus_core_sources.py",
+    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
@@ -135,6 +146,7 @@ FOUNDATION_ARCHETYPES = {
     "allocation-drift-mandate-review",
     "concentration-risk-review",
     "high-volatility-drawdown-review",
+    "low-income-liquidity-shortfall",
     "missing-suitability-context",
     "underperformance-review",
 }
@@ -320,6 +332,8 @@ def _validate_archetypes(
                 "missing-suitability-context evidence_refs missing: " + ", ".join(missing_evidence)
             )
 
+    errors.extend(_validate_low_income_evidence(archetypes))
+
     for archetype_id, archetype in archetypes.items():
         if archetype_id == "high-cash-idle-liquidity":
             continue
@@ -330,6 +344,19 @@ def _validate_archetypes(
         if archetype.implementation_status not in PLANNED_ARCHETYPE_STATUSES:
             errors.append(f"{archetype_id}: non-initial archetypes must remain planned")
     return errors
+
+
+def _validate_low_income_evidence(
+    archetypes: dict[str, object],
+) -> list[str]:
+    low_income = archetypes.get("low-income-liquidity-shortfall")
+    if low_income is None:
+        return []
+    evidence_refs = getattr(low_income, "evidence_refs", ())
+    missing_evidence = sorted(REQUIRED_LOW_INCOME_EVIDENCE - set(evidence_refs))
+    if not missing_evidence:
+        return []
+    return ["low-income-liquidity-shortfall evidence_refs missing: " + ", ".join(missing_evidence)]
 
 
 def _validate_evidence_refs(

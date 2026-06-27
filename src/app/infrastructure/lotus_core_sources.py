@@ -13,6 +13,8 @@ from app.ports.core_sources import (
     CoreBenchmarkAssignmentEvidenceRequest,
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
+    CoreLowIncomeEvidence,
+    CoreLowIncomeEvidenceRequest,
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
@@ -159,6 +161,51 @@ class LotusCoreHighCashSourceAdapter:
             ),
         )
 
+    def fetch_low_income_evidence(
+        self, request: CoreLowIncomeEvidenceRequest
+    ) -> CoreLowIncomeEvidence:
+        portfolio_ref = quote(request.portfolio_id, safe="")
+        as_of = request.as_of_date.isoformat()
+        try:
+            cash_movement_payload = self._query_client.get_json(
+                f"/portfolios/{portfolio_ref}/cash-movement-summary?start_date={as_of}&end_date={as_of}",
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+            cashflow_projection_payload = self._query_client.get_json(
+                f"/portfolios/{portfolio_ref}/cashflow-projection?as_of_date={as_of}"
+                f"&horizon_days={request.horizon_days}&include_projected=true",
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise CoreSourceEntitlementDenied from exc
+            raise CoreSourceUnavailable(code=exc.code) from exc
+
+        cash_movement_count = _int_field(cash_movement_payload, "cashflow_count", "cashflowCount")
+        min_projected_cumulative_cashflow = _min_projected_cumulative_cashflow(
+            cashflow_projection_payload
+        )
+        return CoreLowIncomeEvidence(
+            source_reported_min_projected_cumulative_cashflow=min_projected_cumulative_cashflow,
+            cash_movement_count=cash_movement_count,
+            cash_movement_ref=_source_ref(
+                cash_movement_payload,
+                product_id=CASH_MOVEMENT_PRODUCT_ID,
+                route="/portfolios/{portfolio_id}/cash-movement-summary",
+            ),
+            cashflow_projection_ref=_source_ref(
+                cashflow_projection_payload,
+                product_id=CASHFLOW_PROJECTION_PRODUCT_ID,
+                route="/portfolios/{portfolio_id}/cashflow-projection",
+            ),
+            cashflow_diagnostic=_low_income_cashflow_diagnostic(
+                cash_movement_count=cash_movement_count,
+                min_projected_cumulative_cashflow=min_projected_cumulative_cashflow,
+            ),
+        )
+
 
 def _source_reported_cash_weight(payload: dict[str, Any]) -> _CashWeightEvidence:
     for cash_weight_payload in _cash_weight_payloads(payload):
@@ -266,6 +313,58 @@ def _text_field(payload: dict[str, Any], *keys: str) -> str | None:
         if isinstance(value, str) and value.strip():
             return value.strip()
     return None
+
+
+def _int_field(payload: dict[str, Any], *keys: str) -> int | None:
+    for key in keys:
+        value = payload.get(key)
+        if value is None:
+            continue
+        try:
+            return int(value)
+        except (TypeError, ValueError) as exc:
+            raise CoreSourceUnavailable(code=f"core_{key}_malformed") from exc
+    return None
+
+
+def _min_projected_cumulative_cashflow(payload: dict[str, Any]) -> Decimal | None:
+    values: list[Decimal] = []
+    points = payload.get("points")
+    if isinstance(points, list):
+        for point in points:
+            if not isinstance(point, dict):
+                continue
+            value = point.get("projected_cumulative_cashflow") or point.get(
+                "projectedCumulativeCashflow"
+            )
+            if value is None:
+                continue
+            values.append(_decimal_value(value, code="core_cashflow_projection_malformed"))
+    if values:
+        return min(values)
+    total = payload.get("total_net_cashflow") or payload.get("totalNetCashflow")
+    if total is None:
+        return None
+    return _decimal_value(total, code="core_cashflow_projection_malformed")
+
+
+def _decimal_value(value: object, *, code: str) -> Decimal:
+    try:
+        return Decimal(str(value))
+    except InvalidOperation as exc:
+        raise CoreSourceUnavailable(code=code) from exc
+
+
+def _low_income_cashflow_diagnostic(
+    *,
+    cash_movement_count: int | None,
+    min_projected_cumulative_cashflow: Decimal | None,
+) -> str:
+    if cash_movement_count is None:
+        return "core_cash_movement_count_missing"
+    if min_projected_cumulative_cashflow is None:
+        return "core_cashflow_projection_missing"
+    return "core_cashflow_liquidity_evidence_ready"
 
 
 def _assignment_effective_for_as_of_date(payload: dict[str, Any], as_of_date: date) -> bool:

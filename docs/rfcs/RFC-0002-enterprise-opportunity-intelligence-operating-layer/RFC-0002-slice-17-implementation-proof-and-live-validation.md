@@ -402,6 +402,7 @@ without relying on chat memory.
     readiness, but it proves only governed taxonomy, bounded concentration
     source/policy foundation, bounded high-volatility / drawdown source/policy
     foundation, bounded missing suitability context source/policy foundation,
+    bounded low-income / liquidity-shortfall Core cashflow foundation,
     optional live Risk concentration/high-volatility/drawdown proof
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
@@ -409,9 +410,10 @@ without relying on chat memory.
     concentration live Risk, high-volatility live Risk, and drawdown live Risk
     proof artifacts plus optional missing-suitability live Advise
     policy-evaluation proof. Missing suitability proof clears only the Advise
-    policy live-source blocker; full Workbench product proof, data-mesh
-    certification, client-publication, and supported-feature promotion remain
-    pending.
+    policy live-source blocker; low-income live Core cashflow proof remains
+    blocked by `opportunity_archetype_live_core_cashflow_source_proof_missing`;
+    full Workbench product proof, data-mesh certification, client-publication,
+    and supported-feature promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

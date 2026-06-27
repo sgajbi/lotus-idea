@@ -14,6 +14,7 @@ from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentEvidenceRequest,
     CoreHighCashEvidenceRequest,
+    CoreLowIncomeEvidenceRequest,
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
@@ -82,6 +83,17 @@ def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
         as_of_date=AS_OF_DATE,
         reporting_currency="USD",
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        correlation_id="corr-core",
+        trace_id="trace-core",
+    )
+
+
+def _low_income_request() -> CoreLowIncomeEvidenceRequest:
+    return CoreLowIncomeEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        horizon_days=45,
         correlation_id="corr-core",
         trace_id="trace-core",
     )
@@ -172,6 +184,146 @@ def test_lotus_core_adapter_fetches_benchmark_assignment_source_product() -> Non
             "https://core.example/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment",
         )
     ]
+
+
+def test_lotus_core_adapter_fetches_low_income_cashflow_source_products() -> None:
+    seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, str(request.url)))
+        assert request.headers["X-Correlation-Id"] == "corr-core"
+        assert request.headers["X-Trace-Id"] == "trace-core"
+        url = str(request.url)
+        if "cash-movement-summary" in url:
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflow_count": 3}),
+            )
+        if "cashflow-projection" in url:
+            assert "horizon_days=45" in url
+            return httpx.Response(
+                200,
+                json=_payload(
+                    "PortfolioCashflowProjection",
+                    extra={
+                        "points": [
+                            {"projected_cumulative_cashflow": "-5000"},
+                            {"projected_cumulative_cashflow": "-12500"},
+                            {"projected_cumulative_cashflow": "-7500"},
+                        ]
+                    },
+                ),
+            )
+        raise AssertionError(f"unexpected URL {url}")
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.source_reported_min_projected_cumulative_cashflow == Decimal("-12500")
+    assert evidence.cash_movement_count == 3
+    assert evidence.cash_movement_ref is not None
+    assert evidence.cash_movement_ref.product_id == "lotus-core:PortfolioCashMovementSummary:v1"
+    assert evidence.cashflow_projection_ref is not None
+    assert (
+        evidence.cashflow_projection_ref.product_id == "lotus-core:PortfolioCashflowProjection:v1"
+    )
+    assert evidence.cashflow_diagnostic == "core_cashflow_liquidity_evidence_ready"
+    assert seen == [
+        (
+            "GET",
+            "https://core.example/portfolios/PB_SG_GLOBAL_BAL_001/cash-movement-summary"
+            "?start_date=2026-06-21&end_date=2026-06-21",
+        ),
+        (
+            "GET",
+            "https://core.example/portfolios/PB_SG_GLOBAL_BAL_001/cashflow-projection"
+            "?as_of_date=2026-06-21&horizon_days=45&include_projected=true",
+        ),
+    ]
+
+
+def test_lotus_core_adapter_uses_cashflow_projection_total_when_points_are_absent() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflow_count": 1}),
+            )
+        return httpx.Response(
+            200,
+            json=_payload("PortfolioCashflowProjection", extra={"total_net_cashflow": "-11000"}),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.source_reported_min_projected_cumulative_cashflow == Decimal("-11000")
+
+
+def test_lotus_core_adapter_reports_low_income_missing_projection_diagnostic() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflow_count": 1}),
+            )
+        return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.source_reported_min_projected_cumulative_cashflow is None
+    assert evidence.cashflow_diagnostic == "core_cashflow_projection_missing"
+
+
+def test_lotus_core_adapter_reports_low_income_missing_cash_movement_count() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
+        return httpx.Response(
+            200,
+            json=_payload("PortfolioCashflowProjection", extra={"totalNetCashflow": "-11000"}),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.cash_movement_count is None
+    assert evidence.cashflow_diagnostic == "core_cash_movement_count_missing"
+
+
+def test_lotus_core_adapter_handles_camel_case_low_income_projection_points() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflowCount": "2"}),
+            )
+        return httpx.Response(
+            200,
+            json=_payload(
+                "PortfolioCashflowProjection",
+                extra={
+                    "points": [
+                        "ignored-point",
+                        {},
+                        {"projectedCumulativeCashflow": "-9500"},
+                        {"projectedCumulativeCashflow": "-14500"},
+                    ]
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.cash_movement_count == 2
+    assert evidence.source_reported_min_projected_cumulative_cashflow == Decimal("-14500")
 
 
 def test_lotus_core_adapter_marks_benchmark_assignment_not_effective_for_as_of_date() -> None:
@@ -406,6 +558,13 @@ def test_lotus_core_adapter_maps_benchmark_assignment_forbidden_response_to_enti
         adapter.fetch_benchmark_assignment_evidence(_benchmark_assignment_request())
 
 
+def test_lotus_core_adapter_maps_low_income_forbidden_response_to_entitlement_denied() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(CoreSourceEntitlementDenied):
+        adapter.fetch_low_income_evidence(_low_income_request())
+
+
 def test_lotus_core_adapter_maps_benchmark_assignment_source_error_to_unavailable() -> None:
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
 
@@ -418,6 +577,15 @@ def test_lotus_core_adapter_maps_high_cash_source_error_to_unavailable() -> None
 
     with pytest.raises(CoreSourceUnavailable):
         adapter.fetch_high_cash_evidence(_request())
+
+
+def test_lotus_core_adapter_maps_low_income_source_error_to_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(CoreSourceUnavailable) as exc_info:
+        adapter.fetch_low_income_evidence(_low_income_request())
+
+    assert exc_info.value.code == "upstream_unavailable"
 
 
 def test_lotus_core_adapter_maps_missing_runtime_metadata_to_source_unavailable() -> None:
@@ -494,6 +662,42 @@ def test_lotus_core_adapter_maps_malformed_cash_weight_to_source_unavailable() -
         _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
 
     assert exc_info.value.code == "core_cash_weight_malformed"
+
+
+def test_lotus_core_adapter_maps_malformed_low_income_projection_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflow_count": 1}),
+            )
+        return httpx.Response(
+            200,
+            json=_payload(
+                "PortfolioCashflowProjection",
+                extra={"points": [{"projected_cumulative_cashflow": "not-decimal"}]},
+            ),
+        )
+
+    with pytest.raises(CoreSourceUnavailable) as exc_info:
+        _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(_low_income_request())
+
+    assert exc_info.value.code == "core_cashflow_projection_malformed"
+
+
+def test_lotus_core_adapter_maps_malformed_low_income_count_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload("PortfolioCashMovementSummary", extra={"cashflow_count": "many"}),
+            )
+        return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+
+    with pytest.raises(CoreSourceUnavailable) as exc_info:
+        _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(_low_income_request())
+
+    assert exc_info.value.code == "core_cashflow_count_malformed"
 
 
 def test_lotus_core_adapter_maps_malformed_nested_cash_weight_to_source_unavailable() -> None:
@@ -606,6 +810,34 @@ def test_core_benchmark_assignment_evidence_request_requires_portfolio_id() -> N
 def test_core_benchmark_assignment_evidence_request_requires_aware_evaluation_time() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CoreBenchmarkAssignmentEvidenceRequest(
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+        )
+
+
+def test_core_low_income_evidence_request_requires_valid_horizon() -> None:
+    with pytest.raises(ValueError, match="horizon_days must be between 1 and 366"):
+        CoreLowIncomeEvidenceRequest(
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+            horizon_days=0,
+        )
+
+
+def test_core_low_income_evidence_request_requires_portfolio_id() -> None:
+    with pytest.raises(ValueError, match="portfolio_id is required"):
+        CoreLowIncomeEvidenceRequest(
+            portfolio_id=" ",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        )
+
+
+def test_core_low_income_evidence_request_requires_aware_evaluation_time() -> None:
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        CoreLowIncomeEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
