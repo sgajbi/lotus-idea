@@ -18,9 +18,10 @@ No external business feature is supported yet. Feature promotion still requires
 certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbench,
 downstream realization, supported-feature registration, and evidence on `main`.
 
-Current implemented foundations include source-authority-preserving high-cash, concentration-risk, underperformance, allocation-drift mandate-review, and high-volatility / drawdown review policies with Core, Risk, Performance, and Manage source adapters.
+Current implemented foundations include source-authority-preserving high-cash, concentration-risk, underperformance, allocation-drift mandate-review, high-volatility / drawdown review, and missing suitability context policies with Core, Risk, Performance, Manage, and Advise source adapters.
 High-volatility / drawdown review consumes Risk-owned volatility and drawdown evidence through separate bounded proof contracts; those artifacts can clear only the live Risk volatility blocker and drawdown source blocker.
 The Manage adapter blocks store-wide supportability evidence from becoming a portfolio opportunity claim.
+The Advise adapter consumes policy-evaluation workflow posture only to create a compliance-review candidate for missing suitability context; it does not approve suitability, policy, proposal, sign-off, client publication, or external communication.
 Other foundations cover candidate persistence, replay, lifecycle, review, feedback, queue readiness, AI diagnostics, conversion/report submission, Advise/Manage/Report proof consumption, outbox, runtime trust telemetry, data-mesh readiness, PostgreSQL/migration, Workbench proof, platform mesh proof, and bounded Gateway/Workbench queue/detail reads.
 These are internal foundations only: client publication and supported-feature claims remain blocked.
 

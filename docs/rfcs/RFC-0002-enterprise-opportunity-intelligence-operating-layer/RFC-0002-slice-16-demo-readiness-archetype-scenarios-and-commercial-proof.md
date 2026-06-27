@@ -93,7 +93,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    `opportunity_archetype_drawdown_source_proof_missing`; data-mesh
    certification, Workbench proof, client-publication approval, and
    supported-feature evidence remain required before demo use.
-7. Remaining planned archetypes still require source adapters, deterministic
+7. Missing suitability context now has a bounded deterministic policy and
+   Lotus Advise `AdvisoryPolicyEvaluationRecord:v1` workflow
+   source-port/adapter foundation. It can create only a compliance-review
+   candidate from Advise-owned open approval, disclosure, consent, or sign-off
+   posture while preserving blocked client-publication posture; live Advise
+   proof, data-mesh certification, Workbench proof, client-publication
+   approval, and supported-feature evidence remain required before demo use.
+8. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate

@@ -124,6 +124,36 @@ def test_opportunity_archetype_contract_records_manage_foundation_without_promot
     assert allocation_drift.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_missing_suitability_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    missing_suitability = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "missing-suitability-context"
+    )
+
+    assert missing_suitability.implementation_status == "partially_implemented"
+    assert missing_suitability.first_supported_journey is False
+    assert "lotus-advise:AdvisoryPolicyEvaluationRecord:v1" in missing_suitability.source_products
+    assert "src/app/domain/missing_suitability_signal.py" in missing_suitability.evidence_refs
+    assert "src/app/application/missing_suitability_signal.py" in missing_suitability.evidence_refs
+    assert "src/app/infrastructure/lotus_advise_sources.py" in (missing_suitability.evidence_refs)
+    assert "tests/unit/test_missing_suitability_signal_evaluation.py" in (
+        missing_suitability.evidence_refs
+    )
+    assert "advise_policy_live_source_proof_missing" in missing_suitability.blockers
+    assert "advise_policy_source_adapter_missing" not in missing_suitability.blockers
+    assert "suitability_authority_boundary_proof_missing" not in (missing_suitability.blockers)
+    assert "data_mesh_not_certified" in missing_suitability.blockers
+    assert "client_publication_not_ready" in missing_suitability.blockers
+    assert "supported_feature_promotion_missing" in missing_suitability.blockers
+    assert missing_suitability.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert missing_suitability.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()
@@ -184,6 +214,21 @@ def test_opportunity_archetype_contract_gate_rejects_missing_manage_evidence() -
     assert (
         "allocation-drift-mandate-review evidence_refs missing: "
         "src/app/application/mandate_health_signal.py"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_missing_suitability_evidence() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    payload["archetypes"][6]["evidence_refs"].remove(
+        "src/app/application/missing_suitability_signal.py"
+    )
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "missing-suitability-context evidence_refs missing: "
+        "src/app/application/missing_suitability_signal.py"
     ) in errors
 
 

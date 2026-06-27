@@ -104,6 +104,15 @@ REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
     "tests/unit/test_lotus_risk_drawdown_sources.py",
     "tests/unit/test_risk_drawdown_live_proof.py",
 }
+REQUIRED_MISSING_SUITABILITY_EVIDENCE = {
+    "src/app/domain/missing_suitability_signal.py",
+    "src/app/application/missing_suitability_signal.py",
+    "src/app/ports/advise_sources.py",
+    "src/app/infrastructure/lotus_advise_sources.py",
+    "tests/unit/test_missing_suitability_signal_evaluation.py",
+    "tests/unit/test_missing_suitability_application.py",
+    "tests/unit/test_lotus_advise_sources.py",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
@@ -111,6 +120,7 @@ FOUNDATION_ARCHETYPES = {
     "allocation-drift-mandate-review",
     "concentration-risk-review",
     "high-volatility-drawdown-review",
+    "missing-suitability-context",
     "underperformance-review",
 }
 
@@ -283,6 +293,16 @@ def _validate_archetypes(
             errors.append(
                 "high-volatility-drawdown-review evidence_refs missing: "
                 + ", ".join(missing_evidence)
+            )
+
+    missing_suitability = archetypes.get("missing-suitability-context")
+    if missing_suitability is not None:
+        missing_evidence = sorted(
+            REQUIRED_MISSING_SUITABILITY_EVIDENCE - set(missing_suitability.evidence_refs)
+        )
+        if missing_evidence:
+            errors.append(
+                "missing-suitability-context evidence_refs missing: " + ", ".join(missing_evidence)
             )
 
     for archetype_id, archetype in archetypes.items():
