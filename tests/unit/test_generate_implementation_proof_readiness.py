@@ -21,6 +21,7 @@ from app.application.durable_repository_proof import build_durable_repository_pr
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
 from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
@@ -544,6 +545,48 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_pro
     assert "external_broker_runtime_proof_missing" not in payload["overallBlockers"]
     assert "downstream_consumer_runtime_proof_missing" in payload["overallBlockers"]
     assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof(
+    tmp_path: Path,
+) -> None:
+    mesh_policy_proof = tmp_path / "mesh-policy-proof.json"
+    mesh_policy_proof.write_text(
+        json.dumps(
+            build_mesh_policy_proof_payload(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-27T00:00:00Z",
+            "--mesh-policy-proof",
+            str(mesh_policy_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    data_mesh = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "data-mesh-certification"
+    )
+    assert "mesh_slo_policy_certification_missing" not in data_mesh["blockers"]
+    assert "mesh_access_policy_certification_missing" not in data_mesh["blockers"]
+    assert "mesh_evidence_policy_certification_missing" not in data_mesh["blockers"]
+    assert "data_mesh_not_certified" in data_mesh["blockers"]
+    assert "mesh policy proof artifact" in data_mesh["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
