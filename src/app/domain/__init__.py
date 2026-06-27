@@ -149,8 +149,11 @@ from app.domain.signal_evaluation import (
     HighCashSignalPolicy,
     SignalEvaluationOutcome,
     SignalEvaluationResult,
+    UnderperformanceSignalInput,
+    UnderperformanceSignalPolicy,
     evaluate_concentration_risk_signal,
     evaluate_high_cash_signal,
+    evaluate_underperformance_signal,
 )
 
 __all__ = [
@@ -225,6 +228,8 @@ __all__ = [
     "ConcentrationRiskSignalPolicy",
     "HighCashSignalInput",
     "HighCashSignalPolicy",
+    "UnderperformanceSignalInput",
+    "UnderperformanceSignalPolicy",
     "CandidatePersistenceDecision",
     "CandidatePersistenceRecord",
     "CandidatePersistenceResult",
@@ -258,6 +263,7 @@ __all__ = [
     "request_report_evidence_pack",
     "evaluate_concentration_risk_signal",
     "evaluate_high_cash_signal",
+    "evaluate_underperformance_signal",
     "DEFAULT_REVIEW_ACTION_POLICY",
     "FeedbackCommand",
     "FeedbackResult",

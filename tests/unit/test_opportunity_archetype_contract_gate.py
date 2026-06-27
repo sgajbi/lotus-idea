@@ -71,6 +71,29 @@ def test_opportunity_archetype_contract_records_concentration_foundation_without
     assert concentration.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_underperformance_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    underperformance = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "underperformance-review"
+    )
+
+    assert underperformance.implementation_status == "partially_implemented"
+    assert underperformance.first_supported_journey is False
+    assert "lotus-performance:ReturnsSeriesBundle:v1" in underperformance.source_products
+    assert "src/app/application/underperformance_signal.py" in underperformance.evidence_refs
+    assert "src/app/infrastructure/lotus_performance_sources.py" in underperformance.evidence_refs
+    assert "live_performance_source_proof_missing" in underperformance.blockers
+    assert "benchmark_assignment_source_ref_missing" in underperformance.blockers
+    assert "supported_feature_promotion_missing" in underperformance.blockers
+    assert underperformance.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert underperformance.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()
@@ -103,6 +126,21 @@ def test_opportunity_archetype_contract_gate_rejects_missing_high_cash_evidence(
     assert (
         "high-cash-idle-liquidity evidence_refs missing: "
         "src/app/application/source_ingestion_live_proof.py"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_missing_underperformance_evidence() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    payload["archetypes"][2]["evidence_refs"].remove(
+        "src/app/application/underperformance_signal.py"
+    )
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "underperformance-review evidence_refs missing: "
+        "src/app/application/underperformance_signal.py"
     ) in errors
 
 

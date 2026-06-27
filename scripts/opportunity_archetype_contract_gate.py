@@ -61,10 +61,18 @@ REQUIRED_CONCENTRATION_EVIDENCE = {
     "make risk-concentration-live-proof-contract-gate",
     "tests/unit/test_risk_concentration_live_proof.py",
 }
+REQUIRED_UNDERPERFORMANCE_EVIDENCE = {
+    "src/app/application/underperformance_signal.py",
+    "src/app/infrastructure/lotus_performance_sources.py",
+    "src/app/ports/performance_sources.py",
+    "tests/unit/test_underperformance_signal_evaluation.py",
+    "tests/unit/test_underperformance_application.py",
+    "tests/unit/test_lotus_performance_sources.py",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
-FOUNDATION_ARCHETYPES = {"concentration-risk-review"}
+FOUNDATION_ARCHETYPES = {"concentration-risk-review", "underperformance-review"}
 
 
 def validate_opportunity_archetype_contract(
@@ -205,6 +213,16 @@ def _validate_archetypes(
         if missing_evidence:
             errors.append(
                 "concentration-risk-review evidence_refs missing: " + ", ".join(missing_evidence)
+            )
+
+    underperformance = archetypes.get("underperformance-review")
+    if underperformance is not None:
+        missing_evidence = sorted(
+            REQUIRED_UNDERPERFORMANCE_EVIDENCE - set(underperformance.evidence_refs)
+        )
+        if missing_evidence:
+            errors.append(
+                "underperformance-review evidence_refs missing: " + ", ".join(missing_evidence)
             )
 
     for archetype_id, archetype in archetypes.items():
