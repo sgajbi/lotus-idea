@@ -131,6 +131,8 @@ Workbench, blocked client publication, and supported-feature blockers.
 The repo-native `make implementation-proof-readiness-check` target can consume
 live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
+optional missing-suitability live Advise proof through
+`LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
 default Advise proposal route proof through `LOTUS_ADVISE_ROOT` and
 `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT`, default Manage action route
 proof through `LOTUS_MANAGE_ROOT` and
@@ -313,6 +315,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make downstream-route-contract-proof-gate
@@ -475,7 +478,8 @@ client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
-Advise proposal route proof artifact, Manage action route proof artifact,
+Advise proposal route proof artifact, missing-suitability live Advise proof
+artifact, Manage action route proof artifact,
 Report intake route proof artifact, Report materialization proof artifact,
 mesh policy proof artifact, platform mesh
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,

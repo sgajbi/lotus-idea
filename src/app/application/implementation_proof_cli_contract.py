@@ -23,6 +23,7 @@ from app.application.gateway_workbench_operational_proof import (
 )
 from app.application.high_volatility_live_proof import HIGH_VOLATILITY_LIVE_PROOF_ENV
 from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
+from app.application.missing_suitability_live_proof import MISSING_SUITABILITY_LIVE_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
@@ -153,5 +154,10 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--performance-underperformance-live-proof",
         PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF_ENV,
         "Optional lotus-performance underperformance live source proof artifact path.",
+    ),
+    (
+        "--missing-suitability-live-proof",
+        MISSING_SUITABILITY_LIVE_PROOF_ENV,
+        "Optional lotus-advise missing suitability live source proof artifact path.",
     ),
 )

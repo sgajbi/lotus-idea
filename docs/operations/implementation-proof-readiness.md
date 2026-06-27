@@ -134,6 +134,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Risk high-volatility live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Advise policy-evaluation live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not certify suitability, policy approval, proposal approval, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default source-safe Advise proposal route proof. Defaults to `../lotus-advise`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` | Selects the default generated Advise proposal route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/advise-proposal-route-proof.json`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF` | Overrides the default generated Advise proposal route proof artifact passed into aggregate readiness. |
@@ -242,6 +243,19 @@ candidate generation without storing portfolio identity, request or response
 payloads, correlation IDs, trace IDs, candidate IDs, source routes, returns, or
 benchmark values. It deliberately retains benchmark-assignment, data-mesh,
 Workbench, client-publication, and supported-feature blockers.
+
+Lotus Advise missing-suitability live proof is captured by
+`scripts/generate_missing_suitability_live_proof.py`. A valid artifact
+referenced through `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` clears only
+`opportunity_archetype_advise_policy_live_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves a live
+`lotus-advise:AdvisoryPolicyEvaluationRecord:v1` workflow source call, current
+source evidence, blocked client-publication posture, and deterministic
+compliance-review candidate generation without storing evaluation identity,
+request or response payloads, correlation IDs, trace IDs, candidate IDs,
+source routes, requirement details, or sign-off details. It deliberately
+retains suitability, policy, proposal, client-publication, data-mesh,
+Workbench, and supported-feature blockers.
 
 Durable repository proof is captured by
 `scripts/generate_durable_repository_proof.py`. A valid artifact referenced
@@ -622,9 +636,13 @@ Implementation-backed evidence:
     `scripts/generate_risk_drawdown_live_proof.py`,
 28. Risk drawdown live-proof contract gate:
     `make risk-drawdown-live-proof-contract-gate`,
-29. Performance underperformance live-proof generator:
+29. Missing-suitability live-proof generator:
+    `scripts/generate_missing_suitability_live_proof.py`,
+30. Missing-suitability live-proof contract gate:
+    `make missing-suitability-live-proof-contract-gate`,
+31. Performance underperformance live-proof generator:
     `scripts/generate_performance_underperformance_live_proof.py`,
-30. Performance underperformance live-proof contract gate:
+32. Performance underperformance live-proof contract gate:
     `make performance-underperformance-live-proof-contract-gate`,
 27. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
@@ -772,6 +790,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check

@@ -107,11 +107,15 @@ REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
 REQUIRED_MISSING_SUITABILITY_EVIDENCE = {
     "src/app/domain/missing_suitability_signal.py",
     "src/app/application/missing_suitability_signal.py",
+    "src/app/application/missing_suitability_live_proof.py",
     "src/app/ports/advise_sources.py",
     "src/app/infrastructure/lotus_advise_sources.py",
+    "scripts/generate_missing_suitability_live_proof.py",
+    "make missing-suitability-live-proof-contract-gate",
     "tests/unit/test_missing_suitability_signal_evaluation.py",
     "tests/unit/test_missing_suitability_application.py",
     "tests/unit/test_lotus_advise_sources.py",
+    "tests/unit/test_missing_suitability_live_proof.py",
 }
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}

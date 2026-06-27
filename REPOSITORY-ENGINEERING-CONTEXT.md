@@ -928,6 +928,8 @@ Risk source blocker, and a valid Performance underperformance live-proof
 artifact clears only the live Performance source blocker. A valid high-volatility
 live-proof artifact clears only the live Risk volatility source blocker. A
 valid Risk drawdown live-proof artifact clears only the drawdown source blocker.
+A valid missing-suitability live-proof artifact clears only the Advise policy
+live-source blocker.
 Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries
@@ -938,9 +940,9 @@ risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
 client-publication, and supported-feature blockers. High volatility / drawdown
 review still carries data-mesh, Workbench, client-publication, and
 supported-feature blockers after live Risk volatility and drawdown proofs are supplied.
-Missing suitability context still carries live Advise policy-evaluation
-workflow proof, data-mesh, Workbench, client-publication, and supported-feature
-blockers.
+Missing suitability context still carries data-mesh, Workbench,
+client-publication, and supported-feature blockers after live Advise policy
+proof is supplied.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
