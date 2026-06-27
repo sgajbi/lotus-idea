@@ -49,6 +49,7 @@ from app.application.runtime_trust_telemetry_proof import (
 from app.application.risk_concentration_live_proof import (
     build_risk_concentration_live_proof_payload,
 )
+from app.application.risk_drawdown_live_proof import build_risk_drawdown_live_proof_payload
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
 )
@@ -920,7 +921,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_high_volatility_l
                     "sourceEvidenceCurrent": True,
                     "riskSupportabilityReady": True,
                     "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
-                    "reasonCodes": ["volatility_attention"],
+                    "reasonCodes": ["drawdown_attention"],
                     "unsupportedReasons": [],
                 },
             )
@@ -956,6 +957,63 @@ def test_generate_implementation_proof_readiness_uses_explicit_high_volatility_l
     assert "opportunity_archetype_workbench_product_proof_missing" in archetypes["blockers"]
     assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
     assert "High volatility live proof artifact" in archetypes["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_risk_drawdown_live_proof(
+    tmp_path: Path,
+) -> None:
+    risk_drawdown_proof = tmp_path / "risk-drawdown-live-proof.json"
+    risk_drawdown_proof.write_text(
+        json.dumps(
+            build_risk_drawdown_live_proof_payload(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+                live_risk_source_attempted=True,
+                evaluation_summary={
+                    "runStatus": "completed",
+                    "sourceAuthority": "lotus-risk",
+                    "sourceProductId": "lotus-risk:DrawdownAnalyticsReport:v1",
+                    "evaluationOutcome": "candidate_created",
+                    "sourceEvidenceCurrent": True,
+                    "riskSupportabilityReady": True,
+                    "sourceDiagnosticCodes": ["risk_drawdown_source_ready"],
+                    "reasonCodes": ["drawdown_attention"],
+                    "unsupportedReasons": [],
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-27T00:00:00Z",
+            "--risk-drawdown-live-proof",
+            str(risk_drawdown_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    archetypes = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "opportunity-archetype-scenarios"
+    )
+    assert "opportunity_archetype_drawdown_source_proof_missing" not in (archetypes["blockers"])
+    assert (
+        "opportunity_archetype_live_risk_volatility_source_proof_missing"
+        in (archetypes["blockers"])
+    )
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
+    assert "opportunity_archetype_workbench_product_proof_missing" in archetypes["blockers"]
+    assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
+    assert "Risk drawdown live proof artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

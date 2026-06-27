@@ -240,6 +240,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="High volatility live proof",
             ref_name="High volatility live proof artifact",
         ),
+        "risk_drawdown_live": _proof_artifact_input(
+            args.risk_drawdown_live_proof,
+            artifact_name="Risk drawdown live proof",
+            ref_name="Risk drawdown live proof artifact",
+        ),
         "performance_underperformance_live": _proof_artifact_input(
             args.performance_underperformance_live_proof,
             artifact_name="Performance underperformance live proof",

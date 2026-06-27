@@ -331,6 +331,9 @@ def validate_makefile(makefile: str) -> list[str]:
         "performance-underperformance-live-proof-contract-gate": (
             "scripts/performance_underperformance_live_proof_contract_gate.py"
         ),
+        "risk-drawdown-live-proof-contract-gate": (
+            "scripts/risk_drawdown_live_proof_contract_gate.py"
+        ),
         "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",
         "opportunity-archetype-contract-gate": ("scripts/opportunity_archetype_contract_gate.py"),
         "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",
