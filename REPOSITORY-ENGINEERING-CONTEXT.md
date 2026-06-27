@@ -137,6 +137,13 @@ advisor-review candidates; it does not infer client income needs, funding
 advice, treasury instruction, suitability, or planning objectives.
 `src/app/application/low_income_signal.py` maps Core source evidence into this
 domain policy with entitlement and source-unavailable failure behavior.
+`src/app/application/low_income_core_cashflow_live_proof.py`,
+`scripts/generate_low_income_core_cashflow_live_proof.py`, and
+`make low-income-core-cashflow-live-proof-contract-gate` define a source-safe
+Core cashflow live-proof contract. A valid artifact clears only the
+low-income / liquidity-shortfall live Core cashflow source blocker while
+retaining Workbench, data-mesh, client-publication, supported-feature,
+suitability, planning, funding-advice, and treasury-instruction boundaries.
 The allocation-drift foundation uses
 `src/app/ports/manage_sources.py`,
 `src/app/application/mandate_health_signal.py`, and
@@ -959,6 +966,8 @@ live-proof artifact clears only the live Risk volatility source blocker. A
 valid Risk drawdown live-proof artifact clears only the drawdown source blocker.
 A valid Core benchmark assignment live-proof artifact clears only the
 underperformance benchmark-assignment source-ref blocker.
+A valid low-income Core cashflow live-proof artifact clears only the
+low-income / liquidity-shortfall live Core cashflow source blocker.
 A valid missing-suitability live-proof artifact clears only the Advise policy
 live-source blocker.
 A valid Manage mandate live-proof artifact clears only the portfolio-scoped
@@ -977,6 +986,10 @@ supported-feature blockers after live Risk volatility and drawdown proofs are su
 Missing suitability context still carries data-mesh, Workbench,
 client-publication, and supported-feature blockers after live Advise policy
 proof is supplied.
+Low-income / liquidity shortfall still carries Workbench, data-mesh,
+client-publication, and supported-feature blockers after live Core cashflow
+proof is supplied, and it still does not certify client income needs, funding
+advice, treasury instruction, suitability, or planning objectives.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
@@ -1006,6 +1019,13 @@ supplied through aggregate implementation-proof readiness, it clears only
 Performance, data-mesh, Workbench, client-publication, and supported-feature
 blockers intact. It does not assign benchmarks, calculate benchmark returns, or
 certify benchmark methodology.
+`make low-income-core-cashflow-live-proof-contract-gate` validates the optional
+Lotus Core cashflow live-proof artifact. When a valid artifact is supplied
+through aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_live_core_cashflow_source_proof_missing` and keeps
+Workbench, data-mesh, client-publication, and supported-feature blockers
+intact. It does not infer client income needs, funding advice, treasury
+instruction, suitability, or planning objectives.
 `make high-volatility-live-proof-contract-gate` validates the optional Lotus
 Risk high-volatility live-proof artifact. When a valid artifact is supplied
 through aggregate implementation-proof readiness, it clears only
@@ -1249,15 +1269,17 @@ owned by upstream services.
     `make performance-underperformance-live-proof-contract-gate`
 44. Core benchmark assignment live-proof artifact contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`
-45. AI lineage store proof contract gate:
+45. Low-income Core cashflow live-proof artifact contract gate:
+    `make low-income-core-cashflow-live-proof-contract-gate`
+46. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-46. outbox platform mesh event publication proof contract gate:
+47. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`
-47. AI workflow-pack registration proof contract gate:
+48. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-48. AI workflow-pack runtime execution proof contract gate:
+49. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-49. implementation proof readiness generator:
+50. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
@@ -1267,6 +1289,7 @@ owned by upstream services.
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`,
     `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
+    `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF`,
     `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
     `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT`,
