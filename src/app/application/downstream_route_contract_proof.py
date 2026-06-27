@@ -30,6 +30,8 @@ class DownstreamRouteContractProfile:
     route_valid_field: str
     owner_repository: str
     source_authority: str
+    contract_source_authority: str
+    contract_authority_field: str | None
     approved_producer_product: str
     owned_product: str
     contract_path: str
@@ -46,6 +48,8 @@ ADVISE_PROPOSAL_ROUTE_PROFILE = DownstreamRouteContractProfile(
     route_valid_field="adviseProposalRouteProofValid",
     owner_repository="lotus-advise",
     source_authority="lotus-advise",
+    contract_source_authority="lotus-idea",
+    contract_authority_field="proposal_authority",
     approved_producer_product="lotus-idea:IdeaCandidate:v1",
     owned_product="lotus-advise:AdvisoryProposalLifecycleRecord:v1",
     contract_path=("contracts/idea-proposal-intake/lotus-advise-idea-proposal-intake.v1.json"),
@@ -77,6 +81,8 @@ MANAGE_ACTION_ROUTE_PROFILE = DownstreamRouteContractProfile(
     route_valid_field="manageActionRouteProofValid",
     owner_repository="lotus-manage",
     source_authority="lotus-manage",
+    contract_source_authority="lotus-manage",
+    contract_authority_field=None,
     approved_producer_product="lotus-idea:IdeaCandidate:v1",
     owned_product="lotus-manage:PortfolioActionRegister:v1",
     contract_path=("contracts/idea-action-intake/lotus-manage-idea-action-intake.v1.json"),
@@ -299,7 +305,8 @@ def _downstream_contract_proves_route(
         and payload.get("approved_producer_repository") == "lotus-idea"
         and payload.get("approved_producer_product") == profile.approved_producer_product
         and payload.get("owned_product") == profile.owned_product
-        and payload.get("source_authority") == profile.source_authority
+        and payload.get("source_authority") == profile.contract_source_authority
+        and _contract_retains_downstream_authority(payload, profile)
         and payload.get("lifecycle_status") == "implemented"
         and payload.get("supportability_status") == "not_certified"
         and payload.get("route_existence_proven") is True
@@ -307,6 +314,16 @@ def _downstream_contract_proves_route(
         and payload.get("supported_feature_promoted") is False
         and payload.get("target_route") == profile.target_route
     )
+
+
+def _contract_retains_downstream_authority(
+    payload: dict[str, Any],
+    profile: DownstreamRouteContractProfile,
+) -> bool:
+    authority_field = profile.contract_authority_field
+    if authority_field is None:
+        return True
+    return payload.get(authority_field) == profile.source_authority
 
 
 def _downstream_contract_preserves_non_proof_boundaries(

@@ -82,6 +82,25 @@ def test_route_proofs_fail_closed_when_sibling_evidence_is_missing(tmp_path: Pat
     assert manage_action_route_proof_is_valid(manage_proof) is False
 
 
+def test_advise_route_proof_requires_proposal_authority_boundary(tmp_path: Path) -> None:
+    contract = _advise_contract_payload()
+    contract["proposal_authority"] = "lotus-idea"
+
+    proof = build_advise_proposal_route_proof_payload(
+        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        advise_root=_write_downstream_fixture(
+            tmp_path,
+            repository="lotus-advise",
+            profile=ADVISE_PROPOSAL_ROUTE_PROFILE,
+            contract_payload=contract,
+        ),
+    )
+
+    assert proof["adviseProposalRouteProofValid"] is False
+    assert advise_proposal_route_proof_is_valid(proof) is False
+
+
 @pytest.mark.parametrize(
     ("field_name", "bad_value", "valid"),
     [
@@ -221,7 +240,8 @@ def _advise_contract_payload() -> dict[str, object]:
         "approved_producer_repository": "lotus-idea",
         "approved_producer_product": "lotus-idea:IdeaCandidate:v1",
         "owned_product": "lotus-advise:AdvisoryProposalLifecycleRecord:v1",
-        "source_authority": "lotus-advise",
+        "source_authority": "lotus-idea",
+        "proposal_authority": "lotus-advise",
         "lifecycle_status": "implemented",
         "supportability_status": "not_certified",
         "route_existence_proven": True,
