@@ -598,6 +598,41 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_readiness_wiring() 
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_outbox_consumer_runtime_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "an outbox consumer runtime proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--outbox-consumer-runtime-proof",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "outbox consumer runtime proof artifact into readiness generation"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_generation() -> None:
     module = _load_ci_contract_gate()
     makefile = (
@@ -816,6 +851,25 @@ def test_ci_contract_gate_blocks_missing_outbox_broker_proof_gate() -> None:
     assert (
         "Makefile outbox-broker-proof-contract-gate target must run "
         "`scripts/outbox_broker_proof_contract_gate.py`"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_outbox_consumer_runtime_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "scripts/outbox_consumer_runtime_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile outbox-consumer-runtime-proof-contract-gate target must run "
+        "`scripts/outbox_consumer_runtime_proof_contract_gate.py`"
     ) in errors
 
 

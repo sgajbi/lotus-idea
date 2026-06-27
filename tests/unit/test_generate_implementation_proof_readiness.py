@@ -23,6 +23,9 @@ from app.application.implementation_proof_readiness import (
 )
 from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
 from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
+from app.application.outbox_consumer_runtime_proof import (
+    build_outbox_consumer_runtime_proof_payload,
+)
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
@@ -545,6 +548,55 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_pro
     assert "external_broker_runtime_proof_missing" not in payload["overallBlockers"]
     assert "downstream_consumer_runtime_proof_missing" in payload["overallBlockers"]
     assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_outbox_consumer_runtime_proof(
+    tmp_path: Path,
+) -> None:
+    outbox_proof = tmp_path / "outbox-broker-proof.json"
+    outbox_proof.write_text(
+        json.dumps(
+            build_outbox_broker_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+            )
+        ),
+        encoding="utf-8",
+    )
+    consumer_proof = tmp_path / "outbox-consumer-runtime-proof.json"
+    consumer_proof.write_text(
+        json.dumps(
+            build_outbox_consumer_runtime_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--outbox-broker-proof",
+            str(outbox_proof),
+            "--outbox-consumer-runtime-proof",
+            str(consumer_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "outbox_broker_not_configured" not in payload["overallBlockers"]
+    assert "external_broker_runtime_proof_missing" not in payload["overallBlockers"]
+    assert "downstream_consumer_runtime_proof_missing" not in payload["overallBlockers"]
+    assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
+    assert "gateway_workbench_proof_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
