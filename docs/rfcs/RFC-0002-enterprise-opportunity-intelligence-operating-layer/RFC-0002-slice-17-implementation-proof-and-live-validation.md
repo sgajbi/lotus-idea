@@ -117,7 +117,9 @@ Prove the complete supported opportunity journey end to end.
     after the deploy contract is validated. Aggregate implementation-readiness
     evidence records validated live and scheduled source-ingestion proof
     artifact refs in the `source-ingestion` capability when those blockers are
-    cleared.
+    cleared. The same valid live Core source-ingestion artifact can now clear
+    only `opportunity_archetype_live_core_source_proof_missing` for the
+    high-cash scenario inside aggregate opportunity-archetype readiness.
 14. `src/app/application/durable_repository_proof.py`,
     `scripts/generate_durable_repository_proof.py`, and
     `make durable-repository-proof-contract-gate` now define and enforce a
@@ -282,6 +284,11 @@ Prove the complete supported opportunity journey end to end.
     readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_risk_source_proof_missing`, while preserving
     data-mesh, Workbench, client-publication, and supported-feature blockers.
+29. A valid source-ingestion live Core proof referenced through
+    `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
+    `opportunity_archetype_live_core_source_proof_missing` for the high-cash
+    scenario while preserving Workbench, data-mesh, client-publication, and
+    supported-feature blockers.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -349,9 +356,10 @@ without relying on chat memory.
     source/policy foundation, optional live Risk concentration proof
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
-    source-backed archetype replay, full Workbench product proof, data-mesh
-    certification, client-publication, and supported-feature promotion remain
-    pending.
+    source-backed archetype replay is bounded to optional high-cash live Core
+    and concentration live Risk proof artifacts; full Workbench product proof,
+    data-mesh certification, client-publication, and supported-feature
+    promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

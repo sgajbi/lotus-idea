@@ -267,11 +267,14 @@ supported-feature promotion remain blocked.
 `src/app/application/source_ingestion_live_proof.py` and
 `scripts/generate_source_ingestion_live_proof.py` now define the source-safe
 live Core source-ingestion proof artifact contract. A valid artifact referenced
-through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` can clear only the
-`live_core_source_proof_missing` blocker in the source-ingestion readiness
-diagnostic. `make source-ingestion-live-proof-contract-gate` blocks proof
-payload shape drift, source-sensitive fields, missing aggregate block
-diagnostics, and accidental support promotion.
+through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` can clear
+`live_core_source_proof_missing` in the source-ingestion readiness diagnostic
+and `opportunity_archetype_live_core_source_proof_missing` in aggregate
+opportunity-archetype readiness. It does not clear scheduled-worker,
+data-mesh, Workbench, client-publication, or supported-feature blockers.
+`make source-ingestion-live-proof-contract-gate` blocks proof payload shape
+drift, source-sensitive fields, missing aggregate block diagnostics, and
+accidental support promotion.
 The runtime boundary now distinguishes Core query-service reads from
 query-control-plane snapshot calls through `LOTUS_CORE_QUERY_BASE_URL` and
 `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`, with `LOTUS_CORE_BASE_URL` retained
@@ -890,6 +893,10 @@ claims. Aggregate implementation-proof readiness consumes this contract as
 blocked scenario readiness so operators can see archetype replay gaps without
 confusing them with source-ingestion, Workbench, data-mesh, downstream, or
 supported-feature proof families.
+Valid source-ingestion live Core proof now clears only
+`opportunity_archetype_live_core_source_proof_missing` for the first high-cash
+journey while preserving Workbench, data-mesh, client-publication, and
+supported-feature blockers.
 `make risk-concentration-live-proof-contract-gate` now validates the optional
 Lotus Risk concentration live-proof artifact. When a valid artifact is supplied
 through aggregate implementation-proof readiness, it clears only
