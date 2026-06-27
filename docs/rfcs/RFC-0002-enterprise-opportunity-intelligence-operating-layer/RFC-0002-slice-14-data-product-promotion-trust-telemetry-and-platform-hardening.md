@@ -57,10 +57,13 @@ This slice now has internal operator diagnostic foundations only:
 15. `src/app/application/runtime_trust_telemetry_proof.py`,
     `scripts/generate_runtime_trust_telemetry_proof.py`, and
     `make runtime-trust-telemetry-proof-contract-gate` define and enforce a
-    source-safe candidate-snapshot proof contract for aggregate implementation
-    readiness. The proof clears only `runtime_candidate_snapshot_missing` and
-    keeps platform source-manifest, mesh certification, Gateway/Workbench
-    discovery, and supported-feature blockers in place.
+    source-safe runtime trust telemetry proof contract for aggregate
+    implementation readiness. The proof clears only repo-owned runtime
+    telemetry blockers (`runtime_candidate_snapshot_missing`,
+    `certified_runtime_trust_telemetry_missing`, and
+    `data_mesh_runtime_telemetry_not_certified`) and keeps platform
+    source-manifest, mesh certification, active producer product,
+    Gateway/Workbench discovery, and supported-feature blockers in place.
 16. `src/app/application/platform_mesh_onboarding_proof.py`,
     `scripts/generate_platform_mesh_onboarding_proof.py`, and
     `make platform-mesh-onboarding-proof-contract-gate` validate bounded

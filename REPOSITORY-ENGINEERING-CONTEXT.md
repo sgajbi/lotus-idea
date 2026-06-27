@@ -170,8 +170,11 @@ It also generates a source-safe runtime trust telemetry proof artifact under
 ignored `output/trust-telemetry/runtime/` and passes it into aggregate
 proof-readiness generation. That artifact exercises a deterministic seeded
 candidate snapshot through the runtime telemetry builder and clears only the
-stale aggregate `runtime_candidate_snapshot_missing` blocker; platform mesh,
-Gateway/Workbench, and supported-feature blockers remain.
+repo-owned runtime telemetry blockers:
+`runtime_candidate_snapshot_missing`,
+`certified_runtime_trust_telemetry_missing`, and
+`data_mesh_runtime_telemetry_not_certified`; platform mesh, active producer
+products, Gateway/Workbench, and supported-feature blockers remain.
 It also generates a source-safe Workbench read-path proof artifact under
 ignored `output/workbench/` and passes it into aggregate proof-readiness
 generation. That artifact records the bounded Gateway-backed Workbench queue

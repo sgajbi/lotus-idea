@@ -173,8 +173,11 @@ Persistence adapter validation:
    idempotency, broker, or source payload identifiers.
 10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
     `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
-    runtime telemetry candidate-snapshot proof contract that aggregate readiness
-    consumes to clear only `runtime_candidate_snapshot_missing`.
+    runtime trust telemetry proof contract that aggregate readiness consumes to
+    clear only repo-owned runtime telemetry blockers:
+    `runtime_candidate_snapshot_missing`,
+    `certified_runtime_trust_telemetry_missing`, and
+    `data_mesh_runtime_telemetry_not_certified`.
 11. `tests/unit/test_workbench_read_path_proof.py` and
     `make workbench-read-path-proof-contract-gate` prove the source-safe
     bounded Workbench queue/detail read-path proof contract that aggregate

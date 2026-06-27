@@ -148,12 +148,14 @@ platform evidence writes an invalid non-proof artifact and keeps the blockers;
 drift in present sibling evidence remains a failing contract condition.
 
 `make runtime-trust-telemetry-proof-contract-gate` validates the separate
-source-safe candidate-snapshot proof contract used by aggregate implementation
-readiness. The generated proof under ignored
+source-safe runtime trust telemetry proof contract used by aggregate
+implementation readiness. The generated proof under ignored
 `output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json` can clear
-only `runtime_candidate_snapshot_missing` in the aggregate proof-readiness
-artifact. It is not platform mesh certification and does not promote
-`IdeaCandidate:v1` from proposed posture.
+only repo-owned runtime telemetry blockers in the aggregate proof-readiness
+artifact: `runtime_candidate_snapshot_missing`,
+`certified_runtime_trust_telemetry_missing`, and
+`data_mesh_runtime_telemetry_not_certified`. It is not platform mesh
+certification and does not promote `IdeaCandidate:v1` from proposed posture.
 
 The Docker image copies `contracts/` into `/app/contracts` so containerized
 diagnostics read the same contract truth as local validation.
@@ -188,7 +190,7 @@ The gate validates:
 8. the runtime telemetry snapshot endpoint and generator still emit
    contract-shaped, source-safe, blocked runtime snapshot evidence.
 9. the runtime telemetry proof contract remains source-safe, deterministic, and
-   limited to clearing the aggregate candidate-snapshot blocker.
+   limited to clearing repo-owned runtime telemetry blockers.
 
 This gate is not mesh certification. It is a pre-certification guardrail so
 future implementation slices cannot accidentally promote proposed contracts or
