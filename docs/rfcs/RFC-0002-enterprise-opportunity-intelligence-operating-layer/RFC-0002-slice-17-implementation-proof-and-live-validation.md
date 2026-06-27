@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, and opportunity archetype scenario readiness available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -266,6 +266,13 @@ Prove the complete supported opportunity journey end to end.
     telemetry, Workbench, client-publication, and supported-feature blockers.
     Model-risk dashboard and alert artifact certification is handled by the
     separate model-risk operations proof gate.
+27. The aggregate readiness diagnostic now includes an
+    `opportunity-archetype-scenarios` capability built from
+    `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
+    It exposes source-safe taxonomy evidence and namespaced
+    `opportunity_archetype_*` blockers for canonical scenario replay gaps while
+    preserving the no-demo, no-client-publication, no-data-mesh-certification,
+    and no-supported-feature-promotion boundaries.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -328,6 +335,11 @@ without relying on chat memory.
     `lotus-idea` caller policy; live provider execution, provider rollout,
     model-risk operations certification, runtime trust telemetry, Workbench
     proof, and supported-feature promotion remain pending.
+12. Opportunity archetype scenario readiness is now explicit in aggregate
+    readiness, but it proves only that the governed taxonomy and scenario
+    blockers are visible to operators. Live source-backed archetype replay,
+    full Workbench product proof, data-mesh certification, and supported-feature
+    promotion remain pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

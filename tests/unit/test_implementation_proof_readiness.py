@@ -253,18 +253,22 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.certification_ready is False
-    assert snapshot.capability_count == 9
+    assert snapshot.capability_count == 10
     assert snapshot.certification_ready_capability_count == 0
-    assert snapshot.blocked_capability_count == 9
+    assert snapshot.blocked_capability_count == 10
     assert snapshot.supported_feature_count == 0
     assert snapshot.supported_features_promoted is False
     assert "outbox_broker_not_configured" in snapshot.overall_blockers
     assert "external_broker_runtime_proof_missing" in snapshot.overall_blockers
     assert "source_ingestion_manifest_not_configured" in snapshot.overall_blockers
+    assert "opportunity_archetype_risk_source_adapter_missing" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers
     assert "no_supported_features_promoted" in snapshot.overall_blockers
     assert snapshot.source_of_truth["supported_features"] == (
         "supported-features/supported-features.json"
+    )
+    assert snapshot.source_of_truth["opportunity_archetypes"] == (
+        "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
     )
 
 
@@ -284,6 +288,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "runtime-trust-telemetry-preview",
         "outbox-delivery",
         "workbench-product-proof",
+        "opportunity-archetype-scenarios",
         "downstream-realization",
         "supported-feature-promotion",
     }
@@ -328,6 +333,22 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         source_ingestion.evidence_refs
     )
     assert "live_core_source_proof_missing" in source_ingestion.blockers
+    archetypes = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "opportunity-archetype-scenarios"
+    )
+    assert (
+        "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
+        in archetypes.evidence_refs
+    )
+    assert "make opportunity-archetype-contract-gate" in archetypes.evidence_refs
+    assert "src/app/application/source_ingestion.py" in archetypes.evidence_refs
+    assert "opportunity_archetype_risk_source_adapter_missing" in archetypes.blockers
+    assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes.blockers
+    assert archetypes.readiness_status == "blocked"
+    assert archetypes.supportability_status == "not_certified"
+    assert archetypes.supported_feature_promoted is False
     downstream = next(
         capability
         for capability in snapshot.capabilities

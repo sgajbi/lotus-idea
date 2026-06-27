@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -22,8 +22,9 @@ It aggregates current evidence and blockers across:
 5. source-safe runtime trust telemetry preview, snapshot endpoint, and snapshot generation,
 6. internal outbox delivery foundation and bounded run-once operator action,
 7. Workbench product realization,
-8. downstream Advise, Manage, Report, Render, and Archive realization,
-9. supported-feature promotion.
+8. opportunity archetype scenario readiness,
+9. downstream Advise, Manage, Report, Render, and Archive realization,
+10. supported-feature promotion.
 
 ## What It Proves
 
@@ -42,9 +43,10 @@ It returns:
    candidate-snapshot proof posture,
 7. outbox delivery readiness and run-once posture,
 8. Workbench realization blockers,
-9. downstream realization blockers and internal submission route evidence,
-10. supported-feature promotion blockers,
-11. source-of-truth implementation paths.
+9. opportunity archetype scenario blockers from the governed contract,
+10. downstream realization blockers and internal submission route evidence,
+11. supported-feature promotion blockers,
+12. source-of-truth implementation paths.
 
 ## What It Does Not Prove
 
@@ -462,6 +464,14 @@ The success response is intentionally aggregate and source-safe:
 | `capabilities[].evidenceRefs` | Source-safe implementation, endpoint, and validated proof artifact references |
 | `capabilities[].blockers` | Source-safe blocker codes for that capability family |
 
+The `opportunity-archetype-scenarios` capability reads
+`contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
+and prefixes its scenario blockers with `opportunity_archetype_` so they do not
+collide with source-ingestion, Workbench, data-mesh, or supported-feature
+blockers from other proof families. It is a taxonomy and scenario-readiness
+view only; it does not clear live replay, client-demo, data-mesh, or
+supported-feature blockers.
+
 ## Example
 
 ```powershell
@@ -503,26 +513,30 @@ Implementation-backed evidence:
    publication proof artifacts, and records validated proof refs in capability
    evidence:
    `make implementation-proof-readiness-check`,
-6. AI model-risk operations contract:
+6. opportunity archetype scenario contract:
+   `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`,
+7. opportunity archetype contract gate:
+   `make opportunity-archetype-contract-gate`,
+8. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
-7. AI model-risk operations contract gate:
+9. AI model-risk operations contract gate:
    `make ai-model-risk-ops-contract-gate`,
-8. AI model-risk operations proof gate:
+10. AI model-risk operations proof gate:
    `make ai-model-risk-operations-proof-contract-gate`,
-9. downstream contract check: `make downstream-realization-contract-gate`,
-10. report-owned planned intake contract:
+11. downstream contract check: `make downstream-realization-contract-gate`,
+12. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
-11. runtime trust telemetry snapshot check:
+13. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
-11. runtime trust telemetry snapshot endpoint:
+14. runtime trust telemetry snapshot endpoint:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
-12. generated runtime telemetry evidence:
+15. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-13. source-ingestion run-once endpoint:
+16. source-ingestion run-once endpoint:
    `POST /api/v1/source-ingestion/run-once`,
-14. source-ingestion run-once runbook:
+17. source-ingestion run-once runbook:
     `docs/operations/source-ingestion-run-once.md`,
-15. source-ingestion live-proof generator:
+18. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
 16. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic and governed archetype/scenario contract available; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; demo claims remain blocked
 
 ## Outcome
 
@@ -35,6 +35,11 @@ capabilities exist.
    journeys. `make opportunity-archetype-contract-gate` protects the contract
    from unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
+6. The aggregate implementation-proof readiness diagnostic now exposes an
+   `opportunity-archetype-scenarios` proof family sourced from that contract.
+   Its blockers are namespaced with `opportunity_archetype_` so scenario replay
+   gaps do not collide with source-ingestion, Workbench, data-mesh, downstream,
+   or supported-feature proof families.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.

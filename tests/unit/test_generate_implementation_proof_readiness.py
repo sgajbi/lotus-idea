@@ -91,9 +91,23 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
         "runtime-trust-telemetry-preview",
         "outbox-delivery",
         "workbench-product-proof",
+        "opportunity-archetype-scenarios",
         "downstream-realization",
         "supported-feature-promotion",
     }
+    archetypes = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "opportunity-archetype-scenarios"
+    )
+    assert (
+        "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
+        in archetypes["evidenceRefs"]
+    )
+    assert "make opportunity-archetype-contract-gate" in archetypes["evidenceRefs"]
+    assert "opportunity_archetype_risk_source_adapter_missing" in archetypes["blockers"]
+    assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes["blockers"]
+    assert archetypes["supportedFeaturePromoted"] is False
     ai_explanation = next(
         capability
         for capability in payload["capabilities"]

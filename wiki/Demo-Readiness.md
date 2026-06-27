@@ -10,7 +10,7 @@ promotion.
 | Demo area | Current truth | Client-facing handling |
 | --- | --- | --- |
 | Opportunity intelligence | Internal candidate, review, feedback, conversion, and proof foundations exist. | Explain the governed operating model and current boundaries. |
-| Opportunity archetypes | A governed archetype/scenario contract identifies high cash / idle liquidity as the first partially implemented journey and keeps other archetypes planned. | Use as taxonomy and source-authority framing only; do not present it as live demo proof or a supported feature. |
+| Opportunity archetypes | A governed archetype/scenario contract identifies high cash / idle liquidity as the first partially implemented journey, keeps other archetypes planned, and is visible as blocked scenario readiness in aggregate proof readiness. | Use as taxonomy and source-authority framing only; do not present it as live replay proof, client-demo proof, or a supported feature. |
 | Supported features | No external supported feature is promoted. | Do not claim production availability or client-ready publication. |
 | Workbench | Bounded read-only proof exists, but full product-surface certification is blocked. | Show only after validation and with explicit bounded-preview language. |
 | Downstream realization | Advise, Manage, and Report route-foundation proof can be consumed; bounded Report/Render/Archive materialization proof can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim suitability, rebalance/execution, client publication, or supported-feature promotion. |
@@ -118,6 +118,11 @@ make implementation-proof-readiness-check
 `GET /api/v1/implementation-proof/readiness` is an internal operator diagnostic.
 It shows which proof families remain blocked; it is not client-demo evidence by
 itself.
+
+The `opportunity-archetype-scenarios` readiness family is sourced from the
+governed archetype contract. It prefixes scenario blockers with
+`opportunity_archetype_` to keep taxonomy/replay gaps distinct from source
+ingestion, Workbench, data-mesh, downstream, and supported-feature proof gaps.
 
 The AI lineage store proof gate validates source-safe persistence evidence for
 AI explanation lineage before aggregate proof readiness consumes it. It does

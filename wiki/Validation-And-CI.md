@@ -178,7 +178,8 @@ Persistence adapter validation:
    Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and
    consumption, AI lineage store proof generation and consumption, and AI
-   workflow-pack registration/runtime execution proof generation and consumption, can be
+   workflow-pack registration/runtime execution proof generation and consumption,
+   plus opportunity archetype scenario readiness from the governed contract, can be
    generated without starting the service and
    without exposing candidate, portfolio, client, prompt, outbox event, raw
    idempotency, broker, or source payload identifiers.
@@ -266,6 +267,12 @@ Persistence adapter validation:
     high cash / idle liquidity as the first partially implemented journey, and
     blocks external demo promotion, client-publication,
     data-mesh-certification, and supported-feature claims.
+    `tests/unit/test_implementation_proof_readiness.py`,
+    `tests/unit/test_generate_implementation_proof_readiness.py`, and
+    `tests/integration/test_implementation_proof_readiness_api.py` also prove
+    that aggregate readiness exposes those scenario blockers as namespaced
+    `opportunity_archetype_*` operator evidence without clearing product
+    support.
 16. `tests/unit/test_downstream_realization_contract_gate.py` and
    `make downstream-realization-contract-gate` prove the governed downstream
    realization contract plan remains planned, source-authority preserving,

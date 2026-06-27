@@ -51,6 +51,10 @@ from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
     mesh_policy_proof_is_valid,
 )
+from app.application.opportunity_archetype_contracts import OPPORTUNITY_ARCHETYPE_CONTRACT_PATH
+from app.application.opportunity_archetype_readiness import (
+    build_opportunity_archetype_scenario_readiness,
+)
 from app.application.outbox_broker_proof import outbox_broker_proof_is_valid
 from app.application.outbox_consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
@@ -174,6 +178,9 @@ def build_implementation_proof_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
     )
+    opportunity_archetype_scenario = build_opportunity_archetype_scenario_readiness(
+        repository_root=repository_root,
+    )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
     capabilities = _build_base_capabilities(
@@ -185,6 +192,7 @@ def build_implementation_proof_readiness_snapshot(
         data_mesh=data_mesh,
         runtime_trust_telemetry=runtime_trust_telemetry,
         outbox_delivery=outbox_delivery,
+        opportunity_archetype_scenario=opportunity_archetype_scenario,
         downstream_realization=downstream_realization,
         supported_feature_count=supported_feature_count,
     )
@@ -231,6 +239,7 @@ def _readiness_snapshot(
             "demo_claims": "docs/demo/demo-claims.md",
             "supported_features": "supported-features/supported-features.json",
             "endpoint_certification": "docs/operations/endpoint-certification-ledger.json",
+            "opportunity_archetypes": str(OPPORTUNITY_ARCHETYPE_CONTRACT_PATH.as_posix()),
         },
         capabilities=capabilities,
     )
@@ -246,6 +255,7 @@ def _build_base_capabilities(
     data_mesh: DataMeshReadinessSnapshot,
     runtime_trust_telemetry: RuntimeTrustTelemetryPreview,
     outbox_delivery: OutboxDeliveryReadinessSnapshot,
+    opportunity_archetype_scenario: ImplementationProofCapabilityReadiness,
     downstream_realization: DownstreamRealizationReadinessSnapshot,
     supported_feature_count: int,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -261,6 +271,7 @@ def _build_base_capabilities(
         _runtime_trust_telemetry_capability(runtime_trust_telemetry),
         _outbox_delivery_capability(outbox_delivery),
         _workbench_product_capability(),
+        opportunity_archetype_scenario,
         _downstream_realization_capability(downstream_realization),
         _supported_feature_capability(supported_feature_count),
     )
