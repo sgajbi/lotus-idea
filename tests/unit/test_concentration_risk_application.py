@@ -31,6 +31,8 @@ from app.ports.risk_sources import (
     RiskOpportunitySourcePort,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
+    RiskVolatilityEvidence,
+    RiskVolatilityEvidenceRequest,
 )
 
 
@@ -111,6 +113,11 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
         if self.evidence is None:
             raise AssertionError("evidence must be configured")
         return self.evidence
+
+    def fetch_volatility_evidence(
+        self, request: RiskVolatilityEvidenceRequest
+    ) -> RiskVolatilityEvidence:
+        raise AssertionError("volatility evidence is not used by concentration tests")
 
 
 def from_risk_command() -> EvaluateConcentrationRiskFromRiskCommand:
