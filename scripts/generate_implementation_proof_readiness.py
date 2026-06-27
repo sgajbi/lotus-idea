@@ -167,6 +167,11 @@ def _opportunity_archetype_proof_artifact_inputs(
             artifact_name="Core benchmark assignment live proof",
             ref_name="Core benchmark assignment live proof artifact",
         ),
+        "low_income_core_cashflow_live": _proof_artifact_input(
+            args.low_income_core_cashflow_live_proof,
+            artifact_name="Low-income Core cashflow live proof",
+            ref_name="Low-income Core cashflow live proof artifact",
+        ),
         "manage_mandate_live": _proof_artifact_input(
             args.manage_mandate_live_proof,
             artifact_name="Manage mandate live proof",

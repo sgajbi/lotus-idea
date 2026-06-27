@@ -12,6 +12,10 @@ from app.application.core_benchmark_assignment_live_proof import (
     CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
     core_benchmark_assignment_live_proof_is_valid,
 )
+from app.application.low_income_core_cashflow_live_proof import (
+    LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
+    low_income_core_cashflow_live_proof_is_valid,
+)
 from app.application.manage_mandate_live_proof import (
     MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
     manage_mandate_live_proof_is_valid,
@@ -50,6 +54,8 @@ def _apply_opportunity_archetype_proofs(
     performance_underperformance_live_proof_ref: str | None,
     core_benchmark_assignment_live_proof: Mapping[str, object] | None,
     core_benchmark_assignment_live_proof_ref: str | None,
+    low_income_core_cashflow_live_proof: Mapping[str, object] | None,
+    low_income_core_cashflow_live_proof_ref: str | None,
     manage_mandate_live_proof: Mapping[str, object] | None,
     manage_mandate_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
@@ -101,6 +107,16 @@ def _apply_opportunity_archetype_proofs(
             _apply_core_benchmark_assignment_live_proof(
                 capability,
                 core_benchmark_assignment_live_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if low_income_core_cashflow_live_proof and low_income_core_cashflow_live_proof_is_valid(
+        low_income_core_cashflow_live_proof
+    ):
+        capabilities = tuple(
+            _apply_low_income_core_cashflow_live_proof(
+                capability,
+                low_income_core_cashflow_live_proof_ref,
             )
             for capability in capabilities
         )
@@ -179,6 +195,18 @@ def _apply_core_benchmark_assignment_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
         proof_ref=core_benchmark_assignment_live_proof_ref,
+    )
+
+
+def _apply_low_income_core_cashflow_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    low_income_core_cashflow_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
+        proof_ref=low_income_core_cashflow_live_proof_ref,
     )
 
 

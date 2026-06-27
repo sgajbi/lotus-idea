@@ -69,6 +69,7 @@ REQUIRED_LINT_TARGETS = (
     "source-ingestion-live-proof-contract-gate",
     "risk-concentration-live-proof-contract-gate",
     "core-benchmark-assignment-live-proof-contract-gate",
+    "low-income-core-cashflow-live-proof-contract-gate",
     "manage-mandate-live-proof-contract-gate",
     "missing-suitability-live-proof-contract-gate",
     "performance-underperformance-live-proof-contract-gate",
@@ -331,10 +332,9 @@ def validate_makefile(makefile: str) -> list[str]:
         "risk-concentration-live-proof-contract-gate": (
             "scripts/risk_concentration_live_proof_contract_gate.py"
         ),
-        "performance-underperformance-live-proof-contract-gate": (
-            "scripts/performance_underperformance_live_proof_contract_gate.py"
-        ),
+        "performance-underperformance-live-proof-contract-gate": "scripts/performance_underperformance_live_proof_contract_gate.py",
         "core-benchmark-assignment-live-proof-contract-gate": "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
+        "low-income-core-cashflow-live-proof-contract-gate": "scripts/low_income_core_cashflow_live_proof_contract_gate.py",
         "risk-drawdown-live-proof-contract-gate": (
             "scripts/risk_drawdown_live_proof_contract_gate.py"
         ),

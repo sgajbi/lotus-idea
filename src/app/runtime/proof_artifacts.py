@@ -21,6 +21,9 @@ from app.application.gateway_workbench_operational_proof import (
 from app.application.gateway_workbench_discovery_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
 )
+from app.application.low_income_core_cashflow_live_proof import (
+    LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -62,6 +65,8 @@ class ConfiguredImplementationProofArtifacts:
     gateway_workbench_operational_proof_ref: str | None
     gateway_workbench_discovery_proof: dict[str, Any] | None
     gateway_workbench_discovery_proof_ref: str | None
+    low_income_core_cashflow_live_proof: dict[str, Any] | None
+    low_income_core_cashflow_live_proof_ref: str | None
 
 
 _REF_ONLY_PROOF_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
@@ -155,6 +160,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "gateway_workbench_discovery_proof",
         "gateway_workbench_discovery_proof_ref",
         "Gateway/Workbench discovery proof",
+    ),
+    (
+        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+        "low_income_core_cashflow_live_proof",
+        "low_income_core_cashflow_live_proof_ref",
+        "low-income Core cashflow live proof",
     ),
 )
 

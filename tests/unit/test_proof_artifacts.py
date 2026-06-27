@@ -19,6 +19,9 @@ from app.application.gateway_workbench_operational_proof import (
 from app.application.gateway_workbench_discovery_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
 )
+from app.application.low_income_core_cashflow_live_proof import (
+    LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -52,6 +55,9 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         tmp_path / "output" / "outbox" / "outbox-platform-mesh-event-publication-proof.json"
     )
     platform_mesh_path = tmp_path / "output" / "data-mesh" / "platform-mesh-onboarding-proof.json"
+    low_income_path = (
+        tmp_path / "output" / "opportunity-archetypes" / "low-income-core-cashflow-live-proof.json"
+    )
     for path in (
         durable_path,
         runtime_path,
@@ -64,6 +70,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         outbox_path,
         outbox_mesh_event_path,
         platform_mesh_path,
+        low_income_path,
     ):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"artifact": path.name}), encoding="utf-8")
@@ -111,6 +118,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     monkeypatch.setenv(
         PLATFORM_MESH_ONBOARDING_PROOF_ENV,
         "output/data-mesh/platform-mesh-onboarding-proof.json",
+    )
+    monkeypatch.setenv(
+        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+        "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json",
     )
 
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
@@ -168,6 +179,12 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     }
     assert artifacts.platform_mesh_onboarding_proof_ref == (
         "output/data-mesh/platform-mesh-onboarding-proof.json"
+    )
+    assert artifacts.low_income_core_cashflow_live_proof == {
+        "artifact": "low-income-core-cashflow-live-proof.json"
+    }
+    assert artifacts.low_income_core_cashflow_live_proof_ref == (
+        "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
     )
 
 

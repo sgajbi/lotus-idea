@@ -175,6 +175,14 @@ REQUIRED_READINESS_WIRING = (
         "pass optional Core benchmark assignment live proof artifact into readiness generation",
     ),
     (
+        "LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF",
+        "support optional Core cashflow live proof artifact wiring",
+    ),
+    (
+        "--low-income-core-cashflow-live-proof",
+        "pass optional Core cashflow live proof artifact into readiness generation",
+    ),
+    (
         "LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF",
         "support optional Risk drawdown live proof artifact wiring",
     ),

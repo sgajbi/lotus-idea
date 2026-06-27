@@ -25,6 +25,9 @@ from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
 )
 from app.application.high_volatility_live_proof import HIGH_VOLATILITY_LIVE_PROOF_ENV
+from app.application.low_income_core_cashflow_live_proof import (
+    LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+)
 from app.application.manage_mandate_live_proof import MANAGE_MANDATE_LIVE_PROOF_ENV
 from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
 from app.application.missing_suitability_live_proof import MISSING_SUITABILITY_LIVE_PROOF_ENV
@@ -163,6 +166,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--core-benchmark-assignment-live-proof",
         CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
         "Optional lotus-core benchmark assignment live source proof artifact path.",
+    ),
+    (
+        "--low-income-core-cashflow-live-proof",
+        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
+        "Optional lotus-core cashflow live source proof artifact path for low-income review.",
     ),
     (
         "--manage-mandate-live-proof",
