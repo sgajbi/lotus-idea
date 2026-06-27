@@ -576,7 +576,7 @@ def test_implementation_proof_readiness_uses_outbox_broker_proof_without_support
 
     assert "outbox_broker_not_configured" not in snapshot.overall_blockers
     assert "external_broker_runtime_proof_missing" not in snapshot.overall_blockers
-    assert "downstream_consumer_contracts_missing" in snapshot.overall_blockers
+    assert "downstream_consumer_runtime_proof_missing" in snapshot.overall_blockers
     assert "platform_mesh_event_publication_proof_missing" in snapshot.overall_blockers
     assert "gateway_workbench_proof_missing" in snapshot.overall_blockers
     assert "no_supported_features_promoted" in snapshot.overall_blockers
@@ -590,7 +590,7 @@ def test_implementation_proof_readiness_uses_outbox_broker_proof_without_support
     )
     assert "outbox_broker_not_configured" not in outbox_delivery.blockers
     assert "external_broker_runtime_proof_missing" not in outbox_delivery.blockers
-    assert "downstream_consumer_contracts_missing" in outbox_delivery.blockers
+    assert "downstream_consumer_runtime_proof_missing" in outbox_delivery.blockers
     assert "platform_mesh_event_publication_proof_missing" in outbox_delivery.blockers
     assert "gateway_workbench_proof_missing" in outbox_delivery.blockers
     assert "supported_feature_promotion_missing" in outbox_delivery.blockers

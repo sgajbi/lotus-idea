@@ -542,7 +542,7 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_broker_pro
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert "outbox_broker_not_configured" not in payload["overallBlockers"]
     assert "external_broker_runtime_proof_missing" not in payload["overallBlockers"]
-    assert "downstream_consumer_contracts_missing" in payload["overallBlockers"]
+    assert "downstream_consumer_runtime_proof_missing" in payload["overallBlockers"]
     assert "platform_mesh_event_publication_proof_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False

@@ -62,6 +62,12 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     assert snapshot.source_of_truth["outbox_event_contract_gate"] == (
         "make outbox-event-contract-gate"
     )
+    assert snapshot.source_of_truth["outbox_consumer_contract"] == (
+        "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json"
+    )
+    assert snapshot.source_of_truth["outbox_consumer_contract_gate"] == (
+        "make outbox-consumer-contract-gate"
+    )
     assert snapshot.supported_feature_promoted is False
 
 
@@ -84,7 +90,7 @@ def test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_confi
     assert snapshot.readiness_status == "blocked"
     assert snapshot.certification_blockers == (
         "external_broker_runtime_proof_missing",
-        "downstream_consumer_contracts_missing",
+        "downstream_consumer_runtime_proof_missing",
         "platform_mesh_event_publication_proof_missing",
         "gateway_workbench_proof_missing",
         "supported_feature_promotion_missing",

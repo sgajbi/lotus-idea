@@ -94,6 +94,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
     }
     assert payload["configurationBlockers"] == ["outbox_broker_not_configured"]
     assert "external_broker_runtime_proof_missing" in payload["certificationBlockers"]
+    assert "downstream_consumer_runtime_proof_missing" in payload["certificationBlockers"]
     assert payload["supportedFeaturePromoted"] is False
     assert "idea_high_cash_001" not in response.text
     assert "eventId" not in response.text
