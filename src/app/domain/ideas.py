@@ -18,6 +18,7 @@ class OpportunityFamily(StrEnum):
     HIGH_VOLATILITY = "high_volatility"
     MISSING_BENCHMARK = "missing_benchmark"
     MISSING_RISK_PROFILE = "missing_risk_profile"
+    MISSING_SUITABILITY_CONTEXT = "missing_suitability_context"
 
 
 class SourceSystem(StrEnum):
@@ -70,6 +71,7 @@ class ReasonCode(StrEnum):
     DRAWDOWN_ATTENTION = "drawdown_attention"
     MISSING_BENCHMARK = "missing_benchmark"
     MISSING_RISK_PROFILE = "missing_risk_profile"
+    SUITABILITY_CONTEXT_MISSING = "suitability_context_missing"
     SOURCE_STALE = "source_stale"
     SOURCE_PARTIAL = "source_partial"
     DUPLICATE_SUPPRESSED = "duplicate_suppressed"

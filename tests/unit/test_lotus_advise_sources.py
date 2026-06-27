@@ -1,0 +1,187 @@
+from __future__ import annotations
+
+from datetime import UTC, date, datetime
+from typing import Any
+
+import httpx
+import pytest
+
+from app.domain import EvidenceFreshness
+from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
+from app.infrastructure.lotus_advise_sources import LotusAdvisePolicyEvaluationSourceAdapter
+from app.ports.advise_sources import (
+    AdvisePolicyEvaluationEvidenceRequest,
+    AdviseSourceEntitlementDenied,
+    AdviseSourceUnavailable,
+)
+
+
+AS_OF_DATE = date(2026, 6, 21)
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+
+def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "evaluation_id": "pev_001",
+        "proposal_id": "pp_001",
+        "proposal_version_id": "ppv_001",
+        "evaluation_status": "PENDING_REVIEW",
+        "approval_dependencies": [
+            {
+                "requirement_id": "approval:structured-note",
+                "requirement_type": "approval",
+                "status": "OPEN",
+                "owner_role": "INVESTMENT_COUNSELLOR",
+                "reason_codes": ["POLICY_REQUIREMENT_OPEN"],
+            }
+        ],
+        "disclosure_requirements": [
+            {
+                "requirement_id": "disclosure:structured-note",
+                "requirement_type": "disclosure",
+                "status": "BLOCKED",
+                "owner_role": "ADVISOR",
+                "reason_codes": ["DISCLOSURE_REQUIRED"],
+            }
+        ],
+        "consent_requirements": [],
+        "conflict_posture": {"status": "PENDING_REVIEW"},
+        "sla_posture": {"status": "WITHIN_SLA", "open_requirement_count": 2},
+        "sign_off_status": "PENDING_REVIEW",
+        "sign_off_blockers": ["DISCLOSURE_REQUIREMENT_OPEN:structured-note"],
+        "maker_checker_required": True,
+        "latest_sign_off_event": None,
+        "client_ready_publication": "BLOCKED",
+        "metadata": {
+            "product_version": "v1",
+            "generated_at": "2026-06-21T10:00:00Z",
+            "as_of_date": "2026-06-21",
+            "content_hash": "sha256:advisory-policy-evaluation-record",
+            "data_quality_status": "quality_passed",
+            "freshness": "current",
+        },
+    }
+    if extra:
+        payload.update(extra)
+    return payload
+
+
+def _adapter(handler: httpx.MockTransport) -> LotusAdvisePolicyEvaluationSourceAdapter:
+    return LotusAdvisePolicyEvaluationSourceAdapter(
+        DownstreamJsonClient(
+            DownstreamClientConfig(base_url="https://advise.example", timeout_seconds=0.5),
+            client=httpx.Client(base_url="https://advise.example", transport=handler),
+        )
+    )
+
+
+def _request(evaluation_id: str = "pev_001") -> AdvisePolicyEvaluationEvidenceRequest:
+    return AdvisePolicyEvaluationEvidenceRequest(
+        evaluation_id=evaluation_id,
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=EVALUATED_AT,
+        correlation_id="corr-advise",
+        trace_id="trace-advise",
+    )
+
+
+def test_lotus_advise_adapter_fetches_declared_policy_evaluation_source_product() -> None:
+    seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, str(request.url)))
+        assert request.headers["X-Correlation-Id"] == "corr-advise"
+        assert request.headers["X-Trace-Id"] == "trace-advise"
+        return httpx.Response(200, json=_payload())
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.evaluation_status == "PENDING_REVIEW"
+    assert evidence.open_requirement_count == 2
+    assert evidence.blocked_requirement_count == 1
+    assert evidence.sign_off_status == "PENDING_REVIEW"
+    assert evidence.sign_off_blocker_count == 1
+    assert evidence.client_ready_publication == "BLOCKED"
+    assert evidence.policy_ref is not None
+    assert evidence.policy_ref.product_id == "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"
+    assert evidence.policy_ref.route == "/advisory/policy-evaluations/pev_001/workflow"
+    assert evidence.policy_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.policy_ref.content_hash == "sha256:advisory-policy-evaluation-record"
+    assert evidence.advise_diagnostic == "advise_policy_requirements_open"
+    assert seen == [
+        (
+            "GET",
+            "https://advise.example/advisory/policy-evaluations/pev_001/workflow",
+        )
+    ]
+
+
+def test_lotus_advise_adapter_url_encodes_evaluation_id() -> None:
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        return httpx.Response(200, json=_payload())
+
+    _adapter(httpx.MockTransport(handler)).fetch_policy_evaluation_evidence(
+        _request("pev /needs encoding")
+    )
+
+    assert seen == [
+        "https://advise.example/advisory/policy-evaluations/pev%20%2Fneeds%20encoding/workflow"
+    ]
+
+
+def test_lotus_advise_adapter_maps_forbidden_source_response_to_entitlement_denied() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(AdviseSourceEntitlementDenied):
+        adapter.fetch_policy_evaluation_evidence(_request())
+
+
+def test_lotus_advise_adapter_maps_server_error_to_source_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        adapter.fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "upstream_unavailable"
+
+
+def test_lotus_advise_adapter_maps_malformed_requirements_to_source_unavailable() -> None:
+    payload = _payload(extra={"approval_dependencies": "not-list"})
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "advise_approval_dependencies_malformed"
+
+
+def test_lotus_advise_adapter_requires_lineage_metadata_for_source_ref() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata.pop("generated_at")
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "advise_generated_at_missing"
+
+
+def test_lotus_advise_adapter_maps_stale_policy_source() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["freshness"] = "stale"
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.policy_ref is not None
+    assert evidence.policy_ref.freshness is EvidenceFreshness.STALE
