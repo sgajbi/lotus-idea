@@ -215,6 +215,10 @@ async def get_implementation_proof_readiness(
             gateway_workbench_operational_proof_ref=(
                 proof_artifacts.gateway_workbench_operational_proof_ref
             ),
+            gateway_workbench_discovery_proof=proof_artifacts.gateway_workbench_discovery_proof,
+            gateway_workbench_discovery_proof_ref=(
+                proof_artifacts.gateway_workbench_discovery_proof_ref
+            ),
         )
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         _emit_implementation_proof_readiness_event(

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -163,6 +163,16 @@ Prove the complete supported opportunity journey end to end.
     outbox-delivery proof families, while preserving Workbench product,
     panel, browser accessibility, canonical demo runtime, data-product
     discovery, client-publication, and supported-feature blockers.
+19. `src/app/application/gateway_workbench_discovery_proof.py`,
+    `scripts/generate_gateway_workbench_discovery_proof.py`, and
+    `make gateway-workbench-discovery-proof-contract-gate` now define and
+    enforce a source-safe Gateway/Workbench discovery proof artifact. The
+    aggregate implementation-readiness generator consumes that artifact to
+    clear only `gateway_workbench_discovery_proof_missing` for data-mesh and
+    runtime trust telemetry proof families, while preserving data-mesh
+    certification, producer product activation, platform mesh certification,
+    Workbench product proof, client-publication, and supported-feature
+    blockers.
 19. `src/app/runtime/proof_artifacts.py` now gives the certified operator API
     the same source-safe artifact-ref path as the aggregate generator for
     source-ingestion live proof, source-ingestion scheduled-worker proof,

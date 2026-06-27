@@ -29,6 +29,9 @@ from app.application.downstream_route_contract_proof import (
 from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
 )
+from app.application.gateway_workbench_discovery_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+)
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -237,6 +240,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="Gateway/Workbench operational proof",
             ref_name="Gateway/Workbench operational proof artifact",
         ),
+        "gateway_workbench_discovery": _proof_artifact_input(
+            args.gateway_workbench_discovery_proof,
+            artifact_name="Gateway/Workbench discovery proof",
+            ref_name="Gateway/Workbench discovery proof artifact",
+        ),
         "outbox_broker": _proof_artifact_input(
             args.outbox_broker_proof,
             artifact_name="outbox broker proof",
@@ -380,6 +388,11 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--gateway-workbench-operational-proof",
             GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
             "Optional bounded Gateway/Workbench operational proof artifact path.",
+        ),
+        (
+            "--gateway-workbench-discovery-proof",
+            GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+            "Optional bounded Gateway/Workbench discovery proof artifact path.",
         ),
         (
             "--outbox-broker-proof",

@@ -190,6 +190,14 @@ outbox-delivery proof families. Full Workbench product proof, panel proof,
 browser accessibility, canonical demo runtime, Gateway/Workbench discovery,
 data-product certification, client publication, and supported-feature
 promotion remain blocked.
+It also generates a source-safe Gateway/Workbench discovery proof artifact
+under ignored `output/workbench/` from platform catalog/onboarding evidence,
+the Workbench read-path proof, and the Gateway/Workbench operational proof
+unless `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF` overrides it. A valid
+artifact clears only `gateway_workbench_discovery_proof_missing` for
+data-mesh certification and runtime trust telemetry. Data-mesh certification,
+producer product activation, platform mesh certification, Workbench product
+proof, client publication, and supported-feature promotion remain blocked.
 It also generates source-safe `lotus-advise` proposal route and `lotus-manage`
 action route proof artifacts under ignored `output/downstream/` from sibling
 checkouts configured by `LOTUS_ADVISE_ROOT` and `LOTUS_MANAGE_ROOT`, then
@@ -1067,11 +1075,13 @@ owned by upstream services.
     `make workbench-read-path-proof-contract-gate`
 35. Gateway/Workbench operational proof contract gate:
     `make gateway-workbench-operational-proof-contract-gate`
-36. run-once source-ingestion worker manifest and output-contract gate:
+36. Gateway/Workbench discovery proof contract gate:
+    `make gateway-workbench-discovery-proof-contract-gate`
+37. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-37. scheduled source-ingestion worker deploy-contract gate:
+38. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-38. source-ingestion live-proof artifact contract gate:
+39. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
 38. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
@@ -1147,6 +1157,7 @@ report-intake route proof contract validation,
 report materialization proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench operational proof contract validation,
+Gateway/Workbench discovery proof contract validation,
 outbox platform mesh event publication proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
@@ -1167,7 +1178,7 @@ deploy-contract validation, no-sensitive-content evidence validation,
 durable repository proof contract validation, runtime trust telemetry proof
 contract validation, report-intake route proof contract validation, report
 materialization proof contract validation, Workbench read-path proof contract
-validation, Gateway/Workbench operational proof contract validation, outbox broker proof contract validation, platform mesh onboarding
+validation, Gateway/Workbench operational proof contract validation, Gateway/Workbench discovery proof contract validation, outbox broker proof contract validation, platform mesh onboarding
 proof contract validation, outbox platform mesh event publication proof
 contract validation, AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,

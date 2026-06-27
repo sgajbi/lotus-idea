@@ -39,6 +39,10 @@ from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED,
     gateway_workbench_operational_proof_is_valid,
 )
+from app.application.gateway_workbench_discovery_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
+    gateway_workbench_discovery_proof_is_valid,
+)
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -132,6 +136,8 @@ def build_implementation_proof_readiness_snapshot(
     workbench_read_path_proof_ref: str | None = None,
     gateway_workbench_operational_proof: Mapping[str, object] | None = None,
     gateway_workbench_operational_proof_ref: str | None = None,
+    gateway_workbench_discovery_proof: Mapping[str, object] | None = None,
+    gateway_workbench_discovery_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -308,6 +314,8 @@ def _apply_available_proofs(
     workbench_read_path_proof_ref: str | None,
     gateway_workbench_operational_proof: Mapping[str, object] | None,
     gateway_workbench_operational_proof_ref: str | None,
+    gateway_workbench_discovery_proof: Mapping[str, object] | None,
+    gateway_workbench_discovery_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,
@@ -354,6 +362,8 @@ def _apply_available_proofs(
         workbench_read_path_proof_ref=workbench_read_path_proof_ref,
         gateway_workbench_operational_proof=gateway_workbench_operational_proof,
         gateway_workbench_operational_proof_ref=gateway_workbench_operational_proof_ref,
+        gateway_workbench_discovery_proof=gateway_workbench_discovery_proof,
+        gateway_workbench_discovery_proof_ref=gateway_workbench_discovery_proof_ref,
     )
 
 
@@ -498,6 +508,8 @@ def _apply_platform_and_surface_proofs(
     workbench_read_path_proof_ref: str | None,
     gateway_workbench_operational_proof: Mapping[str, object] | None,
     gateway_workbench_operational_proof_ref: str | None,
+    gateway_workbench_discovery_proof: Mapping[str, object] | None,
+    gateway_workbench_discovery_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if mesh_policy_proof and mesh_policy_proof_is_valid(mesh_policy_proof):
         capabilities = tuple(
@@ -559,6 +571,16 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
+    if gateway_workbench_discovery_proof and gateway_workbench_discovery_proof_is_valid(
+        gateway_workbench_discovery_proof
+    ):
+        capabilities = tuple(
+            _apply_gateway_workbench_discovery_proof(
+                capability,
+                gateway_workbench_discovery_proof_ref,
+            )
+            for capability in capabilities
+        )
     return capabilities
 
 
@@ -569,24 +591,11 @@ def _apply_downstream_route_contract_proof(
     blockers_cleared: tuple[str, ...],
     proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id != capability_id:
-        return capability
-    blockers_to_clear = set(blockers_cleared)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
-    evidence_refs = capability.evidence_refs
-    if proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
-    return _capability(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
-        supported_feature_promoted=capability.supported_feature_promoted,
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=(capability_id,),
+        blockers_cleared=blockers_cleared,
+        proof_ref=proof_ref,
     )
 
 
@@ -594,24 +603,11 @@ def _apply_report_materialization_proof(
     capability: ImplementationProofCapabilityReadiness,
     report_materialization_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id != "downstream-realization":
-        return capability
-    blockers_to_clear = set(REPORT_MATERIALIZATION_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
-    evidence_refs = capability.evidence_refs
-    if report_materialization_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_materialization_proof_ref)))
-    return _capability(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
-        supported_feature_promoted=capability.supported_feature_promoted,
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("downstream-realization",),
+        blockers_cleared=REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+        proof_ref=report_materialization_proof_ref,
     )
 
 
@@ -619,14 +615,29 @@ def _apply_mesh_policy_proof(
     capability: ImplementationProofCapabilityReadiness,
     mesh_policy_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id != "data-mesh-certification":
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("data-mesh-certification",),
+        blockers_cleared=MESH_POLICY_BLOCKERS_CLEARED,
+        proof_ref=mesh_policy_proof_ref,
+    )
+
+
+def _apply_blocker_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    *,
+    capability_ids: tuple[str, ...] | None = None,
+    blockers_cleared: tuple[str, ...],
+    proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability_ids is not None and capability.capability_id not in capability_ids:
         return capability
-    blockers_to_clear = set(MESH_POLICY_BLOCKERS_CLEARED)
+    blockers_to_clear = set(blockers_cleared)
     if not blockers_to_clear.intersection(capability.blockers):
         return capability
     evidence_refs = capability.evidence_refs
-    if mesh_policy_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, mesh_policy_proof_ref)))
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
     return _capability(
         capability.capability_id,
         capability.name,
@@ -694,22 +705,10 @@ def _apply_runtime_trust_telemetry_proof(
     capability: ImplementationProofCapabilityReadiness,
     runtime_trust_telemetry_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    blockers_to_clear = set(RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
-    evidence_refs = capability.evidence_refs
-    if runtime_trust_telemetry_proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, runtime_trust_telemetry_proof_ref)))
-    return _capability(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
-        supported_feature_promoted=capability.supported_feature_promoted,
+    return _apply_blocker_proof(
+        capability,
+        blockers_cleared=RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
+        proof_ref=runtime_trust_telemetry_proof_ref,
     )
 
 
@@ -741,26 +740,23 @@ def _apply_gateway_workbench_operational_proof(
     capability: ImplementationProofCapabilityReadiness,
     gateway_workbench_operational_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id not in {"source-ingestion", "outbox-delivery"}:
-        return capability
-    blockers_to_clear = set(GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
-    evidence_refs = capability.evidence_refs
-    if gateway_workbench_operational_proof_ref:
-        evidence_refs = tuple(
-            dict.fromkeys((*evidence_refs, gateway_workbench_operational_proof_ref))
-        )
-    return _capability(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
-        supported_feature_promoted=capability.supported_feature_promoted,
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("source-ingestion", "outbox-delivery"),
+        blockers_cleared=GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED,
+        proof_ref=gateway_workbench_operational_proof_ref,
+    )
+
+
+def _apply_gateway_workbench_discovery_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    gateway_workbench_discovery_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("data-mesh-certification", "runtime-trust-telemetry-preview"),
+        blockers_cleared=GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
+        proof_ref=gateway_workbench_discovery_proof_ref,
     )
 
 

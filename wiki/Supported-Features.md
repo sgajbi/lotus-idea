@@ -72,8 +72,9 @@ advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 downstream realization, and supported-feature promotion. It consumes a
 source-safe bounded live source-ingestion proof artifact, mesh policy proof
-artifact, bounded Workbench read-path proof artifact, and bounded
-Gateway/Workbench operational proof artifact, but it does not
+artifact, bounded Workbench read-path proof artifact, bounded
+Gateway/Workbench operational proof artifact, and bounded Gateway/Workbench
+discovery proof artifact, but it does not
 provide full live implementation proof, external broker publication, downstream
 delivery, full Gateway/Workbench live proof, data-product certification, or
 supported-feature promotion. These are not externally

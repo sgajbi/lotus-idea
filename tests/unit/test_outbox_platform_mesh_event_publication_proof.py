@@ -200,6 +200,133 @@ def test_outbox_platform_mesh_event_publication_rejects_non_object_payload(
     assert proof_module._load_json_object(contract_path) is None
 
 
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("repository", "lotus-core"),
+        ("sourceAuthority", "lotus-platform"),
+        ("platformMeshEventContractAvailable", False),
+        ("externalBrokerPublicationSupported", True),
+        ("downstreamConsumersCertified", True),
+        ("gatewayWorkbenchProofPresent", True),
+        ("supportedFeaturePromoted", True),
+        ("payloadSafetyPolicy", []),
+        ("payloadSafetyPolicy", {"forbiddenPayloadKeys": "portfolio_id"}),
+        ("payloadSafetyPolicy", {"forbiddenPayloadKeys": ["portfolio_id"]}),
+    ],
+)
+def test_outbox_platform_mesh_event_publication_rejects_source_safety_drift(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    event_contract = _valid_event_contract_payload()
+    event_contract[field_name] = bad_value
+
+    assert proof_module._event_contract_is_source_safe(event_contract) is False
+
+
+@pytest.mark.parametrize(
+    "event_families",
+    [
+        None,
+        "idea.candidate.persisted.v1",
+        [
+            {
+                "eventType": "unknown",
+                "aggregateType": "idea_candidate",
+                "description": "valid enough",
+            }
+        ],
+        [
+            {
+                "eventType": REQUIRED_OUTBOX_EVENT_TYPES[0],
+                "aggregateType": "wrong_aggregate",
+                "description": "valid description text for proof",
+            }
+        ],
+        [
+            {
+                "eventType": REQUIRED_OUTBOX_EVENT_TYPES[0],
+                "aggregateType": "idea_candidate",
+                "description": "too short",
+            }
+        ],
+    ],
+)
+def test_outbox_platform_mesh_event_publication_rejects_event_family_drift(
+    event_families: object,
+) -> None:
+    event_contract = _valid_event_contract_payload()
+    event_contract["eventFamilies"] = event_families
+
+    assert proof_module._event_family_coverage_present(event_contract) is False
+
+
+@pytest.mark.parametrize(
+    "case_name",
+    [
+        "missing_consumer_contract",
+        "missing_event_contract",
+        "declared_event_mismatch",
+        "consumers_not_sequence",
+        "consumer_not_mapping",
+        "certification_status_wrong",
+        "consumed_types_not_sequence",
+    ],
+)
+def test_outbox_platform_mesh_event_publication_rejects_consumer_contract_drift(
+    case_name: str,
+) -> None:
+    consumer_contract: Mapping[str, Any] | None
+    event_contract: Mapping[str, Any] | None
+    match case_name:
+        case "missing_consumer_contract":
+            consumer_contract = None
+            event_contract = _valid_event_contract_payload()
+        case "missing_event_contract":
+            consumer_contract = _valid_consumer_contract_payload()
+            event_contract = None
+        case "declared_event_mismatch":
+            consumer_contract = _valid_consumer_contract_payload()
+            event_contract = {"eventFamilies": []}
+        case "consumers_not_sequence":
+            consumer_contract = {"declaredConsumers": "lotus-report"}
+            event_contract = _valid_event_contract_payload()
+        case "consumer_not_mapping":
+            consumer_contract = {"declaredConsumers": ["lotus-report"]}
+            event_contract = _valid_event_contract_payload()
+        case "certification_status_wrong":
+            consumer_contract = {
+                "declaredConsumers": [
+                    {
+                        "certificationStatus": "certified",
+                        "consumedEventTypes": [REQUIRED_OUTBOX_EVENT_TYPES[0]],
+                    }
+                ]
+            }
+            event_contract = _valid_event_contract_payload()
+        case "consumed_types_not_sequence":
+            consumer_contract = {
+                "declaredConsumers": [
+                    {
+                        "certificationStatus": "contract_declared_not_runtime_certified",
+                        "consumedEventTypes": "idea.candidate.persisted.v1",
+                    }
+                ]
+            }
+            event_contract = _valid_event_contract_payload()
+        case _:
+            raise AssertionError(f"Unhandled consumer contract case: {case_name}")
+
+    assert (
+        proof_module._consumer_contract_links_declared_events(
+            consumer_contract=consumer_contract,
+            event_contract=event_contract,
+        )
+        is False
+    )
+
+
 def test_outbox_platform_mesh_event_publication_rejects_consumer_event_drift() -> None:
     event_contract = _valid_event_contract_payload()
     consumer_contract = _valid_consumer_contract_payload()
@@ -214,6 +341,31 @@ def test_outbox_platform_mesh_event_publication_rejects_consumer_event_drift() -
     )
 
 
+@pytest.mark.parametrize(
+    "source_manifest",
+    [
+        None,
+        {"repositories": "lotus-idea"},
+        {"repositories": [{"repository": "lotus-core"}]},
+        {
+            "repositories": [
+                {
+                    "repository": "lotus-idea",
+                    "source_mode": "platform_mirror",
+                    "catalog_inclusion": "included",
+                    "repo_native_status": "implemented",
+                    "repo_native_declaration_path": "contracts/domain-data-products",
+                }
+            ]
+        },
+    ],
+)
+def test_outbox_platform_mesh_event_publication_rejects_source_manifest_drift(
+    source_manifest: Mapping[str, Any] | None,
+) -> None:
+    assert proof_module._platform_source_manifest_includes_lotus_idea(source_manifest) is False
+
+
 def test_outbox_platform_mesh_event_publication_rejects_platform_catalog_drift() -> None:
     catalog = {
         "products": [
@@ -226,6 +378,44 @@ def test_outbox_platform_mesh_event_publication_rejects_platform_catalog_drift()
     }
 
     assert proof_module._platform_catalog_maps_idea_products(catalog) is False
+
+
+@pytest.mark.parametrize(
+    "catalog",
+    [
+        None,
+        {"products": "lotus-idea"},
+        {"products": [{"product_id": "unknown"}]},
+        {
+            "products": [
+                {
+                    "product_id": product_id,
+                    "producer_repository": "lotus-core",
+                    "lifecycle_status": "proposed",
+                }
+                for product_id in REQUIRED_PLATFORM_PRODUCT_IDS
+            ]
+        },
+        {
+            "products": [
+                {
+                    "product_id": product_id,
+                    "producer_repository": "lotus-idea",
+                    "lifecycle_status": "active",
+                }
+                for product_id in REQUIRED_PLATFORM_PRODUCT_IDS
+            ]
+        },
+    ],
+)
+def test_outbox_platform_mesh_event_publication_rejects_catalog_shape_drift(
+    catalog: Mapping[str, Any] | None,
+) -> None:
+    assert proof_module._platform_catalog_maps_idea_products(catalog) is False
+
+
+def test_outbox_platform_mesh_event_publication_rejects_invalid_timestamp_text() -> None:
+    assert proof_module._is_timezone_aware_datetime_text("not-a-date") is False
 
 
 def _valid_outbox_platform_mesh_event_publication_proof(
