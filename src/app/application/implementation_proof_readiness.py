@@ -725,6 +725,8 @@ def _outbox_delivery_capability(
             "src/app/application/outbox_delivery_readiness.py",
             "src/app/ports/outbox_publisher.py",
             "src/app/infrastructure/outbox_publisher.py",
+            "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
+            "make outbox-event-contract-gate",
             "make outbox-broker-proof-contract-gate",
             "GET /api/v1/outbox-delivery/readiness",
             "POST /api/v1/outbox-delivery/run-once",
