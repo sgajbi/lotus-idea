@@ -54,6 +54,7 @@ REQUIRED_HIGH_CASH_EVIDENCE = {
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
+FOUNDATION_ARCHETYPES = {"concentration-risk-review"}
 
 
 def validate_opportunity_archetype_contract(
@@ -188,6 +189,10 @@ def _validate_archetypes(
 
     for archetype_id, archetype in archetypes.items():
         if archetype_id == "high-cash-idle-liquidity":
+            continue
+        if archetype_id in FOUNDATION_ARCHETYPES:
+            if archetype.implementation_status != "partially_implemented":
+                errors.append(f"{archetype_id}: foundation archetype must be partially_implemented")
             continue
         if archetype.implementation_status not in PLANNED_ARCHETYPE_STATUSES:
             errors.append(f"{archetype_id}: non-initial archetypes must remain planned")

@@ -230,6 +230,31 @@
       "failure_posture": "degrade_to_partial"
     },
     {
+      "product_name": "ConcentrationRiskReport",
+      "producer_repository": "lotus-risk",
+      "required_product_version": "v1",
+      "required_trust_metadata": [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "lineage_version",
+        "request_fingerprint",
+        "source_services",
+        "correlation_id"
+      ],
+      "migration_posture": {
+        "status": "current"
+      },
+      "consumption_mode": "api_read",
+      "business_purpose": "Use source-owned concentration risk evidence as an opportunity input without recalculating concentration, issuer grouping, HHI, or risk methodology locally.",
+      "validation_lanes": [
+        "feature",
+        "pr-merge",
+        "main-releasability"
+      ],
+      "failure_posture": "degrade_to_partial"
+    },
+    {
       "product_name": "MandateRiskHealthContext",
       "producer_repository": "lotus-risk",
       "required_product_version": "v1",

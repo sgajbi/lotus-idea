@@ -441,7 +441,7 @@ eligibility, client-ready publication, order execution, or client contact.
 | Opportunity family | Source authority | Initial business meaning | First support posture |
 | --- | --- | --- | --- |
 | High cash or idle liquidity | `lotus-core`; optional `lotus-manage` and `lotus-advise` context | Cash balance appears materially above mandate, model, or client objective context. | Planned |
-| Concentration review | `lotus-risk`; `lotus-core` issuer/holding refs | Portfolio has concentration, issuer, sector, country, or product exposure requiring review. | Planned |
+| Concentration review | `lotus-risk`; `lotus-core` issuer/holding refs | Portfolio has concentration, issuer, sector, country, or product exposure requiring review. | Partially implemented - deterministic policy and fail-closed Lotus Risk concentration source-adapter foundation only; live proof, upstream consumer approval, data-mesh certification, Workbench proof, and supported promotion remain blocked |
 | Benchmark underperformance | `lotus-performance`; benchmark identity from `lotus-core` | Portfolio or sleeve underperforms relevant benchmark or target over a governed period. | Planned |
 | Allocation drift | `lotus-manage`; source holdings from `lotus-core` | Allocation deviates from model, mandate, or target band. | Planned |
 | Bond maturity or reinvestment | `lotus-core`; optional `lotus-manage` context | Fixed-income maturity creates reinvestment or liquidity review need. | Planned |

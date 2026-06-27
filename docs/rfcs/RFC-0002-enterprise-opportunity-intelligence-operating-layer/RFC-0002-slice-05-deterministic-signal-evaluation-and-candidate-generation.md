@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -103,14 +103,40 @@ Additional implemented source-adapter foundation:
     sensitive-field exclusions so future changes cannot replace deployment
     proof with route-existence or manifest-only claims.
 
+Additional implemented concentration-risk foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `ConcentrationRiskSignalPolicy`, `ConcentrationRiskSignalInput`, and
+   `evaluate_concentration_risk_signal` for source-owned concentration
+   attention candidates.
+2. The evaluator consumes only Lotus Risk-owned concentration weights,
+   issuer-coverage status, freshness, entitlement posture, and source refs. It
+   does not recalculate HHI, issuer grouping, position weights, risk
+   supportability, or any `lotus-risk` methodology.
+3. `src/app/ports/risk_sources.py`,
+   `src/app/application/concentration_risk_signal.py`, and
+   `src/app/infrastructure/lotus_risk_sources.py` add the source port,
+   application wrapper, and fail-closed HTTP adapter over
+   `POST /analytics/risk/concentration`.
+4. The adapter preserves correlation and trace headers, requires source
+   lineage metadata, maps 401/403 to entitlement denial, and fails closed when
+   generated-at, as-of-date, request fingerprint, concentration blocks, or
+   parseable weights are missing.
+5. `tests/unit/test_concentration_risk_signal_evaluation.py`,
+   `tests/unit/test_concentration_risk_application.py`, and
+   `tests/unit/test_lotus_risk_sources.py` cover positive, below-materiality,
+   stale, partial-coverage, missing-source, duplicate, entitlement-denied,
+   source-unavailable, malformed-measure, trace-header, and persistence cases.
+
 Not implemented yet:
 
-1. source-worker certification beyond bounded live Core source-ingestion proof,
+1. live Risk concentration source proof and upstream Risk consumer approval,
+2. source-worker certification beyond bounded live Core source-ingestion proof,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
 4. Gateway/Workbench proof,
 5. supported-feature promotion,
-6. data-product certification.
+7. data-product certification.
 
 ## Golden Scenarios
 

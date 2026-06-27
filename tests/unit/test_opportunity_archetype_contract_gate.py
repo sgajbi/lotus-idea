@@ -47,6 +47,26 @@ def test_opportunity_archetype_contract_preserves_not_certified_boundaries() -> 
     )
 
 
+def test_opportunity_archetype_contract_records_concentration_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    concentration = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "concentration-risk-review"
+    )
+
+    assert concentration.implementation_status == "partially_implemented"
+    assert concentration.first_supported_journey is False
+    assert "lotus-risk:ConcentrationRiskReport:v1" in concentration.source_products
+    assert "live_risk_source_proof_missing" in concentration.blockers
+    assert "risk_source_consumer_approval_missing" in concentration.blockers
+    assert concentration.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert concentration.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()
