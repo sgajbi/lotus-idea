@@ -221,6 +221,17 @@ valid artifact clears only `platform_source_manifest_inclusion_missing` and
 invalid non-proof artifact and keeps the corresponding blockers. Mesh
 certification, active producer products, SLO/access/evidence certification,
 Gateway/Workbench discovery, and supported-feature blockers remain.
+It also generates a source-safe outbox platform mesh event publication proof
+artifact under ignored `output/outbox/` from repo-owned outbox event/consumer
+contracts and the sibling `lotus-platform` checkout configured by
+`LOTUS_PLATFORM_ROOT`, then passes the artifact into aggregate proof-readiness
+generation unless `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`
+overrides it. A valid artifact clears only
+`platform_mesh_event_publication_proof_missing`; missing sibling evidence
+writes an invalid non-proof artifact and keeps the blocker. External broker
+publication, downstream delivery, Gateway/Workbench proof, client-ready
+publication, supported-feature promotion, and full data-mesh certification
+remain blocked.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -315,8 +326,8 @@ adds a source-safe HTTP broker-publisher adapter foundation that emits bounded
 Lotus event envelopes with trace headers and product-safe failure reasons. It
 now has a source-safe outbox broker proof artifact for aggregate RFC
 implementation-readiness evidence, but is not wired as certified external
-broker publication until platform mesh event publication proof and downstream
-consumer runtime proof exist.
+broker publication until certified external publication and downstream
+delivery evidence exist beyond the bounded outbox proof artifacts.
 `src/app/application/outbox_delivery_readiness.py`
 and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
 operator diagnostic over aggregate outbox status counts, delivery-ready backlog,
@@ -529,9 +540,10 @@ telemetry proof, Advise proposal route proof, Manage action route proof,
 Report intake route proof, Workbench read-path proof, and AI lineage store
 proof paths for deterministic CI evidence without requiring ambient process
 environment mutation. The Makefile generates the default Advise/Manage/Report
-route proofs under ignored `output/downstream/` and keeps CI stable when
-sibling evidence is absent by preserving the downstream blockers instead of
-failing the aggregate proof snapshot. The
+route proofs under ignored `output/downstream/`, default outbox platform mesh
+event publication proof under ignored `output/outbox/`, and keeps CI stable
+when sibling evidence is absent by preserving the corresponding blockers
+instead of failing the aggregate proof snapshot. The
 source-ingestion capability evidence includes validated source-ingestion
 live-proof and scheduled-worker deploy-proof artifact refs when the
 corresponding blockers are cleared.
@@ -578,6 +590,7 @@ paths through
 `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, and
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, and
 `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, and
+`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`, and
 `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`. The repo-native Makefile
@@ -585,7 +598,9 @@ default generates `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` from
 `LOTUS_ADVISE_ROOT`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT` from
 `LOTUS_MANAGE_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` from
 `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` from
-`LOTUS_REPORT_ROOT`, and
+`LOTUS_REPORT_ROOT`,
+`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT` from
+`LOTUS_PLATFORM_ROOT`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT` from `LOTUS_AI_ROOT`,
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` from `LOTUS_AI_ROOT`,
 then consumes those artifacts when no override is set, clearing only the
@@ -1049,11 +1064,13 @@ owned by upstream services.
     `make source-ingestion-live-proof-contract-gate`
 38. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-38. AI workflow-pack registration proof contract gate:
+39. outbox platform mesh event publication proof contract gate:
+    `make outbox-platform-mesh-event-publication-proof-contract-gate`
+40. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-39. AI workflow-pack runtime execution proof contract gate:
+41. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-40. implementation proof readiness generator:
+42. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
@@ -1066,6 +1083,8 @@ owned by upstream services.
     `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
     `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT`,
     `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, `LOTUS_PLATFORM_ROOT`,
+    `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT`,
+    `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
     `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`,
@@ -1116,6 +1135,7 @@ runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
 report materialization proof contract validation,
 Workbench read-path proof contract validation,
+outbox platform mesh event publication proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 implementation-proof readiness artifact generation,
@@ -1136,8 +1156,9 @@ durable repository proof contract validation, runtime trust telemetry proof
 contract validation, report-intake route proof contract validation, report
 materialization proof contract validation, Workbench read-path proof contract
 validation, outbox broker proof contract validation, platform mesh onboarding
-proof contract validation, AI lineage store proof
-contract validation, AI workflow-pack registration proof contract validation,
+proof contract validation, outbox platform mesh event publication proof
+contract validation, AI lineage store proof contract validation,
+AI workflow-pack registration proof contract validation,
 source-observability contract validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded

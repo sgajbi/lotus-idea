@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, mesh policy, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, mesh policy, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, Gateway/Workbench proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -76,8 +76,8 @@ validated through the owning repositories and platform gates:
 2. certified long-running scheduled worker runtime proof beyond the current
    deploy-contract artifact,
 3. platform mesh certification, active producer products, and Gateway/Workbench discovery,
-4. bounded downstream consumer runtime proof over the declared consumer contracts,
-5. platform mesh event publication proof and production event-publication evidence,
+4. certified downstream delivery evidence beyond the bounded consumer-runtime proof artifact,
+5. certified external broker publication and production event-publication evidence beyond the bounded platform mesh event publication proof artifact,
 6. `lotus-ai` live-provider rollout and runtime trust certification,
 7. Workbench panel and browser proof,
 8. downstream Advise and Manage realization authority,
@@ -146,6 +146,8 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT` | Selects the default generated outbox consumer runtime proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-consumer-runtime-proof.json`. |
 | `LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF` | Overrides the default generated outbox consumer runtime proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT` | Selects the default generated outbox platform mesh event publication proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/outbox/outbox-platform-mesh-event-publication-proof.json`. |
+| `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` | Overrides the default generated outbox platform mesh event publication proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT` | Selects the default generated AI lineage store proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/ai/ai-lineage-store-proof.json`. |
 | `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF` | Overrides the default generated AI lineage store proof artifact passed into aggregate readiness. |
 | `LOTUS_AI_ROOT` | Selects the sibling `lotus-ai` checkout used to generate default workflow-pack registration and runtime execution proof artifacts. Defaults to `../lotus-ai`. |
@@ -251,6 +253,24 @@ type coverage, and source-authority boundaries remain runtime-checkable and
 source-safe. It does not certify external broker publication, platform mesh
 event publication, Gateway/Workbench behavior, downstream delivery,
 client-ready publication, or supported-feature promotion.
+
+Outbox platform mesh event publication proof is captured by
+`scripts/generate_outbox_platform_mesh_event_publication_proof.py`. The
+repo-native `make implementation-proof-readiness-check` target now generates
+the default artifact from repo-owned outbox event/consumer contracts and
+sibling `lotus-platform` source-manifest/catalog evidence under
+`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT`, then passes
+it into aggregate readiness when
+`LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF` is not set. A valid
+artifact clears only `platform_mesh_event_publication_proof_missing` inside
+aggregate implementation-proof readiness. It proves the source-safe event
+contract, declared consumer contract coverage, platform source-manifest
+inclusion, and generated catalog mapping for proposed `lotus-idea` products.
+It does not certify external broker publication, downstream delivery,
+Gateway/Workbench behavior, client-ready publication, or supported-feature
+promotion. Missing sibling evidence writes an invalid non-proof artifact and
+keeps the blocker so CI remains stable without treating absence as proof;
+drift in present sibling evidence still exits non-zero.
 
 Advise proposal route proof and Manage action route proof are captured by
 `scripts/generate_advise_proposal_route_proof.py` and
@@ -451,8 +471,10 @@ Implementation-backed evidence:
 5. repo-native check that generates and consumes the scheduled-worker
    deploy-proof, durable repository proof, runtime telemetry proof, Workbench
    read-path proof, Advise proposal route proof, Manage action route proof,
-   Report intake route proof, Report materialization proof, and outbox broker
-   proof artifacts, and records validated proof refs in capability evidence:
+   Report intake route proof, Report materialization proof, outbox broker
+   proof, outbox consumer runtime proof, and outbox platform mesh event
+   publication proof artifacts, and records validated proof refs in capability
+   evidence:
    `make implementation-proof-readiness-check`,
 6. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
@@ -507,64 +529,70 @@ Implementation-backed evidence:
     `tests/unit/test_outbox_consumer_runtime_proof.py`,
 31. outbox broker proof contract gate:
     `make outbox-broker-proof-contract-gate`,
-32. Advise proposal route proof generator:
+32. outbox platform mesh event publication proof generator:
+    `scripts/generate_outbox_platform_mesh_event_publication_proof.py`,
+33. outbox platform mesh event publication proof contract gate:
+    `make outbox-platform-mesh-event-publication-proof-contract-gate`,
+34. outbox platform mesh event publication proof tests:
+    `tests/unit/test_outbox_platform_mesh_event_publication_proof.py`,
+35. Advise proposal route proof generator:
     `scripts/generate_advise_proposal_route_proof.py`,
-33. Manage action route proof generator:
+36. Manage action route proof generator:
     `scripts/generate_manage_action_route_proof.py`,
-34. downstream route proof contract gate:
+37. downstream route proof contract gate:
     `make downstream-route-contract-proof-gate`,
-35. downstream route proof tests:
+38. downstream route proof tests:
     `tests/unit/test_downstream_route_contract_proof.py`,
-36. report intake route proof generator:
+39. report intake route proof generator:
     `scripts/generate_report_intake_route_proof.py`,
-37. report intake route proof contract gate:
+40. report intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`,
-38. report intake route proof tests:
+41. report intake route proof tests:
     `tests/unit/test_report_intake_route_proof.py`,
-39. report materialization proof generator:
+42. report materialization proof generator:
     `scripts/generate_report_materialization_proof.py`,
-40. report materialization proof contract gate:
+43. report materialization proof contract gate:
     `make report-materialization-proof-contract-gate`,
-41. report materialization proof tests:
+44. report materialization proof tests:
     `tests/unit/test_report_materialization_proof.py`,
-42. outbox broker proof tests:
+45. outbox broker proof tests:
     `tests/unit/test_outbox_broker_proof.py`,
-43. platform mesh onboarding proof generator:
+46. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
-44. platform mesh onboarding proof contract gate:
+47. platform mesh onboarding proof contract gate:
     `make platform-mesh-onboarding-proof-contract-gate`,
-45. platform mesh onboarding proof tests:
+48. platform mesh onboarding proof tests:
     `tests/unit/test_platform_mesh_onboarding_proof.py`,
-46. Workbench read-path proof tests:
+49. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-47. runtime trust telemetry proof tests:
+50. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-48. outbox delivery run-once endpoint:
+51. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-49. operation event: `implementation_proof_readiness_read`,
-50. endpoint ledger:
+52. operation event: `implementation_proof_readiness_read`,
+53. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-51. runtime artifact loader tests:
+54. runtime artifact loader tests:
     `tests/unit/test_proof_artifacts.py`,
-52. unit tests:
+55. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-53. durable repository proof tests:
+56. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-54. generator tests:
+57. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-55. AI workflow-pack registration proof generator:
+58. AI workflow-pack registration proof generator:
     `scripts/generate_ai_workflow_pack_registration_proof.py`,
-56. AI workflow-pack registration proof contract gate:
+59. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`,
-57. AI workflow-pack registration proof tests:
+60. AI workflow-pack registration proof tests:
     `tests/unit/test_ai_workflow_pack_registration_proof.py`,
-58. AI workflow-pack runtime execution proof generator:
+61. AI workflow-pack runtime execution proof generator:
     `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`,
-59. AI workflow-pack runtime execution proof contract gate:
+62. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`,
-60. AI workflow-pack runtime execution proof tests:
+63. AI workflow-pack runtime execution proof tests:
     `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
-61. integration tests:
+64. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations
@@ -591,6 +619,7 @@ $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT = "output/downstream/report-intake-route-proof.json"
 $env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-materialization-proof.json"
 $env:LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT = "output/outbox/outbox-consumer-runtime-proof.json"
+$env:LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_OUTPUT = "output/outbox/outbox-platform-mesh-event-publication-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
 
@@ -599,6 +628,7 @@ make runtime-trust-telemetry-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
 make outbox-broker-proof-contract-gate
 make outbox-consumer-runtime-proof-contract-gate
+make outbox-platform-mesh-event-publication-proof-contract-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate
 make report-materialization-proof-contract-gate

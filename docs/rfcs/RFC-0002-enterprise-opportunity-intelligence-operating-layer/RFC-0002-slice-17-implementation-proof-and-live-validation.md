@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -62,7 +62,16 @@ Prove the complete supported opportunity journey end to end.
    `downstream_consumer_runtime_proof_missing`; platform mesh event,
    Gateway/Workbench, downstream delivery, and supported-feature blockers
    remain.
-10. `make downstream-realization-contract-gate` now validates the planned
+10. `scripts/generate_outbox_platform_mesh_event_publication_proof.py` and
+    `make outbox-platform-mesh-event-publication-proof-contract-gate` now
+    generate and validate the bounded outbox platform mesh event publication
+    proof artifact consumed by aggregate implementation-proof readiness. A
+    valid artifact clears only `platform_mesh_event_publication_proof_missing`
+    after repo-owned outbox event and consumer contracts plus sibling platform
+    source-manifest/catalog onboarding evidence validate. External broker
+    publication, downstream delivery, Gateway/Workbench, client-ready
+    publication, and supported-feature blockers remain.
+11. `make downstream-realization-contract-gate` now validates the planned
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
    rewritten as route-existence or downstream-execution claims.
@@ -325,10 +334,10 @@ CI-enforced"; it does not close long-running scheduler operations, live Core
 source certification, platform mesh certification, Gateway/Workbench,
 downstream, or supported-feature proof.
 The outbox-delivery readiness diagnostic, run-once operator action, and bounded
-outbox broker and downstream consumer runtime proof artifacts do the same for
-broker and declared-consumer posture; they do not close the external
-publication, platform mesh event publication proof, Gateway/Workbench, or
-downstream delivery gaps.
+outbox broker, downstream consumer runtime, and platform mesh event publication
+proof artifacts do the same for broker and declared-consumer posture; they do
+not close the certified external publication, Gateway/Workbench, or downstream
+delivery gaps.
 The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench

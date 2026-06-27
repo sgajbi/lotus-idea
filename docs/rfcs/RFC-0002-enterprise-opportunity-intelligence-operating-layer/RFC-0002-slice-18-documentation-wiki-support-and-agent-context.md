@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded downstream route proof, bounded outbox broker proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -158,6 +158,13 @@ durable operating-context enforcement:
     downstream-consumer, mesh-event, Gateway/Workbench, and supported-feature
     boundaries.
 22. README, repository context,
+    `docs/operations/implementation-proof-readiness.md`, RFC evidence, demo
+    claims, and wiki source now describe the bounded outbox platform mesh event
+    publication proof artifact, its default generated output, its aggregate
+    blocker-clearance scope, and its remaining external broker publication,
+    downstream delivery, Gateway/Workbench, client-ready publication, and
+    supported-feature boundaries.
+23. README, repository context,
     `docs/operations/implementation-proof-readiness.md`,
     `docs/operations/mesh-readiness.md`, service runbooks, quality gate docs,
     RFC evidence, and wiki source now describe default platform mesh onboarding
@@ -165,7 +172,7 @@ durable operating-context enforcement:
     that missing sibling evidence is a non-proof artifact and no platform mesh
     certification, active product declaration, Gateway/Workbench discovery, or
     supported-feature promotion is implied.
-23. README, repository context,
+24. README, repository context,
     `docs/operations/implementation-proof-readiness.md`,
     `docs/operations/mesh-readiness.md`, quality gate docs, RFC evidence, and
     wiki source now describe default mesh policy proof generation and aggregate
@@ -173,7 +180,7 @@ durable operating-context enforcement:
     policy proof clears only repo-owned policy blockers and does not certify
     the platform mesh, activate products, prove Gateway/Workbench discovery, or
     promote supported features.
-24. `docs/demo/README.md` now gives client-demo teams a governed entry point
+25. `docs/demo/README.md` now gives client-demo teams a governed entry point
     for explaining what Lotus Idea is doing, choosing the right process
     artifact, tying claims to proof, and keeping unsupported autonomy,
     suitability, execution, publication, downstream materialization, and
