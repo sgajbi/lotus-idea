@@ -158,6 +158,14 @@ REQUIRED_READINESS_WIRING = (
         "--risk-concentration-live-proof",
         "pass optional Risk concentration live proof artifact into readiness generation",
     ),
+    (
+        "LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF",
+        "support optional Performance underperformance live proof artifact wiring",
+    ),
+    (
+        "--performance-underperformance-live-proof",
+        "pass optional Performance underperformance live proof artifact into readiness generation",
+    ),
     ("--core-query-base-url", "support optional Core query-service URL wiring"),
     (
         "--core-query-control-plane-base-url",

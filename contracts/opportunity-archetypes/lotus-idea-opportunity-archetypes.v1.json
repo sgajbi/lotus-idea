@@ -150,9 +150,13 @@
         "src/app/application/underperformance_signal.py",
         "src/app/ports/performance_sources.py",
         "src/app/infrastructure/lotus_performance_sources.py",
+        "src/app/application/performance_underperformance_live_proof.py",
+        "scripts/generate_performance_underperformance_live_proof.py",
+        "make performance-underperformance-live-proof-contract-gate",
         "tests/unit/test_underperformance_signal_evaluation.py",
         "tests/unit/test_underperformance_application.py",
         "tests/unit/test_lotus_performance_sources.py",
+        "tests/unit/test_performance_underperformance_live_proof.py",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
       ],
       "canonical_scenarios": [

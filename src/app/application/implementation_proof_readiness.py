@@ -51,6 +51,9 @@ from app.application.implementation_proof_capability_updates import (
     _apply_blocker_proof as _apply_blocker_proof,
     _capability as _capability,
 )
+from app.application.implementation_proof_opportunity_archetype_proofs import (
+    _apply_opportunity_archetype_proofs,
+)
 from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
     mesh_policy_proof_is_valid,
@@ -80,10 +83,6 @@ from app.application.report_materialization_proof import (
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     report_materialization_proof_is_valid,
 )
-from app.application.risk_concentration_live_proof import (
-    RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
-    risk_concentration_live_proof_is_valid,
-)
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,
@@ -101,7 +100,6 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
-from app.application.source_ingestion_live_proof import HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED
 from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
 from app.ports.idea_repository import OutboxDeliveryRepository
 
@@ -153,6 +151,8 @@ def build_implementation_proof_readiness_snapshot(
     gateway_workbench_discovery_proof_ref: str | None = None,
     risk_concentration_live_proof: Mapping[str, object] | None = None,
     risk_concentration_live_proof_ref: str | None = None,
+    performance_underperformance_live_proof: Mapping[str, object] | None = None,
+    performance_underperformance_live_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -342,6 +342,8 @@ def _apply_available_proofs(
     source_ingestion: SourceIngestionReadinessSnapshot,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
+    performance_underperformance_live_proof: Mapping[str, object] | None,
+    performance_underperformance_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,
@@ -397,38 +399,9 @@ def _apply_available_proofs(
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
         risk_concentration_live_proof=risk_concentration_live_proof,
         risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
+        performance_underperformance_live_proof=performance_underperformance_live_proof,
+        performance_underperformance_live_proof_ref=performance_underperformance_live_proof_ref,
     )
-
-
-def _apply_opportunity_archetype_proofs(
-    *,
-    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    source_ingestion_live_proof_valid: bool,
-    source_ingestion_live_proof_ref: str | None,
-    risk_concentration_live_proof: Mapping[str, object] | None,
-    risk_concentration_live_proof_ref: str | None,
-) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if source_ingestion_live_proof_valid:
-        capabilities = tuple(
-            _apply_blocker_proof(
-                capability,
-                capability_ids=("opportunity-archetype-scenarios",),
-                blockers_cleared=HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED,
-                proof_ref=source_ingestion_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if risk_concentration_live_proof and risk_concentration_live_proof_is_valid(
-        risk_concentration_live_proof
-    ):
-        capabilities = tuple(
-            _apply_risk_concentration_live_proof(
-                capability,
-                risk_concentration_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    return capabilities
 
 
 def _apply_storage_and_runtime_proofs(
@@ -767,18 +740,6 @@ def _apply_gateway_workbench_discovery_proof(
         capability_ids=("data-mesh-certification", "runtime-trust-telemetry-preview"),
         blockers_cleared=GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
         proof_ref=gateway_workbench_discovery_proof_ref,
-    )
-
-
-def _apply_risk_concentration_live_proof(
-    capability: ImplementationProofCapabilityReadiness,
-    risk_concentration_live_proof_ref: str | None,
-) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
-        capability,
-        capability_ids=("opportunity-archetype-scenarios",),
-        blockers_cleared=RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
-        proof_ref=risk_concentration_live_proof_ref,
     )
 
 

@@ -856,6 +856,57 @@ def test_ci_contract_gate_blocks_missing_risk_concentration_live_proof_wiring() 
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_performance_underperformance_live_proof_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF",
+            "REMOVED_PERFORMANCE_PROOF",
+        )
+        .replace(
+            "--performance-underperformance-live-proof",
+            "--removed-performance-underperformance-live-proof",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support optional "
+        "Performance underperformance live proof artifact wiring"
+    ) in errors
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass optional Performance "
+        "underperformance live proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_performance_underperformance_live_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) performance-underperformance-live-proof-contract-gate\n", "")
+        .replace(
+            "scripts/performance_underperformance_live_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call "
+        "`$(MAKE) performance-underperformance-live-proof-contract-gate`"
+    ) in errors
+    assert (
+        "Makefile performance-underperformance-live-proof-contract-gate target must run "
+        "`scripts/performance_underperformance_live_proof_contract_gate.py`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_live_core_url_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (

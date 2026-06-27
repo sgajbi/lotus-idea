@@ -63,11 +63,15 @@ REQUIRED_CONCENTRATION_EVIDENCE = {
 }
 REQUIRED_UNDERPERFORMANCE_EVIDENCE = {
     "src/app/application/underperformance_signal.py",
+    "src/app/application/performance_underperformance_live_proof.py",
     "src/app/infrastructure/lotus_performance_sources.py",
     "src/app/ports/performance_sources.py",
+    "scripts/generate_performance_underperformance_live_proof.py",
+    "make performance-underperformance-live-proof-contract-gate",
     "tests/unit/test_underperformance_signal_evaluation.py",
     "tests/unit/test_underperformance_application.py",
     "tests/unit/test_lotus_performance_sources.py",
+    "tests/unit/test_performance_underperformance_live_proof.py",
 }
 REQUIRED_MANAGE_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",

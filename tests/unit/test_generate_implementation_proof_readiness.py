@@ -36,6 +36,9 @@ from app.application.outbox_platform_mesh_event_publication_proof import (
     REQUIRED_PLATFORM_PRODUCT_IDS,
     build_outbox_platform_mesh_event_publication_proof_payload,
 )
+from app.application.performance_underperformance_live_proof import (
+    build_performance_underperformance_live_proof_payload,
+)
 from app.application.platform_mesh_onboarding_proof import (
     build_platform_mesh_onboarding_proof_payload,
 )
@@ -109,6 +112,7 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
     )
     assert "make opportunity-archetype-contract-gate" in archetypes["evidenceRefs"]
     assert "opportunity_archetype_live_risk_source_proof_missing" in archetypes["blockers"]
+    assert "opportunity_archetype_live_performance_source_proof_missing" in (archetypes["blockers"])
     assert (
         "opportunity_archetype_risk_source_consumer_approval_missing"
         not in (archetypes["blockers"])
@@ -890,6 +894,64 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_concentratio
     assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
     assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
     assert "Risk concentration live proof artifact" in archetypes["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_performance_underperformance_live_proof(
+    tmp_path: Path,
+) -> None:
+    performance_proof = tmp_path / "performance-underperformance-live-proof.json"
+    performance_proof.write_text(
+        json.dumps(
+            build_performance_underperformance_live_proof_payload(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+                live_performance_source_attempted=True,
+                evaluation_summary={
+                    "runStatus": "completed",
+                    "sourceAuthority": "lotus-performance",
+                    "sourceProductId": "lotus-performance:ReturnsSeriesBundle:v1",
+                    "evaluationOutcome": "candidate_created",
+                    "sourceEvidenceCurrent": True,
+                    "benchmarkContextAvailable": True,
+                    "sourceDiagnosticCodes": ["performance_benchmark_context_ready"],
+                    "reasonCodes": ["underperformance_attention"],
+                    "unsupportedReasons": [],
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-27T00:00:00Z",
+            "--performance-underperformance-live-proof",
+            str(performance_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    archetypes = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "opportunity-archetype-scenarios"
+    )
+    assert (
+        "opportunity_archetype_live_performance_source_proof_missing"
+        not in (archetypes["blockers"])
+    )
+    assert (
+        "opportunity_archetype_benchmark_assignment_source_ref_missing" in (archetypes["blockers"])
+    )
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
+    assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
+    assert "Performance underperformance live proof artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
