@@ -101,6 +101,7 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
+from app.application.source_ingestion_live_proof import HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED
 from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
 from app.ports.idea_repository import OutboxDeliveryRepository
 
@@ -337,6 +338,8 @@ def _apply_available_proofs(
     gateway_workbench_operational_proof_ref: str | None,
     gateway_workbench_discovery_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_proof_ref: str | None,
+    source_ingestion_live_proof_ref: str | None,
+    source_ingestion: SourceIngestionReadinessSnapshot,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -390,6 +393,8 @@ def _apply_available_proofs(
     )
     return _apply_opportunity_archetype_proofs(
         capabilities=capabilities,
+        source_ingestion_live_proof_valid=source_ingestion.live_core_source_proof_valid,
+        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
         risk_concentration_live_proof=risk_concentration_live_proof,
         risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
     )
@@ -398,9 +403,21 @@ def _apply_available_proofs(
 def _apply_opportunity_archetype_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    source_ingestion_live_proof_valid: bool,
+    source_ingestion_live_proof_ref: str | None,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if source_ingestion_live_proof_valid:
+        capabilities = tuple(
+            _apply_blocker_proof(
+                capability,
+                capability_ids=("opportunity-archetype-scenarios",),
+                blockers_cleared=HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED,
+                proof_ref=source_ingestion_live_proof_ref,
+            )
+            for capability in capabilities
+        )
     if risk_concentration_live_proof and risk_concentration_live_proof_is_valid(
         risk_concentration_live_proof
     ):

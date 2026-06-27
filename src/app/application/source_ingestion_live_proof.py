@@ -7,6 +7,8 @@ from typing import Any
 
 LIVE_PROOF_SCHEMA_VERSION = "lotus-idea.source-ingestion.live-proof.v1"
 
+HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED = ("opportunity_archetype_live_core_source_proof_missing",)
+
 REMAINING_CERTIFICATION_BLOCKERS = (
     "scheduled_worker_deploy_proof_missing",
     "data_mesh_runtime_telemetry_not_certified",

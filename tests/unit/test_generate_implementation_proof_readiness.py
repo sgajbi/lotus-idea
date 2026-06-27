@@ -273,6 +273,15 @@ def test_generate_implementation_proof_readiness_uses_explicit_live_source_proof
     assert "live_core_source_proof_missing" not in source_ingestion["blockers"]
     assert "scheduled_worker_deploy_proof_missing" in source_ingestion["blockers"]
     assert "source ingestion live proof artifact" in source_ingestion["evidenceRefs"]
+    archetypes = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "opportunity-archetype-scenarios"
+    )
+    assert "opportunity_archetype_live_core_source_proof_missing" not in archetypes["blockers"]
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
+    assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes["blockers"]
+    assert "source ingestion live proof artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
     assert os.environ[MANIFEST_ENV] == "pre-existing-manifest.json"
