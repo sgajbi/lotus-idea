@@ -50,6 +50,7 @@ from app.application.runtime_trust_telemetry import (
     build_runtime_trust_telemetry_preview,
 )
 from app.application.runtime_trust_telemetry_proof import (
+    RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
     runtime_trust_telemetry_proof_is_valid,
 )
 from app.application.source_ingestion_readiness import (
@@ -380,7 +381,8 @@ def _apply_runtime_trust_telemetry_proof(
     capability: ImplementationProofCapabilityReadiness,
     runtime_trust_telemetry_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if "runtime_candidate_snapshot_missing" not in capability.blockers:
+    blockers_to_clear = set(RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(capability.blockers):
         return capability
     evidence_refs = capability.evidence_refs
     if runtime_trust_telemetry_proof_ref:
@@ -392,9 +394,7 @@ def _apply_runtime_trust_telemetry_proof(
         supportability_status=capability.supportability_status,
         evidence_refs=evidence_refs,
         blockers=tuple(
-            blocker
-            for blocker in capability.blockers
-            if blocker != "runtime_candidate_snapshot_missing"
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )

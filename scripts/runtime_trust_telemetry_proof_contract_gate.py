@@ -8,6 +8,7 @@ import sys
 from app.application.runtime_trust_telemetry_proof import (
     REMAINING_RUNTIME_TRUST_TELEMETRY_CERTIFICATION_BLOCKERS,
     REQUIRED_RUNTIME_TRUST_TELEMETRY_EVIDENCE_REFS,
+    RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
     RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION,
     build_runtime_trust_telemetry_proof_payload,
     runtime_trust_telemetry_proof_is_valid,
@@ -59,12 +60,11 @@ def validate_runtime_trust_telemetry_proof_contract() -> list[str]:
         errors.append(
             "runtime trust telemetry proof evidence refs must match the governed contract"
         )
-    if tuple(proof.get("aggregateBlockersCleared") or ()) != (
-        "runtime_candidate_snapshot_missing",
+    if (
+        tuple(proof.get("aggregateBlockersCleared") or ())
+        != RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED
     ):
-        errors.append(
-            "runtime trust telemetry proof must clear only runtime_candidate_snapshot_missing"
-        )
+        errors.append("runtime trust telemetry proof must clear only runtime telemetry blockers")
     if tuple(proof.get("remainingCertificationBlockers") or ()) != (
         REMAINING_RUNTIME_TRUST_TELEMETRY_CERTIFICATION_BLOCKERS
     ):

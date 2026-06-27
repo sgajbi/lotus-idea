@@ -254,6 +254,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "scheduled_worker_deploy_proof_missing" not in payload["overallBlockers"]
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
+    assert "certified_runtime_trust_telemetry_missing" not in payload["overallBlockers"]
+    assert "data_mesh_runtime_telemetry_not_certified" not in payload["overallBlockers"]
     assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
