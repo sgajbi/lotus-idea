@@ -18,18 +18,17 @@ No external business feature is supported yet. Feature promotion still requires
 certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbench,
 downstream realization, supported-feature registration, and evidence on `main`.
 
-Current implemented foundations include high-cash evaluation and Core-backed
-source-ingestion orchestration; concentration-risk deterministic policy and a fail-closed Lotus Risk concentration source adapter foundation; candidate
-persistence, replay, lifecycle,
-review, feedback, and advisor queue readiness; AI diagnostics, source-safe
-lineage, model-risk operations proof, and bounded `lotus-ai` workflow-pack
-proof; conversion/report submission foundations and source-safe Advise, Manage,
-Report intake, and Report materialization proof consumption; outbox, runtime
-trust telemetry, data-mesh readiness, PostgreSQL/migration, durable repository,
-Workbench, opportunity archetype scenario readiness, and platform mesh proof
-evidence; plus bounded `lotus-gateway` and `lotus-workbench` queue/detail read
-paths. These are internal foundations only: client publication and
-supported-feature claims remain blocked.
+Current implemented foundations include source-authority-preserving high-cash,
+concentration-risk, underperformance, and allocation-drift mandate-review
+policies with Core, Risk, Performance, and Manage source adapters. The Manage
+adapter blocks store-wide supportability evidence from becoming a portfolio
+opportunity claim. Other foundations cover candidate persistence, replay,
+lifecycle, review, feedback, queue readiness, AI diagnostics, conversion/report
+submission, Advise/Manage/Report proof consumption, outbox, runtime trust
+telemetry, data-mesh readiness, PostgreSQL/migration, Workbench proof, platform
+mesh proof, and bounded Gateway/Workbench queue/detail reads. These are
+internal foundations only: client publication and supported-feature claims
+remain blocked.
 
 ## Product Boundary
 
@@ -127,7 +126,8 @@ flowchart LR
   retry/dead-letter state semantics.
 - `src/app/ports/`: source-owned service, outbox publisher, and repository
   protocols.
-- `src/app/infrastructure/`: Core and Risk source adapters, migration helpers,
+- `src/app/infrastructure/`: Core, Performance, Risk, and Manage source adapters,
+  migration helpers,
   outbox publisher adapter, PostgreSQL codecs, and PostgreSQL repository
   adapter.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,

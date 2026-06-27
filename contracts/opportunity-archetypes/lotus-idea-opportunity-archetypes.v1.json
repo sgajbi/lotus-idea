@@ -188,7 +188,7 @@
     {
       "archetype_id": "allocation-drift-mandate-review",
       "display_name": "Allocation drift / mandate review",
-      "implementation_status": "planned",
+      "implementation_status": "partially_implemented",
       "source_authority_status": "source_owned",
       "first_supported_journey": false,
       "advisor_audience": "portfolio_manager",
@@ -200,32 +200,46 @@
       ],
       "lotus_idea_responsibility": "Detect cross-domain opportunity posture and create review-gated conversion intent without creating DPM action state.",
       "evidence_refs": [
+        "src/app/domain/signal_evaluation.py",
+        "src/app/application/mandate_health_signal.py",
+        "src/app/ports/manage_sources.py",
+        "src/app/infrastructure/lotus_manage_sources.py",
+        "tests/unit/test_mandate_health_signal_evaluation.py",
+        "tests/unit/test_mandate_health_application.py",
+        "tests/unit/test_lotus_manage_sources.py",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
       ],
       "canonical_scenarios": [
         {
           "scenario_id": "pm-mandate-drift-review",
-          "scenario_status": "planned",
+          "scenario_status": "bounded_foundation",
           "scenario_type": "portfolio_health_review",
           "audience": "portfolio_manager",
-          "proof_status": "not_implemented",
+          "proof_status": "not_client_demo_ready",
           "supported_feature_promoted": false,
           "required_evidence": [
             "manage-owned action register posture",
+            "portfolio-scoped action-register source ref",
             "mandate performance health",
             "mandate risk health",
             "Core portfolio state"
           ],
           "remaining_blockers": [
-            "manage_source_adapter_missing",
-            "mandate_health_signal_policy_missing",
+            "portfolio_scoped_manage_source_proof_missing",
+            "mandate_performance_health_source_ref_missing",
+            "mandate_risk_health_source_ref_missing",
+            "core_portfolio_state_source_ref_missing",
+            "data_mesh_not_certified",
             "supported_feature_promotion_missing"
           ]
         }
       ],
       "blockers": [
-        "manage_source_adapter_missing",
-        "mandate_health_signal_policy_missing",
+        "portfolio_scoped_manage_source_proof_missing",
+        "mandate_performance_health_source_ref_missing",
+        "mandate_risk_health_source_ref_missing",
+        "core_portfolio_state_source_ref_missing",
+        "data_mesh_not_certified",
         "supported_feature_promotion_missing"
       ]
     },

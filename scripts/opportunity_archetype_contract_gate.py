@@ -69,10 +69,23 @@ REQUIRED_UNDERPERFORMANCE_EVIDENCE = {
     "tests/unit/test_underperformance_application.py",
     "tests/unit/test_lotus_performance_sources.py",
 }
+REQUIRED_MANAGE_EVIDENCE = {
+    "src/app/domain/signal_evaluation.py",
+    "src/app/application/mandate_health_signal.py",
+    "src/app/ports/manage_sources.py",
+    "src/app/infrastructure/lotus_manage_sources.py",
+    "tests/unit/test_mandate_health_signal_evaluation.py",
+    "tests/unit/test_mandate_health_application.py",
+    "tests/unit/test_lotus_manage_sources.py",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
-FOUNDATION_ARCHETYPES = {"concentration-risk-review", "underperformance-review"}
+FOUNDATION_ARCHETYPES = {
+    "allocation-drift-mandate-review",
+    "concentration-risk-review",
+    "underperformance-review",
+}
 
 
 def validate_opportunity_archetype_contract(
@@ -223,6 +236,15 @@ def _validate_archetypes(
         if missing_evidence:
             errors.append(
                 "underperformance-review evidence_refs missing: " + ", ".join(missing_evidence)
+            )
+
+    allocation_drift = archetypes.get("allocation-drift-mandate-review")
+    if allocation_drift is not None:
+        missing_evidence = sorted(REQUIRED_MANAGE_EVIDENCE - set(allocation_drift.evidence_refs))
+        if missing_evidence:
+            errors.append(
+                "allocation-drift-mandate-review evidence_refs missing: "
+                + ", ".join(missing_evidence)
             )
 
     for archetype_id, archetype in archetypes.items():
