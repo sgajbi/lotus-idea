@@ -16,6 +16,10 @@ from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_CONSUMER_DEPENDENCIES,
     REQUIRED_PLATFORM_MESH_EVIDENCE_REFS,
     REQUIRED_PRODUCER_PRODUCTS,
+    _catalog_includes_idea_consumer,
+    _catalog_includes_idea_products,
+    _maturity_matrix_keeps_idea_deferred,
+    _source_manifest_includes_idea,
     build_platform_mesh_onboarding_proof_payload,
     platform_mesh_onboarding_proof_is_valid,
 )
@@ -286,6 +290,136 @@ def test_platform_mesh_onboarding_proof_contract_gate_rejects_present_sibling_dr
         "platform mesh onboarding proof must validate against sibling platform truth "
         "when sibling evidence is present"
     ) in errors
+
+
+def test_source_manifest_inclusion_skips_non_idea_entries() -> None:
+    assert (
+        _source_manifest_includes_idea({"repositories": ["bad", {"repository": "lotus-core"}]})
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "catalog",
+    [
+        {"products": "bad"},
+        {"products": []},
+        {
+            "products": [
+                {
+                    "product_id": product_id,
+                    "producer_repository": "lotus-core",
+                    "lifecycle_status": "proposed",
+                    "current_routes": [],
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ]
+        },
+        {
+            "products": [
+                {
+                    "product_id": product_id,
+                    "producer_repository": "lotus-idea",
+                    "lifecycle_status": "active",
+                    "current_routes": [],
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ]
+        },
+        {
+            "products": [
+                {
+                    "product_id": product_id,
+                    "producer_repository": "lotus-idea",
+                    "lifecycle_status": "proposed",
+                    "current_routes": ["/api/v1/data-products"],
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ]
+        },
+    ],
+)
+def test_catalog_product_inclusion_fails_closed(catalog: dict[str, object]) -> None:
+    assert _catalog_includes_idea_products(catalog) is False
+
+
+def test_catalog_consumer_inclusion_skips_non_idea_entries() -> None:
+    assert (
+        _catalog_includes_idea_consumer(
+            {"consumers": ["bad", {"consumer_repository": "lotus-core"}]}
+        )
+        is False
+    )
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"repositories": [], "products": []},
+        {
+            "repositories": [{"repository": "lotus-idea", "classification": "active"}],
+            "products": [],
+        },
+        {
+            "repositories": [
+                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "consumer"}
+            ],
+            "products": [],
+        },
+        {
+            "repositories": [
+                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+            ],
+            "products": [],
+        },
+        {
+            "repositories": [
+                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+            ],
+            "products": [
+                {
+                    "product_id": product_id,
+                    "classification": "active",
+                    "maturity_wave": "future_wave",
+                    "lifecycle_status": "proposed",
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ],
+        },
+        {
+            "repositories": [
+                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+            ],
+            "products": [
+                {
+                    "product_id": product_id,
+                    "classification": "deferred",
+                    "maturity_wave": "current_wave",
+                    "lifecycle_status": "proposed",
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ],
+        },
+        {
+            "repositories": [
+                {"repository": "lotus-idea", "classification": "deferred", "mesh_role": "producer"}
+            ],
+            "products": [
+                {
+                    "product_id": product_id,
+                    "classification": "deferred",
+                    "maturity_wave": "future_wave",
+                    "lifecycle_status": "active",
+                }
+                for product_id in REQUIRED_PRODUCER_PRODUCTS
+            ],
+        },
+    ],
+)
+def test_maturity_matrix_deferred_posture_fails_closed(
+    payload: dict[str, object],
+) -> None:
+    assert _maturity_matrix_keeps_idea_deferred(payload) is False
 
 
 def _valid_platform_mesh_onboarding_proof(tmp_path: Path) -> dict[str, Any]:

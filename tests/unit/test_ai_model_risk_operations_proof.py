@@ -18,6 +18,10 @@ from app.application.ai_model_risk_operations_proof import (
     EXPECTED_METRIC_NAME,
     REMAINING_AI_MODEL_RISK_OPERATIONS_BLOCKERS,
     REQUIRED_AI_MODEL_RISK_OPERATIONS_EVIDENCE_REFS,
+    _alert_rules_artifact_certified,
+    _dashboard_artifact_certified,
+    _operations_contract_certified,
+    _runbook_artifact_certified,
     ai_model_risk_operations_proof_is_valid,
     build_ai_model_risk_operations_proof_payload,
 )
@@ -179,6 +183,151 @@ def test_ai_model_risk_operations_proof_contract_gate_passes_current_artifacts()
     module = _load_contract_gate_script()
 
     assert module.validate_ai_model_risk_operations_proof_contract() == []
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_valid"),
+    [
+        (lambda dashboard: dashboard, True),
+        (lambda dashboard: {**dashboard, "uid": "wrong"}, False),
+        (lambda dashboard: {**dashboard, "title": "Wrong"}, False),
+        (
+            lambda dashboard: {
+                **dashboard,
+                "panels": [{"targets": [{"expr": "lotus_wrong_metric_total"}]}],
+            },
+            False,
+        ),
+        (
+            lambda dashboard: {
+                **dashboard,
+                "panels": [
+                    {
+                        "targets": [
+                            {
+                                "expr": EXPECTED_METRIC_NAME,
+                                "legendFormat": "portfolio_id",
+                            }
+                        ]
+                    }
+                ],
+            },
+            False,
+        ),
+        (
+            lambda dashboard: {
+                **dashboard,
+                "panels": [{"targets": [{"expr": EXPECTED_METRIC_NAME}]}],
+            },
+            False,
+        ),
+    ],
+)
+def test_dashboard_artifact_certification_fails_closed(
+    mutation: object,
+    expected_valid: bool,
+    tmp_path: Path,
+) -> None:
+    dashboard = json.loads(
+        (ROOT / "monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    path = tmp_path / "monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(mutation(dashboard)), encoding="utf-8")  # type: ignore[operator]
+
+    assert _dashboard_artifact_certified(tmp_path) is expected_valid
+
+
+def test_dashboard_artifact_certification_rejects_missing_or_invalid_json(
+    tmp_path: Path,
+) -> None:
+    assert _dashboard_artifact_certified(tmp_path) is False
+    path = tmp_path / "monitoring/grafana/dashboards/lotus-idea-ai-model-risk-operations.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("{not-json", encoding="utf-8")
+
+    assert _dashboard_artifact_certified(tmp_path) is False
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "",
+        "portfolio_id",
+        EXPECTED_METRIC_NAME,
+        "\n".join(
+            [
+                f"{EXPECTED_METRIC_NAME} {EXPECTED_METRIC_NAME}",
+                f"alert_id: {EXPECTED_ALERT_IDS[0]}",
+                f"docs/runbooks/ai-model-risk-operations.md#{EXPECTED_ALERT_IDS[0]}",
+            ]
+        ),
+        "\n".join(
+            [
+                f"{EXPECTED_METRIC_NAME} {EXPECTED_METRIC_NAME}",
+                f"alert_id: {EXPECTED_ALERT_IDS[0]}",
+                f"alert_id: {EXPECTED_ALERT_IDS[1]}",
+            ]
+        ),
+    ],
+)
+def test_alert_rules_artifact_certification_fails_closed(
+    text: str,
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "monitoring/prometheus/rules/lotus-idea-ai-model-risk-operations.rules.yml"
+    path.parent.mkdir(parents=True)
+    path.write_text(text, encoding="utf-8")
+
+    assert _alert_rules_artifact_certified(tmp_path) is False
+
+
+def test_runbook_artifact_certification_rejects_missing_or_forbidden_content(
+    tmp_path: Path,
+) -> None:
+    assert _runbook_artifact_certified(tmp_path) is False
+    path = tmp_path / "docs/runbooks/ai-model-risk-operations.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("portfolio_id", encoding="utf-8")
+
+    assert _runbook_artifact_certified(tmp_path) is False
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"dashboard_certified": False, "alert_certified": True, "source_of_truth": {}},
+        {"dashboard_certified": True, "alert_certified": False, "source_of_truth": {}},
+        {"dashboard_certified": True, "alert_certified": True, "source_of_truth": []},
+        {
+            "dashboard_certified": True,
+            "alert_certified": True,
+            "source_of_truth": {"dashboard": "wrong"},
+        },
+    ],
+)
+def test_operations_contract_certification_fails_closed(
+    payload: dict[str, object],
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    assert _operations_contract_certified(tmp_path) is False
+
+
+def test_operations_contract_certification_rejects_missing_or_invalid_json(
+    tmp_path: Path,
+) -> None:
+    assert _operations_contract_certified(tmp_path) is False
+    path = tmp_path / "contracts/observability/lotus-idea-ai-model-risk-operations.v1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text("{not-json", encoding="utf-8")
+
+    assert _operations_contract_certified(tmp_path) is False
 
 
 def _valid_ai_model_risk_operations_proof() -> dict[str, object]:

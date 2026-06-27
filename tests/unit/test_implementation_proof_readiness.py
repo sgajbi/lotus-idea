@@ -18,6 +18,12 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
 )
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
+    _apply_ai_lineage_store_proof,
+    _apply_ai_workflow_pack_registration_proof,
+    _apply_ai_workflow_pack_runtime_execution_proof,
+    _apply_mesh_policy_proof,
+    _apply_outbox_broker_proof,
+    _apply_platform_mesh_onboarding_proof,
     _capability,
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
@@ -81,6 +87,35 @@ def test_implementation_proof_capability_status_is_derived_from_remaining_blocke
     assert capability.certification_ready is True
     assert capability.readiness_status == "ready"
     assert capability.supportability_status == "supported"
+
+
+@pytest.mark.parametrize(
+    ("apply_proof", "capability_id"),
+    [
+        (_apply_mesh_policy_proof, "data-mesh-certification"),
+        (_apply_ai_lineage_store_proof, "ai-explanation"),
+        (_apply_ai_workflow_pack_registration_proof, "ai-explanation"),
+        (_apply_ai_workflow_pack_runtime_execution_proof, "ai-explanation"),
+        (_apply_outbox_broker_proof, "outbox-delivery"),
+        (_apply_platform_mesh_onboarding_proof, "runtime-trust-telemetry-preview"),
+    ],
+)
+def test_implementation_proof_application_is_noop_when_target_blocker_is_absent(
+    apply_proof: object,
+    capability_id: str,
+) -> None:
+    capability = _capability(
+        capability_id,
+        "Already-cleared proof family",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=("existing-proof.json",),
+        blockers=("still_blocked_by_other_requirement",),
+    )
+
+    result = apply_proof(capability, "new-proof.json")  # type: ignore[operator]
+
+    assert result is capability
 
 
 def test_implementation_proof_readiness_reports_blocked_foundation_posture(
