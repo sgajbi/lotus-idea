@@ -97,7 +97,7 @@ existence blockers:
 
 | Proof | Blocker it may clear | Boundaries that remain |
 | --- | --- | --- |
-| Advise proposal route proof | `advise_live_contract_proof_missing` | Suitability, policy approval, proposal lifecycle certification, client communication, and supported-feature promotion remain with `lotus-advise`. |
+| Advise proposal route proof | `advise_live_contract_proof_missing` | Candidate evidence source authority remains with `lotus-idea`; suitability, policy approval, proposal lifecycle certification, client communication, and supported-feature promotion remain with `lotus-advise`. |
 | Manage action route proof | `manage_live_contract_proof_missing` | Mandate/rebalance action authority, execution, order creation, settlement, client communication, and supported-feature promotion remain with `lotus-manage`. |
 | Report intake route proof | `lotus_report_live_intake_route_proof_missing` | Report materialization, render output, archive record creation, client publication, and supported-feature promotion remain with Report/Render/Archive. |
 
@@ -155,13 +155,15 @@ artifact and keeps the corresponding blocker. Drift in present sibling
 evidence exits non-zero so contract mismatch is not hidden.
 
 A valid Advise artifact proves only that `lotus-advise` owns a live route for
-source-safe idea proposal intake. A valid Manage artifact proves only that
+source-safe idea proposal intake, with `lotus-idea` retained as the candidate
+evidence source authority and `lotus-advise` retained as proposal and
+suitability authority. A valid Manage artifact proves only that
 `lotus-manage` owns a live route for source-safe idea action intake. Both
 artifacts deliberately keep these blockers:
 
 | Remaining blocker | Why it remains |
 | --- | --- |
-| `suitability_policy_authority_remains_lotus_advise` | `lotus-advise` remains the source authority for suitability, policy approval, advisory proposal lifecycle, and client communication. |
+| `suitability_policy_authority_remains_lotus_advise` | `lotus-advise` remains the downstream authority for suitability, policy approval, advisory proposal lifecycle, and client communication. |
 | `rebalance_execution_authority_remains_lotus_manage` | `lotus-manage` remains the source authority for action-register, DPM/rebalance workflow, order/execution, and settlement posture. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
 
