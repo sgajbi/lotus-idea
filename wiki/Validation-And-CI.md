@@ -67,6 +67,7 @@ make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
+make performance-underperformance-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
 make runtime-trust-telemetry-snapshot-check
@@ -273,6 +274,11 @@ Persistence adapter validation:
     `make risk-concentration-live-proof-contract-gate` prove the optional Lotus
     Risk concentration live-proof artifact remains source-safe and can clear
     only the namespaced live Risk source blocker when valid evidence is supplied.
+    `tests/unit/test_performance_underperformance_live_proof.py` and
+    `make performance-underperformance-live-proof-contract-gate` prove the
+    optional Lotus Performance underperformance live-proof artifact remains
+    source-safe and can clear only the namespaced live Performance source
+    blocker when valid evidence is supplied.
     `tests/unit/test_implementation_proof_readiness.py`,
     `tests/unit/test_generate_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` also prove

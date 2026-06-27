@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review and underperformance review are non-promoted bounded foundations; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review and underperformance review are non-promoted bounded foundations with source-specific live-proof blockers; demo claims remain blocked
 
 ## Outcome
 
@@ -41,6 +41,11 @@ capabilities exist.
    Its blockers are namespaced with `opportunity_archetype_` so scenario replay
    gaps do not collide with source-ingestion, Workbench, data-mesh, downstream,
    or supported-feature proof families.
+7. Source-safe live proof artifacts can clear only their source-specific
+   archetype blockers: Risk concentration proof clears the live Risk blocker,
+   and Performance underperformance proof clears the live Performance blocker.
+   Benchmark assignment, data-mesh certification, Workbench proof,
+   client-publication, and supported-feature blockers remain intact.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.
