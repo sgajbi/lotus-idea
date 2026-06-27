@@ -19,7 +19,8 @@ certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbenc
 downstream realization, supported-feature registration, and evidence on `main`.
 
 Current implemented foundations include high-cash evaluation and Core-backed
-source-ingestion orchestration; candidate persistence, replay, lifecycle,
+source-ingestion orchestration; concentration-risk deterministic policy and a fail-closed Lotus Risk concentration source adapter foundation; candidate
+persistence, replay, lifecycle,
 review, feedback, and advisor queue readiness; AI diagnostics, source-safe
 lineage, model-risk operations proof, and bounded `lotus-ai` workflow-pack
 proof; conversion/report submission foundations and source-safe Advise, Manage,
@@ -126,7 +127,7 @@ flowchart LR
   retry/dead-letter state semantics.
 - `src/app/ports/`: source-owned service, outbox publisher, and repository
   protocols.
-- `src/app/infrastructure/`: Core source adapter, migration helpers,
+- `src/app/infrastructure/`: Core and Risk source adapters, migration helpers,
   outbox publisher adapter, PostgreSQL codecs, and PostgreSQL repository
   adapter.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,

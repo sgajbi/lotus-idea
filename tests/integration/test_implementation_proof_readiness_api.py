@@ -108,7 +108,10 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert payload["supportedFeaturePromoted"] is False
     assert "outbox_broker_not_configured" in payload["overallBlockers"]
     assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
-    assert "opportunity_archetype_risk_source_adapter_missing" in payload["overallBlockers"]
+    assert "opportunity_archetype_live_risk_source_proof_missing" in payload["overallBlockers"]
+    assert (
+        "opportunity_archetype_risk_source_consumer_approval_missing" in payload["overallBlockers"]
+    )
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
     assert payload["sourceOfTruth"]["endpoint_certification"] == (
@@ -151,7 +154,13 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         in archetype_scenarios["evidenceRefs"]
     )
     assert "make opportunity-archetype-contract-gate" in archetype_scenarios["evidenceRefs"]
-    assert "opportunity_archetype_risk_source_adapter_missing" in (archetype_scenarios["blockers"])
+    assert (
+        "opportunity_archetype_live_risk_source_proof_missing" in (archetype_scenarios["blockers"])
+    )
+    assert (
+        "opportunity_archetype_risk_source_consumer_approval_missing"
+        in (archetype_scenarios["blockers"])
+    )
     assert (
         "opportunity_archetype_supported_feature_promotion_missing"
         in (archetype_scenarios["blockers"])
