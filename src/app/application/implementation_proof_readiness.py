@@ -42,6 +42,10 @@ from app.application.mesh_policy_proof import (
     mesh_policy_proof_is_valid,
 )
 from app.application.outbox_broker_proof import outbox_broker_proof_is_valid
+from app.application.outbox_consumer_runtime_proof import (
+    OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
+    outbox_consumer_runtime_proof_is_valid,
+)
 from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
@@ -153,6 +157,8 @@ def build_implementation_proof_readiness_snapshot(
     mesh_policy_proof_ref: str | None = None,
     outbox_broker_proof: Mapping[str, object] | None = None,
     outbox_broker_proof_ref: str | None = None,
+    outbox_consumer_runtime_proof: Mapping[str, object] | None = None,
+    outbox_consumer_runtime_proof_ref: str | None = None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None = None,
     platform_mesh_onboarding_proof_ref: str | None = None,
     workbench_read_path_proof: Mapping[str, object] | None = None,
@@ -231,6 +237,8 @@ def build_implementation_proof_readiness_snapshot(
         mesh_policy_proof_ref=mesh_policy_proof_ref,
         outbox_broker_proof=outbox_broker_proof,
         outbox_broker_proof_ref=outbox_broker_proof_ref,
+        outbox_consumer_runtime_proof=outbox_consumer_runtime_proof,
+        outbox_consumer_runtime_proof_ref=outbox_consumer_runtime_proof_ref,
         platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
         platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
         workbench_read_path_proof=workbench_read_path_proof,
@@ -335,6 +343,8 @@ def _apply_available_proofs(
     mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
     outbox_broker_proof_ref: str | None,
+    outbox_consumer_runtime_proof: Mapping[str, object] | None,
+    outbox_consumer_runtime_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
@@ -373,6 +383,8 @@ def _apply_available_proofs(
         mesh_policy_proof_ref=mesh_policy_proof_ref,
         outbox_broker_proof=outbox_broker_proof,
         outbox_broker_proof_ref=outbox_broker_proof_ref,
+        outbox_consumer_runtime_proof=outbox_consumer_runtime_proof,
+        outbox_consumer_runtime_proof_ref=outbox_consumer_runtime_proof_ref,
         platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
         platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
         workbench_read_path_proof=workbench_read_path_proof,
@@ -511,6 +523,8 @@ def _apply_platform_and_surface_proofs(
     mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
     outbox_broker_proof_ref: str | None,
+    outbox_consumer_runtime_proof: Mapping[str, object] | None,
+    outbox_consumer_runtime_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
@@ -524,6 +538,16 @@ def _apply_platform_and_surface_proofs(
     if outbox_broker_proof and outbox_broker_proof_is_valid(outbox_broker_proof):
         capabilities = tuple(
             _apply_outbox_broker_proof(capability, outbox_broker_proof_ref)
+            for capability in capabilities
+        )
+    if outbox_consumer_runtime_proof and outbox_consumer_runtime_proof_is_valid(
+        outbox_consumer_runtime_proof
+    ):
+        capabilities = tuple(
+            _apply_outbox_consumer_runtime_proof(
+                capability,
+                outbox_consumer_runtime_proof_ref,
+            )
             for capability in capabilities
         )
     if platform_mesh_onboarding_proof and platform_mesh_onboarding_proof_is_valid(
@@ -855,6 +879,31 @@ def _apply_outbox_broker_proof(
     )
 
 
+def _apply_outbox_consumer_runtime_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    outbox_consumer_runtime_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "outbox-delivery":
+        return capability
+    blockers_to_clear = set(OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if outbox_consumer_runtime_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_consumer_runtime_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
 def _apply_platform_mesh_onboarding_proof(
     capability: ImplementationProofCapabilityReadiness,
     platform_mesh_onboarding_proof_ref: str | None,
@@ -1020,6 +1069,7 @@ def _outbox_delivery_capability(
             "make outbox-event-contract-gate",
             "make outbox-consumer-contract-gate",
             "make outbox-broker-proof-contract-gate",
+            "make outbox-consumer-runtime-proof-contract-gate",
             "GET /api/v1/outbox-delivery/readiness",
             "POST /api/v1/outbox-delivery/run-once",
         ),
