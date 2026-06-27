@@ -139,6 +139,14 @@ def test_underperformance_missing_active_return_blocks_positive_claim() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
 
 
+def test_underperformance_rejects_out_of_range_source_return() -> None:
+    with pytest.raises(ValueError, match="source_reported_active_return"):
+        evaluate_underperformance_signal(
+            underperformance_input(active_return=Decimal("-1.01")),
+            policy(),
+        )
+
+
 def test_underperformance_duplicate_source_is_suppressed() -> None:
     result = evaluate_underperformance_signal(
         underperformance_input(duplicate_of_candidate_id="idea_underperformance_existing"),
@@ -179,4 +187,23 @@ def test_underperformance_policy_rejects_positive_threshold() -> None:
             policy_version="underperformance-review-v1",
             active_return_threshold=Decimal("0.01"),
             candidate_score=Decimal("74"),
+        )
+
+
+def test_underperformance_policy_requires_version() -> None:
+    with pytest.raises(ValueError, match="policy_version is required"):
+        UnderperformanceSignalPolicy(
+            policy_version=" ",
+            active_return_threshold=Decimal("-0.005"),
+            candidate_score=Decimal("74"),
+        )
+
+
+@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
+def test_underperformance_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
+    with pytest.raises(ValueError, match="candidate_score"):
+        UnderperformanceSignalPolicy(
+            policy_version="underperformance-review-v1",
+            active_return_threshold=Decimal("-0.005"),
+            candidate_score=score,
         )

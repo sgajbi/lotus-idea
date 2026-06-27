@@ -112,6 +112,32 @@ def test_lotus_manage_adapter_recognizes_future_portfolio_scoped_evidence() -> N
     assert evidence.manage_diagnostic == "manage_action_register_ready_portfolio_scope"
 
 
+def test_lotus_manage_adapter_recognizes_supportability_scoped_portfolio_evidence() -> None:
+    payload = _payload()
+    supportability = payload["supportability"]
+    assert isinstance(supportability, dict)
+    supportability["portfolioId"] = "PB_SG_GLOBAL_BAL_001"
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.portfolio_scope_confirmed is True
+
+
+def test_lotus_manage_adapter_recognizes_explicit_portfolio_scope_flag() -> None:
+    evidence = _adapter(
+        httpx.MockTransport(
+            lambda request: httpx.Response(
+                200,
+                json=_payload(extra={"portfolio_scope_confirmed": True}),
+            )
+        )
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.portfolio_scope_confirmed is True
+
+
 def test_lotus_manage_adapter_maps_forbidden_source_response_to_entitlement_denied() -> None:
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
 
@@ -119,9 +145,55 @@ def test_lotus_manage_adapter_maps_forbidden_source_response_to_entitlement_deni
         adapter.fetch_mandate_health_evidence(_request())
 
 
+def test_lotus_manage_adapter_maps_server_error_to_source_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(ManageSourceUnavailable) as exc_info:
+        adapter.fetch_mandate_health_evidence(_request())
+
+    assert exc_info.value.code == "upstream_unavailable"
+
+
+def test_lotus_manage_adapter_accepts_missing_supportability_as_unknown_unavailable() -> None:
+    payload = _payload()
+    payload.pop("supportability")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.supportability_state is None
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.data_quality_status == "unknown"
+    assert evidence.action_register_ref.freshness is EvidenceFreshness.UNAVAILABLE
+    assert evidence.manage_diagnostic == "manage_action_register_unknown_store_wide_scope"
+
+
+def test_lotus_manage_adapter_maps_malformed_supportability_to_source_unavailable() -> None:
+    payload = _payload(extra={"supportability": "not-object"})
+
+    with pytest.raises(ManageSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_mandate_health_evidence(_request())
+
+    assert exc_info.value.code == "manage_supportability_malformed"
+
+
 def test_lotus_manage_adapter_maps_missing_counts_to_source_unavailable() -> None:
     payload = _payload()
     payload.pop("workflow_decision_count")
+
+    with pytest.raises(ManageSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_mandate_health_evidence(_request())
+
+    assert exc_info.value.code == "manage_workflow_decision_count_malformed"
+
+
+def test_lotus_manage_adapter_maps_bool_count_to_source_unavailable() -> None:
+    payload = _payload(extra={"workflow_decision_count": True})
 
     with pytest.raises(ManageSourceUnavailable) as exc_info:
         _adapter(
@@ -154,6 +226,86 @@ def test_lotus_manage_adapter_maps_stale_supportability_freshness() -> None:
 
     assert evidence.action_register_ref is not None
     assert evidence.action_register_ref.freshness is EvidenceFreshness.STALE
+
+
+def test_lotus_manage_adapter_accepts_same_day_freshness_bucket_as_current() -> None:
+    payload = _payload()
+    supportability = payload["supportability"]
+    assert isinstance(supportability, dict)
+    supportability["freshness_bucket"] = "same_day"
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
+
+
+def test_lotus_manage_adapter_uses_source_metadata_when_present() -> None:
+    payload = _payload(
+        extra={
+            "generated_at": "2026-06-21T10:00:00Z",
+            "source_batch_fingerprint": "manage-batch",
+        }
+    )
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.generated_at_utc == EVALUATED_AT
+    assert evidence.action_register_ref.content_hash == "sha256:manage-batch"
+
+
+def test_lotus_manage_adapter_normalizes_naive_source_timestamp() -> None:
+    payload = _payload(extra={"generated_at": "2026-06-21T10:00:00"})
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.generated_at_utc == EVALUATED_AT
+
+
+def test_lotus_manage_adapter_uses_request_time_when_source_timestamps_are_absent() -> None:
+    payload = _payload()
+    payload.pop("newest_run_created_at")
+    payload.pop("newest_operation_created_at")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.generated_at_utc == EVALUATED_AT
+
+
+def test_lotus_manage_adapter_preserves_prefixed_source_fingerprint() -> None:
+    payload = _payload(extra={"lineageFingerprint": "sha256:manage-lineage"})
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.content_hash == "sha256:manage-lineage"
+
+
+def test_lotus_manage_adapter_treats_ready_without_freshness_bucket_as_current() -> None:
+    payload = _payload()
+    supportability = payload["supportability"]
+    assert isinstance(supportability, dict)
+    supportability.pop("freshness_bucket")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.action_register_ref is not None
+    assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
 
 
 def test_manage_mandate_health_evidence_request_requires_portfolio_id() -> None:

@@ -136,6 +136,16 @@ def test_concentration_missing_source_ref_blocks_positive_claim() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
 
 
+def test_concentration_missing_issuer_coverage_blocks_positive_claim() -> None:
+    result = evaluate_concentration_risk_signal(
+        concentration_input(issuer_coverage_status=None),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
+
+
 def test_concentration_missing_weights_block_positive_claim() -> None:
     result = evaluate_concentration_risk_signal(
         concentration_input(top_position_weight=None, top_issuer_weight=None),
@@ -222,4 +232,15 @@ def test_concentration_policy_requires_version() -> None:
             top_position_weight_threshold=Decimal("0.15"),
             top_issuer_weight_threshold=Decimal("0.20"),
             candidate_score=Decimal("78"),
+        )
+
+
+@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
+def test_concentration_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
+    with pytest.raises(ValueError, match="candidate_score"):
+        ConcentrationRiskSignalPolicy(
+            policy_version="concentration-attention-v1",
+            top_position_weight_threshold=Decimal("0.15"),
+            top_issuer_weight_threshold=Decimal("0.20"),
+            candidate_score=score,
         )
