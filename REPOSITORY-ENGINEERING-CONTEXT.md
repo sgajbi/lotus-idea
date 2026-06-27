@@ -878,16 +878,23 @@ contract at
 The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review as a non-promoted bounded
 foundation backed by deterministic policy, a Lotus Risk concentration source
-port, a fail-closed HTTP adapter, and focused unit tests. Underperformance,
+port, a fail-closed HTTP adapter, a source-safe live-proof artifact contract,
+and focused unit tests. Underperformance,
 allocation drift, bond maturity, and missing suitability context remain
-planned. Concentration still carries live Risk source proof, upstream consumer
-approval, data-mesh certification, and supported-feature blockers. The
+planned. Concentration still carries live Risk source proof, data-mesh
+certification, Workbench, client-publication, and supported-feature blockers.
+The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
 claims. Aggregate implementation-proof readiness consumes this contract as
 blocked scenario readiness so operators can see archetype replay gaps without
 confusing them with source-ingestion, Workbench, data-mesh, downstream, or
 supported-feature proof families.
+`make risk-concentration-live-proof-contract-gate` now validates the optional
+Lotus Risk concentration live-proof artifact. When a valid artifact is supplied
+through aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_live_risk_source_proof_missing` and keeps data-mesh,
+Workbench, client-publication, and supported-feature blockers intact.
 
 ## CI And Merge Governance
 
@@ -1109,15 +1116,17 @@ owned by upstream services.
     `make source-ingestion-scheduled-worker-check`
 40. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-41. AI lineage store proof contract gate:
+41. Risk concentration live-proof artifact contract gate:
+    `make risk-concentration-live-proof-contract-gate`
+42. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-42. outbox platform mesh event publication proof contract gate:
+43. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`
-43. AI workflow-pack registration proof contract gate:
+44. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-44. AI workflow-pack runtime execution proof contract gate:
+45. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-45. implementation proof readiness generator:
+46. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,

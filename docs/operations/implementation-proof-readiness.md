@@ -130,6 +130,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
 | `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
+| `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default source-safe Advise proposal route proof. Defaults to `../lotus-advise`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` | Selects the default generated Advise proposal route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/advise-proposal-route-proof.json`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF` | Overrides the default generated Advise proposal route proof artifact passed into aggregate readiness. |
@@ -184,6 +185,17 @@ implementation-proof readiness records the validated artifact reference in the
 `source-ingestion` capability `evidenceRefs`, making the blocker-clearance
 evidence auditable without leaking source payloads. This remains deploy
 topology proof only; it is not live long-running scheduler certification.
+
+Lotus Risk concentration live proof is captured by
+`scripts/generate_risk_concentration_live_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` clears only
+`opportunity_archetype_live_risk_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves a live
+`lotus-risk:ConcentrationRiskReport:v1` source call, current source evidence,
+and deterministic concentration candidate generation without storing portfolio
+identity, request or response payloads, correlation IDs, trace IDs, candidate
+IDs, or source routes. It deliberately retains data-mesh, Workbench,
+client-publication, and supported-feature blockers.
 
 Durable repository proof is captured by
 `scripts/generate_durable_repository_proof.py`. A valid artifact referenced
@@ -538,35 +550,39 @@ Implementation-backed evidence:
     `docs/operations/source-ingestion-run-once.md`,
 18. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-16. source-ingestion block-reason diagnostics tests:
+19. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,
-17. scheduled source-ingestion worker proof generator:
+20. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-18. scheduled source-ingestion worker contract gate:
+21. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-19. source-ingestion live-proof contract gate:
+22. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-20. durable repository proof generator:
+23. Risk concentration live-proof generator:
+    `scripts/generate_risk_concentration_live_proof.py`,
+24. Risk concentration live-proof contract gate:
+    `make risk-concentration-live-proof-contract-gate`,
+25. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
-21. durable repository proof contract gate:
+26. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
-22. runtime trust telemetry proof generator:
+27. runtime trust telemetry proof generator:
     `scripts/generate_runtime_trust_telemetry_proof.py`,
-23. runtime trust telemetry proof contract gate:
+28. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`,
-24. Workbench read-path proof generator:
+29. Workbench read-path proof generator:
     `scripts/generate_workbench_read_path_proof.py`,
-25. Workbench read-path proof contract gate:
+30. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-26. Gateway/Workbench operational proof generator:
+28. Gateway/Workbench operational proof generator:
     `scripts/generate_gateway_workbench_operational_proof.py`,
-27. Gateway/Workbench operational proof contract gate:
+29. Gateway/Workbench operational proof contract gate:
     `make gateway-workbench-operational-proof-contract-gate`,
-28. Gateway/Workbench discovery proof generator:
+30. Gateway/Workbench discovery proof generator:
     `scripts/generate_gateway_workbench_discovery_proof.py`,
-29. Gateway/Workbench discovery proof contract gate:
+31. Gateway/Workbench discovery proof contract gate:
     `make gateway-workbench-discovery-proof-contract-gate`,
-30. outbox broker proof generator:
+32. outbox broker proof generator:
     `scripts/generate_outbox_broker_proof.py`,
 31. outbox consumer contract gate:
     `make outbox-consumer-contract-gate`,
@@ -688,6 +704,7 @@ make gateway-workbench-operational-proof-contract-gate
 make gateway-workbench-discovery-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
+make risk-concentration-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check
 make endpoint-certification-gate

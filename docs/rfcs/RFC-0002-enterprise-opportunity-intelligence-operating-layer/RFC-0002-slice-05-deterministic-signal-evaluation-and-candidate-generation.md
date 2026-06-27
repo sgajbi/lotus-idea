@@ -127,10 +127,20 @@ Additional implemented concentration-risk foundation:
    `tests/unit/test_lotus_risk_sources.py` cover positive, below-materiality,
    stale, partial-coverage, missing-source, duplicate, entitlement-denied,
    source-unavailable, malformed-measure, trace-header, and persistence cases.
+6. `src/app/application/risk_concentration_live_proof.py`,
+   `scripts/generate_risk_concentration_live_proof.py`,
+   `scripts/risk_concentration_live_proof_contract_gate.py`, and
+   `make risk-concentration-live-proof-contract-gate` define a source-safe live
+   Risk concentration proof artifact. A valid artifact proves a live
+   `lotus-risk:ConcentrationRiskReport:v1` source call, current source
+   evidence, and deterministic concentration candidate generation, then clears
+   only the namespaced opportunity-archetype live Risk source blocker when
+   consumed by aggregate readiness.
 
 Not implemented yet:
 
-1. live Risk concentration source proof,
+1. live Risk concentration source proof captured from an actual canonical
+   runtime and merged as release evidence,
 2. source-worker certification beyond bounded live Core source-ingestion proof,
 2. certified long-running scheduled daemon runtime and live-service recovery proof,
 3. new API routes beyond the existing caller-supplied foundation endpoint,
@@ -140,8 +150,10 @@ Not implemented yet:
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the
-approval blocker; live Risk source proof, data-product certification,
-Gateway/Workbench proof, and supported-feature promotion remain blocked.
+approval blocker. The new Risk live-proof artifact contract can clear the live
+Risk source blocker only when valid source-safe evidence is supplied; data-product
+certification, Gateway/Workbench proof, client-publication, and supported-feature
+promotion remain blocked.
 
 ## Golden Scenarios
 

@@ -39,7 +39,8 @@ Blocking scaffold commands:
 30. `make source-ingestion-worker-check`
 31. `make source-ingestion-scheduled-worker-check`
 32. `make source-ingestion-live-proof-contract-gate`
-33. `make implementation-proof-readiness-check` generates the scheduled-worker
+33. `make risk-concentration-live-proof-contract-gate`
+34. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
@@ -49,10 +50,10 @@ Blocking scaffold commands:
     mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
     registration proof artifacts, then consumes all in
     aggregate RFC proof-readiness evidence.
-34. `make supported-features-gate`
-35. `make endpoint-certification-gate`
-36. `make postgres-integration-gate`
-37. `make openapi-gate`
+35. `make supported-features-gate`
+36. `make endpoint-certification-gate`
+37. `make postgres-integration-gate`
+38. `make openapi-gate`
 38. `make coverage-gate`
 39. `make security-audit`
 40. `make docker-build`

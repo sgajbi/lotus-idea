@@ -271,10 +271,17 @@ Prove the complete supported opportunity journey end to end.
     `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
     It exposes source-safe taxonomy evidence, records concentration risk review
     as a bounded source/policy foundation, and namespaced
-    `opportunity_archetype_*` blockers for live replay, upstream consumer
-    approval, data-mesh certification, and supported-feature gaps while
-    preserving the no-demo, no-client-publication, no-data-mesh-certification,
-    and no-supported-feature-promotion boundaries.
+    `opportunity_archetype_*` blockers for live proof, data-mesh
+    certification, Workbench proof, client-publication, and supported-feature
+    gaps while preserving the no-demo, no-client-publication,
+    no-data-mesh-certification, and no-supported-feature-promotion boundaries.
+28. `src/app/application/risk_concentration_live_proof.py`,
+    `scripts/generate_risk_concentration_live_proof.py`, and
+    `make risk-concentration-live-proof-contract-gate` now define and enforce a
+    source-safe Lotus Risk concentration live-proof artifact. Aggregate
+    readiness can consume a valid artifact to clear only
+    `opportunity_archetype_live_risk_source_proof_missing`, while preserving
+    data-mesh, Workbench, client-publication, and supported-feature blockers.
 
 This is a proof-control surface with bounded live source-ingestion evidence
 support, not full live opportunity-journey proof. It makes missing evidence
@@ -339,10 +346,12 @@ without relying on chat memory.
     proof, and supported-feature promotion remain pending.
 12. Opportunity archetype scenario readiness is now explicit in aggregate
     readiness, but it proves only governed taxonomy, bounded concentration
-    source/policy foundation, and visible scenario blockers. Upstream consumer
-    approval for `lotus-risk:ConcentrationRiskReport:v1` is source-approved;
-    live source-backed archetype replay, full Workbench product proof,
-    data-mesh certification, and supported-feature promotion remain pending.
+    source/policy foundation, optional live Risk concentration proof
+    consumption, and visible scenario blockers. Upstream consumer approval for
+    `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
+    source-backed archetype replay, full Workbench product proof, data-mesh
+    certification, client-publication, and supported-feature promotion remain
+    pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close
