@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review is a non-promoted bounded foundation; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review and underperformance review are non-promoted bounded foundations; demo claims remain blocked
 
 ## Outcome
 
@@ -30,8 +30,8 @@ capabilities exist.
    and interpret the diagnostic as a readiness aid, not as demo evidence.
 5. `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
    now records the governed opportunity archetype and scenario taxonomy for the
-   first high-cash / idle-liquidity journey, a non-promoted bounded
-   concentration-risk review foundation, and planned underperformance,
+   first high-cash / idle-liquidity journey, non-promoted bounded
+   concentration-risk and underperformance review foundations, and planned
    allocation-drift, bond-maturity, and missing-suitability journeys.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
@@ -71,7 +71,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    and can clear only the live Risk source blocker when valid evidence is
    supplied to aggregate readiness; it is not demo, Workbench, mesh, client
    publication, or supported-feature proof.
-5. Remaining planned archetypes still require source adapters, deterministic
+5. Underperformance review still requires live Performance returns-series
+   source proof, benchmark-assignment source-ref proof, data-mesh
+   certification, Workbench proof, and supported-feature evidence before demo
+   use. The current foundation consumes source-reported active return and
+   benchmark context from `lotus-performance:ReturnsSeriesBundle:v1`, blocks
+   missing benchmark context, and does not calculate performance methodology
+   inside `lotus-idea`.
+6. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate
