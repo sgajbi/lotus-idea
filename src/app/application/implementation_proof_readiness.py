@@ -50,6 +50,10 @@ from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_BLOCKERS_CLEARED,
     platform_mesh_onboarding_proof_is_valid,
 )
+from app.application.report_materialization_proof import (
+    REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+    report_materialization_proof_is_valid,
+)
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,
@@ -143,6 +147,8 @@ def build_implementation_proof_readiness_snapshot(
     manage_action_route_proof_ref: str | None = None,
     report_intake_route_proof: Mapping[str, object] | None = None,
     report_intake_route_proof_ref: str | None = None,
+    report_materialization_proof: Mapping[str, object] | None = None,
+    report_materialization_proof_ref: str | None = None,
     mesh_policy_proof: Mapping[str, object] | None = None,
     mesh_policy_proof_ref: str | None = None,
     outbox_broker_proof: Mapping[str, object] | None = None,
@@ -180,6 +186,8 @@ def build_implementation_proof_readiness_snapshot(
         manage_action_route_proof_ref=manage_action_route_proof_ref,
         report_intake_route_proof=report_intake_route_proof,
         report_intake_route_proof_ref=report_intake_route_proof_ref,
+        report_materialization_proof=report_materialization_proof,
+        report_materialization_proof_ref=report_materialization_proof_ref,
     )
     outbox_delivery = build_outbox_delivery_readiness_snapshot(
         repository=repository,
@@ -217,6 +225,8 @@ def build_implementation_proof_readiness_snapshot(
         advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
         manage_action_route_proof=manage_action_route_proof,
         manage_action_route_proof_ref=manage_action_route_proof_ref,
+        report_materialization_proof=report_materialization_proof,
+        report_materialization_proof_ref=report_materialization_proof_ref,
         mesh_policy_proof=mesh_policy_proof,
         mesh_policy_proof_ref=mesh_policy_proof_ref,
         outbox_broker_proof=outbox_broker_proof,
@@ -319,6 +329,8 @@ def _apply_available_proofs(
     advise_proposal_route_proof_ref: str | None,
     manage_action_route_proof: Mapping[str, object] | None,
     manage_action_route_proof_ref: str | None,
+    report_materialization_proof: Mapping[str, object] | None,
+    report_materialization_proof_ref: str | None,
     mesh_policy_proof: Mapping[str, object] | None,
     mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
@@ -327,6 +339,54 @@ def _apply_available_proofs(
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
     workbench_read_path_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    capabilities = _apply_storage_and_runtime_proofs(
+        capabilities=capabilities,
+        durable_repository_proof=durable_repository_proof,
+        durable_repository_proof_ref=durable_repository_proof_ref,
+        runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
+        runtime_trust_telemetry_proof_ref=runtime_trust_telemetry_proof_ref,
+    )
+    capabilities = _apply_ai_proofs(
+        capabilities=capabilities,
+        ai_lineage_store_proof=ai_lineage_store_proof,
+        ai_lineage_store_proof_ref=ai_lineage_store_proof_ref,
+        ai_model_risk_operations_proof=ai_model_risk_operations_proof,
+        ai_model_risk_operations_proof_ref=ai_model_risk_operations_proof_ref,
+        ai_workflow_pack_registration_proof=ai_workflow_pack_registration_proof,
+        ai_workflow_pack_registration_proof_ref=ai_workflow_pack_registration_proof_ref,
+        ai_workflow_pack_runtime_execution_proof=ai_workflow_pack_runtime_execution_proof,
+        ai_workflow_pack_runtime_execution_proof_ref=(ai_workflow_pack_runtime_execution_proof_ref),
+    )
+    capabilities = _apply_downstream_proofs(
+        capabilities=capabilities,
+        advise_proposal_route_proof=advise_proposal_route_proof,
+        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
+        manage_action_route_proof=manage_action_route_proof,
+        manage_action_route_proof_ref=manage_action_route_proof_ref,
+        report_materialization_proof=report_materialization_proof,
+        report_materialization_proof_ref=report_materialization_proof_ref,
+    )
+    return _apply_platform_and_surface_proofs(
+        capabilities=capabilities,
+        mesh_policy_proof=mesh_policy_proof,
+        mesh_policy_proof_ref=mesh_policy_proof_ref,
+        outbox_broker_proof=outbox_broker_proof,
+        outbox_broker_proof_ref=outbox_broker_proof_ref,
+        platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
+        platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
+        workbench_read_path_proof=workbench_read_path_proof,
+        workbench_read_path_proof_ref=workbench_read_path_proof_ref,
+    )
+
+
+def _apply_storage_and_runtime_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    durable_repository_proof: Mapping[str, object] | None,
+    durable_repository_proof_ref: str | None,
+    runtime_trust_telemetry_proof: Mapping[str, object] | None,
+    runtime_trust_telemetry_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if durable_repository_proof and durable_repository_proof_is_valid(durable_repository_proof):
         capabilities = tuple(
@@ -343,6 +403,21 @@ def _apply_available_proofs(
             )
             for capability in capabilities
         )
+    return capabilities
+
+
+def _apply_ai_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    ai_lineage_store_proof: Mapping[str, object] | None,
+    ai_lineage_store_proof_ref: str | None,
+    ai_model_risk_operations_proof: Mapping[str, object] | None,
+    ai_model_risk_operations_proof_ref: str | None,
+    ai_workflow_pack_registration_proof: Mapping[str, object] | None,
+    ai_workflow_pack_registration_proof_ref: str | None,
+    ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
+    ai_workflow_pack_runtime_execution_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if ai_lineage_store_proof and ai_lineage_store_proof_is_valid(ai_lineage_store_proof):
         capabilities = tuple(
             _apply_ai_lineage_store_proof(capability, ai_lineage_store_proof_ref)
@@ -381,6 +456,19 @@ def _apply_available_proofs(
             )
             for capability in capabilities
         )
+    return capabilities
+
+
+def _apply_downstream_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    advise_proposal_route_proof: Mapping[str, object] | None,
+    advise_proposal_route_proof_ref: str | None,
+    manage_action_route_proof: Mapping[str, object] | None,
+    manage_action_route_proof_ref: str | None,
+    report_materialization_proof: Mapping[str, object] | None,
+    report_materialization_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if advise_proposal_route_proof and advise_proposal_route_proof_is_valid(
         advise_proposal_route_proof
     ):
@@ -403,6 +491,31 @@ def _apply_available_proofs(
             )
             for capability in capabilities
         )
+    if report_materialization_proof and report_materialization_proof_is_valid(
+        report_materialization_proof
+    ):
+        capabilities = tuple(
+            _apply_report_materialization_proof(
+                capability,
+                report_materialization_proof_ref,
+            )
+            for capability in capabilities
+        )
+    return capabilities
+
+
+def _apply_platform_and_surface_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    mesh_policy_proof: Mapping[str, object] | None,
+    mesh_policy_proof_ref: str | None,
+    outbox_broker_proof: Mapping[str, object] | None,
+    outbox_broker_proof_ref: str | None,
+    platform_mesh_onboarding_proof: Mapping[str, object] | None,
+    platform_mesh_onboarding_proof_ref: str | None,
+    workbench_read_path_proof: Mapping[str, object] | None,
+    workbench_read_path_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if mesh_policy_proof and mesh_policy_proof_is_valid(mesh_policy_proof):
         capabilities = tuple(
             _apply_mesh_policy_proof(capability, mesh_policy_proof_ref)
@@ -446,6 +559,31 @@ def _apply_downstream_route_contract_proof(
     evidence_refs = capability.evidence_refs
     if proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_report_materialization_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    report_materialization_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "downstream-realization":
+        return capability
+    blockers_to_clear = set(REPORT_MATERIALIZATION_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if report_materialization_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, report_materialization_proof_ref)))
     return _capability(
         capability.capability_id,
         capability.name,
