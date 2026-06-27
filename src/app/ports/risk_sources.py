@@ -73,6 +73,36 @@ class RiskVolatilityEvidence:
     entitlement_allowed: bool = True
 
 
+@dataclass(frozen=True)
+class RiskDrawdownEvidenceRequest:
+    portfolio_id: str
+    as_of_date: date
+    period_name: str
+    evaluated_at_utc: datetime
+    drawdown_threshold: Decimal
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if not self.period_name.strip():
+            raise ValueError("period_name is required")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+        if self.drawdown_threshold > Decimal("0"):
+            raise ValueError("drawdown_threshold must be zero or negative")
+
+
+@dataclass(frozen=True)
+class RiskDrawdownEvidence:
+    source_reported_max_drawdown: Decimal | None
+    risk_supportability_state: str | None
+    risk_ref: SourceRef | None
+    risk_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
 class RiskOpportunitySourcePort(Protocol):
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
@@ -83,3 +113,6 @@ class RiskOpportunitySourcePort(Protocol):
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
         """Fetch source-owned Lotus Risk volatility evidence for idea evaluation."""
+
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
+        """Fetch source-owned Lotus Risk drawdown evidence for idea evaluation."""
