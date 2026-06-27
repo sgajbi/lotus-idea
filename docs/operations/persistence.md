@@ -81,11 +81,20 @@ type coverage, and source-authority boundaries, clearing only
 `downstream_consumer_runtime_proof_missing`. It does not certify external
 publication, platform mesh event publication, Gateway/Workbench behavior,
 downstream delivery, or supported features.
+`scripts/generate_outbox_platform_mesh_event_publication_proof.py` and
+`make outbox-platform-mesh-event-publication-proof-contract-gate` now provide
+the bounded outbox platform mesh event publication proof artifact consumed by
+aggregate RFC implementation readiness. The artifact validates repo-owned
+source-safe event contracts plus sibling platform source-manifest/catalog
+onboarding evidence, clearing only
+`platform_mesh_event_publication_proof_missing`. It does not certify external
+broker publication, downstream delivery, Gateway/Workbench behavior,
+client-ready publication, or supported features.
 `POST /api/v1/outbox-delivery/run-once` now exposes the bounded run-once
 delivery orchestration as a certified internal operator action. It requires
 `idea.outbox-delivery.run`, fails closed without valid broker configuration,
 returns aggregate counts only, and remains `not_certified` until live broker
-runtime, downstream consumer runtime proof, platform mesh event publication proof,
+runtime, downstream delivery evidence, certified external broker publication,
 Gateway/Workbench proof, and supported-feature promotion exist.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
@@ -100,7 +109,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, and bounded downstream consumer runtime proof artifact | No certified external publication, platform mesh event publication proof, downstream delivery, Gateway/Workbench behavior, or supported-feature promotion |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded outbox platform mesh event publication proof artifact | No certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |
@@ -287,8 +296,8 @@ later slices add:
 1. deploy-pipeline migration evidence,
 2. certified long-running scheduled source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
-4. platform mesh event publication proof and production event-publication
-   evidence beyond the bounded outbox broker and consumer runtime proof artifacts,
+4. certified external broker publication and production event-publication
+   evidence beyond the bounded outbox proof artifacts,
 5. data-product telemetry and platform mesh certification,
 6. Gateway/Workbench/downstream proof for supported workflows,
 7. updated endpoint certification, supported-feature, docs, wiki, and mesh
