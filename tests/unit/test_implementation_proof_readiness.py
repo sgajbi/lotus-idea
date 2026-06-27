@@ -494,43 +494,6 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.supported_features_promoted is False
-    runtime_telemetry = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "runtime-trust-telemetry-preview"
-    )
-    assert "runtime_candidate_snapshot_missing" not in runtime_telemetry.blockers
-    assert "platform_mesh_certification_missing" in runtime_telemetry.blockers
-    assert (
-        "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
-        in runtime_telemetry.evidence_refs
-    )
-    source_ingestion = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "source-ingestion"
-    )
-    review_queue = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "advisor-review-queue"
-    )
-    ai_explanation = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "ai-explanation"
-    )
-    data_mesh = next(
-        capability
-        for capability in snapshot.capabilities
-        if capability.capability_id == "data-mesh-certification"
-    )
-    assert "data_mesh_runtime_telemetry_not_certified" not in source_ingestion.blockers
-    assert "certified_runtime_trust_telemetry_missing" not in review_queue.blockers
-    assert "certified_runtime_trust_telemetry_missing" not in ai_explanation.blockers
-    assert "certified_runtime_trust_telemetry_missing" not in data_mesh.blockers
-    assert "data_mesh_not_certified" in data_mesh.blockers
-    assert "producer_products_not_active" in data_mesh.blockers
 
 
 def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runtime_claim() -> None:

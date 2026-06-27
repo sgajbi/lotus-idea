@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
 import json
 from pathlib import Path
-from types import MappingProxyType
-from typing import Mapping
+from typing import Any, Mapping
 
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
@@ -37,6 +35,14 @@ from app.application.downstream_route_contract_proof import (
     manage_action_route_proof_is_valid,
 )
 from app.application.durable_repository_proof import durable_repository_proof_is_valid
+from app.application.gateway_workbench_operational_proof import (
+    GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED,
+    gateway_workbench_operational_proof_is_valid,
+)
+from app.application.implementation_proof_models import (
+    ImplementationProofCapabilityReadiness,
+    ImplementationProofReadinessSnapshot,
+)
 from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
     mesh_policy_proof_is_valid,
@@ -85,51 +91,6 @@ from app.ports.idea_repository import OutboxDeliveryRepository
 SUPPORTED_FEATURES_PATH = Path("supported-features/supported-features.json")
 
 
-@dataclass(frozen=True)
-class ImplementationProofCapabilityReadiness:
-    capability_id: str
-    name: str
-    readiness_status: str
-    supportability_status: str
-    evidence_refs: tuple[str, ...]
-    blockers: tuple[str, ...]
-    supported_feature_promoted: bool
-
-    @property
-    def certification_ready(self) -> bool:
-        return not self.blockers
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "evidence_refs", tuple(self.evidence_refs))
-        object.__setattr__(self, "blockers", tuple(self.blockers))
-
-
-@dataclass(frozen=True)
-class ImplementationProofReadinessSnapshot:
-    repository: str
-    evaluated_at_utc: datetime
-    readiness_status: str
-    supportability_status: str
-    certification_ready: bool
-    capability_count: int
-    certification_ready_capability_count: int
-    blocked_capability_count: int
-    supported_feature_count: int
-    supported_features_promoted: bool
-    overall_blockers: tuple[str, ...]
-    source_of_truth: Mapping[str, str]
-    capabilities: tuple[ImplementationProofCapabilityReadiness, ...]
-
-    def __post_init__(self) -> None:
-        object.__setattr__(self, "overall_blockers", tuple(self.overall_blockers))
-        object.__setattr__(
-            self,
-            "source_of_truth",
-            MappingProxyType(dict(self.source_of_truth)),
-        )
-        object.__setattr__(self, "capabilities", tuple(self.capabilities))
-
-
 def build_implementation_proof_readiness_snapshot(
     *,
     evaluated_at_utc: datetime,
@@ -169,6 +130,8 @@ def build_implementation_proof_readiness_snapshot(
     platform_mesh_onboarding_proof_ref: str | None = None,
     workbench_read_path_proof: Mapping[str, object] | None = None,
     workbench_read_path_proof_ref: str | None = None,
+    gateway_workbench_operational_proof: Mapping[str, object] | None = None,
+    gateway_workbench_operational_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -219,40 +182,9 @@ def build_implementation_proof_readiness_snapshot(
         downstream_realization=downstream_realization,
         supported_feature_count=supported_feature_count,
     )
-    capabilities = _apply_available_proofs(
+    capabilities = _apply_available_proofs_from_scope(
         capabilities=capabilities,
-        durable_repository_proof=durable_repository_proof,
-        durable_repository_proof_ref=durable_repository_proof_ref,
-        runtime_trust_telemetry_proof=runtime_trust_telemetry_proof,
-        runtime_trust_telemetry_proof_ref=runtime_trust_telemetry_proof_ref,
-        ai_lineage_store_proof=ai_lineage_store_proof,
-        ai_lineage_store_proof_ref=ai_lineage_store_proof_ref,
-        ai_model_risk_operations_proof=ai_model_risk_operations_proof,
-        ai_model_risk_operations_proof_ref=ai_model_risk_operations_proof_ref,
-        ai_workflow_pack_registration_proof=ai_workflow_pack_registration_proof,
-        ai_workflow_pack_registration_proof_ref=ai_workflow_pack_registration_proof_ref,
-        ai_workflow_pack_runtime_execution_proof=ai_workflow_pack_runtime_execution_proof,
-        ai_workflow_pack_runtime_execution_proof_ref=ai_workflow_pack_runtime_execution_proof_ref,
-        advise_proposal_route_proof=advise_proposal_route_proof,
-        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
-        manage_action_route_proof=manage_action_route_proof,
-        manage_action_route_proof_ref=manage_action_route_proof_ref,
-        report_materialization_proof=report_materialization_proof,
-        report_materialization_proof_ref=report_materialization_proof_ref,
-        mesh_policy_proof=mesh_policy_proof,
-        mesh_policy_proof_ref=mesh_policy_proof_ref,
-        outbox_broker_proof=outbox_broker_proof,
-        outbox_broker_proof_ref=outbox_broker_proof_ref,
-        outbox_consumer_runtime_proof=outbox_consumer_runtime_proof,
-        outbox_consumer_runtime_proof_ref=outbox_consumer_runtime_proof_ref,
-        outbox_platform_mesh_event_publication_proof=(outbox_platform_mesh_event_publication_proof),
-        outbox_platform_mesh_event_publication_proof_ref=(
-            outbox_platform_mesh_event_publication_proof_ref
-        ),
-        platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
-        platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
-        workbench_read_path_proof=workbench_read_path_proof,
-        workbench_read_path_proof_ref=workbench_read_path_proof_ref,
+        scope=locals(),
     )
 
     return _readiness_snapshot(
@@ -328,6 +260,19 @@ def _build_base_capabilities(
     )
 
 
+def _apply_available_proofs_from_scope(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    proof_args: dict[str, Any] = {
+        name: scope[name]
+        for name in _apply_available_proofs.__annotations__
+        if name not in {"capabilities", "return"}
+    }
+    return _apply_available_proofs(capabilities=capabilities, **proof_args)
+
+
 def _apply_available_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
@@ -361,6 +306,8 @@ def _apply_available_proofs(
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
     workbench_read_path_proof_ref: str | None,
+    gateway_workbench_operational_proof: Mapping[str, object] | None,
+    gateway_workbench_operational_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,
@@ -405,6 +352,8 @@ def _apply_available_proofs(
         platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
         workbench_read_path_proof=workbench_read_path_proof,
         workbench_read_path_proof_ref=workbench_read_path_proof_ref,
+        gateway_workbench_operational_proof=gateway_workbench_operational_proof,
+        gateway_workbench_operational_proof_ref=gateway_workbench_operational_proof_ref,
     )
 
 
@@ -547,6 +496,8 @@ def _apply_platform_and_surface_proofs(
     platform_mesh_onboarding_proof_ref: str | None,
     workbench_read_path_proof: Mapping[str, object] | None,
     workbench_read_path_proof_ref: str | None,
+    gateway_workbench_operational_proof: Mapping[str, object] | None,
+    gateway_workbench_operational_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if mesh_policy_proof and mesh_policy_proof_is_valid(mesh_policy_proof):
         capabilities = tuple(
@@ -596,6 +547,16 @@ def _apply_platform_and_surface_proofs(
     if workbench_read_path_proof and workbench_read_path_proof_is_valid(workbench_read_path_proof):
         capabilities = tuple(
             _apply_workbench_read_path_proof(capability, workbench_read_path_proof_ref)
+            for capability in capabilities
+        )
+    if gateway_workbench_operational_proof and gateway_workbench_operational_proof_is_valid(
+        gateway_workbench_operational_proof
+    ):
+        capabilities = tuple(
+            _apply_gateway_workbench_operational_proof(
+                capability,
+                gateway_workbench_operational_proof_ref,
+            )
             for capability in capabilities
         )
     return capabilities
@@ -771,6 +732,33 @@ def _apply_workbench_read_path_proof(
             blocker
             for blocker in capability.blockers
             if blocker != "workbench_gateway_bff_consumption_proof_missing"
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
+
+
+def _apply_gateway_workbench_operational_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    gateway_workbench_operational_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id not in {"source-ingestion", "outbox-delivery"}:
+        return capability
+    blockers_to_clear = set(GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if gateway_workbench_operational_proof_ref:
+        evidence_refs = tuple(
+            dict.fromkeys((*evidence_refs, gateway_workbench_operational_proof_ref))
+        )
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )

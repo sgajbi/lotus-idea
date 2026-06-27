@@ -26,9 +26,14 @@ from app.application.downstream_route_contract_proof import (
     ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
     MANAGE_ACTION_ROUTE_PROOF_ENV,
 )
-from app.application.implementation_proof_readiness import (
+from app.application.gateway_workbench_operational_proof import (
+    GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+)
+from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
+)
+from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
@@ -140,27 +145,8 @@ def _capability_payload(
 
 
 def _proof_payload_kwargs(input_: Mapping[str, ProofArtifactInput]) -> dict[str, Any]:
-    proof_fields = (
-        "durable_repository",
-        "runtime_trust_telemetry",
-        "ai_lineage_store",
-        "ai_model_risk_operations",
-        "ai_workflow_pack_registration",
-        "ai_workflow_pack_runtime_execution",
-        "advise_proposal_route",
-        "manage_action_route",
-        "report_intake_route",
-        "report_materialization",
-        "mesh_policy",
-        "outbox_broker",
-        "outbox_consumer_runtime",
-        "outbox_platform_mesh_event_publication",
-        "platform_mesh_onboarding",
-        "workbench_read_path",
-    )
     kwargs: dict[str, Any] = {}
-    for field_name in proof_fields:
-        artifact = input_[field_name]
+    for field_name, artifact in input_.items():
         kwargs[f"{field_name}_proof"] = artifact.payload
         kwargs[f"{field_name}_proof_ref"] = _proof_ref(artifact)
     return kwargs
@@ -245,6 +231,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             args.workbench_read_path_proof,
             artifact_name="workbench read-path proof",
             ref_name="workbench read-path proof artifact",
+        ),
+        "gateway_workbench_operational": _proof_artifact_input(
+            args.gateway_workbench_operational_proof,
+            artifact_name="Gateway/Workbench operational proof",
+            ref_name="Gateway/Workbench operational proof artifact",
         ),
         "outbox_broker": _proof_artifact_input(
             args.outbox_broker_proof,
@@ -384,6 +375,11 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--workbench-read-path-proof",
             WORKBENCH_READ_PATH_PROOF_ENV,
             "Optional bounded Workbench read-path proof artifact path.",
+        ),
+        (
+            "--gateway-workbench-operational-proof",
+            GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+            "Optional bounded Gateway/Workbench operational proof artifact path.",
         ),
         (
             "--outbox-broker-proof",

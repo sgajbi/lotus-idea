@@ -30,28 +30,30 @@ Blocking scaffold commands:
 21. `make ai-workflow-pack-registration-proof-contract-gate`
 22. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
 23. `make workbench-read-path-proof-contract-gate`
-24. `make outbox-broker-proof-contract-gate`
-25. `make platform-mesh-onboarding-proof-contract-gate`
-26. `make downstream-route-contract-proof-gate`
-27. `make source-ingestion-worker-check`
-28. `make source-ingestion-scheduled-worker-check`
-29. `make source-ingestion-live-proof-contract-gate`
-30. `make implementation-proof-readiness-check` generates the scheduled-worker
+24. `make gateway-workbench-operational-proof-contract-gate`
+25. `make outbox-broker-proof-contract-gate`
+26. `make platform-mesh-onboarding-proof-contract-gate`
+27. `make downstream-route-contract-proof-gate`
+28. `make source-ingestion-worker-check`
+29. `make source-ingestion-scheduled-worker-check`
+30. `make source-ingestion-live-proof-contract-gate`
+31. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
-    telemetry proof artifact, Workbench read-path proof artifact, outbox
+    telemetry proof artifact, Workbench read-path proof artifact,
+    Gateway/Workbench operational proof artifact, outbox
     broker proof artifact, default Advise proposal route proof artifact,
     default Manage action route proof artifact, default Report intake route
     proof artifact, default mesh policy proof artifact, and default platform
     mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
     registration proof artifacts, then consumes all in
     aggregate RFC proof-readiness evidence.
-31. `make supported-features-gate`
-32. `make endpoint-certification-gate`
-33. `make postgres-integration-gate`
-34. `make openapi-gate`
-35. `make coverage-gate`
-36. `make security-audit`
-37. `make docker-build`
+32. `make supported-features-gate`
+33. `make endpoint-certification-gate`
+34. `make postgres-integration-gate`
+35. `make openapi-gate`
+36. `make coverage-gate`
+37. `make security-audit`
+38. `make docker-build`
 
 Cleanup support command:
 

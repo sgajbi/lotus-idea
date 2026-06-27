@@ -18,6 +18,9 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
     build_ai_workflow_pack_runtime_execution_proof_payload,
 )
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
+from app.application.gateway_workbench_operational_proof import (
+    build_gateway_workbench_operational_proof_payload,
+)
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
@@ -516,6 +519,60 @@ def test_generate_implementation_proof_readiness_uses_explicit_workbench_read_pa
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "canonical_demo_runtime_proof_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench_operational_proof(
+    tmp_path: Path,
+) -> None:
+    workbench_proof_payload = build_workbench_read_path_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=Path(__file__).resolve().parents[2],
+    )
+    gateway_workbench_proof = tmp_path / "gateway-workbench-operational-proof.json"
+    gateway_workbench_proof.write_text(
+        json.dumps(
+            build_gateway_workbench_operational_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+                workbench_read_path_proof=workbench_proof_payload,
+                workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--gateway-workbench-operational-proof",
+            str(gateway_workbench_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "gateway_workbench_proof_missing" not in payload["overallBlockers"]
+    assert "workbench_product_proof_missing" in payload["overallBlockers"]
+    assert "workbench_panel_missing" in payload["overallBlockers"]
+    assert "gateway_workbench_discovery_proof_missing" in payload["overallBlockers"]
+    source_ingestion = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "source-ingestion"
+    )
+    outbox_delivery = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "outbox-delivery"
+    )
+    assert "Gateway/Workbench operational proof artifact" in source_ingestion["evidenceRefs"]
+    assert "Gateway/Workbench operational proof artifact" in outbox_delivery["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
