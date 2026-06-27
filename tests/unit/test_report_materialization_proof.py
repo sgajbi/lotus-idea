@@ -12,10 +12,12 @@ import pytest
 from app.application.report_materialization_proof import (
     REMAINING_REPORT_MATERIALIZATION_BLOCKERS,
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
+    REPORT_MATERIALIZATION_PROOF_ENV,
     REPORT_MATERIALIZATION_PROOF_SCHEMA_VERSION,
     REPORT_MATERIALIZATION_ROUTE,
     REQUIRED_REPORT_MATERIALIZATION_EVIDENCE_REFS,
     build_report_materialization_proof_payload,
+    load_report_materialization_proof_from_env,
     report_materialization_proof_is_valid,
 )
 
@@ -93,6 +95,27 @@ def test_rejects_report_materialization_proof_with_invalid_top_level_fields(
 
 
 @pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("aggregateBlockersCleared", ("wrong",)),
+        ("evidenceRefs", ("wrong",)),
+        ("remainingCertificationBlockers", ("wrong",)),
+        ("proofChecks", None),
+        ("generatedAtUtc", ""),
+    ],
+)
+def test_rejects_report_materialization_proof_with_invalid_collections(
+    field_name: str,
+    bad_value: object,
+    tmp_path: Path,
+) -> None:
+    proof = _valid_report_materialization_proof(tmp_path)
+    proof[field_name] = bad_value
+
+    assert report_materialization_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
     "check_name",
     [
         "timezoneAwareGeneratedAtUtc",
@@ -142,6 +165,64 @@ def test_report_materialization_proof_contract_gate_scans_tuple_content() -> Non
     module._validate_forbidden_content(("portfolio_id",), errors)
 
     assert errors == ["$[0]: forbidden source-sensitive text `portfolio_id` is present"]
+
+
+def test_load_report_materialization_proof_from_env_returns_none_when_unset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(REPORT_MATERIALIZATION_PROOF_ENV, raising=False)
+
+    assert load_report_materialization_proof_from_env() == (None, None)
+
+
+def test_load_report_materialization_proof_from_env_requires_object(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "proof.json"
+    proof_path.write_text("[]", encoding="utf-8")
+    monkeypatch.setenv(REPORT_MATERIALIZATION_PROOF_ENV, str(proof_path))
+
+    with pytest.raises(ValueError, match="must reference a JSON object"):
+        load_report_materialization_proof_from_env()
+
+
+def test_load_report_materialization_proof_from_env_returns_source_safe_ref(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "proof.json"
+    proof_path.write_text(
+        json.dumps(_valid_report_materialization_proof(tmp_path)), encoding="utf-8"
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv(REPORT_MATERIALIZATION_PROOF_ENV, str(proof_path))
+
+    proof, proof_ref = load_report_materialization_proof_from_env()
+
+    assert proof is not None
+    assert report_materialization_proof_is_valid(proof) is True
+    assert proof_ref == "proof.json"
+
+
+def test_load_report_materialization_proof_from_env_hides_foreign_path(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cwd = tmp_path / "cwd"
+    cwd.mkdir()
+    proof_path = tmp_path / "outside" / "proof.json"
+    proof_path.parent.mkdir()
+    proof_path.write_text(
+        json.dumps(_valid_report_materialization_proof(tmp_path)), encoding="utf-8"
+    )
+    monkeypatch.chdir(cwd)
+    monkeypatch.setenv(REPORT_MATERIALIZATION_PROOF_ENV, str(proof_path))
+
+    proof, proof_ref = load_report_materialization_proof_from_env()
+
+    assert proof is not None
+    assert proof_ref == "report materialization proof artifact"
 
 
 def _valid_report_materialization_proof(tmp_path: Path) -> dict[str, Any]:

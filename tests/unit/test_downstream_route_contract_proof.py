@@ -5,23 +5,27 @@ import importlib.util
 import json
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Mapping
+from typing import Any, Mapping, cast
 
 import pytest
 
 from app.application.downstream_route_contract_proof import (
     ADVISE_PROPOSAL_ROUTE,
     ADVISE_PROPOSAL_ROUTE_PROFILE,
+    ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
     ADVISE_ROUTE_BLOCKERS_CLEARED,
     DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION,
     MANAGE_ACTION_ROUTE,
     MANAGE_ACTION_ROUTE_PROFILE,
+    MANAGE_ACTION_ROUTE_PROOF_ENV,
     MANAGE_ROUTE_BLOCKERS_CLEARED,
     REMAINING_ADVISE_ROUTE_BLOCKERS,
     REMAINING_MANAGE_ROUTE_BLOCKERS,
+    advise_proposal_route_proof_is_valid,
     build_advise_proposal_route_proof_payload,
     build_manage_action_route_proof_payload,
-    advise_proposal_route_proof_is_valid,
+    load_advise_proposal_route_proof_from_env,
+    load_manage_action_route_proof_from_env,
     manage_action_route_proof_is_valid,
 )
 
@@ -101,6 +105,27 @@ def test_advise_route_proof_requires_proposal_authority_boundary(tmp_path: Path)
     assert advise_proposal_route_proof_is_valid(proof) is False
 
 
+def test_manage_route_proof_accepts_contract_without_separate_authority_field(
+    tmp_path: Path,
+) -> None:
+    contract = _manage_contract_payload()
+    contract["unexpected_authority_field"] = "lotus-idea"
+
+    proof = build_manage_action_route_proof_payload(
+        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+        manage_root=_write_downstream_fixture(
+            tmp_path,
+            repository="lotus-manage",
+            profile=MANAGE_ACTION_ROUTE_PROFILE,
+            contract_payload=contract,
+        ),
+    )
+
+    assert proof["manageActionRouteProofValid"] is True
+    assert manage_action_route_proof_is_valid(proof) is True
+
+
 @pytest.mark.parametrize(
     ("field_name", "bad_value", "valid"),
     [
@@ -110,11 +135,14 @@ def test_advise_route_proof_requires_proposal_authority_boundary(tmp_path: Path)
         ("proofScope", "execution", advise_proposal_route_proof_is_valid),
         ("adviseProposalRouteProofValid", False, advise_proposal_route_proof_is_valid),
         ("targetRoute", "POST /advisory/proposals", advise_proposal_route_proof_is_valid),
+        ("sourceAuthority", "lotus-idea", advise_proposal_route_proof_is_valid),
         ("downstreamExecutionProven", True, advise_proposal_route_proof_is_valid),
         ("suitabilityAuthorityGranted", True, advise_proposal_route_proof_is_valid),
+        ("rebalanceExecutionAuthorityGranted", True, advise_proposal_route_proof_is_valid),
         ("clientPublicationAuthorityGranted", True, advise_proposal_route_proof_is_valid),
         ("supportedFeaturePromoted", True, advise_proposal_route_proof_is_valid),
         ("proofClosed", True, advise_proposal_route_proof_is_valid),
+        ("generatedAtUtc", "", advise_proposal_route_proof_is_valid),
         ("generatedAtUtc", "not-a-date", advise_proposal_route_proof_is_valid),
     ],
 )
@@ -128,6 +156,104 @@ def test_rejects_advise_route_proof_with_invalid_top_level_fields(
     proof[field_name] = bad_value
 
     assert valid(proof) is False  # type: ignore[operator]
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("aggregateBlockersCleared", ("wrong",)),
+        ("evidenceRefs", ("wrong",)),
+        ("remainingCertificationBlockers", ("wrong",)),
+        ("proofChecks", None),
+    ],
+)
+def test_rejects_advise_route_proof_with_invalid_collections(
+    field_name: str,
+    bad_value: object,
+    tmp_path: Path,
+) -> None:
+    proof = _valid_advise_route_proof(tmp_path)
+    proof[field_name] = bad_value
+
+    assert advise_proposal_route_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    "check_name",
+    [
+        "timezoneAwareGeneratedAtUtc",
+        "fileEvidencePresent",
+        "downstreamContractProvesRoute",
+        "downstreamContractPreservesNonProofBoundaries",
+        "downstreamContractRetainsAuthorityBlockers",
+    ],
+)
+def test_rejects_manage_route_proof_with_invalid_proof_checks(
+    check_name: str,
+    tmp_path: Path,
+) -> None:
+    proof = _valid_manage_route_proof(tmp_path)
+    proof_checks = dict(cast(Mapping[str, object], proof["proofChecks"]))
+    proof_checks[check_name] = False
+    proof["proofChecks"] = proof_checks
+
+    assert manage_action_route_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("load_proof", "env_name"),
+    [
+        (load_advise_proposal_route_proof_from_env, ADVISE_PROPOSAL_ROUTE_PROOF_ENV),
+        (load_manage_action_route_proof_from_env, MANAGE_ACTION_ROUTE_PROOF_ENV),
+    ],
+)
+def test_load_route_proof_from_env_returns_none_when_unset(
+    load_proof: object,
+    env_name: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(env_name, raising=False)
+
+    assert load_proof() == (None, None)  # type: ignore[operator]
+
+
+@pytest.mark.parametrize(
+    ("load_proof", "env_name"),
+    [
+        (load_advise_proposal_route_proof_from_env, ADVISE_PROPOSAL_ROUTE_PROOF_ENV),
+        (load_manage_action_route_proof_from_env, MANAGE_ACTION_ROUTE_PROOF_ENV),
+    ],
+)
+def test_load_route_proof_from_env_requires_object(
+    load_proof: object,
+    env_name: str,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    proof_path = tmp_path / "proof.json"
+    proof_path.write_text("[]", encoding="utf-8")
+    monkeypatch.setenv(env_name, str(proof_path))
+
+    with pytest.raises(ValueError, match="must reference a JSON object"):
+        load_proof()  # type: ignore[operator]
+
+
+def test_load_route_proof_from_env_hides_foreign_path(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    cwd = tmp_path / "cwd"
+    cwd.mkdir()
+    proof_path = tmp_path / "outside" / "proof.json"
+    proof_path.parent.mkdir()
+    proof_path.write_text(json.dumps(_valid_advise_route_proof(tmp_path)), encoding="utf-8")
+    monkeypatch.chdir(cwd)
+    monkeypatch.setenv(ADVISE_PROPOSAL_ROUTE_PROOF_ENV, str(proof_path))
+
+    proof, proof_ref = load_advise_proposal_route_proof_from_env()
+
+    assert proof is not None
+    assert proof_ref == f"{ADVISE_PROPOSAL_ROUTE_PROOF_ENV} artifact"
 
 
 def test_advise_route_proof_cli_allows_missing_sibling_evidence_for_default_readiness(
