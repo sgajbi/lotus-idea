@@ -12,7 +12,7 @@ promotion.
 | Opportunity intelligence | Internal candidate, review, feedback, conversion, and proof foundations exist. | Explain the governed operating model and current boundaries. |
 | Supported features | No external supported feature is promoted. | Do not claim production availability or client-ready publication. |
 | Workbench | Bounded read-only proof exists, but full product-surface certification is blocked. | Show only after validation and with explicit bounded-preview language. |
-| Downstream realization | Advise, Manage, Report, Render, and Archive ownership is modeled, not fully materialized. | Describe domain boundaries; do not claim downstream creation. |
+| Downstream realization | Advise, Manage, and Report route-foundation proof can be consumed; bounded Report/Render/Archive materialization proof can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim suitability, rebalance/execution, client publication, or supported-feature promotion. |
 | Data mesh | Proposed products and readiness diagnostics exist. | Present as day-one governance foundation, not certified data-product status. |
 
 ## Client Demo Flow
@@ -63,7 +63,7 @@ Use this framing for external audiences:
 | --- | --- |
 | What is Lotus doing here? | Showing how opportunity intelligence can be governed from source evidence through review posture and proof readiness. |
 | Why should a client trust the story? | Every current claim must link to an owner, command, run ID, artifact, and validation gate. |
-| What is not being claimed? | Production support, client-ready publication, suitability approval, execution, report materialization, archive creation, autonomous advice, and certified data-product status. |
+| What is not being claimed? | Production support, client-ready publication, suitability approval, rebalance/execution authority, autonomous advice, certified data-product status, or supported-feature promotion. |
 
 ## Claim States
 
@@ -139,9 +139,10 @@ publication, or supported-feature promotion.
 
 Until proof-readiness blockers are cleared by implementation-backed evidence,
 do not claim autonomous advice, suitability approval, mandate compliance,
-rebalance execution, report materialization, rendered client output, archive
-record creation, client-ready publication, certified data-mesh product status,
-or supported external product availability.
+rebalance execution, rendered client-ready output, client-ready publication,
+certified data-mesh product status, or supported external product availability.
+Bounded Report/Render/Archive proof may be described only as internal proof
+readiness evidence, not as client publication or product support.
 
 ## Acceptance Checklist
 

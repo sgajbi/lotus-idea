@@ -77,10 +77,10 @@ later implementation-backed artifact explicitly clears the relevant blocker:
 2. suitability approval,
 3. mandate or compliance certification,
 4. rebalance execution,
-5. report materialization,
-6. rendered client report output,
-7. archive record creation,
-8. client communication or publication authority,
+5. rendered client-ready report output,
+6. client communication authority,
+7. bounded Report/Render/Archive proof as product support,
+8. client publication authority,
 9. certified data-mesh product status,
 10. supported external product availability.
 

@@ -7,7 +7,7 @@
 | Required role | `operator` |
 | Required capability | `idea.downstream-realization.readiness.read` |
 | Supportability | `not_certified` |
-| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation proof consumption when sibling evidence is present; no downstream execution, materialization, client publication, or supported-feature promotion |
+| Product claim | Internal submission posture plus default source-safe `lotus-advise`, `lotus-manage`, and `lotus-report` route-foundation proof consumption when sibling evidence is present; default source-safe `lotus-report` materialization proof can clear only Report/Render/Archive materialization blockers; no suitability, rebalance/execution, client publication, or supported-feature promotion |
 
 `GET /api/v1/downstream-realization/readiness` reports source-safe readiness
 for realizing approved ideas through `lotus-advise`, `lotus-manage`,
@@ -41,7 +41,10 @@ It returns:
     evidence is present,
 11. default source-safe proof that `lotus-report` exposes
     `POST /reports/idea-evidence-packs` for idea evidence-pack intake,
-12. `not_certified` supportability until downstream live contracts and product
+12. default source-safe proof that `lotus-report` exposes
+    `POST /reports/idea-evidence-packs/materializations` and has report-owned
+    materialization/render/archive evidence when sibling evidence is present,
+13. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
 The submission routes are:
@@ -60,16 +63,17 @@ downstream outcomes or promote support.
 
 ## What It Does Not Prove
 
-The diagnostic is deliberately not downstream execution proof. It does not:
+The diagnostic is deliberately not downstream execution authority. It does not:
 
 1. call downstream Lotus services,
 2. create Advise proposals or suitability records,
 3. create Manage action-register, model, rebalance, or execution records,
-4. create Report packages,
-5. create Render output,
-6. create Archive records,
-7. authorize publication of client-facing material,
-8. promote a supported feature.
+4. create Report packages from within `lotus-idea`,
+5. create Render output from within `lotus-idea`,
+6. create Archive records from within `lotus-idea`,
+7. grant suitability, rebalance, execution, or client-communication authority,
+8. authorize publication of client-facing material,
+9. promote a supported feature.
 
 The submission routes also do not prove that the downstream target route exists
 or accepted business authority. A downstream service remains the source of
@@ -100,6 +104,7 @@ existence blockers:
 | Advise proposal route proof | `advise_live_contract_proof_missing` | Candidate evidence source authority remains with `lotus-idea`; suitability, policy approval, proposal lifecycle certification, client communication, and supported-feature promotion remain with `lotus-advise`. |
 | Manage action route proof | `manage_live_contract_proof_missing` | Mandate/rebalance action authority, execution, order creation, settlement, client communication, and supported-feature promotion remain with `lotus-manage`. |
 | Report intake route proof | `lotus_report_live_intake_route_proof_missing` | Report materialization, render output, archive record creation, client publication, and supported-feature promotion remain with Report/Render/Archive. |
+| Report materialization proof | `report_evidence_pack_live_materialization_proof_missing`, `rendered_output_creation_missing`, `archive_record_creation_missing` | Client publication and supported-feature promotion remain blocked; `lotus-report`, `lotus-render`, and `lotus-archive` retain downstream authority. |
 
 `make downstream-realization-contract-gate` blocks:
 
@@ -119,12 +124,12 @@ validated through the owning repositories and platform gates:
 1. `lotus-advise` proposal/suitability intake is implemented and certified,
 2. `lotus-manage` action-register or DPM review intake is implemented and
    certified,
-3. `lotus-report`, `lotus-render`, and `lotus-archive` materialization proof
-   exists for an idea evidence pack,
-4. downstream live contract proof is captured beyond route-foundation posture,
-5. Gateway/Workbench product proof exists where a product surface consumes the
+3. downstream live contract proof is captured beyond route-foundation and
+   materialization posture,
+4. Gateway/Workbench product proof exists where a product surface consumes the
    flow,
-6. data-mesh runtime trust telemetry and platform certification are complete,
+5. data-mesh runtime trust telemetry and platform certification are complete,
+6. client-publication authority is explicitly granted by owning services,
 7. supported-feature promotion evidence is present.
 
 ## Advise And Manage Route Proofs
@@ -166,6 +171,35 @@ artifacts deliberately keep these blockers:
 | `suitability_policy_authority_remains_lotus_advise` | `lotus-advise` remains the downstream authority for suitability, policy approval, advisory proposal lifecycle, and client communication. |
 | `rebalance_execution_authority_remains_lotus_manage` | `lotus-manage` remains the source authority for action-register, DPM/rebalance workflow, order/execution, and settlement posture. |
 | `client_publication_authority_blocked` | No client-ready communication authority is granted. |
+
+## Report Materialization Proof
+
+`scripts/generate_report_materialization_proof.py` can read the sibling
+`lotus-report` materialization contract and produce a source-safe artifact such
+as:
+
+```powershell
+python scripts/generate_report_materialization_proof.py `
+  --generated-at-utc 2026-06-27T00:00:00Z `
+  --report-root ..\lotus-report `
+  --output output\downstream\report-materialization-proof.json
+```
+
+`make implementation-proof-readiness-check` generates this artifact by default
+from `LOTUS_REPORT_ROOT=../lotus-report` into
+`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT=output/downstream/report-materialization-proof.json`
+and passes it to aggregate readiness. Set
+`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` only when you need to override that
+artifact. Missing sibling evidence writes an invalid non-proof artifact and
+keeps the materialization blockers. A valid artifact proves only that
+`lotus-report` owns the materialization route and downstream evidence chain for
+report materialization, rendered-output creation, and archive-record creation.
+It deliberately keeps these blockers:
+
+| Remaining blocker | Why it remains |
+| --- | --- |
+| `client_publication_authority_blocked` | No client-ready communication authority is granted. |
+| `supported_feature_promotion_missing` | Materialization evidence is not supported-feature promotion. |
 
 ## Report Intake Route Proof
 
@@ -257,25 +291,31 @@ Implementation-backed evidence:
    `scripts/generate_report_intake_route_proof.py`,
 14. report route proof gate:
     `scripts/report_intake_route_proof_contract_gate.py`,
-15. readiness API route: `src/app/api/downstream_realization_readiness.py`,
-16. operation events:
+15. report materialization proof generator:
+   `scripts/generate_report_materialization_proof.py`,
+16. report materialization proof gate:
+    `scripts/report_materialization_proof_contract_gate.py`,
+17. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+18. operation events:
    `downstream_realization_readiness_read` and
    `downstream_realization_submission`,
-17. endpoint ledger:
+19. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-18. unit tests:
+20. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-19. application orchestration tests:
+21. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-20. adapter tests:
+22. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-21. gate tests:
+23. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-22. route proof tests:
+24. route proof tests:
     `tests/unit/test_downstream_route_contract_proof.py`,
-23. report route proof tests:
+25. report route proof tests:
     `tests/unit/test_report_intake_route_proof.py`,
-24. integration tests:
+26. report materialization proof tests:
+    `tests/unit/test_report_materialization_proof.py`,
+27. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py` and
    `tests/integration/test_downstream_realization_api.py`.
 
@@ -286,6 +326,7 @@ python -m pytest tests/unit/test_downstream_realization_application.py tests/uni
 make downstream-realization-contract-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate
+make report-materialization-proof-contract-gate
 make endpoint-certification-gate
 make openapi-gate
 ```

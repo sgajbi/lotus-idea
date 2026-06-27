@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, outbox broker, mesh policy, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, downstream execution authority, platform mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, mesh policy, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -80,8 +80,9 @@ validated through the owning repositories and platform gates:
 5. platform mesh event publication proof for outbox publication,
 6. `lotus-ai` live-provider rollout and runtime trust certification,
 7. Workbench panel and browser proof,
-8. downstream Advise, Manage, Report, Render, and Archive realization,
-9. supported-feature promotion evidence.
+8. downstream Advise and Manage realization authority,
+9. Report/Render/Archive client-publication authority,
+10. supported-feature promotion evidence.
 
 Downstream realization blockers are backed by
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
@@ -92,12 +93,11 @@ The downstream realization capability now also cites the internal submission
 routes for Advise/Manage conversion intents and Report evidence-pack requests,
 plus the report-owned planned intake contract at
 `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`.
-Default source-safe Advise proposal route, Manage action route, and Report
-intake route proof artifacts can clear only the corresponding route-existence
-blocker when merged sibling evidence is present. Those refs do not clear
-suitability policy authority, rebalance/action authority, downstream execution,
-materialization, render, archive, client-publication, or supported-feature
-blockers.
+Default source-safe Advise proposal route, Manage action route, Report intake
+route, and Report materialization proof artifacts can clear only their
+corresponding bounded blockers when merged sibling evidence is present. Those
+refs do not clear suitability policy authority, rebalance/action authority,
+client-publication authority, or supported-feature blockers.
 
 Source-ingestion live proof is captured by
 `scripts/generate_source_ingestion_live_proof.py`. A valid artifact referenced
@@ -137,6 +137,8 @@ the canonical target instead of a one-off command:
 | `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/report-intake-route-proof.json`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` | Selects the default generated report materialization proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/report-materialization-proof.json`. |
+| `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` | Overrides the default generated report materialization proof artifact passed into aggregate readiness. |
 | `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` | Selects the default generated mesh policy proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/mesh-policy-proof.json`. |
 | `LOTUS_IDEA_MESH_POLICY_PROOF` | Overrides the default generated mesh policy proof artifact passed into aggregate readiness. |
 | `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
@@ -268,6 +270,24 @@ report-owned intake route modules and tests, the `lotus-idea` downstream
 contract, and the readiness endpoints. It does not create a report job, render
 output, archive record, client publication, suitability decision, mandate
 action, execution instruction, or supported feature.
+
+Report materialization proof is captured by
+`scripts/generate_report_materialization_proof.py`. The repo-native
+`make implementation-proof-readiness-check` target now generates the default
+artifact from `LOTUS_REPORT_ROOT` under
+`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` and passes it into aggregate
+readiness when `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` is not set. A valid
+artifact clears only `report_evidence_pack_live_materialization_proof_missing`,
+`rendered_output_creation_missing`, and `archive_record_creation_missing`
+inside downstream realization and aggregate implementation-proof readiness.
+Missing sibling evidence writes an invalid non-proof artifact and keeps those
+blockers so CI remains stable without treating absence as proof. It cites the
+merged `lotus-report` materialization contract for
+`POST /reports/idea-evidence-packs/materializations`, report-owned
+materialization/render/archive modules and tests, the `lotus-idea` downstream
+contract, and the readiness endpoints. It does not grant client-publication
+authority, suitability authority, mandate action, execution instruction, or a
+supported feature.
 
 Platform mesh onboarding proof is captured by
 `scripts/generate_platform_mesh_onboarding_proof.py`. The repo-native
@@ -416,8 +436,8 @@ Implementation-backed evidence:
 5. repo-native check that generates and consumes the scheduled-worker
    deploy-proof, durable repository proof, runtime telemetry proof, Workbench
    read-path proof, Advise proposal route proof, Manage action route proof,
-   Report intake route proof, and outbox broker proof artifacts, and records
-   validated proof refs in capability evidence:
+   Report intake route proof, Report materialization proof, and outbox broker
+   proof artifacts, and records validated proof refs in capability evidence:
    `make implementation-proof-readiness-check`,
 6. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
@@ -480,13 +500,19 @@ Implementation-backed evidence:
     `make report-intake-route-proof-contract-gate`,
 35. report intake route proof tests:
     `tests/unit/test_report_intake_route_proof.py`,
-36. outbox broker proof tests:
+36. report materialization proof generator:
+    `scripts/generate_report_materialization_proof.py`,
+37. report materialization proof contract gate:
+    `make report-materialization-proof-contract-gate`,
+38. report materialization proof tests:
+    `tests/unit/test_report_materialization_proof.py`,
+39. outbox broker proof tests:
     `tests/unit/test_outbox_broker_proof.py`,
-37. platform mesh onboarding proof generator:
+40. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
-38. platform mesh onboarding proof contract gate:
+41. platform mesh onboarding proof contract gate:
     `make platform-mesh-onboarding-proof-contract-gate`,
-39. platform mesh onboarding proof tests:
+42. platform mesh onboarding proof tests:
     `tests/unit/test_platform_mesh_onboarding_proof.py`,
 40. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
@@ -542,6 +568,7 @@ $env:LOTUS_MANAGE_ROOT = "..\lotus-manage"
 $env:LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT = "output/downstream/manage-action-route-proof.json"
 $env:LOTUS_REPORT_ROOT = "..\lotus-report"
 $env:LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT = "output/downstream/report-intake-route-proof.json"
+$env:LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT = "output/downstream/report-materialization-proof.json"
 $env:IMPLEMENTATION_PROOF_OUTPUT = "output/implementation-proof/implementation-proof-readiness.json"
 make implementation-proof-readiness-check
 
@@ -551,6 +578,7 @@ make ai-workflow-pack-registration-proof-contract-gate
 make outbox-broker-proof-contract-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate
+make report-materialization-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
