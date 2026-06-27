@@ -188,12 +188,16 @@ Persistence adapter validation:
     bounded Workbench queue/detail read-path proof contract that aggregate
     readiness consumes to clear only
     `workbench_gateway_bff_consumption_proof_missing`.
-12. `tests/unit/test_outbox_broker_proof.py` and
-    `make outbox-consumer-contract-gate` / `make outbox-broker-proof-contract-gate`
-    prove the declared downstream consumer contract and source-safe bounded
-    outbox broker proof contract that aggregate readiness consumes to clear
-    only `outbox_broker_not_configured` and
-    `external_broker_runtime_proof_missing`.
+12. `tests/unit/test_outbox_broker_proof.py`,
+    `tests/unit/test_outbox_consumer_runtime_proof.py`,
+    `make outbox-consumer-contract-gate`,
+    `make outbox-broker-proof-contract-gate`, and
+    `make outbox-consumer-runtime-proof-contract-gate` prove the declared
+    downstream consumer contract, source-safe bounded outbox broker proof
+    contract, and source-safe bounded downstream consumer runtime proof
+    contract that aggregate readiness consumes to clear only
+    `outbox_broker_not_configured`, `external_broker_runtime_proof_missing`,
+    and `downstream_consumer_runtime_proof_missing`.
 13. `tests/unit/test_report_intake_route_proof.py`,
     `tests/unit/test_downstream_realization_readiness.py`,
     `tests/integration/test_downstream_realization_readiness_api.py`, and

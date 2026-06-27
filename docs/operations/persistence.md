@@ -71,7 +71,16 @@ supported features.
 `make outbox-consumer-contract-gate` now declare governed downstream consumers
 for Gateway, Advise, Manage, and Report without certifying runtime consumption.
 Readiness therefore reports `downstream_consumer_runtime_proof_missing` instead
-of a missing-contract blocker while live consumer proof remains absent.
+of a missing-contract blocker until a bounded consumer runtime proof artifact is
+supplied.
+`scripts/generate_outbox_consumer_runtime_proof.py` and
+`make outbox-consumer-runtime-proof-contract-gate` now provide the bounded
+consumer runtime proof artifact consumed by aggregate RFC implementation
+readiness. The artifact validates declared consumer coverage, consumed event
+type coverage, and source-authority boundaries, clearing only
+`downstream_consumer_runtime_proof_missing`. It does not certify external
+publication, platform mesh event publication, Gateway/Workbench behavior,
+downstream delivery, or supported features.
 `POST /api/v1/outbox-delivery/run-once` now exposes the bounded run-once
 delivery orchestration as a certified internal operator action. It requires
 `idea.outbox-delivery.run`, fails closed without valid broker configuration,
@@ -91,7 +100,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, and source-safe outbox broker proof artifact for accepted internal mutations | No certified external publication, platform mesh event publication proof, or downstream consumer runtime proof |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, and bounded downstream consumer runtime proof artifact | No certified external publication, platform mesh event publication proof, downstream delivery, Gateway/Workbench behavior, or supported-feature promotion |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |
@@ -278,8 +287,8 @@ later slices add:
 1. deploy-pipeline migration evidence,
 2. certified long-running scheduled source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
-4. downstream consumer runtime proof, platform mesh event publication proof, and
-   production event-publication evidence beyond the bounded outbox broker proof artifact,
+4. platform mesh event publication proof and production event-publication
+   evidence beyond the bounded outbox broker and consumer runtime proof artifacts,
 5. data-product telemetry and platform mesh certification,
 6. Gateway/Workbench/downstream proof for supported workflows,
 7. updated endpoint certification, supported-feature, docs, wiki, and mesh

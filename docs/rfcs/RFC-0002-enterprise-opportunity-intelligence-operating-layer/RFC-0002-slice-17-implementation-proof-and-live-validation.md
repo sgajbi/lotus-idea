@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -52,9 +52,17 @@ Prove the complete supported opportunity journey end to end.
 8. `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
    `make outbox-consumer-contract-gate` now declare the Gateway, Advise,
    Manage, and Report outbox consumers with source-authority boundaries. This
-   removes the stale missing-contract posture and preserves
-   `downstream_consumer_runtime_proof_missing` until live consumer proof exists.
-8. `make downstream-realization-contract-gate` now validates the planned
+   removes the stale missing-contract posture while leaving runtime proof to the
+   bounded downstream consumer runtime proof artifact and keeping downstream
+   delivery unsupported.
+9. `scripts/generate_outbox_consumer_runtime_proof.py` and
+   `make outbox-consumer-runtime-proof-contract-gate` now generate and validate
+   the bounded downstream consumer runtime proof artifact consumed by aggregate
+   implementation-proof readiness. A valid artifact clears only
+   `downstream_consumer_runtime_proof_missing`; platform mesh event,
+   Gateway/Workbench, downstream delivery, and supported-feature blockers
+   remain.
+10. `make downstream-realization-contract-gate` now validates the planned
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
    rewritten as route-existence or downstream-execution claims.
@@ -317,9 +325,10 @@ CI-enforced"; it does not close long-running scheduler operations, live Core
 source certification, platform mesh certification, Gateway/Workbench,
 downstream, or supported-feature proof.
 The outbox-delivery readiness diagnostic, run-once operator action, and bounded
-outbox broker proof artifact do the same for broker and event delivery posture;
-they do not close the external publication, platform mesh event publication proof,
-or downstream consumer proof gap.
+outbox broker and downstream consumer runtime proof artifacts do the same for
+broker and declared-consumer posture; they do not close the external
+publication, platform mesh event publication proof, Gateway/Workbench, or
+downstream delivery gaps.
 The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench
