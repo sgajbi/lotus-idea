@@ -879,13 +879,20 @@ RFC-0002 Slice 16 now also has a governed opportunity archetype/scenario
 contract at
 `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
 The contract records high cash / idle liquidity as the first partially
-implemented journey and concentration risk review as a non-promoted bounded
-foundation backed by deterministic policy, a Lotus Risk concentration source
-port, a fail-closed HTTP adapter, a source-safe live-proof artifact contract,
-and focused unit tests. Underperformance,
-allocation drift, bond maturity, and missing suitability context remain
-planned. Concentration still carries live Risk source proof, data-mesh
-certification, Workbench, client-publication, and supported-feature blockers.
+implemented journey and concentration risk review plus underperformance review
+as non-promoted bounded foundations. Concentration is backed by deterministic
+policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
+source-safe live-proof artifact contract, and focused unit tests.
+Underperformance is backed by deterministic policy, a Lotus Performance
+returns-series source port, a fail-closed HTTP adapter over
+`POST /integration/returns/series`, and focused unit tests that prove
+source-reported active-return consumption and missing-benchmark-context
+blocking. Allocation drift, bond maturity, and missing suitability context
+remain planned. Concentration still carries live Risk source proof, data-mesh
+certification, Workbench, client-publication, and supported-feature blockers;
+underperformance still carries live Performance source proof,
+benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
+supported-feature blockers.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion

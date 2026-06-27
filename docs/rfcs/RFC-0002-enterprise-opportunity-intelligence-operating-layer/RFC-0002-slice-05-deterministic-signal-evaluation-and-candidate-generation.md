@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, underperformance policy plus Performance source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -137,16 +137,47 @@ Additional implemented concentration-risk foundation:
    only the namespaced opportunity-archetype live Risk source blocker when
    consumed by aggregate readiness.
 
+Additional implemented underperformance foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `UnderperformanceSignalPolicy`, `UnderperformanceSignalInput`, and
+   `evaluate_underperformance_signal` for source-owned active-return
+   underperformance candidates.
+2. The evaluator consumes only `lotus-performance` source-reported active
+   return, benchmark-context availability, freshness, entitlement posture, and
+   source refs. It does not calculate portfolio return, benchmark return,
+   active return, attribution, benchmark assignment, or performance
+   supportability locally.
+3. `src/app/ports/performance_sources.py`,
+   `src/app/application/underperformance_signal.py`, and
+   `src/app/infrastructure/lotus_performance_sources.py` add the source port,
+   application wrapper, and fail-closed HTTP adapter over
+   `POST /integration/returns/series`.
+4. The adapter requests a stateful `ReturnsSeriesBundle` with benchmark series
+   included, preserves correlation and trace headers, consumes only the final
+   source-reported cumulative active-return point, requires source lineage
+   metadata, maps 401/403 to entitlement denial, and fails closed when async
+   execution is still pending or required response metadata is missing.
+5. `tests/unit/test_underperformance_signal_evaluation.py`,
+   `tests/unit/test_underperformance_application.py`, and
+   `tests/unit/test_lotus_performance_sources.py` cover positive,
+   below-materiality, missing benchmark context, stale source, missing source,
+   duplicate, entitlement-denied, source-unavailable, pending async response,
+   malformed active-return, and trace-header cases.
+
 Not implemented yet:
 
 1. live Risk concentration source proof captured from an actual canonical
    runtime and merged as release evidence,
-2. source-worker certification beyond bounded live Core source-ingestion proof,
-2. certified long-running scheduled daemon runtime and live-service recovery proof,
-3. new API routes beyond the existing caller-supplied foundation endpoint,
-4. Gateway/Workbench proof,
-5. supported-feature promotion,
-7. data-product certification.
+2. live Performance returns-series source proof captured from an actual
+   canonical runtime and merged as release evidence,
+3. benchmark-assignment source-ref proof from the governed source authority,
+4. source-worker certification beyond bounded live Core source-ingestion proof,
+5. certified long-running scheduled daemon runtime and live-service recovery proof,
+6. new API routes beyond the existing caller-supplied foundation endpoint,
+7. Gateway/Workbench proof,
+8. supported-feature promotion,
+9. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the
