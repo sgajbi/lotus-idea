@@ -911,12 +911,17 @@ opportunity claims. High volatility is backed by deterministic policy, a Lotus
 Risk `RiskMetricsReport:v1` source port, a fail-closed HTTP adapter over
 `POST /analytics/risk/calculate`, a source-safe live-proof artifact contract,
 and focused unit tests that prove source-reported volatility consumption,
+non-ready risk supportability blocking, and no local risk-methodology calculation. Drawdown review is backed by deterministic policy, a Lotus Risk
+`DrawdownAnalyticsReport:v1` source port, a fail-closed HTTP adapter over
+`POST /analytics/risk/drawdown`, a source-safe live-proof artifact contract,
+and focused unit tests that prove source-reported max-drawdown consumption,
 non-ready risk supportability blocking, and no local risk-methodology calculation. Bond maturity and missing
 suitability context remain planned. A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
 artifact clears only the live Performance source blocker. A valid high-volatility
-live-proof artifact clears only the live Risk volatility source blocker.
+live-proof artifact clears only the live Risk volatility source blocker. A
+valid Risk drawdown live-proof artifact clears only the drawdown source blocker.
 Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries
@@ -924,9 +929,9 @@ benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
 supported-feature blockers. Allocation drift still carries portfolio-scoped
 Manage source proof, mandate performance-health source-ref, mandate
 risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
-client-publication, and supported-feature blockers. High volatility still
-carries drawdown source proof, data-mesh, Workbench, client-publication, and
-supported-feature blockers after live Risk volatility proof is supplied.
+client-publication, and supported-feature blockers. High volatility / drawdown
+review still carries data-mesh, Workbench, client-publication, and
+supported-feature blockers after live Risk volatility and drawdown proofs are supplied.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
@@ -955,6 +960,12 @@ through aggregate implementation-proof readiness, it clears only
 `opportunity_archetype_live_risk_volatility_source_proof_missing` and keeps
 drawdown, data-mesh, Workbench, client-publication, and supported-feature
 blockers intact.
+`make risk-drawdown-live-proof-contract-gate` validates the optional Lotus Risk
+drawdown live-proof artifact. When a valid artifact is supplied through
+aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_drawdown_source_proof_missing` and keeps volatility,
+data-mesh, Workbench, client-publication, and supported-feature blockers
+intact.
 
 ## CI And Merge Governance
 

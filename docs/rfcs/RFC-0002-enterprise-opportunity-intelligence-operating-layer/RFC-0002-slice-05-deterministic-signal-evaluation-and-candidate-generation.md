@@ -239,8 +239,48 @@ Additional implemented high-volatility foundation:
    ready Risk supportability, and deterministic high-volatility candidate
    generation, then clears only the namespaced opportunity-archetype live Risk
    volatility blocker when consumed by aggregate readiness.
-7. This foundation does not include drawdown-specific source proof, data-mesh
-   certification, Workbench proof, or supported-feature promotion.
+7. This high-volatility foundation does not include drawdown-specific source
+   proof, data-mesh certification, Workbench proof, or supported-feature
+   promotion.
+
+Additional implemented drawdown-review foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `DrawdownReviewSignalPolicy`, `DrawdownReviewSignalInput`, and
+   `evaluate_drawdown_review_signal` for source-owned drawdown attention
+   candidates under the high-volatility / drawdown review archetype.
+2. The evaluator consumes only Lotus Risk-owned maximum drawdown,
+   supportability state, freshness, entitlement posture, and source refs. It
+   does not calculate drawdown, volatility, tracking error, VaR, risk profile,
+   suitability, or mandate risk locally.
+3. `src/app/ports/risk_sources.py`,
+   `src/app/application/drawdown_review_signal.py`, and
+   `src/app/infrastructure/lotus_risk_sources.py` add the source port,
+   application wrapper, and fail-closed HTTP adapter over
+   `POST /analytics/risk/drawdown` for `DrawdownAnalyticsReport:v1` drawdown
+   evidence.
+4. The adapter preserves correlation and trace headers, requests source-owned
+   stateful drawdown analytics, requires source lineage metadata, maps 401/403
+   to entitlement denial, and fails closed when generated-at, as-of-date,
+   request fingerprint, period results, summary blocks, or parseable maximum
+   drawdown are missing or malformed.
+5. `tests/unit/test_drawdown_review_signal_evaluation.py`,
+   `tests/unit/test_drawdown_review_application.py`, and
+   `tests/unit/test_lotus_risk_drawdown_sources.py` cover positive,
+   below-materiality, stale, non-ready, missing-source, duplicate,
+   entitlement-denied, source-unavailable, malformed-measure, trace-header, and
+   request-validation cases.
+6. `src/app/application/risk_drawdown_live_proof.py`,
+   `scripts/generate_risk_drawdown_live_proof.py`,
+   `scripts/risk_drawdown_live_proof_contract_gate.py`, and
+   `make risk-drawdown-live-proof-contract-gate` define a source-safe live Risk
+   drawdown proof artifact. A valid artifact proves a live
+   `lotus-risk:DrawdownAnalyticsReport:v1` source call, current source
+   evidence, ready Risk supportability, and deterministic drawdown-review
+   candidate generation, then clears only the namespaced opportunity-archetype
+   drawdown source blocker when consumed by aggregate readiness.
+7. This foundation does not include data-mesh certification, Workbench proof,
+   client-publication approval, or supported-feature promotion.
 
 Not implemented yet:
 
@@ -256,14 +296,12 @@ Not implemented yet:
 6. mandate risk-health source refs from the governed Risk source authority,
 7. Core portfolio-state source refs for allocation-drift / mandate-review
    candidates,
-8. drawdown-specific source proof for the high-volatility / drawdown review
-   archetype,
-9. source-worker certification beyond bounded live Core source-ingestion proof,
-10. certified long-running scheduled daemon runtime and live-service recovery proof,
-11. new API routes beyond the existing caller-supplied foundation endpoint,
-12. Gateway/Workbench proof,
-13. supported-feature promotion,
-14. data-product certification.
+8. source-worker certification beyond bounded live Core source-ingestion proof,
+9. certified long-running scheduled daemon runtime and live-service recovery proof,
+10. new API routes beyond the existing caller-supplied foundation endpoint,
+11. Gateway/Workbench proof,
+12. supported-feature promotion,
+13. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

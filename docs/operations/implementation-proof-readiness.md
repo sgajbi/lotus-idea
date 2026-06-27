@@ -132,6 +132,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Risk high-volatility live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default source-safe Advise proposal route proof. Defaults to `../lotus-advise`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` | Selects the default generated Advise proposal route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/advise-proposal-route-proof.json`. |
@@ -217,6 +218,18 @@ generation without storing portfolio identity, request or response payloads,
 correlation IDs, trace IDs, candidate IDs, source routes, volatility values, or
 drawdown figures. It deliberately retains drawdown, data-mesh, Workbench,
 client-publication, and supported-feature blockers.
+
+Lotus Risk drawdown live proof is captured by
+`scripts/generate_risk_drawdown_live_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` clears only
+`opportunity_archetype_drawdown_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves a live
+`lotus-risk:DrawdownAnalyticsReport:v1` source call, current source evidence,
+ready Risk supportability, and deterministic drawdown-review candidate
+generation without storing portfolio identity, request or response payloads,
+correlation IDs, trace IDs, candidate IDs, source routes, max-drawdown values,
+or drawdown episodes. It deliberately retains volatility, data-mesh,
+Workbench, client-publication, and supported-feature blockers.
 
 Lotus Performance underperformance live proof is captured by
 `scripts/generate_performance_underperformance_live_proof.py`. A valid artifact
@@ -517,9 +530,10 @@ blockers from other proof families. It is a taxonomy and scenario-readiness
 view only. A valid source-ingestion live Core proof can clear only the
 high-cash live Core scenario blocker, a valid Risk concentration proof can
 clear only the concentration live Risk scenario blocker, and a valid
-high-volatility proof can clear only the live Risk volatility scenario blocker.
-High-volatility remains blocked on drawdown source proof, data-mesh,
-Workbench, publication, and supported-feature evidence. Client-demo,
+high-volatility proof can clear only the live Risk volatility scenario blocker,
+and a valid Risk drawdown proof can clear only the drawdown source blocker.
+High-volatility / drawdown review remains blocked on data-mesh, Workbench,
+publication, and supported-feature evidence unless those separate proofs are supplied. Client-demo,
 data-mesh, Workbench, publication, and supported-feature blockers remain.
 
 ## Example
@@ -604,9 +618,13 @@ Implementation-backed evidence:
     `scripts/generate_high_volatility_live_proof.py`,
 26. High-volatility live-proof contract gate:
     `make high-volatility-live-proof-contract-gate`,
-27. Performance underperformance live-proof generator:
+27. Risk drawdown live-proof generator:
+    `scripts/generate_risk_drawdown_live_proof.py`,
+28. Risk drawdown live-proof contract gate:
+    `make risk-drawdown-live-proof-contract-gate`,
+29. Performance underperformance live-proof generator:
     `scripts/generate_performance_underperformance_live_proof.py`,
-28. Performance underperformance live-proof contract gate:
+30. Performance underperformance live-proof contract gate:
     `make performance-underperformance-live-proof-contract-gate`,
 27. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
@@ -753,6 +771,7 @@ make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
+make risk-drawdown-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check
