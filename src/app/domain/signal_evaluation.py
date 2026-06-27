@@ -68,6 +68,23 @@ class ConcentrationRiskSignalPolicy:
 
 
 @dataclass(frozen=True)
+class UnderperformanceSignalPolicy:
+    policy_version: str
+    active_return_threshold: Decimal
+    candidate_score: Decimal
+
+    def __post_init__(self) -> None:
+        if not self.policy_version.strip():
+            raise ValueError("policy_version is required")
+        if self.active_return_threshold < Decimal("-1") or self.active_return_threshold > Decimal(
+            "0"
+        ):
+            raise ValueError("active_return_threshold must be between -1 and 0")
+        if self.candidate_score < Decimal("0") or self.candidate_score > Decimal("100"):
+            raise ValueError("candidate_score must be between 0 and 100")
+
+
+@dataclass(frozen=True)
 class HighCashSignalInput:
     as_of_date: date
     source_reported_cash_weight: Decimal | None
@@ -88,6 +105,18 @@ class ConcentrationRiskSignalInput:
     top_issuer_weight_current: Decimal | None
     issuer_coverage_status: str | None
     concentration_ref: SourceRef | None
+    evaluated_at_utc: datetime
+    entitlement_allowed: bool = True
+    access_scope: ReviewAccessScope | None = None
+    duplicate_of_candidate_id: str | None = None
+
+
+@dataclass(frozen=True)
+class UnderperformanceSignalInput:
+    as_of_date: date
+    source_reported_active_return: Decimal | None
+    benchmark_context_available: bool
+    performance_ref: SourceRef | None
     evaluated_at_utc: datetime
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
@@ -326,6 +355,110 @@ def evaluate_concentration_risk_signal(
     )
 
 
+def evaluate_underperformance_signal(
+    source_input: UnderperformanceSignalInput,
+    policy: UnderperformanceSignalPolicy,
+) -> SignalEvaluationResult:
+    if source_input.evaluated_at_utc.tzinfo is None:
+        raise ValueError("evaluated_at_utc must be timezone-aware")
+
+    if not source_input.entitlement_allowed:
+        return _blocked(
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
+        )
+    if source_input.performance_ref is None:
+        return _blocked(
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if source_input.performance_ref.freshness is not EvidenceFreshness.CURRENT:
+        return _blocked(
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.SOURCE_STALE,),
+            unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
+        )
+    if not source_input.benchmark_context_available:
+        return _blocked(
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.MISSING_BENCHMARK,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if source_input.duplicate_of_candidate_id is not None:
+        return SignalEvaluationResult(
+            outcome=SignalEvaluationOutcome.SUPPRESSED,
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
+        )
+    if source_input.source_reported_active_return is None:
+        return _blocked(
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.SOURCE_PARTIAL,),
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        )
+    if source_input.source_reported_active_return < Decimal(
+        "-1"
+    ) or source_input.source_reported_active_return > Decimal("1"):
+        raise ValueError("source_reported_active_return must be between -1 and 1")
+    if source_input.source_reported_active_return > policy.active_return_threshold:
+        return SignalEvaluationResult(
+            outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+            family=OpportunityFamily.UNDERPERFORMANCE,
+            reason_codes=(ReasonCode.BELOW_MATERIALITY,),
+        )
+
+    source_refs = (source_input.performance_ref,)
+    identity = _stable_underperformance_identity(source_input, policy, source_refs)
+    signal = OpportunitySignal(
+        signal_id=f"signal_underperformance_{identity}",
+        family=OpportunityFamily.UNDERPERFORMANCE,
+        source_refs=source_refs,
+        reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION,),
+        detected_at_utc=source_input.evaluated_at_utc,
+    )
+    lineage = LineageRef(
+        lineage_id=f"lineage:lotus-idea:underperformance:{identity}",
+        source_refs=source_refs,
+        content_hash=f"sha256:{identity}",
+    )
+    evidence_packet = IdeaEvidencePacket(
+        evidence_packet_id=f"iep_underperformance_{identity}",
+        supportability=EvidenceSupportability.READY,
+        source_refs=source_refs,
+        lineage_ref=lineage,
+        reason_codes=(
+            ReasonCode.UNDERPERFORMANCE_ATTENTION,
+            ReasonCode.REVIEW_REQUIRED,
+        ),
+        created_at_utc=source_input.evaluated_at_utc,
+    )
+    candidate = IdeaCandidate(
+        candidate_id=f"idea_underperformance_{identity}",
+        family=OpportunityFamily.UNDERPERFORMANCE,
+        lifecycle_status=IdeaLifecycleStatus.GENERATED,
+        review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+        evidence_packet=evidence_packet,
+        source_signal_ids=(signal.signal_id,),
+        score=IdeaScore(
+            policy_version=policy.policy_version,
+            score=policy.candidate_score,
+            reason_codes=(ReasonCode.UNDERPERFORMANCE_ATTENTION, ReasonCode.REVIEW_REQUIRED),
+        ),
+        access_scope=source_input.access_scope,
+        created_at_utc=source_input.evaluated_at_utc,
+        updated_at_utc=source_input.evaluated_at_utc,
+    )
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
+        family=OpportunityFamily.UNDERPERFORMANCE,
+        reason_codes=evidence_packet.reason_codes,
+        signal=signal,
+        candidate=candidate,
+    )
+
+
 def _blocked(
     *,
     family: OpportunityFamily,
@@ -414,6 +547,33 @@ def _stable_concentration_identity(
             if source_input.top_position_weight_current is not None
             else None
         ),
+        "access_scope": (
+            {
+                "tenant_id": source_input.access_scope.tenant_id,
+                "book_id": source_input.access_scope.book_id,
+                "portfolio_id": source_input.access_scope.portfolio_id,
+                "client_id": source_input.access_scope.client_id,
+            }
+            if source_input.access_scope is not None
+            else None
+        ),
+        "source_hashes": [source_ref.content_hash for source_ref in source_refs],
+    }
+    canonical = json.dumps(identity_payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+
+
+def _stable_underperformance_identity(
+    source_input: UnderperformanceSignalInput,
+    policy: UnderperformanceSignalPolicy,
+    source_refs: tuple[SourceRef, ...],
+) -> str:
+    identity_payload = {
+        "active_return": str(source_input.source_reported_active_return),
+        "as_of_date": source_input.as_of_date.isoformat(),
+        "benchmark_context_available": source_input.benchmark_context_available,
+        "family": OpportunityFamily.UNDERPERFORMANCE.value,
+        "policy_version": policy.policy_version,
         "access_scope": (
             {
                 "tenant_id": source_input.access_scope.tenant_id,
