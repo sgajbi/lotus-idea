@@ -16,6 +16,10 @@ from app.application.risk_concentration_live_proof import (
     RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
     risk_concentration_live_proof_is_valid,
 )
+from app.application.risk_drawdown_live_proof import (
+    RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
+    risk_drawdown_live_proof_is_valid,
+)
 from app.application.source_ingestion_live_proof import HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED
 
 
@@ -28,6 +32,8 @@ def _apply_opportunity_archetype_proofs(
     risk_concentration_live_proof_ref: str | None,
     high_volatility_live_proof: Mapping[str, object] | None,
     high_volatility_live_proof_ref: str | None,
+    risk_drawdown_live_proof: Mapping[str, object] | None,
+    risk_drawdown_live_proof_ref: str | None,
     performance_underperformance_live_proof: Mapping[str, object] | None,
     performance_underperformance_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -53,6 +59,11 @@ def _apply_opportunity_archetype_proofs(
     ):
         capabilities = tuple(
             _apply_high_volatility_live_proof(capability, high_volatility_live_proof_ref)
+            for capability in capabilities
+        )
+    if risk_drawdown_live_proof and risk_drawdown_live_proof_is_valid(risk_drawdown_live_proof):
+        capabilities = tuple(
+            _apply_risk_drawdown_live_proof(capability, risk_drawdown_live_proof_ref)
             for capability in capabilities
         )
     if performance_underperformance_live_proof and performance_underperformance_live_proof_is_valid(
@@ -89,6 +100,18 @@ def _apply_high_volatility_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
         proof_ref=high_volatility_live_proof_ref,
+    )
+
+
+def _apply_risk_drawdown_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    risk_drawdown_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
+        proof_ref=risk_drawdown_live_proof_ref,
     )
 
 

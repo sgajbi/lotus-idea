@@ -87,14 +87,22 @@ REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
     "src/app/application/high_volatility_signal.py",
     "src/app/application/high_volatility_live_proof.py",
+    "src/app/application/drawdown_review_signal.py",
+    "src/app/application/risk_drawdown_live_proof.py",
     "src/app/ports/risk_sources.py",
     "src/app/infrastructure/lotus_risk_sources.py",
     "scripts/generate_high_volatility_live_proof.py",
+    "scripts/generate_risk_drawdown_live_proof.py",
     "make high-volatility-live-proof-contract-gate",
+    "make risk-drawdown-live-proof-contract-gate",
     "tests/unit/test_high_volatility_signal_evaluation.py",
     "tests/unit/test_high_volatility_application.py",
     "tests/unit/test_lotus_risk_volatility_sources.py",
     "tests/unit/test_high_volatility_live_proof.py",
+    "tests/unit/test_drawdown_review_signal_evaluation.py",
+    "tests/unit/test_drawdown_review_application.py",
+    "tests/unit/test_lotus_risk_drawdown_sources.py",
+    "tests/unit/test_risk_drawdown_live_proof.py",
 }
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}

@@ -39,6 +39,7 @@ from app.application.performance_underperformance_live_proof import (
 from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
 from app.application.report_materialization_proof import REPORT_MATERIALIZATION_PROOF_ENV
 from app.application.risk_concentration_live_proof import RISK_CONCENTRATION_LIVE_PROOF_ENV
+from app.application.risk_drawdown_live_proof import RISK_DRAWDOWN_LIVE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 
@@ -142,6 +143,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--high-volatility-live-proof",
         HIGH_VOLATILITY_LIVE_PROOF_ENV,
         "Optional lotus-risk high-volatility live source proof artifact path.",
+    ),
+    (
+        "--risk-drawdown-live-proof",
+        RISK_DRAWDOWN_LIVE_PROOF_ENV,
+        "Optional lotus-risk drawdown live source proof artifact path.",
     ),
     (
         "--performance-underperformance-live-proof",
