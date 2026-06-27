@@ -162,6 +162,11 @@ def _opportunity_archetype_proof_artifact_inputs(
             artifact_name="Performance underperformance live proof",
             ref_name="Performance underperformance live proof artifact",
         ),
+        "core_benchmark_assignment_live": _proof_artifact_input(
+            args.core_benchmark_assignment_live_proof,
+            artifact_name="Core benchmark assignment live proof",
+            ref_name="Core benchmark assignment live proof artifact",
+        ),
         "manage_mandate_live": _proof_artifact_input(
             args.manage_mandate_live_proof,
             artifact_name="Manage mandate live proof",

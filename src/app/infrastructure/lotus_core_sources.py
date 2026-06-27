@@ -9,6 +9,8 @@ from urllib.parse import quote
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.core_sources import (
+    CoreBenchmarkAssignmentEvidence,
+    CoreBenchmarkAssignmentEvidenceRequest,
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreSourceEntitlementDenied,
@@ -21,6 +23,7 @@ PORTFOLIO_STATE_PRODUCT_ID = "lotus-core:PortfolioStateSnapshot:v1"
 HOLDINGS_PRODUCT_ID = "lotus-core:HoldingsAsOf:v1"
 CASH_MOVEMENT_PRODUCT_ID = "lotus-core:PortfolioCashMovementSummary:v1"
 CASHFLOW_PROJECTION_PRODUCT_ID = "lotus-core:PortfolioCashflowProjection:v1"
+BENCHMARK_ASSIGNMENT_PRODUCT_ID = "lotus-core:BenchmarkAssignment:v1"
 
 
 @dataclass(frozen=True)
@@ -100,6 +103,60 @@ class LotusCoreHighCashSourceAdapter:
                 route="/portfolios/{portfolio_id}/cashflow-projection",
             ),
             cash_weight_diagnostic=cash_weight_evidence.diagnostic,
+        )
+
+    def fetch_benchmark_assignment_evidence(
+        self, request: CoreBenchmarkAssignmentEvidenceRequest
+    ) -> CoreBenchmarkAssignmentEvidence:
+        portfolio_ref = quote(request.portfolio_id, safe="")
+        as_of = request.as_of_date.isoformat()
+        payload: dict[str, object] = {"as_of_date": as_of}
+        if request.reporting_currency:
+            payload["reporting_currency"] = request.reporting_currency
+        try:
+            assignment_payload = self._query_control_plane_client.post_json(
+                f"/integration/portfolios/{portfolio_ref}/benchmark-assignment",
+                json_payload=payload,
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise CoreSourceEntitlementDenied from exc
+            raise CoreSourceUnavailable(code=exc.code) from exc
+
+        assignment_status = _text_field(assignment_payload, "assignment_status", "assignmentStatus")
+        benchmark_identity_resolved = (
+            _text_field(
+                assignment_payload,
+                "benchmark_id",
+                "benchmarkId",
+            )
+            is not None
+        )
+        assignment_effective_for_as_of_date = _assignment_effective_for_as_of_date(
+            assignment_payload,
+            request.as_of_date,
+        )
+        assignment_version_present = assignment_payload.get("assignment_version") is not None or (
+            assignment_payload.get("assignmentVersion") is not None
+        )
+        return CoreBenchmarkAssignmentEvidence(
+            benchmark_assignment_ref=_source_ref(
+                assignment_payload,
+                product_id=BENCHMARK_ASSIGNMENT_PRODUCT_ID,
+                route="/integration/portfolios/{portfolio_id}/benchmark-assignment",
+            ),
+            benchmark_identity_resolved=benchmark_identity_resolved,
+            assignment_effective_for_as_of_date=assignment_effective_for_as_of_date,
+            assignment_status=assignment_status,
+            assignment_version_present=assignment_version_present,
+            assignment_diagnostic=_benchmark_assignment_diagnostic(
+                benchmark_identity_resolved=benchmark_identity_resolved,
+                assignment_effective_for_as_of_date=assignment_effective_for_as_of_date,
+                assignment_status=assignment_status,
+                assignment_version_present=assignment_version_present,
+            ),
         )
 
 
@@ -193,6 +250,52 @@ def _date_field(payload: dict[str, Any], *keys: str) -> date:
         if isinstance(value, str):
             return date.fromisoformat(value)
     raise CoreSourceUnavailable(code="core_as_of_date_missing")
+
+
+def _optional_date_field(payload: dict[str, Any], *keys: str) -> date | None:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return date.fromisoformat(value)
+    return None
+
+
+def _text_field(payload: dict[str, Any], *keys: str) -> str | None:
+    for key in keys:
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _assignment_effective_for_as_of_date(payload: dict[str, Any], as_of_date: date) -> bool:
+    effective_from = _optional_date_field(payload, "effective_from", "effectiveFrom")
+    effective_to = _optional_date_field(payload, "effective_to", "effectiveTo")
+    if effective_from is None:
+        return False
+    if effective_from > as_of_date:
+        return False
+    return effective_to is None or effective_to >= as_of_date
+
+
+def _benchmark_assignment_diagnostic(
+    *,
+    benchmark_identity_resolved: bool,
+    assignment_effective_for_as_of_date: bool,
+    assignment_status: str | None,
+    assignment_version_present: bool,
+) -> str:
+    if not benchmark_identity_resolved:
+        return "core_benchmark_assignment_benchmark_identity_missing"
+    if not assignment_effective_for_as_of_date:
+        return "core_benchmark_assignment_not_effective_for_as_of_date"
+    if assignment_status is None:
+        return "core_benchmark_assignment_status_missing"
+    if assignment_status.lower() != "active":
+        return f"core_benchmark_assignment_{assignment_status.lower()}"
+    if not assignment_version_present:
+        return "core_benchmark_assignment_version_missing"
+    return "core_benchmark_assignment_ready"
 
 
 def _content_hash(payload: dict[str, Any]) -> str:

@@ -167,6 +167,14 @@ REQUIRED_READINESS_WIRING = (
         "pass optional Performance underperformance live proof artifact into readiness generation",
     ),
     (
+        "LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF",
+        "support optional Core benchmark assignment live proof artifact wiring",
+    ),
+    (
+        "--core-benchmark-assignment-live-proof",
+        "pass optional Core benchmark assignment live proof artifact into readiness generation",
+    ),
+    (
         "LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF",
         "support optional Risk drawdown live proof artifact wiring",
     ),

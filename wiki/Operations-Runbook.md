@@ -135,6 +135,8 @@ optional missing-suitability live Advise proof through
 `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
 optional Manage mandate live proof through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
+optional Core benchmark assignment live proof through
+`LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`,
 default Advise proposal route proof through `LOTUS_ADVISE_ROOT` and
 `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT`, default Manage action route
 proof through `LOTUS_MANAGE_ROOT` and
@@ -317,6 +319,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make core-benchmark-assignment-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
@@ -482,7 +485,8 @@ client-ready publication, or supported-feature promotion.
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
 Advise proposal route proof artifact, missing-suitability live Advise proof
-artifact, Manage mandate live proof artifact, Manage action route proof artifact,
+artifact, Manage mandate live proof artifact, Core benchmark assignment live
+proof artifact, Manage action route proof artifact,
 Report intake route proof artifact, Report materialization proof artifact,
 mesh policy proof artifact, platform mesh
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,

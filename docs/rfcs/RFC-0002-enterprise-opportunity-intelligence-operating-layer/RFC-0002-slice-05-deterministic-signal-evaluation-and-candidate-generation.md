@@ -174,6 +174,17 @@ Additional implemented underperformance foundation:
    deterministic underperformance candidate generation, then clears only the
    namespaced opportunity-archetype live Performance source blocker when
    consumed by aggregate readiness.
+7. `src/app/application/core_benchmark_assignment_live_proof.py`,
+   `scripts/generate_core_benchmark_assignment_live_proof.py`,
+   `scripts/core_benchmark_assignment_live_proof_contract_gate.py`, and
+   `make core-benchmark-assignment-live-proof-contract-gate` define a
+   source-safe live Core benchmark assignment proof artifact. A valid artifact
+   proves a live `lotus-core:BenchmarkAssignment:v1` source call, current source
+   evidence, effective assignment posture, benchmark identity resolution, and
+   assignment version presence, then clears only the namespaced
+   opportunity-archetype benchmark-assignment source-ref blocker when consumed
+   by aggregate readiness. It does not assign benchmarks, calculate benchmark
+   returns, certify benchmark methodology, or promote underperformance support.
 
 Additional implemented allocation-drift / mandate-review foundation:
 

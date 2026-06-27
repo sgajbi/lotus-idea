@@ -12,6 +12,7 @@ from app.domain import EvidenceFreshness
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import (
+    CoreBenchmarkAssignmentEvidenceRequest,
     CoreHighCashEvidenceRequest,
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
@@ -75,6 +76,17 @@ def _request() -> CoreHighCashEvidenceRequest:
     )
 
 
+def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
+    return CoreBenchmarkAssignmentEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        reporting_currency="USD",
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        correlation_id="corr-core",
+        trace_id="trace-core",
+    )
+
+
 def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None:
     seen: list[tuple[str, str]] = []
 
@@ -117,6 +129,143 @@ def test_lotus_core_adapter_fetches_declared_high_cash_source_products() -> None
         evidence.cashflow_projection_ref.product_id == "lotus-core:PortfolioCashflowProjection:v1"
     )
     assert len(seen) == 4
+
+
+def test_lotus_core_adapter_fetches_benchmark_assignment_source_product() -> None:
+    seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, str(request.url)))
+        assert request.headers["X-Correlation-Id"] == "corr-core"
+        assert request.headers["X-Trace-Id"] == "trace-core"
+        payload = json.loads(request.content)
+        assert payload == {"as_of_date": "2026-06-21", "reporting_currency": "USD"}
+        return httpx.Response(
+            200,
+            json=_payload(
+                "BenchmarkAssignment",
+                extra={
+                    "benchmark_id": "BMK_PB_GLOBAL_BALANCED_60_40",
+                    "effective_from": "2026-01-01",
+                    "effective_to": None,
+                    "assignment_status": "active",
+                    "assignment_version": 3,
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_benchmark_assignment_evidence(
+        _benchmark_assignment_request()
+    )
+
+    assert evidence.benchmark_assignment_ref is not None
+    assert evidence.benchmark_assignment_ref.product_id == "lotus-core:BenchmarkAssignment:v1"
+    assert evidence.benchmark_assignment_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.benchmark_identity_resolved is True
+    assert evidence.assignment_effective_for_as_of_date is True
+    assert evidence.assignment_status == "active"
+    assert evidence.assignment_version_present is True
+    assert evidence.assignment_diagnostic == "core_benchmark_assignment_ready"
+    assert seen == [
+        (
+            "POST",
+            "https://core.example/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment",
+        )
+    ]
+
+
+def test_lotus_core_adapter_marks_benchmark_assignment_not_effective_for_as_of_date() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload(
+                "BenchmarkAssignment",
+                extra={
+                    "benchmark_id": "BMK_PB_GLOBAL_BALANCED_60_40",
+                    "effective_from": "2026-07-01",
+                    "assignment_status": "active",
+                    "assignment_version": 3,
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_benchmark_assignment_evidence(
+        _benchmark_assignment_request()
+    )
+
+    assert evidence.benchmark_identity_resolved is True
+    assert evidence.assignment_effective_for_as_of_date is False
+    assert (
+        evidence.assignment_diagnostic == "core_benchmark_assignment_not_effective_for_as_of_date"
+    )
+
+
+def test_lotus_core_adapter_marks_benchmark_assignment_missing_effective_date_and_identity() -> (
+    None
+):
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert json.loads(request.content) == {"as_of_date": "2026-06-21"}
+        return httpx.Response(
+            200,
+            json=_payload(
+                "BenchmarkAssignment",
+                extra={"assignment_status": "active", "assignment_version": 3},
+            ),
+        )
+
+    request = CoreBenchmarkAssignmentEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+    )
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_benchmark_assignment_evidence(request)
+
+    assert evidence.benchmark_identity_resolved is False
+    assert evidence.assignment_effective_for_as_of_date is False
+    assert evidence.assignment_diagnostic == "core_benchmark_assignment_benchmark_identity_missing"
+
+
+@pytest.mark.parametrize(
+    ("extra", "expected_diagnostic"),
+    [
+        (
+            {"benchmark_id": "BMK_PB_GLOBAL_BALANCED_60_40", "effective_from": "2026-01-01"},
+            "core_benchmark_assignment_status_missing",
+        ),
+        (
+            {
+                "benchmark_id": "BMK_PB_GLOBAL_BALANCED_60_40",
+                "effective_from": "2026-01-01",
+                "assignment_status": "inactive",
+                "assignment_version": 3,
+            },
+            "core_benchmark_assignment_inactive",
+        ),
+        (
+            {
+                "benchmark_id": "BMK_PB_GLOBAL_BALANCED_60_40",
+                "effective_from": "2026-01-01",
+                "assignment_status": "active",
+            },
+            "core_benchmark_assignment_version_missing",
+        ),
+    ],
+)
+def test_lotus_core_adapter_reports_benchmark_assignment_diagnostics(
+    extra: dict[str, Any],
+    expected_diagnostic: str,
+) -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload("BenchmarkAssignment", extra=extra),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_benchmark_assignment_evidence(
+        _benchmark_assignment_request()
+    )
+
+    assert evidence.assignment_diagnostic == expected_diagnostic
 
 
 def test_lotus_core_adapter_splits_query_and_control_plane_clients() -> None:
@@ -245,6 +394,29 @@ def test_lotus_core_adapter_maps_forbidden_source_response_to_entitlement_denied
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
 
     with pytest.raises(CoreSourceEntitlementDenied):
+        adapter.fetch_high_cash_evidence(_request())
+
+
+def test_lotus_core_adapter_maps_benchmark_assignment_forbidden_response_to_entitlement_denied() -> (
+    None
+):
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(CoreSourceEntitlementDenied):
+        adapter.fetch_benchmark_assignment_evidence(_benchmark_assignment_request())
+
+
+def test_lotus_core_adapter_maps_benchmark_assignment_source_error_to_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(CoreSourceUnavailable):
+        adapter.fetch_benchmark_assignment_evidence(_benchmark_assignment_request())
+
+
+def test_lotus_core_adapter_maps_high_cash_source_error_to_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(CoreSourceUnavailable):
         adapter.fetch_high_cash_evidence(_request())
 
 
@@ -416,6 +588,24 @@ def test_core_high_cash_evidence_request_requires_portfolio_id() -> None:
 def test_core_high_cash_evidence_request_requires_aware_evaluation_time() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CoreHighCashEvidenceRequest(
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+        )
+
+
+def test_core_benchmark_assignment_evidence_request_requires_portfolio_id() -> None:
+    with pytest.raises(ValueError, match="portfolio_id is required"):
+        CoreBenchmarkAssignmentEvidenceRequest(
+            portfolio_id=" ",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        )
+
+
+def test_core_benchmark_assignment_evidence_request_requires_aware_evaluation_time() -> None:
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        CoreBenchmarkAssignmentEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),

@@ -938,15 +938,17 @@ Risk source blocker, and a valid Performance underperformance live-proof
 artifact clears only the live Performance source blocker. A valid high-volatility
 live-proof artifact clears only the live Risk volatility source blocker. A
 valid Risk drawdown live-proof artifact clears only the drawdown source blocker.
+A valid Core benchmark assignment live-proof artifact clears only the
+underperformance benchmark-assignment source-ref blocker.
 A valid missing-suitability live-proof artifact clears only the Advise policy
 live-source blocker.
 A valid Manage mandate live-proof artifact clears only the portfolio-scoped
 Manage action-register source blocker.
 Concentration still
 carries data-mesh certification, Workbench, client-publication, and
-supported-feature blockers; underperformance still carries
-benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
-supported-feature blockers. Allocation drift still carries mandate
+supported-feature blockers; underperformance still carries live Performance,
+data-mesh, Workbench, client-publication, and supported-feature blockers after
+Core benchmark assignment proof is supplied. Allocation drift still carries mandate
 performance-health source-ref, mandate risk-health source-ref, Core
 portfolio-state source-ref, data-mesh, Workbench, client-publication,
 supported-feature, rebalance, action, and order-execution blockers after live
@@ -978,6 +980,13 @@ artifact is supplied through aggregate implementation-proof readiness, it clears
 only `opportunity_archetype_live_performance_source_proof_missing` and keeps
 benchmark-assignment, data-mesh, Workbench, client-publication, and
 supported-feature blockers intact.
+`make core-benchmark-assignment-live-proof-contract-gate` validates the optional
+Lotus Core benchmark assignment live-proof artifact. When a valid artifact is
+supplied through aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_benchmark_assignment_source_ref_missing` and keeps live
+Performance, data-mesh, Workbench, client-publication, and supported-feature
+blockers intact. It does not assign benchmarks, calculate benchmark returns, or
+certify benchmark methodology.
 `make high-volatility-live-proof-contract-gate` validates the optional Lotus
 Risk high-volatility live-proof artifact. When a valid artifact is supplied
 through aggregate implementation-proof readiness, it clears only
@@ -1217,15 +1226,17 @@ owned by upstream services.
     `make high-volatility-live-proof-contract-gate`
 43. Performance underperformance live-proof artifact contract gate:
     `make performance-underperformance-live-proof-contract-gate`
-44. AI lineage store proof contract gate:
+44. Core benchmark assignment live-proof artifact contract gate:
+    `make core-benchmark-assignment-live-proof-contract-gate`
+45. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-45. outbox platform mesh event publication proof contract gate:
+46. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`
-46. AI workflow-pack registration proof contract gate:
+47. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-47. AI workflow-pack runtime execution proof contract gate:
+48. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-48. implementation proof readiness generator:
+49. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,

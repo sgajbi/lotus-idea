@@ -69,6 +69,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make core-benchmark-assignment-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
@@ -182,6 +183,7 @@ Persistence adapter validation:
    proof consumption, default Advise proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
    optional Manage mandate live proof consumption,
+   optional Core benchmark assignment live proof consumption,
    default Report intake route proof generation and consumption, default
    Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and
@@ -292,6 +294,11 @@ Persistence adapter validation:
     optional Lotus Performance underperformance live-proof artifact remains
     source-safe and can clear only the namespaced live Performance source
     blocker when valid evidence is supplied.
+    `tests/unit/test_core_benchmark_assignment_live_proof.py` and
+    `make core-benchmark-assignment-live-proof-contract-gate` prove the
+    optional Lotus Core benchmark assignment live-proof artifact remains
+    source-safe and can clear only the namespaced benchmark-assignment
+    source-ref blocker when valid evidence is supplied.
     `tests/unit/test_missing_suitability_live_proof.py` and
     `make missing-suitability-live-proof-contract-gate` prove the optional
     Lotus Advise policy-evaluation live-proof artifact remains source-safe and
