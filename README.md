@@ -31,13 +31,11 @@ Current implemented foundations include:
 - source-safe outbox records, repo-owned outbox event and downstream consumer
   contracts, HTTP broker-publisher adapter foundation, readiness diagnostics,
   and bounded broker proof evidence,
-- runtime trust telemetry, data-mesh readiness, PostgreSQL/migration, durable
-  repository, live Core, Workbench, outbox, and optional platform mesh proof
-  evidence for aggregate readiness,
-- bounded `lotus-gateway` read-only queue/detail routes, including caller
-  entitlement-scope forwarding for both published read paths,
-- bounded `lotus-workbench` read-only queue/detail rendering through Gateway,
-  with stricter live validation before demo evidence is accepted.
+- runtime trust telemetry, data-mesh readiness, repo-owned SLO/access/evidence
+  policy proof, PostgreSQL/migration, durable repository, live Core, Workbench,
+  outbox, and optional platform mesh proof evidence for aggregate readiness,
+- bounded `lotus-gateway` queue/detail routes with caller-scope forwarding,
+- bounded `lotus-workbench` queue/detail rendering through Gateway.
 
 ## Product Boundary
 
@@ -101,8 +99,9 @@ day one. Repo-owned source truth starts in:
 - [Lotus Data Mesh Standard](../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
 
 All products remain proposed and not certified until runtime behavior, telemetry, platform
-certification, Gateway/Workbench proof, and supported-feature promotion are complete. Optional
-platform onboarding proof validates catalog visibility only; certification and support stay blocked.
+certification, Gateway/Workbench proof, and supported-feature promotion are complete. Repo-owned
+mesh policy proof validates SLO/access/evidence contracts only; optional platform onboarding proof
+validates catalog visibility only. Certification and support stay blocked.
 
 ## Architecture At A Glance
 
@@ -187,6 +186,7 @@ docker compose up --build
 | `make openapi-gate` | Validate OpenAPI quality. |
 | `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
+| `make mesh-policy-proof-contract-gate` | Validate the repo-owned mesh SLO, access, and evidence policy proof without certifying platform mesh readiness or supported features. |
 | `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
 | `make outbox-event-contract-gate`, `make outbox-consumer-contract-gate` | Validate repo-owned outbox event and downstream consumer contracts, source-safe payload policy, source-authority boundaries, and remaining proof blockers. |
 | `make migration-contract-gate` | Validate migration contract structure. |
@@ -199,7 +199,7 @@ docker compose up --build
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-runtime-execution-proof-contract-gate` | Validate the bounded sibling `lotus-ai` deterministic runtime execution proof without certifying live provider execution, model-risk operations, Workbench, client-ready publication, or supported-feature promotion. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; missing sibling evidence leaves the proof invalid and blockers intact. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, report-intake route, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; `LOTUS_IDEA_MESH_POLICY_PROOF` can override the repo-owned mesh policy proof path. Missing sibling evidence leaves cross-repo proof invalid and blockers intact. |
 | `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Generate source-safe runtime trust telemetry preview and snapshot evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |

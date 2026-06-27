@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -176,7 +176,20 @@ Prove the complete supported opportunity journey end to end.
     `platform_catalog_inclusion_missing`, while preserving mesh certification,
     product activation, SLO/access/evidence, Gateway/Workbench, and
     supported-feature blockers.
-22. `src/app/application/report_intake_route_proof.py`,
+22. `src/app/application/mesh_policy_proof.py`,
+    `scripts/generate_mesh_policy_proof.py`, and
+    `make mesh-policy-proof-contract-gate` now define and enforce the
+    repo-owned mesh policy proof artifact. The repo-native
+    `make implementation-proof-readiness-check` target generates the default
+    artifact under `output/data-mesh/mesh-policy-proof.json` and passes it into
+    aggregate readiness unless `LOTUS_IDEA_MESH_POLICY_PROOF` overrides the
+    path. The aggregate readiness generator consumes that artifact to clear
+    only `mesh_slo_policy_certification_missing`,
+    `mesh_access_policy_certification_missing`, and
+    `mesh_evidence_policy_certification_missing`, while preserving mesh
+    certification, product activation, platform source-manifest/catalog,
+    Gateway/Workbench, and supported-feature blockers.
+23. `src/app/application/report_intake_route_proof.py`,
     `scripts/generate_report_intake_route_proof.py`, and
     `make report-intake-route-proof-contract-gate` now define and enforce a
     source-safe `lotus-report` route-foundation proof artifact. The aggregate
@@ -184,7 +197,7 @@ Prove the complete supported opportunity journey end to end.
     to clear only `lotus_report_live_intake_route_proof_missing`, while
     preserving report materialization, render output, archive record,
     client-publication, and supported-feature blockers.
-23. `src/app/application/ai_workflow_pack_registration_proof.py`,
+24. `src/app/application/ai_workflow_pack_registration_proof.py`,
     `scripts/generate_ai_workflow_pack_registration_proof.py`, and
     `make ai-workflow-pack-registration-proof-contract-gate` now define and
     enforce a source-safe sibling `lotus-ai` workflow-pack registration proof
@@ -195,7 +208,7 @@ Prove the complete supported opportunity journey end to end.
     Workbench, client-publication, and supported-feature blockers. Model-risk
     dashboard and alert artifact certification is handled by the separate
     model-risk operations proof gate.
-24. `src/app/application/ai_workflow_pack_runtime_execution_proof.py`,
+25. `src/app/application/ai_workflow_pack_runtime_execution_proof.py`,
     `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`, and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` now define
     and enforce a source-safe sibling `lotus-ai` workflow-pack runtime execution

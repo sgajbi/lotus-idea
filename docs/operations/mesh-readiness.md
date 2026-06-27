@@ -1,8 +1,8 @@
 # Data Mesh Readiness
 
 Status: Planned data-mesh posture with internal readiness, runtime telemetry
-preview, source-safe runtime snapshot diagnostics, and bounded platform
-source-manifest/catalog onboarding proof.
+preview, source-safe runtime snapshot diagnostics, repo-owned mesh policy
+proof, and bounded platform source-manifest/catalog onboarding proof.
 
 Certification status: not certified.
 
@@ -47,6 +47,9 @@ evidence until mesh certification, Gateway discovery, Workbench discovery, and
 supported-feature promotion evidence exist. The platform onboarding proof path
 can validate source-manifest and catalog inclusion separately; that is catalog
 visibility, not mesh certification.
+The mesh policy proof path validates local SLO, access, and evidence-pack
+policy contracts separately; that is repo-owned policy proof, not platform mesh
+certification.
 
 The controlling platform standard is
 [Lotus Data Mesh Standard](../../../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md).
@@ -157,6 +160,21 @@ artifact: `runtime_candidate_snapshot_missing`,
 `data_mesh_runtime_telemetry_not_certified`. It is not platform mesh
 certification and does not promote `IdeaCandidate:v1` from proposed posture.
 
+`scripts/generate_mesh_policy_proof.py` validates the repo-owned SLO, access,
+and evidence-pack policy contracts for `lotus-idea:IdeaCandidate:v1`. A valid
+artifact clears only these aggregate implementation-readiness blockers:
+
+1. `mesh_slo_policy_certification_missing`,
+2. `mesh_access_policy_certification_missing`,
+3. `mesh_evidence_policy_certification_missing`.
+
+`make implementation-proof-readiness-check` now generates this default proof
+under ignored `output/data-mesh/mesh-policy-proof.json` and consumes it in the
+aggregate readiness artifact unless `LOTUS_IDEA_MESH_POLICY_PROOF` overrides
+the path. The proof keeps `data_mesh_not_certified`,
+`producer_products_not_active`, platform source-manifest/catalog,
+Gateway/Workbench discovery, and supported-feature blockers intact.
+
 The Docker image copies `contracts/` into `/app/contracts` so containerized
 diagnostics read the same contract truth as local validation.
 
@@ -166,6 +184,7 @@ Run:
 
 ```powershell
 make data-mesh-contract-gate
+make mesh-policy-proof-contract-gate
 make platform-mesh-onboarding-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make runtime-trust-telemetry-preview-check
@@ -189,7 +208,9 @@ The gate validates:
    not-certified evidence from the active repository provider.
 8. the runtime telemetry snapshot endpoint and generator still emit
    contract-shaped, source-safe, blocked runtime snapshot evidence.
-9. the runtime telemetry proof contract remains source-safe, deterministic, and
+9. the mesh policy proof contract remains source-safe, deterministic, and
+   limited to clearing repo-owned SLO/access/evidence policy blockers.
+10. the runtime telemetry proof contract remains source-safe, deterministic, and
    limited to clearing repo-owned runtime telemetry blockers.
 
 This gate is not mesh certification. It is a pre-certification guardrail so

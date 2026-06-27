@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded outbox broker proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded outbox broker proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -156,7 +156,15 @@ durable operating-context enforcement:
     that missing sibling evidence is a non-proof artifact and no platform mesh
     certification, active product declaration, Gateway/Workbench discovery, or
     supported-feature promotion is implied.
-23. `docs/demo/README.md` now gives client-demo teams a governed entry point
+23. README, repository context,
+    `docs/operations/implementation-proof-readiness.md`,
+    `docs/operations/mesh-readiness.md`, quality gate docs, RFC evidence, and
+    wiki source now describe default mesh policy proof generation and aggregate
+    consumption while preserving the boundary that local SLO/access/evidence
+    policy proof clears only repo-owned policy blockers and does not certify
+    the platform mesh, activate products, prove Gateway/Workbench discovery, or
+    promote supported features.
+24. `docs/demo/README.md` now gives client-demo teams a governed entry point
     for explaining what Lotus Idea is doing, choosing the right process
     artifact, tying claims to proof, and keeping unsupported autonomy,
     suitability, execution, publication, downstream materialization, and

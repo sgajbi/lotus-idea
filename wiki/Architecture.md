@@ -86,6 +86,13 @@ The blocker list is aligned to platform mesh certification families so missing
 source-manifest, catalog, SLO, access, evidence, Gateway/Workbench discovery,
 and supported-feature proof stay visible before any product is promoted.
 
+`make mesh-policy-proof-contract-gate` and
+`scripts/generate_mesh_policy_proof.py` validate the repo-owned SLO, access,
+and evidence-pack policy proof for `IdeaCandidate:v1`. A valid artifact clears
+only SLO/access/evidence policy blockers in aggregate implementation readiness;
+it is not platform mesh certification, product activation, Gateway/Workbench
+discovery, or supported-feature promotion.
+
 The internal
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` endpoint reads the
 active repository snapshot and returns aggregate runtime telemetry preview

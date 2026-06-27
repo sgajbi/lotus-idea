@@ -20,34 +20,35 @@ Blocking scaffold commands:
 11. `make ai-model-risk-operations-proof-contract-gate`
 12. `make implementation-truth-gate`
 13. `make data-mesh-contract-gate`
-14. `make downstream-realization-contract-gate`
-15. `make migration-contract-gate`
-16. `make migration-execution-gate`
-17. `make durable-repository-proof-contract-gate`
-18. `make runtime-trust-telemetry-proof-contract-gate`
-19. `make ai-lineage-store-proof-contract-gate`
-20. `make ai-workflow-pack-registration-proof-contract-gate`
-21. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-22. `make workbench-read-path-proof-contract-gate`
-23. `make outbox-broker-proof-contract-gate`
-24. `make platform-mesh-onboarding-proof-contract-gate`
-23. `make source-ingestion-worker-check`
-24. `make source-ingestion-scheduled-worker-check`
-25. `make source-ingestion-live-proof-contract-gate`
-26. `make implementation-proof-readiness-check` generates the scheduled-worker
+14. `make mesh-policy-proof-contract-gate`
+15. `make downstream-realization-contract-gate`
+16. `make migration-contract-gate`
+17. `make migration-execution-gate`
+18. `make durable-repository-proof-contract-gate`
+19. `make runtime-trust-telemetry-proof-contract-gate`
+20. `make ai-lineage-store-proof-contract-gate`
+21. `make ai-workflow-pack-registration-proof-contract-gate`
+22. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
+23. `make workbench-read-path-proof-contract-gate`
+24. `make outbox-broker-proof-contract-gate`
+25. `make platform-mesh-onboarding-proof-contract-gate`
+26. `make source-ingestion-worker-check`
+27. `make source-ingestion-scheduled-worker-check`
+28. `make source-ingestion-live-proof-contract-gate`
+29. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact, outbox
-    broker proof artifact, default report-intake route proof artifact, and
-    default platform mesh onboarding proof artifact, plus AI lineage store and
-    AI workflow-pack registration proof artifacts, then consumes all nine in
+    broker proof artifact, default report-intake route proof artifact, default
+    mesh policy proof artifact, and default platform mesh onboarding proof
+    artifact, plus AI lineage store and AI workflow-pack registration proof artifacts, then consumes all in
     aggregate RFC proof-readiness evidence.
-27. `make supported-features-gate`
-28. `make endpoint-certification-gate`
-29. `make postgres-integration-gate`
-30. `make openapi-gate`
-31. `make coverage-gate`
-32. `make security-audit`
-33. `make docker-build`
+30. `make supported-features-gate`
+31. `make endpoint-certification-gate`
+32. `make postgres-integration-gate`
+33. `make openapi-gate`
+34. `make coverage-gate`
+35. `make security-audit`
+36. `make docker-build`
 
 Cleanup support command:
 
@@ -65,6 +66,7 @@ ignored by git unless an RFC explicitly promotes a specific evidence snapshot.
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
 OpenAPI quality,
 supported-feature promotion control, endpoint certification, data-mesh contract validation,
+mesh policy proof contract validation,
 downstream realization contract validation, migration contract validation,
 migration execution dry-run validation,
 source-ingestion worker manifest and source-safe output-contract validation,
