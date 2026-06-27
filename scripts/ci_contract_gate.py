@@ -68,6 +68,7 @@ REQUIRED_LINT_TARGETS = (
     "source-ingestion-scheduled-worker-check",
     "source-ingestion-live-proof-contract-gate",
     "risk-concentration-live-proof-contract-gate",
+    "missing-suitability-live-proof-contract-gate",
     "performance-underperformance-live-proof-contract-gate",
     "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
@@ -333,6 +334,9 @@ def validate_makefile(makefile: str) -> list[str]:
         ),
         "risk-drawdown-live-proof-contract-gate": (
             "scripts/risk_drawdown_live_proof_contract_gate.py"
+        ),
+        "missing-suitability-live-proof-contract-gate": (
+            "scripts/missing_suitability_live_proof_contract_gate.py"
         ),
         "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",
         "opportunity-archetype-contract-gate": ("scripts/opportunity_archetype_contract_gate.py"),

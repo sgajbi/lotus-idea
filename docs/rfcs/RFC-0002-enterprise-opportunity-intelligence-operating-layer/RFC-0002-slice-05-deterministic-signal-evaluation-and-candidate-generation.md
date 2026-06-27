@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -311,9 +311,15 @@ Additional implemented missing suitability context foundation:
    stale, missing-source, missing-status/count, duplicate, entitlement-denied,
    source-unavailable, malformed-source, trace-header, and request-validation
    cases.
-6. This foundation does not include live Advise proof, data-mesh
-   certification, Workbench proof, client-publication approval, or
-   supported-feature promotion.
+6. `src/app/application/missing_suitability_live_proof.py`,
+   `scripts/generate_missing_suitability_live_proof.py`, and
+   `make missing-suitability-live-proof-contract-gate` define a source-safe
+   live Advise proof artifact. A valid artifact can clear only
+   `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not
+   approve suitability, policy, proposal, sign-off, client publication, or
+   external communication.
+7. This foundation does not include data-mesh certification, Workbench proof,
+   client-publication approval, or supported-feature promotion.
 
 Not implemented yet:
 
@@ -329,14 +335,12 @@ Not implemented yet:
 6. mandate risk-health source refs from the governed Risk source authority,
 7. Core portfolio-state source refs for allocation-drift / mandate-review
    candidates,
-8. live Advise policy-evaluation workflow source proof for missing suitability
-   context,
-9. source-worker certification beyond bounded live Core source-ingestion proof,
-10. certified long-running scheduled daemon runtime and live-service recovery proof,
-11. new API routes beyond the existing caller-supplied foundation endpoint,
-12. Gateway/Workbench proof,
-13. supported-feature promotion,
-14. data-product certification.
+8. source-worker certification beyond bounded live Core source-ingestion proof,
+9. certified long-running scheduled daemon runtime and live-service recovery proof,
+10. new API routes beyond the existing caller-supplied foundation endpoint,
+11. Gateway/Workbench proof,
+12. supported-feature promotion,
+13. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

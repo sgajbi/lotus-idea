@@ -69,6 +69,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
@@ -289,6 +290,11 @@ Persistence adapter validation:
     optional Lotus Performance underperformance live-proof artifact remains
     source-safe and can clear only the namespaced live Performance source
     blocker when valid evidence is supplied.
+    `tests/unit/test_missing_suitability_live_proof.py` and
+    `make missing-suitability-live-proof-contract-gate` prove the optional
+    Lotus Advise policy-evaluation live-proof artifact remains source-safe and
+    can clear only the namespaced missing-suitability Advise source blocker
+    when valid evidence is supplied.
     `tests/unit/test_implementation_proof_readiness.py`,
     `tests/unit/test_generate_implementation_proof_readiness.py`, and
     `tests/integration/test_implementation_proof_readiness_api.py` also prove

@@ -384,8 +384,9 @@ without relying on chat memory.
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
     source-backed archetype replay is bounded to optional high-cash live Core,
     concentration live Risk, high-volatility live Risk, and drawdown live Risk
-    proof artifacts. Missing suitability context still requires live Advise
-    policy-evaluation workflow proof; full Workbench product proof, data-mesh
+    proof artifacts plus optional missing-suitability live Advise
+    policy-evaluation proof. Missing suitability proof clears only the Advise
+    policy live-source blocker; full Workbench product proof, data-mesh
     certification, client-publication, and supported-feature promotion remain
     pending.
 
