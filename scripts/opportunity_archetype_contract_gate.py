@@ -23,6 +23,7 @@ REQUIRED_ARCHETYPES = {
     "concentration-risk-review",
     "underperformance-review",
     "allocation-drift-mandate-review",
+    "high-volatility-drawdown-review",
     "bond-maturity-reinvestment",
     "missing-suitability-context",
 }
@@ -82,12 +83,22 @@ REQUIRED_MANAGE_EVIDENCE = {
     "tests/unit/test_mandate_health_application.py",
     "tests/unit/test_lotus_manage_sources.py",
 }
+REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
+    "src/app/domain/signal_evaluation.py",
+    "src/app/application/high_volatility_signal.py",
+    "src/app/ports/risk_sources.py",
+    "src/app/infrastructure/lotus_risk_sources.py",
+    "tests/unit/test_high_volatility_signal_evaluation.py",
+    "tests/unit/test_high_volatility_application.py",
+    "tests/unit/test_lotus_risk_volatility_sources.py",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
 FOUNDATION_ARCHETYPES = {
     "allocation-drift-mandate-review",
     "concentration-risk-review",
+    "high-volatility-drawdown-review",
     "underperformance-review",
 }
 
@@ -248,6 +259,17 @@ def _validate_archetypes(
         if missing_evidence:
             errors.append(
                 "allocation-drift-mandate-review evidence_refs missing: "
+                + ", ".join(missing_evidence)
+            )
+
+    high_volatility = archetypes.get("high-volatility-drawdown-review")
+    if high_volatility is not None:
+        missing_evidence = sorted(
+            REQUIRED_HIGH_VOLATILITY_EVIDENCE - set(high_volatility.evidence_refs)
+        )
+        if missing_evidence:
+            errors.append(
+                "high-volatility-drawdown-review evidence_refs missing: "
                 + ", ".join(missing_evidence)
             )
 

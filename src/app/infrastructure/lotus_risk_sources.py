@@ -12,12 +12,16 @@ from app.ports.risk_sources import (
     RiskConcentrationEvidenceRequest,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
+    RiskVolatilityEvidence,
+    RiskVolatilityEvidenceRequest,
 )
 
 
 PRODUCT_VERSION = "v1"
 CONCENTRATION_PRODUCT_ID = "lotus-risk:ConcentrationRiskReport:v1"
 CONCENTRATION_ROUTE = "/analytics/risk/concentration"
+RISK_METRICS_PRODUCT_ID = "lotus-risk:RiskMetricsReport:v1"
+RISK_CALCULATE_ROUTE = "/analytics/risk/calculate"
 
 
 @dataclass(frozen=True)
@@ -25,6 +29,13 @@ class _ConcentrationMeasures:
     top_position_weight_current: Decimal | None
     top_issuer_weight_current: Decimal | None
     issuer_coverage_status: str | None
+
+
+@dataclass(frozen=True)
+class _VolatilityMeasures:
+    source_reported_volatility: Decimal | None
+    supportability_state: str | None
+    diagnostic: str
 
 
 class LotusRiskConcentrationSourceAdapter:
@@ -60,6 +71,76 @@ class LotusRiskConcentrationSourceAdapter:
             concentration_ref=_source_ref(payload),
             concentration_diagnostic=_diagnostic(measures),
         )
+
+
+class LotusRiskVolatilitySourceAdapter:
+    def __init__(self, risk_client: DownstreamJsonClient) -> None:
+        self._risk_client = risk_client
+
+    def fetch_volatility_evidence(
+        self, request: RiskVolatilityEvidenceRequest
+    ) -> RiskVolatilityEvidence:
+        try:
+            payload = self._risk_client.post_json(
+                RISK_CALCULATE_ROUTE,
+                json_payload=_risk_calculate_request_payload(request),
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise RiskSourceEntitlementDenied from exc
+            raise RiskSourceUnavailable(code=exc.code) from exc
+
+        measures = _volatility_measures(payload, period_name=request.period_name)
+        return RiskVolatilityEvidence(
+            source_reported_volatility=measures.source_reported_volatility,
+            risk_supportability_state=measures.supportability_state,
+            risk_ref=_risk_metrics_source_ref(payload),
+            risk_diagnostic=measures.diagnostic,
+        )
+
+
+def _risk_calculate_request_payload(request: RiskVolatilityEvidenceRequest) -> dict[str, Any]:
+    return {
+        "input_mode": "stateful",
+        "stateful_input": {
+            "portfolio_id": request.portfolio_id,
+            "as_of_date": request.as_of_date.isoformat(),
+            "periods": [{"type": request.period_name, "name": request.period_name}],
+            "metrics": ["VOLATILITY"],
+        },
+    }
+
+
+def _volatility_measures(payload: dict[str, Any], *, period_name: str) -> _VolatilityMeasures:
+    results = _object_field(payload, "results")
+    period_result = _object_field(results, period_name)
+    metrics = _object_field(period_result, "metrics")
+    volatility_metric = _object_field(metrics, "VOLATILITY")
+    metadata = _object_field(payload, "metadata")
+    supportability_state = _supportability_state(metadata)
+    volatility = _decimal_field(
+        volatility_metric,
+        "value",
+        code="risk_volatility_value_malformed",
+    )
+    if volatility is None:
+        return _VolatilityMeasures(
+            source_reported_volatility=None,
+            supportability_state=supportability_state,
+            diagnostic="risk_volatility_value_missing",
+        )
+    diagnostic = (
+        "risk_volatility_source_ready"
+        if supportability_state == "ready"
+        else f"risk_volatility_source_{supportability_state or 'unknown'}"
+    )
+    return _VolatilityMeasures(
+        source_reported_volatility=volatility,
+        supportability_state=supportability_state,
+        diagnostic=diagnostic,
+    )
 
 
 def _concentration_measures(payload: dict[str, Any]) -> _ConcentrationMeasures:
@@ -111,6 +192,43 @@ def _source_ref(payload: dict[str, Any]) -> SourceRef:
         data_quality_status=supportability_state,
         freshness=_freshness(metadata, payload, supportability_state=supportability_state),
     )
+
+
+def _risk_metrics_source_ref(payload: dict[str, Any]) -> SourceRef:
+    metadata = _object_field(payload, "metadata")
+    scope = _object_field(payload, "scope")
+    supportability_state = _supportability_state(metadata) or "unknown"
+    return SourceRef(
+        product_id=RISK_METRICS_PRODUCT_ID,
+        source_system=SourceSystem.LOTUS_RISK,
+        product_version=str(
+            metadata.get("contract_version")
+            or metadata.get("contractVersion")
+            or metadata.get("product_version")
+            or metadata.get("productVersion")
+            or PRODUCT_VERSION
+        ),
+        route=RISK_CALCULATE_ROUTE,
+        as_of_date=_date_field(scope, metadata, keys=("as_of_date", "asOfDate")),
+        generated_at_utc=_datetime_field(
+            metadata,
+            keys=("generated_at", "generatedAt", "calculated_at", "calculatedAt"),
+        ),
+        content_hash=_content_hash(metadata, payload),
+        data_quality_status=supportability_state,
+        freshness=_freshness(metadata, payload, supportability_state=supportability_state),
+    )
+
+
+def _supportability_state(metadata: dict[str, Any]) -> str | None:
+    supportability = metadata.get("calculation_supportability")
+    if isinstance(supportability, dict):
+        state = supportability.get("state")
+        if isinstance(state, str) and state.strip():
+            return state.strip().lower()
+    if isinstance(supportability, str) and supportability.strip():
+        return supportability.strip().lower()
+    return None
 
 
 def _object_field(payload: dict[str, Any], key: str) -> dict[str, Any]:

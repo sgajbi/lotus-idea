@@ -446,7 +446,7 @@ eligibility, client-ready publication, order execution, or client contact.
 | Allocation drift | `lotus-manage`; source holdings from `lotus-core` | Allocation deviates from model, mandate, or target band. | Planned |
 | Bond maturity or reinvestment | `lotus-core`; optional `lotus-manage` context | Fixed-income maturity creates reinvestment or liquidity review need. | Planned |
 | Low income yield | `lotus-performance`; holdings from `lotus-core` | Income output appears below target, objective, or comparable mandate context. | Planned |
-| High volatility or drawdown | `lotus-risk`; returns from `lotus-performance` | Risk profile or realized risk calls for review. | Planned |
+| High volatility or drawdown | `lotus-risk`; returns from `lotus-performance` | Risk profile or realized risk calls for review. | Partially implemented - deterministic high-volatility policy plus Lotus Risk `RiskMetricsReport:v1` source-port/adapter foundation only; drawdown-specific source proof, live Risk proof, data-mesh certification, Workbench proof, and supported promotion remain blocked |
 | Missing benchmark | `lotus-core`; `lotus-performance` dependency | Portfolio lacks benchmark identity required for meaningful analytics. | Planned |
 | Missing or stale risk profile | `lotus-advise`; client facts from `lotus-core` | Advice or review is blocked because risk profile is missing, stale, or incompatible. | Planned |
 | Mandate or restriction review | `lotus-core`; `lotus-manage`; `lotus-advise` | Mandate, restriction, or suitability context blocks or changes actionability. | Planned |

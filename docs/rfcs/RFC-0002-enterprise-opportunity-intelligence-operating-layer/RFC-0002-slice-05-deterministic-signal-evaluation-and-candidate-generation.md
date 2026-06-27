@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, underperformance policy plus Performance source-port/adapter foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, underperformance policy plus Performance source-port/adapter foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility policy plus RiskMetricsReport source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -203,6 +203,37 @@ Additional implemented allocation-drift / mandate-review foundation:
    entitlement denial, source unavailability, malformed counts, trace headers,
    and request validation.
 
+Additional implemented high-volatility foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `HighVolatilitySignalPolicy`, `HighVolatilitySignalInput`, and
+   `evaluate_high_volatility_signal` for source-owned volatility attention
+   candidates.
+2. The evaluator consumes only Lotus Risk-owned volatility, supportability
+   state, freshness, entitlement posture, and source refs. It does not
+   calculate volatility, drawdown, tracking error, VaR, risk profile,
+   suitability, or mandate risk locally.
+3. `src/app/ports/risk_sources.py`,
+   `src/app/application/high_volatility_signal.py`, and
+   `src/app/infrastructure/lotus_risk_sources.py` add the source port,
+   application wrapper, and fail-closed HTTP adapter over
+   `POST /analytics/risk/calculate` for `RiskMetricsReport:v1` volatility
+   evidence.
+4. The adapter preserves correlation and trace headers, requests source-owned
+   stateful `VOLATILITY` metrics, requires source lineage metadata, maps
+   401/403 to entitlement denial, and fails closed when generated-at,
+   as-of-date, request fingerprint, period results, metric blocks, or parseable
+   volatility are missing or malformed.
+5. `tests/unit/test_high_volatility_signal_evaluation.py`,
+   `tests/unit/test_high_volatility_application.py`, and
+   `tests/unit/test_lotus_risk_volatility_sources.py` cover positive,
+   below-materiality, stale, non-ready, missing-source, duplicate,
+   entitlement-denied, source-unavailable, malformed-measure, trace-header, and
+   request-validation cases.
+6. This foundation does not include live Risk proof, drawdown-specific source
+   proof, data-mesh certification, Workbench proof, or supported-feature
+   promotion.
+
 Not implemented yet:
 
 1. live Risk concentration source proof captured from an actual canonical
@@ -217,12 +248,16 @@ Not implemented yet:
 6. mandate risk-health source refs from the governed Risk source authority,
 7. Core portfolio-state source refs for allocation-drift / mandate-review
    candidates,
-8. source-worker certification beyond bounded live Core source-ingestion proof,
-9. certified long-running scheduled daemon runtime and live-service recovery proof,
-10. new API routes beyond the existing caller-supplied foundation endpoint,
-11. Gateway/Workbench proof,
-12. supported-feature promotion,
-13. data-product certification.
+8. live Risk high-volatility source proof captured from an actual canonical
+   runtime and merged as release evidence,
+9. drawdown-specific source proof for the high-volatility / drawdown review
+   archetype,
+10. source-worker certification beyond bounded live Core source-ingestion proof,
+11. certified long-running scheduled daemon runtime and live-service recovery proof,
+12. new API routes beyond the existing caller-supplied foundation endpoint,
+13. Gateway/Workbench proof,
+14. supported-feature promotion,
+15. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

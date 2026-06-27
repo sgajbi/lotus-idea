@@ -894,7 +894,8 @@ contract at
 `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
 The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review, underperformance review,
-and allocation drift / mandate review as non-promoted bounded foundations.
+allocation drift / mandate review, and high-volatility review as non-promoted
+bounded foundations.
 Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
 source-safe live-proof artifact contract, and focused unit tests.
@@ -906,8 +907,13 @@ blocking. Allocation drift / mandate review is backed by deterministic policy,
 a Lotus Manage action-register posture source port, a fail-closed HTTP adapter
 over `GET /api/v1/rebalance/supportability/summary`, and focused unit tests
 that prove current store-wide Manage posture blocks portfolio-scoped
-opportunity claims. Bond maturity and missing suitability context remain
-planned. A valid Risk concentration live-proof artifact clears only the live
+opportunity claims. High volatility is backed by deterministic policy, a Lotus
+Risk `RiskMetricsReport:v1` source port, a fail-closed HTTP adapter over
+`POST /analytics/risk/calculate`, and focused unit tests that prove
+source-reported volatility consumption, non-ready risk supportability blocking,
+and no local risk-methodology calculation. Bond maturity and missing
+suitability context remain planned. A valid Risk concentration live-proof
+artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
 artifact clears only the live Performance source blocker. Concentration still
 carries data-mesh certification, Workbench, client-publication, and
@@ -916,7 +922,9 @@ benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
 supported-feature blockers. Allocation drift still carries portfolio-scoped
 Manage source proof, mandate performance-health source-ref, mandate
 risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
-client-publication, and supported-feature blockers.
+client-publication, and supported-feature blockers. High volatility still
+carries live Risk volatility proof, drawdown source proof, data-mesh,
+Workbench, client-publication, and supported-feature blockers.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion

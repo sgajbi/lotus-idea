@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review and underperformance review are non-promoted bounded foundations with source-specific live-proof blockers; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, and high-volatility review are non-promoted bounded foundations with source-specific blockers; demo claims remain blocked
 
 ## Outcome
 
@@ -31,8 +31,9 @@ capabilities exist.
 5. `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
-   concentration-risk and underperformance review foundations, and planned
-   allocation-drift, bond-maturity, and missing-suitability journeys.
+   concentration-risk, underperformance, allocation-drift, and high-volatility
+   review foundations, and planned bond-maturity and missing-suitability
+   journeys.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
@@ -83,7 +84,12 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    benchmark context from `lotus-performance:ReturnsSeriesBundle:v1`, blocks
    missing benchmark context, and does not calculate performance methodology
    inside `lotus-idea`.
-6. Remaining planned archetypes still require source adapters, deterministic
+6. High-volatility review now has a bounded deterministic policy plus Lotus
+   Risk `RiskMetricsReport:v1` source-port/adapter foundation. It still
+   requires live Risk proof, drawdown-specific source proof, data-mesh
+   certification, Workbench proof, and supported-feature evidence before demo
+   use.
+7. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate

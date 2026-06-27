@@ -503,8 +503,11 @@ collide with source-ingestion, Workbench, data-mesh, or supported-feature
 blockers from other proof families. It is a taxonomy and scenario-readiness
 view only. A valid source-ingestion live Core proof can clear only the
 high-cash live Core scenario blocker, and a valid Risk concentration proof can
-clear only the concentration live Risk scenario blocker; client-demo,
-data-mesh, Workbench, publication, and supported-feature blockers remain.
+clear only the concentration live Risk scenario blocker. High-volatility now
+has a bounded source-adapter foundation, but it remains blocked on live Risk
+volatility proof, drawdown source proof, data-mesh, Workbench, publication, and
+supported-feature evidence. Client-demo, data-mesh, Workbench, publication, and
+supported-feature blockers remain.
 
 ## Example
 

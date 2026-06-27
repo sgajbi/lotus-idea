@@ -18,13 +18,13 @@ No external business feature is supported yet. Feature promotion still requires
 certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbench,
 downstream realization, supported-feature registration, and evidence on `main`.
 
-Current implemented foundations include source-authority-preserving high-cash,
-concentration-risk, underperformance, and allocation-drift mandate-review
-policies with Core, Risk, Performance, and Manage source adapters. The Manage
-adapter blocks store-wide supportability evidence from becoming a portfolio
-opportunity claim. Other foundations cover candidate persistence, replay,
-lifecycle, review, feedback, queue readiness, AI diagnostics, conversion/report
-submission, Advise/Manage/Report proof consumption, outbox, runtime trust
+Current implemented foundations include source-authority-preserving high-cash, concentration-risk,
+underperformance, allocation-drift mandate-review, and high-volatility policies with Core, Risk,
+Performance, and Manage source adapters. High-volatility consumes Risk-owned volatility only;
+drawdown proof remains blocked. The Manage adapter blocks store-wide supportability evidence from
+becoming a portfolio opportunity claim. Other foundations cover candidate persistence, replay,
+lifecycle, review, feedback, queue readiness, AI diagnostics, conversion/report submission,
+Advise/Manage/Report proof consumption, outbox, runtime trust
 telemetry, data-mesh readiness, PostgreSQL/migration, Workbench proof, platform
 mesh proof, and bounded Gateway/Workbench queue/detail reads. These are
 internal foundations only: client publication and supported-feature claims
