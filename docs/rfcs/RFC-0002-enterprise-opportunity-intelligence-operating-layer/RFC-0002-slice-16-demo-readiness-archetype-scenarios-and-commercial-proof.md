@@ -86,10 +86,12 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    missing benchmark context, and does not calculate performance methodology
    inside `lotus-idea`.
 6. High-volatility review now has a bounded deterministic policy, Lotus Risk
-   `RiskMetricsReport:v1` source-port/adapter foundation, and source-safe live
-   Risk volatility proof contract. A valid artifact can clear only
-   `opportunity_archetype_live_risk_volatility_source_proof_missing`; drawdown
-   source proof, data-mesh certification, Workbench proof, and
+   `RiskMetricsReport:v1` and `DrawdownAnalyticsReport:v1`
+   source-port/adapter foundations, and source-safe live Risk volatility and
+   drawdown proof contracts. Valid artifacts can clear only
+   `opportunity_archetype_live_risk_volatility_source_proof_missing` and
+   `opportunity_archetype_drawdown_source_proof_missing`; data-mesh
+   certification, Workbench proof, client-publication approval, and
    supported-feature evidence remain required before demo use.
 7. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
