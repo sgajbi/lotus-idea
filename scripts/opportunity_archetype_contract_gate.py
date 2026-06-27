@@ -86,11 +86,15 @@ REQUIRED_MANAGE_EVIDENCE = {
 REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
     "src/app/application/high_volatility_signal.py",
+    "src/app/application/high_volatility_live_proof.py",
     "src/app/ports/risk_sources.py",
     "src/app/infrastructure/lotus_risk_sources.py",
+    "scripts/generate_high_volatility_live_proof.py",
+    "make high-volatility-live-proof-contract-gate",
     "tests/unit/test_high_volatility_signal_evaluation.py",
     "tests/unit/test_high_volatility_application.py",
     "tests/unit/test_lotus_risk_volatility_sources.py",
+    "tests/unit/test_high_volatility_live_proof.py",
 }
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}

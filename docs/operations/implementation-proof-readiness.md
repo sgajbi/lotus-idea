@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, and Performance underperformance proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -131,6 +131,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
 | `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Risk high-volatility live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default source-safe Advise proposal route proof. Defaults to `../lotus-advise`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` | Selects the default generated Advise proposal route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/advise-proposal-route-proof.json`. |
@@ -203,6 +204,18 @@ through `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` clears only
 and deterministic concentration candidate generation without storing portfolio
 identity, request or response payloads, correlation IDs, trace IDs, candidate
 IDs, or source routes. It deliberately retains data-mesh, Workbench,
+client-publication, and supported-feature blockers.
+
+Lotus Risk high-volatility live proof is captured by
+`scripts/generate_high_volatility_live_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` clears only
+`opportunity_archetype_live_risk_volatility_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves a live
+`lotus-risk:RiskMetricsReport:v1` source call, current source evidence,
+ready Risk supportability, and deterministic high-volatility candidate
+generation without storing portfolio identity, request or response payloads,
+correlation IDs, trace IDs, candidate IDs, source routes, volatility values, or
+drawdown figures. It deliberately retains drawdown, data-mesh, Workbench,
 client-publication, and supported-feature blockers.
 
 Lotus Performance underperformance live proof is captured by
@@ -502,12 +515,12 @@ and prefixes its scenario blockers with `opportunity_archetype_` so they do not
 collide with source-ingestion, Workbench, data-mesh, or supported-feature
 blockers from other proof families. It is a taxonomy and scenario-readiness
 view only. A valid source-ingestion live Core proof can clear only the
-high-cash live Core scenario blocker, and a valid Risk concentration proof can
-clear only the concentration live Risk scenario blocker. High-volatility now
-has a bounded source-adapter foundation, but it remains blocked on live Risk
-volatility proof, drawdown source proof, data-mesh, Workbench, publication, and
-supported-feature evidence. Client-demo, data-mesh, Workbench, publication, and
-supported-feature blockers remain.
+high-cash live Core scenario blocker, a valid Risk concentration proof can
+clear only the concentration live Risk scenario blocker, and a valid
+high-volatility proof can clear only the live Risk volatility scenario blocker.
+High-volatility remains blocked on drawdown source proof, data-mesh,
+Workbench, publication, and supported-feature evidence. Client-demo,
+data-mesh, Workbench, publication, and supported-feature blockers remain.
 
 ## Example
 
@@ -587,9 +600,13 @@ Implementation-backed evidence:
     `scripts/generate_risk_concentration_live_proof.py`,
 24. Risk concentration live-proof contract gate:
     `make risk-concentration-live-proof-contract-gate`,
-25. Performance underperformance live-proof generator:
+25. High-volatility live-proof generator:
+    `scripts/generate_high_volatility_live_proof.py`,
+26. High-volatility live-proof contract gate:
+    `make high-volatility-live-proof-contract-gate`,
+27. Performance underperformance live-proof generator:
     `scripts/generate_performance_underperformance_live_proof.py`,
-26. Performance underperformance live-proof contract gate:
+28. Performance underperformance live-proof contract gate:
     `make performance-underperformance-live-proof-contract-gate`,
 27. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
@@ -705,6 +722,7 @@ make implementation-proof-readiness-check
 $env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
 $env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
+$env:LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF = "output/opportunity/high-volatility-live-proof.json"
 $env:LOTUS_ADVISE_ROOT = "..\lotus-advise"
 $env:LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT = "output/downstream/advise-proposal-route-proof.json"
 $env:LOTUS_MANAGE_ROOT = "..\lotus-manage"
@@ -734,6 +752,7 @@ make gateway-workbench-discovery-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
+make high-volatility-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check

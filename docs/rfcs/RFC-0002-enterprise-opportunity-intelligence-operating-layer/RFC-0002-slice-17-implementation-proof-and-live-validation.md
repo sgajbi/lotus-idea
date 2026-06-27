@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, and opportunity archetype scenario readiness with concentration-risk source/policy foundation available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility live Risk proof artifact contract, and opportunity archetype scenario readiness with source/policy foundations available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -284,7 +284,15 @@ Prove the complete supported opportunity journey end to end.
     readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_risk_source_proof_missing`, while preserving
     data-mesh, Workbench, client-publication, and supported-feature blockers.
-29. `src/app/application/performance_underperformance_live_proof.py`,
+29. `src/app/application/high_volatility_live_proof.py`,
+    `scripts/generate_high_volatility_live_proof.py`, and
+    `make high-volatility-live-proof-contract-gate` now define and enforce a
+    source-safe Lotus Risk high-volatility live-proof artifact. Aggregate
+    readiness can consume a valid artifact to clear only
+    `opportunity_archetype_live_risk_volatility_source_proof_missing`, while
+    preserving drawdown, data-mesh, Workbench, client-publication, and
+    supported-feature blockers.
+30. `src/app/application/performance_underperformance_live_proof.py`,
     `scripts/generate_performance_underperformance_live_proof.py`, and
     `make performance-underperformance-live-proof-contract-gate` now define and
     enforce a source-safe Lotus Performance underperformance live-proof
@@ -292,7 +300,7 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_live_performance_source_proof_missing`, while
     preserving benchmark-assignment, data-mesh, Workbench, client-publication,
     and supported-feature blockers.
-30. A valid source-ingestion live Core proof referenced through
+31. A valid source-ingestion live Core proof referenced through
     `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
     `opportunity_archetype_live_core_source_proof_missing` for the high-cash
     scenario while preserving Workbench, data-mesh, client-publication, and
@@ -361,13 +369,15 @@ without relying on chat memory.
     proof, and supported-feature promotion remain pending.
 12. Opportunity archetype scenario readiness is now explicit in aggregate
     readiness, but it proves only governed taxonomy, bounded concentration
-    source/policy foundation, optional live Risk concentration proof
+    source/policy foundation, bounded high-volatility source/policy
+    foundation, optional live Risk concentration/high-volatility proof
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
-    source-backed archetype replay is bounded to optional high-cash live Core
-    and concentration live Risk proof artifacts; full Workbench product proof,
-    data-mesh certification, client-publication, and supported-feature
-    promotion remain pending.
+    source-backed archetype replay is bounded to optional high-cash live Core,
+    concentration live Risk, and high-volatility live Risk proof artifacts;
+    drawdown source proof, full Workbench product proof, data-mesh
+    certification, client-publication, and supported-feature promotion remain
+    pending.
 
 The new downstream realization readiness diagnostic narrows the proof gap from
 "unknown" to "explicitly blocked with source-authority refs"; it does not close

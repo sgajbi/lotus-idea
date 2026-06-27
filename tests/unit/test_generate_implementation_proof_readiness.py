@@ -24,6 +24,7 @@ from app.application.gateway_workbench_operational_proof import (
 from app.application.gateway_workbench_discovery_proof import (
     build_gateway_workbench_discovery_proof_payload,
 )
+from app.application.high_volatility_live_proof import build_high_volatility_live_proof_payload
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
@@ -112,6 +113,10 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
     )
     assert "make opportunity-archetype-contract-gate" in archetypes["evidenceRefs"]
     assert "opportunity_archetype_live_risk_source_proof_missing" in archetypes["blockers"]
+    assert (
+        "opportunity_archetype_live_risk_volatility_source_proof_missing"
+        in (archetypes["blockers"])
+    )
     assert "opportunity_archetype_live_performance_source_proof_missing" in (archetypes["blockers"])
     assert (
         "opportunity_archetype_risk_source_consumer_approval_missing"
@@ -894,6 +899,63 @@ def test_generate_implementation_proof_readiness_uses_explicit_risk_concentratio
     assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
     assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
     assert "Risk concentration live proof artifact" in archetypes["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_high_volatility_live_proof(
+    tmp_path: Path,
+) -> None:
+    high_volatility_proof = tmp_path / "high-volatility-live-proof.json"
+    high_volatility_proof.write_text(
+        json.dumps(
+            build_high_volatility_live_proof_payload(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+                live_risk_source_attempted=True,
+                evaluation_summary={
+                    "runStatus": "completed",
+                    "sourceAuthority": "lotus-risk",
+                    "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
+                    "evaluationOutcome": "candidate_created",
+                    "sourceEvidenceCurrent": True,
+                    "riskSupportabilityReady": True,
+                    "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
+                    "reasonCodes": ["volatility_attention"],
+                    "unsupportedReasons": [],
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-27T00:00:00Z",
+            "--high-volatility-live-proof",
+            str(high_volatility_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    archetypes = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "opportunity-archetype-scenarios"
+    )
+    assert (
+        "opportunity_archetype_live_risk_volatility_source_proof_missing"
+        not in (archetypes["blockers"])
+    )
+    assert "opportunity_archetype_drawdown_source_proof_missing" in archetypes["blockers"]
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
+    assert "opportunity_archetype_workbench_product_proof_missing" in archetypes["blockers"]
+    assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
+    assert "High volatility live proof artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

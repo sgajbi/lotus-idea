@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, underperformance policy plus Performance source-port/adapter foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility policy plus RiskMetricsReport source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility policy plus RiskMetricsReport source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -230,9 +230,17 @@ Additional implemented high-volatility foundation:
    below-materiality, stale, non-ready, missing-source, duplicate,
    entitlement-denied, source-unavailable, malformed-measure, trace-header, and
    request-validation cases.
-6. This foundation does not include live Risk proof, drawdown-specific source
-   proof, data-mesh certification, Workbench proof, or supported-feature
-   promotion.
+6. `src/app/application/high_volatility_live_proof.py`,
+   `scripts/generate_high_volatility_live_proof.py`,
+   `scripts/high_volatility_live_proof_contract_gate.py`, and
+   `make high-volatility-live-proof-contract-gate` define a source-safe live
+   Risk high-volatility proof artifact. A valid artifact proves a live
+   `lotus-risk:RiskMetricsReport:v1` source call, current source evidence,
+   ready Risk supportability, and deterministic high-volatility candidate
+   generation, then clears only the namespaced opportunity-archetype live Risk
+   volatility blocker when consumed by aggregate readiness.
+7. This foundation does not include drawdown-specific source proof, data-mesh
+   certification, Workbench proof, or supported-feature promotion.
 
 Not implemented yet:
 
@@ -248,16 +256,14 @@ Not implemented yet:
 6. mandate risk-health source refs from the governed Risk source authority,
 7. Core portfolio-state source refs for allocation-drift / mandate-review
    candidates,
-8. live Risk high-volatility source proof captured from an actual canonical
-   runtime and merged as release evidence,
-9. drawdown-specific source proof for the high-volatility / drawdown review
+8. drawdown-specific source proof for the high-volatility / drawdown review
    archetype,
-10. source-worker certification beyond bounded live Core source-ingestion proof,
-11. certified long-running scheduled daemon runtime and live-service recovery proof,
-12. new API routes beyond the existing caller-supplied foundation endpoint,
-13. Gateway/Workbench proof,
-14. supported-feature promotion,
-15. data-product certification.
+9. source-worker certification beyond bounded live Core source-ingestion proof,
+10. certified long-running scheduled daemon runtime and live-service recovery proof,
+11. new API routes beyond the existing caller-supplied foundation endpoint,
+12. Gateway/Workbench proof,
+13. supported-feature promotion,
+14. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

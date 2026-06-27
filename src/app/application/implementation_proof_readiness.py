@@ -151,6 +151,8 @@ def build_implementation_proof_readiness_snapshot(
     gateway_workbench_discovery_proof_ref: str | None = None,
     risk_concentration_live_proof: Mapping[str, object] | None = None,
     risk_concentration_live_proof_ref: str | None = None,
+    high_volatility_live_proof: Mapping[str, object] | None = None,
+    high_volatility_live_proof_ref: str | None = None,
     performance_underperformance_live_proof: Mapping[str, object] | None = None,
     performance_underperformance_live_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
@@ -342,6 +344,8 @@ def _apply_available_proofs(
     source_ingestion: SourceIngestionReadinessSnapshot,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
+    high_volatility_live_proof: Mapping[str, object] | None,
+    high_volatility_live_proof_ref: str | None,
     performance_underperformance_live_proof: Mapping[str, object] | None,
     performance_underperformance_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -399,6 +403,8 @@ def _apply_available_proofs(
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
         risk_concentration_live_proof=risk_concentration_live_proof,
         risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
+        high_volatility_live_proof=high_volatility_live_proof,
+        high_volatility_live_proof_ref=high_volatility_live_proof_ref,
         performance_underperformance_live_proof=performance_underperformance_live_proof,
         performance_underperformance_live_proof_ref=performance_underperformance_live_proof_ref,
     )
