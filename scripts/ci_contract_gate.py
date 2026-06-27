@@ -59,6 +59,7 @@ REQUIRED_LINT_TARGETS = (
     "workbench-read-path-proof-contract-gate",
     "outbox-broker-proof-contract-gate",
     "outbox-consumer-runtime-proof-contract-gate",
+    "outbox-platform-mesh-event-publication-proof-contract-gate",
     "platform-mesh-onboarding-proof-contract-gate",
     "source-ingestion-worker-check",
     "source-ingestion-scheduled-worker-check",
@@ -332,6 +333,9 @@ def validate_makefile(makefile: str) -> list[str]:
         "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
         "outbox-consumer-runtime-proof-contract-gate": (
             "scripts/outbox_consumer_runtime_proof_contract_gate.py"
+        ),
+        "outbox-platform-mesh-event-publication-proof-contract-gate": (
+            "scripts/outbox_platform_mesh_event_publication_proof_contract_gate.py"
         ),
         "outbox-consumer-contract-gate": "scripts/outbox_consumer_contract_gate.py",
         "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",

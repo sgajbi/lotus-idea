@@ -308,6 +308,9 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "POST /api/v1/outbox-delivery/run-once" in outbox_delivery.evidence_refs
     assert "src/app/infrastructure/outbox_publisher.py" in outbox_delivery.evidence_refs
     assert "make outbox-broker-proof-contract-gate" in outbox_delivery.evidence_refs
+    assert "make outbox-platform-mesh-event-publication-proof-contract-gate" in (
+        outbox_delivery.evidence_refs
+    )
     assert "outbox_broker_not_configured" in outbox_delivery.blockers
     assert "external_broker_runtime_proof_missing" in outbox_delivery.blockers
     source_ingestion = next(
@@ -712,9 +715,7 @@ def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_p
     assert "output/workbench/workbench-read-path-proof.json" in workbench.evidence_refs
 
 
-def test_implementation_proof_readiness_uses_outbox_broker_proof_without_support_promotion() -> (
-    None
-):
+def test_readiness_uses_outbox_broker_proof_without_support_promotion() -> None:
     proof = build_outbox_broker_proof_payload(
         generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository_root=ROOT,
@@ -836,9 +837,7 @@ def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certifica
     assert snapshot.supported_features_promoted is False
 
 
-def test_implementation_proof_readiness_uses_report_intake_route_proof_without_materialization() -> (
-    None
-):
+def test_readiness_uses_report_intake_route_proof_without_materialization() -> None:
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),

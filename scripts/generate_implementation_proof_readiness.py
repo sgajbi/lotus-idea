@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -36,6 +36,9 @@ from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
 )
+from app.application.outbox_platform_mesh_event_publication_proof import (
+    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+)
 from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_PROOF_ENV,
 )
@@ -62,25 +65,6 @@ class ProofArtifactInput:
     payload: dict[str, Any] | None
     path: Path | None
     ref_name: str
-
-
-@dataclass(frozen=True)
-class ProofArtifactInputs:
-    durable_repository: ProofArtifactInput
-    runtime_trust_telemetry: ProofArtifactInput
-    ai_lineage_store: ProofArtifactInput
-    ai_model_risk_operations: ProofArtifactInput
-    ai_workflow_pack_registration: ProofArtifactInput
-    ai_workflow_pack_runtime_execution: ProofArtifactInput
-    advise_proposal_route: ProofArtifactInput
-    manage_action_route: ProofArtifactInput
-    report_intake_route: ProofArtifactInput
-    report_materialization: ProofArtifactInput
-    mesh_policy: ProofArtifactInput
-    workbench_read_path: ProofArtifactInput
-    outbox_broker: ProofArtifactInput
-    outbox_consumer_runtime: ProofArtifactInput
-    platform_mesh_onboarding: ProofArtifactInput
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -155,7 +139,7 @@ def _capability_payload(
     }
 
 
-def _proof_payload_kwargs(input_: ProofArtifactInputs) -> dict[str, Any]:
+def _proof_payload_kwargs(input_: Mapping[str, ProofArtifactInput]) -> dict[str, Any]:
     proof_fields = (
         "durable_repository",
         "runtime_trust_telemetry",
@@ -170,12 +154,13 @@ def _proof_payload_kwargs(input_: ProofArtifactInputs) -> dict[str, Any]:
         "mesh_policy",
         "outbox_broker",
         "outbox_consumer_runtime",
+        "outbox_platform_mesh_event_publication",
         "platform_mesh_onboarding",
         "workbench_read_path",
     )
     kwargs: dict[str, Any] = {}
     for field_name in proof_fields:
-        artifact = getattr(input_, field_name)
+        artifact = input_[field_name]
         kwargs[f"{field_name}_proof"] = artifact.payload
         kwargs[f"{field_name}_proof_ref"] = _proof_ref(artifact)
     return kwargs
@@ -199,84 +184,89 @@ def _proof_ref(input_: ProofArtifactInput) -> str | None:
     return _source_safe_artifact_ref(input_.path, artifact_name=input_.ref_name)
 
 
-def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
-    return ProofArtifactInputs(
-        durable_repository=_proof_artifact_input(
+def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactInput]:
+    return {
+        "durable_repository": _proof_artifact_input(
             args.durable_repository_proof,
             artifact_name="durable repository proof",
             ref_name="durable repository proof artifact",
         ),
-        runtime_trust_telemetry=_proof_artifact_input(
+        "runtime_trust_telemetry": _proof_artifact_input(
             args.runtime_trust_telemetry_proof,
             artifact_name="runtime trust telemetry proof",
             ref_name="runtime trust telemetry proof artifact",
         ),
-        ai_lineage_store=_proof_artifact_input(
+        "ai_lineage_store": _proof_artifact_input(
             args.ai_lineage_store_proof,
             artifact_name="AI lineage store proof",
             ref_name="AI lineage store proof artifact",
         ),
-        ai_model_risk_operations=_proof_artifact_input(
+        "ai_model_risk_operations": _proof_artifact_input(
             args.ai_model_risk_operations_proof,
             artifact_name="AI model-risk operations proof",
             ref_name="AI model-risk operations proof artifact",
         ),
-        ai_workflow_pack_registration=_proof_artifact_input(
+        "ai_workflow_pack_registration": _proof_artifact_input(
             args.ai_workflow_pack_registration_proof,
             artifact_name="AI workflow-pack registration proof",
             ref_name="AI workflow-pack registration proof artifact",
         ),
-        ai_workflow_pack_runtime_execution=_proof_artifact_input(
+        "ai_workflow_pack_runtime_execution": _proof_artifact_input(
             args.ai_workflow_pack_runtime_execution_proof,
             artifact_name="AI workflow-pack runtime execution proof",
             ref_name="AI workflow-pack runtime execution proof artifact",
         ),
-        advise_proposal_route=_proof_artifact_input(
+        "advise_proposal_route": _proof_artifact_input(
             args.advise_proposal_route_proof,
             artifact_name="Advise proposal route proof",
             ref_name="Advise proposal route proof artifact",
         ),
-        manage_action_route=_proof_artifact_input(
+        "manage_action_route": _proof_artifact_input(
             args.manage_action_route_proof,
             artifact_name="Manage action route proof",
             ref_name="Manage action route proof artifact",
         ),
-        report_intake_route=_proof_artifact_input(
+        "report_intake_route": _proof_artifact_input(
             args.report_intake_route_proof,
             artifact_name="report intake route proof",
             ref_name="report intake route proof artifact",
         ),
-        report_materialization=_proof_artifact_input(
+        "report_materialization": _proof_artifact_input(
             args.report_materialization_proof,
             artifact_name="report materialization proof",
             ref_name="report materialization proof artifact",
         ),
-        mesh_policy=_proof_artifact_input(
+        "mesh_policy": _proof_artifact_input(
             args.mesh_policy_proof,
             artifact_name="mesh policy proof",
             ref_name="mesh policy proof artifact",
         ),
-        workbench_read_path=_proof_artifact_input(
+        "workbench_read_path": _proof_artifact_input(
             args.workbench_read_path_proof,
             artifact_name="workbench read-path proof",
             ref_name="workbench read-path proof artifact",
         ),
-        outbox_broker=_proof_artifact_input(
+        "outbox_broker": _proof_artifact_input(
             args.outbox_broker_proof,
             artifact_name="outbox broker proof",
             ref_name="outbox broker proof artifact",
         ),
-        outbox_consumer_runtime=_proof_artifact_input(
+        "outbox_consumer_runtime": _proof_artifact_input(
             args.outbox_consumer_runtime_proof,
             artifact_name="outbox consumer runtime proof",
             ref_name="outbox consumer runtime proof artifact",
         ),
-        platform_mesh_onboarding=_proof_artifact_input(
+        "outbox_platform_mesh_event_publication": _proof_artifact_input(
+            args.outbox_platform_mesh_event_publication_proof,
+            artifact_name="outbox platform mesh event publication proof",
+            ref_name="outbox platform mesh event publication proof artifact",
+        ),
+        "platform_mesh_onboarding": _proof_artifact_input(
             args.platform_mesh_onboarding_proof,
             artifact_name="platform mesh onboarding proof",
             ref_name="platform mesh onboarding proof artifact",
         ),
-    )
+    }
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -404,6 +394,11 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--outbox-consumer-runtime-proof",
             OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
             "Optional bounded outbox downstream consumer runtime proof artifact path.",
+        ),
+        (
+            "--outbox-platform-mesh-event-publication-proof",
+            OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
+            "Optional bounded outbox platform mesh event publication proof artifact path.",
         ),
         (
             "--platform-mesh-onboarding-proof",

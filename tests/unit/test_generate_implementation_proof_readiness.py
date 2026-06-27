@@ -26,6 +26,10 @@ from app.application.outbox_broker_proof import build_outbox_broker_proof_payloa
 from app.application.outbox_consumer_runtime_proof import (
     build_outbox_consumer_runtime_proof_payload,
 )
+from app.application.outbox_platform_mesh_event_publication_proof import (
+    REQUIRED_PLATFORM_PRODUCT_IDS,
+    build_outbox_platform_mesh_event_publication_proof_payload,
+)
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
@@ -601,6 +605,43 @@ def test_generate_implementation_proof_readiness_uses_explicit_outbox_consumer_r
     assert payload["supportedFeaturePromoted"] is False
 
 
+def test_generate_implementation_proof_readiness_uses_explicit_outbox_platform_mesh_event_proof(
+    tmp_path: Path,
+) -> None:
+    platform_root = _write_outbox_platform_fixture(tmp_path)
+    event_proof = tmp_path / "outbox-platform-mesh-event-publication-proof.json"
+    event_proof.write_text(
+        json.dumps(
+            build_outbox_platform_mesh_event_publication_proof_payload(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+                repository_root=Path(__file__).resolve().parents[2],
+                platform_root=platform_root,
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-27T00:00:00Z",
+            "--outbox-platform-mesh-event-publication-proof",
+            str(event_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "platform_mesh_event_publication_proof_missing" not in payload["overallBlockers"]
+    assert "gateway_workbench_proof_missing" in payload["overallBlockers"]
+    assert "supported_feature_promotion_missing" in payload["overallBlockers"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
 def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof(
     tmp_path: Path,
 ) -> None:
@@ -674,3 +715,51 @@ def _valid_scheduled_worker_proof() -> dict[str, object]:
         run_once_worker_entrypoint_present=True,
         docker_compose_service_present=True,
     )
+
+
+def _write_outbox_platform_fixture(tmp_path: Path) -> Path:
+    platform_root = tmp_path / "lotus-platform-outbox"
+    manifest_path = (
+        platform_root
+        / "platform-contracts"
+        / "domain-data-products"
+        / "domain-product-source-manifest.v1.json"
+    )
+    catalog_path = platform_root / "generated" / "domain-product-catalog.json"
+    handoff_path = platform_root / "docs" / "operations" / "enterprise-mesh-completion-handoff.md"
+    manifest_path.parent.mkdir(parents=True)
+    catalog_path.parent.mkdir(parents=True)
+    handoff_path.parent.mkdir(parents=True)
+    manifest_path.write_text(
+        json.dumps(
+            {
+                "repositories": [
+                    {
+                        "repository": "lotus-idea",
+                        "source_mode": "repo_native",
+                        "catalog_inclusion": "included",
+                        "repo_native_status": "implemented",
+                        "repo_native_declaration_path": "contracts/domain-data-products",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    catalog_path.write_text(
+        json.dumps(
+            {
+                "products": [
+                    {
+                        "product_id": product_id,
+                        "producer_repository": "lotus-idea",
+                        "lifecycle_status": "proposed",
+                    }
+                    for product_id in sorted(REQUIRED_PLATFORM_PRODUCT_IDS)
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    handoff_path.write_text("lotus-idea enterprise mesh completion handoff\n", encoding="utf-8")
+    return platform_root
