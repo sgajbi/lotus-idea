@@ -213,7 +213,7 @@ Report/Render/Archive materialization, Gateway/Workbench product proof,
 runtime trust telemetry, and supported-feature evidence exist.
 The outbox delivery readiness diagnostic and run-once operator action are
 explicitly `not_certified` until live broker runtime proof, downstream consumer
-contracts, platform mesh event certification, Gateway/Workbench proof, and
+contracts, platform mesh event publication proof, Gateway/Workbench proof, and
 supported-feature evidence exist.
 The bounded outbox broker proof artifact is source-safe and clears only
 aggregate broker configuration/runtime-proof blockers in implementation-proof

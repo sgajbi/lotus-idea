@@ -56,20 +56,22 @@ outbox status counts, delivery-ready backlog, durable repository posture,
 broker configuration posture, publisher-adapter presence, and certification
 blockers. It does not expose event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims.
-`scripts/generate_outbox_broker_proof.py` and
-`make outbox-broker-proof-contract-gate` now provide a source-safe outbox
-broker proof artifact for aggregate RFC implementation-readiness evidence. The
-artifact cites the implemented outbox delivery orchestration, publisher port,
-HTTP publisher adapter, readiness endpoint, run-once endpoint, and
+`contracts/outbox-events/lotus-idea-outbox-events.v1.json` and
+`make outbox-event-contract-gate` now define and enforce the repo-owned internal
+outbox event contract. `scripts/generate_outbox_broker_proof.py` and
+`make outbox-broker-proof-contract-gate` provide a source-safe outbox broker
+proof artifact for aggregate RFC implementation-readiness evidence. The artifact
+cites the implemented outbox delivery orchestration, publisher port, HTTP
+publisher adapter, readiness endpoint, run-once endpoint, event contract, and
 configured-publisher API proof. It clears only aggregate broker configuration
 and broker runtime-proof blockers; it does not certify external publication,
-platform mesh event delivery, downstream consumer contracts, or supported
-features.
+platform mesh event publication proof, downstream consumer contracts, or
+supported features.
 `POST /api/v1/outbox-delivery/run-once` now exposes the bounded run-once
 delivery orchestration as a certified internal operator action. It requires
 `idea.outbox-delivery.run`, fails closed without valid broker configuration,
 returns aggregate counts only, and remains `not_certified` until live broker
-runtime, downstream consumer contracts, platform mesh event certification,
+runtime, downstream consumer contracts, platform mesh event publication proof,
 Gateway/Workbench proof, and supported-feature promotion exist.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
@@ -84,7 +86,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, aggregate readiness diagnostic, bounded run-once operator action, and source-safe outbox broker proof artifact for accepted internal mutations | No certified external publication, platform mesh event delivery, or downstream consumer support |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event contract, aggregate readiness diagnostic, bounded run-once operator action, and source-safe outbox broker proof artifact for accepted internal mutations | No certified external publication, platform mesh event publication proof, or downstream consumer support |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |
@@ -271,7 +273,7 @@ later slices add:
 1. deploy-pipeline migration evidence,
 2. certified long-running scheduled source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
-4. downstream consumer contract proof, platform mesh event certification, and
+4. downstream consumer contract proof, platform mesh event publication proof, and
    production event-publication evidence beyond the bounded outbox broker proof artifact,
 5. data-product telemetry and platform mesh certification,
 6. Gateway/Workbench/downstream proof for supported workflows,

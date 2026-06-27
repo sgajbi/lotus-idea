@@ -159,7 +159,7 @@ consumed by aggregate implementation-proof readiness.
    aggregate implementation-proof readiness diagnostic when any RFC-0002 proof
    family remains uncertified. It also covers outbox delivery run-once and
    readiness while external publication certification, downstream consumer
-   contracts, platform mesh event certification, and supported-feature evidence
+   contracts, platform mesh event publication proof, and supported-feature evidence
    are absent.
 
 These signals are operational support evidence only. `durable_storage_backed=true` confirms only
