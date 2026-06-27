@@ -61,6 +61,8 @@ REQUIRED_SOURCE_OF_TRUTH_KEYS = {
     "publisher_adapter",
     "outbox_delivery",
     "outbox_delivery_readiness",
+    "outbox_consumer_contract",
+    "outbox_consumer_contract_gate",
     "contract_gate",
     "make_target",
     "rfc_slice_06",
@@ -70,7 +72,7 @@ REQUIRED_SOURCE_OF_TRUTH_KEYS = {
 
 REMAINING_CERTIFICATION_BLOCKERS = (
     "platform_mesh_event_publication_proof_missing",
-    "downstream_consumer_contracts_missing",
+    "downstream_consumer_runtime_proof_missing",
     "gateway_workbench_proof_missing",
     "supported_feature_promotion_missing",
 )
