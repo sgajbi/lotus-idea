@@ -65,13 +65,18 @@ cites the implemented outbox delivery orchestration, publisher port, HTTP
 publisher adapter, readiness endpoint, run-once endpoint, event contract, and
 configured-publisher API proof. It clears only aggregate broker configuration
 and broker runtime-proof blockers; it does not certify external publication,
-platform mesh event publication proof, downstream consumer contracts, or
+platform mesh event publication proof, downstream consumer runtime proof, or
 supported features.
+`contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
+`make outbox-consumer-contract-gate` now declare governed downstream consumers
+for Gateway, Advise, Manage, and Report without certifying runtime consumption.
+Readiness therefore reports `downstream_consumer_runtime_proof_missing` instead
+of a missing-contract blocker while live consumer proof remains absent.
 `POST /api/v1/outbox-delivery/run-once` now exposes the bounded run-once
 delivery orchestration as a certified internal operator action. It requires
 `idea.outbox-delivery.run`, fails closed without valid broker configuration,
 returns aggregate counts only, and remains `not_certified` until live broker
-runtime, downstream consumer contracts, platform mesh event publication proof,
+runtime, downstream consumer runtime proof, platform mesh event publication proof,
 Gateway/Workbench proof, and supported-feature promotion exist.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
@@ -86,7 +91,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event contract, aggregate readiness diagnostic, bounded run-once operator action, and source-safe outbox broker proof artifact for accepted internal mutations | No certified external publication, platform mesh event publication proof, or downstream consumer support |
+| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, and source-safe outbox broker proof artifact for accepted internal mutations | No certified external publication, platform mesh event publication proof, or downstream consumer runtime proof |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |
@@ -273,7 +278,7 @@ later slices add:
 1. deploy-pipeline migration evidence,
 2. certified long-running scheduled source-ingestion worker proof against the real service,
 3. live source adapter proof against a running Core service,
-4. downstream consumer contract proof, platform mesh event publication proof, and
+4. downstream consumer runtime proof, platform mesh event publication proof, and
    production event-publication evidence beyond the bounded outbox broker proof artifact,
 5. data-product telemetry and platform mesh certification,
 6. Gateway/Workbench/downstream proof for supported workflows,

@@ -76,7 +76,7 @@ validated through the owning repositories and platform gates:
 2. certified long-running scheduled worker runtime proof beyond the current
    deploy-contract artifact,
 3. platform mesh certification, active producer products, and Gateway/Workbench discovery,
-4. certified downstream consumer contracts and production event-publication evidence,
+4. certified downstream consumer runtime proof over the declared consumer contracts and production event-publication evidence,
 5. platform mesh event publication proof for outbox publication,
 6. `lotus-ai` live-provider rollout and runtime trust certification,
 7. Workbench panel and browser proof,
@@ -212,8 +212,16 @@ snapshot. It cites the implemented outbox delivery orchestration, publisher
 port, HTTP publisher adapter foundation, readiness endpoint, run-once endpoint,
 configured-publisher API proof, and `make outbox-broker-proof-contract-gate`.
 It does not certify external broker publication support, downstream consumer
-contracts, platform mesh event publication, Gateway/Workbench behavior,
+runtime proof, platform mesh event publication, Gateway/Workbench behavior,
 client-ready publication, or supported-feature promotion.
+
+Downstream outbox consumer contract posture is enforced by
+`contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
+`make outbox-consumer-contract-gate`. The contract declares Gateway, Advise,
+Manage, and Report consumers with source-authority boundaries and keeps each
+consumer `contract_declared_not_runtime_certified`; it changes the outbox
+blocker from `downstream_consumer_contracts_missing` to
+`downstream_consumer_runtime_proof_missing` without promoting support.
 
 Report intake route proof is captured by
 `scripts/generate_report_intake_route_proof.py`. The repo-native
@@ -405,17 +413,19 @@ Implementation-backed evidence:
     `make workbench-read-path-proof-contract-gate`,
 26. outbox broker proof generator:
     `scripts/generate_outbox_broker_proof.py`,
-27. outbox broker proof contract gate:
+27. outbox consumer contract gate:
+    `make outbox-consumer-contract-gate`,
+28. outbox broker proof contract gate:
     `make outbox-broker-proof-contract-gate`,
-28. report intake route proof generator:
+29. report intake route proof generator:
     `scripts/generate_report_intake_route_proof.py`,
-29. report intake route proof contract gate:
+30. report intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`,
-30. report intake route proof tests:
+31. report intake route proof tests:
     `tests/unit/test_report_intake_route_proof.py`,
-31. outbox broker proof tests:
+32. outbox broker proof tests:
     `tests/unit/test_outbox_broker_proof.py`,
-32. platform mesh onboarding proof generator:
+33. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
 33. platform mesh onboarding proof contract gate:
     `make platform-mesh-onboarding-proof-contract-gate`,

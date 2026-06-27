@@ -294,7 +294,7 @@ Lotus event envelopes with trace headers and product-safe failure reasons. It
 now has a source-safe outbox broker proof artifact for aggregate RFC
 implementation-readiness evidence, but is not wired as certified external
 broker publication until platform mesh event publication proof and downstream
-consumer contracts exist.
+consumer runtime proof exist.
 `src/app/application/outbox_delivery_readiness.py`
 and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
 operator diagnostic over aggregate outbox status counts, delivery-ready backlog,
@@ -315,9 +315,13 @@ Gateway/Workbench support, or supported-feature promotion.
 aggregate implementation-proof readiness consumes to clear only broker
 configuration/runtime-proof blockers. `contracts/outbox-events/lotus-idea-outbox-events.v1.json`
 and `make outbox-event-contract-gate` define the repo-owned event envelope,
-implemented event families, and source-safe payload policy. The broker proof
-artifact cites implemented adapter and API proof, blocks source-sensitive event
-and payload content, and preserves downstream consumer, platform mesh event
+implemented event families, and source-safe payload policy.
+`contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
+`make outbox-consumer-contract-gate` now declare governed downstream consumers
+for Gateway, Advise, Manage, and Report while keeping them
+`contract_declared_not_runtime_certified`. The broker proof artifact cites
+implemented adapter and API proof, blocks source-sensitive event and payload
+content, and preserves downstream consumer runtime, platform mesh event
 publication, Gateway/Workbench, and supported-feature blockers.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,

@@ -162,8 +162,13 @@ Implemented first-wave internal scope:
     `make outbox-broker-proof-contract-gate` now add a source-safe bounded
     outbox broker proof artifact for aggregate implementation-readiness
     evidence. It clears only the aggregate broker configuration/runtime-proof
-    blockers and preserves downstream consumer, platform mesh event publication,
-    Gateway/Workbench, and supported-feature blockers.
+    blockers and preserves downstream consumer runtime, platform mesh event
+    publication, Gateway/Workbench, and supported-feature blockers.
+    `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
+    `make outbox-consumer-contract-gate` now declare Gateway, Advise, Manage,
+    and Report as governed downstream consumers with source-authority
+    boundaries. The contract clears the missing-contract posture only; all
+    consumers remain `contract_declared_not_runtime_certified`.
 20. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
@@ -246,9 +251,9 @@ Not implemented yet:
 3. live source adapter and live source-ingestion proof against a running Core service,
 4. data-product certification,
 5. certified external publication, platform mesh event publication proof, and
-   downstream consumer proof beyond the aggregate outbox readiness diagnostic,
-   HTTP publisher adapter foundation, repo-owned outbox event contract, and
-   bounded outbox broker proof artifact,
+   downstream consumer runtime proof beyond the aggregate outbox readiness
+   diagnostic, HTTP publisher adapter foundation, repo-owned outbox event and
+   consumer contracts, and bounded outbox broker proof artifact,
 6. Gateway/Workbench/downstream proof,
 7. supported-feature promotion.
 
@@ -282,10 +287,10 @@ without valid broker configuration, leaves records untouched when blocked, and
 returns aggregate delivery counts without event identifiers, aggregate ids, raw
 idempotency keys, source payloads, broker payloads, or downstream claims. This
 does not certify external publication, platform mesh event publication, or
-downstream consumer contracts. The next durable persistence slices must still
+downstream consumer runtime proof. The next durable persistence slices must still
 prove certified long-running scheduled daemon behavior, deploy-pipeline
 migration evidence, live Core source-adapter behavior against that service,
-downstream consumer contracts, platform mesh event publication proof, and
+downstream consumer runtime proof, platform mesh event publication proof, and
 event-publication proof before any
 supported event publication claim, and keep API responses truthful:
 `durableStorageBacked=true` means the configured repository adapter is active,

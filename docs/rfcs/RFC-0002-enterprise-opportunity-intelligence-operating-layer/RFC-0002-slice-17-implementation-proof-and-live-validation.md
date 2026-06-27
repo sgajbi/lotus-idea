@@ -46,8 +46,14 @@ Prove the complete supported opportunity journey end to end.
    bounded outbox broker proof artifact consumed by aggregate
    implementation-proof readiness. A valid artifact clears only
    `outbox_broker_not_configured` and
-   `external_broker_runtime_proof_missing`; downstream consumer, platform mesh
-   event, Gateway/Workbench, and supported-feature blockers remain.
+   `external_broker_runtime_proof_missing`; downstream consumer runtime,
+   platform mesh event, Gateway/Workbench, and supported-feature blockers
+   remain.
+8. `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
+   `make outbox-consumer-contract-gate` now declare the Gateway, Advise,
+   Manage, and Report outbox consumers with source-authority boundaries. This
+   removes the stale missing-contract posture and preserves
+   `downstream_consumer_runtime_proof_missing` until live consumer proof exists.
 8. `make downstream-realization-contract-gate` now validates the planned
    downstream realization contract plan used by the downstream readiness proof
    family, so proof blockers stay source-authority preserving and cannot be
