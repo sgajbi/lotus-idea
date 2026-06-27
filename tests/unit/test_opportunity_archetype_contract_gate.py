@@ -86,6 +86,13 @@ def test_opportunity_archetype_contract_records_underperformance_foundation_with
     assert underperformance.first_supported_journey is False
     assert "lotus-performance:ReturnsSeriesBundle:v1" in underperformance.source_products
     assert "src/app/application/underperformance_signal.py" in underperformance.evidence_refs
+    assert (
+        "src/app/application/performance_underperformance_live_proof.py"
+        in underperformance.evidence_refs
+    )
+    assert "make performance-underperformance-live-proof-contract-gate" in (
+        underperformance.evidence_refs
+    )
     assert "src/app/infrastructure/lotus_performance_sources.py" in underperformance.evidence_refs
     assert "live_performance_source_proof_missing" in underperformance.blockers
     assert "benchmark_assignment_source_ref_missing" in underperformance.blockers

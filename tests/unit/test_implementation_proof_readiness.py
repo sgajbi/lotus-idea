@@ -26,10 +26,12 @@ from app.application.implementation_proof_readiness import (
     _apply_outbox_broker_proof,
     _apply_platform_mesh_onboarding_proof,
     _apply_report_materialization_proof,
-    _apply_risk_concentration_live_proof,
     _capability,
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
+)
+from app.application.implementation_proof_opportunity_archetype_proofs import (
+    _apply_risk_concentration_live_proof,
 )
 from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
 from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
@@ -265,6 +267,9 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert "source_ingestion_manifest_not_configured" in snapshot.overall_blockers
     assert "opportunity_archetype_live_risk_source_proof_missing" in snapshot.overall_blockers
     assert (
+        "opportunity_archetype_live_performance_source_proof_missing" in snapshot.overall_blockers
+    )
+    assert (
         "opportunity_archetype_risk_source_consumer_approval_missing"
         not in snapshot.overall_blockers
     )
@@ -351,6 +356,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "make opportunity-archetype-contract-gate" in archetypes.evidence_refs
     assert "src/app/application/source_ingestion.py" in archetypes.evidence_refs
     assert "opportunity_archetype_live_risk_source_proof_missing" in archetypes.blockers
+    assert "opportunity_archetype_live_performance_source_proof_missing" in (archetypes.blockers)
     assert "opportunity_archetype_risk_source_consumer_approval_missing" not in (
         archetypes.blockers
     )
