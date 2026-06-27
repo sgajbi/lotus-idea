@@ -18,24 +18,16 @@ No external business feature is supported yet. Feature promotion still requires
 certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbench,
 downstream realization, supported-feature registration, and evidence on `main`.
 
-Current implemented foundations include:
-
-- high-cash evaluation and Core-backed source-ingestion orchestration with
-  run-once/scheduled workers, readiness, aggregate APIs, and proof diagnostics,
-- candidate persistence, replay, idempotency, lifecycle, review, and feedback,
-- advisor queue projection with fail-closed entitlement-scope enforcement and queue readiness,
-- AI explanation diagnostics, source-safe lineage persistence, model-risk
-  operations proof, and bounded `lotus-ai` workflow-pack registration/runtime
-  proof without live provider rollout or client-ready publication,
-- conversion/report foundations plus governed downstream contract-readiness, submission APIs, HTTP adapter foundations for Advise, Manage, and Report, and optional source-safe proof consumption for the merged `lotus-report` intake route, without report materialization, render, archive, publication, or supported-feature claims,
-- source-safe outbox records, repo-owned outbox event and downstream consumer
-  contracts, HTTP broker-publisher adapter foundation, readiness diagnostics,
-  and bounded broker proof evidence,
-- runtime trust telemetry, data-mesh readiness, repo-owned SLO/access/evidence
-  policy proof, PostgreSQL/migration, durable repository, live Core, Workbench,
-  outbox, and optional platform mesh proof evidence for aggregate readiness,
-- bounded `lotus-gateway` queue/detail routes with caller-scope forwarding,
-- bounded `lotus-workbench` queue/detail rendering through Gateway.
+Current implemented foundations include high-cash evaluation and Core-backed
+source-ingestion orchestration; candidate persistence, replay, lifecycle,
+review, feedback, and advisor queue readiness; AI diagnostics, source-safe
+lineage, model-risk operations proof, and bounded `lotus-ai` workflow-pack
+proof; conversion/report submission foundations and source-safe Advise, Manage,
+Report intake, and Report materialization proof consumption; outbox, runtime
+trust telemetry, data-mesh readiness, PostgreSQL/migration, durable repository,
+Workbench, and platform mesh proof evidence; plus bounded `lotus-gateway` and
+`lotus-workbench` queue/detail read paths. These are internal foundations only:
+client publication and supported-feature claims remain blocked.
 
 ## Product Boundary
 
@@ -199,10 +191,11 @@ docker compose up --build
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-runtime-execution-proof-contract-gate` | Validate the bounded sibling `lotus-ai` deterministic runtime execution proof without certifying live provider execution, model-risk operations, Workbench, client-ready publication, or supported-feature promotion. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, Advise proposal route, Manage action route, Report intake route, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo Advise, Manage, Report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; `LOTUS_IDEA_MESH_POLICY_PROOF` can override the repo-owned mesh policy proof path. Missing sibling evidence leaves cross-repo proof invalid and blockers intact. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, Advise proposal route, Manage action route, Report intake route, Report materialization, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo Advise, Manage, Report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; `LOTUS_IDEA_MESH_POLICY_PROOF` can override the repo-owned mesh policy proof path. Missing sibling evidence leaves cross-repo proof invalid and blockers intact. |
 | `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Generate source-safe runtime trust telemetry preview and snapshot evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
+| `make report-materialization-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence materialization proof contract without certifying client publication or supported features. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
 | `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
@@ -293,6 +286,9 @@ Local controls keep implementation claims grounded:
 - `make report-intake-route-proof-contract-gate` keeps the bounded
   `lotus-report` route proof source-safe and prevents it from becoming a
   false report/render/archive, client-publication, or supported-feature claim.
+- `make report-materialization-proof-contract-gate` keeps the bounded
+  `lotus-report` materialization proof source-safe and prevents Report/Render/Archive
+  evidence from becoming a false client-publication or supported-feature claim.
 - `make repository-hygiene-gate` blocks generated cache, build, dependency,
   environment, and database artifacts.
 - `make clean` removes ignored local byproducts through the governed cleanup

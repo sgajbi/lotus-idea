@@ -169,6 +169,7 @@ Persistence adapter validation:
    proof consumption, default Advise proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
    default Report intake route proof generation and consumption, default
+   Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and
    consumption, AI lineage store proof generation and consumption, and AI
    workflow-pack registration/runtime execution proof generation and consumption, can be
@@ -200,7 +201,13 @@ Persistence adapter validation:
     `lotus-report` intake route proof contract that downstream and aggregate
     readiness consume to clear only
     `lotus_report_live_intake_route_proof_missing`.
-14. `tests/unit/test_ai_lineage_store_proof.py` and
+14. `tests/unit/test_report_materialization_proof.py` and
+    `make report-materialization-proof-contract-gate` prove the source-safe
+    `lotus-report` materialization proof contract that downstream and aggregate
+    readiness consume to clear only
+    `report_evidence_pack_live_materialization_proof_missing`,
+    `rendered_output_creation_missing`, and `archive_record_creation_missing`.
+15. `tests/unit/test_ai_lineage_store_proof.py` and
     `make ai-lineage-store-proof-contract-gate` prove the source-safe AI
     lineage store proof contract that aggregate readiness consumes to clear
     only `certified_ai_lineage_store_missing`, without leaking prompt,
@@ -487,10 +494,10 @@ promotion, client-ready publication, or supported-feature promotion.
 The internal downstream-realization-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only; planned contract records are not downstream
-route-existence proof. These checks do not certify Advise proposal creation,
-Manage action realization, Report/Render/Archive materialization,
-Gateway/Workbench support, data-product promotion, client-ready publication,
-or supported-feature promotion.
+route-existence proof. Bounded route/materialization proof artifacts clear only
+their named blockers. These checks do not certify Advise suitability,
+Manage rebalance/action authority, Gateway/Workbench support, data-product
+promotion, client-ready publication, or supported-feature promotion.
 
 The downstream-realization contract gate validates
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.

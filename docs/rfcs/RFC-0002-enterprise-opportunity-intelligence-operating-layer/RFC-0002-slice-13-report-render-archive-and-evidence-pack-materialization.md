@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream submission API, application orchestration and adapter foundation, governed downstream contract-plan gate, and bounded `lotus-report` intake route proof consumption
+Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream submission API, application orchestration and adapter foundation, governed downstream contract-plan gate, bounded `lotus-report` intake route proof consumption, and bounded `lotus-report` materialization proof consumption while client publication and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -60,6 +60,13 @@ Implemented in the first Slice 13 foundation:
    `lotus_report_live_intake_route_proof_missing`; it does not prove
    materialization, render, archive, client-publication authority, or a
    supported feature.
+   The merged `lotus-report` materialization path can now also be proven through
+   `scripts/generate_report_materialization_proof.py` and
+   `make report-materialization-proof-contract-gate`. A valid artifact clears
+   only `report_evidence_pack_live_materialization_proof_missing`,
+   `rendered_output_creation_missing`, and `archive_record_creation_missing`;
+   it does not grant client-publication authority or promote a supported
+   feature.
 9. `src/app/ports/downstream_realization.py` and
    `src/app/infrastructure/downstream_realization.py` add a source-safe HTTP
    adapter foundation for Report evidence-pack request handoff envelopes. The
@@ -125,27 +132,31 @@ Partially satisfied:
    foundation.
 2. Client-ready publication is explicitly blocked.
 3. Source evidence lineage and safe source summaries are preserved.
+4. `lotus-report` can provide source-safe materialization/render/archive proof
+   for reviewed idea evidence when the sibling materialization contract is
+   present.
 
 Not yet satisfied:
 
-1. No `lotus-report` report evidence-pack materialization proof exists for
-   idea evidence.
-2. No `lotus-render` deterministic output projection exists.
-3. No `lotus-archive` metadata, retention, legal-hold, retrieval, or access-audit
-   record exists.
-4. No rendered-output equivalence proof exists.
-5. No Gateway/Workbench product surface, data-product certification, runtime
-   trust telemetry, downstream materialization proof, or supported-feature
-   promotion exists. PostgreSQL-backed internal request recording proof exists
+1. Client-ready publication authority remains blocked.
+2. Supported-feature promotion remains blocked.
+3. Suitability, rebalance/action, and execution authority remain in the owning
+   downstream applications.
+4. No Gateway/Workbench product surface, data-product certification, runtime
+   trust telemetry, client-publication proof, or supported-feature promotion
+   exists. PostgreSQL-backed internal request recording proof exists
    only inside the opt-in runtime proof.
 
 The downstream-realization readiness diagnostic and report submission API are
 certified as internal foundations. With a valid report-intake route proof, they
 can cite `POST /reports/idea-evidence-packs` as a route-foundation proof, but
-they are still not materialization proof. They keep Report/Render/Archive
-ownership outside `lotus-idea` and remain `not_certified` until downstream intake,
-deterministic rendering, archive metadata, retention/legal-hold, retrieval, and
-access-audit proof are implemented in the owning services.
+they are still not materialization proof. With a valid report-materialization
+proof, they can also cite
+`POST /reports/idea-evidence-packs/materializations` as report-owned
+materialization/render/archive evidence. They keep Report/Render/Archive
+ownership outside `lotus-idea` and remain `not_certified` until client
+publication, Gateway/Workbench product proof, data-mesh certification, and
+supported-feature promotion are implemented and validated.
 
 ## Boundary Decision
 
@@ -153,6 +164,7 @@ This slice intentionally starts with `lotus-idea` source-owned request truth and
 a source-safe adapter foundation. Report, Render, and Archive remain the
 authorities for package intake, deterministic rendering, archive records,
 retention, legal hold, retrieval, and access audit. The next Slice 13 increment
-should certify a live downstream intake contract only after the owning service
-accepts the request shape and can test it without moving downstream authority
-into `lotus-idea`.
+should decide whether client-publication authority, rendered-output equivalence,
+retrieval/legal-hold audit evidence, or product-surface proof belongs in this
+RFC slice or in later publication/demo certification slices. It must not move
+downstream authority into `lotus-idea`.

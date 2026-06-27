@@ -684,7 +684,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return source-safe downstream realization readiness across Advise, Manage, Report, Render, and Archive blockers plus manifest-backed planned downstream contract readiness for internal operators.",
       "when_to_use": "Use for internal platform/operator validation when a caller has idea.downstream-realization.readiness.read capability and needs to see lotus-idea-owned conversion intent, conversion outcome, report evidence-pack request, and planned Advise/Manage/Report handoff contract posture before downstream product proof.",
-      "when_not_to_use": "Do not use as Advise proposal creation proof, Manage action-register proof, Report/Render/Archive materialization proof, downstream route-existence proof, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as Advise suitability proof, Manage action-register/rebalance authority proof, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication, or supported-feature promotion. Bounded route and materialization proof refs clear only their named blockers.",
       "request_examples": [
         "GET /api/v1/downstream-realization/readiness with X-Caller-Roles: operator and X-Caller-Capabilities: idea.downstream-realization.readiness.read"
       ],

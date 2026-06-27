@@ -53,7 +53,8 @@ Current state:
     request governance for reviewed report conversion intents, source summaries,
     retention refs, Report/Render/Archive authority refs, idempotency, audit,
     a certified internal API foundation, and operator-visible
-    Report/Render/Archive blocker reporting,
+    Report/Render/Archive blocker reporting, plus bounded `lotus-report`
+    materialization proof consumption when sibling evidence is present,
 16. RFC-0002 Slice 18 partially synchronizes API certification documentation
     with the machine-readable endpoint certification ledger so current
     foundation endpoints, capabilities, and unsupported boundaries are visible
@@ -79,8 +80,9 @@ First implementation program:
 7. persist conversion intents/outcomes and harden downstream adapter contracts
    only after source ownership and idempotency guarantees are explicit,
 8. realize Advise, Manage, Report, Render, Archive, and AI integration only
-   where source-backed; current report evidence-pack support is request truth
-   only and not downstream materialization,
+   where source-backed; current report evidence-pack support includes internal
+   request truth and bounded materialization proof consumption only, not client
+   publication or supported product promotion,
 9. prove canonical demo scenarios and publish implementation-backed documentation.
 
 Unsupported until proved:

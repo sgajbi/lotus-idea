@@ -50,7 +50,7 @@ Use this framing when a client asks what Lotus is doing:
 | --- | --- |
 | What is being shown? | A controlled foundation walkthrough for governed opportunity intelligence, not a supported external product claim. |
 | Why is it trustworthy? | Each current-state claim must link to owning code, tests, validation commands, evidence artifacts, and clear boundaries. |
-| What remains blocked? | Supported feature promotion, certified data-product status, full Workbench live proof, downstream materialization, rendered output, archive creation, and client-ready publication. |
+| What remains blocked? | Supported feature promotion, certified data-product status, full Workbench live proof, suitability/rebalance authority, client-ready publication, and any client-facing report output. Bounded Report/Render/Archive materialization proof is internal proof readiness evidence only. |
 
 ## Client Pack Rules
 
@@ -84,9 +84,10 @@ or reclassify the claim before rehearsal.
 
 Until implementation-backed evidence clears the relevant blockers, do not
 claim autonomous investment advice, suitability approval, mandate compliance,
-rebalance execution, report materialization, rendered client output, archive
-record creation, publication to clients as a supported product, certified
-data-mesh product status, or external product availability.
+rebalance execution, rendered client-ready output, publication to clients as a
+supported product, certified data-mesh product status, or external product
+availability. Bounded Report/Render/Archive materialization proof may be
+referenced only as internal proof readiness evidence.
 
 ## Platform References
 

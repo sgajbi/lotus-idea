@@ -38,7 +38,7 @@ controlled opportunity-intelligence layer for private banking:
    candidates and review posture,
 3. advisors remain accountable for review, feedback, and conversion intent,
 4. downstream systems retain ownership of suitability, rebalance execution,
-   report materialization, rendering, archive, and client communication,
+   bounded Report/Render/Archive proof, client-ready publication, and client communication,
 5. data-mesh and proof-readiness diagnostics show which claims are implemented,
    bounded, planned, or blocked.
 
@@ -129,7 +129,7 @@ session-specific artifact, not by editing the template itself.
 | Business narrative | Private-banking workflow in client language, not internal implementation jargon. |
 | Demo sequence | Screens, APIs, reports, or proof artifacts shown in order. |
 | Implementation-backed claims | Claim state, owner, evidence command, run artifact, and current boundary. |
-| Do-not-claim list | Unsupported autonomy, suitability, execution, client communication, report materialization, and supported-feature claims. |
+| Do-not-claim list | Unsupported autonomy, suitability, execution, client communication, client-ready report publication, and supported-feature claims. |
 | Evidence manifest | Links to generated proof readiness, demo claims, CI run, and screenshot pack if screenshots are used. |
 | Follow-up ownership | Product, engineering, operations, security, commercial, and marketing owners. |
 
@@ -169,10 +169,10 @@ Until implementation proof clears the relevant blockers, do not claim:
 2. suitability approval,
 3. mandate or compliance certification,
 4. rebalance execution,
-5. report materialization,
-6. rendered client report output,
-7. archive record creation,
-8. blocked client-ready publication,
+5. rendered client-ready report output,
+6. publication or distribution to clients,
+7. bounded Report/Render/Archive proof as product support,
+8. client communication,
 9. certified data-mesh product status,
 10. supported external product availability.
 

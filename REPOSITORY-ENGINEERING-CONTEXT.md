@@ -202,6 +202,16 @@ foundation and clears only `lotus_report_live_intake_route_proof_missing`;
 missing sibling evidence writes an invalid non-proof artifact and keeps the
 blocker. Report materialization, render output, archive record, client
 publication, and supported-feature blockers remain.
+It also generates a source-safe `lotus-report` materialization proof artifact
+under ignored `output/downstream/` from the sibling checkout configured by
+`LOTUS_REPORT_ROOT`, then passes the artifact into aggregate proof-readiness
+generation unless `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF` overrides it. A
+valid artifact records the merged
+`POST /reports/idea-evidence-packs/materializations` materialization route and
+clears only `report_evidence_pack_live_materialization_proof_missing`,
+`rendered_output_creation_missing`, and `archive_record_creation_missing`;
+missing sibling evidence writes an invalid non-proof artifact and keeps those
+blockers. Client publication and supported-feature blockers remain.
 It also generates a source-safe platform mesh onboarding proof artifact under
 ignored `output/data-mesh/` from the sibling checkout configured by
 `LOTUS_PLATFORM_ROOT`, then passes the artifact into aggregate proof-readiness
@@ -567,12 +577,14 @@ paths through
 `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, and
 `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, and
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, and
+`LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, and
 `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`. The repo-native Makefile
 default generates `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` from
 `LOTUS_ADVISE_ROOT`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT` from
 `LOTUS_MANAGE_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` from
+`LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT` from
 `LOTUS_REPORT_ROOT`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT` from `LOTUS_AI_ROOT`,
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` from `LOTUS_AI_ROOT`,
@@ -695,12 +707,12 @@ summary projection, Report/Render/Archive source-authority refs, retention
 policy references, idempotent repository persistence, safe audit events, and a
 certified internal API for report evidence-pack requests. This is not yet a
 supported report evidence product: PostgreSQL-backed internal request recording
-proof exists only inside the opt-in runtime proof; there is no certified live
-`lotus-report` idea evidence-pack intake route or materialization proof, no
-`lotus-render` deterministic output, no
-`lotus-archive` metadata or access-audit record, no client-ready publication
-authority, no Gateway/Workbench proof, no data-product certification, no runtime
-trust telemetry, and no supported-feature promotion.
+proof exists only inside the opt-in runtime proof, and bounded sibling
+`lotus-report` intake/materialization proof can clear only named proof blockers
+when merged evidence is present. There is no client-ready publication authority,
+no suitability/rebalance authority, no Gateway/Workbench product proof, no
+data-product certification, no runtime trust telemetry certification, and no
+supported-feature promotion.
 
 RFC-0002 Slice 14 is partially implemented as internal data-mesh-readiness and
 runtime trust telemetry preview/snapshot diagnostics. `src/app/application/data_mesh_readiness.py`
@@ -1025,15 +1037,17 @@ owned by upstream services.
     `make runtime-trust-telemetry-proof-contract-gate`
 32. report-intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`
-33. Workbench read-path proof contract gate:
+33. report materialization proof contract gate:
+    `make report-materialization-proof-contract-gate`
+34. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`
-34. run-once source-ingestion worker manifest and output-contract gate:
+35. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-35. scheduled source-ingestion worker deploy-contract gate:
+36. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-36. source-ingestion live-proof artifact contract gate:
+37. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-37. AI lineage store proof contract gate:
+38. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
 38. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
@@ -1049,7 +1063,9 @@ owned by upstream services.
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`,
     `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
-    `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_PLATFORM_ROOT`,
+    `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
+    `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT`,
+    `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, `LOTUS_PLATFORM_ROOT`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
     `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`,
@@ -1098,6 +1114,7 @@ validation, source-ingestion live-proof contract validation,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
+report materialization proof contract validation,
 Workbench read-path proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
@@ -1116,9 +1133,10 @@ safe migration execution dry-run validation, source-ingestion worker manifest
 and output-contract validation, scheduled source-ingestion worker
 deploy-contract validation, no-sensitive-content evidence validation,
 durable repository proof contract validation, runtime trust telemetry proof
-contract validation, report-intake route proof contract validation, Workbench
-read-path proof contract validation, outbox broker proof contract validation,
-platform mesh onboarding proof contract validation, AI lineage store proof
+contract validation, report-intake route proof contract validation, report
+materialization proof contract validation, Workbench read-path proof contract
+validation, outbox broker proof contract validation, platform mesh onboarding
+proof contract validation, AI lineage store proof
 contract validation, AI workflow-pack registration proof contract validation,
 source-observability contract validation, PostgreSQL runtime proof, coverage,
 security, Docker, release-evidence, verified immutable action SHA pins with
