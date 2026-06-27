@@ -1,6 +1,6 @@
 # RFC-0002 Slice 14: Data Product Promotion, Trust Telemetry, And Platform Hardening
 
-Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, and bounded platform onboarding proof
+Status: Partially implemented - internal not-certified mesh readiness, runtime telemetry preview, source-safe runtime snapshot diagnostics, runtime telemetry proof contract, repo-owned mesh policy proof, and bounded platform onboarding proof
 
 ## Outcome
 
@@ -70,6 +70,15 @@ This slice now has internal operator diagnostic foundations only:
     sibling `lotus-platform` source-manifest, generated catalog, dependency
     graph, maturity matrix, and handoff evidence. The proof clears only
     source-manifest and catalog-inclusion blockers from aggregate readiness.
+17. `src/app/application/mesh_policy_proof.py`,
+    `scripts/generate_mesh_policy_proof.py`, and
+    `make mesh-policy-proof-contract-gate` validate the repo-owned
+    SLO/access/evidence policy proof for `lotus-idea:IdeaCandidate:v1`. The
+    proof clears only `mesh_slo_policy_certification_missing`,
+    `mesh_access_policy_certification_missing`, and
+    `mesh_evidence_policy_certification_missing` from aggregate readiness while
+    leaving platform mesh certification, producer activation, Gateway/Workbench
+    discovery, and supported-feature blockers in place.
 
 Evidence:
 
@@ -86,6 +95,8 @@ Evidence:
 11. `scripts/runtime_trust_telemetry_proof_contract_gate.py`
 12. `tests/unit/test_platform_mesh_onboarding_proof.py`
 13. `scripts/platform_mesh_onboarding_proof_contract_gate.py`
+14. `tests/unit/test_mesh_policy_proof.py`
+15. `scripts/mesh_policy_proof_contract_gate.py`
 
 ## Current Non-Goals
 
@@ -104,8 +115,9 @@ Evidence:
    repo-native declarations.
 2. Replace blocked static trust telemetry with current runtime trust telemetry
    and certification evidence.
-3. Promote SLO, access, freshness, evidence, compatibility, and supportability
-   policies from planned posture to certification inputs.
+3. Use the repo-owned SLO/access/evidence policy proof as certification input
+   in platform mesh gates; do not treat local policy proof as platform
+   certification.
 4. Update platform catalogs and validators where required.
 5. Verify every active producer product has source authority, schema validation,
    lineage, owner, consumer contract, freshness/completeness posture,
@@ -124,8 +136,8 @@ Evidence:
 
 The diagnostic endpoints deliberately report blocked / not-certified posture.
 The runtime telemetry preview, runtime snapshot endpoint, generated
-snapshot, runtime telemetry proof contract, and platform onboarding proof are
-implementation-backed pre-certification evidence, but they do not
+snapshot, runtime telemetry proof contract, mesh policy proof, and platform
+onboarding proof are implementation-backed pre-certification evidence, but they do not
 activate producer declarations or replace the blocked static fallback for
 platform mesh certification. Full Slice 14 completion still requires
 implementation-backed active product declarations, Gateway/Workbench discovery

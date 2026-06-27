@@ -710,6 +710,19 @@ generated evidence to
 These endpoints and generated artifacts are diagnostic evidence only; they are
 not data-product certification, platform source-manifest inclusion,
 Gateway/Workbench discovery, raw lineage export, or supported mesh promotion.
+`src/app/application/mesh_policy_proof.py`,
+`scripts/generate_mesh_policy_proof.py`, and
+`make mesh-policy-proof-contract-gate` now validate the repo-owned
+SLO/access/evidence policy proof for `lotus-idea:IdeaCandidate:v1`. The default
+`make implementation-proof-readiness-check` target generates
+`output/data-mesh/mesh-policy-proof.json` and passes it into aggregate
+readiness. A valid artifact clears only
+`mesh_slo_policy_certification_missing`,
+`mesh_access_policy_certification_missing`, and
+`mesh_evidence_policy_certification_missing`. It deliberately leaves
+`data_mesh_not_certified`, `producer_products_not_active`,
+platform source-manifest/catalog, Gateway/Workbench discovery, and
+supported-feature blockers in place.
 `src/app/application/platform_mesh_onboarding_proof.py`,
 `scripts/generate_platform_mesh_onboarding_proof.py`, and
 `make platform-mesh-onboarding-proof-contract-gate` now validate bounded sibling

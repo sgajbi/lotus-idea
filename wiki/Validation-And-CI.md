@@ -49,6 +49,7 @@ make operation-metric-contract-gate
 make ai-model-risk-ops-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
+make mesh-policy-proof-contract-gate
 make downstream-realization-contract-gate
 make migration-contract-gate
 make migration-execution-gate
@@ -80,7 +81,8 @@ repository hygiene, maintainability thresholds, documentation contract enforceme
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
 OpenAPI quality, source-observability contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement,
-unit tests, integration tests, e2e tests, data-mesh contract validation, migration contract validation, coverage gate,
+unit tests, integration tests, e2e tests, data-mesh contract validation,
+mesh policy proof contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,

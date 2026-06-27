@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default report-intake route, outbox broker, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, platform mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default report-intake route, outbox broker, mesh policy, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, platform mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -127,6 +127,8 @@ the canonical target instead of a one-off command:
 | `LOTUS_REPORT_ROOT` | Selects the sibling `lotus-report` checkout used to generate the default source-safe report-intake route proof. Defaults to `../lotus-report`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` | Selects the default generated report-intake route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/report-intake-route-proof.json`. |
 | `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` | Overrides the default generated report-intake route proof artifact passed into aggregate readiness. |
+| `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` | Selects the default generated mesh policy proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/mesh-policy-proof.json`. |
+| `LOTUS_IDEA_MESH_POLICY_PROOF` | Overrides the default generated mesh policy proof artifact passed into aggregate readiness. |
 | `LOTUS_PLATFORM_ROOT` | Selects the sibling `lotus-platform` checkout used to generate the default source-safe platform mesh onboarding proof. Defaults to `../lotus-platform`. |
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT` | Selects the default generated platform mesh onboarding proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/data-mesh/platform-mesh-onboarding-proof.json`. |
 | `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF` | Overrides the default generated platform mesh onboarding proof artifact passed into aggregate readiness. |
@@ -255,6 +257,24 @@ prove Gateway/Workbench discovery, or promote a supported feature.
 Missing sibling evidence writes an invalid non-proof artifact and keeps the
 blockers so CI remains stable without treating absence as proof; drift in
 present sibling evidence still exits non-zero.
+
+Mesh policy proof is captured by `scripts/generate_mesh_policy_proof.py`. The
+repo-native `make implementation-proof-readiness-check` target now generates
+the default artifact under `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT` and passes it
+into aggregate readiness when `LOTUS_IDEA_MESH_POLICY_PROOF` is not set. A valid
+artifact clears only the repo-owned policy blockers:
+
+1. `mesh_slo_policy_certification_missing`,
+2. `mesh_access_policy_certification_missing`,
+3. `mesh_evidence_policy_certification_missing`.
+
+It cites the mesh readiness, SLO, access, and evidence-pack policy contracts
+plus the repo-native gates. It does not certify the platform mesh, activate
+producer products, prove platform source-manifest/catalog inclusion,
+Gateway/Workbench discovery, client-ready publication, or supported-feature
+promotion. `make mesh-policy-proof-contract-gate` validates the artifact shape,
+source-safe evidence refs, and three-blocker clearance boundary before the proof
+is consumed by aggregate readiness.
 
 AI lineage store proof is captured by
 `scripts/generate_ai_lineage_store_proof.py`. The repo-native

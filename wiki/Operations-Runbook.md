@@ -135,7 +135,8 @@ default report-intake route proof through `LOTUS_REPORT_ROOT` and
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`, default platform mesh onboarding
 proof through `LOTUS_PLATFORM_ROOT` and
 `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, default AI lineage store
-proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, and optional
+proof through `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF_OUTPUT`, default mesh policy
+proof through `LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT`, and optional
 `IMPLEMENTATION_PROOF_OUTPUT`, preserving the canonical local command while
 allowing live release-proof evidence when the stack is available. Missing
 sibling report or platform evidence writes an invalid non-proof artifact and
@@ -432,8 +433,8 @@ client-ready publication, or supported-feature promotion.
 `make implementation-proof-readiness-check` generates the scheduled
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
-report-intake route proof artifact, platform mesh onboarding proof artifact,
-AI lineage store proof artifact, AI workflow-pack registration proof artifact,
+report-intake route proof artifact, mesh policy proof artifact, platform mesh
+onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
 The snapshot records validated proof artifact refs in capability
@@ -452,6 +453,8 @@ artifact paths configured through
 `LOTUS_REPORT_ROOT`,
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
+`LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT`,
+`LOTUS_IDEA_MESH_POLICY_PROOF`,
 `LOTUS_PLATFORM_ROOT`,
 `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`, and
 `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`,
@@ -463,7 +466,8 @@ artifact paths configured through
 aggregate proof blockers. Use these artifacts as CI or async operator evidence
 only; they are not live scheduler certification, runtime database
 configuration, production storage certification, production recovery readiness,
-platform mesh certification, live AI provider execution, model-risk operations
+platform mesh certification, product activation, Gateway/Workbench discovery,
+live AI provider execution, model-risk operations
 certification, report/render/archive materialization, full Workbench proof, or
 supported-feature promotion.
 

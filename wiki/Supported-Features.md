@@ -69,10 +69,10 @@ check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
 downstream realization, and supported-feature promotion. It consumes a
-source-safe bounded live source-ingestion proof artifact and a bounded
-Workbench read-path proof artifact, but it does not provide full live
-implementation proof, external broker publication, downstream delivery, full
-Gateway/Workbench live proof, data-product certification, or
+source-safe bounded live source-ingestion proof artifact, mesh policy proof
+artifact, and bounded Workbench read-path proof artifact, but it does not
+provide full live implementation proof, external broker publication, downstream
+delivery, full Gateway/Workbench live proof, data-product certification, or
 supported-feature promotion. These are not externally
 supported features until live source-worker certification, certified
 long-running scheduled source-worker runtime proof, full Workbench live proof,
