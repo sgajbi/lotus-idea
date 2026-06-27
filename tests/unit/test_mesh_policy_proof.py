@@ -74,9 +74,32 @@ def test_rejects_mesh_policy_proof_with_missing_policy_files(tmp_path: Path) -> 
         ("supportedFeaturePromoted", True),
         ("proofClosed", True),
         ("generatedAtUtc", "not-a-datetime"),
+        ("generatedAtUtc", ""),
     ],
 )
 def test_rejects_mesh_policy_proof_with_invalid_top_level_fields(
+    field_name: str,
+    bad_value: object,
+) -> None:
+    proof = build_mesh_policy_proof_payload(
+        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+    proof[field_name] = bad_value
+
+    assert mesh_policy_proof_is_valid(proof) is False
+
+
+@pytest.mark.parametrize(
+    ("field_name", "bad_value"),
+    [
+        ("aggregateBlockersCleared", ["data_mesh_not_certified"]),
+        ("evidenceRefs", ["contracts/domain-data-products/mesh-readiness.v1.json"]),
+        ("remainingCertificationBlockers", ["mesh_slo_policy_certification_missing"]),
+        ("proofChecks", "all-good"),
+    ],
+)
+def test_rejects_mesh_policy_proof_with_invalid_contract_collections(
     field_name: str,
     bad_value: object,
 ) -> None:
@@ -109,6 +132,23 @@ def test_rejects_mesh_policy_proof_with_invalid_proof_checks(check_name: str) ->
     proof_checks[check_name] = False
     proof["proofChecks"] = proof_checks
 
+    assert mesh_policy_proof_is_valid(proof) is False
+
+
+def test_rejects_mesh_readiness_without_source_of_truth_map(tmp_path: Path) -> None:
+    _copy_mesh_policy_contracts(tmp_path)
+    readiness_path = tmp_path / "contracts" / "domain-data-products" / "mesh-readiness.v1.json"
+    readiness = json.loads(readiness_path.read_text(encoding="utf-8"))
+    readiness["source_of_truth"] = []
+    readiness_path.write_text(json.dumps(readiness), encoding="utf-8")
+
+    proof = build_mesh_policy_proof_payload(
+        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository_root=tmp_path,
+    )
+
+    assert proof["meshPolicyProofValid"] is False
+    assert proof["proofChecks"]["readinessReferencesPolicies"] is False
     assert mesh_policy_proof_is_valid(proof) is False
 
 
@@ -196,3 +236,13 @@ def _load_contract_gate_script() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _copy_mesh_policy_contracts(target_root: Path) -> None:
+    for relative_path in REQUIRED_MESH_POLICY_EVIDENCE_REFS:
+        if relative_path.startswith(("GET ", "POST ", "make ")):
+            continue
+        source_path = ROOT / relative_path
+        target_path = target_root / relative_path
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        target_path.write_text(source_path.read_text(encoding="utf-8"), encoding="utf-8")
