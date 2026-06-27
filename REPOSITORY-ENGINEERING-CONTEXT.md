@@ -181,6 +181,18 @@ generation. That artifact records the bounded Gateway-backed Workbench queue
 and detail read implementation and clears only
 `workbench_gateway_bff_consumption_proof_missing`; full panel, accessibility,
 canonical demo runtime, data-product, and supported-feature blockers remain.
+It also generates source-safe `lotus-advise` proposal route and `lotus-manage`
+action route proof artifacts under ignored `output/downstream/` from sibling
+checkouts configured by `LOTUS_ADVISE_ROOT` and `LOTUS_MANAGE_ROOT`, then
+passes the artifacts into aggregate proof-readiness generation unless
+`LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF` or
+`LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF` overrides them. Valid artifacts record
+merged sibling route foundations for `POST /advisory/proposals/idea-intake`
+and `POST /api/v1/rebalance/idea-action-intake`, clearing only
+`advise_live_contract_proof_missing` and `manage_live_contract_proof_missing`.
+Missing sibling evidence writes invalid non-proof artifacts and keeps the
+blockers. Suitability, mandate/rebalance authority, downstream execution,
+client publication, and supported-feature blockers remain.
 It also generates a source-safe `lotus-report` intake route proof artifact
 under ignored `output/downstream/` from the sibling checkout configured by
 `LOTUS_REPORT_ROOT`, then passes the artifact into aggregate proof-readiness
@@ -486,24 +498,30 @@ which clears only the prior missing-contract blocker. When the generated default
 or `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF` override references a valid
 source-safe artifact, the Report row moves to
 `POST /reports/idea-evidence-packs` with `route_foundation_proven_not_certified`,
-clearing only the Report route blocker. `make downstream-realization-contract-gate` blocks premature
-downstream-execution, supported-feature, and source-authority drift in that
-contract plan. The endpoint emits bounded
+clearing only the Report route blocker. When generated default or overridden
+Advise/Manage route proofs reference valid source-safe artifacts, the Advise
+and Manage rows move to `POST /advisory/proposals/idea-intake` and
+`POST /api/v1/rebalance/idea-action-intake`, clearing only their route-proof
+blockers. `make downstream-realization-contract-gate` and
+`make downstream-route-contract-proof-gate` block premature downstream
+execution, supported-feature, source-authority drift, and source-sensitive
+route-proof evidence. The endpoint emits bounded
 `downstream_realization_readiness_read` operation events and does not call
-downstream services, create Report packages, render output, archive records,
-or promote downstream realization.
+downstream services, grant suitability or mandate/rebalance authority, create
+Report packages, render output, archive records, or promote downstream
+realization.
 `scripts/generate_implementation_proof_readiness.py` and
 `make implementation-proof-readiness-check` now provide the same source-safe
 proof-readiness snapshot as repo-native automation evidence for CI, async runs,
 and operator handoff. The generator accepts explicit source-ingestion manifest,
 live-proof, scheduled-worker proof, durable repository proof, runtime trust
-telemetry proof, report-intake route proof, Workbench read-path proof, and AI
-lineage store proof paths for deterministic CI evidence without requiring
-ambient process environment mutation. The Makefile generates the default
-report-intake route proof under
-ignored `output/downstream/` and keeps CI stable when sibling `lotus-report`
-evidence is absent by preserving the downstream blocker instead of failing the
-aggregate proof snapshot. The
+telemetry proof, Advise proposal route proof, Manage action route proof,
+Report intake route proof, Workbench read-path proof, and AI lineage store
+proof paths for deterministic CI evidence without requiring ambient process
+environment mutation. The Makefile generates the default Advise/Manage/Report
+route proofs under ignored `output/downstream/` and keeps CI stable when
+sibling evidence is absent by preserving the downstream blockers instead of
+failing the aggregate proof snapshot. The
 source-ingestion capability evidence includes validated source-ingestion
 live-proof and scheduled-worker deploy-proof artifact refs when the
 corresponding blockers are cleared.
@@ -537,20 +555,25 @@ execution, provider rollout, runtime trust telemetry, Workbench proof,
 client-ready publication, and supported-feature promotion blocked.
 The live operator API also consumes configured source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
-Workbench read-path, report-intake route, AI lineage store, AI model-risk
-operations, and AI workflow-pack registration/runtime execution proof artifact
+Workbench read-path, Advise proposal route, Manage action route, Report intake
+route, AI lineage store, AI model-risk operations, and AI workflow-pack
+registration/runtime execution proof artifact
 paths through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`,
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`, and
+`LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, and
+`LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, and
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, and
 `LOTUS_IDEA_AI_LINEAGE_STORE_PROOF`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`. The repo-native Makefile
-default generates `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` from
-`LOTUS_REPORT_ROOT` and
+default generates `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` from
+`LOTUS_ADVISE_ROOT`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT` from
+`LOTUS_MANAGE_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT` from
+`LOTUS_REPORT_ROOT`, and
 `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF_OUTPUT` from `LOTUS_AI_ROOT`,
 `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT` from `LOTUS_AI_ROOT`,
 then consumes those artifacts when no override is set, clearing only the
@@ -878,7 +901,8 @@ logs; fix or document the owned warning source instead.
    Implementation-proof-readiness orchestration aggregates current RFC-0002
    capability proof blockers across source ingestion, queue, AI, data mesh,
    runtime trust telemetry preview/snapshot evidence, outbox delivery and its
-   bounded broker proof artifact, bounded report-intake route proof artifact,
+   bounded broker proof artifact, bounded Advise proposal, Manage action, and
+   Report intake route proof artifacts,
    Workbench, downstream realization, and supported-feature promotion without
    leaking source payloads, event identifiers, broker payloads, or promoting
    support. Capability readiness and supportability are normalized after proof
@@ -991,33 +1015,39 @@ owned by upstream services.
 25. data-mesh contract gate: `make data-mesh-contract-gate`
 26. downstream realization contract gate:
     `make downstream-realization-contract-gate`
-27. migration contract gate: `make migration-contract-gate`
-28. migration execution dry-run gate: `make migration-execution-gate`
-29. durable repository proof contract gate:
+27. downstream route proof contract gate:
+    `make downstream-route-contract-proof-gate`
+28. migration contract gate: `make migration-contract-gate`
+29. migration execution dry-run gate: `make migration-execution-gate`
+30. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`
-30. runtime trust telemetry proof contract gate:
+31. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`
-30. report-intake route proof contract gate:
+32. report-intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`
-31. Workbench read-path proof contract gate:
+33. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`
-32. run-once source-ingestion worker manifest and output-contract gate:
+34. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-33. scheduled source-ingestion worker deploy-contract gate:
+35. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-34. source-ingestion live-proof artifact contract gate:
+36. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-35. AI lineage store proof contract gate:
+37. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-36. AI workflow-pack registration proof contract gate:
+38. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-37. AI workflow-pack runtime execution proof contract gate:
+39. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-38. implementation proof readiness generator:
+40. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
     `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
+    `LOTUS_ADVISE_ROOT`, `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT`,
+    `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_MANAGE_ROOT`,
+    `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT`,
+    `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`,
     `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_PLATFORM_ROOT`,
     `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT`,
@@ -1032,8 +1062,9 @@ owned by upstream services.
     `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC`, and
     `IMPLEMENTATION_PROOF_OUTPUT` when release reviewers are validating against
     a running Core stack or merged sibling route-proof/platform/AI proof
-    artifacts. Missing sibling report, platform, or `lotus-ai` evidence leaves the generated
-    proof invalid and keeps the corresponding blockers.
+    artifacts. Missing sibling Advise, Manage, Report, platform, or `lotus-ai`
+    evidence leaves the generated proof invalid and keeps the corresponding
+    blockers.
 39. runtime trust telemetry preview generator:
     `make runtime-trust-telemetry-preview-check`
 40. runtime trust telemetry snapshot generator:

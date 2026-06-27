@@ -306,10 +306,11 @@ readiness, and blocker groups for `lotus-advise`, `lotus-manage`,
 name the owning repository and adapter posture from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`, and
 `make downstream-realization-contract-gate` keeps them planned and
-not-certified. The Report handoff record cites the report-owned planned intake
-contract at
-`lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
-but that contract is not downstream route-existence or materialization proof.
+not-certified. Source-safe route-foundation proof artifacts can move the
+Advise, Manage, or Report target route from planned posture to the proved
+route only when merged sibling evidence is present. These artifacts are route
+evidence only; they are not suitability, mandate/rebalance, execution,
+materialization, or supported-feature proof.
 The endpoint
 does not call downstream services, create
 proposals, create manage actions, materialize reports, render output, archive

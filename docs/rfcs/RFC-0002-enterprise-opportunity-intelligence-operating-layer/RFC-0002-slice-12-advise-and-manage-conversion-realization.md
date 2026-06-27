@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream submission API, application orchestration and adapter foundations, and governed downstream contract-plan gate
+Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream submission API, application orchestration and adapter foundations, governed downstream contract-plan gate, and bounded Advise/Manage route-foundation proof consumption
 
 ## Outcome
 
@@ -122,14 +122,37 @@ Implemented in this slice:
     permission denial, report-target rejection on the conversion route,
     not-certified operation-event emission, and absence of downstream outcome
     recording or supported-feature promotion.
+24. `src/app/application/downstream_route_contract_proof.py`,
+    `scripts/generate_advise_proposal_route_proof.py`,
+    `scripts/generate_manage_action_route_proof.py`, and
+    `make downstream-route-contract-proof-gate` now define and enforce
+    source-safe Advise proposal and Manage action route-foundation proof
+    artifacts. Valid artifacts can clear only
+    `advise_live_contract_proof_missing` or
+    `manage_live_contract_proof_missing` after merged sibling contracts prove
+    the intake route foundation. Missing sibling evidence writes invalid
+    non-proof artifacts and preserves blockers.
+25. `src/app/application/downstream_realization_readiness.py` consumes valid
+    Advise/Manage route proofs and updates only the target route and
+    route-existence blocker posture. It keeps
+    `suitability_policy_authority_remains_lotus_advise` and
+    `rebalance_execution_authority_remains_lotus_manage` intact, so route
+    evidence cannot become suitability, rebalance, execution, or supported
+    product proof.
+26. `tests/unit/test_downstream_route_contract_proof.py` and
+    `tests/unit/test_downstream_realization_readiness.py` prove source-safe
+    payloads, fail-closed missing sibling evidence, anti-overclaim flags,
+    route-only blocker clearance, and retained downstream authority blockers.
 
 ## Remaining Work
 
 This slice is not yet a supported conversion product. Remaining work includes:
 
 1. Gateway/Workbench proof,
-2. `lotus-advise` acceptance contract for proposal/suitability workflow intake,
-3. `lotus-manage` acceptance contract for DPM review/action candidate intake,
+2. `lotus-advise` suitability, policy, proposal lifecycle, and client
+   communication certification beyond route-foundation evidence,
+3. `lotus-manage` mandate, DPM/rebalance/action, execution, and settlement
+   certification beyond route-foundation evidence,
 4. `lotus-report` report-evidence package intake proof for the first
    report-only conversion path,
 5. downstream failure/rejection/completion integration tests across owning
@@ -142,7 +165,10 @@ and submission-posture foundations only. They do not create proposals,
 suitability records, manage action-register records, rebalance records, orders,
 client communications, reports, rendered output, or archive records. Planned
 contract-readiness records and configured adapter calls are not route-existence
-proof in the downstream repositories.
+proof in the downstream repositories. Valid Advise and Manage route-foundation
+artifacts prove only that the sibling service exposes the agreed source-safe
+intake route; they are not acceptance, suitability, rebalance, execution,
+client-publication, or supported-feature proof.
 
 ## Required Work
 
@@ -166,6 +192,7 @@ proof in the downstream repositories.
 
 The current implementation satisfies the internal domain governance, certified
 internal API foundation, source-safe submission API, and source-safe
-adapter-foundation portions of this gate only. Cross-repository downstream
-realization remains planned until the owning services certify live contracts
-and acceptance proof.
+adapter-foundation portions of this gate, plus route-only proof consumption
+when sibling evidence is present. Cross-repository downstream realization
+remains planned until the owning services certify live acceptance,
+suitability/rebalance authority, downstream outcomes, and product support.

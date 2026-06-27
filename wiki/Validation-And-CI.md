@@ -166,8 +166,10 @@ Persistence adapter validation:
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, Workbench read-path proof consumption, bounded outbox broker
-   proof consumption, default report-intake route proof generation and
-   consumption, default platform mesh onboarding proof generation and
+   proof consumption, default Advise proposal route proof generation and
+   consumption, default Manage action route proof generation and consumption,
+   default Report intake route proof generation and consumption, default
+   platform mesh onboarding proof generation and
    consumption, AI lineage store proof generation and consumption, and AI
    workflow-pack registration/runtime execution proof generation and consumption, can be
    generated without starting the service and

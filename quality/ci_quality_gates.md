@@ -32,23 +32,26 @@ Blocking scaffold commands:
 23. `make workbench-read-path-proof-contract-gate`
 24. `make outbox-broker-proof-contract-gate`
 25. `make platform-mesh-onboarding-proof-contract-gate`
-26. `make source-ingestion-worker-check`
-27. `make source-ingestion-scheduled-worker-check`
-28. `make source-ingestion-live-proof-contract-gate`
-29. `make implementation-proof-readiness-check` generates the scheduled-worker
+26. `make downstream-route-contract-proof-gate`
+27. `make source-ingestion-worker-check`
+28. `make source-ingestion-scheduled-worker-check`
+29. `make source-ingestion-live-proof-contract-gate`
+30. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact, outbox
-    broker proof artifact, default report-intake route proof artifact, default
-    mesh policy proof artifact, and default platform mesh onboarding proof
-    artifact, plus AI lineage store and AI workflow-pack registration proof artifacts, then consumes all in
+    broker proof artifact, default Advise proposal route proof artifact,
+    default Manage action route proof artifact, default Report intake route
+    proof artifact, default mesh policy proof artifact, and default platform
+    mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
+    registration proof artifacts, then consumes all in
     aggregate RFC proof-readiness evidence.
-30. `make supported-features-gate`
-31. `make endpoint-certification-gate`
-32. `make postgres-integration-gate`
-33. `make openapi-gate`
-34. `make coverage-gate`
-35. `make security-audit`
-36. `make docker-build`
+31. `make supported-features-gate`
+32. `make endpoint-certification-gate`
+33. `make postgres-integration-gate`
+34. `make openapi-gate`
+35. `make coverage-gate`
+36. `make security-audit`
+37. `make docker-build`
 
 Cleanup support command:
 
