@@ -172,6 +172,13 @@ manifest under `output/source-ingestion/` and a source-safe explicit
 checked-in example manifest remains the canonical source-safe default, while
 ignored proof-run manifests are local evidence inputs only.
 
+Valid source-ingestion live Core proof also clears only
+`opportunity_archetype_live_core_source_proof_missing` for the governed
+high-cash / idle-liquidity scenario inside `opportunity-archetype-scenarios`.
+It remains source-safe proof over the internal high-cash ingestion run and does
+not certify Workbench behavior, data mesh, client publication, or
+supported-feature promotion.
+
 Scheduled source-ingestion worker deploy proof is captured by
 `scripts/generate_scheduled_source_ingestion_worker_proof.py`. A valid artifact
 referenced through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears
@@ -481,8 +488,10 @@ The `opportunity-archetype-scenarios` capability reads
 and prefixes its scenario blockers with `opportunity_archetype_` so they do not
 collide with source-ingestion, Workbench, data-mesh, or supported-feature
 blockers from other proof families. It is a taxonomy and scenario-readiness
-view only; it does not clear live replay, client-demo, data-mesh, or
-supported-feature blockers.
+view only. A valid source-ingestion live Core proof can clear only the
+high-cash live Core scenario blocker, and a valid Risk concentration proof can
+clear only the concentration live Risk scenario blocker; client-demo,
+data-mesh, Workbench, publication, and supported-feature blockers remain.
 
 ## Example
 

@@ -166,7 +166,8 @@ Persistence adapter validation:
    `make source-ingestion-live-proof-contract-gate` prove the live Core
    source-ingestion proof artifact contract, source-sensitive-field blocking,
    aggregate blocked-reason diagnostics, and readiness blocker behavior without
-   calling Core in CI.
+   calling Core in CI. A valid artifact can clear only the source-ingestion
+   live-Core blocker and the high-cash archetype live-Core blocker.
 9. `tests/unit/test_generate_implementation_proof_readiness.py` and
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including source-ingestion proof
