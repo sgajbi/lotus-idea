@@ -100,18 +100,22 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["certificationReady"] is False
-    assert payload["capabilityCount"] == 9
+    assert payload["capabilityCount"] == 10
     assert payload["certificationReadyCapabilityCount"] == 0
-    assert payload["blockedCapabilityCount"] == 9
+    assert payload["blockedCapabilityCount"] == 10
     assert payload["supportedFeatureCount"] == 0
     assert payload["supportedFeaturesPromoted"] is False
     assert payload["supportedFeaturePromoted"] is False
     assert "outbox_broker_not_configured" in payload["overallBlockers"]
     assert "external_broker_runtime_proof_missing" in payload["overallBlockers"]
+    assert "opportunity_archetype_risk_source_adapter_missing" in payload["overallBlockers"]
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "no_supported_features_promoted" in payload["overallBlockers"]
     assert payload["sourceOfTruth"]["endpoint_certification"] == (
         "docs/operations/endpoint-certification-ledger.json"
+    )
+    assert payload["sourceOfTruth"]["opportunity_archetypes"] == (
+        "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
     )
     assert {capability["capabilityId"] for capability in payload["capabilities"]} == {
         "source-ingestion",
@@ -121,6 +125,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "runtime-trust-telemetry-preview",
         "outbox-delivery",
         "workbench-product-proof",
+        "opportunity-archetype-scenarios",
         "downstream-realization",
         "supported-feature-promotion",
     }
@@ -140,6 +145,18 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert "model_risk_operations_dashboard_not_certified" not in ai_explanation_blockers
     assert "model_risk_operations_alerts_not_certified" not in ai_explanation_blockers
     assert "certified_runtime_trust_telemetry_missing" in ai_explanation_blockers
+    archetype_scenarios = capabilities["opportunity-archetype-scenarios"]
+    assert (
+        "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
+        in archetype_scenarios["evidenceRefs"]
+    )
+    assert "make opportunity-archetype-contract-gate" in archetype_scenarios["evidenceRefs"]
+    assert "opportunity_archetype_risk_source_adapter_missing" in (archetype_scenarios["blockers"])
+    assert (
+        "opportunity_archetype_supported_feature_promotion_missing"
+        in (archetype_scenarios["blockers"])
+    )
+    assert archetype_scenarios["supportedFeaturePromoted"] is False
     assert "portfolio_id" not in response.text
     assert "client_id" not in response.text
 

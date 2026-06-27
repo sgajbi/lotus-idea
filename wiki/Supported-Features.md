@@ -70,14 +70,18 @@ The implementation-proof readiness diagnostic is also an operator supportability
 check only; it aggregates blockers and evidence refs across source ingestion,
 advisor queue, AI explanation, data mesh, runtime trust telemetry
 preview/snapshot endpoint and evidence, outbox delivery, Workbench,
-downstream realization, and supported-feature promotion. It consumes a
+opportunity archetype scenarios, downstream realization, and supported-feature
+promotion. It consumes a
 source-safe bounded live source-ingestion proof artifact, mesh policy proof
 artifact, bounded Workbench read-path proof artifact, bounded
 Gateway/Workbench operational proof artifact, and bounded Gateway/Workbench
 discovery proof artifact, but it does not
 provide full live implementation proof, external broker publication, downstream
 delivery, full Gateway/Workbench live proof, data-product certification, or
-supported-feature promotion. These are not externally
+supported-feature promotion. The opportunity archetype scenario readiness
+family is taxonomy and replay-gap evidence only; it does not promote live
+archetype proof, client-ready demo material, or a supported feature. These are
+not externally
 supported features until live source-worker certification, certified
 long-running scheduled source-worker runtime proof, full Workbench live proof,
 downstream acceptance, data-product certification, and supported-feature

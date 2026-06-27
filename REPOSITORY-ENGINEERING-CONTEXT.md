@@ -564,6 +564,13 @@ instead of failing the aggregate proof snapshot. The
 source-ingestion capability evidence includes validated source-ingestion
 live-proof and scheduled-worker deploy-proof artifact refs when the
 corresponding blockers are cleared.
+The aggregate snapshot now also includes an
+`opportunity-archetype-scenarios` capability built from
+`contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
+It exposes source-safe taxonomy evidence and namespaced
+`opportunity_archetype_*` blockers for canonical scenario replay gaps without
+clearing live replay, Workbench product, data-mesh certification, client
+publication, or supported-feature promotion blockers.
 The AI explanation capability evidence includes the AI model-risk operations
 contract and gate refs so release reviewers can see the not-certified
 dashboard-control and alert-candidate posture without clearing model-risk
@@ -873,7 +880,10 @@ implemented journey and keeps concentration, underperformance, allocation
 drift, bond maturity, and missing suitability context planned. The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
-claims.
+claims. Aggregate implementation-proof readiness consumes this contract as
+blocked scenario readiness so operators can see archetype replay gaps without
+confusing them with source-ingestion, Workbench, data-mesh, downstream, or
+supported-feature proof families.
 
 ## CI And Merge Governance
 
@@ -956,9 +966,10 @@ logs; fix or document the owned warning source instead.
    runtime trust telemetry preview/snapshot evidence, outbox delivery and its
    bounded broker proof artifact, bounded Advise proposal, Manage action, and
    Report intake route proof artifacts,
-   Workbench, downstream realization, and supported-feature promotion without
-   leaking source payloads, event identifiers, broker payloads, or promoting
-   support. Capability readiness and supportability are normalized after proof
+   Workbench, opportunity archetype scenarios, downstream realization, and
+   supported-feature promotion without leaking source payloads, event
+   identifiers, broker payloads, or promoting support. Capability readiness and
+   supportability are normalized after proof
    artifact consumption, so future proof additions cannot leave stale
    `blocked` or `not_certified` labels when a proof family has no remaining
    blockers.
