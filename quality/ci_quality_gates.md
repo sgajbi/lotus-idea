@@ -45,7 +45,8 @@ Blocking scaffold commands:
 36. `make manage-mandate-live-proof-contract-gate`
 37. `make missing-suitability-live-proof-contract-gate`
 38. `make performance-underperformance-live-proof-contract-gate`
-39. `make implementation-proof-readiness-check` generates the scheduled-worker
+39. `make core-benchmark-assignment-live-proof-contract-gate`
+40. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox

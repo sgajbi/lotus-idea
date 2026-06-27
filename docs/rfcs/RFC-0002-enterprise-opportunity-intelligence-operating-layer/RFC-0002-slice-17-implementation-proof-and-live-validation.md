@@ -308,7 +308,16 @@ Prove the complete supported opportunity journey end to end.
     `opportunity_archetype_live_performance_source_proof_missing`, while
     preserving benchmark-assignment, data-mesh, Workbench, client-publication,
     and supported-feature blockers.
-32. `src/app/application/manage_mandate_live_proof.py`,
+32. `src/app/application/core_benchmark_assignment_live_proof.py`,
+    `scripts/generate_core_benchmark_assignment_live_proof.py`, and
+    `make core-benchmark-assignment-live-proof-contract-gate` now define and
+    enforce a source-safe Lotus Core benchmark assignment live-proof artifact.
+    Aggregate readiness can consume a valid artifact to clear only
+    `opportunity_archetype_benchmark_assignment_source_ref_missing`, while
+    preserving live Performance, data-mesh, Workbench, client-publication, and
+    supported-feature blockers. The proof does not assign benchmarks,
+    calculate benchmark returns, or certify benchmark methodology.
+33. `src/app/application/manage_mandate_live_proof.py`,
     `scripts/generate_manage_mandate_live_proof.py`, and
     `make manage-mandate-live-proof-contract-gate` now define and enforce a
     source-safe Lotus Manage mandate live-proof artifact. Aggregate readiness

@@ -8,6 +8,10 @@ from app.application.high_volatility_live_proof import (
     HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
     high_volatility_live_proof_is_valid,
 )
+from app.application.core_benchmark_assignment_live_proof import (
+    CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
+    core_benchmark_assignment_live_proof_is_valid,
+)
 from app.application.manage_mandate_live_proof import (
     MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
     manage_mandate_live_proof_is_valid,
@@ -44,6 +48,8 @@ def _apply_opportunity_archetype_proofs(
     risk_drawdown_live_proof_ref: str | None,
     performance_underperformance_live_proof: Mapping[str, object] | None,
     performance_underperformance_live_proof_ref: str | None,
+    core_benchmark_assignment_live_proof: Mapping[str, object] | None,
+    core_benchmark_assignment_live_proof_ref: str | None,
     manage_mandate_live_proof: Mapping[str, object] | None,
     manage_mandate_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
@@ -85,6 +91,16 @@ def _apply_opportunity_archetype_proofs(
             _apply_performance_underperformance_live_proof(
                 capability,
                 performance_underperformance_live_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if core_benchmark_assignment_live_proof and core_benchmark_assignment_live_proof_is_valid(
+        core_benchmark_assignment_live_proof
+    ):
+        capabilities = tuple(
+            _apply_core_benchmark_assignment_live_proof(
+                capability,
+                core_benchmark_assignment_live_proof_ref,
             )
             for capability in capabilities
         )
@@ -151,6 +167,18 @@ def _apply_performance_underperformance_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
         proof_ref=performance_underperformance_live_proof_ref,
+    )
+
+
+def _apply_core_benchmark_assignment_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    core_benchmark_assignment_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
+        proof_ref=core_benchmark_assignment_live_proof_ref,
     )
 
 

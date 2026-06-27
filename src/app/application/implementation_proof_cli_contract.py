@@ -10,6 +10,9 @@ from app.application.ai_workflow_pack_registration_proof import (
 from app.application.ai_workflow_pack_runtime_execution_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
+from app.application.core_benchmark_assignment_live_proof import (
+    CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
+)
 from app.application.downstream_route_contract_proof import (
     ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
     MANAGE_ACTION_ROUTE_PROOF_ENV,
@@ -155,6 +158,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--performance-underperformance-live-proof",
         PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF_ENV,
         "Optional lotus-performance underperformance live source proof artifact path.",
+    ),
+    (
+        "--core-benchmark-assignment-live-proof",
+        CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
+        "Optional lotus-core benchmark assignment live source proof artifact path.",
     ),
     (
         "--manage-mandate-live-proof",

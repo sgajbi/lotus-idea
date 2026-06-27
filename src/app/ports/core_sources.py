@@ -44,8 +44,42 @@ class CoreHighCashEvidence:
     entitlement_allowed: bool = True
 
 
+@dataclass(frozen=True)
+class CoreBenchmarkAssignmentEvidenceRequest:
+    portfolio_id: str
+    as_of_date: date
+    evaluated_at_utc: datetime
+    reporting_currency: str | None = None
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class CoreBenchmarkAssignmentEvidence:
+    benchmark_assignment_ref: SourceRef | None
+    benchmark_identity_resolved: bool
+    assignment_effective_for_as_of_date: bool
+    assignment_status: str | None
+    assignment_version_present: bool
+    assignment_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
 class CoreOpportunitySourcePort(Protocol):
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
     ) -> CoreHighCashEvidence:
         """Fetch source-owned Core evidence for high-cash evaluation."""
+
+
+class CoreBenchmarkAssignmentSourcePort(Protocol):
+    def fetch_benchmark_assignment_evidence(
+        self, request: CoreBenchmarkAssignmentEvidenceRequest
+    ) -> CoreBenchmarkAssignmentEvidence:
+        """Fetch source-owned Core benchmark assignment evidence for opportunity context."""
