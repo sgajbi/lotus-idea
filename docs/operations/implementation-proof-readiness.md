@@ -131,6 +131,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
 | `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default source-safe Advise proposal route proof. Defaults to `../lotus-advise`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT` | Selects the default generated Advise proposal route proof artifact consumed by aggregate readiness when no override is set. Defaults to `output/downstream/advise-proposal-route-proof.json`. |
 | `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF` | Overrides the default generated Advise proposal route proof artifact passed into aggregate readiness. |
@@ -203,6 +204,18 @@ and deterministic concentration candidate generation without storing portfolio
 identity, request or response payloads, correlation IDs, trace IDs, candidate
 IDs, or source routes. It deliberately retains data-mesh, Workbench,
 client-publication, and supported-feature blockers.
+
+Lotus Performance underperformance live proof is captured by
+`scripts/generate_performance_underperformance_live_proof.py`. A valid artifact
+referenced through `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` clears
+only `opportunity_archetype_live_performance_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves a live
+`lotus-performance:ReturnsSeriesBundle:v1` source call, current source
+evidence, benchmark context availability, and deterministic underperformance
+candidate generation without storing portfolio identity, request or response
+payloads, correlation IDs, trace IDs, candidate IDs, source routes, returns, or
+benchmark values. It deliberately retains benchmark-assignment, data-mesh,
+Workbench, client-publication, and supported-feature blockers.
 
 Durable repository proof is captured by
 `scripts/generate_durable_repository_proof.py`. A valid artifact referenced
@@ -571,7 +584,11 @@ Implementation-backed evidence:
     `scripts/generate_risk_concentration_live_proof.py`,
 24. Risk concentration live-proof contract gate:
     `make risk-concentration-live-proof-contract-gate`,
-25. durable repository proof generator:
+25. Performance underperformance live-proof generator:
+    `scripts/generate_performance_underperformance_live_proof.py`,
+26. Performance underperformance live-proof contract gate:
+    `make performance-underperformance-live-proof-contract-gate`,
+27. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
 26. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
@@ -714,6 +731,7 @@ make gateway-workbench-discovery-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
+make performance-underperformance-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check
 make endpoint-certification-gate

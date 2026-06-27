@@ -284,7 +284,15 @@ Prove the complete supported opportunity journey end to end.
     readiness can consume a valid artifact to clear only
     `opportunity_archetype_live_risk_source_proof_missing`, while preserving
     data-mesh, Workbench, client-publication, and supported-feature blockers.
-29. A valid source-ingestion live Core proof referenced through
+29. `src/app/application/performance_underperformance_live_proof.py`,
+    `scripts/generate_performance_underperformance_live_proof.py`, and
+    `make performance-underperformance-live-proof-contract-gate` now define and
+    enforce a source-safe Lotus Performance underperformance live-proof
+    artifact. Aggregate readiness can consume a valid artifact to clear only
+    `opportunity_archetype_live_performance_source_proof_missing`, while
+    preserving benchmark-assignment, data-mesh, Workbench, client-publication,
+    and supported-feature blockers.
+30. A valid source-ingestion live Core proof referenced through
     `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
     `opportunity_archetype_live_core_source_proof_missing` for the high-cash
     scenario while preserving Workbench, data-mesh, client-publication, and

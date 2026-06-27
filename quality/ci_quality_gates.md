@@ -40,7 +40,8 @@ Blocking scaffold commands:
 31. `make source-ingestion-scheduled-worker-check`
 32. `make source-ingestion-live-proof-contract-gate`
 33. `make risk-concentration-live-proof-contract-gate`
-34. `make implementation-proof-readiness-check` generates the scheduled-worker
+34. `make performance-underperformance-live-proof-contract-gate`
+35. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox

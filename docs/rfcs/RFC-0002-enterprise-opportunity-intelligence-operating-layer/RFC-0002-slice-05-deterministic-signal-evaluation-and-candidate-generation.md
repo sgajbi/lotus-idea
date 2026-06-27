@@ -164,6 +164,16 @@ Additional implemented underperformance foundation:
    below-materiality, missing benchmark context, stale source, missing source,
    duplicate, entitlement-denied, source-unavailable, pending async response,
    malformed active-return, and trace-header cases.
+6. `src/app/application/performance_underperformance_live_proof.py`,
+   `scripts/generate_performance_underperformance_live_proof.py`,
+   `scripts/performance_underperformance_live_proof_contract_gate.py`, and
+   `make performance-underperformance-live-proof-contract-gate` define a
+   source-safe live Performance underperformance proof artifact. A valid
+   artifact proves a live `lotus-performance:ReturnsSeriesBundle:v1` source
+   call, current source evidence, benchmark context availability, and
+   deterministic underperformance candidate generation, then clears only the
+   namespaced opportunity-archetype live Performance source blocker when
+   consumed by aggregate readiness.
 
 Additional implemented allocation-drift / mandate-review foundation:
 
