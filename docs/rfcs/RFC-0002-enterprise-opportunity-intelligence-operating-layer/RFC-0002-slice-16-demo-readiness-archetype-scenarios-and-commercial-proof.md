@@ -48,7 +48,8 @@ capabilities exist.
    high-volatility proof clears the live Risk volatility blocker, drawdown
    proof clears the Risk drawdown blocker, Performance underperformance proof
    clears the live Performance blocker, Core benchmark assignment proof clears
-   the benchmark-assignment source-ref blocker, Manage mandate proof clears the
+   the benchmark-assignment source-ref blocker, low-income Core cashflow proof
+   clears the live Core cashflow source blocker, Manage mandate proof clears the
    portfolio-scoped Manage action-register blocker, and Advise
    missing-suitability proof clears the live Advise policy blocker. Mandate
    performance/risk health, Core portfolio-state, data-mesh certification,
@@ -117,11 +118,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    supported-feature evidence, rebalance authority, action authority, order
    creation, execution, and settlement remain required before demo use.
 9. Low-income / liquidity shortfall now has a bounded deterministic policy,
-   Lotus Core cashflow source-port/adapter foundation, and contract-backed
-   archetype entry. It can create only advisor-review candidates from Core
+   Lotus Core cashflow source-port/adapter foundation, source-safe Core
+   cashflow live-proof contract, and contract-backed archetype entry. It can
+   create only advisor-review candidates from Core
    `PortfolioCashflowProjection:v1` and `PortfolioCashMovementSummary:v1`
-   evidence, and it must not be presented as client income-needs planning,
-   funding advice, suitability, treasury instruction, Workbench proof,
+   evidence, and a valid proof artifact can clear only
+   `opportunity_archetype_live_core_cashflow_source_proof_missing`. It must
+   not be presented as client income-needs planning, funding advice,
+   suitability, treasury instruction, Workbench proof, data-mesh certification,
    client publication, or supported-feature promotion.
 10. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.

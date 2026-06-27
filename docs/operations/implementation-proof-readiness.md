@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, Core benchmark assignment, Manage mandate, and Advise missing-suitability proof artifacts clear only source-specific blockers; low-income / liquidity-shortfall has bounded Core cashflow policy and adapter foundation but no live Core cashflow proof; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, Core benchmark assignment, low-income Core cashflow, Manage mandate, and Advise missing-suitability proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -135,6 +135,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes a validated source-safe Lotus Core cashflow live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes a validated source-safe Lotus Manage mandate live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`; it does not certify mandate performance health, mandate risk health, Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, rebalance authority, action authority, order creation, execution, or settlement. |
 | `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Advise policy-evaluation live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not certify suitability, policy approval, proposal approval, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_ADVISE_ROOT` | Selects the sibling `lotus-advise` checkout used to generate the default source-safe Advise proposal route proof. Defaults to `../lotus-advise`. |
@@ -258,6 +259,22 @@ or response payloads, correlation IDs, trace IDs, candidate IDs, or source
 routes. It deliberately retains live Performance, data-mesh, Workbench,
 client-publication, and supported-feature blockers, and it does not assign
 benchmarks, calculate benchmark returns, or certify benchmark methodology.
+
+Lotus Core low-income cashflow live proof is captured by
+`scripts/generate_low_income_core_cashflow_live_proof.py`. A valid artifact
+referenced through `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` clears only
+`opportunity_archetype_live_core_cashflow_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves live
+`lotus-core:PortfolioCashflowProjection:v1` and
+`lotus-core:PortfolioCashMovementSummary:v1` source calls, current source
+evidence, cash-movement evidence presence, projected cumulative cashflow
+evidence presence, and deterministic low-income / liquidity-shortfall
+candidate posture without storing portfolio identity, request or response
+payloads, correlation IDs, trace IDs, candidate IDs, source routes, cashflow
+amounts, movement details, or client facts. It deliberately retains Workbench,
+data-mesh, client-publication, and supported-feature blockers, and it does not
+infer client income needs, funding advice, treasury instruction, suitability,
+or planning objectives.
 
 Lotus Manage mandate live proof is captured by
 `scripts/generate_manage_mandate_live_proof.py`. A valid artifact referenced
@@ -576,6 +593,9 @@ high-cash live Core scenario blocker, a valid Risk concentration proof can
 clear only the concentration live Risk scenario blocker, and a valid
 high-volatility proof can clear only the live Risk volatility scenario blocker,
 and a valid Risk drawdown proof can clear only the drawdown source blocker.
+Valid Performance, Core benchmark assignment, low-income Core cashflow, Manage
+mandate, and Advise missing-suitability artifacts can clear only their own
+namespaced source blockers when supplied.
 High-volatility / drawdown review remains blocked on data-mesh, Workbench,
 publication, and supported-feature evidence unless those separate proofs are supplied. Client-demo,
 data-mesh, Workbench, publication, and supported-feature blockers remain.
@@ -682,6 +702,12 @@ Implementation-backed evidence:
     `scripts/generate_core_benchmark_assignment_live_proof.py`,
 36. Core benchmark assignment live-proof contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`,
+37. Low-income Core cashflow live-proof generator:
+    `scripts/generate_low_income_core_cashflow_live_proof.py`,
+38. Low-income Core cashflow live-proof contract gate:
+    `make low-income-core-cashflow-live-proof-contract-gate`,
+39. Low-income Core cashflow live-proof tests:
+    `tests/unit/test_low_income_core_cashflow_live_proof.py`,
 27. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
 26. durable repository proof contract gate:
@@ -797,6 +823,7 @@ $env:LOTUS_CORE_QUERY_BASE_URL = "http://localhost:8201"
 $env:LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL = "http://localhost:8202"
 $env:LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF = "output/source-ingestion/live-proof.json"
 $env:LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF = "output/opportunity/high-volatility-live-proof.json"
+$env:LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF = "output/opportunity/low-income-core-cashflow-live-proof.json"
 $env:LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF = "output/opportunity/manage-mandate-live-proof.json"
 $env:LOTUS_ADVISE_ROOT = "..\lotus-advise"
 $env:LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT = "output/downstream/advise-proposal-route-proof.json"
@@ -833,6 +860,7 @@ make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make core-benchmark-assignment-live-proof-contract-gate
+make low-income-core-cashflow-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check
 make endpoint-certification-gate

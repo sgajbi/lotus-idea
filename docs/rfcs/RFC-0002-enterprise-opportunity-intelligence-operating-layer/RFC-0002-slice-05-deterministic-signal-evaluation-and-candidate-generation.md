@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -368,9 +368,19 @@ Additional implemented low-income / liquidity-shortfall foundation:
    `tests/unit/test_lotus_core_sources.py` cover positive, not-eligible,
    stale, missing-source, duplicate, entitlement-denied, source-unavailable,
    malformed-projection, and request-validation cases.
-6. This foundation does not include live Core cashflow proof, data-mesh
-   certification, Workbench proof, client-publication approval, or
-   supported-feature promotion.
+6. `src/app/application/low_income_core_cashflow_live_proof.py`,
+   `scripts/generate_low_income_core_cashflow_live_proof.py`, and
+   `make low-income-core-cashflow-live-proof-contract-gate` define a
+   source-safe live Core cashflow proof artifact. A valid artifact proves live
+   `lotus-core:PortfolioCashflowProjection:v1` and
+   `lotus-core:PortfolioCashMovementSummary:v1` source calls, current source
+   evidence, and deterministic low-income / liquidity-shortfall candidate
+   posture, then clears only the namespaced opportunity-archetype live Core
+   cashflow source blocker when consumed by aggregate readiness.
+7. This foundation does not include data-mesh certification, Workbench proof,
+   client-publication approval, supported-feature promotion, income-needs
+   certification, funding advice, treasury instruction, suitability, or
+   planning objective proof.
 
 Not implemented yet:
 

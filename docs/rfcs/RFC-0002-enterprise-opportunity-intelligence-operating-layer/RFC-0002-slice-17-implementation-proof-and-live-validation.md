@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, and opportunity archetype scenario readiness with source/policy foundations available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, and opportunity archetype scenario readiness with source/policy foundations available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -317,6 +317,14 @@ Prove the complete supported opportunity journey end to end.
     preserving live Performance, data-mesh, Workbench, client-publication, and
     supported-feature blockers. The proof does not assign benchmarks,
     calculate benchmark returns, or certify benchmark methodology.
+33. `src/app/application/low_income_core_cashflow_live_proof.py`,
+    `scripts/generate_low_income_core_cashflow_live_proof.py`, and
+    `make low-income-core-cashflow-live-proof-contract-gate` now define and
+    enforce a source-safe Lotus Core cashflow live-proof artifact. Aggregate
+    readiness can consume a valid artifact to clear only
+    `opportunity_archetype_live_core_cashflow_source_proof_missing`, while
+    preserving Workbench, data-mesh, client-publication, supported-feature,
+    suitability, planning, funding-advice, and treasury-instruction blockers.
 33. `src/app/application/manage_mandate_live_proof.py`,
     `scripts/generate_manage_mandate_live_proof.py`, and
     `make manage-mandate-live-proof-contract-gate` now define and enforce a
@@ -407,11 +415,11 @@ without relying on chat memory.
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
     source-backed archetype replay is bounded to optional high-cash live Core,
-    concentration live Risk, high-volatility live Risk, and drawdown live Risk
-    proof artifacts plus optional missing-suitability live Advise
-    policy-evaluation proof. Missing suitability proof clears only the Advise
-    policy live-source blocker; low-income live Core cashflow proof remains
-    blocked by `opportunity_archetype_live_core_cashflow_source_proof_missing`;
+    concentration live Risk, high-volatility live Risk, drawdown live Risk,
+    low-income live Core cashflow, and missing-suitability live Advise
+    proof artifacts. Missing suitability proof clears only the Advise policy
+    live-source blocker; low-income Core cashflow proof clears only
+    `opportunity_archetype_live_core_cashflow_source_proof_missing`;
     full Workbench product proof, data-mesh certification, client-publication,
     and supported-feature promotion remain pending.
 
