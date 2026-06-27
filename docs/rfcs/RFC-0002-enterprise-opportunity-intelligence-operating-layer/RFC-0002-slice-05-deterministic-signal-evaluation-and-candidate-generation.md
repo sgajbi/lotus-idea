@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, underperformance policy plus Performance source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter foundation, underperformance policy plus Performance source-port/adapter foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -165,6 +165,34 @@ Additional implemented underperformance foundation:
    duplicate, entitlement-denied, source-unavailable, pending async response,
    malformed active-return, and trace-header cases.
 
+Additional implemented allocation-drift / mandate-review foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `MandateHealthSignalPolicy`, `MandateHealthSignalInput`, and
+   `evaluate_mandate_health_signal` for portfolio-manager review candidates
+   that require source-owned Manage action-register posture.
+2. The evaluator consumes only Manage-owned workflow decision count, lineage
+   edge count, supportability state, freshness, entitlement posture,
+   portfolio-scope confirmation, and source refs. It does not calculate drift,
+   mandate compliance, model-portfolio deviations, rebalance actions, orders,
+   execution, or settlement.
+3. `src/app/ports/manage_sources.py`,
+   `src/app/application/mandate_health_signal.py`, and
+   `src/app/infrastructure/lotus_manage_sources.py` add the source port,
+   application wrapper, and fail-closed HTTP adapter over
+   `GET /api/v1/rebalance/supportability/summary`.
+4. The current Manage route is store-wide supportability evidence. The adapter
+   records this as source posture and source-response lineage, but the domain
+   policy blocks candidate creation unless future evidence confirms
+   portfolio-scoped action-register posture for the requested portfolio.
+5. `tests/unit/test_mandate_health_signal_evaluation.py`,
+   `tests/unit/test_mandate_health_application.py`, and
+   `tests/unit/test_lotus_manage_sources.py` cover positive future
+   portfolio-scoped evidence, current store-wide-source blocking,
+   non-ready/stale/missing Manage evidence, duplicate suppression,
+   entitlement denial, source unavailability, malformed counts, trace headers,
+   and request validation.
+
 Not implemented yet:
 
 1. live Risk concentration source proof captured from an actual canonical
@@ -172,12 +200,19 @@ Not implemented yet:
 2. live Performance returns-series source proof captured from an actual
    canonical runtime and merged as release evidence,
 3. benchmark-assignment source-ref proof from the governed source authority,
-4. source-worker certification beyond bounded live Core source-ingestion proof,
-5. certified long-running scheduled daemon runtime and live-service recovery proof,
-6. new API routes beyond the existing caller-supplied foundation endpoint,
-7. Gateway/Workbench proof,
-8. supported-feature promotion,
-9. data-product certification.
+4. portfolio-scoped Manage action-register proof beyond the current
+   store-wide supportability route foundation,
+5. mandate performance-health source refs from the governed Performance source
+   authority,
+6. mandate risk-health source refs from the governed Risk source authority,
+7. Core portfolio-state source refs for allocation-drift / mandate-review
+   candidates,
+8. source-worker certification beyond bounded live Core source-ingestion proof,
+9. certified long-running scheduled daemon runtime and live-service recovery proof,
+10. new API routes beyond the existing caller-supplied foundation endpoint,
+11. Gateway/Workbench proof,
+12. supported-feature promotion,
+13. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

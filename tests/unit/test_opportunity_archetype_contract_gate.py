@@ -94,6 +94,29 @@ def test_opportunity_archetype_contract_records_underperformance_foundation_with
     assert underperformance.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_manage_foundation_without_promotion() -> None:
+    contract = load_opportunity_archetype_contract()
+
+    allocation_drift = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "allocation-drift-mandate-review"
+    )
+
+    assert allocation_drift.implementation_status == "partially_implemented"
+    assert allocation_drift.first_supported_journey is False
+    assert "lotus-manage:PortfolioActionRegister:v1" in allocation_drift.source_products
+    assert "src/app/application/mandate_health_signal.py" in allocation_drift.evidence_refs
+    assert "src/app/infrastructure/lotus_manage_sources.py" in allocation_drift.evidence_refs
+    assert "portfolio_scoped_manage_source_proof_missing" in allocation_drift.blockers
+    assert "manage_source_adapter_missing" not in allocation_drift.blockers
+    assert "mandate_health_signal_policy_missing" not in allocation_drift.blockers
+    assert "data_mesh_not_certified" in allocation_drift.blockers
+    assert "supported_feature_promotion_missing" in allocation_drift.blockers
+    assert allocation_drift.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert allocation_drift.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()
@@ -141,6 +164,19 @@ def test_opportunity_archetype_contract_gate_rejects_missing_underperformance_ev
     assert (
         "underperformance-review evidence_refs missing: "
         "src/app/application/underperformance_signal.py"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_missing_manage_evidence() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    payload["archetypes"][3]["evidence_refs"].remove("src/app/application/mandate_health_signal.py")
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "allocation-drift-mandate-review evidence_refs missing: "
+        "src/app/application/mandate_health_signal.py"
     ) in errors
 
 

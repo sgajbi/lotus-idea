@@ -124,7 +124,21 @@ refs, consumes Core's `HoldingsAsOf:v1` cash-weight value from
 `totals.source_reported_cash_weight`, fails closed when Core omits the value or
 reports blocked cash-weight supportability, and does not calculate cash weight
 from cash totals or market values. This remains internal source-adapter
-foundation behavior. `src/app/application/source_ingestion.py`
+foundation behavior. The same domain module now includes deterministic
+concentration, underperformance, and allocation-drift mandate-review policies.
+The allocation-drift foundation uses
+`src/app/ports/manage_sources.py`,
+`src/app/application/mandate_health_signal.py`, and
+`src/app/infrastructure/lotus_manage_sources.py` to consume
+`lotus-manage:PortfolioActionRegister:v1` action-register supportability
+posture through the source-owned `/api/v1/rebalance/supportability/summary`
+route. The adapter records workflow decision count, lineage edge count,
+supportability state, freshness, and source-response lineage, but the domain
+policy blocks the current store-wide Manage summary from creating a portfolio
+opportunity until portfolio-scoped Manage evidence is proven. This slice does
+not calculate drift, mandate compliance, rebalance actions, orders, execution,
+or settlement inside `lotus-idea`.
+`src/app/application/source_ingestion.py`
 now adds an internal high-cash source-ingestion orchestration wrapper over the
 Core source port and repository port, including generated source-ingestion
 idempotency keys, a bounded run-once batch worker foundation, batch decision
@@ -879,20 +893,28 @@ RFC-0002 Slice 16 now also has a governed opportunity archetype/scenario
 contract at
 `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
 The contract records high cash / idle liquidity as the first partially
-implemented journey and concentration risk review plus underperformance review
-as non-promoted bounded foundations. Concentration is backed by deterministic
+implemented journey and concentration risk review, underperformance review,
+and allocation drift / mandate review as non-promoted bounded foundations.
+Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
 source-safe live-proof artifact contract, and focused unit tests.
 Underperformance is backed by deterministic policy, a Lotus Performance
 returns-series source port, a fail-closed HTTP adapter over
 `POST /integration/returns/series`, and focused unit tests that prove
 source-reported active-return consumption and missing-benchmark-context
-blocking. Allocation drift, bond maturity, and missing suitability context
-remain planned. Concentration still carries live Risk source proof, data-mesh
+blocking. Allocation drift / mandate review is backed by deterministic policy,
+a Lotus Manage action-register posture source port, a fail-closed HTTP adapter
+over `GET /api/v1/rebalance/supportability/summary`, and focused unit tests
+that prove current store-wide Manage posture blocks portfolio-scoped
+opportunity claims. Bond maturity and missing suitability context remain
+planned. Concentration still carries live Risk source proof, data-mesh
 certification, Workbench, client-publication, and supported-feature blockers;
 underperformance still carries live Performance source proof,
 benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
-supported-feature blockers.
+supported-feature blockers. Allocation drift still carries portfolio-scoped
+Manage source proof, mandate performance-health source-ref, mandate
+risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
+client-publication, and supported-feature blockers.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
