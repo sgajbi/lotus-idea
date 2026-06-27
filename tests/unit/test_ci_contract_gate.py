@@ -835,6 +835,27 @@ def test_ci_contract_gate_blocks_missing_live_source_proof_readiness_wiring() ->
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_risk_concentration_live_proof_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF", "REMOVED_RISK_PROOF")
+        .replace("--risk-concentration-live-proof", "--removed-risk-concentration-live-proof")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support "
+        "optional Risk concentration live proof artifact wiring"
+    ) in errors
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass optional Risk "
+        "concentration live proof artifact into readiness generation"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_live_core_url_readiness_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (

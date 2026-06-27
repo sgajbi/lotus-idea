@@ -11,27 +11,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
-from app.application.ai_model_risk_operations_proof import (
-    AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
-)
-from app.application.ai_workflow_pack_registration_proof import (
-    AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
-)
-from app.application.ai_workflow_pack_runtime_execution_proof import (
-    AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
-)
-from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
-from app.application.downstream_route_contract_proof import (
-    ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
-    MANAGE_ACTION_ROUTE_PROOF_ENV,
-)
-from app.application.gateway_workbench_operational_proof import (
-    GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
-)
-from app.application.gateway_workbench_discovery_proof import (
-    GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
-)
+from app.application.implementation_proof_cli_contract import PROOF_ARTIFACT_ARGS
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -39,19 +19,6 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
-from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
-from app.application.outbox_consumer_runtime_proof import (
-    OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
-)
-from app.application.outbox_platform_mesh_event_publication_proof import (
-    OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
-)
-from app.application.platform_mesh_onboarding_proof import (
-    PLATFORM_MESH_ONBOARDING_PROOF_ENV,
-)
-from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
-from app.application.report_materialization_proof import REPORT_MATERIALIZATION_PROOF_ENV
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -60,12 +27,10 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
-from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
-from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 
 
 @dataclass(frozen=True)
@@ -265,6 +230,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="platform mesh onboarding proof",
             ref_name="platform mesh onboarding proof artifact",
         ),
+        "risk_concentration_live": _proof_artifact_input(
+            args.risk_concentration_live_proof,
+            artifact_name="Risk concentration live proof",
+            ref_name="Risk concentration live proof artifact",
+        ),
     }
 
 
@@ -323,99 +293,7 @@ def _add_runtime_context_args(parser: argparse.ArgumentParser) -> None:
 
 
 def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
-    proof_args = (
-        (
-            "--durable-repository-proof",
-            DURABLE_REPOSITORY_PROOF_ENV,
-            "Optional durable PostgreSQL repository proof artifact path.",
-        ),
-        (
-            "--runtime-trust-telemetry-proof",
-            RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
-            "Optional runtime trust telemetry candidate snapshot proof artifact path.",
-        ),
-        (
-            "--ai-lineage-store-proof",
-            AI_LINEAGE_STORE_PROOF_ENV,
-            "Optional durable AI explanation lineage store proof artifact path.",
-        ),
-        (
-            "--ai-model-risk-operations-proof",
-            AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
-            "Optional AI model-risk operations dashboard and alert proof artifact path.",
-        ),
-        (
-            "--ai-workflow-pack-registration-proof",
-            AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
-            "Optional lotus-ai idea workflow-pack registration proof artifact path.",
-        ),
-        (
-            "--ai-workflow-pack-runtime-execution-proof",
-            AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
-            "Optional lotus-ai idea workflow-pack runtime execution proof artifact path.",
-        ),
-        (
-            "--advise-proposal-route-proof",
-            ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
-            "Optional lotus-advise idea proposal route proof artifact path.",
-        ),
-        (
-            "--manage-action-route-proof",
-            MANAGE_ACTION_ROUTE_PROOF_ENV,
-            "Optional lotus-manage idea action route proof artifact path.",
-        ),
-        (
-            "--report-intake-route-proof",
-            REPORT_INTAKE_ROUTE_PROOF_ENV,
-            "Optional lotus-report idea evidence intake route proof artifact path.",
-        ),
-        (
-            "--report-materialization-proof",
-            REPORT_MATERIALIZATION_PROOF_ENV,
-            "Optional lotus-report idea evidence materialization proof artifact path.",
-        ),
-        (
-            "--mesh-policy-proof",
-            MESH_POLICY_PROOF_ENV,
-            "Optional repo-owned mesh SLO, access, and evidence policy proof artifact path.",
-        ),
-        (
-            "--workbench-read-path-proof",
-            WORKBENCH_READ_PATH_PROOF_ENV,
-            "Optional bounded Workbench read-path proof artifact path.",
-        ),
-        (
-            "--gateway-workbench-operational-proof",
-            GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
-            "Optional bounded Gateway/Workbench operational proof artifact path.",
-        ),
-        (
-            "--gateway-workbench-discovery-proof",
-            GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
-            "Optional bounded Gateway/Workbench discovery proof artifact path.",
-        ),
-        (
-            "--outbox-broker-proof",
-            OUTBOX_BROKER_PROOF_ENV,
-            "Optional bounded outbox broker runtime proof artifact path.",
-        ),
-        (
-            "--outbox-consumer-runtime-proof",
-            OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
-            "Optional bounded outbox downstream consumer runtime proof artifact path.",
-        ),
-        (
-            "--outbox-platform-mesh-event-publication-proof",
-            OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
-            "Optional bounded outbox platform mesh event publication proof artifact path.",
-        ),
-        (
-            "--platform-mesh-onboarding-proof",
-            PLATFORM_MESH_ONBOARDING_PROOF_ENV,
-            "Optional platform source-manifest and catalog onboarding proof artifact path.",
-        ),
-    )
-    for flag, env_name, description in proof_args:
+    for flag, env_name, description in PROOF_ARTIFACT_ARGS:
         parser.add_argument(
             flag,
             default=os.getenv(env_name),

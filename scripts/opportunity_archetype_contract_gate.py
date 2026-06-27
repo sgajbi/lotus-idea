@@ -51,6 +51,14 @@ REQUIRED_HIGH_CASH_EVIDENCE = {
     "GET /api/v1/source-ingestion/readiness",
     "POST /api/v1/source-ingestion/run-once",
 }
+REQUIRED_CONCENTRATION_EVIDENCE = {
+    "src/app/application/concentration_risk_signal.py",
+    "src/app/application/risk_concentration_live_proof.py",
+    "src/app/infrastructure/lotus_risk_sources.py",
+    "scripts/generate_risk_concentration_live_proof.py",
+    "make risk-concentration-live-proof-contract-gate",
+    "tests/unit/test_risk_concentration_live_proof.py",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
@@ -185,6 +193,16 @@ def _validate_archetypes(
         if missing_evidence:
             errors.append(
                 "high-cash-idle-liquidity evidence_refs missing: " + ", ".join(missing_evidence)
+            )
+
+    concentration = archetypes.get("concentration-risk-review")
+    if concentration is not None:
+        missing_evidence = sorted(
+            REQUIRED_CONCENTRATION_EVIDENCE - set(concentration.evidence_refs)
+        )
+        if missing_evidence:
+            errors.append(
+                "concentration-risk-review evidence_refs missing: " + ", ".join(missing_evidence)
             )
 
     for archetype_id, archetype in archetypes.items():

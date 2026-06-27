@@ -150,6 +150,14 @@ REQUIRED_READINESS_WIRING = (
         "--source-ingestion-live-proof",
         "support optional live source-ingestion proof artifact wiring",
     ),
+    (
+        "LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF",
+        "support optional Risk concentration live proof artifact wiring",
+    ),
+    (
+        "--risk-concentration-live-proof",
+        "pass optional Risk concentration live proof artifact into readiness generation",
+    ),
     ("--core-query-base-url", "support optional Core query-service URL wiring"),
     (
         "--core-query-control-plane-base-url",
