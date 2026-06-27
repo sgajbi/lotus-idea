@@ -47,6 +47,10 @@ from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
 )
+from app.application.implementation_proof_capability_updates import (
+    _apply_blocker_proof as _apply_blocker_proof,
+    _capability as _capability,
+)
 from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
     mesh_policy_proof_is_valid,
@@ -75,6 +79,10 @@ from app.application.platform_mesh_onboarding_proof import (
 from app.application.report_materialization_proof import (
     REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
     report_materialization_proof_is_valid,
+)
+from app.application.risk_concentration_live_proof import (
+    RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
+    risk_concentration_live_proof_is_valid,
 )
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
@@ -142,6 +150,8 @@ def build_implementation_proof_readiness_snapshot(
     gateway_workbench_operational_proof_ref: str | None = None,
     gateway_workbench_discovery_proof: Mapping[str, object] | None = None,
     gateway_workbench_discovery_proof_ref: str | None = None,
+    risk_concentration_live_proof: Mapping[str, object] | None = None,
+    risk_concentration_live_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -327,6 +337,8 @@ def _apply_available_proofs(
     gateway_workbench_operational_proof_ref: str | None,
     gateway_workbench_discovery_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_proof_ref: str | None,
+    risk_concentration_live_proof: Mapping[str, object] | None,
+    risk_concentration_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,
@@ -355,7 +367,7 @@ def _apply_available_proofs(
         report_materialization_proof=report_materialization_proof,
         report_materialization_proof_ref=report_materialization_proof_ref,
     )
-    return _apply_platform_and_surface_proofs(
+    capabilities = _apply_platform_and_surface_proofs(
         capabilities=capabilities,
         mesh_policy_proof=mesh_policy_proof,
         mesh_policy_proof_ref=mesh_policy_proof_ref,
@@ -376,6 +388,30 @@ def _apply_available_proofs(
         gateway_workbench_discovery_proof=gateway_workbench_discovery_proof,
         gateway_workbench_discovery_proof_ref=gateway_workbench_discovery_proof_ref,
     )
+    return _apply_opportunity_archetype_proofs(
+        capabilities=capabilities,
+        risk_concentration_live_proof=risk_concentration_live_proof,
+        risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
+    )
+
+
+def _apply_opportunity_archetype_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    risk_concentration_live_proof: Mapping[str, object] | None,
+    risk_concentration_live_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if risk_concentration_live_proof and risk_concentration_live_proof_is_valid(
+        risk_concentration_live_proof
+    ):
+        capabilities = tuple(
+            _apply_risk_concentration_live_proof(
+                capability,
+                risk_concentration_live_proof_ref,
+            )
+            for capability in capabilities
+        )
+    return capabilities
 
 
 def _apply_storage_and_runtime_proofs(
@@ -634,60 +670,6 @@ def _apply_mesh_policy_proof(
     )
 
 
-def _apply_blocker_proof(
-    capability: ImplementationProofCapabilityReadiness,
-    *,
-    capability_ids: tuple[str, ...] | None = None,
-    blockers_cleared: tuple[str, ...],
-    proof_ref: str | None,
-) -> ImplementationProofCapabilityReadiness:
-    if capability_ids is not None and capability.capability_id not in capability_ids:
-        return capability
-    blockers_to_clear = set(blockers_cleared)
-    if not blockers_to_clear.intersection(capability.blockers):
-        return capability
-    evidence_refs = capability.evidence_refs
-    if proof_ref:
-        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
-    return _capability(
-        capability.capability_id,
-        capability.name,
-        readiness_status=capability.readiness_status,
-        supportability_status=capability.supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=tuple(
-            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
-        ),
-        supported_feature_promoted=capability.supported_feature_promoted,
-    )
-
-
-def _capability(
-    capability_id: str,
-    name: str,
-    *,
-    readiness_status: str,
-    supportability_status: str,
-    evidence_refs: tuple[str, ...],
-    blockers: tuple[str, ...],
-    supported_feature_promoted: bool = False,
-) -> ImplementationProofCapabilityReadiness:
-    normalized_readiness_status = readiness_status
-    normalized_supportability_status = supportability_status
-    if not blockers:
-        normalized_readiness_status = "ready"
-        normalized_supportability_status = "supported"
-    return ImplementationProofCapabilityReadiness(
-        capability_id=capability_id,
-        name=name,
-        readiness_status=normalized_readiness_status,
-        supportability_status=normalized_supportability_status,
-        evidence_refs=evidence_refs,
-        blockers=blockers,
-        supported_feature_promoted=supported_feature_promoted,
-    )
-
-
 def _apply_durable_repository_proof(
     capability: ImplementationProofCapabilityReadiness,
     durable_repository_proof_ref: str | None,
@@ -768,6 +750,18 @@ def _apply_gateway_workbench_discovery_proof(
         capability_ids=("data-mesh-certification", "runtime-trust-telemetry-preview"),
         blockers_cleared=GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
         proof_ref=gateway_workbench_discovery_proof_ref,
+    )
+
+
+def _apply_risk_concentration_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    risk_concentration_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
+        proof_ref=risk_concentration_live_proof_ref,
     )
 
 

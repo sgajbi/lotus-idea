@@ -95,9 +95,13 @@
         "src/app/application/concentration_risk_signal.py",
         "src/app/ports/risk_sources.py",
         "src/app/infrastructure/lotus_risk_sources.py",
+        "src/app/application/risk_concentration_live_proof.py",
+        "scripts/generate_risk_concentration_live_proof.py",
+        "make risk-concentration-live-proof-contract-gate",
         "tests/unit/test_concentration_risk_signal_evaluation.py",
         "tests/unit/test_concentration_risk_application.py",
         "tests/unit/test_lotus_risk_sources.py",
+        "tests/unit/test_risk_concentration_live_proof.py",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
       ],
       "canonical_scenarios": [

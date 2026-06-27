@@ -26,6 +26,7 @@ from app.application.implementation_proof_readiness import (
     _apply_outbox_broker_proof,
     _apply_platform_mesh_onboarding_proof,
     _apply_report_materialization_proof,
+    _apply_risk_concentration_live_proof,
     _capability,
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
@@ -116,6 +117,7 @@ def test_implementation_proof_capability_status_is_derived_from_remaining_blocke
         (_apply_ai_workflow_pack_runtime_execution_proof, "ai-explanation"),
         (_apply_outbox_broker_proof, "outbox-delivery"),
         (_apply_platform_mesh_onboarding_proof, "runtime-trust-telemetry-preview"),
+        (_apply_risk_concentration_live_proof, "opportunity-archetype-scenarios"),
     ],
 )
 def test_implementation_proof_application_is_noop_when_target_blocker_is_absent(

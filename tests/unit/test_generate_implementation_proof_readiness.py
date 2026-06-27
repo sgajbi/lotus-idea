@@ -42,6 +42,9 @@ from app.application.platform_mesh_onboarding_proof import (
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.risk_concentration_live_proof import (
+    build_risk_concentration_live_proof_payload,
+)
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
 )
@@ -827,6 +830,57 @@ def test_generate_implementation_proof_readiness_uses_explicit_mesh_policy_proof
     assert "mesh_evidence_policy_certification_missing" not in data_mesh["blockers"]
     assert "data_mesh_not_certified" in data_mesh["blockers"]
     assert "mesh policy proof artifact" in data_mesh["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_risk_concentration_live_proof(
+    tmp_path: Path,
+) -> None:
+    risk_proof = tmp_path / "risk-concentration-live-proof.json"
+    risk_proof.write_text(
+        json.dumps(
+            build_risk_concentration_live_proof_payload(
+                generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+                live_risk_source_attempted=True,
+                evaluation_summary={
+                    "runStatus": "completed",
+                    "sourceAuthority": "lotus-risk",
+                    "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
+                    "evaluationOutcome": "candidate_created",
+                    "sourceEvidenceCurrent": True,
+                    "sourceDiagnosticCodes": ["risk_issuer_coverage_complete"],
+                    "reasonCodes": ["concentration_attention"],
+                    "unsupportedReasons": [],
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-27T00:00:00Z",
+            "--risk-concentration-live-proof",
+            str(risk_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    archetypes = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "opportunity-archetype-scenarios"
+    )
+    assert "opportunity_archetype_live_risk_source_proof_missing" not in (archetypes["blockers"])
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
+    assert "opportunity_archetype_supported_feature_promotion_missing" in (archetypes["blockers"])
+    assert "Risk concentration live proof artifact" in archetypes["evidenceRefs"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 
