@@ -177,8 +177,12 @@ def test_opportunity_archetype_contract_records_low_income_foundation_without_pr
     assert "lotus-core:PortfolioCashflowProjection:v1" in low_income.source_products
     assert "lotus-core:PortfolioCashMovementSummary:v1" in low_income.source_products
     assert "src/app/application/low_income_signal.py" in low_income.evidence_refs
+    assert "src/app/application/low_income_core_cashflow_live_proof.py" in low_income.evidence_refs
     assert "src/app/infrastructure/lotus_core_sources.py" in low_income.evidence_refs
+    assert "scripts/generate_low_income_core_cashflow_live_proof.py" in low_income.evidence_refs
+    assert "make low-income-core-cashflow-live-proof-contract-gate" in low_income.evidence_refs
     assert "tests/unit/test_low_income_signal_evaluation.py" in low_income.evidence_refs
+    assert "tests/unit/test_low_income_core_cashflow_live_proof.py" in low_income.evidence_refs
     assert "live_core_cashflow_source_proof_missing" in low_income.blockers
     assert "data_mesh_not_certified" in low_income.blockers
     assert "client_publication_not_ready" in low_income.blockers

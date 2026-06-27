@@ -439,10 +439,14 @@
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
         "src/app/domain/low_income_signal.py",
         "src/app/application/low_income_signal.py",
+        "src/app/application/low_income_core_cashflow_live_proof.py",
         "src/app/ports/core_sources.py",
         "src/app/infrastructure/lotus_core_sources.py",
+        "scripts/generate_low_income_core_cashflow_live_proof.py",
+        "make low-income-core-cashflow-live-proof-contract-gate",
         "tests/unit/test_low_income_signal_evaluation.py",
         "tests/unit/test_low_income_application.py",
+        "tests/unit/test_low_income_core_cashflow_live_proof.py",
         "tests/unit/test_lotus_core_sources.py"
       ],
       "canonical_scenarios": [
