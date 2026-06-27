@@ -6,6 +6,15 @@ from typing import Any, cast
 from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
+from app.application.downstream_route_contract_proof import (
+    ADVISE_PROPOSAL_ROUTE,
+    ADVISE_ROUTE_BLOCKERS_CLEARED,
+    DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION,
+    MANAGE_ACTION_ROUTE,
+    MANAGE_ROUTE_BLOCKERS_CLEARED,
+    REMAINING_ADVISE_ROUTE_BLOCKERS,
+    REMAINING_MANAGE_ROUTE_BLOCKERS,
+)
 from app.application.report_intake_route_proof import (
     REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS,
     REPORT_INTAKE_ROUTE,
@@ -201,6 +210,48 @@ def test_downstream_realization_readiness_uses_report_route_proof_without_materi
     assert "output/downstream/report-intake-route-proof.json" in report_contract.evidence_refs
 
 
+def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
+    None
+):
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        advise_proposal_route_proof=_valid_advise_route_proof(),
+        advise_proposal_route_proof_ref="output/downstream/advise-proposal-route-proof.json",
+        manage_action_route_proof=_valid_manage_route_proof(),
+        manage_action_route_proof_ref="output/downstream/manage-action-route-proof.json",
+    )
+
+    assert "advise_live_contract_proof_missing" not in snapshot.blockers
+    assert "manage_live_contract_proof_missing" not in snapshot.blockers
+    assert "suitability_policy_authority_remains_lotus_advise" in snapshot.blockers
+    assert "rebalance_execution_authority_remains_lotus_manage" in snapshot.blockers
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    capabilities = {capability.capability_id: capability for capability in snapshot.capabilities}
+    assert "advise_live_contract_proof_missing" not in (
+        capabilities["advise-proposal-realization"].blockers
+    )
+    assert "suitability_policy_authority_remains_lotus_advise" in (
+        capabilities["advise-proposal-realization"].blockers
+    )
+    assert "manage_live_contract_proof_missing" not in (
+        capabilities["manage-action-realization"].blockers
+    )
+    assert "rebalance_execution_authority_remains_lotus_manage" in (
+        capabilities["manage-action-realization"].blockers
+    )
+    contracts = {contract.contract_id: contract for contract in snapshot.downstream_contracts}
+    advise_contract = contracts["lotus-idea-to-lotus-advise-proposal-intake:v1"]
+    manage_contract = contracts["lotus-idea-to-lotus-manage-action-intake:v1"]
+    assert advise_contract.target_route == ADVISE_PROPOSAL_ROUTE
+    assert manage_contract.target_route == MANAGE_ACTION_ROUTE
+    assert advise_contract.route_fit_status == "route_foundation_proven_not_certified"
+    assert manage_contract.route_fit_status == "route_foundation_proven_not_certified"
+    assert "output/downstream/advise-proposal-route-proof.json" in (advise_contract.evidence_refs)
+    assert "output/downstream/manage-action-route-proof.json" in manage_contract.evidence_refs
+
+
 def _valid_report_intake_route_proof() -> dict[str, object]:
     return {
         "schemaVersion": REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
@@ -234,6 +285,83 @@ def _valid_report_intake_route_proof() -> dict[str, object]:
         "reportMaterializationProven": False,
         "renderedOutputCreated": False,
         "archiveRecordCreated": False,
+        "clientPublicationAuthorityGranted": False,
+        "supportedFeaturePromoted": False,
+        "proofClosed": False,
+    }
+
+
+def _valid_advise_route_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-06-27T00:00:00+00:00",
+        "proofType": "lotus_advise_idea_proposal_intake_route_contract",
+        "proofScope": "source_safe_advise_proposal_route_only",
+        "adviseProposalRouteProofValid": True,
+        "aggregateBlockersCleared": ADVISE_ROUTE_BLOCKERS_CLEARED,
+        "evidenceRefs": (
+            "../lotus-advise/contracts/idea-proposal-intake/"
+            "lotus-advise-idea-proposal-intake.v1.json",
+            "../lotus-advise/src/api/proposals/router.py",
+            "../lotus-advise/src/core/proposals/service.py",
+            "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json",
+            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+            "RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
+            "GET /api/v1/downstream-realization/readiness",
+            "GET /api/v1/implementation-proof/readiness",
+        ),
+        "targetRoute": ADVISE_PROPOSAL_ROUTE,
+        "sourceAuthority": "lotus-advise",
+        "proofChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "fileEvidencePresent": True,
+            "downstreamContractProvesRoute": True,
+            "downstreamContractPreservesNonProofBoundaries": True,
+            "downstreamContractRetainsAuthorityBlockers": True,
+        },
+        "remainingCertificationBlockers": REMAINING_ADVISE_ROUTE_BLOCKERS,
+        "downstreamExecutionProven": False,
+        "suitabilityAuthorityGranted": False,
+        "rebalanceExecutionAuthorityGranted": False,
+        "clientPublicationAuthorityGranted": False,
+        "supportedFeaturePromoted": False,
+        "proofClosed": False,
+    }
+
+
+def _valid_manage_route_proof() -> dict[str, object]:
+    return {
+        "schemaVersion": DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION,
+        "repository": "lotus-idea",
+        "generatedAtUtc": "2026-06-27T00:00:00+00:00",
+        "proofType": "lotus_manage_idea_action_intake_route_contract",
+        "proofScope": "source_safe_manage_action_route_only",
+        "manageActionRouteProofValid": True,
+        "aggregateBlockersCleared": MANAGE_ROUTE_BLOCKERS_CLEARED,
+        "evidenceRefs": (
+            "../lotus-manage/contracts/idea-action-intake/lotus-manage-idea-action-intake.v1.json",
+            "../lotus-manage/src/api/routers/rebalance_runs.py",
+            "../lotus-manage/src/core/rebalance_runs/service.py",
+            "contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json",
+            "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+            "RFC-0002-slice-12-advise-and-manage-conversion-realization.md",
+            "GET /api/v1/downstream-realization/readiness",
+            "GET /api/v1/implementation-proof/readiness",
+        ),
+        "targetRoute": MANAGE_ACTION_ROUTE,
+        "sourceAuthority": "lotus-manage",
+        "proofChecks": {
+            "timezoneAwareGeneratedAtUtc": True,
+            "fileEvidencePresent": True,
+            "downstreamContractProvesRoute": True,
+            "downstreamContractPreservesNonProofBoundaries": True,
+            "downstreamContractRetainsAuthorityBlockers": True,
+        },
+        "remainingCertificationBlockers": REMAINING_MANAGE_ROUTE_BLOCKERS,
+        "downstreamExecutionProven": False,
+        "suitabilityAuthorityGranted": False,
+        "rebalanceExecutionAuthorityGranted": False,
         "clientPublicationAuthorityGranted": False,
         "supportedFeaturePromoted": False,
         "proofClosed": False,

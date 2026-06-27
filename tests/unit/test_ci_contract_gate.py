@@ -425,6 +425,91 @@ def test_ci_contract_gate_blocks_missing_report_intake_route_proof_readiness_wir
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_advise_proposal_route_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF),"
+            "--advise-proposal-route-proof $(LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF),"
+            "--advise-proposal-route-proof "
+            "$(LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT)) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "Advise proposal route proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_manage_action_route_proof_readiness_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(if $(LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF),"
+            "--manage-action-route-proof $(LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF),"
+            "--manage-action-route-proof $(LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT)) ",
+            "",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "Manage action route proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_advise_and_manage_route_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_advise_proposal_route_proof.py", "scripts/removed.py")
+        .replace("scripts/generate_manage_action_route_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "an Advise proposal route proof artifact"
+    ) in errors
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "a Manage action route proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_downstream_route_contract_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) downstream-route-contract-proof-gate\n", "")
+        .replace(
+            "scripts/downstream_route_contract_proof_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) downstream-route-contract-proof-gate`" in errors
+    assert (
+        "Makefile downstream-route-contract-proof-gate target must run "
+        "`scripts/downstream_route_contract_proof_gate.py`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_report_intake_route_proof_generation() -> None:
     module = _load_ci_contract_gate()
     makefile = (
