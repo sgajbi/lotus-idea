@@ -157,6 +157,8 @@ def build_implementation_proof_readiness_snapshot(
     risk_drawdown_live_proof_ref: str | None = None,
     performance_underperformance_live_proof: Mapping[str, object] | None = None,
     performance_underperformance_live_proof_ref: str | None = None,
+    manage_mandate_live_proof: Mapping[str, object] | None = None,
+    manage_mandate_live_proof_ref: str | None = None,
     missing_suitability_live_proof: Mapping[str, object] | None = None,
     missing_suitability_live_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
@@ -354,6 +356,8 @@ def _apply_available_proofs(
     risk_drawdown_live_proof_ref: str | None,
     performance_underperformance_live_proof: Mapping[str, object] | None,
     performance_underperformance_live_proof_ref: str | None,
+    manage_mandate_live_proof: Mapping[str, object] | None,
+    manage_mandate_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -417,6 +421,8 @@ def _apply_available_proofs(
         risk_drawdown_live_proof_ref=risk_drawdown_live_proof_ref,
         performance_underperformance_live_proof=performance_underperformance_live_proof,
         performance_underperformance_live_proof_ref=performance_underperformance_live_proof_ref,
+        manage_mandate_live_proof=manage_mandate_live_proof,
+        manage_mandate_live_proof_ref=manage_mandate_live_proof_ref,
         missing_suitability_live_proof=missing_suitability_live_proof,
         missing_suitability_live_proof_ref=missing_suitability_live_proof_ref,
     )

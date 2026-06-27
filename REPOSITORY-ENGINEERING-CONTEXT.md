@@ -138,6 +138,16 @@ policy blocks the current store-wide Manage summary from creating a portfolio
 opportunity until portfolio-scoped Manage evidence is proven. This slice does
 not calculate drift, mandate compliance, rebalance actions, orders, execution,
 or settlement inside `lotus-idea`.
+`src/app/application/manage_mandate_live_proof.py`,
+`scripts/generate_manage_mandate_live_proof.py`, and
+`make manage-mandate-live-proof-contract-gate` now define a source-safe
+Manage mandate live-proof contract. A valid artifact referenced through
+`LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` clears only
+`opportunity_archetype_portfolio_scoped_manage_source_proof_missing` for
+allocation-drift / mandate-review readiness. Mandate performance-health,
+mandate risk-health, Core portfolio-state, data-mesh, Workbench,
+client-publication, supported-feature, rebalance, action, and order-execution
+blockers remain.
 `src/app/application/source_ingestion.py`
 now adds an internal high-cash source-ingestion orchestration wrapper over the
 Core source port and repository port, including generated source-ingestion
@@ -930,14 +940,17 @@ live-proof artifact clears only the live Risk volatility source blocker. A
 valid Risk drawdown live-proof artifact clears only the drawdown source blocker.
 A valid missing-suitability live-proof artifact clears only the Advise policy
 live-source blocker.
+A valid Manage mandate live-proof artifact clears only the portfolio-scoped
+Manage action-register source blocker.
 Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries
 benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
-supported-feature blockers. Allocation drift still carries portfolio-scoped
-Manage source proof, mandate performance-health source-ref, mandate
-risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
-client-publication, and supported-feature blockers. High volatility / drawdown
+supported-feature blockers. Allocation drift still carries mandate
+performance-health source-ref, mandate risk-health source-ref, Core
+portfolio-state source-ref, data-mesh, Workbench, client-publication,
+supported-feature, rebalance, action, and order-execution blockers after live
+Manage mandate proof is supplied. High volatility / drawdown
 review still carries data-mesh, Workbench, client-publication, and
 supported-feature blockers after live Risk volatility and drawdown proofs are supplied.
 Missing suitability context still carries data-mesh, Workbench,
@@ -1221,6 +1234,7 @@ owned by upstream services.
     `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_MANAGE_ROOT`,
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`,
+    `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
     `LOTUS_REPORT_ROOT`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,
     `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF_OUTPUT`,

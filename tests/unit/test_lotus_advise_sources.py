@@ -159,6 +159,39 @@ def test_lotus_advise_adapter_maps_malformed_requirements_to_source_unavailable(
     assert exc_info.value.code == "advise_approval_dependencies_malformed"
 
 
+def test_lotus_advise_adapter_maps_malformed_sign_off_blockers_to_source_unavailable() -> None:
+    payload = _payload(extra={"sign_off_blockers": ["valid", 123]})
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "advise_sign_off_blockers_malformed"
+
+
+@pytest.mark.parametrize(
+    ("sla_posture", "expected_code"),
+    [
+        ({"open_requirement_count": True}, "advise_open_requirement_count_malformed"),
+        ({"open_requirement_count": -1}, "advise_open_requirement_count_malformed"),
+        ("not-object", "advise_sla_posture_malformed"),
+    ],
+)
+def test_lotus_advise_adapter_rejects_malformed_sla_posture(
+    sla_posture: object,
+    expected_code: str,
+) -> None:
+    payload = _payload(extra={"sla_posture": sla_posture})
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == expected_code
+
+
 def test_lotus_advise_adapter_requires_lineage_metadata_for_source_ref() -> None:
     payload = _payload()
     metadata = payload["metadata"]
@@ -173,6 +206,45 @@ def test_lotus_advise_adapter_requires_lineage_metadata_for_source_ref() -> None
     assert exc_info.value.code == "advise_generated_at_missing"
 
 
+def test_lotus_advise_adapter_rejects_malformed_metadata_object() -> None:
+    payload = _payload(extra={"metadata": "not-object"})
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "advise_metadata_malformed"
+
+
+def test_lotus_advise_adapter_rejects_naive_generated_at_metadata() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["generated_at"] = "2026-06-21T10:00:00"
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "advise_generated_at_naive"
+
+
+def test_lotus_advise_adapter_requires_content_hash_metadata() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata.pop("content_hash")
+
+    with pytest.raises(AdviseSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_policy_evaluation_evidence(_request())
+
+    assert exc_info.value.code == "advise_content_hash_missing"
+
+
 def test_lotus_advise_adapter_maps_stale_policy_source() -> None:
     payload = _payload()
     metadata = payload["metadata"]
@@ -185,3 +257,95 @@ def test_lotus_advise_adapter_maps_stale_policy_source() -> None:
 
     assert evidence.policy_ref is not None
     assert evidence.policy_ref.freshness is EvidenceFreshness.STALE
+
+
+@pytest.mark.parametrize(
+    ("freshness_value", "expected"),
+    [
+        ("expired", EvidenceFreshness.EXPIRED),
+        ("unavailable", EvidenceFreshness.UNAVAILABLE),
+    ],
+)
+def test_lotus_advise_adapter_maps_non_current_policy_source_freshness(
+    freshness_value: str,
+    expected: EvidenceFreshness,
+) -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["freshness"] = freshness_value
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.policy_ref is not None
+    assert evidence.policy_ref.freshness is expected
+
+
+def test_lotus_advise_adapter_uses_fallback_metadata_and_diagnostics() -> None:
+    payload = _payload(
+        extra={
+            "approval_dependencies": [],
+            "disclosure_requirements": [],
+            "consent_requirements": [],
+            "evaluation_status": "  ",
+            "sign_off_status": "  ",
+            "sign_off_blockers": [],
+            "client_ready_publication": "BLOCKED",
+            "sla_posture": {},
+            "metadata": {
+                "generated_at": "2026-06-21T10:00:00Z",
+                "content_hash": "fallback-hash",
+            },
+        }
+    )
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.evaluation_status is None
+    assert evidence.sign_off_status is None
+    assert evidence.open_requirement_count == 0
+    assert evidence.policy_ref is not None
+    assert evidence.policy_ref.as_of_date == AS_OF_DATE
+    assert evidence.policy_ref.content_hash == "sha256:fallback-hash"
+    assert evidence.policy_ref.data_quality_status == "unknown"
+    assert evidence.policy_ref.freshness is EvidenceFreshness.UNAVAILABLE
+    assert evidence.advise_diagnostic == "advise_policy_evaluation_source_partial"
+
+
+def test_lotus_advise_adapter_distinguishes_sign_off_and_available_diagnostics() -> None:
+    sign_off_blocked_payload = _payload(
+        extra={
+            "approval_dependencies": [],
+            "disclosure_requirements": [],
+            "consent_requirements": [],
+            "evaluation_status": "READY",
+            "sign_off_status": "PENDING_REVIEW",
+            "sign_off_blockers": ["DISCLOSURE_PENDING"],
+            "sla_posture": {"open_requirement_count": 0},
+        }
+    )
+    available_payload = _payload(
+        extra={
+            "approval_dependencies": [],
+            "disclosure_requirements": [],
+            "consent_requirements": [],
+            "evaluation_status": "READY",
+            "sign_off_status": "SIGNED_OFF",
+            "sign_off_blockers": [],
+            "sla_posture": {"open_requirement_count": 0},
+        }
+    )
+
+    sign_off_blocked = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=sign_off_blocked_payload))
+    ).fetch_policy_evaluation_evidence(_request())
+    available = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=available_payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert sign_off_blocked.advise_diagnostic == "advise_policy_sign_off_blocked"
+    assert available.advise_diagnostic == "advise_policy_context_available"

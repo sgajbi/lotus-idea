@@ -907,6 +907,56 @@ def test_ci_contract_gate_blocks_missing_performance_underperformance_live_proof
     ) in errors
 
 
+def test_ci_contract_gate_blocks_missing_manage_mandate_live_proof_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF",
+            "REMOVED_MANAGE_MANDATE_PROOF",
+        )
+        .replace(
+            "--manage-mandate-live-proof",
+            "--removed-manage-mandate-live-proof",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must support optional "
+        "Manage mandate live proof artifact wiring"
+    ) in errors
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass optional Manage "
+        "mandate live proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_manage_mandate_live_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) manage-mandate-live-proof-contract-gate\n", "")
+        .replace(
+            "scripts/manage_mandate_live_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call `$(MAKE) manage-mandate-live-proof-contract-gate`"
+    ) in errors
+    assert (
+        "Makefile manage-mandate-live-proof-contract-gate target must run "
+        "`scripts/manage_mandate_live_proof_contract_gate.py`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_suitability_live_proof_wiring() -> None:
     module = _load_ci_contract_gate()
     makefile = (

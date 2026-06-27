@@ -8,6 +8,10 @@ from app.application.high_volatility_live_proof import (
     HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
     high_volatility_live_proof_is_valid,
 )
+from app.application.manage_mandate_live_proof import (
+    MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
+    manage_mandate_live_proof_is_valid,
+)
 from app.application.missing_suitability_live_proof import (
     MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
     missing_suitability_live_proof_is_valid,
@@ -40,6 +44,8 @@ def _apply_opportunity_archetype_proofs(
     risk_drawdown_live_proof_ref: str | None,
     performance_underperformance_live_proof: Mapping[str, object] | None,
     performance_underperformance_live_proof_ref: str | None,
+    manage_mandate_live_proof: Mapping[str, object] | None,
+    manage_mandate_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
@@ -80,6 +86,11 @@ def _apply_opportunity_archetype_proofs(
                 capability,
                 performance_underperformance_live_proof_ref,
             )
+            for capability in capabilities
+        )
+    if manage_mandate_live_proof and manage_mandate_live_proof_is_valid(manage_mandate_live_proof):
+        capabilities = tuple(
+            _apply_manage_mandate_live_proof(capability, manage_mandate_live_proof_ref)
             for capability in capabilities
         )
     if missing_suitability_live_proof and missing_suitability_live_proof_is_valid(
@@ -140,6 +151,18 @@ def _apply_performance_underperformance_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
         proof_ref=performance_underperformance_live_proof_ref,
+    )
+
+
+def _apply_manage_mandate_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    manage_mandate_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
+        proof_ref=manage_mandate_live_proof_ref,
     )
 
 

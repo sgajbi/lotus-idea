@@ -133,6 +133,8 @@ live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
 optional missing-suitability live Advise proof through
 `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
+optional Manage mandate live proof through
+`LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 default Advise proposal route proof through `LOTUS_ADVISE_ROOT` and
 `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT`, default Manage action route
 proof through `LOTUS_MANAGE_ROOT` and
@@ -315,6 +317,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
@@ -479,7 +482,7 @@ client-ready publication, or supported-feature promotion.
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
 Advise proposal route proof artifact, missing-suitability live Advise proof
-artifact, Manage action route proof artifact,
+artifact, Manage mandate live proof artifact, Manage action route proof artifact,
 Report intake route proof artifact, Report materialization proof artifact,
 mesh policy proof artifact, platform mesh
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
@@ -498,6 +501,7 @@ artifact paths configured through
 `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF`,
 `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF`,
 `LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF`,
+`LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 `LOTUS_REPORT_ROOT`,
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT`,
 `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`,

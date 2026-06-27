@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -202,6 +202,14 @@ durable operating-context enforcement:
     artifact, tying claims to proof, and keeping unsupported autonomy,
     suitability, execution, publication, downstream materialization, and
     certified data-product claims out of client material.
+26. README, repository context, `docs/operations/implementation-proof-readiness.md`,
+    service runbooks, quality gate docs, RFC evidence, demo claims, and wiki
+    source now describe bounded Manage mandate live proof while preserving the
+    boundary that a valid artifact clears only the portfolio-scoped Manage
+    source blocker and does not prove mandate performance or risk health, Core
+    portfolio state, data-mesh certification, Workbench support, client
+    publication, supported features, rebalance authority, action authority,
+    order creation, execution, or settlement.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and
