@@ -10,6 +10,8 @@ from app.infrastructure.downstream_client import DownstreamJsonClient, Downstrea
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
+    RiskDrawdownEvidence,
+    RiskDrawdownEvidenceRequest,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
     RiskVolatilityEvidence,
@@ -22,6 +24,8 @@ CONCENTRATION_PRODUCT_ID = "lotus-risk:ConcentrationRiskReport:v1"
 CONCENTRATION_ROUTE = "/analytics/risk/concentration"
 RISK_METRICS_PRODUCT_ID = "lotus-risk:RiskMetricsReport:v1"
 RISK_CALCULATE_ROUTE = "/analytics/risk/calculate"
+DRAWDOWN_PRODUCT_ID = "lotus-risk:DrawdownAnalyticsReport:v1"
+DRAWDOWN_ROUTE = "/analytics/risk/drawdown"
 
 
 @dataclass(frozen=True)
@@ -34,6 +38,13 @@ class _ConcentrationMeasures:
 @dataclass(frozen=True)
 class _VolatilityMeasures:
     source_reported_volatility: Decimal | None
+    supportability_state: str | None
+    diagnostic: str
+
+
+@dataclass(frozen=True)
+class _DrawdownMeasures:
+    source_reported_max_drawdown: Decimal | None
     supportability_state: str | None
     diagnostic: str
 
@@ -101,6 +112,32 @@ class LotusRiskVolatilitySourceAdapter:
         )
 
 
+class LotusRiskDrawdownSourceAdapter:
+    def __init__(self, risk_client: DownstreamJsonClient) -> None:
+        self._risk_client = risk_client
+
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
+        try:
+            payload = self._risk_client.post_json(
+                DRAWDOWN_ROUTE,
+                json_payload=_drawdown_request_payload(request),
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise RiskSourceEntitlementDenied from exc
+            raise RiskSourceUnavailable(code=exc.code) from exc
+
+        measures = _drawdown_measures(payload, period_name=request.period_name)
+        return RiskDrawdownEvidence(
+            source_reported_max_drawdown=measures.source_reported_max_drawdown,
+            risk_supportability_state=measures.supportability_state,
+            risk_ref=_drawdown_source_ref(payload),
+            risk_diagnostic=measures.diagnostic,
+        )
+
+
 def _risk_calculate_request_payload(request: RiskVolatilityEvidenceRequest) -> dict[str, Any]:
     return {
         "input_mode": "stateful",
@@ -109,6 +146,29 @@ def _risk_calculate_request_payload(request: RiskVolatilityEvidenceRequest) -> d
             "as_of_date": request.as_of_date.isoformat(),
             "periods": [{"type": request.period_name, "name": request.period_name}],
             "metrics": ["VOLATILITY"],
+        },
+    }
+
+
+def _drawdown_request_payload(request: RiskDrawdownEvidenceRequest) -> dict[str, Any]:
+    return {
+        "input_mode": "stateful",
+        "stateful_input": {
+            "portfolio_id": request.portfolio_id,
+            "as_of_date": request.as_of_date.isoformat(),
+            "periods": [{"type": request.period_name, "name": request.period_name}],
+            "benchmark_policy": {
+                "include_benchmark": False,
+                "missing_benchmark_policy": "IGNORE",
+            },
+        },
+        "analysis_options": {
+            "include_underwater_series": False,
+            "include_episode_list": True,
+            "top_n_episodes": 5,
+            "cdar_alpha": 0.95,
+            "minimum_episode_depth_bps": 0.0,
+            "duration_unit": "BUSINESS_DAYS",
         },
     }
 
@@ -138,6 +198,35 @@ def _volatility_measures(payload: dict[str, Any], *, period_name: str) -> _Volat
     )
     return _VolatilityMeasures(
         source_reported_volatility=volatility,
+        supportability_state=supportability_state,
+        diagnostic=diagnostic,
+    )
+
+
+def _drawdown_measures(payload: dict[str, Any], *, period_name: str) -> _DrawdownMeasures:
+    results = _object_field(payload, "results")
+    period_result = _object_field(results, period_name)
+    summary = _object_field(period_result, "summary")
+    metadata = _object_field(payload, "metadata")
+    supportability_state = _supportability_state(metadata)
+    max_drawdown = _decimal_field(
+        summary,
+        "max_drawdown",
+        code="risk_drawdown_value_malformed",
+    )
+    if max_drawdown is None:
+        return _DrawdownMeasures(
+            source_reported_max_drawdown=None,
+            supportability_state=supportability_state,
+            diagnostic="risk_drawdown_value_missing",
+        )
+    diagnostic = (
+        "risk_drawdown_source_ready"
+        if supportability_state == "ready"
+        else f"risk_drawdown_source_{supportability_state or 'unknown'}"
+    )
+    return _DrawdownMeasures(
+        source_reported_max_drawdown=max_drawdown,
         supportability_state=supportability_state,
         diagnostic=diagnostic,
     )
@@ -189,6 +278,32 @@ def _source_ref(payload: dict[str, Any]) -> SourceRef:
         as_of_date=as_of_date,
         generated_at_utc=generated_at,
         content_hash=content_hash,
+        data_quality_status=supportability_state,
+        freshness=_freshness(metadata, payload, supportability_state=supportability_state),
+    )
+
+
+def _drawdown_source_ref(payload: dict[str, Any]) -> SourceRef:
+    metadata = _object_field(payload, "metadata")
+    scope = _object_field(payload, "scope")
+    supportability_state = _supportability_state(metadata) or "unknown"
+    return SourceRef(
+        product_id=DRAWDOWN_PRODUCT_ID,
+        source_system=SourceSystem.LOTUS_RISK,
+        product_version=str(
+            metadata.get("contract_version")
+            or metadata.get("contractVersion")
+            or metadata.get("product_version")
+            or metadata.get("productVersion")
+            or PRODUCT_VERSION
+        ),
+        route=DRAWDOWN_ROUTE,
+        as_of_date=_date_field(scope, metadata, keys=("as_of_date", "asOfDate")),
+        generated_at_utc=_datetime_field(
+            metadata,
+            keys=("generated_at", "generatedAt", "calculated_at", "calculatedAt"),
+        ),
+        content_hash=_content_hash(metadata, payload),
         data_quality_status=supportability_state,
         freshness=_freshness(metadata, payload, supportability_state=supportability_state),
     )

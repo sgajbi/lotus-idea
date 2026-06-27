@@ -19,6 +19,8 @@ from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
+    RiskDrawdownEvidence,
+    RiskDrawdownEvidenceRequest,
     RiskOpportunitySourcePort,
     RiskSourceUnavailable,
     RiskVolatilityEvidence,
@@ -46,6 +48,9 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
         raise AssertionError("volatility evidence is not used by concentration proof tests")
+
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
+        raise AssertionError("drawdown evidence is not used by concentration proof tests")
 
 
 def test_risk_concentration_live_proof_payload_is_source_safe_and_not_promoted() -> None:

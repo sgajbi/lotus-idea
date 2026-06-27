@@ -28,6 +28,8 @@ from app.domain import (
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
+    RiskDrawdownEvidence,
+    RiskDrawdownEvidenceRequest,
     RiskOpportunitySourcePort,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
@@ -118,6 +120,9 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
         raise AssertionError("volatility evidence is not used by concentration tests")
+
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
+        raise AssertionError("drawdown evidence is not used by concentration tests")
 
 
 def from_risk_command() -> EvaluateConcentrationRiskFromRiskCommand:

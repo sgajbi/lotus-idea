@@ -67,6 +67,7 @@ class ReasonCode(StrEnum):
     MATURITY_WINDOW = "maturity_window"
     INCOME_ATTENTION = "income_attention"
     VOLATILITY_ATTENTION = "volatility_attention"
+    DRAWDOWN_ATTENTION = "drawdown_attention"
     MISSING_BENCHMARK = "missing_benchmark"
     MISSING_RISK_PROFILE = "missing_risk_profile"
     SOURCE_STALE = "source_stale"

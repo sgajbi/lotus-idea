@@ -19,6 +19,8 @@ from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
+    RiskDrawdownEvidence,
+    RiskDrawdownEvidenceRequest,
     RiskOpportunitySourcePort,
     RiskSourceUnavailable,
     RiskVolatilityEvidence,
@@ -46,6 +48,9 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
         if self.error is not None:
             raise self.error
         return _risk_evidence()
+
+    def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
+        raise AssertionError("drawdown evidence is not used by high-volatility proof tests")
 
 
 def test_high_volatility_live_proof_payload_is_source_safe_and_not_promoted() -> None:
