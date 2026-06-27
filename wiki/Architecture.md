@@ -186,9 +186,11 @@ worker entrypoint and opt-in Docker Compose worker profile validated by
 `make source-ingestion-scheduled-worker-check`, plus a source-safe live Core
 proof artifact contract validated by
 `make source-ingestion-live-proof-contract-gate`. Production storage readiness
-still requires deploy migration evidence, mesh certification, live broker
-runtime proof, downstream consumer runtime proof, and live event-publication evidence
-beyond the internal outbox retry/dead-letter and publisher-adapter foundation.
+still requires deploy migration evidence, mesh certification, platform mesh
+event publication proof, downstream delivery evidence, and live
+event-publication evidence beyond the internal outbox retry/dead-letter,
+publisher-adapter, bounded broker proof, and bounded downstream consumer
+runtime proof foundations.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
 blockers without calling Core, certifying live source ingestion, or promoting a
@@ -375,9 +377,8 @@ product-safe failure reasons.
 that foundation without mutating records or publishing events.
 `POST /api/v1/outbox-delivery/run-once` adds the protected internal operator
 surface for a single bounded delivery pass and returns aggregate counts only.
-This is not certified live broker runtime, a Gateway event, platform mesh
-event, downstream consumer runtime proof, downstream delivery, or supported
-feature.
+This is not certified external publication, a Gateway event, platform mesh
+event publication, downstream delivery, or a supported feature.
 `src/app/application/downstream_realization.py` adds source-safe submission
 orchestration for existing Advise/Manage conversion intents and Report
 evidence-pack requests while leaving authoritative downstream outcome truth in

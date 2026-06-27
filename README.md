@@ -185,7 +185,8 @@ docker compose up --build
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
-| `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, platform mesh event publication, or downstream consumer runtime proof. |
+| `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, platform mesh event publication, or downstream delivery. |
+| `make outbox-consumer-runtime-proof-contract-gate` | Validate the bounded downstream consumer runtime proof contract without certifying platform mesh event publication, Gateway/Workbench behavior, downstream delivery, or supported-feature promotion. |
 | `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
 | `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without, by itself, certifying `lotus-ai` runtime execution, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
