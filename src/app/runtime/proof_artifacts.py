@@ -15,6 +15,9 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
+from app.application.gateway_workbench_operational_proof import (
+    GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -52,6 +55,8 @@ class ConfiguredImplementationProofArtifacts:
     platform_mesh_onboarding_proof_ref: str | None
     workbench_read_path_proof: dict[str, Any] | None
     workbench_read_path_proof_ref: str | None
+    gateway_workbench_operational_proof: dict[str, Any] | None
+    gateway_workbench_operational_proof_ref: str | None
 
 
 _REF_ONLY_PROOF_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
@@ -133,6 +138,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "workbench_read_path_proof",
         "workbench_read_path_proof_ref",
         "workbench read-path proof",
+    ),
+    (
+        GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+        "gateway_workbench_operational_proof",
+        "gateway_workbench_operational_proof_ref",
+        "Gateway/Workbench operational proof",
     ),
 )
 

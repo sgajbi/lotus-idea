@@ -13,6 +13,9 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
+from app.application.gateway_workbench_operational_proof import (
+    GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -35,6 +38,9 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     ai_workflow_pack_path = tmp_path / "output" / "ai" / "ai-workflow-pack-registration-proof.json"
     ai_runtime_path = tmp_path / "output" / "ai" / "ai-workflow-pack-runtime-execution-proof.json"
     workbench_path = tmp_path / "output" / "workbench" / "workbench-read-path-proof.json"
+    gateway_workbench_path = (
+        tmp_path / "output" / "workbench" / "gateway-workbench-operational-proof.json"
+    )
     outbox_path = tmp_path / "output" / "outbox" / "outbox-broker-proof.json"
     outbox_mesh_event_path = (
         tmp_path / "output" / "outbox" / "outbox-platform-mesh-event-publication-proof.json"
@@ -47,6 +53,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         ai_workflow_pack_path,
         ai_runtime_path,
         workbench_path,
+        gateway_workbench_path,
         outbox_path,
         outbox_mesh_event_path,
         platform_mesh_path,
@@ -77,6 +84,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     monkeypatch.setenv(
         WORKBENCH_READ_PATH_PROOF_ENV,
         "output/workbench/workbench-read-path-proof.json",
+    )
+    monkeypatch.setenv(
+        GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
+        "output/workbench/gateway-workbench-operational-proof.json",
     )
     monkeypatch.setenv(
         OUTBOX_BROKER_PROOF_ENV,
@@ -120,6 +131,12 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     assert artifacts.workbench_read_path_proof == {"artifact": "workbench-read-path-proof.json"}
     assert (
         artifacts.workbench_read_path_proof_ref == "output/workbench/workbench-read-path-proof.json"
+    )
+    assert artifacts.gateway_workbench_operational_proof == {
+        "artifact": "gateway-workbench-operational-proof.json"
+    }
+    assert artifacts.gateway_workbench_operational_proof_ref == (
+        "output/workbench/gateway-workbench-operational-proof.json"
     )
     assert artifacts.outbox_broker_proof == {"artifact": "outbox-broker-proof.json"}
     assert artifacts.outbox_broker_proof_ref == "output/outbox/outbox-broker-proof.json"

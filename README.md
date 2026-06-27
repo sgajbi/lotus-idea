@@ -91,7 +91,7 @@ day one. Repo-owned source truth starts in:
 - [Lotus Data Mesh Standard](../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
 
 All products remain proposed and not certified until runtime behavior, telemetry, platform
-certification, Gateway/Workbench proof, and supported-feature promotion are complete. Repo-owned
+certification, full Gateway/Workbench product proof, and supported-feature promotion are complete. Repo-owned
 mesh policy proof validates SLO/access/evidence contracts only; optional platform onboarding proof
 validates catalog visibility only. Certification and support stay blocked.
 
@@ -185,6 +185,7 @@ docker compose up --build
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
+| `make gateway-workbench-operational-proof-contract-gate` | Validate the bounded Gateway/Workbench operational proof that consumes the Workbench read-path proof and clears only the generic source-ingestion/outbox Gateway/Workbench blocker. |
 | `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, platform mesh event publication, or downstream delivery. |
 | `make outbox-consumer-runtime-proof-contract-gate` | Validate the bounded downstream consumer runtime proof contract without certifying platform mesh event publication, Gateway/Workbench behavior, downstream delivery, or supported-feature promotion. |
 | `make outbox-platform-mesh-event-publication-proof-contract-gate` | Validate the bounded source-safe outbox event contract plus platform source-manifest/catalog onboarding proof without certifying external broker publication, downstream delivery, Gateway/Workbench behavior, or supported-feature promotion. |
@@ -193,7 +194,7 @@ docker compose up --build
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-runtime-execution-proof-contract-gate` | Validate the bounded sibling `lotus-ai` deterministic runtime execution proof without certifying live provider execution, model-risk operations, Workbench, client-ready publication, or supported-feature promotion. |
 | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Advise proposal route, Manage action route, Report intake route, Report materialization, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo Advise, Manage, Report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; `LOTUS_IDEA_MESH_POLICY_PROOF` can override the repo-owned mesh policy proof path. Missing sibling evidence leaves cross-repo proof invalid and blockers intact. |
+| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, Gateway/Workbench operational, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Advise proposal route, Manage action route, Report intake route, Report materialization, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, and source-safe RFC proof-readiness evidence. Cross-repo Advise, Manage, Report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`, `LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; `LOTUS_IDEA_MESH_POLICY_PROOF` can override the repo-owned mesh policy proof path. Missing sibling evidence leaves cross-repo proof invalid and blockers intact. |
 | `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Generate source-safe runtime trust telemetry preview and snapshot evidence. |
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
@@ -283,8 +284,9 @@ Local controls keep implementation claims grounded:
 - `make no-sensitive-content-guard` keeps local evidence and output artifacts
   free of sensitive marker names.
 - `make durable-repository-proof-contract-gate` keeps the aggregate
-  proof-readiness storage evidence source-safe and explicit about remaining
-  production, mesh, live-source, Workbench, and supported-feature blockers.
+  proof-readiness storage evidence source-safe and explicit about remaining production, mesh, live-source, Workbench, and supported-feature blockers.
+- `make gateway-workbench-operational-proof-contract-gate` keeps the bounded
+  Gateway/Workbench operational artifact tied to the Workbench read-path proof and prevents it from becoming full panel, browser, canonical demo, mesh discovery, or supported-feature proof.
 - `make report-intake-route-proof-contract-gate` keeps the bounded
   `lotus-report` route proof source-safe and prevents it from becoming a
   false report/render/archive, client-publication, or supported-feature claim.
@@ -300,11 +302,7 @@ Local controls keep implementation claims grounded:
 
 ## Documentation Map
 
-Product and operator overview: [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md), and [wiki/Integrations.md](wiki/Integrations.md).
-Governance and release posture: [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md), [wiki/Supported-Features.md](wiki/Supported-Features.md), and [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md).
-Implementation evidence: [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md).
-Client-demo process, client-facing brief, and template: [wiki/Demo-Readiness.md](wiki/Demo-Readiness.md) and [docs/demo/README.md](docs/demo/README.md).
+Product and operator overview: [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md), and [wiki/Integrations.md](wiki/Integrations.md). Governance and release posture: [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md), [wiki/Supported-Features.md](wiki/Supported-Features.md), and [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md).
+Implementation evidence: [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md). Client-demo process, client-facing brief, and template: [wiki/Demo-Readiness.md](wiki/Demo-Readiness.md) and [docs/demo/README.md](docs/demo/README.md).
 
-Repo-local `wiki/` is the authored source of truth. The GitHub wiki is a
-publication target and should be updated through the platform wiki sync flow
-after merge to `main`.
+Repo-local `wiki/` is the authored source of truth. The GitHub wiki is a publication target and should be updated through the platform wiki sync flow after merge to `main`.

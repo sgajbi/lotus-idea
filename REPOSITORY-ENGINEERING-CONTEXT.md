@@ -181,6 +181,15 @@ generation. That artifact records the bounded Gateway-backed Workbench queue
 and detail read implementation and clears only
 `workbench_gateway_bff_consumption_proof_missing`; full panel, accessibility,
 canonical demo runtime, data-product, and supported-feature blockers remain.
+It also generates a source-safe Gateway/Workbench operational proof artifact
+under ignored `output/workbench/` from the validated Workbench read-path proof
+and passes it into aggregate proof-readiness generation unless
+`LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF` overrides it. A valid artifact
+clears only `gateway_workbench_proof_missing` for the source-ingestion and
+outbox-delivery proof families. Full Workbench product proof, panel proof,
+browser accessibility, canonical demo runtime, Gateway/Workbench discovery,
+data-product certification, client publication, and supported-feature
+promotion remain blocked.
 It also generates source-safe `lotus-advise` proposal route and `lotus-manage`
 action route proof artifacts under ignored `output/downstream/` from sibling
 checkouts configured by `LOTUS_ADVISE_ROOT` and `LOTUS_MANAGE_ROOT`, then
@@ -229,9 +238,9 @@ generation unless `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`
 overrides it. A valid artifact clears only
 `platform_mesh_event_publication_proof_missing`; missing sibling evidence
 writes an invalid non-proof artifact and keeps the blocker. External broker
-publication, downstream delivery, Gateway/Workbench proof, client-ready
-publication, supported-feature promotion, and full data-mesh certification
-remain blocked.
+publication, downstream delivery, full Gateway/Workbench product proof,
+client-ready publication, supported-feature promotion, and full data-mesh
+certification remain blocked.
 `src/app/application/source_ingestion_readiness.py` and
 `GET /api/v1/source-ingestion/readiness` now expose a certified internal
 operator diagnostic for run-once worker configuration and certification
@@ -1056,11 +1065,13 @@ owned by upstream services.
     `make report-materialization-proof-contract-gate`
 34. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`
-35. run-once source-ingestion worker manifest and output-contract gate:
+35. Gateway/Workbench operational proof contract gate:
+    `make gateway-workbench-operational-proof-contract-gate`
+36. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-36. scheduled source-ingestion worker deploy-contract gate:
+37. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-37. source-ingestion live-proof artifact contract gate:
+38. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
 38. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
@@ -1135,6 +1146,7 @@ runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
 report materialization proof contract validation,
 Workbench read-path proof contract validation,
+Gateway/Workbench operational proof contract validation,
 outbox platform mesh event publication proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
@@ -1155,7 +1167,7 @@ deploy-contract validation, no-sensitive-content evidence validation,
 durable repository proof contract validation, runtime trust telemetry proof
 contract validation, report-intake route proof contract validation, report
 materialization proof contract validation, Workbench read-path proof contract
-validation, outbox broker proof contract validation, platform mesh onboarding
+validation, Gateway/Workbench operational proof contract validation, outbox broker proof contract validation, platform mesh onboarding
 proof contract validation, outbox platform mesh event publication proof
 contract validation, AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
