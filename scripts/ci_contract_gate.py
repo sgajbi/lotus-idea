@@ -215,7 +215,6 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
     "pr-auto-merge.yml": ("continue-on-error:",),
     "merged-pr-main-releasability.yml": ("continue-on-error:",),
 }
-
 READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
 # fmt: off
 GENERATED_READINESS_ARTIFACTS = (
