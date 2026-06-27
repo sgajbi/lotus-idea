@@ -310,6 +310,7 @@ make durable-repository-proof-contract-gate
 make source-ingestion-worker-check
 make source-ingestion-scheduled-worker-check
 make source-ingestion-live-proof-contract-gate
+make risk-concentration-live-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make downstream-route-contract-proof-gate
 make report-intake-route-proof-contract-gate

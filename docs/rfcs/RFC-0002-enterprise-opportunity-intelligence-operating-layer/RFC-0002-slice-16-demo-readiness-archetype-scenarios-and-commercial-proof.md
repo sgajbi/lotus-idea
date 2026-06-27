@@ -67,6 +67,10 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    before demo use. Risk consumer approval for
    `lotus-risk:ConcentrationRiskReport:v1` is source-approved and is no longer
    a concentration-review blocker.
+   The source-safe Risk concentration live-proof artifact contract now exists
+   and can clear only the live Risk source blocker when valid evidence is
+   supplied to aggregate readiness; it is not demo, Workbench, mesh, client
+   publication, or supported-feature proof.
 5. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
