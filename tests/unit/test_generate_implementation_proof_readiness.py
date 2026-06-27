@@ -21,6 +21,9 @@ from app.application.durable_repository_proof import build_durable_repository_pr
 from app.application.gateway_workbench_operational_proof import (
     build_gateway_workbench_operational_proof_payload,
 )
+from app.application.gateway_workbench_discovery_proof import (
+    build_gateway_workbench_discovery_proof_payload,
+)
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
@@ -32,6 +35,9 @@ from app.application.outbox_consumer_runtime_proof import (
 from app.application.outbox_platform_mesh_event_publication_proof import (
     REQUIRED_PLATFORM_PRODUCT_IDS,
     build_outbox_platform_mesh_event_publication_proof_payload,
+)
+from app.application.platform_mesh_onboarding_proof import (
+    build_platform_mesh_onboarding_proof_payload,
 )
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
@@ -60,6 +66,7 @@ from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
     write_lotus_ai_workflow_pack_runtime_execution_fixture,
 )
+from tests.unit.test_gateway_workbench_discovery_proof import _write_platform_fixture
 
 
 def test_implementation_proof_readiness_payload_is_source_safe() -> None:
@@ -573,6 +580,70 @@ def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench
     )
     assert "Gateway/Workbench operational proof artifact" in source_ingestion["evidenceRefs"]
     assert "Gateway/Workbench operational proof artifact" in outbox_delivery["evidenceRefs"]
+    assert payload["readinessStatus"] == "blocked"
+    assert payload["supportedFeaturePromoted"] is False
+
+
+def test_generate_implementation_proof_readiness_uses_explicit_gateway_workbench_discovery_proof(
+    tmp_path: Path,
+) -> None:
+    repository_root = Path(__file__).resolve().parents[2]
+    platform_root = _write_platform_fixture(tmp_path)
+    workbench_proof_payload = build_workbench_read_path_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=repository_root,
+    )
+    gateway_workbench_operational_proof_payload = build_gateway_workbench_operational_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=repository_root,
+        workbench_read_path_proof=workbench_proof_payload,
+        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+    )
+    gateway_workbench_discovery_proof = tmp_path / "gateway-workbench-discovery-proof.json"
+    gateway_workbench_discovery_proof.write_text(
+        json.dumps(
+            build_gateway_workbench_discovery_proof_payload(
+                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                repository_root=repository_root,
+                platform_root=platform_root,
+                platform_mesh_onboarding_proof=build_platform_mesh_onboarding_proof_payload(
+                    generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+                    repository_root=repository_root,
+                    platform_root=platform_root,
+                ),
+                workbench_read_path_proof=workbench_proof_payload,
+                gateway_workbench_operational_proof=gateway_workbench_operational_proof_payload,
+                platform_mesh_onboarding_proof_ref=(
+                    "output/data-mesh/platform-mesh-onboarding-proof.json"
+                ),
+                workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+                gateway_workbench_operational_proof_ref=(
+                    "output/workbench/gateway-workbench-operational-proof.json"
+                ),
+            )
+        ),
+        encoding="utf-8",
+    )
+    output_path = tmp_path / "proof" / "readiness.json"
+
+    result = proof_report.main(
+        [
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--gateway-workbench-discovery-proof",
+            str(gateway_workbench_discovery_proof),
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert "gateway_workbench_discovery_proof_missing" not in payload["overallBlockers"]
+    assert "data_mesh_not_certified" in payload["overallBlockers"]
+    assert "producer_products_not_active" in payload["overallBlockers"]
+    assert "platform_mesh_certification_missing" in payload["overallBlockers"]
+    assert "workbench_product_proof_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

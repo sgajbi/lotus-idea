@@ -88,7 +88,7 @@ Current RFC-0002 implementation-start baseline:
    `make implementation-proof-readiness-check` generates and consumes the
    scheduled source-ingestion worker deploy-proof artifact, durable repository
    proof artifact, runtime telemetry proof artifact, Gateway/Workbench
-   operational proof artifact, report-intake route proof
+   operational proof artifact, Gateway/Workbench discovery proof artifact, report-intake route proof
    artifact, platform mesh onboarding proof artifact, AI lineage store proof
    artifact, and AI model-risk operations contract refs before producing the
    same source-safe posture as repo-native automation evidence.

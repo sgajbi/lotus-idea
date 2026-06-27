@@ -35,6 +35,14 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/generate_platform_mesh_onboarding_proof.py",
         "a platform mesh onboarding proof artifact",
     ),
+    (
+        "scripts/generate_gateway_workbench_operational_proof.py",
+        "a Gateway/Workbench operational proof artifact",
+    ),
+    (
+        "scripts/generate_gateway_workbench_discovery_proof.py",
+        "a Gateway/Workbench discovery proof artifact",
+    ),
 )
 
 PASSED_READINESS_ARTIFACTS = (
@@ -63,6 +71,8 @@ PASSED_READINESS_ARTIFACTS = (
         "outbox platform mesh event publication proof artifact",
     ),
     ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
+    ("--gateway-workbench-operational-proof", "Gateway/Workbench operational proof artifact"),
+    ("--gateway-workbench-discovery-proof", "Gateway/Workbench discovery proof artifact"),
 )
 
 REQUIRED_READINESS_WIRING = (
@@ -106,6 +116,22 @@ REQUIRED_READINESS_WIRING = (
         "pass the default platform mesh onboarding proof output into readiness generation",
     ),
     ("LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF", "support optional onboarding proof"),
+    (
+        "LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF_OUTPUT",
+        "pass the default Gateway/Workbench operational proof output into readiness generation",
+    ),
+    (
+        "LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF",
+        "support optional Gateway/Workbench operational proof wiring",
+    ),
+    (
+        "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF_OUTPUT",
+        "pass the default Gateway/Workbench discovery proof output into readiness generation",
+    ),
+    (
+        "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF",
+        "support optional Gateway/Workbench discovery proof wiring",
+    ),
     ("LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF_OUTPUT", "pass default outbox proof"),
     ("LOTUS_IDEA_OUTBOX_CONSUMER_RUNTIME_PROOF", "support optional outbox proof"),
     (

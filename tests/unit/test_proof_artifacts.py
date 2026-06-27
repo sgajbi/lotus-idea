@@ -16,6 +16,9 @@ from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_EN
 from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
 )
+from app.application.gateway_workbench_discovery_proof import (
+    GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -41,6 +44,9 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     gateway_workbench_path = (
         tmp_path / "output" / "workbench" / "gateway-workbench-operational-proof.json"
     )
+    gateway_workbench_discovery_path = (
+        tmp_path / "output" / "workbench" / "gateway-workbench-discovery-proof.json"
+    )
     outbox_path = tmp_path / "output" / "outbox" / "outbox-broker-proof.json"
     outbox_mesh_event_path = (
         tmp_path / "output" / "outbox" / "outbox-platform-mesh-event-publication-proof.json"
@@ -54,6 +60,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         ai_runtime_path,
         workbench_path,
         gateway_workbench_path,
+        gateway_workbench_discovery_path,
         outbox_path,
         outbox_mesh_event_path,
         platform_mesh_path,
@@ -88,6 +95,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     monkeypatch.setenv(
         GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
         "output/workbench/gateway-workbench-operational-proof.json",
+    )
+    monkeypatch.setenv(
+        GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
+        "output/workbench/gateway-workbench-discovery-proof.json",
     )
     monkeypatch.setenv(
         OUTBOX_BROKER_PROOF_ENV,
@@ -137,6 +148,12 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     }
     assert artifacts.gateway_workbench_operational_proof_ref == (
         "output/workbench/gateway-workbench-operational-proof.json"
+    )
+    assert artifacts.gateway_workbench_discovery_proof == {
+        "artifact": "gateway-workbench-discovery-proof.json"
+    }
+    assert artifacts.gateway_workbench_discovery_proof_ref == (
+        "output/workbench/gateway-workbench-discovery-proof.json"
     )
     assert artifacts.outbox_broker_proof == {"artifact": "outbox-broker-proof.json"}
     assert artifacts.outbox_broker_proof_ref == "output/outbox/outbox-broker-proof.json"

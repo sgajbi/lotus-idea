@@ -31,29 +31,30 @@ Blocking scaffold commands:
 22. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
 23. `make workbench-read-path-proof-contract-gate`
 24. `make gateway-workbench-operational-proof-contract-gate`
-25. `make outbox-broker-proof-contract-gate`
-26. `make platform-mesh-onboarding-proof-contract-gate`
-27. `make downstream-route-contract-proof-gate`
-28. `make source-ingestion-worker-check`
-29. `make source-ingestion-scheduled-worker-check`
-30. `make source-ingestion-live-proof-contract-gate`
-31. `make implementation-proof-readiness-check` generates the scheduled-worker
+25. `make gateway-workbench-discovery-proof-contract-gate`
+26. `make outbox-broker-proof-contract-gate`
+27. `make platform-mesh-onboarding-proof-contract-gate`
+28. `make downstream-route-contract-proof-gate`
+29. `make source-ingestion-worker-check`
+30. `make source-ingestion-scheduled-worker-check`
+31. `make source-ingestion-live-proof-contract-gate`
+32. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
-    Gateway/Workbench operational proof artifact, outbox
+    Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
     broker proof artifact, default Advise proposal route proof artifact,
     default Manage action route proof artifact, default Report intake route
     proof artifact, default mesh policy proof artifact, and default platform
     mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
     registration proof artifacts, then consumes all in
     aggregate RFC proof-readiness evidence.
-32. `make supported-features-gate`
-33. `make endpoint-certification-gate`
-34. `make postgres-integration-gate`
-35. `make openapi-gate`
-36. `make coverage-gate`
-37. `make security-audit`
-38. `make docker-build`
+33. `make supported-features-gate`
+34. `make endpoint-certification-gate`
+35. `make postgres-integration-gate`
+36. `make openapi-gate`
+37. `make coverage-gate`
+38. `make security-audit`
+39. `make docker-build`
 
 Cleanup support command:
 
@@ -83,6 +84,7 @@ runtime trust telemetry proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 Workbench read-path proof contract validation,
+Gateway/Workbench discovery proof contract validation,
 outbox broker proof contract validation,
 implementation-proof readiness artifact generation, source-observability
 contract validation, operation metric contract validation, AI model-risk

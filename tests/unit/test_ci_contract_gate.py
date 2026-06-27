@@ -655,12 +655,8 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_wiring()
         (ROOT / "Makefile")
         .read_text(encoding="utf-8")
         .replace(
-            "$(if $(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF),"
-            "--platform-mesh-onboarding-proof "
-            "$(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF),"
-            "--platform-mesh-onboarding-proof "
-            "$(LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF_OUTPUT)) ",
-            "",
+            "--platform-mesh-onboarding-proof",
+            "--removed-platform-mesh-onboarding-proof",
         )
     )
 
@@ -669,6 +665,99 @@ def test_ci_contract_gate_blocks_missing_platform_mesh_onboarding_proof_wiring()
     assert (
         "Makefile implementation-proof-readiness-check target must pass the "
         "platform mesh onboarding proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_gateway_workbench_operational_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_gateway_workbench_operational_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "a Gateway/Workbench operational proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_gateway_workbench_operational_proof_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--gateway-workbench-operational-proof",
+            "--removed-gateway-workbench-operational-proof",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "Gateway/Workbench operational proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_generation() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("scripts/generate_gateway_workbench_discovery_proof.py", "scripts/removed.py")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must generate "
+        "a Gateway/Workbench discovery proof artifact"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_wiring() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "--gateway-workbench-discovery-proof",
+            "--removed-gateway-workbench-discovery-proof",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile implementation-proof-readiness-check target must pass the "
+        "Gateway/Workbench discovery proof artifact into readiness generation"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_gateway_workbench_discovery_proof_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace("$(MAKE) gateway-workbench-discovery-proof-contract-gate\n", "")
+        .replace(
+            "scripts/gateway_workbench_discovery_proof_contract_gate.py",
+            "scripts/removed.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call `$(MAKE) gateway-workbench-discovery-proof-contract-gate`"
+    ) in errors
+    assert (
+        "Makefile gateway-workbench-discovery-proof-contract-gate target must run "
+        "`scripts/gateway_workbench_discovery_proof_contract_gate.py`"
     ) in errors
 
 

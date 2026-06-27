@@ -58,6 +58,7 @@ make runtime-trust-telemetry-proof-contract-gate
 make report-intake-route-proof-contract-gate
 make workbench-read-path-proof-contract-gate
 make gateway-workbench-operational-proof-contract-gate
+make gateway-workbench-discovery-proof-contract-gate
 make ai-lineage-store-proof-contract-gate
 make ai-workflow-pack-registration-proof-contract-gate
 make ai-workflow-pack-runtime-execution-proof-contract-gate
@@ -90,6 +91,7 @@ runtime trust telemetry proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench operational proof contract validation,
+Gateway/Workbench discovery proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 AI workflow-pack runtime execution proof contract validation,
@@ -168,7 +170,7 @@ Persistence adapter validation:
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
    consumption, Workbench read-path proof consumption, Gateway/Workbench
-   operational proof consumption, bounded outbox broker
+   operational proof consumption, Gateway/Workbench discovery proof consumption, bounded outbox broker
    proof consumption, default Advise proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
    default Report intake route proof generation and consumption, default
@@ -196,7 +198,13 @@ Persistence adapter validation:
     source-safe bounded Gateway/Workbench operational proof contract that
     aggregate readiness consumes to clear only `gateway_workbench_proof_missing`
     for source-ingestion and outbox-delivery proof families.
-13. `tests/unit/test_outbox_broker_proof.py`,
+13. `tests/unit/test_gateway_workbench_discovery_proof.py` and
+    `make gateway-workbench-discovery-proof-contract-gate` prove the
+    source-safe bounded Gateway/Workbench discovery proof contract that
+    aggregate readiness consumes to clear only
+    `gateway_workbench_discovery_proof_missing` for data-mesh and runtime
+    trust telemetry proof families.
+14. `tests/unit/test_outbox_broker_proof.py`,
     `tests/unit/test_outbox_consumer_runtime_proof.py`,
     `tests/unit/test_outbox_platform_mesh_event_publication_proof.py`,
     `make outbox-consumer-contract-gate`,

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -151,6 +151,15 @@ durable operating-context enforcement:
     proof families and does not certify Workbench product proof, browser proof,
     canonical demo runtime, data-product discovery, or supported features.
 21. README, repository context,
+    `docs/operations/implementation-proof-readiness.md`, quality gate docs, RFC
+    evidence, and wiki source now describe the Gateway/Workbench discovery
+    proof artifact and `make gateway-workbench-discovery-proof-contract-gate`,
+    while preserving the boundary that a valid artifact clears only
+    `gateway_workbench_discovery_proof_missing` for data-mesh and runtime trust
+    telemetry proof families and does not certify data-mesh products, activate
+    producer products, certify full Workbench product behavior, or promote
+    supported features.
+21. README, repository context,
     `docs/operations/implementation-proof-readiness.md`, RFC evidence, and
     wiki source now describe that the live implementation-proof readiness API
     consumes configured source-ingestion live, source-ingestion scheduled-worker,
@@ -195,7 +204,8 @@ durable operating-context enforcement:
     certified data-product claims out of client material.
 
 This documentation slice does not promote any supported feature. It records
-bounded Workbench read-path proof and Gateway/Workbench operational proof only; it does not add full
+bounded Workbench read-path proof, Gateway/Workbench operational proof, and
+Gateway/Workbench discovery proof only; it does not add full
 Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled
 runtime proof.
