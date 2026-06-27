@@ -262,8 +262,9 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert "external_broker_runtime_proof_missing" in snapshot.overall_blockers
     assert "source_ingestion_manifest_not_configured" in snapshot.overall_blockers
     assert "opportunity_archetype_live_risk_source_proof_missing" in snapshot.overall_blockers
-    assert "opportunity_archetype_risk_source_consumer_approval_missing" in (
-        snapshot.overall_blockers
+    assert (
+        "opportunity_archetype_risk_source_consumer_approval_missing"
+        not in snapshot.overall_blockers
     )
     assert "workbench_panel_missing" in snapshot.overall_blockers
     assert "no_supported_features_promoted" in snapshot.overall_blockers
@@ -348,7 +349,10 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
     assert "make opportunity-archetype-contract-gate" in archetypes.evidence_refs
     assert "src/app/application/source_ingestion.py" in archetypes.evidence_refs
     assert "opportunity_archetype_live_risk_source_proof_missing" in archetypes.blockers
-    assert "opportunity_archetype_risk_source_consumer_approval_missing" in archetypes.blockers
+    assert "opportunity_archetype_risk_source_consumer_approval_missing" not in (
+        archetypes.blockers
+    )
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes.blockers
     assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes.blockers
     assert archetypes.readiness_status == "blocked"
     assert archetypes.supportability_status == "not_certified"

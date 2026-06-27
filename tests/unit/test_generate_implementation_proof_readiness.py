@@ -106,7 +106,11 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
     )
     assert "make opportunity-archetype-contract-gate" in archetypes["evidenceRefs"]
     assert "opportunity_archetype_live_risk_source_proof_missing" in archetypes["blockers"]
-    assert "opportunity_archetype_risk_source_consumer_approval_missing" in archetypes["blockers"]
+    assert (
+        "opportunity_archetype_risk_source_consumer_approval_missing"
+        not in (archetypes["blockers"])
+    )
+    assert "opportunity_archetype_data_mesh_not_certified" in archetypes["blockers"]
     assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes["blockers"]
     assert archetypes["supportedFeaturePromoted"] is False
     ai_explanation = next(

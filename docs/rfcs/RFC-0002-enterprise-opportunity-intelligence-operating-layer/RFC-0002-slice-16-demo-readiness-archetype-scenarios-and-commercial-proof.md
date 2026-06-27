@@ -62,9 +62,11 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    evidence.
 3. RFP-safe language must remain blocked until supported-feature promotion
    evidence exists.
-4. Concentration risk review still requires live Risk source proof, upstream
-   Risk consumer approval, data-mesh certification, Workbench proof, and
-   supported-feature evidence before demo use.
+4. Concentration risk review still requires live Risk source proof,
+   data-mesh certification, Workbench proof, and supported-feature evidence
+   before demo use. Risk consumer approval for
+   `lotus-risk:ConcentrationRiskReport:v1` is source-approved and is no longer
+   a concentration-review blocker.
 5. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 

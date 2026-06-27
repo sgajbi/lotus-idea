@@ -115,7 +115,6 @@
           ],
           "remaining_blockers": [
             "live_risk_source_proof_missing",
-            "risk_source_consumer_approval_missing",
             "data_mesh_not_certified",
             "supported_feature_promotion_missing"
           ]
@@ -123,7 +122,6 @@
       ],
       "blockers": [
         "live_risk_source_proof_missing",
-        "risk_source_consumer_approval_missing",
         "data_mesh_not_certified",
         "supported_feature_promotion_missing"
       ]
