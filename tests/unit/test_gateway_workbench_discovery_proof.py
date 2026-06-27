@@ -317,6 +317,34 @@ def test_gateway_workbench_discovery_contract_gate_scans_tuple_content() -> None
     assert errors == ["$[0]: forbidden source-sensitive text `PB_SG_GLOBAL_BAL_001` is present"]
 
 
+def test_gateway_workbench_discovery_contract_gate_accepts_missing_platform_checkout(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+
+    errors = module.validate_gateway_workbench_discovery_proof_contract(
+        platform_root=tmp_path / "missing-lotus-platform",
+    )
+
+    assert errors == []
+
+
+def test_gateway_workbench_discovery_contract_gate_rejects_invalid_present_platform_evidence(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+    platform_root = _write_platform_fixture(tmp_path, publish_routes=True)
+
+    errors = module.validate_gateway_workbench_discovery_proof_contract(
+        platform_root=platform_root,
+    )
+
+    assert errors == [
+        "Gateway/Workbench discovery proof must validate against sibling platform truth when "
+        "sibling evidence is present"
+    ]
+
+
 def _valid_gateway_workbench_discovery_proof(tmp_path: Path) -> dict[str, Any]:
     return _gateway_workbench_discovery_proof(_write_platform_fixture(tmp_path))
 
