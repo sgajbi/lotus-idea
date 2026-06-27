@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded outbox broker proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded downstream route proof, bounded outbox broker proof, mesh policy proof, AI lineage store proof, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -83,6 +83,15 @@ durable operating-context enforcement:
     `make downstream-realization-contract-gate` while preserving the boundary
     that no downstream route existence, downstream execution, or
     supported-feature promotion exists.
+13. README, repository context,
+    `docs/operations/downstream-realization-readiness.md`,
+    `docs/operations/implementation-proof-readiness.md`, quality scorecard,
+    RFC evidence, and wiki source now describe bounded Advise proposal and
+    Manage action route-proof generation, aggregate consumption, and
+    `make downstream-route-contract-proof-gate`, while preserving the boundary
+    that valid artifacts clear only route-foundation blockers and do not grant
+    suitability, policy approval, mandate/rebalance authority, execution,
+    client communication, or supported-feature promotion.
 13. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/api-certification.md`, observability and persistence
     guides, quality scorecard, RFC evidence, and wiki source now describe the

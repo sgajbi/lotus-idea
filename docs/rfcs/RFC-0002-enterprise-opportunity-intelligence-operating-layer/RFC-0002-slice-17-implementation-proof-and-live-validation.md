@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, report-intake route proof artifact, bounded outbox broker proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, and AI workflow-pack runtime execution proof artifact available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -189,7 +189,18 @@ Prove the complete supported opportunity journey end to end.
     `mesh_evidence_policy_certification_missing`, while preserving mesh
     certification, product activation, platform source-manifest/catalog,
     Gateway/Workbench, and supported-feature blockers.
-23. `src/app/application/report_intake_route_proof.py`,
+23. `src/app/application/downstream_route_contract_proof.py`,
+    `scripts/generate_advise_proposal_route_proof.py`,
+    `scripts/generate_manage_action_route_proof.py`, and
+    `make downstream-route-contract-proof-gate` now define and enforce
+    source-safe Advise proposal and Manage action route-foundation proof
+    artifacts. The aggregate implementation-readiness generator and operator
+    API consume valid artifacts to clear only
+    `advise_live_contract_proof_missing` and
+    `manage_live_contract_proof_missing`, while preserving suitability,
+    policy approval, mandate/rebalance authority, execution, order creation,
+    client-publication, and supported-feature blockers.
+24. `src/app/application/report_intake_route_proof.py`,
     `scripts/generate_report_intake_route_proof.py`, and
     `make report-intake-route-proof-contract-gate` now define and enforce a
     source-safe `lotus-report` route-foundation proof artifact. The aggregate
@@ -197,7 +208,7 @@ Prove the complete supported opportunity journey end to end.
     to clear only `lotus_report_live_intake_route_proof_missing`, while
     preserving report materialization, render output, archive record,
     client-publication, and supported-feature blockers.
-24. `src/app/application/ai_workflow_pack_registration_proof.py`,
+25. `src/app/application/ai_workflow_pack_registration_proof.py`,
     `scripts/generate_ai_workflow_pack_registration_proof.py`, and
     `make ai-workflow-pack-registration-proof-contract-gate` now define and
     enforce a source-safe sibling `lotus-ai` workflow-pack registration proof
@@ -208,7 +219,7 @@ Prove the complete supported opportunity journey end to end.
     Workbench, client-publication, and supported-feature blockers. Model-risk
     dashboard and alert artifact certification is handled by the separate
     model-risk operations proof gate.
-25. `src/app/application/ai_workflow_pack_runtime_execution_proof.py`,
+26. `src/app/application/ai_workflow_pack_runtime_execution_proof.py`,
     `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`, and
     `make ai-workflow-pack-runtime-execution-proof-contract-gate` now define
     and enforce a source-safe sibling `lotus-ai` workflow-pack runtime execution
@@ -258,19 +269,24 @@ without relying on chat memory.
    but full Workbench panel proof, browser accessibility proof, canonical demo
    runtime proof, entitlement-denied proof, mutation affordances, and
    supported-feature promotion remain pending.
-8. AI lineage store proof is now explicit in aggregate readiness evidence, but
+8. Advise proposal and Manage action route proofs are now explicit in
+   aggregate readiness evidence, but they prove only source-safe sibling route
+   foundations. Suitability, policy approval, mandate/rebalance authority,
+   execution, order creation, client communication, and supported-feature
+   promotion remain pending.
+9. AI lineage store proof is now explicit in aggregate readiness evidence, but
    `lotus-ai` workflow-pack registration/runtime execution, live provider
    execution, runtime trust telemetry, Workbench proof, and supported-feature
    promotion remain pending unless corresponding sibling proof artifacts are
    present and valid. Repo-owned model-risk dashboard/alert artifact
    certification is now covered by the model-risk operations proof gate.
-9. AI workflow-pack registration proof is now explicit in aggregate readiness
+10. AI workflow-pack registration proof is now explicit in aggregate readiness
    evidence, but it proves only the governed sibling registration,
    binding, queue policy, supportability, and test coverage for
    `idea_explanation.pack@v1`; runtime execution, provider calls, model-risk
    operations certification, runtime trust telemetry, Workbench proof, and
    supported-feature promotion remain pending unless separately proven.
-10. AI workflow-pack runtime execution proof is now explicit in aggregate
+11. AI workflow-pack runtime execution proof is now explicit in aggregate
     readiness evidence, but it proves only deterministic sibling runtime
     execution with source-safe guardrails, stub-provider routing, and restricted
     `lotus-idea` caller policy; live provider execution, provider rollout,
@@ -327,14 +343,20 @@ supported-feature proof gaps.
 The runtime proof-artifact loader narrows the operator-readiness gap from
 "generator-only artifact consumption" to "HTTP and generated readiness share
 the same configured proof evidence." It now includes source-ingestion live and
-scheduled proof artifact refs plus default report-intake route and platform
-mesh onboarding proof refs as auditable evidence when those blockers clear; it
+scheduled proof artifact refs plus default Advise proposal route, Manage action
+route, Report intake route, and platform mesh onboarding proof refs as
+auditable evidence when those blockers clear; it
 does not certify storage, live scheduler operations, mesh, Workbench,
 Report/Render/Archive materialization, or supported-feature readiness.
 The report-intake route proof narrows the downstream proof gap from "no
 route-foundation evidence" to "`lotus-report` intake route is source-safely
 proven and linked into readiness." It does not close Report package creation,
 rendered output, archive record, client-publication, or supported-feature proof.
+The Advise/Manage route proofs narrow the downstream proof gap from "no sibling
+route-foundation evidence" to "proposal and action intake route foundations can
+be source-safely proven and linked into readiness." They do not close
+suitability, policy approval, mandate/rebalance authority, execution, order
+creation, client communication, or supported-feature proof.
 The AI model-risk operations contract refs narrow the model-risk proof index
 gap from "contract exists outside aggregate readiness" to "contract and gate are
 visible in the `ai-explanation` capability evidence." They do not certify a
