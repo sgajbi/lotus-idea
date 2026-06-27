@@ -138,6 +138,40 @@ def test_performance_underperformance_live_proof_rejects_missing_benchmark_conte
     assert performance_underperformance_live_proof_is_valid(payload) is False
 
 
+def test_performance_underperformance_live_proof_records_missing_live_source_attempt() -> None:
+    payload = build_performance_underperformance_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_performance_source_attempted=False,
+        evaluation_summary={
+            "evaluationOutcome": "candidate_created",
+            "sourceEvidenceCurrent": True,
+            "benchmarkContextAvailable": True,
+            "sourceDiagnosticCodes": "not-a-list",
+            "reasonCodes": "not-a-list",
+            "unsupportedReasons": "not-a-list",
+        },
+    )
+
+    assert payload["runStatus"] == "completed"
+    assert payload["sourceDiagnosticCodes"] == []
+    assert payload["reasonCodes"] == []
+    assert payload["unsupportedReasons"] == []
+    assert "live_performance_source_proof_missing" in payload["proofBlockers"]
+    assert performance_underperformance_live_proof_is_valid(payload) is False
+
+
+def test_empty_performance_underperformance_live_proof_summary_is_unknown_and_blocked() -> None:
+    payload = build_performance_underperformance_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_performance_source_attempted=True,
+        evaluation_summary={},
+    )
+
+    assert payload["runStatus"] == "unknown"
+    assert "live_performance_source_run_blocked" in payload["proofBlockers"]
+    assert performance_underperformance_live_proof_is_valid(payload) is False
+
+
 def test_performance_underperformance_live_proof_cli_writes_source_safe_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

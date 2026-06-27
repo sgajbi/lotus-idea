@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, and high-volatility review are non-promoted bounded foundations with source-specific blockers; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, and high-volatility review are non-promoted bounded foundations with source-specific proof contracts; demo claims remain blocked
 
 ## Outcome
 
@@ -44,8 +44,9 @@ capabilities exist.
    or supported-feature proof families.
 7. Source-safe live proof artifacts can clear only their source-specific
    archetype blockers: Risk concentration proof clears the live Risk blocker,
-   and Performance underperformance proof clears the live Performance blocker.
-   Benchmark assignment, data-mesh certification, Workbench proof,
+   high-volatility proof clears the live Risk volatility blocker, and
+   Performance underperformance proof clears the live Performance blocker.
+   Drawdown, benchmark assignment, data-mesh certification, Workbench proof,
    client-publication, and supported-feature blockers remain intact.
 
 This slice does not create demo-ready material. It deliberately prevents
@@ -84,11 +85,12 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    benchmark context from `lotus-performance:ReturnsSeriesBundle:v1`, blocks
    missing benchmark context, and does not calculate performance methodology
    inside `lotus-idea`.
-6. High-volatility review now has a bounded deterministic policy plus Lotus
-   Risk `RiskMetricsReport:v1` source-port/adapter foundation. It still
-   requires live Risk proof, drawdown-specific source proof, data-mesh
-   certification, Workbench proof, and supported-feature evidence before demo
-   use.
+6. High-volatility review now has a bounded deterministic policy, Lotus Risk
+   `RiskMetricsReport:v1` source-port/adapter foundation, and source-safe live
+   Risk volatility proof contract. A valid artifact can clear only
+   `opportunity_archetype_live_risk_volatility_source_proof_missing`; drawdown
+   source proof, data-mesh certification, Workbench proof, and
+   supported-feature evidence remain required before demo use.
 7. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 

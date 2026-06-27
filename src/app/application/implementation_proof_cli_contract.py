@@ -21,6 +21,7 @@ from app.application.gateway_workbench_discovery_proof import (
 from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
 )
+from app.application.high_volatility_live_proof import HIGH_VOLATILITY_LIVE_PROOF_ENV
 from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_consumer_runtime_proof import (
@@ -136,6 +137,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--risk-concentration-live-proof",
         RISK_CONCENTRATION_LIVE_PROOF_ENV,
         "Optional lotus-risk concentration live source proof artifact path.",
+    ),
+    (
+        "--high-volatility-live-proof",
+        HIGH_VOLATILITY_LIVE_PROOF_ENV,
+        "Optional lotus-risk high-volatility live source proof artifact path.",
     ),
     (
         "--performance-underperformance-live-proof",

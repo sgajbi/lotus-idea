@@ -10,10 +10,10 @@ from types import ModuleType
 
 import pytest
 
-from app.application.risk_concentration_live_proof import (
-    RISK_CONCENTRATION_LIVE_PROOF_SCHEMA_VERSION,
-    build_risk_concentration_live_proof_payload,
-    risk_concentration_live_proof_is_valid,
+from app.application.high_volatility_live_proof import (
+    HIGH_VOLATILITY_LIVE_PROOF_SCHEMA_VERSION,
+    build_high_volatility_live_proof_payload,
+    high_volatility_live_proof_is_valid,
 )
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.ports.risk_sources import (
@@ -38,47 +38,49 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
     ) -> RiskConcentrationEvidence:
-        if self.error is not None:
-            raise self.error
-        return _risk_evidence()
+        raise AssertionError("concentration evidence is not used by high-volatility proof tests")
 
     def fetch_volatility_evidence(
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
-        raise AssertionError("volatility evidence is not used by concentration proof tests")
+        if self.error is not None:
+            raise self.error
+        return _risk_evidence()
 
 
-def test_risk_concentration_live_proof_payload_is_source_safe_and_not_promoted() -> None:
-    payload = build_risk_concentration_live_proof_payload(
+def test_high_volatility_live_proof_payload_is_source_safe_and_not_promoted() -> None:
+    payload = build_high_volatility_live_proof_payload(
         generated_at_utc=GENERATED_AT,
         live_risk_source_attempted=True,
         evaluation_summary={
             "runStatus": "completed",
             "sourceAuthority": "lotus-risk",
-            "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
+            "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
             "evaluationOutcome": "candidate_created",
             "sourceEvidenceCurrent": True,
-            "sourceDiagnosticCodes": ["risk_issuer_coverage_complete"],
-            "reasonCodes": ["concentration_attention"],
+            "riskSupportabilityReady": True,
+            "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
+            "reasonCodes": ["volatility_attention"],
             "unsupportedReasons": [],
         },
     )
 
-    assert payload["schemaVersion"] == RISK_CONCENTRATION_LIVE_PROOF_SCHEMA_VERSION
+    assert payload["schemaVersion"] == HIGH_VOLATILITY_LIVE_PROOF_SCHEMA_VERSION
     assert payload["runStatus"] == "completed"
     assert payload["candidateGenerated"] is True
     assert payload["sourceEvidenceCurrent"] is True
+    assert payload["riskSupportabilityReady"] is True
     assert payload["supportedFeaturePromoted"] is False
     assert payload["proofClosed"] is False
     assert payload["proofBlockers"] == []
     assert payload["aggregateBlockersCleared"] == [
-        "opportunity_archetype_live_risk_source_proof_missing"
+        "opportunity_archetype_live_risk_volatility_source_proof_missing"
     ]
     assert (
-        "opportunity_archetype_data_mesh_not_certified"
+        "opportunity_archetype_drawdown_source_proof_missing"
         in (payload["remainingCertificationBlockers"])
     )
-    assert risk_concentration_live_proof_is_valid(payload) is True
+    assert high_volatility_live_proof_is_valid(payload) is True
     serialized = json.dumps(payload)
     assert "portfolioId" not in serialized
     assert "candidateId" not in serialized
@@ -86,16 +88,17 @@ def test_risk_concentration_live_proof_payload_is_source_safe_and_not_promoted()
     assert "PB_SG_GLOBAL_BAL_001" not in serialized
 
 
-def test_blocked_risk_concentration_live_proof_does_not_validate() -> None:
-    payload = build_risk_concentration_live_proof_payload(
+def test_blocked_high_volatility_live_proof_does_not_validate() -> None:
+    payload = build_high_volatility_live_proof_payload(
         generated_at_utc=GENERATED_AT,
         live_risk_source_attempted=True,
         evaluation_summary={
             "runStatus": "blocked",
             "sourceAuthority": "lotus-risk",
-            "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
+            "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
             "evaluationOutcome": "blocked",
             "sourceEvidenceCurrent": False,
+            "riskSupportabilityReady": False,
             "errorCode": "risk_source_unavailable",
             "sourceDiagnosticCodes": ["risk_source_unavailable"],
             "reasonCodes": ["source_partial"],
@@ -104,49 +107,52 @@ def test_blocked_risk_concentration_live_proof_does_not_validate() -> None:
     )
 
     assert payload["runStatus"] == "blocked"
-    assert "live_risk_source_run_blocked" in payload["proofBlockers"]
+    assert "live_risk_volatility_source_run_blocked" in payload["proofBlockers"]
     assert "source_error_risk_source_unavailable" in payload["proofBlockers"]
-    assert "risk_source_evidence_not_current" in payload["proofBlockers"]
-    assert "no_concentration_candidate_generated" in payload["proofBlockers"]
-    assert risk_concentration_live_proof_is_valid(payload) is False
+    assert "risk_volatility_source_evidence_not_current" in payload["proofBlockers"]
+    assert "risk_volatility_supportability_not_ready" in payload["proofBlockers"]
+    assert "no_high_volatility_candidate_generated" in payload["proofBlockers"]
+    assert high_volatility_live_proof_is_valid(payload) is False
 
 
-def test_risk_concentration_live_proof_requires_timezone_aware_generation_time() -> None:
+def test_high_volatility_live_proof_requires_timezone_aware_generation_time() -> None:
     with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
-        build_risk_concentration_live_proof_payload(
+        build_high_volatility_live_proof_payload(
             generated_at_utc=datetime(2026, 6, 21, 10, 10),
             live_risk_source_attempted=True,
             evaluation_summary={},
         )
 
 
-def test_risk_concentration_live_proof_rejects_non_candidate_source_evidence() -> None:
-    payload = build_risk_concentration_live_proof_payload(
+def test_high_volatility_live_proof_rejects_non_candidate_source_evidence() -> None:
+    payload = build_high_volatility_live_proof_payload(
         generated_at_utc=GENERATED_AT,
         live_risk_source_attempted=True,
         evaluation_summary={
             "runStatus": "completed",
             "sourceAuthority": "lotus-risk",
-            "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
+            "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
             "evaluationOutcome": "not_eligible",
             "sourceEvidenceCurrent": True,
-            "sourceDiagnosticCodes": ["risk_issuer_coverage_complete"],
+            "riskSupportabilityReady": True,
+            "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
             "reasonCodes": ["below_materiality"],
             "unsupportedReasons": [],
         },
     )
 
-    assert "no_concentration_candidate_generated" in payload["proofBlockers"]
-    assert risk_concentration_live_proof_is_valid(payload) is False
+    assert "no_high_volatility_candidate_generated" in payload["proofBlockers"]
+    assert high_volatility_live_proof_is_valid(payload) is False
 
 
-def test_risk_concentration_live_proof_records_missing_live_source_attempt() -> None:
-    payload = build_risk_concentration_live_proof_payload(
+def test_high_volatility_live_proof_records_missing_live_source_attempt() -> None:
+    payload = build_high_volatility_live_proof_payload(
         generated_at_utc=GENERATED_AT,
         live_risk_source_attempted=False,
         evaluation_summary={
             "evaluationOutcome": "candidate_created",
             "sourceEvidenceCurrent": True,
+            "riskSupportabilityReady": True,
             "sourceDiagnosticCodes": "not-a-list",
             "reasonCodes": "not-a-list",
             "unsupportedReasons": "not-a-list",
@@ -157,32 +163,32 @@ def test_risk_concentration_live_proof_records_missing_live_source_attempt() -> 
     assert payload["sourceDiagnosticCodes"] == []
     assert payload["reasonCodes"] == []
     assert payload["unsupportedReasons"] == []
-    assert "live_risk_source_proof_missing" in payload["proofBlockers"]
-    assert risk_concentration_live_proof_is_valid(payload) is False
+    assert "live_risk_volatility_source_proof_missing" in payload["proofBlockers"]
+    assert high_volatility_live_proof_is_valid(payload) is False
 
 
-def test_empty_risk_concentration_live_proof_summary_is_unknown_and_blocked() -> None:
-    payload = build_risk_concentration_live_proof_payload(
+def test_empty_high_volatility_live_proof_summary_is_unknown_and_blocked() -> None:
+    payload = build_high_volatility_live_proof_payload(
         generated_at_utc=GENERATED_AT,
         live_risk_source_attempted=True,
         evaluation_summary={},
     )
 
     assert payload["runStatus"] == "unknown"
-    assert "live_risk_source_run_blocked" in payload["proofBlockers"]
-    assert risk_concentration_live_proof_is_valid(payload) is False
+    assert "live_risk_volatility_source_run_blocked" in payload["proofBlockers"]
+    assert high_volatility_live_proof_is_valid(payload) is False
 
 
-def test_risk_concentration_live_proof_cli_writes_source_safe_artifact(
+def test_high_volatility_live_proof_cli_writes_source_safe_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _load_live_proof_script()
-    output_path = tmp_path / "risk-concentration-live-proof.json"
+    output_path = tmp_path / "high-volatility-live-proof.json"
 
     monkeypatch.setattr(
         module,
-        "LotusRiskConcentrationSourceAdapter",
+        "LotusRiskVolatilitySourceAdapter",
         lambda _client: RecordingRiskSource(),
     )
 
@@ -194,6 +200,8 @@ def test_risk_concentration_live_proof_cli_writes_source_safe_artifact(
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",
             "2026-06-21",
+            "--period-name",
+            "YTD",
             "--generated-at-utc",
             "2026-06-21T10:10:00Z",
             "--evaluated-at-utc",
@@ -213,8 +221,9 @@ def test_risk_concentration_live_proof_cli_writes_source_safe_artifact(
     assert payload["liveRiskSourceAttempted"] is True
     assert payload["candidateGenerated"] is True
     assert payload["sourceEvidenceCurrent"] is True
+    assert payload["riskSupportabilityReady"] is True
     assert (
-        "opportunity_archetype_live_risk_source_proof_missing"
+        "opportunity_archetype_live_risk_volatility_source_proof_missing"
         in (payload["aggregateBlockersCleared"])
     )
     serialized = json.dumps(payload)
@@ -223,16 +232,16 @@ def test_risk_concentration_live_proof_cli_writes_source_safe_artifact(
     assert "trace-123" not in serialized
 
 
-def test_risk_concentration_live_proof_cli_writes_blocked_artifact(
+def test_high_volatility_live_proof_cli_writes_blocked_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     module = _load_live_proof_script()
-    output_path = tmp_path / "risk-concentration-live-proof.json"
+    output_path = tmp_path / "high-volatility-live-proof.json"
 
     monkeypatch.setattr(
         module,
-        "LotusRiskConcentrationSourceAdapter",
+        "LotusRiskVolatilitySourceAdapter",
         lambda _client: RecordingRiskSource(
             error=RiskSourceUnavailable(code="risk_source_unavailable")
         ),
@@ -263,30 +272,29 @@ def test_risk_concentration_live_proof_cli_writes_blocked_artifact(
     assert "PB_SG_GLOBAL_BAL_001" not in json.dumps(payload)
 
 
-def _risk_evidence() -> RiskConcentrationEvidence:
-    return RiskConcentrationEvidence(
-        top_position_weight_current=Decimal("0.22"),
-        top_issuer_weight_current=Decimal("0.27"),
-        issuer_coverage_status="complete",
-        concentration_ref=SourceRef(
-            product_id="lotus-risk:ConcentrationRiskReport:v1",
+def _risk_evidence() -> RiskVolatilityEvidence:
+    return RiskVolatilityEvidence(
+        source_reported_volatility=Decimal("14.25"),
+        risk_supportability_state="ready",
+        risk_ref=SourceRef(
+            product_id="lotus-risk:RiskMetricsReport:v1",
             source_system=SourceSystem.LOTUS_RISK,
             product_version="v1",
-            route="/analytics/risk/concentration",
+            route="/analytics/risk/calculate",
             as_of_date=AS_OF_DATE,
             generated_at_utc=GENERATED_AT,
-            content_hash="sha256:risk-concentration-report",
+            content_hash="sha256:risk-metrics-report",
             data_quality_status="ready",
             freshness=EvidenceFreshness.CURRENT,
         ),
-        concentration_diagnostic="risk_issuer_coverage_complete",
+        risk_diagnostic="risk_volatility_source_ready",
     )
 
 
 def _load_live_proof_script() -> ModuleType:
-    script_path = ROOT / "scripts" / "generate_risk_concentration_live_proof.py"
+    script_path = ROOT / "scripts" / "generate_high_volatility_live_proof.py"
     spec = importlib.util.spec_from_file_location(
-        "generate_risk_concentration_live_proof", script_path
+        "generate_high_volatility_live_proof", script_path
     )
     assert spec is not None
     assert spec.loader is not None

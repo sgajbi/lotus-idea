@@ -909,13 +909,15 @@ over `GET /api/v1/rebalance/supportability/summary`, and focused unit tests
 that prove current store-wide Manage posture blocks portfolio-scoped
 opportunity claims. High volatility is backed by deterministic policy, a Lotus
 Risk `RiskMetricsReport:v1` source port, a fail-closed HTTP adapter over
-`POST /analytics/risk/calculate`, and focused unit tests that prove
-source-reported volatility consumption, non-ready risk supportability blocking,
-and no local risk-methodology calculation. Bond maturity and missing
+`POST /analytics/risk/calculate`, a source-safe live-proof artifact contract,
+and focused unit tests that prove source-reported volatility consumption,
+non-ready risk supportability blocking, and no local risk-methodology calculation. Bond maturity and missing
 suitability context remain planned. A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
-artifact clears only the live Performance source blocker. Concentration still
+artifact clears only the live Performance source blocker. A valid high-volatility
+live-proof artifact clears only the live Risk volatility source blocker.
+Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries
 benchmark-assignment source-ref, data-mesh, Workbench, client-publication, and
@@ -923,8 +925,8 @@ supported-feature blockers. Allocation drift still carries portfolio-scoped
 Manage source proof, mandate performance-health source-ref, mandate
 risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
 client-publication, and supported-feature blockers. High volatility still
-carries live Risk volatility proof, drawdown source proof, data-mesh,
-Workbench, client-publication, and supported-feature blockers.
+carries drawdown source proof, data-mesh, Workbench, client-publication, and
+supported-feature blockers after live Risk volatility proof is supplied.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
@@ -947,6 +949,12 @@ artifact is supplied through aggregate implementation-proof readiness, it clears
 only `opportunity_archetype_live_performance_source_proof_missing` and keeps
 benchmark-assignment, data-mesh, Workbench, client-publication, and
 supported-feature blockers intact.
+`make high-volatility-live-proof-contract-gate` validates the optional Lotus
+Risk high-volatility live-proof artifact. When a valid artifact is supplied
+through aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_live_risk_volatility_source_proof_missing` and keeps
+drawdown, data-mesh, Workbench, client-publication, and supported-feature
+blockers intact.
 
 ## CI And Merge Governance
 
@@ -1170,17 +1178,19 @@ owned by upstream services.
     `make source-ingestion-live-proof-contract-gate`
 41. Risk concentration live-proof artifact contract gate:
     `make risk-concentration-live-proof-contract-gate`
-42. Performance underperformance live-proof artifact contract gate:
+42. High-volatility live-proof artifact contract gate:
+    `make high-volatility-live-proof-contract-gate`
+43. Performance underperformance live-proof artifact contract gate:
     `make performance-underperformance-live-proof-contract-gate`
-43. AI lineage store proof contract gate:
+44. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-44. outbox platform mesh event publication proof contract gate:
+45. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`
-45. AI workflow-pack registration proof contract gate:
+46. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-46. AI workflow-pack runtime execution proof contract gate:
+47. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-47. implementation proof readiness generator:
+48. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
