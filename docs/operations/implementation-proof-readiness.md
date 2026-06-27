@@ -319,6 +319,8 @@ The success response is intentionally aggregate and source-safe:
 | `sourceOfTruth` | Implementation, RFC, supported-feature, demo-claim, and endpoint-ledger paths |
 | `capabilities[]` | Capability-level readiness records for each proof family |
 | `capabilities[].capabilityId` | Stable proof-family identifier such as `source-ingestion`, `outbox-delivery`, or `downstream-realization` |
+| `capabilities[].readinessStatus` | Capability readiness derived from remaining blockers after proof artifact consumption; blocker-free capabilities report `ready` |
+| `capabilities[].supportabilityStatus` | Capability supportability derived from remaining blockers after proof artifact consumption; blocker-free capabilities report `supported` |
 | `capabilities[].evidenceRefs` | Source-safe implementation, endpoint, and validated proof artifact references |
 | `capabilities[].blockers` | Source-safe blocker codes for that capability family |
 

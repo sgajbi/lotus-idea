@@ -432,7 +432,9 @@ AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
 The snapshot records validated proof artifact refs in capability
-evidence. The live operator API also honors valid source-ingestion live,
+evidence. Capability readiness and supportability are derived after proof
+artifact consumption, so a proof family can report `ready` and `supported` only
+when its blocker list is empty. The live operator API also honors valid source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
 Workbench read-path, report-intake route, platform mesh onboarding, AI lineage
 store, AI workflow-pack registration proof, and AI workflow-pack runtime execution proof

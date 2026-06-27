@@ -342,11 +342,16 @@ def _capability(
     blockers: tuple[str, ...],
     supported_feature_promoted: bool = False,
 ) -> ImplementationProofCapabilityReadiness:
+    normalized_readiness_status = readiness_status
+    normalized_supportability_status = supportability_status
+    if not blockers:
+        normalized_readiness_status = "ready"
+        normalized_supportability_status = "supported"
     return ImplementationProofCapabilityReadiness(
         capability_id=capability_id,
         name=name,
-        readiness_status=readiness_status,
-        supportability_status=supportability_status,
+        readiness_status=normalized_readiness_status,
+        supportability_status=normalized_supportability_status,
         evidence_refs=evidence_refs,
         blockers=blockers,
         supported_feature_promoted=supported_feature_promoted,

@@ -18,6 +18,7 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
 )
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
 from app.application.implementation_proof_readiness import (
+    _capability,
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
@@ -64,6 +65,21 @@ from tests.support.ai_workflow_pack_fixture import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_implementation_proof_capability_status_is_derived_from_remaining_blockers() -> None:
+    capability = _capability(
+        "source-ingestion",
+        "Source-owned high-cash signal ingestion",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=("output/source-ingestion/live-proof.json",),
+        blockers=(),
+    )
+
+    assert capability.certification_ready is True
+    assert capability.readiness_status == "ready"
+    assert capability.supportability_status == "supported"
 
 
 def test_implementation_proof_readiness_reports_blocked_foundation_posture(

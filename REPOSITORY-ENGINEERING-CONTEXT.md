@@ -862,7 +862,10 @@ logs; fix or document the owned warning source instead.
    bounded broker proof artifact, bounded report-intake route proof artifact,
    Workbench, downstream realization, and supported-feature promotion without
    leaking source payloads, event identifiers, broker payloads, or promoting
-   support.
+   support. Capability readiness and supportability are normalized after proof
+   artifact consumption, so future proof additions cannot leave stale
+   `blocked` or `not_certified` labels when a proof family has no remaining
+   blockers.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence
