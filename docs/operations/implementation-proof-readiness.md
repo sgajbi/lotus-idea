@@ -77,7 +77,7 @@ validated through the owning repositories and platform gates:
    deploy-contract artifact,
 3. platform mesh certification, active producer products, and Gateway/Workbench discovery,
 4. certified downstream consumer contracts and production event-publication evidence,
-5. platform mesh event certification for outbox publication,
+5. platform mesh event publication proof for outbox publication,
 6. `lotus-ai` live-provider rollout and runtime trust certification,
 7. Workbench panel and browser proof,
 8. downstream Advise, Manage, Report, Render, and Archive realization,

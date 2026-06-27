@@ -476,7 +476,7 @@ The internal outbox-delivery-readiness and outbox-delivery-run-once endpoints
 are covered by OpenAPI, endpoint certification, unit tests, and integration
 tests. Passing checks certify the diagnostic route and bounded operator action
 only; they do not certify live broker runtime, downstream consumer delivery,
-platform mesh event certification, Gateway/Workbench support, data-product
+platform mesh event publication proof, Gateway/Workbench support, data-product
 promotion, client-ready publication, or supported-feature promotion.
 
 The internal downstream-realization-readiness endpoint is covered by OpenAPI,

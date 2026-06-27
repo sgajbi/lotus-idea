@@ -293,7 +293,7 @@ adds a source-safe HTTP broker-publisher adapter foundation that emits bounded
 Lotus event envelopes with trace headers and product-safe failure reasons. It
 now has a source-safe outbox broker proof artifact for aggregate RFC
 implementation-readiness evidence, but is not wired as certified external
-broker publication until platform mesh event certification and downstream
+broker publication until platform mesh event publication proof and downstream
 consumer contracts exist.
 `src/app/application/outbox_delivery_readiness.py`
 and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
@@ -313,10 +313,12 @@ Gateway/Workbench support, or supported-feature promotion.
 `scripts/generate_outbox_broker_proof.py`, and
 `make outbox-broker-proof-contract-gate` define the bounded proof artifact that
 aggregate implementation-proof readiness consumes to clear only broker
-configuration/runtime-proof blockers. The artifact cites implemented adapter
-and API proof, blocks source-sensitive event and payload content, and preserves
-downstream consumer, platform mesh event, Gateway/Workbench, and
-supported-feature blockers.
+configuration/runtime-proof blockers. `contracts/outbox-events/lotus-idea-outbox-events.v1.json`
+and `make outbox-event-contract-gate` define the repo-owned event envelope,
+implemented event families, and source-safe payload policy. The broker proof
+artifact cites implemented adapter and API proof, blocks source-sensitive event
+and payload content, and preserves downstream consumer, platform mesh event
+publication, Gateway/Workbench, and supported-feature blockers.
 `migrations/001_idea_repository_foundation.sql` and its rollback file now define
 the first versioned schema contract for database-backed candidate,
 idempotency, lifecycle, audit, outbox, review, feedback, conversion, and report

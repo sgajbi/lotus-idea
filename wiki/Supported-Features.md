@@ -32,7 +32,7 @@ operator endpoints now report aggregate backlog/status posture and can execute
 one bounded configured-publisher pass without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
 or downstream claims. That is recoverability foundation only; no certified live
-broker runtime, downstream consumer, Gateway event, platform mesh event, or
+broker runtime, downstream consumer, Gateway event, platform mesh event publication, or
 supported event publication exists. `lotus-gateway` now publishes bounded
 read-only advisor queue and candidate detail routes with caller
 entitlement-scope forwarding, and `lotus-workbench` now renders the bounded

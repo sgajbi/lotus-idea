@@ -283,7 +283,7 @@ source certification, platform mesh certification, Gateway/Workbench,
 downstream, or supported-feature proof.
 The outbox-delivery readiness diagnostic, run-once operator action, and bounded
 outbox broker proof artifact do the same for broker and event delivery posture;
-they do not close the external publication, platform mesh event certification,
+they do not close the external publication, platform mesh event publication proof,
 or downstream consumer proof gap.
 The runtime trust telemetry snapshot endpoint narrows the trust-evidence proof
 gap from "generated artifact only" to "API-certified diagnostic plus generated

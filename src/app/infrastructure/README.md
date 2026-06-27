@@ -8,7 +8,7 @@ Current adapters include:
 1. `lotus_core_sources.py` for source-owned Core evidence retrieval.
 2. `outbox_publisher.py` for the source-safe HTTP broker-publisher adapter
    foundation. It is not certified live broker runtime until downstream
-   consumers, platform mesh event contracts, Gateway/Workbench proof, and
+   consumers, platform mesh event publication proof, Gateway/Workbench proof, and
    supported-feature evidence exist.
 3. `downstream_realization.py` for source-safe HTTP Advise, Manage, and Report
    handoff adapter foundations. They are not live downstream realization proof
