@@ -30,6 +30,12 @@ from app.application.downstream_realization_readiness import (
     DownstreamRealizationReadinessSnapshot,
     build_downstream_realization_readiness_snapshot,
 )
+from app.application.downstream_route_contract_proof import (
+    ADVISE_ROUTE_BLOCKERS_CLEARED,
+    MANAGE_ROUTE_BLOCKERS_CLEARED,
+    advise_proposal_route_proof_is_valid,
+    manage_action_route_proof_is_valid,
+)
 from app.application.durable_repository_proof import durable_repository_proof_is_valid
 from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
@@ -131,6 +137,10 @@ def build_implementation_proof_readiness_snapshot(
     ai_workflow_pack_registration_proof_ref: str | None = None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None = None,
     ai_workflow_pack_runtime_execution_proof_ref: str | None = None,
+    advise_proposal_route_proof: Mapping[str, object] | None = None,
+    advise_proposal_route_proof_ref: str | None = None,
+    manage_action_route_proof: Mapping[str, object] | None = None,
+    manage_action_route_proof_ref: str | None = None,
     report_intake_route_proof: Mapping[str, object] | None = None,
     report_intake_route_proof_ref: str | None = None,
     mesh_policy_proof: Mapping[str, object] | None = None,
@@ -164,6 +174,10 @@ def build_implementation_proof_readiness_snapshot(
     downstream_realization = build_downstream_realization_readiness_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
+        advise_proposal_route_proof=advise_proposal_route_proof,
+        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
+        manage_action_route_proof=manage_action_route_proof,
+        manage_action_route_proof_ref=manage_action_route_proof_ref,
         report_intake_route_proof=report_intake_route_proof,
         report_intake_route_proof_ref=report_intake_route_proof_ref,
     )
@@ -173,20 +187,17 @@ def build_implementation_proof_readiness_snapshot(
     )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
 
-    capabilities: tuple[ImplementationProofCapabilityReadiness, ...] = (
-        _source_ingestion_capability(
-            source_ingestion,
-            live_proof_ref=source_ingestion_live_proof_ref,
-            scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
-        ),
-        _review_queue_capability(review_queue),
-        _ai_explanation_capability(ai_explanation),
-        _data_mesh_capability(data_mesh),
-        _runtime_trust_telemetry_capability(runtime_trust_telemetry),
-        _outbox_delivery_capability(outbox_delivery),
-        _workbench_product_capability(),
-        _downstream_realization_capability(downstream_realization),
-        _supported_feature_capability(supported_feature_count),
+    capabilities = _build_base_capabilities(
+        source_ingestion=source_ingestion,
+        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+        source_ingestion_scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
+        review_queue=review_queue,
+        ai_explanation=ai_explanation,
+        data_mesh=data_mesh,
+        runtime_trust_telemetry=runtime_trust_telemetry,
+        outbox_delivery=outbox_delivery,
+        downstream_realization=downstream_realization,
+        supported_feature_count=supported_feature_count,
     )
     capabilities = _apply_available_proofs(
         capabilities=capabilities,
@@ -202,6 +213,10 @@ def build_implementation_proof_readiness_snapshot(
         ai_workflow_pack_registration_proof_ref=ai_workflow_pack_registration_proof_ref,
         ai_workflow_pack_runtime_execution_proof=ai_workflow_pack_runtime_execution_proof,
         ai_workflow_pack_runtime_execution_proof_ref=ai_workflow_pack_runtime_execution_proof_ref,
+        advise_proposal_route_proof=advise_proposal_route_proof,
+        advise_proposal_route_proof_ref=advise_proposal_route_proof_ref,
+        manage_action_route_proof=manage_action_route_proof,
+        manage_action_route_proof_ref=manage_action_route_proof_ref,
         mesh_policy_proof=mesh_policy_proof,
         mesh_policy_proof_ref=mesh_policy_proof_ref,
         outbox_broker_proof=outbox_broker_proof,
@@ -212,6 +227,19 @@ def build_implementation_proof_readiness_snapshot(
         workbench_read_path_proof_ref=workbench_read_path_proof_ref,
     )
 
+    return _readiness_snapshot(
+        evaluated_at_utc=evaluated_at_utc,
+        supported_feature_count=supported_feature_count,
+        capabilities=capabilities,
+    )
+
+
+def _readiness_snapshot(
+    *,
+    evaluated_at_utc: datetime,
+    supported_feature_count: int,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+) -> ImplementationProofReadinessSnapshot:
     overall_blockers = tuple(
         dict.fromkeys(blocker for capability in capabilities for blocker in capability.blockers)
     )
@@ -242,6 +270,36 @@ def build_implementation_proof_readiness_snapshot(
     )
 
 
+def _build_base_capabilities(
+    *,
+    source_ingestion: SourceIngestionReadinessSnapshot,
+    source_ingestion_live_proof_ref: str | None,
+    source_ingestion_scheduled_worker_proof_ref: str | None,
+    review_queue: ReviewQueueReadinessSnapshot,
+    ai_explanation: AIExplanationReadinessSnapshot,
+    data_mesh: DataMeshReadinessSnapshot,
+    runtime_trust_telemetry: RuntimeTrustTelemetryPreview,
+    outbox_delivery: OutboxDeliveryReadinessSnapshot,
+    downstream_realization: DownstreamRealizationReadinessSnapshot,
+    supported_feature_count: int,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return (
+        _source_ingestion_capability(
+            source_ingestion,
+            live_proof_ref=source_ingestion_live_proof_ref,
+            scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
+        ),
+        _review_queue_capability(review_queue),
+        _ai_explanation_capability(ai_explanation),
+        _data_mesh_capability(data_mesh),
+        _runtime_trust_telemetry_capability(runtime_trust_telemetry),
+        _outbox_delivery_capability(outbox_delivery),
+        _workbench_product_capability(),
+        _downstream_realization_capability(downstream_realization),
+        _supported_feature_capability(supported_feature_count),
+    )
+
+
 def _apply_available_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
@@ -257,6 +315,10 @@ def _apply_available_proofs(
     ai_workflow_pack_registration_proof_ref: str | None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
     ai_workflow_pack_runtime_execution_proof_ref: str | None,
+    advise_proposal_route_proof: Mapping[str, object] | None,
+    advise_proposal_route_proof_ref: str | None,
+    manage_action_route_proof: Mapping[str, object] | None,
+    manage_action_route_proof_ref: str | None,
     mesh_policy_proof: Mapping[str, object] | None,
     mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
@@ -319,6 +381,28 @@ def _apply_available_proofs(
             )
             for capability in capabilities
         )
+    if advise_proposal_route_proof and advise_proposal_route_proof_is_valid(
+        advise_proposal_route_proof
+    ):
+        capabilities = tuple(
+            _apply_downstream_route_contract_proof(
+                capability,
+                capability_id="downstream-realization",
+                blockers_cleared=ADVISE_ROUTE_BLOCKERS_CLEARED,
+                proof_ref=advise_proposal_route_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if manage_action_route_proof and manage_action_route_proof_is_valid(manage_action_route_proof):
+        capabilities = tuple(
+            _apply_downstream_route_contract_proof(
+                capability,
+                capability_id="downstream-realization",
+                blockers_cleared=MANAGE_ROUTE_BLOCKERS_CLEARED,
+                proof_ref=manage_action_route_proof_ref,
+            )
+            for capability in capabilities
+        )
     if mesh_policy_proof and mesh_policy_proof_is_valid(mesh_policy_proof):
         capabilities = tuple(
             _apply_mesh_policy_proof(capability, mesh_policy_proof_ref)
@@ -345,6 +429,34 @@ def _apply_available_proofs(
             for capability in capabilities
         )
     return capabilities
+
+
+def _apply_downstream_route_contract_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    *,
+    capability_id: str,
+    blockers_cleared: tuple[str, ...],
+    proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != capability_id:
+        return capability
+    blockers_to_clear = set(blockers_cleared)
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
 
 
 def _apply_mesh_policy_proof(

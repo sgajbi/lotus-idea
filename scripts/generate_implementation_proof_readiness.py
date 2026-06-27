@@ -22,6 +22,10 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
+from app.application.downstream_route_contract_proof import (
+    ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
+    MANAGE_ACTION_ROUTE_PROOF_ENV,
+)
 from app.application.implementation_proof_readiness import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -68,6 +72,8 @@ class ProofArtifactInputs:
     ai_model_risk_operations: ProofArtifactInput
     ai_workflow_pack_registration: ProofArtifactInput
     ai_workflow_pack_runtime_execution: ProofArtifactInput
+    advise_proposal_route: ProofArtifactInput
+    manage_action_route: ProofArtifactInput
     report_intake_route: ProofArtifactInput
     mesh_policy: ProofArtifactInput
     workbench_read_path: ProofArtifactInput
@@ -119,6 +125,12 @@ def main(argv: list[str] | None = None) -> int:
                 ai_workflow_pack_runtime_execution_proof_ref=(
                     proof_artifacts.ai_workflow_pack_runtime_execution.source_safe_ref
                 ),
+                advise_proposal_route_proof=proof_artifacts.advise_proposal_route.payload,
+                advise_proposal_route_proof_ref=(
+                    proof_artifacts.advise_proposal_route.source_safe_ref
+                ),
+                manage_action_route_proof=proof_artifacts.manage_action_route.payload,
+                manage_action_route_proof_ref=proof_artifacts.manage_action_route.source_safe_ref,
                 report_intake_route_proof=proof_artifacts.report_intake_route.payload,
                 report_intake_route_proof_ref=proof_artifacts.report_intake_route.source_safe_ref,
                 mesh_policy_proof=proof_artifacts.mesh_policy.payload,
@@ -227,6 +239,16 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
             args.ai_workflow_pack_runtime_execution_proof,
             artifact_name="AI workflow-pack runtime execution proof",
             ref_name="AI workflow-pack runtime execution proof artifact",
+        ),
+        advise_proposal_route=_proof_artifact_input(
+            args.advise_proposal_route_proof,
+            artifact_name="Advise proposal route proof",
+            ref_name="Advise proposal route proof artifact",
+        ),
+        manage_action_route=_proof_artifact_input(
+            args.manage_action_route_proof,
+            artifact_name="Manage action route proof",
+            ref_name="Manage action route proof artifact",
         ),
         report_intake_route=_proof_artifact_input(
             args.report_intake_route_proof,
@@ -344,6 +366,16 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--ai-workflow-pack-runtime-execution-proof",
             AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
             "Optional lotus-ai idea workflow-pack runtime execution proof artifact path.",
+        ),
+        (
+            "--advise-proposal-route-proof",
+            ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
+            "Optional lotus-advise idea proposal route proof artifact path.",
+        ),
+        (
+            "--manage-action-route-proof",
+            MANAGE_ACTION_ROUTE_PROOF_ENV,
+            "Optional lotus-manage idea action route proof artifact path.",
         ),
         (
             "--report-intake-route-proof",

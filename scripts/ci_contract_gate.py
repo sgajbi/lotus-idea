@@ -34,6 +34,7 @@ REQUIRED_LINT_TARGETS = (
     "data-mesh-contract-gate",
     "mesh-policy-proof-contract-gate",
     "downstream-realization-contract-gate",
+    "downstream-route-contract-proof-gate",
     "outbox-event-contract-gate",
     "outbox-consumer-contract-gate",
     "migration-contract-gate",
@@ -222,9 +223,8 @@ GENERATED_READINESS_ARTIFACTS = (
     ("scripts/generate_ai_lineage_store_proof.py", "an AI lineage store proof artifact"),
     ("scripts/generate_ai_workflow_pack_registration_proof.py", "an AI workflow-pack registration proof artifact"),
     ("scripts/generate_ai_workflow_pack_runtime_execution_proof.py", "an AI workflow-pack runtime execution proof artifact"),
-    ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"),
-    ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
-    ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
+    ("scripts/generate_workbench_read_path_proof.py", "a Workbench read-path proof artifact"), ("scripts/generate_outbox_broker_proof.py", "an outbox broker proof artifact"),
+    ("scripts/generate_advise_proposal_route_proof.py", "an Advise proposal route proof artifact"), ("scripts/generate_manage_action_route_proof.py", "a Manage action route proof artifact"), ("scripts/generate_report_intake_route_proof.py", "a report intake route proof artifact"),
     ("scripts/generate_mesh_policy_proof.py", "a mesh policy proof artifact"),
     ("scripts/generate_platform_mesh_onboarding_proof.py", "a platform mesh onboarding proof artifact"),
 )
@@ -233,12 +233,9 @@ PASSED_READINESS_ARTIFACTS = (
     ("--durable-repository-proof", "durable repository proof artifact"),
     ("--runtime-trust-telemetry-proof", "runtime trust telemetry proof artifact"),
     ("--ai-lineage-store-proof", "AI lineage store proof artifact"),
-    ("--ai-workflow-pack-registration-proof", "AI workflow-pack registration proof artifact"),
-    ("--ai-workflow-pack-runtime-execution-proof", "AI workflow-pack runtime execution proof artifact"),
-    ("--report-intake-route-proof", "report intake route proof artifact"),
-    ("--mesh-policy-proof", "mesh policy proof artifact"),
-    ("--workbench-read-path-proof", "Workbench read-path proof artifact"),
-    ("--outbox-broker-proof", "outbox broker proof artifact"),
+    ("--ai-workflow-pack-registration-proof", "AI workflow-pack registration proof artifact"), ("--ai-workflow-pack-runtime-execution-proof", "AI workflow-pack runtime execution proof artifact"),
+    ("--advise-proposal-route-proof", "Advise proposal route proof artifact"), ("--manage-action-route-proof", "Manage action route proof artifact"), ("--report-intake-route-proof", "report intake route proof artifact"),
+    ("--mesh-policy-proof", "mesh policy proof artifact"), ("--workbench-read-path-proof", "Workbench read-path proof artifact"), ("--outbox-broker-proof", "outbox broker proof artifact"),
     ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
 )
 REQUIRED_READINESS_WIRING = (
@@ -250,6 +247,8 @@ REQUIRED_READINESS_WIRING = (
     ("LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF", "support optional AI workflow-pack registration proof artifact wiring"),
     ("LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_OUTPUT", "pass the default AI workflow-pack runtime execution proof output into readiness generation"),
     ("LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF", "support optional AI workflow-pack runtime execution proof artifact wiring"),
+    ("LOTUS_ADVISE_ROOT", "support default lotus-advise root wiring for Advise proposal route proof generation"), ("LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT", "pass the default Advise proposal route proof output into readiness generation"), ("LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF", "support optional Advise proposal route proof artifact wiring"),
+    ("LOTUS_MANAGE_ROOT", "support default lotus-manage root wiring for Manage action route proof generation"), ("LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT", "pass the default Manage action route proof output into readiness generation"), ("LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF", "support optional Manage action route proof artifact wiring"),
     ("LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF_OUTPUT", "pass the default report intake route proof output into readiness generation"),
     ("LOTUS_IDEA_MESH_POLICY_PROOF_OUTPUT", "pass the default mesh policy proof output into readiness generation"),
     ("LOTUS_IDEA_MESH_POLICY_PROOF", "support optional mesh policy proof artifact wiring"),
@@ -296,7 +295,7 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
     for marker, requirement in REQUIRED_READINESS_WIRING:
         if marker not in target_block:
             errors.append(f"{READINESS_TARGET} must {requirement}")
-    if target_block.count("--allow-missing-evidence") < 4:
+    if target_block.count("--allow-missing-evidence") < 6:
         errors.append(
             f"{READINESS_TARGET} must keep all cross-repo proof generators CI-stable when "
             "sibling evidence is absent"
@@ -361,6 +360,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "ai-lineage-store-proof-contract-gate": "scripts/ai_lineage_store_proof_contract_gate.py",
         "ai-workflow-pack-registration-proof-contract-gate": "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
         "ai-workflow-pack-runtime-execution-proof-contract-gate": "scripts/ai_workflow_pack_runtime_execution_proof_contract_gate.py",
+        "downstream-route-contract-proof-gate": "scripts/downstream_route_contract_proof_gate.py",
         "report-intake-route-proof-contract-gate": "scripts/report_intake_route_proof_contract_gate.py",
         "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
         "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
