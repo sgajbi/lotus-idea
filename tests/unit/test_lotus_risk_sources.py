@@ -114,6 +114,15 @@ def test_lotus_risk_adapter_maps_forbidden_source_response_to_entitlement_denied
         adapter.fetch_concentration_evidence(_request())
 
 
+def test_lotus_risk_adapter_maps_server_error_to_source_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(RiskSourceUnavailable) as exc_info:
+        adapter.fetch_concentration_evidence(_request())
+
+    assert exc_info.value.code == "upstream_unavailable"
+
+
 def test_lotus_risk_adapter_maps_missing_runtime_metadata_to_source_unavailable() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(200, json={"source_service": "lotus-risk"})
@@ -136,6 +145,20 @@ def test_lotus_risk_adapter_maps_missing_generated_at_to_source_unavailable() ->
         ).fetch_concentration_evidence(_request())
 
     assert exc_info.value.code == "risk_generated_at_missing"
+
+
+def test_lotus_risk_adapter_maps_missing_as_of_date_to_source_unavailable() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata.pop("as_of_date")
+
+    with pytest.raises(RiskSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_concentration_evidence(_request())
+
+    assert exc_info.value.code == "risk_as_of_date_missing"
 
 
 def test_lotus_risk_adapter_maps_missing_content_hash_to_source_unavailable() -> None:
@@ -180,6 +203,38 @@ def test_lotus_risk_adapter_maps_malformed_concentration_weight_to_source_unavai
     assert exc_info.value.code == "risk_top_position_weight_malformed"
 
 
+def test_lotus_risk_adapter_accepts_missing_source_weights_as_source_gap() -> None:
+    payload = _payload()
+    single_position = payload["single_position_concentration"]
+    issuer_concentration = payload["issuer_concentration"]
+    assert isinstance(single_position, dict)
+    assert isinstance(issuer_concentration, dict)
+    single_position.pop("top_position_weight_current")
+    issuer_concentration.pop("top_issuer_weight_current")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_concentration_evidence(_request())
+
+    assert evidence.top_position_weight_current is None
+    assert evidence.top_issuer_weight_current is None
+    assert evidence.concentration_diagnostic == "risk_concentration_weights_missing"
+
+
+def test_lotus_risk_adapter_marks_missing_issuer_coverage_diagnostic() -> None:
+    payload = _payload()
+    issuer_concentration = payload["issuer_concentration"]
+    assert isinstance(issuer_concentration, dict)
+    issuer_concentration.pop("coverage_status")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_concentration_evidence(_request())
+
+    assert evidence.issuer_coverage_status is None
+    assert evidence.concentration_diagnostic == "risk_issuer_coverage_missing"
+
+
 def test_lotus_risk_adapter_maps_stale_freshness_metadata() -> None:
     payload = _payload()
     metadata = payload["metadata"]
@@ -192,6 +247,45 @@ def test_lotus_risk_adapter_maps_stale_freshness_metadata() -> None:
 
     assert evidence.concentration_ref is not None
     assert evidence.concentration_ref.freshness is EvidenceFreshness.STALE
+
+
+@pytest.mark.parametrize(
+    ("freshness_status", "expected"),
+    [
+        ("expired", EvidenceFreshness.EXPIRED),
+        ("unavailable", EvidenceFreshness.UNAVAILABLE),
+        ("current", EvidenceFreshness.CURRENT),
+    ],
+)
+def test_lotus_risk_adapter_maps_declared_freshness_states(
+    freshness_status: str,
+    expected: EvidenceFreshness,
+) -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["freshness_status"] = freshness_status
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_concentration_evidence(_request())
+
+    assert evidence.concentration_ref is not None
+    assert evidence.concentration_ref.freshness is expected
+
+
+def test_lotus_risk_adapter_marks_unknown_supportability_as_unavailable() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["calculation_supportability"] = {"state": "partial"}
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_concentration_evidence(_request())
+
+    assert evidence.concentration_ref is not None
+    assert evidence.concentration_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
 def test_risk_concentration_evidence_request_requires_portfolio_id() -> None:

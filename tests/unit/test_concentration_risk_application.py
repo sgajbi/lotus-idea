@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
+import pytest
+
 from app.application.concentration_risk_signal import (
     EvaluateAndPersistConcentrationRiskFromRiskCommand,
     EvaluateAndPersistConcentrationRiskSignalCommand,
@@ -126,13 +128,14 @@ def current_risk_evidence(
     top_position_weight: Decimal | None = Decimal("0.23"),
     top_issuer_weight: Decimal | None = Decimal("0.245"),
     issuer_coverage_status: str | None = "complete",
+    concentration_diagnostic: str | None = "risk_issuer_coverage_complete",
 ) -> RiskConcentrationEvidence:
     return RiskConcentrationEvidence(
         top_position_weight_current=top_position_weight,
         top_issuer_weight_current=top_issuer_weight,
         issuer_coverage_status=issuer_coverage_status,
         concentration_ref=source_ref(),
-        concentration_diagnostic="risk_issuer_coverage_complete",
+        concentration_diagnostic=concentration_diagnostic,
     )
 
 
@@ -270,3 +273,84 @@ def test_application_persists_risk_backed_concentration_candidate() -> None:
     assert result.source_diagnostic_codes == ("risk_issuer_coverage_complete",)
     assert source.seen_request is not None
     assert source.seen_request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+
+
+def test_application_does_not_persist_risk_backed_entitlement_denial() -> None:
+    source = RecordingRiskSource(error=RiskSourceEntitlementDenied())
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_concentration_risk_signal_from_risk(
+        EvaluateAndPersistConcentrationRiskFromRiskCommand(
+            evaluation=from_risk_command(),
+            idempotency_key="signal-ingestion:concentration:risk:denied:2026-06-21",
+            actor_subject="signal-ingestion-worker",
+        ),
+        risk_source=source,
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.persistence is None
+    assert result.source_diagnostic_codes == ("risk_source_entitlement_denied",)
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_application_does_not_persist_risk_backed_unavailable_source() -> None:
+    source = RecordingRiskSource(error=RiskSourceUnavailable(code="upstream_timeout"))
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_concentration_risk_signal_from_risk(
+        EvaluateAndPersistConcentrationRiskFromRiskCommand(
+            evaluation=from_risk_command(),
+            idempotency_key="signal-ingestion:concentration:risk:unavailable:2026-06-21",
+            actor_subject="signal-ingestion-worker",
+        ),
+        risk_source=source,
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.persistence is None
+    assert result.source_diagnostic_codes == ("upstream_timeout",)
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_application_does_not_persist_risk_backed_below_materiality_result() -> None:
+    source = RecordingRiskSource(
+        evidence=current_risk_evidence(
+            top_position_weight=Decimal("0.01"),
+            top_issuer_weight=Decimal("0.02"),
+            concentration_diagnostic=" ",
+        )
+    )
+    repository = InMemoryIdeaRepository()
+
+    result = evaluate_and_persist_concentration_risk_signal_from_risk(
+        EvaluateAndPersistConcentrationRiskFromRiskCommand(
+            evaluation=from_risk_command(),
+            idempotency_key="signal-ingestion:concentration:risk:below:2026-06-21",
+            actor_subject="signal-ingestion-worker",
+        ),
+        risk_source=source,
+        repository=repository,
+    )
+
+    assert result.evaluation.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
+    assert result.persistence is None
+    assert result.source_diagnostic_codes == ()
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_application_requires_actor_for_risk_backed_persistence() -> None:
+    source = RecordingRiskSource(evidence=current_risk_evidence())
+
+    with pytest.raises(ValueError, match="actor_subject is required"):
+        evaluate_and_persist_concentration_risk_signal_from_risk(
+            EvaluateAndPersistConcentrationRiskFromRiskCommand(
+                evaluation=from_risk_command(),
+                idempotency_key="signal-ingestion:concentration:risk:actor:2026-06-21",
+                actor_subject=" ",
+            ),
+            risk_source=source,
+            repository=InMemoryIdeaRepository(),
+        )

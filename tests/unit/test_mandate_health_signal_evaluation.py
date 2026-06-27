@@ -143,6 +143,16 @@ def test_mandate_health_missing_counts_block_positive_claim() -> None:
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
 
 
+def test_mandate_health_missing_supportability_state_blocks_positive_claim() -> None:
+    result = evaluate_mandate_health_signal(
+        mandate_input(supportability_state=None),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
+
+
 def test_mandate_health_below_threshold_does_not_create_candidate() -> None:
     result = evaluate_mandate_health_signal(
         mandate_input(workflow_decision_count=0),
@@ -152,6 +162,19 @@ def test_mandate_health_below_threshold_does_not_create_candidate() -> None:
     assert result.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.BELOW_MATERIALITY,)
+
+
+def test_mandate_health_rejects_negative_source_counts() -> None:
+    with pytest.raises(ValueError, match="workflow_decision_count must be non-negative"):
+        evaluate_mandate_health_signal(
+            mandate_input(workflow_decision_count=-1),
+            policy(),
+        )
+    with pytest.raises(ValueError, match="lineage_edge_count must be non-negative"):
+        evaluate_mandate_health_signal(
+            mandate_input(lineage_edge_count=-1),
+            policy(),
+        )
 
 
 def test_mandate_health_duplicate_source_is_suppressed() -> None:
@@ -197,4 +220,33 @@ def test_mandate_health_policy_rejects_negative_threshold() -> None:
             minimum_workflow_decision_count=-1,
             minimum_lineage_edge_count=1,
             candidate_score=Decimal("70"),
+        )
+
+    with pytest.raises(ValueError, match="minimum_lineage_edge_count"):
+        MandateHealthSignalPolicy(
+            policy_version="allocation-drift-mandate-review-v1",
+            minimum_workflow_decision_count=1,
+            minimum_lineage_edge_count=-1,
+            candidate_score=Decimal("70"),
+        )
+
+
+def test_mandate_health_policy_requires_version() -> None:
+    with pytest.raises(ValueError, match="policy_version is required"):
+        MandateHealthSignalPolicy(
+            policy_version=" ",
+            minimum_workflow_decision_count=1,
+            minimum_lineage_edge_count=1,
+            candidate_score=Decimal("70"),
+        )
+
+
+@pytest.mark.parametrize("score", [Decimal("-0.01"), Decimal("100.01")])
+def test_mandate_health_policy_rejects_invalid_candidate_score(score: Decimal) -> None:
+    with pytest.raises(ValueError, match="candidate_score"):
+        MandateHealthSignalPolicy(
+            policy_version="allocation-drift-mandate-review-v1",
+            minimum_workflow_decision_count=1,
+            minimum_lineage_edge_count=1,
+            candidate_score=score,
         )

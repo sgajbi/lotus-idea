@@ -179,6 +179,26 @@ def test_lotus_performance_adapter_maps_forbidden_response_to_entitlement_denied
         adapter.fetch_underperformance_evidence(_request())
 
 
+def test_lotus_performance_adapter_maps_server_error_to_source_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        adapter.fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "upstream_unavailable"
+
+
+def test_lotus_performance_adapter_rejects_source_service_mismatch() -> None:
+    payload = _payload(extra={"source_service": "lotus-risk"})
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_source_service_mismatch"
+
+
 def test_lotus_performance_adapter_maps_pending_async_response_to_source_unavailable() -> None:
     payload = {
         "source_service": "lotus-performance",
@@ -208,6 +228,60 @@ def test_lotus_performance_adapter_maps_missing_metadata_to_source_unavailable()
     assert exc_info.value.code == "performance_metadata_missing"
 
 
+def test_lotus_performance_adapter_maps_missing_generated_at_to_source_unavailable() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata.pop("generated_at")
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_generated_at_missing"
+
+
+def test_lotus_performance_adapter_maps_naive_generated_at_to_source_unavailable() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    metadata["generated_at"] = "2026-06-21T10:00:00"
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_generated_at_naive"
+
+
+def test_lotus_performance_adapter_maps_missing_as_of_date_to_source_unavailable() -> None:
+    payload = _payload()
+    payload.pop("as_of_date")
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_as_of_date_missing"
+
+
+def test_lotus_performance_adapter_maps_missing_content_hash_to_source_unavailable() -> None:
+    payload = _payload()
+    provenance = payload["provenance"]
+    assert isinstance(provenance, dict)
+    provenance.clear()
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_content_hash_missing"
+
+
 def test_lotus_performance_adapter_maps_malformed_active_return_to_source_unavailable() -> None:
     payload = _payload()
     series = payload["series"]
@@ -222,6 +296,33 @@ def test_lotus_performance_adapter_maps_malformed_active_return_to_source_unavai
     assert exc_info.value.code == "performance_active_return_malformed"
 
 
+def test_lotus_performance_adapter_maps_malformed_active_return_point_to_unavailable() -> None:
+    payload = _payload()
+    series = payload["series"]
+    assert isinstance(series, dict)
+    series["cumulative_active_returns"][-1] = "not-object"
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_cumulative_active_return_missing"
+
+
+def test_lotus_performance_adapter_accepts_missing_active_return_value_as_source_gap() -> None:
+    payload = _payload()
+    series = payload["series"]
+    assert isinstance(series, dict)
+    series["cumulative_active_returns"][-1].pop("return_value")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_underperformance_evidence(_request())
+
+    assert evidence.source_reported_active_return is None
+
+
 def test_lotus_performance_adapter_maps_stale_warning_to_stale_source_ref() -> None:
     payload = _payload()
     diagnostics = payload["diagnostics"]
@@ -234,6 +335,46 @@ def test_lotus_performance_adapter_maps_stale_warning_to_stale_source_ref() -> N
 
     assert evidence.performance_ref is not None
     assert evidence.performance_ref.freshness is EvidenceFreshness.STALE
+
+
+def test_lotus_performance_adapter_marks_quality_unknown_without_diagnostics() -> None:
+    payload = _payload()
+    payload.pop("diagnostics")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_underperformance_evidence(_request())
+
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.data_quality_status == "unknown"
+    assert evidence.performance_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
+def test_lotus_performance_adapter_marks_quality_unknown_without_coverage() -> None:
+    payload = _payload(extra={"diagnostics": {"warnings": []}})
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_underperformance_evidence(_request())
+
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.data_quality_status == "unknown"
+
+
+def test_lotus_performance_adapter_marks_quality_partial_when_points_are_missing() -> None:
+    payload = _payload()
+    diagnostics = payload["diagnostics"]
+    assert isinstance(diagnostics, dict)
+    coverage = diagnostics["coverage"]
+    assert isinstance(coverage, dict)
+    coverage["missing_points"] = 3
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_underperformance_evidence(_request())
+
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.data_quality_status == "partial"
 
 
 def test_performance_underperformance_request_requires_portfolio_id() -> None:
