@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, default report-intake route, outbox broker, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default report-intake route, outbox broker, platform mesh onboarding, AI lineage store, and AI workflow-pack registration/runtime execution proof artifacts can be consumed; no full live journey, live AI provider execution, platform mesh certification, report materialization, external event publication, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -54,7 +54,7 @@ The diagnostic is deliberately not full live journey proof. It does not:
 2. certify source-ingestion as a supported live source product beyond a
    configured bounded proof artifact,
 3. live-call `lotus-ai`, execute live provider/RAG workflows, or certify provider rollout,
-4. certify data products or runtime trust telemetry,
+4. certify data products through platform mesh certification,
 5. prove Gateway or Workbench product behavior,
 6. create downstream proposals, manage actions, reports, rendered output, or
    archive records,
@@ -75,7 +75,7 @@ validated through the owning repositories and platform gates:
 1. source-ingestion certification beyond the bounded live Core proof artifact,
 2. certified long-running scheduled worker runtime proof beyond the current
    deploy-contract artifact,
-3. certified runtime trust telemetry and platform mesh certification,
+3. platform mesh certification, active producer products, and Gateway/Workbench discovery,
 4. certified downstream consumer contracts and production event-publication evidence,
 5. platform mesh event certification for outbox publication,
 6. `lotus-ai` live-provider rollout and runtime trust certification,
@@ -177,13 +177,19 @@ absent.
 Runtime trust telemetry proof is captured by
 `scripts/generate_runtime_trust_telemetry_proof.py`. A valid artifact
 referenced through `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF` or passed with
-`--runtime-trust-telemetry-proof` clears only the aggregate
-`runtime_candidate_snapshot_missing` blocker inside generated
-implementation-proof readiness evidence and the operator API readiness
-snapshot. It exercises a deterministic, source-safe candidate snapshot through
-the runtime trust telemetry builder. It does not certify the platform source
-manifest, platform mesh, Gateway or Workbench discovery, client-ready
-publication, or supported-feature promotion.
+`--runtime-trust-telemetry-proof` clears only repo-owned runtime telemetry
+blockers inside generated implementation-proof readiness evidence and the
+operator API readiness snapshot:
+
+1. `runtime_candidate_snapshot_missing`,
+2. `certified_runtime_trust_telemetry_missing`,
+3. `data_mesh_runtime_telemetry_not_certified`.
+
+It exercises a deterministic, source-safe candidate snapshot through the
+runtime trust telemetry builder and records the proof artifact as aggregate
+evidence. It does not certify the platform source manifest, platform mesh,
+active producer products, SLO/access/evidence policy, Gateway or Workbench
+discovery, client-ready publication, or supported-feature promotion.
 
 Workbench read-path proof is captured by
 `scripts/generate_workbench_read_path_proof.py`. A valid artifact referenced

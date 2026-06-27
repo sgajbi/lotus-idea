@@ -11,7 +11,7 @@
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
 | `make source-ingestion-live-proof-contract-gate` | Source-safe live-proof artifact contract proof. |
-| `make runtime-trust-telemetry-proof-contract-gate` | Source-safe runtime telemetry candidate-snapshot proof contract. |
+| `make runtime-trust-telemetry-proof-contract-gate` | Source-safe runtime trust telemetry proof contract for aggregate readiness. |
 | `make ai-lineage-store-proof-contract-gate` | Source-safe AI lineage store proof contract without, by itself, certifying `lotus-ai` runtime, Workbench, or supported-feature promotion. |
 | `make ai-model-risk-operations-proof-contract-gate` | Source-safe AI model-risk operations proof contract for repo-owned dashboard, alert-rule, and runbook artifacts without certifying `lotus-ai`, Workbench, client-ready publication, or supported-feature promotion. |
 | `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, default report-intake route, default platform mesh onboarding, AI lineage store, AI model-risk operations, AI workflow-pack, and RFC-0002 aggregate proof-readiness evidence. |

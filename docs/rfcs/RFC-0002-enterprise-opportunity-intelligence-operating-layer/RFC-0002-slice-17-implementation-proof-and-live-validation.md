@@ -106,11 +106,14 @@ Prove the complete supported opportunity journey end to end.
 15. `src/app/application/runtime_trust_telemetry_proof.py`,
     `scripts/generate_runtime_trust_telemetry_proof.py`, and
     `make runtime-trust-telemetry-proof-contract-gate` now define and enforce a
-    source-safe runtime trust telemetry candidate-snapshot proof artifact. The
-    aggregate implementation-readiness generator consumes that artifact to clear
-    only `runtime_candidate_snapshot_missing`, while preserving platform
-    source-manifest, platform mesh, Gateway/Workbench discovery, and
-    supported-feature blockers.
+    source-safe runtime trust telemetry proof artifact. The aggregate
+    implementation-readiness generator consumes that artifact to clear only
+    repo-owned runtime telemetry blockers
+    (`runtime_candidate_snapshot_missing`,
+    `certified_runtime_trust_telemetry_missing`, and
+    `data_mesh_runtime_telemetry_not_certified`), while preserving platform
+    source-manifest, platform mesh, active producer product, Gateway/Workbench
+    discovery, and supported-feature blockers.
 16. `lotus-workbench` PR #391 merged bounded read-only Workbench rendering for
     the Gateway-published advisor queue and source-safe candidate detail. The
     live-validation script now fails unless a populated candidate row, loaded
@@ -287,9 +290,10 @@ gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench
 discovery, or supported-feature proof gaps.
 The runtime telemetry proof artifact narrows the aggregate readiness gap from
-"runtime candidate snapshot missing" to "source-safe seeded candidate snapshot
-contract is proven"; it also does not close platform mesh certification,
-Gateway/Workbench discovery, or supported-feature proof gaps.
+"runtime telemetry certification missing" to "repo-owned source-safe runtime
+telemetry proof is validated"; it does not close platform mesh certification,
+active producer product, Gateway/Workbench discovery, or supported-feature
+proof gaps.
 The Workbench read-path proof artifact narrows the aggregate readiness gap from
 "no durable Workbench BFF-consumption proof" to "bounded read-only Gateway
 queue/detail consumption has a source-safe proof artifact"; it does not close
