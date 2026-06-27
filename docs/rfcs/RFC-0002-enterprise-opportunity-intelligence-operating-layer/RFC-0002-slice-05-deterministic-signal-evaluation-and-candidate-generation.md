@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -105,7 +105,7 @@ Additional implemented source-adapter foundation:
 
 Additional implemented concentration-risk foundation:
 
-1. `src/app/domain/signal_evaluation.py` now defines
+1. `src/app/domain/missing_suitability_signal.py` now defines
    `ConcentrationRiskSignalPolicy`, `ConcentrationRiskSignalInput`, and
    `evaluate_concentration_risk_signal` for source-owned concentration
    attention candidates.
@@ -282,6 +282,39 @@ Additional implemented drawdown-review foundation:
 7. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
+Additional implemented missing suitability context foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `MissingSuitabilityContextSignalPolicy`,
+   `MissingSuitabilityContextSignalInput`, and
+   `evaluate_missing_suitability_context_signal` for governance-gap review
+   candidates under the missing suitability context archetype.
+2. The evaluator consumes only Lotus Advise-owned policy evaluation workflow
+   posture: evaluation status, open/blocked approval, disclosure, consent, and
+   sign-off requirements, client-publication boundary, freshness, entitlement
+   posture, and source refs. It does not calculate suitability, approve policy,
+   approve proposals, complete sign-off, release client-ready publication, or
+   create external client communication.
+3. `src/app/ports/advise_sources.py`,
+   `src/app/application/missing_suitability_signal.py`, and
+   `src/app/infrastructure/lotus_advise_sources.py` add the source port,
+   application wrapper, and fail-closed HTTP adapter over
+   `GET /advisory/policy-evaluations/{evaluation_id}/workflow` for
+   `AdvisoryPolicyEvaluationRecord:v1` workflow posture.
+4. The adapter preserves correlation and trace headers, requires source
+   lineage metadata for generated-at and content hash, maps 401/403 to
+   entitlement denial, and fails closed when requirement lists, sign-off
+   blockers, source timestamps, freshness, or hashes are malformed or missing.
+5. `tests/unit/test_missing_suitability_signal_evaluation.py`,
+   `tests/unit/test_missing_suitability_application.py`, and
+   `tests/unit/test_lotus_advise_sources.py` cover positive, clear-context,
+   stale, missing-source, missing-status/count, duplicate, entitlement-denied,
+   source-unavailable, malformed-source, trace-header, and request-validation
+   cases.
+6. This foundation does not include live Advise proof, data-mesh
+   certification, Workbench proof, client-publication approval, or
+   supported-feature promotion.
+
 Not implemented yet:
 
 1. live Risk concentration source proof captured from an actual canonical
@@ -296,12 +329,14 @@ Not implemented yet:
 6. mandate risk-health source refs from the governed Risk source authority,
 7. Core portfolio-state source refs for allocation-drift / mandate-review
    candidates,
-8. source-worker certification beyond bounded live Core source-ingestion proof,
-9. certified long-running scheduled daemon runtime and live-service recovery proof,
-10. new API routes beyond the existing caller-supplied foundation endpoint,
-11. Gateway/Workbench proof,
-12. supported-feature promotion,
-13. data-product certification.
+8. live Advise policy-evaluation workflow source proof for missing suitability
+   context,
+9. source-worker certification beyond bounded live Core source-ingestion proof,
+10. certified long-running scheduled daemon runtime and live-service recovery proof,
+11. new API routes beyond the existing caller-supplied foundation endpoint,
+12. Gateway/Workbench proof,
+13. supported-feature promotion,
+14. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

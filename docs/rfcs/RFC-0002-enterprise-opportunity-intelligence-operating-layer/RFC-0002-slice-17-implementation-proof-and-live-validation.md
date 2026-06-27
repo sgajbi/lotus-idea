@@ -378,12 +378,14 @@ without relying on chat memory.
 12. Opportunity archetype scenario readiness is now explicit in aggregate
     readiness, but it proves only governed taxonomy, bounded concentration
     source/policy foundation, bounded high-volatility / drawdown source/policy
-    foundation, optional live Risk concentration/high-volatility/drawdown proof
+    foundation, bounded missing suitability context source/policy foundation,
+    optional live Risk concentration/high-volatility/drawdown proof
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
     source-backed archetype replay is bounded to optional high-cash live Core,
     concentration live Risk, high-volatility live Risk, and drawdown live Risk
-    proof artifacts; full Workbench product proof, data-mesh
+    proof artifacts. Missing suitability context still requires live Advise
+    policy-evaluation workflow proof; full Workbench product proof, data-mesh
     certification, client-publication, and supported-feature promotion remain
     pending.
 

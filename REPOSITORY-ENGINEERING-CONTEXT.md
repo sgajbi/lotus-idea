@@ -915,8 +915,14 @@ non-ready risk supportability blocking, and no local risk-methodology calculatio
 `DrawdownAnalyticsReport:v1` source port, a fail-closed HTTP adapter over
 `POST /analytics/risk/drawdown`, a source-safe live-proof artifact contract,
 and focused unit tests that prove source-reported max-drawdown consumption,
-non-ready risk supportability blocking, and no local risk-methodology calculation. Bond maturity and missing
-suitability context remain planned. A valid Risk concentration live-proof
+non-ready risk supportability blocking, and no local risk-methodology calculation. Missing suitability
+context is backed by deterministic policy, a Lotus Advise
+`AdvisoryPolicyEvaluationRecord:v1` workflow source port, a fail-closed HTTP
+adapter over `GET /advisory/policy-evaluations/{evaluation_id}/workflow`, and
+focused unit tests that prove Advise-owned open approval, disclosure, consent,
+and sign-off posture can create only a compliance-review candidate without
+approving suitability, policy, proposals, sign-off, client publication, or
+external communication. Bond maturity remains planned. A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
 artifact clears only the live Performance source blocker. A valid high-volatility
@@ -932,6 +938,9 @@ risk-health source-ref, Core portfolio-state source-ref, data-mesh, Workbench,
 client-publication, and supported-feature blockers. High volatility / drawdown
 review still carries data-mesh, Workbench, client-publication, and
 supported-feature blockers after live Risk volatility and drawdown proofs are supplied.
+Missing suitability context still carries live Advise policy-evaluation
+workflow proof, data-mesh, Workbench, client-publication, and supported-feature
+blockers.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
