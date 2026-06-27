@@ -77,11 +77,15 @@ REQUIRED_UNDERPERFORMANCE_EVIDENCE = {
 REQUIRED_MANAGE_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
     "src/app/application/mandate_health_signal.py",
+    "src/app/application/manage_mandate_live_proof.py",
     "src/app/ports/manage_sources.py",
     "src/app/infrastructure/lotus_manage_sources.py",
+    "scripts/generate_manage_mandate_live_proof.py",
+    "make manage-mandate-live-proof-contract-gate",
     "tests/unit/test_mandate_health_signal_evaluation.py",
     "tests/unit/test_mandate_health_application.py",
     "tests/unit/test_lotus_manage_sources.py",
+    "tests/unit/test_manage_mandate_live_proof.py",
 }
 REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",

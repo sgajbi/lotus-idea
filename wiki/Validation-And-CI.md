@@ -69,6 +69,7 @@ make source-ingestion-live-proof-contract-gate
 make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
+make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make implementation-proof-readiness-check
@@ -180,6 +181,7 @@ Persistence adapter validation:
    operational proof consumption, Gateway/Workbench discovery proof consumption, bounded outbox broker
    proof consumption, default Advise proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
+   optional Manage mandate live proof consumption,
    default Report intake route proof generation and consumption, default
    Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and

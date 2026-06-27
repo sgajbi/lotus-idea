@@ -19,6 +19,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_missing_suitability_context_signal,
 )
+from app.domain.missing_suitability_signal import _validate_counts
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -155,6 +156,17 @@ def test_missing_suitability_context_requires_blocked_publication_boundary() -> 
     assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,)
 
 
+def test_missing_suitability_context_blocks_missing_publication_boundary() -> None:
+    result = evaluate_missing_suitability_context_signal(
+        suitability_input(client_ready_publication=None),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.reason_codes == (ReasonCode.SOURCE_PARTIAL,)
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.MISSING_SOURCE,)
+
+
 def test_missing_suitability_context_duplicate_and_entitlement_are_guarded() -> None:
     duplicate = evaluate_missing_suitability_context_signal(
         suitability_input(duplicate_of_candidate_id="idea_missing_suitability_context_existing"),
@@ -191,3 +203,43 @@ def test_missing_suitability_context_rejects_negative_counts_and_naive_time() ->
     )
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         evaluate_missing_suitability_context_signal(invalid_input, policy())
+
+
+@pytest.mark.parametrize(
+    ("policy_version", "minimum_open_requirement_count", "candidate_score", "message"),
+    [
+        (" ", 1, Decimal("68"), "policy_version is required"),
+        (
+            "missing-suitability-context-review-v1",
+            -1,
+            Decimal("68"),
+            "minimum_open_requirement_count must be non-negative",
+        ),
+        (
+            "missing-suitability-context-review-v1",
+            1,
+            Decimal("101"),
+            "candidate_score must be between 0 and 100",
+        ),
+    ],
+)
+def test_missing_suitability_policy_rejects_invalid_configuration(
+    policy_version: str,
+    minimum_open_requirement_count: int,
+    candidate_score: Decimal,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        MissingSuitabilityContextSignalPolicy(
+            policy_version=policy_version,
+            minimum_open_requirement_count=minimum_open_requirement_count,
+            candidate_score=candidate_score,
+        )
+
+
+def test_missing_suitability_count_validation_defends_post_blocking_invariant() -> None:
+    with pytest.raises(
+        ValueError,
+        match="open_requirement_count must be available after blocking validation",
+    ):
+        _validate_counts(suitability_input(open_requirement_count=None))

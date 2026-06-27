@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -202,6 +202,16 @@ Additional implemented allocation-drift / mandate-review foundation:
    non-ready/stale/missing Manage evidence, duplicate suppression,
    entitlement denial, source unavailability, malformed counts, trace headers,
    and request validation.
+6. `src/app/application/manage_mandate_live_proof.py`,
+   `scripts/generate_manage_mandate_live_proof.py`, and
+   `make manage-mandate-live-proof-contract-gate` define the source-safe
+   live-proof artifact contract for portfolio-scoped
+   `lotus-manage:PortfolioActionRegister:v1` posture. A valid artifact clears
+   only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`
+   in aggregate readiness. It does not certify mandate performance health,
+   mandate risk health, Core portfolio state, data mesh, Workbench behavior,
+   client publication, supported-feature promotion, rebalance authority,
+   action authority, order creation, execution, or settlement.
 
 Additional implemented high-volatility foundation:
 
@@ -328,16 +338,14 @@ Not implemented yet:
 2. live Performance returns-series source proof captured from an actual
    canonical runtime and merged as release evidence,
 3. benchmark-assignment source-ref proof from the governed source authority,
-4. portfolio-scoped Manage action-register proof beyond the current
-   store-wide supportability route foundation,
-5. mandate performance-health source refs from the governed Performance source
+4. mandate performance-health source refs from the governed Performance source
    authority,
-6. mandate risk-health source refs from the governed Risk source authority,
-7. Core portfolio-state source refs for allocation-drift / mandate-review
+5. mandate risk-health source refs from the governed Risk source authority,
+6. Core portfolio-state source refs for allocation-drift / mandate-review
    candidates,
-8. source-worker certification beyond bounded live Core source-ingestion proof,
-9. certified long-running scheduled daemon runtime and live-service recovery proof,
-10. new API routes beyond the existing caller-supplied foundation endpoint,
+7. source-worker certification beyond bounded live Core source-ingestion proof,
+8. certified long-running scheduled daemon runtime and live-service recovery proof,
+9. new API routes beyond the existing caller-supplied foundation endpoint,
 11. Gateway/Workbench proof,
 12. supported-feature promotion,
 13. data-product certification.

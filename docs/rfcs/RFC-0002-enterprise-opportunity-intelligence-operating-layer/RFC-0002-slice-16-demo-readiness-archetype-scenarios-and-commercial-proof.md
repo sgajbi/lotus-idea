@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, and high-volatility review are non-promoted bounded foundations with source-specific proof contracts; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, high-volatility / drawdown review, and missing suitability context are non-promoted bounded foundations with source-specific proof contracts; demo claims remain blocked
 
 ## Outcome
 
@@ -31,9 +31,9 @@ capabilities exist.
 5. `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
-   concentration-risk, underperformance, allocation-drift, and high-volatility
-   review foundations, and planned bond-maturity and missing-suitability
-   journeys.
+   concentration-risk, underperformance, allocation-drift, high-volatility /
+   drawdown, and missing-suitability review foundations, and planned
+   bond-maturity journeys.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
@@ -44,10 +44,14 @@ capabilities exist.
    or supported-feature proof families.
 7. Source-safe live proof artifacts can clear only their source-specific
    archetype blockers: Risk concentration proof clears the live Risk blocker,
-   high-volatility proof clears the live Risk volatility blocker, and
-   Performance underperformance proof clears the live Performance blocker.
-   Drawdown, benchmark assignment, data-mesh certification, Workbench proof,
-   client-publication, and supported-feature blockers remain intact.
+   high-volatility proof clears the live Risk volatility blocker, drawdown
+   proof clears the Risk drawdown blocker, Performance underperformance proof
+   clears the live Performance blocker, Manage mandate proof clears the
+   portfolio-scoped Manage action-register blocker, and Advise
+   missing-suitability proof clears the live Advise policy blocker. Benchmark
+   assignment, mandate performance/risk health, Core portfolio-state,
+   data-mesh certification, Workbench proof, client-publication, and
+   supported-feature blockers remain intact.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.
@@ -102,7 +106,15 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    suitability live-source blocker; data-mesh certification, Workbench proof,
    client-publication approval, and supported-feature evidence remain required
    before demo use.
-8. Remaining planned archetypes still require source adapters, deterministic
+8. Allocation drift / mandate review now has a bounded deterministic policy,
+   Lotus Manage `PortfolioActionRegister:v1` source-port/adapter foundation,
+   and source-safe Manage mandate live-proof contract. A valid artifact clears
+   only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`;
+   mandate performance-health, mandate risk-health, Core portfolio-state,
+   data-mesh certification, Workbench proof, client-publication approval,
+   supported-feature evidence, rebalance authority, action authority, order
+   creation, execution, and settlement remain required before demo use.
+9. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate

@@ -138,6 +138,43 @@ def _proof_ref(input_: ProofArtifactInput) -> str | None:
     return _source_safe_artifact_ref(input_.path, artifact_name=input_.ref_name)
 
 
+def _opportunity_archetype_proof_artifact_inputs(
+    args: argparse.Namespace,
+) -> dict[str, ProofArtifactInput]:
+    return {
+        "risk_concentration_live": _proof_artifact_input(
+            args.risk_concentration_live_proof,
+            artifact_name="Risk concentration live proof",
+            ref_name="Risk concentration live proof artifact",
+        ),
+        "high_volatility_live": _proof_artifact_input(
+            args.high_volatility_live_proof,
+            artifact_name="High volatility live proof",
+            ref_name="High volatility live proof artifact",
+        ),
+        "risk_drawdown_live": _proof_artifact_input(
+            args.risk_drawdown_live_proof,
+            artifact_name="Risk drawdown live proof",
+            ref_name="Risk drawdown live proof artifact",
+        ),
+        "performance_underperformance_live": _proof_artifact_input(
+            args.performance_underperformance_live_proof,
+            artifact_name="Performance underperformance live proof",
+            ref_name="Performance underperformance live proof artifact",
+        ),
+        "manage_mandate_live": _proof_artifact_input(
+            args.manage_mandate_live_proof,
+            artifact_name="Manage mandate live proof",
+            ref_name="Manage mandate live proof artifact",
+        ),
+        "missing_suitability_live": _proof_artifact_input(
+            args.missing_suitability_live_proof,
+            artifact_name="Missing suitability live proof",
+            ref_name="Missing suitability live proof artifact",
+        ),
+    }
+
+
 def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactInput]:
     return {
         "durable_repository": _proof_artifact_input(
@@ -230,31 +267,7 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="platform mesh onboarding proof",
             ref_name="platform mesh onboarding proof artifact",
         ),
-        "risk_concentration_live": _proof_artifact_input(
-            args.risk_concentration_live_proof,
-            artifact_name="Risk concentration live proof",
-            ref_name="Risk concentration live proof artifact",
-        ),
-        "high_volatility_live": _proof_artifact_input(
-            args.high_volatility_live_proof,
-            artifact_name="High volatility live proof",
-            ref_name="High volatility live proof artifact",
-        ),
-        "risk_drawdown_live": _proof_artifact_input(
-            args.risk_drawdown_live_proof,
-            artifact_name="Risk drawdown live proof",
-            ref_name="Risk drawdown live proof artifact",
-        ),
-        "performance_underperformance_live": _proof_artifact_input(
-            args.performance_underperformance_live_proof,
-            artifact_name="Performance underperformance live proof",
-            ref_name="Performance underperformance live proof artifact",
-        ),
-        "missing_suitability_live": _proof_artifact_input(
-            args.missing_suitability_live_proof,
-            artifact_name="Missing suitability live proof",
-            ref_name="Missing suitability live proof artifact",
-        ),
+        **_opportunity_archetype_proof_artifact_inputs(args),
     }
 
 

@@ -6,7 +6,12 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-from app.application.opportunity_archetype_contracts import load_opportunity_archetype_contract
+import pytest
+
+from app.application.opportunity_archetype_contracts import (
+    load_opportunity_archetype_contract,
+    opportunity_archetype_contract_from_payload,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -114,7 +119,11 @@ def test_opportunity_archetype_contract_records_manage_foundation_without_promot
     assert allocation_drift.first_supported_journey is False
     assert "lotus-manage:PortfolioActionRegister:v1" in allocation_drift.source_products
     assert "src/app/application/mandate_health_signal.py" in allocation_drift.evidence_refs
+    assert "src/app/application/manage_mandate_live_proof.py" in allocation_drift.evidence_refs
     assert "src/app/infrastructure/lotus_manage_sources.py" in allocation_drift.evidence_refs
+    assert "scripts/generate_manage_mandate_live_proof.py" in allocation_drift.evidence_refs
+    assert "make manage-mandate-live-proof-contract-gate" in allocation_drift.evidence_refs
+    assert "tests/unit/test_manage_mandate_live_proof.py" in allocation_drift.evidence_refs
     assert "portfolio_scoped_manage_source_proof_missing" in allocation_drift.blockers
     assert "manage_source_adapter_missing" not in allocation_drift.blockers
     assert "mandate_health_signal_policy_missing" not in allocation_drift.blockers
@@ -240,6 +249,63 @@ def test_opportunity_archetype_contract_gate_rejects_promoted_scenario() -> None
     errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
 
     assert "high-cash-idle-liquidity: scenario must not promote supported features" in errors
+
+
+def test_opportunity_archetype_contract_loader_rejects_non_object_json(tmp_path: Path) -> None:
+    contract_path = tmp_path / "contract.json"
+    contract_path.write_text("[]", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="opportunity archetype contract must be a JSON object"):
+        load_opportunity_archetype_contract(
+            repository_root=tmp_path,
+            contract_path=Path("contract.json"),
+        )
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        (
+            lambda payload: payload.__setitem__("source_of_truth", []),
+            "opportunity archetype source_of_truth must be an object",
+        ),
+        (
+            lambda payload: payload.__setitem__("archetypes", {}),
+            "opportunity archetypes must be a list",
+        ),
+        (
+            lambda payload: payload.__setitem__("archetypes", ["not-object"]),
+            "opportunity archetype entries must be objects",
+        ),
+    ],
+)
+def test_opportunity_archetype_contract_parser_rejects_invalid_collection_shapes(
+    mutation: Any,
+    message: str,
+) -> None:
+    payload = _contract_payload()
+    mutation(payload)
+
+    with pytest.raises(ValueError, match=message):
+        opportunity_archetype_contract_from_payload(payload)
+
+
+def test_opportunity_archetype_contract_parser_ignores_non_list_string_fields() -> None:
+    payload = _contract_payload()
+    payload["archetypes"][0]["source_products"] = "not-list"
+    payload["archetypes"][0]["evidence_refs"] = "not-list"
+    payload["archetypes"][0]["blockers"] = "not-list"
+    payload["archetypes"][0]["canonical_scenarios"][0]["required_evidence"] = "not-list"
+    payload["archetypes"][0]["canonical_scenarios"][0]["remaining_blockers"] = "not-list"
+
+    contract = opportunity_archetype_contract_from_payload(payload)
+
+    archetype = contract.archetypes[0]
+    assert archetype.source_products == ()
+    assert archetype.evidence_refs == ()
+    assert archetype.blockers == ()
+    assert archetype.canonical_scenarios[0].required_evidence == ()
+    assert archetype.canonical_scenarios[0].remaining_blockers == ()
 
 
 def _contract_payload() -> dict[str, Any]:

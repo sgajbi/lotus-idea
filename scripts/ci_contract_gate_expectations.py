@@ -175,6 +175,14 @@ REQUIRED_READINESS_WIRING = (
         "pass optional Risk drawdown live proof artifact into readiness generation",
     ),
     (
+        "LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF",
+        "support optional Manage mandate live proof artifact wiring",
+    ),
+    (
+        "--manage-mandate-live-proof",
+        "pass optional Manage mandate live proof artifact into readiness generation",
+    ),
+    (
         "LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF",
         "support optional Advise missing suitability live proof artifact wiring",
     ),
