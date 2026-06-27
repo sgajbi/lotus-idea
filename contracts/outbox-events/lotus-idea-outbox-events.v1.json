@@ -1,0 +1,120 @@
+{
+  "contractId": "lotus-idea-outbox-events",
+  "contractVersion": "1.0.0",
+  "schemaVersion": "lotus-idea.outbox-events.v1",
+  "repository": "lotus-idea",
+  "producer": "lotus-idea",
+  "sourceAuthority": "lotus-idea",
+  "lifecycleStatus": "implemented_contract_not_certified",
+  "supportabilityStatus": "not_certified",
+  "publicationScope": "internal_outbox_event_publication_contract",
+  "platformMeshEventContractAvailable": true,
+  "platformMeshEventPublicationProven": false,
+  "externalBrokerPublicationSupported": false,
+  "downstreamConsumersCertified": false,
+  "gatewayWorkbenchProofPresent": false,
+  "supportedFeaturePromoted": false,
+  "envelope": {
+    "requiredFields": [
+      "eventId",
+      "eventType",
+      "aggregateType",
+      "aggregateId",
+      "schemaVersion",
+      "occurredAtUtc",
+      "payload",
+      "producer",
+      "sourceAuthority",
+      "supportabilityStatus"
+    ],
+    "optionalFields": [
+      "idempotencyFingerprint",
+      "correlationId",
+      "causationId"
+    ],
+    "fieldPolicies": {
+      "eventId": "deterministic event identifier generated from event type, aggregate identifier, UTC occurrence time, and idempotency fingerprint",
+      "aggregateType": "must be idea_candidate for candidate workflow events",
+      "aggregateId": "internal aggregate identifier; not client-ready publication identity",
+      "schemaVersion": "must be v1 for all event families in this contract",
+      "occurredAtUtc": "must be timezone-aware UTC ISO-8601 text",
+      "payload": "source-safe string map with no raw source payload, portfolio, account, holding, client, route, request, response, content hash, evidence hash, or raw idempotency key"
+    }
+  },
+  "eventFamilies": [
+    {
+      "eventType": "idea.candidate.persisted.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Candidate persisted after source-owned signal evaluation and internal idempotent persistence."
+    },
+    {
+      "eventType": "idea.lifecycle.transitioned.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Candidate lifecycle status changed through governed internal workflow."
+    },
+    {
+      "eventType": "idea.review.decision_recorded.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Advisor review decision recorded with caller and entitlement checks upstream of suitability authority."
+    },
+    {
+      "eventType": "idea.feedback.recorded.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Advisor feedback recorded for learning, triage, and review-cycle telemetry."
+    },
+    {
+      "eventType": "idea.conversion.intent_requested.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Reviewed opportunity conversion intent requested for Advise, Manage, or Report realization."
+    },
+    {
+      "eventType": "idea.conversion.outcome_recorded.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Source-authorized downstream conversion outcome recorded in lotus-idea."
+    },
+    {
+      "eventType": "idea.report_evidence_pack.requested.v1",
+      "aggregateType": "idea_candidate",
+      "description": "Report evidence-pack request recorded before Report, Render, and Archive materialization proof."
+    }
+  ],
+  "payloadSafetyPolicy": {
+    "payloadValueType": "string",
+    "forbiddenPayloadKeys": [
+      "account_id",
+      "client_id",
+      "client_name",
+      "content_hash",
+      "evidence_hash",
+      "holding_id",
+      "idempotency_key",
+      "portfolio_id",
+      "raw_source_payload",
+      "request_body",
+      "response_body",
+      "route",
+      "source_route"
+    ],
+    "failureReasonPolicy": "publisher failure reasons must use governed status codes and must not echo sensitive source or transport content"
+  },
+  "sourceOfTruth": {
+    "event_domain_model": "src/app/domain/events.py",
+    "persistence_event_writers": "src/app/domain/persistence.py",
+    "publisher_port": "src/app/ports/outbox_publisher.py",
+    "publisher_adapter": "src/app/infrastructure/outbox_publisher.py",
+    "outbox_delivery": "src/app/application/outbox_delivery.py",
+    "outbox_delivery_readiness": "src/app/application/outbox_delivery_readiness.py",
+    "contract_gate": "scripts/outbox_event_contract_gate.py",
+    "make_target": "make outbox-event-contract-gate",
+    "rfc_slice_06": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md",
+    "rfc_slice_14": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-14-data-product-promotion-trust-telemetry-and-platform-hardening.md",
+    "rfc_slice_17": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-17-implementation-proof-and-live-validation.md"
+  },
+  "remainingCertificationBlockers": [
+    "platform_mesh_event_publication_proof_missing",
+    "downstream_consumer_contracts_missing",
+    "gateway_workbench_proof_missing",
+    "supported_feature_promotion_missing"
+  ]
+}
+
