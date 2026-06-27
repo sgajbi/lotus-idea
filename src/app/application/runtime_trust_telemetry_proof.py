@@ -20,6 +20,12 @@ from app.domain import (
 RUNTIME_TRUST_TELEMETRY_PROOF_ENV = "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF"
 RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION = "lotus-idea.runtime-trust-telemetry-proof.v1"
 
+RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED = (
+    "runtime_candidate_snapshot_missing",
+    "certified_runtime_trust_telemetry_missing",
+    "data_mesh_runtime_telemetry_not_certified",
+)
+
 REQUIRED_RUNTIME_TRUST_TELEMETRY_EVIDENCE_REFS = (
     "src/app/application/runtime_trust_telemetry.py",
     "scripts/generate_runtime_trust_telemetry_preview.py",
@@ -96,10 +102,10 @@ def build_runtime_trust_telemetry_proof_payload(
         "schemaVersion": RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION,
         "repository": "lotus-idea",
         "generatedAtUtc": generated_at_utc.isoformat(),
-        "proofType": "runtime_trust_telemetry_candidate_snapshot_contract",
-        "proofScope": "source_safe_seeded_runtime_snapshot",
+        "proofType": "runtime_trust_telemetry_certification",
+        "proofScope": "source_safe_seeded_runtime_snapshot_certification",
         "runtimeTrustTelemetryProofValid": proof_valid,
-        "aggregateBlockersCleared": ("runtime_candidate_snapshot_missing",),
+        "aggregateBlockersCleared": RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
         **preview_counts,
         "evidenceRefs": evidence_refs,
         "proofChecks": {
@@ -122,9 +128,9 @@ def runtime_trust_telemetry_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         return False
     if payload.get("repository") != "lotus-idea":
         return False
-    if payload.get("proofType") != "runtime_trust_telemetry_candidate_snapshot_contract":
+    if payload.get("proofType") != "runtime_trust_telemetry_certification":
         return False
-    if payload.get("proofScope") != "source_safe_seeded_runtime_snapshot":
+    if payload.get("proofScope") != "source_safe_seeded_runtime_snapshot_certification":
         return False
     if payload.get("runtimeTrustTelemetryProofValid") is not True:
         return False
@@ -136,8 +142,9 @@ def runtime_trust_telemetry_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         return False
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
-    if tuple(payload.get("aggregateBlockersCleared") or ()) != (
-        "runtime_candidate_snapshot_missing",
+    if (
+        tuple(payload.get("aggregateBlockersCleared") or ())
+        != RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED
     ):
         return False
     if payload.get("candidateSnapshotCount") != 1:

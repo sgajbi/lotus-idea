@@ -303,6 +303,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_runtime_trust_tel
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
+    assert "certified_runtime_trust_telemetry_missing" not in payload["overallBlockers"]
+    assert "data_mesh_runtime_telemetry_not_certified" not in payload["overallBlockers"]
     assert "platform_mesh_certification_missing" in payload["overallBlockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False

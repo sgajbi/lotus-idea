@@ -12,6 +12,7 @@ import pytest
 from app.application.runtime_trust_telemetry_proof import (
     REMAINING_RUNTIME_TRUST_TELEMETRY_CERTIFICATION_BLOCKERS,
     REQUIRED_RUNTIME_TRUST_TELEMETRY_EVIDENCE_REFS,
+    RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
     RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION,
     build_runtime_trust_telemetry_proof_payload,
     runtime_trust_telemetry_proof_is_valid,
@@ -25,10 +26,10 @@ def test_builds_source_safe_runtime_trust_telemetry_proof() -> None:
 
     assert proof["schemaVersion"] == RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION
     assert proof["repository"] == "lotus-idea"
-    assert proof["proofType"] == "runtime_trust_telemetry_candidate_snapshot_contract"
-    assert proof["proofScope"] == "source_safe_seeded_runtime_snapshot"
+    assert proof["proofType"] == "runtime_trust_telemetry_certification"
+    assert proof["proofScope"] == "source_safe_seeded_runtime_snapshot_certification"
     assert proof["runtimeTrustTelemetryProofValid"] is True
-    assert tuple(proof["aggregateBlockersCleared"]) == ("runtime_candidate_snapshot_missing",)
+    assert tuple(proof["aggregateBlockersCleared"]) == RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED
     assert proof["candidateSnapshotCount"] == 1
     assert proof["currentSourceRefCount"] == 4
     assert proof["staleOrUnavailableSourceRefCount"] == 0
