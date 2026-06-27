@@ -80,6 +80,11 @@ from app.domain.missing_suitability_signal import (
     MissingSuitabilityContextSignalPolicy,
     evaluate_missing_suitability_context_signal,
 )
+from app.domain.low_income_signal import (
+    LowIncomeSignalInput,
+    LowIncomeSignalPolicy,
+    evaluate_low_income_signal,
+)
 from app.domain.persistence import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -246,6 +251,8 @@ __all__ = [
     "HighCashSignalPolicy",
     "HighVolatilitySignalInput",
     "HighVolatilitySignalPolicy",
+    "LowIncomeSignalInput",
+    "LowIncomeSignalPolicy",
     "MandateHealthSignalInput",
     "MandateHealthSignalPolicy",
     "MissingSuitabilityContextSignalInput",
@@ -287,6 +294,7 @@ __all__ = [
     "evaluate_drawdown_review_signal",
     "evaluate_high_cash_signal",
     "evaluate_high_volatility_signal",
+    "evaluate_low_income_signal",
     "evaluate_mandate_health_signal",
     "evaluate_missing_suitability_context_signal",
     "evaluate_underperformance_signal",

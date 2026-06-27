@@ -163,6 +163,30 @@ def test_opportunity_archetype_contract_records_missing_suitability_foundation_w
     assert missing_suitability.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_low_income_foundation_without_promotion() -> None:
+    contract = load_opportunity_archetype_contract()
+
+    low_income = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "low-income-liquidity-shortfall"
+    )
+
+    assert low_income.implementation_status == "partially_implemented"
+    assert low_income.first_supported_journey is False
+    assert "lotus-core:PortfolioCashflowProjection:v1" in low_income.source_products
+    assert "lotus-core:PortfolioCashMovementSummary:v1" in low_income.source_products
+    assert "src/app/application/low_income_signal.py" in low_income.evidence_refs
+    assert "src/app/infrastructure/lotus_core_sources.py" in low_income.evidence_refs
+    assert "tests/unit/test_low_income_signal_evaluation.py" in low_income.evidence_refs
+    assert "live_core_cashflow_source_proof_missing" in low_income.blockers
+    assert "data_mesh_not_certified" in low_income.blockers
+    assert "client_publication_not_ready" in low_income.blockers
+    assert "supported_feature_promotion_missing" in low_income.blockers
+    assert low_income.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert low_income.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()

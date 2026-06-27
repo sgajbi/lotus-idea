@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -139,7 +139,7 @@ Additional implemented concentration-risk foundation:
 
 Additional implemented underperformance foundation:
 
-1. `src/app/domain/signal_evaluation.py` now defines
+1. `src/app/domain/low_income_signal.py` now defines
    `UnderperformanceSignalPolicy`, `UnderperformanceSignalInput`, and
    `evaluate_underperformance_signal` for source-owned active-return
    underperformance candidates.
@@ -341,6 +341,36 @@ Additional implemented missing suitability context foundation:
    external communication.
 7. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
+
+Additional implemented low-income / liquidity-shortfall foundation:
+
+1. `src/app/domain/signal_evaluation.py` now defines
+   `LowIncomeSignalPolicy`, `LowIncomeSignalInput`, and
+   `evaluate_low_income_signal` for source-backed cashflow pressure review
+   candidates.
+2. The evaluator consumes only Core-owned `PortfolioCashflowProjection:v1` and
+   `PortfolioCashMovementSummary:v1` source refs, current source freshness,
+   Core-reported cashflow count, and a source-reported minimum projected
+   cumulative cashflow value. It does not infer client income needs, funding
+   advice, treasury instruction, suitability, or planning objectives.
+3. `src/app/ports/core_sources.py`,
+   `src/app/application/low_income_signal.py`, and
+   `src/app/infrastructure/lotus_core_sources.py` add the Core source-port,
+   application wrapper, and fail-closed adapter over
+   `/portfolios/{portfolio_id}/cash-movement-summary` and
+   `/portfolios/{portfolio_id}/cashflow-projection`.
+4. Positive evaluation creates only an advisor-review candidate with
+   deterministic IDs and policy-versioned score when projected cumulative
+   cashflow breaches the threshold. Missing, stale, malformed, duplicate, or
+   entitlement-blocked source evidence does not create a candidate.
+5. `tests/unit/test_low_income_signal_evaluation.py`,
+   `tests/unit/test_low_income_application.py`, and
+   `tests/unit/test_lotus_core_sources.py` cover positive, not-eligible,
+   stale, missing-source, duplicate, entitlement-denied, source-unavailable,
+   malformed-projection, and request-validation cases.
+6. This foundation does not include live Core cashflow proof, data-mesh
+   certification, Workbench proof, client-publication approval, or
+   supported-feature promotion.
 
 Not implemented yet:
 

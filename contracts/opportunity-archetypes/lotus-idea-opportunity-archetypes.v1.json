@@ -93,7 +93,7 @@
       ],
       "lotus_idea_responsibility": "Queue source-owned concentration evidence for review without recalculating risk.",
       "evidence_refs": [
-        "src/app/domain/signal_evaluation.py",
+        "src/app/domain/low_income_signal.py",
         "src/app/application/concentration_risk_signal.py",
         "src/app/ports/risk_sources.py",
         "src/app/infrastructure/lotus_risk_sources.py",
@@ -419,6 +419,60 @@
         "advise_policy_live_source_proof_missing",
         "data_mesh_not_certified",
         "workbench_product_proof_missing",
+        "client_publication_not_ready",
+        "supported_feature_promotion_missing"
+      ]
+    },
+    {
+      "archetype_id": "low-income-liquidity-shortfall",
+      "display_name": "Low income / liquidity shortfall",
+      "implementation_status": "partially_implemented",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "advisor",
+      "source_products": [
+        "lotus-core:PortfolioCashflowProjection:v1",
+        "lotus-core:PortfolioCashMovementSummary:v1"
+      ],
+      "lotus_idea_responsibility": "Detect source-backed cashflow pressure for advisor review without inferring client income needs, funding advice, treasury instruction, or planning suitability.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+        "src/app/domain/low_income_signal.py",
+        "src/app/application/low_income_signal.py",
+        "src/app/ports/core_sources.py",
+        "src/app/infrastructure/lotus_core_sources.py",
+        "tests/unit/test_low_income_signal_evaluation.py",
+        "tests/unit/test_low_income_application.py",
+        "tests/unit/test_lotus_core_sources.py"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "advisor-cashflow-liquidity-pressure-review",
+          "scenario_status": "bounded_foundation",
+          "scenario_type": "cashflow_liquidity_review",
+          "audience": "advisor",
+          "proof_status": "not_client_demo_ready",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "Core cashflow projection source ref",
+            "Core cash movement summary source ref",
+            "source freshness",
+            "projected cumulative cashflow threshold",
+            "advisor review posture"
+          ],
+          "remaining_blockers": [
+            "live_core_cashflow_source_proof_missing",
+            "workbench_product_proof_missing",
+            "data_mesh_not_certified",
+            "client_publication_not_ready",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "live_core_cashflow_source_proof_missing",
+        "workbench_product_proof_missing",
+        "data_mesh_not_certified",
         "client_publication_not_ready",
         "supported_feature_promotion_missing"
       ]

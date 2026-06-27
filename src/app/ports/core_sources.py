@@ -71,6 +71,34 @@ class CoreBenchmarkAssignmentEvidence:
     entitlement_allowed: bool = True
 
 
+@dataclass(frozen=True)
+class CoreLowIncomeEvidenceRequest:
+    portfolio_id: str
+    as_of_date: date
+    evaluated_at_utc: datetime
+    horizon_days: int = 30
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if self.horizon_days < 1 or self.horizon_days > 366:
+            raise ValueError("horizon_days must be between 1 and 366")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class CoreLowIncomeEvidence:
+    source_reported_min_projected_cumulative_cashflow: Decimal | None
+    cash_movement_count: int | None
+    cash_movement_ref: SourceRef | None
+    cashflow_projection_ref: SourceRef | None
+    cashflow_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
 class CoreOpportunitySourcePort(Protocol):
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
@@ -83,3 +111,10 @@ class CoreBenchmarkAssignmentSourcePort(Protocol):
         self, request: CoreBenchmarkAssignmentEvidenceRequest
     ) -> CoreBenchmarkAssignmentEvidence:
         """Fetch source-owned Core benchmark assignment evidence for opportunity context."""
+
+
+class CoreLowIncomeSourcePort(Protocol):
+    def fetch_low_income_evidence(
+        self, request: CoreLowIncomeEvidenceRequest
+    ) -> CoreLowIncomeEvidence:
+        """Fetch source-owned Core cashflow evidence for low-income/liquidity review."""

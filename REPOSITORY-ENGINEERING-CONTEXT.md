@@ -108,8 +108,10 @@ files stay coherent, and optional sibling `lotus-platform` catalog/source
 manifest evidence is used to catch source-product drift or premature mesh
 inclusion.
 
-RFC-0002 Slice 05 is partially implemented for the high-cash / idle-liquidity
-domain policy and the first Core source-port foundation.
+RFC-0002 Slice 05 is partially implemented for high-cash / idle-liquidity,
+concentration, underperformance, allocation-drift mandate-review,
+high-volatility / drawdown, missing suitability context, and low-income /
+liquidity-shortfall domain policy foundations.
 `src/app/domain/signal_evaluation.py` consumes source-reported cash-weight
 evidence and Core source refs, creates deterministic `OpportunitySignal`,
 `IdeaEvidencePacket`, and `IdeaCandidate` domain objects for positive cases,
@@ -124,8 +126,17 @@ refs, consumes Core's `HoldingsAsOf:v1` cash-weight value from
 `totals.source_reported_cash_weight`, fails closed when Core omits the value or
 reports blocked cash-weight supportability, and does not calculate cash weight
 from cash totals or market values. This remains internal source-adapter
-foundation behavior. The same domain module now includes deterministic
-concentration, underperformance, and allocation-drift mandate-review policies.
+foundation behavior. `src/app/domain/signal_evaluation.py` also includes
+deterministic concentration, underperformance, and allocation-drift
+mandate-review policies. `src/app/domain/low_income_signal.py` adds the
+low-income / liquidity-shortfall policy. The low-income foundation uses
+Core-owned `PortfolioCashflowProjection:v1` and
+`PortfolioCashMovementSummary:v1` source refs, source freshness, cashflow
+count, and a projected cumulative cashflow threshold to create only
+advisor-review candidates; it does not infer client income needs, funding
+advice, treasury instruction, suitability, or planning objectives.
+`src/app/application/low_income_signal.py` maps Core source evidence into this
+domain policy with entitlement and source-unavailable failure behavior.
 The allocation-drift foundation uses
 `src/app/ports/manage_sources.py`,
 `src/app/application/mandate_health_signal.py`, and
@@ -904,8 +915,9 @@ contract at
 `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
 The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review, underperformance review,
-allocation drift / mandate review, and high-volatility review as non-promoted
-bounded foundations.
+allocation drift / mandate review, high-volatility review, missing suitability
+context, and low-income / liquidity shortfall as non-promoted bounded
+foundations.
 Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
 source-safe live-proof artifact contract, and focused unit tests.
@@ -932,7 +944,14 @@ adapter over `GET /advisory/policy-evaluations/{evaluation_id}/workflow`, and
 focused unit tests that prove Advise-owned open approval, disclosure, consent,
 and sign-off posture can create only a compliance-review candidate without
 approving suitability, policy, proposals, sign-off, client publication, or
-external communication. Bond maturity remains planned. A valid Risk concentration live-proof
+external communication. Low-income / liquidity shortfall is backed by
+deterministic policy, a Lotus Core cashflow source port, a fail-closed HTTP
+adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
+`/portfolios/{portfolio_id}/cashflow-projection`, and focused unit tests that
+prove source-reported projected cumulative cashflow consumption while blocking
+planning, funding-advice, treasury-instruction, suitability, Workbench,
+client-publication, and supported-feature claims. Bond maturity remains planned.
+A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
 artifact clears only the live Performance source blocker. A valid high-volatility
@@ -1097,11 +1116,13 @@ logs; fix or document the owned warning source instead.
 5. `src/app/ports/`: interfaces to `lotus-core`, `lotus-performance`,
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
    `idea_repository.py` owns the central repository workflow protocols used by
-   application orchestration, and `core_sources.py` owns the high-cash Core
-   evidence port.
+   application orchestration, and `core_sources.py` owns the high-cash,
+   benchmark-assignment, and low-income Core evidence ports.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
-   current Core adapter preserves source-data product refs and requires Core to
-   report cash weight explicitly rather than deriving it locally. The layer also
+   current Core adapter preserves source-data product refs, requires Core to
+   report cash weight explicitly rather than deriving it locally, and consumes
+   Core cashflow products for bounded low-income / liquidity-shortfall
+   review without moving cashflow methodology into `lotus-idea`. The layer also
    contains source-safe downstream realization adapter foundations for
    Advise/Manage/Report handoff envelopes, migration execution helpers,
    PostgreSQL codec helpers, and `PostgresIdeaRepository`, which is tested as a

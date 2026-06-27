@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, high-volatility / drawdown review, and missing suitability context are non-promoted bounded foundations with source-specific proof contracts; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, high-volatility / drawdown review, missing suitability context, and low-income / liquidity shortfall are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
 
 ## Outcome
 
@@ -32,7 +32,8 @@ capabilities exist.
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
    concentration-risk, underperformance, allocation-drift, high-volatility /
-   drawdown, and missing-suitability review foundations, and planned
+   drawdown, missing-suitability, and low-income / liquidity-shortfall review
+   foundations, and planned
    bond-maturity journeys.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
@@ -115,7 +116,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    data-mesh certification, Workbench proof, client-publication approval,
    supported-feature evidence, rebalance authority, action authority, order
    creation, execution, and settlement remain required before demo use.
-9. Remaining planned archetypes still require source adapters, deterministic
+9. Low-income / liquidity shortfall now has a bounded deterministic policy,
+   Lotus Core cashflow source-port/adapter foundation, and contract-backed
+   archetype entry. It can create only advisor-review candidates from Core
+   `PortfolioCashflowProjection:v1` and `PortfolioCashMovementSummary:v1`
+   evidence, and it must not be presented as client income-needs planning,
+   funding advice, suitability, treasury instruction, Workbench proof,
+   client publication, or supported-feature promotion.
+10. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate
