@@ -177,6 +177,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "github.event.pull_request.head.repo.fork == false",
         "secrets.LOTUS_AUTOMERGE_TOKEN",
         "LOTUS_AUTOMERGE_TOKEN is required",
+        "Resource not accessible by personal access token",
         "gh pr merge",
         "--auto --rebase --delete-branch",
     ),

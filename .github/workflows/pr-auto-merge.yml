@@ -39,5 +39,10 @@ jobs:
             echo "$output"
             exit 0
           fi
+          if echo "$output" | grep -qi "Resource not accessible by personal access token"; then
+            echo "::warning::LOTUS_AUTOMERGE_TOKEN is present but cannot enable pull request auto-merge. Skipping auto-merge; use an authorized human or release actor to rebase merge this PR."
+            echo "$output"
+            exit 0
+          fi
           echo "$output"
           exit "$code"
