@@ -22,6 +22,7 @@ from app.application.implementation_proof_readiness import (
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.mesh_policy_proof import build_mesh_policy_proof_payload
 from app.application.outbox_broker_proof import build_outbox_broker_proof_payload
 from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_CONSUMER_DEPENDENCIES,
@@ -642,6 +643,44 @@ def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_with
     assert "output/data-mesh/platform-mesh-onboarding-proof.json" in (
         runtime_telemetry.evidence_refs
     )
+
+
+def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certification() -> None:
+    proof = build_mesh_policy_proof_payload(
+        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        mesh_policy_proof=proof,
+        mesh_policy_proof_ref="output/data-mesh/mesh-policy-proof.json",
+    )
+
+    assert "mesh_slo_policy_certification_missing" not in snapshot.overall_blockers
+    assert "mesh_access_policy_certification_missing" not in snapshot.overall_blockers
+    assert "mesh_evidence_policy_certification_missing" not in snapshot.overall_blockers
+    assert "data_mesh_not_certified" in snapshot.overall_blockers
+    assert "producer_products_not_active" in snapshot.overall_blockers
+    assert "platform_source_manifest_inclusion_missing" in snapshot.overall_blockers
+    assert "platform_catalog_inclusion_missing" in snapshot.overall_blockers
+    assert "gateway_workbench_discovery_proof_missing" in snapshot.overall_blockers
+    assert "no_supported_features_promoted" in snapshot.overall_blockers
+    data_mesh = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "data-mesh-certification"
+    )
+    assert "mesh_slo_policy_certification_missing" not in data_mesh.blockers
+    assert "mesh_access_policy_certification_missing" not in data_mesh.blockers
+    assert "mesh_evidence_policy_certification_missing" not in data_mesh.blockers
+    assert "data_mesh_not_certified" in data_mesh.blockers
+    assert "output/data-mesh/mesh-policy-proof.json" in data_mesh.evidence_refs
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
 
 
 def test_implementation_proof_readiness_uses_report_intake_route_proof_without_materialization() -> (

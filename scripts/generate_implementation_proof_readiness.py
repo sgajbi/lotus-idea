@@ -27,6 +27,7 @@ from app.application.implementation_proof_readiness import (
     ImplementationProofReadinessSnapshot,
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.platform_mesh_onboarding_proof import (
     PLATFORM_MESH_ONBOARDING_PROOF_ENV,
@@ -68,6 +69,7 @@ class ProofArtifactInputs:
     ai_workflow_pack_registration: ProofArtifactInput
     ai_workflow_pack_runtime_execution: ProofArtifactInput
     report_intake_route: ProofArtifactInput
+    mesh_policy: ProofArtifactInput
     workbench_read_path: ProofArtifactInput
     outbox_broker: ProofArtifactInput
     platform_mesh_onboarding: ProofArtifactInput
@@ -119,6 +121,8 @@ def main(argv: list[str] | None = None) -> int:
                 ),
                 report_intake_route_proof=proof_artifacts.report_intake_route.payload,
                 report_intake_route_proof_ref=proof_artifacts.report_intake_route.source_safe_ref,
+                mesh_policy_proof=proof_artifacts.mesh_policy.payload,
+                mesh_policy_proof_ref=proof_artifacts.mesh_policy.source_safe_ref,
                 outbox_broker_proof=proof_artifacts.outbox_broker.payload,
                 outbox_broker_proof_ref=proof_artifacts.outbox_broker.source_safe_ref,
                 platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding.payload,
@@ -228,6 +232,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> ProofArtifactInputs:
             args.report_intake_route_proof,
             artifact_name="report intake route proof",
             ref_name="report intake route proof artifact",
+        ),
+        mesh_policy=_proof_artifact_input(
+            args.mesh_policy_proof,
+            artifact_name="mesh policy proof",
+            ref_name="mesh policy proof artifact",
         ),
         workbench_read_path=_proof_artifact_input(
             args.workbench_read_path_proof,
@@ -340,6 +349,11 @@ def _add_proof_artifact_args(parser: argparse.ArgumentParser) -> None:
             "--report-intake-route-proof",
             REPORT_INTAKE_ROUTE_PROOF_ENV,
             "Optional lotus-report idea evidence intake route proof artifact path.",
+        ),
+        (
+            "--mesh-policy-proof",
+            MESH_POLICY_PROOF_ENV,
+            "Optional repo-owned mesh SLO, access, and evidence policy proof artifact path.",
         ),
         (
             "--workbench-read-path-proof",

@@ -31,6 +31,10 @@ from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
 from app.application.durable_repository_proof import durable_repository_proof_is_valid
+from app.application.mesh_policy_proof import (
+    MESH_POLICY_BLOCKERS_CLEARED,
+    mesh_policy_proof_is_valid,
+)
 from app.application.outbox_broker_proof import outbox_broker_proof_is_valid
 from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
@@ -129,6 +133,8 @@ def build_implementation_proof_readiness_snapshot(
     ai_workflow_pack_runtime_execution_proof_ref: str | None = None,
     report_intake_route_proof: Mapping[str, object] | None = None,
     report_intake_route_proof_ref: str | None = None,
+    mesh_policy_proof: Mapping[str, object] | None = None,
+    mesh_policy_proof_ref: str | None = None,
     outbox_broker_proof: Mapping[str, object] | None = None,
     outbox_broker_proof_ref: str | None = None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None = None,
@@ -196,6 +202,8 @@ def build_implementation_proof_readiness_snapshot(
         ai_workflow_pack_registration_proof_ref=ai_workflow_pack_registration_proof_ref,
         ai_workflow_pack_runtime_execution_proof=ai_workflow_pack_runtime_execution_proof,
         ai_workflow_pack_runtime_execution_proof_ref=ai_workflow_pack_runtime_execution_proof_ref,
+        mesh_policy_proof=mesh_policy_proof,
+        mesh_policy_proof_ref=mesh_policy_proof_ref,
         outbox_broker_proof=outbox_broker_proof,
         outbox_broker_proof_ref=outbox_broker_proof_ref,
         platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
@@ -249,6 +257,8 @@ def _apply_available_proofs(
     ai_workflow_pack_registration_proof_ref: str | None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
     ai_workflow_pack_runtime_execution_proof_ref: str | None,
+    mesh_policy_proof: Mapping[str, object] | None,
+    mesh_policy_proof_ref: str | None,
     outbox_broker_proof: Mapping[str, object] | None,
     outbox_broker_proof_ref: str | None,
     platform_mesh_onboarding_proof: Mapping[str, object] | None,
@@ -309,6 +319,11 @@ def _apply_available_proofs(
             )
             for capability in capabilities
         )
+    if mesh_policy_proof and mesh_policy_proof_is_valid(mesh_policy_proof):
+        capabilities = tuple(
+            _apply_mesh_policy_proof(capability, mesh_policy_proof_ref)
+            for capability in capabilities
+        )
     if outbox_broker_proof and outbox_broker_proof_is_valid(outbox_broker_proof):
         capabilities = tuple(
             _apply_outbox_broker_proof(capability, outbox_broker_proof_ref)
@@ -330,6 +345,31 @@ def _apply_available_proofs(
             for capability in capabilities
         )
     return capabilities
+
+
+def _apply_mesh_policy_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    mesh_policy_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    if capability.capability_id != "data-mesh-certification":
+        return capability
+    blockers_to_clear = set(MESH_POLICY_BLOCKERS_CLEARED)
+    if not blockers_to_clear.intersection(capability.blockers):
+        return capability
+    evidence_refs = capability.evidence_refs
+    if mesh_policy_proof_ref:
+        evidence_refs = tuple(dict.fromkeys((*evidence_refs, mesh_policy_proof_ref)))
+    return _capability(
+        capability.capability_id,
+        capability.name,
+        readiness_status=capability.readiness_status,
+        supportability_status=capability.supportability_status,
+        evidence_refs=evidence_refs,
+        blockers=tuple(
+            blocker for blocker in capability.blockers if blocker not in blockers_to_clear
+        ),
+        supported_feature_promoted=capability.supported_feature_promoted,
+    )
 
 
 def _capability(
