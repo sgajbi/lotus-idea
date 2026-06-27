@@ -33,6 +33,7 @@ REQUIRED_LINT_TARGETS = (
     "implementation-truth-gate",
     "data-mesh-contract-gate",
     "downstream-realization-contract-gate",
+    "outbox-event-contract-gate",
     "migration-contract-gate",
     "migration-execution-gate",
     "durable-repository-proof-contract-gate",

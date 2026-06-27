@@ -14,9 +14,11 @@ REQUIRED_OUTBOX_BROKER_EVIDENCE_REFS = (
     "src/app/application/outbox_delivery_readiness.py",
     "src/app/ports/outbox_publisher.py",
     "src/app/infrastructure/outbox_publisher.py",
+    "contracts/outbox-events/lotus-idea-outbox-events.v1.json",
     "tests/unit/test_outbox_delivery.py",
     "tests/unit/test_outbox_delivery_readiness.py",
     "tests/integration/test_outbox_delivery_readiness_api.py",
+    "make outbox-event-contract-gate",
     "make outbox-broker-proof-contract-gate",
     "GET /api/v1/outbox-delivery/readiness",
     "POST /api/v1/outbox-delivery/run-once",
@@ -29,7 +31,7 @@ OUTBOX_BROKER_BLOCKERS_CLEARED = (
 
 REMAINING_OUTBOX_BROKER_CERTIFICATION_BLOCKERS = (
     "downstream_consumer_contracts_missing",
-    "platform_mesh_event_contract_missing",
+    "platform_mesh_event_publication_proof_missing",
     "gateway_workbench_proof_missing",
     "supported_feature_promotion_missing",
 )
