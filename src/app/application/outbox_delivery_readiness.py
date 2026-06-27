@@ -16,6 +16,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 OUTBOX_EVENT_CONTRACT_PATH = (
     REPOSITORY_ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"
 )
+OUTBOX_CONSUMER_CONTRACT_PATH = (
+    REPOSITORY_ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-consumers.v1.json"
+)
 
 
 @dataclass(frozen=True)
@@ -95,6 +98,10 @@ def build_outbox_delivery_readiness_snapshot(
             "repository_port": "src/app/ports/idea_repository.py",
             "outbox_event_contract": ("contracts/outbox-events/lotus-idea-outbox-events.v1.json"),
             "outbox_event_contract_gate": "make outbox-event-contract-gate",
+            "outbox_consumer_contract": (
+                "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json"
+            ),
+            "outbox_consumer_contract_gate": "make outbox-consumer-contract-gate",
             "rfc_slice_06": (
                 "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
                 "RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md"
@@ -134,11 +141,17 @@ def _configuration_blockers() -> tuple[str, ...]:
 def outbox_delivery_certification_blockers() -> tuple[str, ...]:
     return (
         "external_broker_runtime_proof_missing",
-        "downstream_consumer_contracts_missing",
+        _downstream_consumer_certification_blocker(),
         _platform_mesh_event_certification_blocker(),
         "gateway_workbench_proof_missing",
         "supported_feature_promotion_missing",
     )
+
+
+def _downstream_consumer_certification_blocker() -> str:
+    if OUTBOX_CONSUMER_CONTRACT_PATH.is_file():
+        return "downstream_consumer_runtime_proof_missing"
+    return "downstream_consumer_contracts_missing"
 
 
 def _platform_mesh_event_certification_blocker() -> str:

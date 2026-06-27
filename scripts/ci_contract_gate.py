@@ -34,6 +34,7 @@ REQUIRED_LINT_TARGETS = (
     "data-mesh-contract-gate",
     "downstream-realization-contract-gate",
     "outbox-event-contract-gate",
+    "outbox-consumer-contract-gate",
     "migration-contract-gate",
     "migration-execution-gate",
     "durable-repository-proof-contract-gate",
@@ -357,6 +358,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "report-intake-route-proof-contract-gate": "scripts/report_intake_route_proof_contract_gate.py",
         "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
         "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
+        "outbox-consumer-contract-gate": "scripts/outbox_consumer_contract_gate.py",
         "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
         "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
     }

@@ -104,6 +104,8 @@
     "publisher_adapter": "src/app/infrastructure/outbox_publisher.py",
     "outbox_delivery": "src/app/application/outbox_delivery.py",
     "outbox_delivery_readiness": "src/app/application/outbox_delivery_readiness.py",
+    "outbox_consumer_contract": "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json",
+    "outbox_consumer_contract_gate": "make outbox-consumer-contract-gate",
     "contract_gate": "scripts/outbox_event_contract_gate.py",
     "make_target": "make outbox-event-contract-gate",
     "rfc_slice_06": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md",
@@ -112,9 +114,8 @@
   },
   "remainingCertificationBlockers": [
     "platform_mesh_event_publication_proof_missing",
-    "downstream_consumer_contracts_missing",
+    "downstream_consumer_runtime_proof_missing",
     "gateway_workbench_proof_missing",
     "supported_feature_promotion_missing"
   ]
 }
-

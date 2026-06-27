@@ -410,11 +410,14 @@ OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {
                             "publisher_port": "src/app/ports/outbox_publisher.py",
                             "publisher_adapter": "src/app/infrastructure/outbox_publisher.py",
                             "repository_port": "src/app/ports/idea_repository.py",
+                            "outbox_consumer_contract": (
+                                "contracts/outbox-events/lotus-idea-outbox-consumers.v1.json"
+                            ),
                         },
                         "configurationBlockers": ["outbox_broker_not_configured"],
                         "certificationBlockers": [
                             "external_broker_runtime_proof_missing",
-                            "downstream_consumer_contracts_missing",
+                            "downstream_consumer_runtime_proof_missing",
                             "platform_mesh_event_publication_proof_missing",
                         ],
                         "supportedFeaturePromoted": False,
@@ -438,7 +441,7 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
         "Runs one bounded internal outbox delivery pass for operators. The endpoint uses the "
         "active repository provider and configured outbox publisher adapter, returns aggregate "
         "counts only, and remains not certified until live broker runtime, downstream consumer "
-        "contracts, platform mesh event publication proof, Gateway/Workbench proof, and "
+        "runtime proof, platform mesh event publication proof, Gateway/Workbench proof, and "
         "supported-feature promotion exist. If the broker is not configured or invalid, the "
         "endpoint fails closed without mutating pending outbox records."
     ),
@@ -465,7 +468,7 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
                         "certificationBlockers": [
                             "outbox_broker_not_configured",
                             "external_broker_runtime_proof_missing",
-                            "downstream_consumer_contracts_missing",
+                            "downstream_consumer_runtime_proof_missing",
                             "platform_mesh_event_publication_proof_missing",
                             "gateway_workbench_proof_missing",
                             "supported_feature_promotion_missing",
