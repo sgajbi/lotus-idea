@@ -61,8 +61,12 @@ FORBIDDEN_TEXT_FRAGMENTS = {
 }
 
 
-def validate_gateway_workbench_discovery_proof_contract() -> list[str]:
+def validate_gateway_workbench_discovery_proof_contract(
+    *,
+    platform_root: Path | None = None,
+) -> list[str]:
     errors: list[str] = []
+    effective_platform_root = platform_root or PLATFORM_ROOT
     generated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
     workbench_read_path_proof = build_workbench_read_path_proof_payload(
         generated_at_utc=generated_at_utc,
@@ -77,12 +81,12 @@ def validate_gateway_workbench_discovery_proof_contract() -> list[str]:
     platform_mesh_onboarding_proof = build_platform_mesh_onboarding_proof_payload(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
-        platform_root=PLATFORM_ROOT,
+        platform_root=effective_platform_root,
     )
     proof = build_gateway_workbench_discovery_proof_payload(
         generated_at_utc=generated_at_utc,
         repository_root=ROOT,
-        platform_root=PLATFORM_ROOT,
+        platform_root=effective_platform_root,
         platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
         workbench_read_path_proof=workbench_read_path_proof,
         gateway_workbench_operational_proof=gateway_workbench_operational_proof,
@@ -113,8 +117,17 @@ def validate_gateway_workbench_discovery_proof_contract() -> list[str]:
         REMAINING_GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS
     ):
         errors.append("Gateway/Workbench discovery proof must retain certification blockers")
-    if not gateway_workbench_discovery_proof_is_valid(proof):
-        errors.append("Gateway/Workbench discovery proof must validate against its contract")
+    proof_checks = proof.get("proofChecks")
+    file_evidence_present = (
+        isinstance(proof_checks, Mapping) and proof_checks.get("fileEvidencePresent") is True
+    )
+    if file_evidence_present and not gateway_workbench_discovery_proof_is_valid(proof):
+        errors.append(
+            "Gateway/Workbench discovery proof must validate against sibling platform truth when "
+            "sibling evidence is present"
+        )
+    if not file_evidence_present and proof.get("gatewayWorkbenchDiscoveryProofValid") is not False:
+        errors.append("missing sibling platform evidence must remain an invalid non-proof artifact")
     _validate_forbidden_content(proof, errors)
     return errors
 
