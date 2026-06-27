@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import os
+from pathlib import Path
 from types import MappingProxyType
 from typing import Mapping
 
@@ -11,6 +12,10 @@ from app.ports.idea_repository import CandidateSnapshotRepository, OutboxDeliver
 
 OUTBOX_BROKER_URL_ENV = "LOTUS_IDEA_OUTBOX_BROKER_URL"
 DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT = 3
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+OUTBOX_EVENT_CONTRACT_PATH = (
+    REPOSITORY_ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"
+)
 
 
 @dataclass(frozen=True)
@@ -68,13 +73,7 @@ def build_outbox_delivery_readiness_snapshot(
         repository.outbox_events_for_delivery(max_retry_count=max_retry_count)
     )
     configuration_blockers = _configuration_blockers()
-    certification_blockers = (
-        "external_broker_runtime_proof_missing",
-        "downstream_consumer_contracts_missing",
-        "platform_mesh_event_contract_missing",
-        "gateway_workbench_proof_missing",
-        "supported_feature_promotion_missing",
-    )
+    certification_blockers = outbox_delivery_certification_blockers()
     certification_ready = not configuration_blockers and not certification_blockers
 
     return OutboxDeliveryReadinessSnapshot(
@@ -94,6 +93,8 @@ def build_outbox_delivery_readiness_snapshot(
             "publisher_port": "src/app/ports/outbox_publisher.py",
             "publisher_adapter": "src/app/infrastructure/outbox_publisher.py",
             "repository_port": "src/app/ports/idea_repository.py",
+            "outbox_event_contract": ("contracts/outbox-events/lotus-idea-outbox-events.v1.json"),
+            "outbox_event_contract_gate": "make outbox-event-contract-gate",
             "rfc_slice_06": (
                 "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
                 "RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md"
@@ -128,3 +129,19 @@ def _configuration_blockers() -> tuple[str, ...]:
     if os.getenv(OUTBOX_BROKER_URL_ENV, "").strip():
         return ()
     return ("outbox_broker_not_configured",)
+
+
+def outbox_delivery_certification_blockers() -> tuple[str, ...]:
+    return (
+        "external_broker_runtime_proof_missing",
+        "downstream_consumer_contracts_missing",
+        _platform_mesh_event_certification_blocker(),
+        "gateway_workbench_proof_missing",
+        "supported_feature_promotion_missing",
+    )
+
+
+def _platform_mesh_event_certification_blocker() -> str:
+    if OUTBOX_EVENT_CONTRACT_PATH.is_file():
+        return "platform_mesh_event_publication_proof_missing"
+    return "platform_mesh_event_contract_missing"
