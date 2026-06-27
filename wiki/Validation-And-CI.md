@@ -184,7 +184,8 @@ Persistence adapter validation:
     readiness consumes to clear only
     `workbench_gateway_bff_consumption_proof_missing`.
 12. `tests/unit/test_outbox_broker_proof.py` and
-    `make outbox-broker-proof-contract-gate` prove the source-safe bounded
+    `make outbox-consumer-contract-gate` / `make outbox-broker-proof-contract-gate`
+    prove the declared downstream consumer contract and source-safe bounded
     outbox broker proof contract that aggregate readiness consumes to clear
     only `outbox_broker_not_configured` and
     `external_broker_runtime_proof_missing`.

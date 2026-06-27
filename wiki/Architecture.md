@@ -180,7 +180,7 @@ worker entrypoint and opt-in Docker Compose worker profile validated by
 proof artifact contract validated by
 `make source-ingestion-live-proof-contract-gate`. Production storage readiness
 still requires deploy migration evidence, mesh certification, live broker
-runtime proof, downstream consumer proof, and live event-publication evidence
+runtime proof, downstream consumer runtime proof, and live event-publication evidence
 beyond the internal outbox retry/dead-letter and publisher-adapter foundation.
 `GET /api/v1/source-ingestion/readiness` now exposes the internal operator
 readiness posture for that run-once worker configuration and certification
@@ -203,6 +203,11 @@ publisher adapter. It fails closed when broker configuration is absent or
 invalid, and both endpoints avoid event ids, aggregate ids, raw idempotency
 keys, source payloads, broker payloads, downstream delivery contracts, or a
 supported-feature claim.
+The repo-owned downstream consumer contract at
+`contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` declares Gateway,
+Advise, Manage, and Report as downstream consumers with source-authority
+boundaries and keeps them not runtime certified. It changes the outbox blocker
+taxonomy from missing consumer contracts to missing consumer runtime proof.
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal
@@ -363,7 +368,8 @@ that foundation without mutating records or publishing events.
 `POST /api/v1/outbox-delivery/run-once` adds the protected internal operator
 surface for a single bounded delivery pass and returns aggregate counts only.
 This is not certified live broker runtime, a Gateway event, platform mesh
-event, downstream delivery contract, or supported feature.
+event, downstream consumer runtime proof, downstream delivery, or supported
+feature.
 `src/app/application/downstream_realization.py` adds source-safe submission
 orchestration for existing Advise/Manage conversion intents and Report
 evidence-pack requests while leaving authoritative downstream outcome truth in

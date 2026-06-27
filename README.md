@@ -28,9 +28,9 @@ Current implemented foundations include:
   operations proof, and bounded `lotus-ai` workflow-pack registration/runtime
   proof without live provider rollout or client-ready publication,
 - conversion/report foundations plus governed downstream contract-readiness, submission APIs, HTTP adapter foundations for Advise, Manage, and Report, and optional source-safe proof consumption for the merged `lotus-report` intake route, without report materialization, render, archive, publication, or supported-feature claims,
-- source-safe outbox records, repo-owned outbox event contract, HTTP
-  broker-publisher adapter foundation, readiness diagnostics, and bounded
-  broker proof evidence,
+- source-safe outbox records, repo-owned outbox event and downstream consumer
+  contracts, HTTP broker-publisher adapter foundation, readiness diagnostics,
+  and bounded broker proof evidence,
 - runtime trust telemetry, data-mesh readiness, PostgreSQL/migration, durable
   repository, live Core, Workbench, outbox, and optional platform mesh proof
   evidence for aggregate readiness,
@@ -188,12 +188,12 @@ docker compose up --build
 | `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
 | `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
-| `make outbox-event-contract-gate` | Validate the repo-owned outbox event envelope, implemented event families, source-safe payload policy, and remaining publication proof blockers. |
+| `make outbox-event-contract-gate`, `make outbox-consumer-contract-gate` | Validate repo-owned outbox event and downstream consumer contracts, source-safe payload policy, source-authority boundaries, and remaining proof blockers. |
 | `make migration-contract-gate` | Validate migration contract structure. |
 | `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
 | `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
 | `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
-| `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, platform mesh event publication, or downstream consumers. |
+| `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, platform mesh event publication, or downstream consumer runtime proof. |
 | `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
 | `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without, by itself, certifying `lotus-ai` runtime execution, Workbench, or supported-feature promotion. |
 | `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
