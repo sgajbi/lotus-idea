@@ -129,8 +129,12 @@ Current RFC-0002 implementation-start baseline:
     downstream, data-mesh, or supported-feature support.
 15. The first opportunity journey is high cash / idle liquidity for
     `PB_SG_GLOBAL_BAL_001`.
-16. The first review audience is advisor only.
-17. The first downstream conversion posture is report-only evidence after
+16. RFC-0002 Slice 16 now has a governed opportunity archetype/scenario
+    contract and `make opportunity-archetype-contract-gate`; it is taxonomy and
+    anti-overclaim evidence only, not live demo proof or supported-feature
+    promotion.
+17. The first review audience is advisor only.
+18. The first downstream conversion posture is report-only evidence after
     advisor review.
-18. Business features remain unsupported until later slices implement runtime
+19. Business features remain unsupported until later slices implement runtime
     behavior, certification, and supported-feature promotion.

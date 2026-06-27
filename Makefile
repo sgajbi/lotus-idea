@@ -1,4 +1,4 @@
-.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate operation-metric-contract-gate ai-model-risk-ops-contract-gate ai-model-risk-operations-proof-contract-gate implementation-truth-gate data-mesh-contract-gate mesh-policy-proof-contract-gate downstream-realization-contract-gate downstream-route-contract-proof-gate outbox-event-contract-gate outbox-consumer-contract-gate migration-contract-gate migration-execution-gate durable-repository-proof-contract-gate runtime-trust-telemetry-proof-contract-gate ai-lineage-store-proof-contract-gate ai-workflow-pack-registration-proof-contract-gate ai-workflow-pack-runtime-execution-proof-contract-gate report-intake-route-proof-contract-gate report-materialization-proof-contract-gate workbench-read-path-proof-contract-gate gateway-workbench-operational-proof-contract-gate gateway-workbench-discovery-proof-contract-gate outbox-broker-proof-contract-gate outbox-consumer-runtime-proof-contract-gate outbox-platform-mesh-event-publication-proof-contract-gate platform-mesh-onboarding-proof-contract-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
+.PHONY: install lint ci-contract-gate repository-hygiene-gate maintainability-gate documentation-contract-gate quality-scorecard-gate monetary-float-guard no-sensitive-content-guard source-observability-contract-gate operation-metric-contract-gate ai-model-risk-ops-contract-gate ai-model-risk-operations-proof-contract-gate implementation-truth-gate data-mesh-contract-gate mesh-policy-proof-contract-gate opportunity-archetype-contract-gate downstream-realization-contract-gate downstream-route-contract-proof-gate outbox-event-contract-gate outbox-consumer-contract-gate migration-contract-gate migration-execution-gate durable-repository-proof-contract-gate runtime-trust-telemetry-proof-contract-gate ai-lineage-store-proof-contract-gate ai-workflow-pack-registration-proof-contract-gate ai-workflow-pack-runtime-execution-proof-contract-gate report-intake-route-proof-contract-gate report-materialization-proof-contract-gate workbench-read-path-proof-contract-gate gateway-workbench-operational-proof-contract-gate gateway-workbench-discovery-proof-contract-gate outbox-broker-proof-contract-gate outbox-consumer-runtime-proof-contract-gate outbox-platform-mesh-event-publication-proof-contract-gate platform-mesh-onboarding-proof-contract-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-coverage coverage-gate security-audit check ci docker-build clean
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -72,6 +72,7 @@ lint:
 	$(MAKE) implementation-truth-gate
 	$(MAKE) data-mesh-contract-gate
 	$(MAKE) mesh-policy-proof-contract-gate
+	$(MAKE) opportunity-archetype-contract-gate
 	$(MAKE) downstream-realization-contract-gate
 	$(MAKE) downstream-route-contract-proof-gate
 	$(MAKE) outbox-event-contract-gate
@@ -142,6 +143,9 @@ data-mesh-contract-gate:
 
 mesh-policy-proof-contract-gate:
 	$(VENV_PYTHON) scripts/mesh_policy_proof_contract_gate.py
+
+opportunity-archetype-contract-gate:
+	$(VENV_PYTHON) scripts/opportunity_archetype_contract_gate.py
 
 downstream-realization-contract-gate:
 	$(VENV_PYTHON) scripts/downstream_realization_contract_gate.py

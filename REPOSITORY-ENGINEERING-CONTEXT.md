@@ -865,6 +865,15 @@ template, validation commands, acceptance checklist, rehearsal/follow-up
 discipline, and do-not-claim boundaries. The process is governed documentation
 truth only; it does not promote external demo readiness, supported features,
 downstream materialization, client publication, or certified data-mesh status.
+RFC-0002 Slice 16 now also has a governed opportunity archetype/scenario
+contract at
+`contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
+The contract records high cash / idle liquidity as the first partially
+implemented journey and keeps concentration, underperformance, allocation
+drift, bond maturity, and missing suitability context planned. The
+`make opportunity-archetype-contract-gate` command blocks unsupported demo,
+client publication, data-mesh certification, and supported-feature promotion
+claims.
 
 ## CI And Merge Governance
 
@@ -1057,41 +1066,43 @@ owned by upstream services.
     `make ai-model-risk-operations-proof-contract-gate`
 24. implementation-truth gate: `make implementation-truth-gate`
 25. data-mesh contract gate: `make data-mesh-contract-gate`
-26. downstream realization contract gate:
+26. opportunity archetype contract gate:
+    `make opportunity-archetype-contract-gate`
+27. downstream realization contract gate:
     `make downstream-realization-contract-gate`
-27. downstream route proof contract gate:
+28. downstream route proof contract gate:
     `make downstream-route-contract-proof-gate`
-28. migration contract gate: `make migration-contract-gate`
-29. migration execution dry-run gate: `make migration-execution-gate`
-30. durable repository proof contract gate:
+29. migration contract gate: `make migration-contract-gate`
+30. migration execution dry-run gate: `make migration-execution-gate`
+31. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`
-31. runtime trust telemetry proof contract gate:
+32. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`
-32. report-intake route proof contract gate:
+33. report-intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`
-33. report materialization proof contract gate:
+34. report materialization proof contract gate:
     `make report-materialization-proof-contract-gate`
-34. Workbench read-path proof contract gate:
+35. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`
-35. Gateway/Workbench operational proof contract gate:
+36. Gateway/Workbench operational proof contract gate:
     `make gateway-workbench-operational-proof-contract-gate`
-36. Gateway/Workbench discovery proof contract gate:
+37. Gateway/Workbench discovery proof contract gate:
     `make gateway-workbench-discovery-proof-contract-gate`
-37. run-once source-ingestion worker manifest and output-contract gate:
+38. run-once source-ingestion worker manifest and output-contract gate:
     `make source-ingestion-worker-check`
-38. scheduled source-ingestion worker deploy-contract gate:
+39. scheduled source-ingestion worker deploy-contract gate:
     `make source-ingestion-scheduled-worker-check`
-39. source-ingestion live-proof artifact contract gate:
+40. source-ingestion live-proof artifact contract gate:
     `make source-ingestion-live-proof-contract-gate`
-38. AI lineage store proof contract gate:
+41. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-39. outbox platform mesh event publication proof contract gate:
+42. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`
-40. AI workflow-pack registration proof contract gate:
+43. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-41. AI workflow-pack runtime execution proof contract gate:
+44. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-42. implementation proof readiness generator:
+45. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
@@ -1147,8 +1158,9 @@ documentation contract enforcement, quality-scorecard truth, monetary precision
 guarding, no-sensitive-content evidence guarding, source-observability contract
 enforcement, operation metric contract enforcement, OpenAPI quality, implementation-truth gate,
 supported-feature gate,
-endpoint-certification gate, data-mesh contract gate, migration contract gate,
-migration execution dry-run gate, source-ingestion worker manifest and
+endpoint-certification gate, data-mesh contract gate, opportunity archetype
+contract gate, migration contract gate, migration execution dry-run gate,
+source-ingestion worker manifest and
 output-contract validation, scheduled source-ingestion worker deploy-contract
 validation, source-ingestion live-proof contract validation,
 durable repository proof contract validation,
@@ -1172,6 +1184,7 @@ critical workflow jobs.
 bank-buyable lane contract itself so future agentic changes cannot silently
 remove architecture, repository-hygiene, maintainability, OpenAPI, endpoint-certification, supported-feature,
 data-mesh contract validation, migration contract validation, coverage,
+opportunity archetype contract validation,
 safe migration execution dry-run validation, source-ingestion worker manifest
 and output-contract validation, scheduled source-ingestion worker
 deploy-contract validation, no-sensitive-content evidence validation,

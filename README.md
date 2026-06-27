@@ -179,6 +179,7 @@ docker compose up --build
 | `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
 | `make mesh-policy-proof-contract-gate` | Validate the repo-owned mesh SLO, access, and evidence policy proof without certifying platform mesh readiness or supported features. |
+| `make opportunity-archetype-contract-gate` | Validate the governed opportunity archetype and scenario contract while preserving not-certified demo, client-publication, data-mesh, and supported-feature boundaries. |
 | `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
 | `make outbox-event-contract-gate`, `make outbox-consumer-contract-gate` | Validate repo-owned outbox event and downstream consumer contracts, source-safe payload policy, source-authority boundaries, and remaining proof blockers. |
 | `make migration-contract-gate` | Validate migration contract structure. |
@@ -223,10 +224,7 @@ flowchart LR
 Run `make lint`, `make typecheck`, and `make test-unit` for feature-lane
 feedback; run `make check`, `make postgres-integration-gate`,
 `make security-audit`, and `make docker-build` for PR-grade proof.
-Governance-focused changes should also run `make documentation-contract-gate`,
-`make implementation-truth-gate`, `make quality-scorecard-gate`,
-`make downstream-realization-contract-gate`, and
-`make supported-features-gate`.
+Governance-focused changes should also run `make documentation-contract-gate`, `make implementation-truth-gate`, `make quality-scorecard-gate`, `make opportunity-archetype-contract-gate`, `make downstream-realization-contract-gate`, and `make supported-features-gate`.
 
 The same controls are explained in [wiki/Validation-And-CI.md](wiki/Validation-And-CI.md),
 [quality/ci_quality_gates.md](quality/ci_quality_gates.md), and
