@@ -39,9 +39,10 @@ client publication, or promote a supported feature.
 
 Missing risk-profile review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It creates advisor-review candidates
-only from explicit Advise-owned risk-profile diagnostic posture and does not
-approve risk profiling, suitability, policy, proposal, client publication, or
-external communication.
+only from explicit Advise-owned risk-profile diagnostic posture, including the
+bounded `POST /api/v1/idea-signals/missing-risk-profile/evaluate` API over
+caller-supplied Advise evidence, and does not approve risk profiling,
+suitability, policy, proposal, client publication, or external communication.
 
 ## Non-Functional Capability Matrix
 

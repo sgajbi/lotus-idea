@@ -25,7 +25,9 @@ a supported feature.
 
 Missing risk-profile review is an internal bounded foundation only. It can
 create advisor-review evidence-gap candidates from explicit Advise-owned
-risk-profile diagnostic posture, but it does not approve risk profiling,
+risk-profile diagnostic posture, including the bounded
+`POST /api/v1/idea-signals/missing-risk-profile/evaluate` API over
+caller-supplied Advise evidence, but it does not approve risk profiling,
 suitability, policy, proposal, client publication, or external communication.
 Its source-safe live proof can clear only the Advise risk-profile live-source
 blocker; typed source-product, data-mesh, Workbench, client-publication, and

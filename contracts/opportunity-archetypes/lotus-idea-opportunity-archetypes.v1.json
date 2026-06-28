@@ -531,6 +531,8 @@
         "make missing-risk-profile-live-proof-contract-gate",
         "tests/unit/test_missing_risk_profile_signal_evaluation.py",
         "tests/unit/test_missing_risk_profile_application.py",
+        "tests/integration/test_missing_risk_profile_signal_api.py",
+        "POST /api/v1/idea-signals/missing-risk-profile/evaluate",
         "tests/unit/test_missing_risk_profile_live_proof.py",
         "tests/unit/test_implementation_proof_readiness_missing_risk_profile.py"
       ],

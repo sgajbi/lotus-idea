@@ -705,6 +705,12 @@ candidate detail. `POST /api/v1/idea-signals/high-cash/evaluate` accepts
 caller-supplied, source-owned Core evidence references and source-reported cash
 weight, enforces `idea.signal.evaluate` capability or advisor role, and returns
 deterministic candidate, blocked, suppressed, or not-eligible posture.
+`POST /api/v1/idea-signals/missing-risk-profile/evaluate` accepts
+caller-supplied, source-owned Advise risk-profile posture evidence, enforces
+`idea.signal.evaluate`, returns source-safe candidate or blocked posture, and
+does not approve risk profiling, suitability, policy, proposal, client
+publication, typed data-product certification, Gateway, Workbench, or supported
+feature promotion.
 `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` uses the same source
 evidence contract, requires `idea.candidate.persist` plus `Idempotency-Key`,
 and persists created candidates through the internal in-memory
