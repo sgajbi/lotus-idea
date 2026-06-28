@@ -396,6 +396,37 @@ Additional implemented missing suitability context foundation:
 7. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
+Additional implemented missing risk profile foundation:
+
+1. `src/app/domain/missing_risk_profile_signal.py` now defines
+   `MissingRiskProfileSignalPolicy`, `MissingRiskProfileSignalInput`, and
+   `evaluate_missing_risk_profile_signal` for advisor-review evidence-gap
+   candidates under the missing or stale risk-profile archetype.
+2. The evaluator consumes only Lotus Advise-owned risk-profile posture supplied
+   as source-backed evidence: missing, stale, expired, review-due, current,
+   source freshness, entitlement posture, and source refs. It does not approve
+   risk profiling, determine client suitability, approve policy, approve
+   proposals, release client-ready publication, or create external client
+   communication.
+3. `src/app/application/missing_risk_profile_signal.py` adds the application
+   command wrapper and a bounded Advise policy-evaluation adapter path over the
+   existing `AdvisePolicyEvaluationEvidence` source port. The adapter creates a
+   candidate only when `advise_diagnostic` carries explicit risk-profile
+   diagnostic codes such as `risk_profile_missing`,
+   `risk_profile_stale`, `risk_profile_expired`, or
+   `risk_profile_review_due`.
+4. Generic open suitability or policy requirements remain owned by the existing
+   missing suitability context path; they do not create missing-risk-profile
+   candidates unless Advise emits explicit risk-profile diagnostic posture.
+5. `tests/unit/test_missing_risk_profile_signal_evaluation.py` and
+   `tests/unit/test_missing_risk_profile_application.py` cover positive,
+   current/not-eligible, stale, expired, review-due, missing-source,
+   missing-posture, duplicate, entitlement-denied, source-unavailable, generic
+   suitability diagnostic suppression, and request-routing cases.
+6. This foundation does not include a typed Advise risk-profile source product,
+   live Advise risk-profile proof, data-mesh certification, Workbench proof,
+   client-publication approval, or supported-feature promotion.
+
 Additional implemented low-income / liquidity-shortfall foundation:
 
 1. `src/app/domain/signal_evaluation.py` now defines

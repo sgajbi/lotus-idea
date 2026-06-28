@@ -80,6 +80,11 @@ from app.domain.missing_suitability_signal import (
     MissingSuitabilityContextSignalPolicy,
     evaluate_missing_suitability_context_signal,
 )
+from app.domain.missing_risk_profile_signal import (
+    MissingRiskProfileSignalInput,
+    MissingRiskProfileSignalPolicy,
+    evaluate_missing_risk_profile_signal,
+)
 from app.domain.missing_benchmark_signal import (
     MissingBenchmarkSignalInput,
     MissingBenchmarkSignalPolicy,
@@ -269,6 +274,8 @@ __all__ = [
     "MandateHealthSignalPolicy",
     "MissingSuitabilityContextSignalInput",
     "MissingSuitabilityContextSignalPolicy",
+    "MissingRiskProfileSignalInput",
+    "MissingRiskProfileSignalPolicy",
     "MissingBenchmarkSignalInput",
     "MissingBenchmarkSignalPolicy",
     "UnderperformanceSignalInput",
@@ -312,6 +319,7 @@ __all__ = [
     "evaluate_low_income_signal",
     "evaluate_mandate_health_signal",
     "evaluate_missing_benchmark_signal",
+    "evaluate_missing_risk_profile_signal",
     "evaluate_missing_suitability_context_signal",
     "evaluate_underperformance_signal",
     "DEFAULT_REVIEW_ACTION_POLICY",
