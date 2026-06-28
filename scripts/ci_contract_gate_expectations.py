@@ -51,6 +51,7 @@ REQUIRED_LINT_TARGETS = (
     "low-income-core-cashflow-live-proof-contract-gate",
     "manage-mandate-live-proof-contract-gate",
     "mandate-restriction-live-proof-contract-gate",
+    "mandate-restriction-source-product-proof-contract-gate",
     "missing-suitability-live-proof-contract-gate",
     "missing-risk-profile-source-product-proof-contract-gate",
     "missing-risk-profile-live-proof-contract-gate",
@@ -113,6 +114,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "manage-mandate-live-proof-contract-gate": "scripts/manage_mandate_live_proof_contract_gate.py",
     "mandate-restriction-live-proof-contract-gate": (
         "scripts/mandate_restriction_live_proof_contract_gate.py"
+    ),
+    "mandate-restriction-source-product-proof-contract-gate": (
+        "scripts/mandate_restriction_source_product_proof_contract_gate.py"
     ),
     "missing-suitability-live-proof-contract-gate": (
         "scripts/missing_suitability_live_proof_contract_gate.py"
@@ -210,6 +214,10 @@ GENERATED_READINESS_ARTIFACTS = (
         "scripts/generate_gateway_workbench_discovery_proof.py",
         "a Gateway/Workbench discovery proof artifact",
     ),
+    (
+        "scripts/generate_mandate_restriction_source_product_proof.py",
+        "a mandate/restriction source-product proof artifact",
+    ),
 )
 
 PASSED_READINESS_ARTIFACTS = (
@@ -240,6 +248,10 @@ PASSED_READINESS_ARTIFACTS = (
     ("--platform-mesh-onboarding-proof", "platform mesh onboarding proof artifact"),
     ("--gateway-workbench-operational-proof", "Gateway/Workbench operational proof artifact"),
     ("--gateway-workbench-discovery-proof", "Gateway/Workbench discovery proof artifact"),
+    (
+        "--mandate-restriction-source-product-proof",
+        "Mandate/restriction source-product proof artifact",
+    ),
 )
 
 REQUIRED_READINESS_WIRING = (
@@ -396,6 +408,18 @@ REQUIRED_READINESS_WIRING = (
     (
         "--mandate-restriction-live-proof",
         "pass optional Advise mandate/restriction live proof artifact into readiness generation",
+    ),
+    (
+        "LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF",
+        "support optional Advise mandate/restriction source-product proof artifact wiring",
+    ),
+    (
+        "LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_OUTPUT",
+        "support default Advise mandate/restriction source-product proof output wiring",
+    ),
+    (
+        "--mandate-restriction-source-product-proof",
+        "pass optional Advise mandate/restriction source-product proof artifact into readiness generation",
     ),
     (
         "LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF",

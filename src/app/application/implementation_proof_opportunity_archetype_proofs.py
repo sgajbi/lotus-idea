@@ -32,6 +32,10 @@ from app.application.mandate_restriction_live_proof import (
     MANDATE_RESTRICTION_LIVE_BLOCKERS_CLEARED,
     mandate_restriction_live_proof_is_valid,
 )
+from app.application.mandate_restriction_source_product_proof import (
+    MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED,
+    mandate_restriction_source_product_proof_is_valid,
+)
 from app.application.missing_suitability_live_proof import (
     MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
     missing_suitability_live_proof_is_valid,
@@ -104,6 +108,8 @@ def _apply_opportunity_archetype_proofs(
     manage_mandate_live_proof_ref: str | None,
     mandate_restriction_live_proof: Mapping[str, object] | None,
     mandate_restriction_live_proof_ref: str | None,
+    mandate_restriction_source_product_proof: Mapping[str, object] | None,
+    mandate_restriction_source_product_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
     missing_risk_profile_source_product_proof: Mapping[str, object] | None,
@@ -192,6 +198,12 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
             "mandate_restriction_live",
             mandate_restriction_live_proof_is_valid,
             _apply_mandate_restriction_live_proof,
+        ),
+        _proof_step(
+            scope,
+            "mandate_restriction_source_product",
+            mandate_restriction_source_product_proof_is_valid,
+            _apply_mandate_restriction_source_product_proof,
         ),
         _proof_step(
             scope,
@@ -316,6 +328,12 @@ def apply_opportunity_archetype_proofs_from_scope(
         manage_mandate_live_proof_ref=_ref(scope, "manage_mandate_live_proof_ref"),
         mandate_restriction_live_proof=_payload(scope, "mandate_restriction_live_proof"),
         mandate_restriction_live_proof_ref=_ref(scope, "mandate_restriction_live_proof_ref"),
+        mandate_restriction_source_product_proof=_payload(
+            scope, "mandate_restriction_source_product_proof"
+        ),
+        mandate_restriction_source_product_proof_ref=_ref(
+            scope, "mandate_restriction_source_product_proof_ref"
+        ),
         missing_suitability_live_proof=_payload(scope, "missing_suitability_live_proof"),
         missing_suitability_live_proof_ref=_ref(scope, "missing_suitability_live_proof_ref"),
         missing_risk_profile_source_product_proof=_payload(
@@ -468,6 +486,18 @@ def _apply_mandate_restriction_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MANDATE_RESTRICTION_LIVE_BLOCKERS_CLEARED,
         proof_ref=mandate_restriction_live_proof_ref,
+    )
+
+
+def _apply_mandate_restriction_source_product_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    mandate_restriction_source_product_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED,
+        proof_ref=mandate_restriction_source_product_proof_ref,
     )
 
 

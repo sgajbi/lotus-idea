@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; typed Advise mandate/restriction source-product proof and Advise mandate/restriction live proof clear only their named blockers; demo claims remain blocked
 
 ## Outcome
 
@@ -60,9 +60,12 @@ capabilities exist.
    proof clears the portfolio-scoped Manage action-register blocker, Core
    portfolio-state proof clears only the Core portfolio-state source-ref
    blocker, Advise missing-suitability proof clears the live Advise policy
-   blocker, typed missing risk-profile source-product proof clears only the
-   typed Advise risk-profile source-product blocker, and missing risk-profile
-   live proof clears only the live Advise risk-profile source blocker.
+   blocker, typed mandate/restriction source-product proof clears only the
+   typed restriction source-product blocker, mandate/restriction live proof
+   clears only the Advise restriction live-source blocker, typed missing
+   risk-profile source-product proof clears only the typed Advise risk-profile
+   source-product blocker, and missing risk-profile live proof clears only the
+   live Advise risk-profile source blocker.
    Mandate performance/risk health, data-mesh certification, Workbench proof,
    client-publication, and supported-feature blockers remain intact after
    source-specific proof.
@@ -170,13 +173,18 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    certification, client publication, supported-feature promotion, benchmark
    assignment, benchmark methodology, and benchmark-return calculation remain
    blocked.
-13. Mandate/restriction review now has a bounded deterministic policy and
-   source-safe caller-supplied API foundation. It can create only
-   compliance-review candidates from explicit source-owned restriction posture
-   and must not be presented as live upstream source integration, mandate
+13. Mandate/restriction review now has a bounded deterministic policy,
+   source-safe caller-supplied API foundation, typed Advise
+   `AdvisoryPolicyEvaluationRecord:v1` source-product proof, and separate
+   source-safe Advise live-proof contract. It can create only compliance-review
+   candidates from explicit source-owned restriction posture. A valid
+   source-product proof clears only
+   `opportunity_archetype_typed_restriction_source_product_missing`, and a
+   valid live proof clears only
+   `opportunity_archetype_live_restriction_source_proof_missing`; mandate
    change authority, product/country restriction clearance, suitability
    approval, order creation, Workbench proof, data-mesh certification, client
-   publication, or supported-feature promotion.
+   publication, and supported-feature promotion remain blocked.
 14. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 

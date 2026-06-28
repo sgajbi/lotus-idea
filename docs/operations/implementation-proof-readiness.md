@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, typed Advise mandate/restriction source-product, Advise mandate/restriction live, Advise missing-suitability, typed Advise missing risk-profile source-product, and Advise missing risk-profile live proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/restriction-clearance/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -142,6 +142,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes a validated source-safe Lotus Core cashflow live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes a validated source-safe Lotus Manage mandate live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`; it does not certify mandate performance health, mandate risk health, Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, rebalance authority, action authority, order creation, execution, or settlement. |
 | `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` | Passes a validated source-safe Lotus Advise mandate/restriction live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_restriction_source_proof_missing`; it does not certify a typed restriction source product, clear restrictions, change mandate state, approve suitability or policy, certify data mesh, prove Workbench behavior, approve client publication, create rebalance/order authority, or promote support. |
+| `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` | Passes a validated source-safe typed Lotus Advise mandate/restriction source-product proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_typed_restriction_source_product_missing`; it does not certify live Advise reachability, clear restrictions, change mandate state, approve suitability, approve policy, approve proposals, certify data mesh, prove Workbench behavior, approve client publication, create rebalance/order authority, or promote support. |
 | `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Advise policy-evaluation live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_advise_policy_live_source_proof_missing`; it does not certify suitability, policy approval, proposal approval, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF` | Passes a validated source-safe typed Lotus Advise risk-profile source-product proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_typed_advise_risk_profile_source_product_missing`; it does not certify live Advise reachability, approve risk profiling, approve suitability or policy, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF` | Passes a validated source-safe Lotus Advise risk-profile diagnostic live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_advise_risk_profile_live_source_proof_missing`; it does not certify a typed risk-profile source product, risk-profile approval, suitability, policy approval, proposal approval, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -339,6 +340,20 @@ order, client-publication, data-mesh, Workbench, and supported-feature
 blockers. Generic Advise policy diagnostics do not validate this proof; the
 source diagnostic must explicitly identify a mandate/restriction review
 condition.
+
+Lotus Advise mandate/restriction source-product proof is captured by
+`scripts/generate_mandate_restriction_source_product_proof.py`. A valid
+artifact referenced through
+`LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` clears only
+`opportunity_archetype_typed_restriction_source_product_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves that
+`lotus-idea` consumes the typed
+`lotus-advise:AdvisoryPolicyEvaluationRecord:v1` source-product contract and
+Advise-owned restriction diagnostic vocabulary for mandate, product
+restriction, country restriction, and suitability-policy actionability posture.
+It deliberately retains live Advise source proof, restriction clearance,
+mandate-state authority, suitability, policy, proposal, client-publication,
+data-mesh, Workbench, and supported-feature blockers.
 
 Lotus Advise missing-suitability live proof is captured by
 `scripts/generate_missing_suitability_live_proof.py`. A valid artifact
@@ -670,7 +685,8 @@ clear only the concentration live Risk scenario blocker, and a valid
 high-volatility proof can clear only the live Risk volatility scenario blocker,
 and a valid Risk drawdown proof can clear only the drawdown source blocker.
 Valid Performance, Core benchmark assignment, low-income Core cashflow, Manage
-mandate, Core portfolio-state, Advise missing-suitability, and Advise missing
+mandate, Core portfolio-state, Advise mandate/restriction source-product,
+Advise mandate/restriction live, Advise missing-suitability, and Advise missing
 risk-profile artifacts can clear only their own namespaced source blockers when
 supplied.
 High-volatility / drawdown review remains blocked on data-mesh, Workbench,
@@ -771,6 +787,10 @@ Implementation-backed evidence:
     `scripts/generate_missing_risk_profile_source_product_proof.py`,
 32. Missing risk-profile source-product proof contract gate:
     `make missing-risk-profile-source-product-proof-contract-gate`,
+33. Mandate/restriction source-product proof generator:
+    `scripts/generate_mandate_restriction_source_product_proof.py`,
+34. Mandate/restriction source-product proof contract gate:
+    `make mandate-restriction-source-product-proof-contract-gate`,
 33. Missing risk-profile live-proof generator:
     `scripts/generate_missing_risk_profile_live_proof.py`,
 34. Missing risk-profile live-proof contract gate:

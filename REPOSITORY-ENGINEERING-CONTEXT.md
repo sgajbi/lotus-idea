@@ -1095,6 +1095,20 @@ mandate/restriction live-proof path. A valid artifact referenced through
 source proof blocker when current `AdvisoryPolicyEvaluationRecord:v1` evidence
 carries an explicit source-owned restriction diagnostic; generic Advise policy
 diagnostics do not validate this proof.
+`src/app/application/mandate_restriction_source_product_proof.py`,
+`scripts/generate_mandate_restriction_source_product_proof.py`, and
+`make mandate-restriction-source-product-proof-contract-gate` define the
+separate typed Advise mandate/restriction source-product proof path. A valid
+artifact referenced through
+`LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF` clears only the typed
+restriction source-product blocker when it cites
+`lotus-advise:AdvisoryPolicyEvaluationRecord:v1`, the Advise source-product
+contract, trust telemetry contract, and Advise-owned mandate, product
+restriction, country restriction, and suitability-policy actionability
+diagnostic vocabulary; it does not certify live Advise reachability, clear
+restrictions, change mandate state, approve suitability or policy, certify
+data mesh, prove Workbench behavior, approve client publication, create
+rebalance/order authority, or promote support.
 A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
@@ -1117,6 +1131,8 @@ A valid Manage mandate live-proof artifact clears only the portfolio-scoped
 Manage action-register source blocker.
 A valid mandate/restriction live-proof artifact clears only the Advise live
 restriction source blocker.
+A valid mandate/restriction source-product proof artifact clears only the typed
+Advise restriction source-product blocker.
 Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries live Performance,
@@ -1136,11 +1152,15 @@ Workbench, client-publication, and supported-feature blockers after typed
 Advise risk-profile source-product proof is supplied, and still carries
 data-mesh, Workbench, client-publication, and supported-feature blockers after
 both typed source-product proof and live Advise risk-profile proof are supplied.
-Mandate/restriction review still carries typed restriction source product,
-Workbench, data-mesh, client-publication, and supported-feature blockers after
-live Advise restriction proof is supplied, and it still does not clear
-restrictions, change mandate state, approve policy/suitability/proposals, or
-create rebalance/order authority.
+Mandate/restriction review still carries live Advise source, Workbench,
+data-mesh, client-publication, and supported-feature blockers after typed
+Advise restriction source-product proof is supplied; it still carries typed
+restriction source-product, Workbench, data-mesh, client-publication, and
+supported-feature blockers after live Advise restriction proof is supplied;
+and it still carries Workbench, data-mesh, client-publication, and
+supported-feature blockers after both source-product and live Advise proofs
+are supplied. Neither proof clears restrictions, changes mandate state,
+approves policy/suitability/proposals, or creates rebalance/order authority.
 Low-income / liquidity shortfall still carries Workbench, data-mesh,
 client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding
