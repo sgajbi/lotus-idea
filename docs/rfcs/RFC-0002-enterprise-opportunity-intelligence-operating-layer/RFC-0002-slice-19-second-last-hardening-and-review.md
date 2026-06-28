@@ -150,6 +150,26 @@ This slice also hardens CI lint-gate contract coverage:
    data-mesh certification, live source ingestion, Workbench support, client
    publication, or production-ready claims.
 
+This slice also hardens repo-native CI test and coverage enforcement:
+
+1. The Makefile now exposes suite-specific coverage targets:
+   `make test-unit-coverage`, `make test-integration-coverage`, and
+   `make test-e2e-coverage`.
+2. `make test-coverage` runs those suite-level targets before
+   `make coverage-gate`, preserving the combined coverage gate while keeping
+   suite execution on the same Makefile surface used locally.
+3. Feature, PR Merge, and Main Releasability workflows call repo-native test
+   and coverage targets instead of raw workflow `pytest` commands.
+4. `scripts/ci_contract_gate.py` now rejects raw workflow `pytest` shortcuts
+   and weakened coverage-target selectors, so future agents cannot make GitHub
+   appear green while bypassing local quality governance.
+5. `tests/unit/test_ci_contract_gate.py` and
+   `tests/unit/test_ci_enforcement_contract.py` cover current pass behavior,
+   raw workflow shortcut rejection, and scoped coverage-target failure cases.
+6. This is CI enforcement only. It does not promote supported features,
+   data-mesh certification, live source ingestion, Workbench support, client
+   publication, or production-ready claims.
+
 This slice also hardens downstream realization contract governance:
 
 1. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`

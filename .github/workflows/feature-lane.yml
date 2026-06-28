@@ -69,4 +69,4 @@ jobs:
       - name: Install
         run: make install
       - name: Run unit tests
-        run: ./.venv/bin/python -m pytest tests/unit
+        run: make test-unit

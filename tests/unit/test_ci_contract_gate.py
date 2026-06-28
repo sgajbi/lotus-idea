@@ -110,6 +110,28 @@ def test_ci_contract_gate_blocks_unscoped_unit_test_target() -> None:
     assert "Makefile test-unit target must run `$(VENV_PYTHON) -m pytest $(UNIT_TESTS)`" in errors
 
 
+def test_ci_contract_gate_blocks_unscoped_coverage_test_target() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "COVERAGE_FILE=.coverage.integration $(VENV_PYTHON) -m pytest "
+            "$(INTEGRATION_TESTS) --cov=src --cov-report=",
+            "COVERAGE_FILE=.coverage.integration $(VENV_PYTHON) -m pytest "
+            "tests/integration --cov=src --cov-report=",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile test-integration-coverage target must run "
+        "`COVERAGE_FILE=.coverage.integration $(VENV_PYTHON) -m pytest "
+        "$(INTEGRATION_TESTS) --cov=src --cov-report=`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_stale_implementation_proof_readiness_target() -> None:
     module = _load_ci_contract_gate()
     makefile = (

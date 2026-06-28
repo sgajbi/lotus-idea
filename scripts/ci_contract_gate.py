@@ -11,6 +11,8 @@ from ci_contract_gate_expectations import (  # noqa: E402
     PASSED_READINESS_ARTIFACTS,
     REQUIRED_LINT_TARGETS,
     REQUIRED_READINESS_WIRING,
+    SCRIPT_TARGET_EXPECTATIONS,
+    TEST_TARGET_EXPECTATIONS,
 )
 
 MAKEFILE_PATH = ROOT / "Makefile"
@@ -35,6 +37,9 @@ REQUIRED_TARGETS = (
     "test-unit",
     "test-integration",
     "test-e2e",
+    "test-unit-coverage",
+    "test-integration-coverage",
+    "test-e2e-coverage",
     "test-coverage",
     "coverage-gate",
     "security-audit",
@@ -73,7 +78,6 @@ REQUIRED_TEST_SELECTORS = {
     ),
     "E2E_TESTS ?= tests/e2e": "Makefile must define E2E_TESTS for scoped e2e validation",
 }
-
 WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     "feature-lane.yml": (
         "permissions:\n  contents: read",
@@ -85,7 +89,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "make architecture-boundary-gate",
         "make openapi-gate",
         "make security-audit",
-        "pytest tests/unit",
+        "make test-unit",
     ),
     "pr-merge-gate.yml": (
         "permissions:\n  contents: read",
@@ -98,6 +102,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "suite: unit",
         "suite: integration",
         "suite: e2e",
+        "make test-${{ matrix.suite }}-coverage",
         "make lint",
         "make typecheck",
         "make architecture-boundary-gate",
@@ -124,6 +129,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "suite: unit",
         "suite: integration",
         "suite: e2e",
+        "make test-${{ matrix.suite }}-coverage",
         "make lint",
         "make typecheck",
         "make architecture-boundary-gate",
@@ -169,18 +175,21 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "contents: write",
         "pull-requests: write",
         "continue-on-error:",
+        "run: ./.venv/bin/python -m pytest",
     ),
     "pr-merge-gate.yml": (
         "pull_request_target:",
         "contents: write",
         "pull-requests: write",
         "continue-on-error:",
+        "run: ./.venv/bin/python -m pytest",
     ),
     "main-releasability.yml": (
         "pull_request_target:",
         "contents: write",
         "pull-requests: write",
         "continue-on-error:",
+        "run: ./.venv/bin/python -m pytest",
     ),
     "pr-auto-merge.yml": ("continue-on-error:",),
     "merged-pr-main-releasability.yml": ("continue-on-error:",),
@@ -227,7 +236,7 @@ def _validate_implementation_proof_readiness_target(makefile: str) -> list[str]:
     return errors
 
 
-def validate_makefile(makefile: str) -> list[str]:
+def _validate_required_makefile_targets(makefile: str) -> list[str]:
     errors: list[str] = []
     for target in REQUIRED_TARGETS:
         if not re.search(rf"^{re.escape(target)}:", makefile, re.MULTILINE):
@@ -235,6 +244,11 @@ def validate_makefile(makefile: str) -> list[str]:
     for selector, error in REQUIRED_TEST_SELECTORS.items():
         if selector not in makefile:
             errors.append(error)
+    return errors
+
+
+def _validate_aggregate_makefile_targets(makefile: str) -> list[str]:
+    errors: list[str] = []
     lint_block = _target_block(makefile, "lint")
     for call in REQUIRED_LINT_CALLS:
         if call not in lint_block:
@@ -247,19 +261,26 @@ def validate_makefile(makefile: str) -> list[str]:
     for dependency in REQUIRED_CI_DEPS:
         if dependency not in ci_deps:
             errors.append(f"Makefile ci target missing `{dependency}`")
-    test_target_expectations = {
-        "test-unit": "$(VENV_PYTHON) -m pytest $(UNIT_TESTS)",
-        "test-integration": "$(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS)",
-        "test-e2e": "$(VENV_PYTHON) -m pytest $(E2E_TESTS)",
-    }
-    for target, expected_command in test_target_expectations.items():
+    return errors
+
+
+def _validate_test_targets(makefile: str) -> list[str]:
+    errors: list[str] = []
+    for target, expected_command in TEST_TARGET_EXPECTATIONS.items():
         if expected_command not in _target_block(makefile, target):
             errors.append(f"Makefile {target} target must run `{expected_command}`")
 
     coverage_block = _target_block(makefile, "test-coverage")
-    for selector in ("$(UNIT_TESTS)", "$(INTEGRATION_TESTS)", "$(E2E_TESTS)"):
-        if selector not in coverage_block:
-            errors.append(f"Makefile test-coverage target must use `{selector}`")
+    for target in ("test-unit-coverage", "test-integration-coverage", "test-e2e-coverage"):
+        if target not in coverage_block:
+            errors.append(f"Makefile test-coverage target must call `{target}`")
+    if "$(MAKE) coverage-gate" not in coverage_block:
+        errors.append("Makefile test-coverage target must call `$(MAKE) coverage-gate`")
+    return errors
+
+
+def _validate_security_audit_target(makefile: str) -> list[str]:
+    errors: list[str] = []
     security_audit = _target_block(makefile, "security-audit")
     if "-m pip_audit" not in security_audit:
         errors.append("Makefile security-audit target must run pip-audit")
@@ -267,67 +288,19 @@ def validate_makefile(makefile: str) -> list[str]:
         errors.append("Makefile security-audit target must audit shared runtime lock")
     if "requirements/ci-tooling.lock.txt" not in security_audit:
         errors.append("Makefile security-audit target must audit CI tooling lock")
+    return errors
 
-    script_target_expectations = {
-        "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
-        "source-ingestion-scheduled-worker-check": "scripts/source_ingestion_scheduled_worker_contract_gate.py",
-        "source-ingestion-live-proof-contract-gate": "scripts/source_ingestion_live_proof_contract_gate.py",
-        "risk-concentration-live-proof-contract-gate": "scripts/risk_concentration_live_proof_contract_gate.py",
-        "performance-underperformance-live-proof-contract-gate": "scripts/performance_underperformance_live_proof_contract_gate.py",
-        "core-benchmark-assignment-live-proof-contract-gate": "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
-        "core-portfolio-state-live-proof-contract-gate": "scripts/core_portfolio_state_live_proof_contract_gate.py",
-        "bond-maturity-live-proof-contract-gate": "scripts/bond_maturity_live_proof_contract_gate.py",
-        "missing-benchmark-live-proof-contract-gate": "scripts/missing_benchmark_live_proof_contract_gate.py",
-        "missing-benchmark-performance-readiness-proof-contract-gate": (
-            "scripts/missing_benchmark_performance_readiness_proof_contract_gate.py"
-        ),
-        "low-income-core-cashflow-live-proof-contract-gate": "scripts/low_income_core_cashflow_live_proof_contract_gate.py",
-        "risk-drawdown-live-proof-contract-gate": "scripts/risk_drawdown_live_proof_contract_gate.py",
-        "manage-mandate-live-proof-contract-gate": "scripts/manage_mandate_live_proof_contract_gate.py",
-        "mandate-restriction-live-proof-contract-gate": (
-            "scripts/mandate_restriction_live_proof_contract_gate.py"
-        ),
-        "missing-suitability-live-proof-contract-gate": "scripts/missing_suitability_live_proof_contract_gate.py",
-        "missing-risk-profile-live-proof-contract-gate": "scripts/missing_risk_profile_live_proof_contract_gate.py",
-        "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",
-        "opportunity-archetype-contract-gate": ("scripts/opportunity_archetype_contract_gate.py"),
-        "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",
-        "runtime-trust-telemetry-proof-contract-gate": "scripts/runtime_trust_telemetry_proof_contract_gate.py",
-        "ai-lineage-store-proof-contract-gate": "scripts/ai_lineage_store_proof_contract_gate.py",
-        "ai-workflow-pack-registration-proof-contract-gate": "scripts/ai_workflow_pack_registration_proof_contract_gate.py",
-        "ai-workflow-pack-runtime-execution-proof-contract-gate": "scripts/ai_workflow_pack_runtime_execution_proof_contract_gate.py",
-        "downstream-route-contract-proof-gate": "scripts/downstream_route_contract_proof_gate.py",
-        "report-intake-route-proof-contract-gate": "scripts/report_intake_route_proof_contract_gate.py",
-        "report-materialization-proof-contract-gate": "scripts/report_materialization_proof_contract_gate.py",
-        "workbench-read-path-proof-contract-gate": "scripts/workbench_read_path_proof_contract_gate.py",
-        "gateway-workbench-operational-proof-contract-gate": (
-            "scripts/gateway_workbench_operational_proof_contract_gate.py"
-        ),
-        "gateway-workbench-discovery-proof-contract-gate": (
-            "scripts/gateway_workbench_discovery_proof_contract_gate.py"
-        ),
-        "outbox-broker-proof-contract-gate": "scripts/outbox_broker_proof_contract_gate.py",
-        "outbox-consumer-runtime-proof-contract-gate": (
-            "scripts/outbox_consumer_runtime_proof_contract_gate.py"
-        ),
-        "outbox-platform-mesh-event-publication-proof-contract-gate": (
-            "scripts/outbox_platform_mesh_event_publication_proof_contract_gate.py"
-        ),
-        "outbox-consumer-contract-gate": "scripts/outbox_consumer_contract_gate.py",
-        "signal-api-contract-gate": "scripts/signal_api_contract_gate.py",
-        "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
-        "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
-        "ai-model-risk-operations-proof-contract-gate": (
-            "scripts/ai_model_risk_operations_proof_contract_gate.py"
-        ),
-        "high-volatility-live-proof-contract-gate": (
-            "scripts/high_volatility_live_proof_contract_gate.py"
-        ),
-    }
-    for target, script in script_target_expectations.items():
+
+def _validate_script_targets(makefile: str) -> list[str]:
+    errors: list[str] = []
+    for target, script in SCRIPT_TARGET_EXPECTATIONS.items():
         if script not in _target_block(makefile, target):
             errors.append(f"Makefile {target} target must run `{script}`")
-    errors.extend(_validate_implementation_proof_readiness_target(makefile))
+    return errors
+
+
+def _validate_support_targets(makefile: str) -> list[str]:
+    errors = _validate_implementation_proof_readiness_target(makefile)
     runtime_preview_check = _target_block(makefile, "runtime-trust-telemetry-preview-check")
     if "scripts/generate_runtime_trust_telemetry_preview.py" not in runtime_preview_check:
         errors.append(
@@ -344,6 +317,17 @@ def validate_makefile(makefile: str) -> list[str]:
     if "scripts/clean_generated_artifacts.py" not in clean_block:
         errors.append("Makefile clean target must run `scripts/clean_generated_artifacts.py`")
     return errors
+
+
+def validate_makefile(makefile: str) -> list[str]:
+    return [
+        *_validate_required_makefile_targets(makefile),
+        *_validate_aggregate_makefile_targets(makefile),
+        *_validate_test_targets(makefile),
+        *_validate_security_audit_target(makefile),
+        *_validate_script_targets(makefile),
+        *_validate_support_targets(makefile),
+    ]
 
 
 def validate_workflows(workflows_dir: Path) -> list[str]:

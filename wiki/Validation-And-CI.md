@@ -411,10 +411,10 @@ in critical lanes, maintainability enforcement, quality-scorecard truth,
 repository-hygiene enforcement, no-sensitive-content evidence guarding,
 implementation-truth enforcement, and source-safe local quality gates.
 It also has unit coverage for current-repository pass behavior and failure cases for floating
-action tags, wrong verified SHAs, missing version provenance comments, and weakened focused test
-target wiring. `make test-unit`, `make test-integration`, and `make test-e2e` default to their full
-suite paths while allowing scoped fix-forward runs through `UNIT_TESTS`, `INTEGRATION_TESTS`, and
-`E2E_TESTS` overrides:
+action tags, wrong verified SHAs, missing version provenance comments, weakened focused test target
+wiring, and raw workflow `pytest` shortcuts. `make test-unit`, `make test-integration`, and
+`make test-e2e` default to their full suite paths while allowing scoped fix-forward runs through
+`UNIT_TESTS`, `INTEGRATION_TESTS`, and `E2E_TESTS` overrides:
 
 ```powershell
 make test-unit UNIT_TESTS=tests/unit/test_runtime_trust_telemetry.py
@@ -424,6 +424,20 @@ make test-e2e E2E_TESTS=tests/e2e/test_service_contract.py
 
 Use these overrides for fast local diagnosis. PR evidence should still state whether the full
 repo-native target or a focused target was run.
+
+GitHub test and coverage lanes must stay repo-native:
+
+```powershell
+make test-unit
+make test-unit-coverage
+make test-integration-coverage
+make test-e2e-coverage
+make test-coverage
+```
+
+The PR Merge and Main Releasability matrices call the suite-level coverage targets and publish the
+same `.coverage.<suite>` artifacts. `make ci-contract-gate` rejects raw workflow `pytest` shortcuts
+so GitHub cannot drift away from the local Makefile contract.
 
 The repository-hygiene gate blocks tracked generated artifacts and local runtime byproducts:
 Python cache files, coverage outputs, build/dist outputs, dependency directories, local
