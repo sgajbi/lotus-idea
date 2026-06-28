@@ -41,6 +41,8 @@ def test_builds_source_safe_advise_route_proof(tmp_path: Path) -> None:
     assert proof["proofScope"] == "source_safe_advise_proposal_route_only"
     assert proof["adviseProposalRouteProofValid"] is True
     assert proof["targetRoute"] == ADVISE_PROPOSAL_ROUTE
+    assert proof["sourceAuthority"] == "lotus-idea"
+    assert proof["downstreamAuthority"] == "lotus-advise"
     assert tuple(proof["aggregateBlockersCleared"]) == ADVISE_ROUTE_BLOCKERS_CLEARED
     assert tuple(proof["remainingCertificationBlockers"]) == (REMAINING_ADVISE_ROUTE_BLOCKERS)
     assert proof["downstreamExecutionProven"] is False
@@ -59,6 +61,8 @@ def test_builds_source_safe_manage_route_proof(tmp_path: Path) -> None:
     assert proof["proofScope"] == "source_safe_manage_action_route_only"
     assert proof["manageActionRouteProofValid"] is True
     assert proof["targetRoute"] == MANAGE_ACTION_ROUTE
+    assert proof["sourceAuthority"] == "lotus-manage"
+    assert proof["downstreamAuthority"] == "lotus-manage"
     assert tuple(proof["aggregateBlockersCleared"]) == MANAGE_ROUTE_BLOCKERS_CLEARED
     assert tuple(proof["remainingCertificationBlockers"]) == (REMAINING_MANAGE_ROUTE_BLOCKERS)
     assert proof["downstreamExecutionProven"] is False
@@ -135,7 +139,8 @@ def test_manage_route_proof_accepts_contract_without_separate_authority_field(
         ("proofScope", "execution", advise_proposal_route_proof_is_valid),
         ("adviseProposalRouteProofValid", False, advise_proposal_route_proof_is_valid),
         ("targetRoute", "POST /advisory/proposals", advise_proposal_route_proof_is_valid),
-        ("sourceAuthority", "lotus-idea", advise_proposal_route_proof_is_valid),
+        ("sourceAuthority", "lotus-advise", advise_proposal_route_proof_is_valid),
+        ("downstreamAuthority", "lotus-idea", advise_proposal_route_proof_is_valid),
         ("downstreamExecutionProven", True, advise_proposal_route_proof_is_valid),
         ("suitabilityAuthorityGranted", True, advise_proposal_route_proof_is_valid),
         ("rebalanceExecutionAuthorityGranted", True, advise_proposal_route_proof_is_valid),
