@@ -27,6 +27,7 @@ REQUIRED_ARCHETYPES = {
     "bond-maturity-reinvestment",
     "low-income-liquidity-shortfall",
     "missing-benchmark-review",
+    "missing-risk-profile-review",
     "missing-suitability-context",
 }
 REQUIRED_SOURCE_OF_TRUTH = {
@@ -158,6 +159,14 @@ REQUIRED_MISSING_BENCHMARK_EVIDENCE = {
     "tests/unit/test_lotus_core_sources.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
+REQUIRED_MISSING_RISK_PROFILE_EVIDENCE = {
+    "src/app/domain/missing_risk_profile_signal.py",
+    "src/app/application/missing_risk_profile_signal.py",
+    "src/app/ports/advise_sources.py",
+    "tests/unit/test_missing_risk_profile_signal_evaluation.py",
+    "tests/unit/test_missing_risk_profile_application.py",
+    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
@@ -168,6 +177,7 @@ FOUNDATION_ARCHETYPES = {
     "high-volatility-drawdown-review",
     "low-income-liquidity-shortfall",
     "missing-benchmark-review",
+    "missing-risk-profile-review",
     "missing-suitability-context",
     "underperformance-review",
 }
@@ -369,49 +379,29 @@ def _validate_archetypes(
 
 def _validate_foundation_evidence(archetypes: dict[str, object]) -> list[str]:
     errors: list[str] = []
-    errors.extend(_validate_low_income_evidence(archetypes))
-    errors.extend(_validate_bond_maturity_evidence(archetypes))
-    errors.extend(_validate_missing_benchmark_evidence(archetypes))
+    for archetype_id, required_evidence in (
+        ("low-income-liquidity-shortfall", REQUIRED_LOW_INCOME_EVIDENCE),
+        ("bond-maturity-reinvestment", REQUIRED_BOND_MATURITY_EVIDENCE),
+        ("missing-benchmark-review", REQUIRED_MISSING_BENCHMARK_EVIDENCE),
+        ("missing-risk-profile-review", REQUIRED_MISSING_RISK_PROFILE_EVIDENCE),
+    ):
+        errors.extend(_validate_required_evidence(archetypes, archetype_id, required_evidence))
     return errors
 
 
-def _validate_low_income_evidence(
+def _validate_required_evidence(
     archetypes: dict[str, object],
+    archetype_id: str,
+    required_evidence: set[str],
 ) -> list[str]:
-    low_income = archetypes.get("low-income-liquidity-shortfall")
-    if low_income is None:
+    archetype = archetypes.get(archetype_id)
+    if archetype is None:
         return []
-    evidence_refs = getattr(low_income, "evidence_refs", ())
-    missing_evidence = sorted(REQUIRED_LOW_INCOME_EVIDENCE - set(evidence_refs))
+    evidence_refs = getattr(archetype, "evidence_refs", ())
+    missing_evidence = sorted(required_evidence - set(evidence_refs))
     if not missing_evidence:
         return []
-    return ["low-income-liquidity-shortfall evidence_refs missing: " + ", ".join(missing_evidence)]
-
-
-def _validate_bond_maturity_evidence(
-    archetypes: dict[str, object],
-) -> list[str]:
-    bond_maturity = archetypes.get("bond-maturity-reinvestment")
-    if bond_maturity is None:
-        return []
-    evidence_refs = getattr(bond_maturity, "evidence_refs", ())
-    missing_evidence = sorted(REQUIRED_BOND_MATURITY_EVIDENCE - set(evidence_refs))
-    if not missing_evidence:
-        return []
-    return ["bond-maturity-reinvestment evidence_refs missing: " + ", ".join(missing_evidence)]
-
-
-def _validate_missing_benchmark_evidence(
-    archetypes: dict[str, object],
-) -> list[str]:
-    missing_benchmark = archetypes.get("missing-benchmark-review")
-    if missing_benchmark is None:
-        return []
-    evidence_refs = getattr(missing_benchmark, "evidence_refs", ())
-    missing_evidence = sorted(REQUIRED_MISSING_BENCHMARK_EVIDENCE - set(evidence_refs))
-    if not missing_evidence:
-        return []
-    return ["missing-benchmark-review evidence_refs missing: " + ", ".join(missing_evidence)]
+    return [f"{archetype_id} evidence_refs missing: " + ", ".join(missing_evidence)]
 
 
 def _validate_evidence_refs(

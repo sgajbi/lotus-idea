@@ -111,7 +111,8 @@ inclusion.
 RFC-0002 Slice 05 is partially implemented for high-cash / idle-liquidity,
 concentration, underperformance, allocation-drift mandate-review, bond
 maturity / reinvestment, high-volatility / drawdown, missing suitability
-context, and low-income / liquidity-shortfall domain policy foundations.
+context, missing risk-profile review, and low-income / liquidity-shortfall
+domain policy foundations.
 `src/app/domain/signal_evaluation.py` consumes source-reported cash-weight
 evidence and Core source refs, creates deterministic `OpportunitySignal`,
 `IdeaEvidencePacket`, and `IdeaCandidate` domain objects for positive cases,
@@ -935,9 +936,9 @@ contract at
 The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review, underperformance review,
 allocation drift / mandate review, bond maturity / reinvestment,
-high-volatility review, missing suitability context, low-income /
-liquidity shortfall, and missing-benchmark review as non-promoted bounded
-foundations.
+high-volatility review, missing suitability context, missing risk-profile
+review, low-income / liquidity shortfall, and missing-benchmark review as
+non-promoted bounded foundations.
 Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
 source-safe live-proof artifact contract, and focused unit tests.
@@ -964,7 +965,13 @@ adapter over `GET /advisory/policy-evaluations/{evaluation_id}/workflow`, and
 focused unit tests that prove Advise-owned open approval, disclosure, consent,
 and sign-off posture can create only a compliance-review candidate without
 approving suitability, policy, proposals, sign-off, client publication, or
-external communication. Low-income / liquidity shortfall is backed by
+external communication. Missing risk-profile review is backed by deterministic
+policy and bounded consumption of explicit Lotus Advise risk-profile diagnostic
+posture from `AdvisoryPolicyEvaluationRecord:v1`; generic open suitability or
+policy requirements stay on the missing suitability context path. It can create
+only an advisor-review evidence-gap candidate and does not approve risk
+profiling, suitability, policy, proposal, client publication, or external
+communication. Low-income / liquidity shortfall is backed by
 deterministic policy, a Lotus Core cashflow source port, a fail-closed HTTP
 adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
 `/portfolios/{portfolio_id}/cashflow-projection`, and focused unit tests that
@@ -1002,6 +1009,9 @@ supported-feature blockers after live Risk volatility and drawdown proofs are su
 Missing suitability context still carries data-mesh, Workbench,
 client-publication, and supported-feature blockers after live Advise policy
 proof is supplied.
+Missing risk-profile review still carries typed Advise risk-profile source
+product, live Advise risk-profile proof, data-mesh, Workbench,
+client-publication, and supported-feature blockers.
 Low-income / liquidity shortfall still carries Workbench, data-mesh,
 client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding
