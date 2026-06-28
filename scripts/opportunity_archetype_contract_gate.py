@@ -4,11 +4,8 @@ import argparse
 from pathlib import Path
 import sys
 
-
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
-if str(SRC) not in sys.path:
-    sys.path.insert(0, str(SRC))
+sys.path.insert(0, str(ROOT / "src"))
 
 from app.application.opportunity_archetype_contracts import (  # noqa: E402
     OPPORTUNITY_ARCHETYPE_CONTRACT_PATH,
@@ -17,6 +14,7 @@ from app.application.opportunity_archetype_contracts import (  # noqa: E402
     opportunity_archetype_contract_from_payload,
 )
 
+_parse_payload = opportunity_archetype_contract_from_payload
 
 REQUIRED_ARCHETYPES = {
     "high-cash-idle-liquidity",
@@ -162,15 +160,22 @@ REQUIRED_MISSING_BENCHMARK_EVIDENCE = {
     "src/app/domain/missing_benchmark_signal.py",
     "src/app/application/missing_benchmark_signal.py",
     "src/app/application/missing_benchmark_live_proof.py",
+    "src/app/application/missing_benchmark_performance_readiness_proof.py",
     "src/app/ports/core_sources.py",
+    "src/app/ports/performance_sources.py",
     "src/app/infrastructure/lotus_core_sources.py",
+    "src/app/infrastructure/lotus_performance_sources.py",
     "scripts/generate_missing_benchmark_live_proof.py",
+    "scripts/generate_missing_benchmark_performance_readiness_proof.py",
     "make missing-benchmark-live-proof-contract-gate",
+    "make missing-benchmark-performance-readiness-proof-contract-gate",
     "tests/unit/test_missing_benchmark_signal_evaluation.py",
     "tests/unit/test_missing_benchmark_application.py",
     "tests/unit/test_missing_benchmark_live_proof.py",
+    "tests/unit/test_missing_benchmark_performance_readiness_proof.py",
     "tests/unit/test_implementation_proof_readiness_missing_benchmark.py",
     "tests/unit/test_lotus_core_sources.py",
+    "tests/unit/test_lotus_performance_sources.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
 REQUIRED_MISSING_RISK_PROFILE_EVIDENCE = {
@@ -471,10 +476,6 @@ def _validate_scenarios(
         if not getattr(scenario, "remaining_blockers", ()):
             errors.append(f"{archetype_id}: scenario remaining_blockers are required")
     return errors
-
-
-def _parse_payload(payload: dict[str, object]) -> OpportunityArchetypeContract:
-    return opportunity_archetype_contract_from_payload(payload)
 
 
 def parse_args() -> argparse.Namespace:

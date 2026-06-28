@@ -189,6 +189,7 @@ Persistence adapter validation:
    optional Core benchmark assignment live proof consumption,
    optional Core portfolio-state live proof consumption,
    optional missing-benchmark live Core proof consumption,
+   optional missing-benchmark Performance readiness proof consumption,
    default Report intake route proof generation and consumption, default
    Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and

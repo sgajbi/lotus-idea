@@ -8,6 +8,8 @@ from typing import Any
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
 from app.ports.performance_sources import (
+    PerformanceBenchmarkReadinessEvidence,
+    PerformanceBenchmarkReadinessEvidenceRequest,
     PerformanceSourceEntitlementDenied,
     PerformanceSourceUnavailable,
     PerformanceUnderperformanceEvidence,
@@ -23,6 +25,12 @@ RETURNS_SERIES_ROUTE = "/integration/returns/series"
 @dataclass(frozen=True)
 class _UnderperformanceMeasures:
     source_reported_active_return: Decimal | None
+    benchmark_context_available: bool
+    diagnostic: str
+
+
+@dataclass(frozen=True)
+class _BenchmarkReadinessMeasures:
     benchmark_context_available: bool
     diagnostic: str
 
@@ -55,9 +63,33 @@ class LotusPerformanceUnderperformanceSourceAdapter:
             performance_diagnostic=measures.diagnostic,
         )
 
+    def fetch_benchmark_readiness_evidence(
+        self,
+        request: PerformanceBenchmarkReadinessEvidenceRequest,
+    ) -> PerformanceBenchmarkReadinessEvidence:
+        try:
+            payload = self._performance_client.post_json(
+                RETURNS_SERIES_ROUTE,
+                json_payload=_returns_series_request_payload(request),
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise PerformanceSourceEntitlementDenied from exc
+            raise PerformanceSourceUnavailable(code=exc.code) from exc
+
+        measures = _benchmark_readiness_measures(payload)
+        return PerformanceBenchmarkReadinessEvidence(
+            benchmark_context_available=measures.benchmark_context_available,
+            performance_ref=_source_ref(payload),
+            performance_diagnostic=measures.diagnostic,
+        )
+
 
 def _returns_series_request_payload(
-    request: PerformanceUnderperformanceEvidenceRequest,
+    request: PerformanceUnderperformanceEvidenceRequest
+    | PerformanceBenchmarkReadinessEvidenceRequest,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "portfolio_id": request.portfolio_id,
@@ -103,6 +135,24 @@ def _underperformance_measures(payload: dict[str, Any]) -> _UnderperformanceMeas
     )
     return _UnderperformanceMeasures(
         source_reported_active_return=active_return,
+        benchmark_context_available=benchmark_context_available,
+        diagnostic=diagnostic,
+    )
+
+
+def _benchmark_readiness_measures(payload: dict[str, Any]) -> _BenchmarkReadinessMeasures:
+    if str(payload.get("source_service", "")).lower() != "lotus-performance":
+        raise PerformanceSourceUnavailable(code="performance_source_service_mismatch")
+    if _is_async_accepted(payload):
+        raise PerformanceSourceUnavailable(code="performance_returns_series_pending")
+
+    benchmark_context_available = isinstance(payload.get("benchmark_context"), dict)
+    diagnostic = (
+        "performance_benchmark_context_ready"
+        if benchmark_context_available
+        else "performance_benchmark_context_missing"
+    )
+    return _BenchmarkReadinessMeasures(
         benchmark_context_available=benchmark_context_available,
         diagnostic=diagnostic,
     )

@@ -1046,15 +1046,17 @@ Low-income / liquidity shortfall still carries Workbench, data-mesh,
 client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding
 advice, treasury instruction, suitability, or planning objectives.
-Missing-benchmark review is backed by deterministic policy and the existing
-Lotus Core benchmark-assignment source port. It can create only an
+Missing-benchmark review is backed by deterministic policy, the existing
+Lotus Core benchmark-assignment source port, and bounded Lotus Performance
+benchmark-readiness proof consumption over `ReturnsSeriesBundle:v1`. It can create only an
 advisor-review evidence-gap candidate when Core-owned benchmark identity,
 effective assignment, active status, or assignment version posture is missing;
-it does not assign a benchmark, calculate benchmark returns, certify
-methodology, or promote support. A valid source-safe missing-benchmark live
-Core proof artifact clears only the missing-benchmark live Core source blocker;
-Performance benchmark-readiness source-ref, data-mesh, Workbench,
-client-publication, and supported-feature blockers remain.
+it does not assign a benchmark, calculate performance or benchmark returns,
+certify methodology, or promote support. A valid source-safe missing-benchmark
+live Core proof artifact clears only the missing-benchmark live Core source
+blocker; a valid source-safe Performance benchmark-readiness proof artifact
+clears only the missing-benchmark Performance source-ref blocker. Data-mesh,
+Workbench, client-publication, and supported-feature blockers remain.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
@@ -1077,6 +1079,15 @@ artifact is supplied through aggregate implementation-proof readiness, it clears
 only `opportunity_archetype_live_performance_source_proof_missing` and keeps
 benchmark-assignment, data-mesh, Workbench, client-publication, and
 supported-feature blockers intact.
+`make missing-benchmark-performance-readiness-proof-contract-gate` validates the
+optional Lotus Performance benchmark-readiness proof artifact for
+missing-benchmark review. When a valid artifact is supplied through aggregate
+implementation-proof readiness, it clears only
+`opportunity_archetype_performance_benchmark_readiness_source_ref_missing` and
+keeps Core missing-benchmark live proof, data-mesh, Workbench,
+client-publication, and supported-feature blockers intact. It does not assign
+benchmarks, calculate performance or benchmark returns, or certify benchmark
+methodology.
 `make core-benchmark-assignment-live-proof-contract-gate` validates the optional
 Lotus Core benchmark assignment live-proof artifact. When a valid artifact is
 supplied through aggregate implementation-proof readiness, it clears only

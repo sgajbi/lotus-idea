@@ -5,9 +5,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT_DIR = Path(__file__).resolve().parent
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.append(str(SCRIPT_DIR))
+sys.path.append(str(Path(__file__).resolve().parent))
 
 from ci_contract_gate_expectations import (  # noqa: E402
     GENERATED_READINESS_ARTIFACTS,
@@ -19,7 +17,6 @@ MAKEFILE_PATH = ROOT / "Makefile"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
 ACTION_USE_RE = re.compile(r"uses:\s+(?P<action>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@(?P<ref>[^ \t#]+)")
 FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-
 PINNED_ACTIONS: dict[str, tuple[str, str]] = {
     "actions/checkout": ("9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0", "v7.0.0"),
     "actions/setup-python": ("a309ff8b426b58ec0e2a45f0f869d46889d02405", "v6.2.0"),
@@ -71,6 +68,7 @@ REQUIRED_LINT_TARGETS = (
     "core-benchmark-assignment-live-proof-contract-gate",
     "core-portfolio-state-live-proof-contract-gate",
     "missing-benchmark-live-proof-contract-gate",
+    "missing-benchmark-performance-readiness-proof-contract-gate",
     "low-income-core-cashflow-live-proof-contract-gate",
     "manage-mandate-live-proof-contract-gate",
     "missing-suitability-live-proof-contract-gate",
@@ -337,6 +335,9 @@ def validate_makefile(makefile: str) -> list[str]:
         "core-benchmark-assignment-live-proof-contract-gate": "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
         "core-portfolio-state-live-proof-contract-gate": "scripts/core_portfolio_state_live_proof_contract_gate.py",
         "missing-benchmark-live-proof-contract-gate": "scripts/missing_benchmark_live_proof_contract_gate.py",
+        "missing-benchmark-performance-readiness-proof-contract-gate": (
+            "scripts/missing_benchmark_performance_readiness_proof_contract_gate.py"
+        ),
         "low-income-core-cashflow-live-proof-contract-gate": "scripts/low_income_core_cashflow_live_proof_contract_gate.py",
         "risk-drawdown-live-proof-contract-gate": "scripts/risk_drawdown_live_proof_contract_gate.py",
         "manage-mandate-live-proof-contract-gate": "scripts/manage_mandate_live_proof_contract_gate.py",

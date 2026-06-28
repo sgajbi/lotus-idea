@@ -8,7 +8,7 @@
 | Required capability | `idea.implementation-proof.readiness.read` |
 | Required query | Timezone-aware `evaluatedAtUtc` |
 | Supportability | `not_certified` while blockers remain |
-| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, Advise missing-suitability, and Advise missing risk-profile proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
+| Product claim | Bounded live source-ingestion, runtime trust telemetry, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Gateway/Workbench operational, Gateway/Workbench discovery, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution proof artifacts, and opportunity archetype scenario readiness can be consumed; Risk concentration, high-volatility, Risk drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, low-income Core cashflow, Manage mandate, Advise missing-suitability, and Advise missing risk-profile proof artifacts clear only source-specific blockers; no full live journey, live AI provider execution, suitability/rebalance/risk-profile/benchmark-assignment authority, platform mesh certification, external broker publication, downstream delivery, full Gateway/Workbench product proof, live archetype replay proof, client-ready publication, or supported-feature promotion |
 
 `GET /api/v1/implementation-proof/readiness` is the internal operator
 diagnostic for RFC-0002 implementation proof posture.
@@ -134,6 +134,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Risk high-volatility live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF` | Passes a validated source-safe Lotus Performance underperformance live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_performance_source_proof_missing`; it does not certify benchmark assignment, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes a validated source-safe Lotus Core portfolio-state live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`; it does not certify Manage action-register proof, mandate performance health, mandate risk health, rebalance authority, action authority, order execution, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes a validated source-safe Lotus Core missing-benchmark live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; it does not assign benchmarks, certify Performance benchmark-readiness evidence, certify benchmark methodology, calculate benchmark composition or returns, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
@@ -733,17 +734,21 @@ Implementation-backed evidence:
     `scripts/generate_performance_underperformance_live_proof.py`,
 36. Performance underperformance live-proof contract gate:
     `make performance-underperformance-live-proof-contract-gate`,
-37. Core benchmark assignment live-proof generator:
+37. Missing-benchmark Performance readiness proof generator:
+    `scripts/generate_missing_benchmark_performance_readiness_proof.py`,
+38. Missing-benchmark Performance readiness proof contract gate:
+    `make missing-benchmark-performance-readiness-proof-contract-gate`,
+39. Core benchmark assignment live-proof generator:
     `scripts/generate_core_benchmark_assignment_live_proof.py`,
-38. Core benchmark assignment live-proof contract gate:
+40. Core benchmark assignment live-proof contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`,
-39. Core portfolio-state live-proof generator:
+41. Core portfolio-state live-proof generator:
     `scripts/generate_core_portfolio_state_live_proof.py`,
-40. Core portfolio-state live-proof contract gate:
+42. Core portfolio-state live-proof contract gate:
     `make core-portfolio-state-live-proof-contract-gate`,
-41. Core portfolio-state live-proof tests:
+43. Core portfolio-state live-proof tests:
     `tests/unit/test_core_portfolio_state_live_proof.py`,
-42. Low-income Core cashflow live-proof generator:
+44. Low-income Core cashflow live-proof generator:
     `scripts/generate_low_income_core_cashflow_live_proof.py`,
 43. Low-income Core cashflow live-proof contract gate:
     `make low-income-core-cashflow-live-proof-contract-gate`,

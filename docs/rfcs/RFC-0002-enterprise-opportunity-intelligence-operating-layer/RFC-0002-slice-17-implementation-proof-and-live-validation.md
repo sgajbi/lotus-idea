@@ -329,7 +329,18 @@ Prove the complete supported opportunity journey end to end.
     client-publication, and supported-feature blockers. The proof does not
     assign benchmarks, calculate benchmark returns, or certify benchmark
     methodology.
-33. `src/app/application/low_income_core_cashflow_live_proof.py`,
+34. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
+    `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
+    `make missing-benchmark-performance-readiness-proof-contract-gate` now
+    define and enforce a source-safe Lotus Performance benchmark-readiness proof
+    artifact for missing-benchmark review. Aggregate readiness can consume a
+    valid artifact to clear only
+    `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`,
+    while preserving Core missing-benchmark live proof, data-mesh, Workbench,
+    client-publication, and supported-feature blockers. The proof does not
+    assign benchmarks, calculate performance or benchmark returns, or certify
+    benchmark methodology.
+35. `src/app/application/low_income_core_cashflow_live_proof.py`,
     `scripts/generate_low_income_core_cashflow_live_proof.py`, and
     `make low-income-core-cashflow-live-proof-contract-gate` now define and
     enforce a source-safe Lotus Core cashflow live-proof artifact. Aggregate

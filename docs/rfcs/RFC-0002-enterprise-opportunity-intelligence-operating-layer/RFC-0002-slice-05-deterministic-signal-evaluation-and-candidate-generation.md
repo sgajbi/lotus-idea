@@ -240,10 +240,17 @@ Additional implemented missing-benchmark foundation:
    Core proof artifact that can clear only the missing-benchmark live Core
    source blocker when it proves a current Core source attempt produced an
    advisor-review missing-benchmark candidate.
-6. The opportunity archetype contract records `missing-benchmark-review` as a
+6. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
+   `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
+   `make missing-benchmark-performance-readiness-proof-contract-gate` define a
+   source-safe Lotus Performance benchmark-readiness proof artifact that can
+   clear only the missing-benchmark Performance source-ref blocker when
+   `ReturnsSeriesBundle:v1` evidence proves benchmark readiness was evaluated.
+7. The opportunity archetype contract records `missing-benchmark-review` as a
    non-promoted bounded foundation. Remaining blockers include Performance
-   benchmark-readiness source ref, data-mesh certification, Workbench proof,
-   client publication, and supported-feature promotion.
+   benchmark-readiness source ref when no valid proof is supplied, data-mesh
+   certification, Workbench proof, client publication, and supported-feature
+   promotion.
 
 Additional implemented allocation-drift / mandate-review foundation:
 
@@ -509,8 +516,8 @@ Not implemented yet:
    runtime and merged as release evidence,
 2. live Performance returns-series source proof captured from an actual
    canonical runtime and merged as release evidence,
-3. Performance benchmark-readiness source refs beyond Core benchmark-assignment
-   source-ref proof,
+3. live Performance benchmark-readiness proof captured from an actual canonical
+   runtime and merged as release evidence,
 4. mandate performance-health source refs from the governed Performance source
    authority,
 5. mandate risk-health source refs from the governed Risk source authority,
