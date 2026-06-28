@@ -509,12 +509,13 @@ Not implemented yet:
    runtime and merged as release evidence,
 2. live Performance returns-series source proof captured from an actual
    canonical runtime and merged as release evidence,
-3. benchmark-assignment source-ref proof from the governed source authority,
+3. Performance benchmark-readiness source refs beyond Core benchmark-assignment
+   source-ref proof,
 4. mandate performance-health source refs from the governed Performance source
    authority,
 5. mandate risk-health source refs from the governed Risk source authority,
-6. Core portfolio-state source refs for allocation-drift / mandate-review
-   candidates,
+6. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
+   proof beyond Core portfolio-state source-ref proof,
 7. source-worker certification beyond bounded live Core source-ingestion proof,
 8. certified long-running scheduled daemon runtime and live-service recovery proof,
 9. source-fetching APIs beyond current caller-supplied high-cash and

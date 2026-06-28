@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available; full live opportunity-journey proof remains pending
 
 ## Outcome
 
@@ -346,6 +346,15 @@ Prove the complete supported opportunity journey end to end.
     while preserving mandate performance-health, mandate risk-health, Core
     portfolio-state, data-mesh, Workbench, client-publication,
     supported-feature, rebalance, action, and order-execution blockers.
+34. `src/app/application/core_portfolio_state_live_proof.py`,
+    `scripts/generate_core_portfolio_state_live_proof.py`, and
+    `make core-portfolio-state-live-proof-contract-gate` now define and enforce
+    a source-safe Lotus Core portfolio-state live-proof artifact. Aggregate
+    readiness can consume a valid artifact to clear only
+    `opportunity_archetype_core_portfolio_state_source_ref_missing`, while
+    preserving portfolio-scoped Manage proof, mandate performance-health,
+    mandate risk-health, data-mesh, Workbench, client-publication,
+    supported-feature, rebalance, action, and order-execution blockers.
 33. A valid source-ingestion live Core proof referenced through
     `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
     `opportunity_archetype_live_core_source_proof_missing` for the high-cash
@@ -400,7 +409,12 @@ without relying on chat memory.
    Mandate performance-health, mandate risk-health, Core portfolio-state,
    data-mesh, Workbench, client-publication, supported-feature, rebalance,
    action, and order-execution proof remain pending.
-10. AI lineage store proof is now explicit in aggregate readiness evidence, but
+10. Core portfolio-state live proof is now explicit in aggregate readiness
+   evidence, but it proves only current `PortfolioStateSnapshot:v1` source-ref
+   posture. Portfolio-scoped Manage proof, mandate performance-health, mandate
+   risk-health, data-mesh, Workbench, client-publication, supported-feature,
+   rebalance, action, and order-execution proof remain pending.
+11. AI lineage store proof is now explicit in aggregate readiness evidence, but
    `lotus-ai` workflow-pack registration/runtime execution, live provider
    execution, runtime trust telemetry, Workbench proof, and supported-feature
    promotion remain pending unless corresponding sibling proof artifacts are

@@ -70,6 +70,7 @@ make risk-concentration-live-proof-contract-gate
 make high-volatility-live-proof-contract-gate
 make risk-drawdown-live-proof-contract-gate
 make core-benchmark-assignment-live-proof-contract-gate
+make core-portfolio-state-live-proof-contract-gate
 make low-income-core-cashflow-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
@@ -186,6 +187,7 @@ Persistence adapter validation:
    consumption, default Manage action route proof generation and consumption,
    optional Manage mandate live proof consumption,
    optional Core benchmark assignment live proof consumption,
+   optional Core portfolio-state live proof consumption,
    optional missing-benchmark live Core proof consumption,
    default Report intake route proof generation and consumption, default
    Report materialization proof generation and consumption, default
@@ -302,6 +304,11 @@ Persistence adapter validation:
     optional Lotus Core benchmark assignment live-proof artifact remains
     source-safe and can clear only the namespaced benchmark-assignment
     source-ref blocker when valid evidence is supplied.
+    `tests/unit/test_core_portfolio_state_live_proof.py` and
+    `make core-portfolio-state-live-proof-contract-gate` prove the optional
+    Lotus Core portfolio-state live-proof artifact remains source-safe and can
+    clear only the namespaced Core portfolio-state source-ref blocker when
+    valid evidence is supplied.
     `tests/unit/test_low_income_core_cashflow_live_proof.py` and
     `make low-income-core-cashflow-live-proof-contract-gate` prove the optional
     Lotus Core cashflow live-proof artifact remains source-safe and can clear

@@ -179,6 +179,16 @@ allocation-drift / mandate-review readiness. Mandate performance-health,
 mandate risk-health, Core portfolio-state, data-mesh, Workbench,
 client-publication, supported-feature, rebalance, action, and order-execution
 blockers remain.
+`src/app/application/core_portfolio_state_live_proof.py`,
+`scripts/generate_core_portfolio_state_live_proof.py`, and
+`make core-portfolio-state-live-proof-contract-gate` now define a source-safe
+Core portfolio-state live-proof contract. A valid artifact referenced through
+`LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` clears only
+`opportunity_archetype_core_portfolio_state_source_ref_missing` for
+allocation-drift / mandate-review readiness. Portfolio-scoped Manage proof,
+mandate performance-health, mandate risk-health, data-mesh, Workbench,
+client-publication, supported-feature, rebalance, action, and order-execution
+blockers remain.
 `src/app/application/source_ingestion.py`
 now adds an internal high-cash source-ingestion orchestration wrapper over the
 Core source port and repository port, including generated source-ingestion
@@ -1002,6 +1012,8 @@ live-proof artifact clears only the live Risk volatility source blocker. A
 valid Risk drawdown live-proof artifact clears only the drawdown source blocker.
 A valid Core benchmark assignment live-proof artifact clears only the
 underperformance benchmark-assignment source-ref blocker.
+A valid Core portfolio-state live-proof artifact clears only the
+allocation-drift / mandate-review Core portfolio-state source-ref blocker.
 A valid low-income Core cashflow live-proof artifact clears only the
 low-income / liquidity-shortfall live Core cashflow source blocker.
 A valid missing-suitability live-proof artifact clears only the Advise policy
@@ -1014,11 +1026,11 @@ Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries live Performance,
 data-mesh, Workbench, client-publication, and supported-feature blockers after
-Core benchmark assignment proof is supplied. Allocation drift still carries mandate
-performance-health source-ref, mandate risk-health source-ref, Core
-portfolio-state source-ref, data-mesh, Workbench, client-publication,
-supported-feature, rebalance, action, and order-execution blockers after live
-Manage mandate proof is supplied. High volatility / drawdown
+Core benchmark assignment proof is supplied. Allocation drift still carries
+mandate performance-health source-ref, mandate risk-health source-ref,
+data-mesh, Workbench, client-publication, supported-feature, rebalance, action,
+and order-execution blockers after live Manage mandate and Core
+portfolio-state proofs are supplied. High volatility / drawdown
 review still carries data-mesh, Workbench, client-publication, and
 supported-feature blockers after live Risk volatility and drawdown proofs are supplied.
 Missing suitability context still carries data-mesh, Workbench,
@@ -1072,6 +1084,13 @@ supplied through aggregate implementation-proof readiness, it clears only
 Performance, data-mesh, Workbench, client-publication, and supported-feature
 blockers intact. It does not assign benchmarks, calculate benchmark returns, or
 certify benchmark methodology.
+`make core-portfolio-state-live-proof-contract-gate` validates the optional
+Lotus Core portfolio-state live-proof artifact. When a valid artifact is
+supplied through aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_core_portfolio_state_source_ref_missing` and keeps
+portfolio-scoped Manage, mandate performance-health, mandate risk-health,
+data-mesh, Workbench, client-publication, supported-feature, rebalance, action,
+and order-execution blockers intact.
 `make missing-benchmark-live-proof-contract-gate` validates the optional Lotus
 Core missing-benchmark live-proof artifact. When a valid artifact is supplied
 through aggregate implementation-proof readiness, it clears only
@@ -1329,21 +1348,24 @@ owned by upstream services.
     `make performance-underperformance-live-proof-contract-gate`
 44. Core benchmark assignment live-proof artifact contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`
-45. Low-income Core cashflow live-proof artifact contract gate:
+45. Core portfolio-state live-proof artifact contract gate:
+    `make core-portfolio-state-live-proof-contract-gate`
+46. Low-income Core cashflow live-proof artifact contract gate:
     `make low-income-core-cashflow-live-proof-contract-gate`
-46. AI lineage store proof contract gate:
+47. AI lineage store proof contract gate:
     `make ai-lineage-store-proof-contract-gate`
-47. outbox platform mesh event publication proof contract gate:
+48. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`
-48. AI workflow-pack registration proof contract gate:
+49. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`
-49. AI workflow-pack runtime execution proof contract gate:
+50. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-50. implementation proof readiness generator:
+51. implementation proof readiness generator:
     `make implementation-proof-readiness-check`
     It remains CI-stable by default and can consume live source-proof evidence
     through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
     `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
+    `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`,
     `LOTUS_ADVISE_ROOT`, `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF_OUTPUT`,
     `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_MANAGE_ROOT`,
     `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF_OUTPUT`,
