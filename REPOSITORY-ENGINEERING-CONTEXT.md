@@ -1056,7 +1056,14 @@ only the Advise risk-profile live-source blocker when current explicit
 diagnostic evidence produces a deterministic review candidate; it does not
 certify a typed risk-profile source product, risk profiling authority,
 suitability, policy, proposal, data mesh, Workbench, client publication, or
-supported-feature promotion. Low-income / liquidity shortfall is backed by
+supported-feature promotion. A source-safe typed missing risk-profile
+source-product proof artifact can clear only the typed Advise risk-profile
+source-product blocker when it cites
+`lotus-advise:AdvisoryPolicyEvaluationRecord:v1`, the Advise source-product
+contract, trust telemetry contract, and Advise-owned missing, stale, expired,
+and review-due diagnostic vocabulary; it does not certify live Advise
+reachability, risk profiling authority, suitability, policy, proposal, data
+mesh, Workbench, client publication, or supported-feature promotion. Low-income / liquidity shortfall is backed by
 deterministic policy, a Lotus Core cashflow source port, a fail-closed HTTP
 adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
 `/portfolios/{portfolio_id}/cashflow-projection`, the bounded
@@ -1102,6 +1109,8 @@ A valid low-income Core cashflow live-proof artifact clears only the
 low-income / liquidity-shortfall live Core cashflow source blocker.
 A valid missing-suitability live-proof artifact clears only the Advise policy
 live-source blocker.
+A valid missing risk-profile source-product proof artifact clears only the
+typed Advise risk-profile source-product blocker.
 A valid missing risk-profile live-proof artifact clears only the Advise
 risk-profile live-source blocker.
 A valid Manage mandate live-proof artifact clears only the portfolio-scoped
@@ -1122,9 +1131,11 @@ supported-feature blockers after live Risk volatility and drawdown proofs are su
 Missing suitability context still carries data-mesh, Workbench,
 client-publication, and supported-feature blockers after live Advise policy
 proof is supplied.
-Missing risk-profile review still carries typed Advise risk-profile source
-product, data-mesh, Workbench, client-publication, and supported-feature
-blockers after live Advise risk-profile proof is supplied.
+Missing risk-profile review still carries live Advise source, data-mesh,
+Workbench, client-publication, and supported-feature blockers after typed
+Advise risk-profile source-product proof is supplied, and still carries
+data-mesh, Workbench, client-publication, and supported-feature blockers after
+both typed source-product proof and live Advise risk-profile proof are supplied.
 Mandate/restriction review still carries typed restriction source product,
 Workbench, data-mesh, client-publication, and supported-feature blockers after
 live Advise restriction proof is supplied, and it still does not clear

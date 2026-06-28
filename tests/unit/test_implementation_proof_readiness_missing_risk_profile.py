@@ -8,6 +8,9 @@ from app.application.implementation_proof_readiness import (
 from app.application.missing_risk_profile_live_proof import (
     build_missing_risk_profile_live_proof_payload,
 )
+from app.application.missing_risk_profile_source_product_proof import (
+    build_missing_risk_profile_source_product_proof_payload,
+)
 from app.domain import InMemoryIdeaRepository
 
 
@@ -31,6 +34,57 @@ def test_implementation_proof_readiness_retains_missing_risk_profile_blocker_wit
     assert "opportunity_archetype_advise_risk_profile_live_source_proof_missing" in (
         snapshot.overall_blockers
     )
+    assert "opportunity_archetype_typed_advise_risk_profile_source_product_missing" in (
+        snapshot.overall_blockers
+    )
+
+
+def test_implementation_proof_readiness_uses_missing_risk_profile_source_product_proof_only() -> (
+    None
+):
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        missing_risk_profile_source_product_proof=(
+            _valid_missing_risk_profile_source_product_proof()
+        ),
+        missing_risk_profile_source_product_proof_ref=(
+            "output/opportunity/missing-risk-profile-source-product-proof.json"
+        ),
+    )
+
+    assert "opportunity_archetype_typed_advise_risk_profile_source_product_missing" not in (
+        snapshot.overall_blockers
+    )
+    assert "opportunity_archetype_advise_risk_profile_live_source_proof_missing" in (
+        snapshot.overall_blockers
+    )
+    assert "opportunity_archetype_data_mesh_not_certified" in snapshot.overall_blockers
+    assert "opportunity_archetype_workbench_product_proof_missing" in snapshot.overall_blockers
+    assert "opportunity_archetype_client_publication_not_ready" in snapshot.overall_blockers
+    assert "opportunity_archetype_supported_feature_promotion_missing" in (
+        snapshot.overall_blockers
+    )
+    archetypes = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "opportunity-archetype-scenarios"
+    )
+    assert "opportunity_archetype_typed_advise_risk_profile_source_product_missing" not in (
+        archetypes.blockers
+    )
+    assert "opportunity_archetype_advise_risk_profile_live_source_proof_missing" in (
+        archetypes.blockers
+    )
+    assert (
+        "output/opportunity/missing-risk-profile-source-product-proof.json"
+        in archetypes.evidence_refs
+    )
+    assert archetypes.supported_feature_promoted is False
+    assert snapshot.readiness_status == "blocked"
+    assert snapshot.supportability_status == "not_certified"
+    assert snapshot.supported_features_promoted is False
 
 
 def test_implementation_proof_readiness_uses_missing_risk_profile_live_proof_without_promotion() -> (
@@ -80,6 +134,38 @@ def test_implementation_proof_readiness_uses_missing_risk_profile_live_proof_wit
     assert snapshot.supported_features_promoted is False
 
 
+def test_implementation_proof_readiness_combines_missing_risk_profile_source_proofs() -> None:
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        missing_risk_profile_source_product_proof=(
+            _valid_missing_risk_profile_source_product_proof()
+        ),
+        missing_risk_profile_source_product_proof_ref=(
+            "output/opportunity/missing-risk-profile-source-product-proof.json"
+        ),
+        missing_risk_profile_live_proof=_valid_missing_risk_profile_live_proof(),
+        missing_risk_profile_live_proof_ref=(
+            "output/opportunity/missing-risk-profile-live-proof.json"
+        ),
+    )
+
+    assert "opportunity_archetype_typed_advise_risk_profile_source_product_missing" not in (
+        snapshot.overall_blockers
+    )
+    assert "opportunity_archetype_advise_risk_profile_live_source_proof_missing" not in (
+        snapshot.overall_blockers
+    )
+    assert "opportunity_archetype_data_mesh_not_certified" in snapshot.overall_blockers
+    assert "opportunity_archetype_workbench_product_proof_missing" in snapshot.overall_blockers
+    assert "opportunity_archetype_client_publication_not_ready" in snapshot.overall_blockers
+    assert "opportunity_archetype_supported_feature_promotion_missing" in (
+        snapshot.overall_blockers
+    )
+    assert snapshot.supported_features_promoted is False
+
+
 def _valid_missing_risk_profile_live_proof() -> dict[str, object]:
     return build_missing_risk_profile_live_proof_payload(
         generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
@@ -94,4 +180,10 @@ def _valid_missing_risk_profile_live_proof() -> dict[str, object]:
             "reasonCodes": ["missing_risk_profile", "review_required"],
             "unsupportedReasons": [],
         },
+    )
+
+
+def _valid_missing_risk_profile_source_product_proof() -> dict[str, object]:
+    return build_missing_risk_profile_source_product_proof_payload(
+        generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
     )
