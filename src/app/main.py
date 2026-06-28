@@ -9,6 +9,7 @@ from app.api.candidate_lifecycle import register_candidate_lifecycle_routes
 from app.api.concentration_risk_signals import register_concentration_risk_signal_routes
 from app.api.conversion_governance import register_conversion_governance_routes
 from app.api.data_mesh_readiness import register_data_mesh_readiness_routes
+from app.api.drawdown_review_signals import register_drawdown_review_signal_routes
 from app.api.downstream_realization import register_downstream_realization_routes
 from app.api.downstream_realization_readiness import (
     register_downstream_realization_readiness_routes,
@@ -50,6 +51,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_idea_signal_routes(application)
     register_bond_maturity_signal_routes(application)
     register_concentration_risk_signal_routes(application)
+    register_drawdown_review_signal_routes(application)
     register_low_income_signal_routes(application)
     register_missing_benchmark_signal_routes(application)
     register_missing_risk_profile_signal_routes(application)
