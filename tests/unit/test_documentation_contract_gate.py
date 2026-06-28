@@ -188,6 +188,49 @@ def test_documentation_contract_gate_blocks_missing_required_diagram(
     assert errors == ["wiki/Architecture.md: has 0 Mermaid diagrams; minimum is 1"]
 
 
+def test_documentation_contract_gate_blocks_same_wiki_markdown_suffix_links(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    wiki = tmp_path / "wiki"
+    wiki.mkdir()
+    (wiki / "Home.md").write_text("[Overview](Overview.md)\n", encoding="utf-8")
+    (wiki / "Overview.md").write_text("# Overview\n", encoding="utf-8")
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(),
+        polished_surfaces=(),
+    )
+
+    assert errors == [
+        "wiki/Home.md: same-wiki link `Overview.md` must omit `.md` for GitHub wiki navigation"
+    ]
+
+
+def test_documentation_contract_gate_allows_deep_document_markdown_links(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    wiki = tmp_path / "wiki"
+    docs = tmp_path / "docs" / "demo"
+    wiki.mkdir()
+    docs.mkdir(parents=True)
+    (wiki / "Demo-Readiness.md").write_text(
+        "[Demo guide](../docs/demo/README.md)\n",
+        encoding="utf-8",
+    )
+    (docs / "README.md").write_text("# Demo\n", encoding="utf-8")
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(),
+        polished_surfaces=(),
+    )
+
+    assert errors == []
+
+
 def test_documentation_contract_gate_accepts_polished_operator_doc(
     tmp_path: Path,
 ) -> None:

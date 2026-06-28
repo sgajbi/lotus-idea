@@ -5,6 +5,11 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    from wiki_navigation_contract import same_wiki_page_link_errors
+except ModuleNotFoundError:
+    from scripts.wiki_navigation_contract import same_wiki_page_link_errors
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -156,7 +161,7 @@ REQUIRED_SURFACES = (
     DocumentationSurface(
         "wiki/Home.md",
         15,
-        ("Start Here", "Boundary", "Validation And CI"),
+        ("Start Here", "Boundary", "Validation and CI"),
     ),
     DocumentationSurface(
         "wiki/Overview.md",
@@ -386,12 +391,7 @@ POLISHED_SURFACES = (
     ),
 )
 
-PROHIBITED_PLACEHOLDERS = (
-    ("TODO", re.compile(r"\bTODO\b", re.IGNORECASE)),
-    ("TBD", re.compile(r"\bTBD\b", re.IGNORECASE)),
-    ("lorem ipsum", re.compile(r"\blorem ipsum\b", re.IGNORECASE)),
-    ("coming soon", re.compile(r"\bcoming soon\b", re.IGNORECASE)),
-)
+PROHIBITED_PLACEHOLDERS = ("TODO", "TBD", "lorem ipsum", "coming soon")
 
 
 def _non_empty_lines(content: str) -> list[str]:
@@ -452,8 +452,8 @@ def validate_documentation_contract(
         for fragment in surface.required_fragments:
             if fragment not in content:
                 errors.append(f"{surface.relative_path}: missing required fragment `{fragment}`")
-        for name, pattern in PROHIBITED_PLACEHOLDERS:
-            if pattern.search(content):
+        for name in PROHIBITED_PLACEHOLDERS:
+            if re.search(rf"\b{re.escape(name)}\b", content, re.IGNORECASE):
                 errors.append(f"{surface.relative_path}: contains placeholder text `{name}`")
     for surface in polished_surfaces:
         path = root / surface.relative_path
@@ -482,6 +482,7 @@ def validate_documentation_contract(
                 f"{surface.relative_path}: has {mermaid_count} Mermaid diagrams; "
                 f"minimum is {surface.min_mermaid_fences}"
             )
+    errors.extend(same_wiki_page_link_errors(root=root))
     return errors
 
 
