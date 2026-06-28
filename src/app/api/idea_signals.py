@@ -17,6 +17,10 @@ from app.application.high_cash_signal import (
     evaluate_and_persist_high_cash_signal as evaluate_and_persist_high_cash_signal_command,
     evaluate_high_cash_signal_command,
 )
+from app.application.mandate_restriction_signal import (
+    EvaluateMandateRestrictionSignalCommand,
+    evaluate_mandate_restriction_signal_command,
+)
 from app.domain import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -253,6 +257,80 @@ class EvaluateHighCashSignalRequest(CamelModel):
         )
 
 
+class EvaluateMandateRestrictionSignalRequest(CamelModel):
+    as_of_date: date = Field(
+        ...,
+        alias="asOfDate",
+        description="Business date for the source-owned restriction posture.",
+        examples=["2026-06-21"],
+    )
+    evaluated_at_utc: datetime = Field(
+        ...,
+        alias="evaluatedAtUtc",
+        description="UTC timestamp for deterministic evaluation.",
+        examples=["2026-06-21T10:00:00Z"],
+    )
+    restriction_ref: SourceRefRequest | None = Field(
+        default=None,
+        alias="restrictionRef",
+        description="Source-owned mandate, restriction, or suitability-policy posture reference.",
+    )
+    restriction_status: str | None = Field(
+        default=None,
+        alias="restrictionStatus",
+        description="Source-owned restriction posture such as REVIEW_REQUIRED, BLOCKED, BREACHED, or CLEAR.",
+        examples=["REVIEW_REQUIRED"],
+    )
+    changed_since_last_review: bool | None = Field(
+        default=None,
+        alias="changedSinceLastReview",
+        description="Whether the source-owning service reports a restriction or mandate change.",
+    )
+    actionability_blocked: bool | None = Field(
+        default=None,
+        alias="actionabilityBlocked",
+        description="Whether the source-owning service reports actionability is blocked pending review.",
+    )
+    access_scope: ReviewAccessScopeRequest | None = Field(
+        default=None,
+        alias="accessScope",
+        description="Optional review access scope carried onto created candidates.",
+    )
+    entitlement_allowed: bool = Field(
+        default=True,
+        alias="entitlementAllowed",
+        description="Whether upstream caller/source entitlement already allowed this evidence for evaluation.",
+    )
+    duplicate_of_candidate_id: str | None = Field(
+        default=None,
+        alias="duplicateOfCandidateId",
+        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
+        examples=["idea_mandate_restriction_existing"],
+    )
+
+    @field_validator("evaluated_at_utc")
+    @classmethod
+    def _evaluated_at_must_be_aware(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("evaluatedAtUtc must be timezone-aware")
+        return value
+
+    def to_command(self) -> EvaluateMandateRestrictionSignalCommand:
+        return EvaluateMandateRestrictionSignalCommand(
+            as_of_date=self.as_of_date,
+            restriction_ref=(
+                self.restriction_ref.to_domain() if self.restriction_ref is not None else None
+            ),
+            restriction_status=self.restriction_status,
+            changed_since_last_review=self.changed_since_last_review,
+            actionability_blocked=self.actionability_blocked,
+            evaluated_at_utc=self.evaluated_at_utc,
+            entitlement_allowed=self.entitlement_allowed,
+            access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
+            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
+        )
+
+
 class SourceRefResponse(CamelModel):
     product_id: str = Field(..., alias="productId")
     source_system: SourceSystem = Field(..., alias="sourceSystem")
@@ -342,6 +420,41 @@ class EvaluateHighCashSignalResponse(CamelModel):
         )
 
 
+class EvaluateMandateRestrictionSignalResponse(CamelModel):
+    outcome: str
+    family: str
+    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
+    unsupported_reasons: tuple[str, ...] = Field(..., alias="unsupportedReasons")
+    candidate: IdeaCandidateSummaryResponse | None
+    source_authority: str = Field(..., alias="sourceAuthority")
+    supported_feature_promoted: bool = Field(
+        False,
+        alias="supportedFeaturePromoted",
+        description="False until live source adapters, Gateway/Workbench proof, and supported-feature registration exist.",
+    )
+
+    @classmethod
+    def from_domain(
+        cls,
+        result: SignalEvaluationResult,
+        *,
+        source_authority: str,
+    ) -> "EvaluateMandateRestrictionSignalResponse":
+        return cls(
+            outcome=result.outcome.value,
+            family=result.family.value,
+            reasonCodes=tuple(reason.value for reason in result.reason_codes),
+            unsupportedReasons=tuple(reason.value for reason in result.unsupported_reasons),
+            candidate=(
+                IdeaCandidateSummaryResponse.from_domain(result.candidate)
+                if result.candidate is not None
+                else None
+            ),
+            sourceAuthority=source_authority,
+            supportedFeaturePromoted=False,
+        )
+
+
 class CandidatePersistenceSummaryResponse(CamelModel):
     decision: CandidatePersistenceDecision
     candidate_id: str | None = Field(default=None, alias="candidateId")
@@ -420,6 +533,46 @@ async def evaluate_high_cash_signal(
         source_authority="lotus-core",
     )
     return EvaluateHighCashSignalResponse.from_domain(result)
+
+
+async def evaluate_mandate_restriction_signal(
+    request: EvaluateMandateRestrictionSignalRequest,
+    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
+    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
+    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+) -> EvaluateMandateRestrictionSignalResponse | JSONResponse:
+    caller = caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+    source_authority = _restriction_source_authority(request)
+    try:
+        require_capability(caller, _EVALUATE_HIGH_CASH_POLICY)
+    except PermissionDeniedError:
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.PERMISSION_DENIED,
+            source_authority=source_authority,
+            error_code="permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to evaluate idea signals.",
+        )
+
+    result = evaluate_mandate_restriction_signal_command(request.to_command())
+    emit_foundation_operation_event(
+        IdeaOperation.SIGNAL_EVALUATION,
+        _operation_outcome_from_signal_evaluation(result),
+        source_authority=source_authority,
+    )
+    return EvaluateMandateRestrictionSignalResponse.from_domain(
+        result,
+        source_authority=source_authority,
+    )
 
 
 async def evaluate_and_persist_high_cash_signal(
@@ -546,6 +699,12 @@ def _operation_outcome_from_candidate_persistence(
     return OperationOutcome.CONFLICT
 
 
+def _restriction_source_authority(request: EvaluateMandateRestrictionSignalRequest) -> str:
+    if request.restriction_ref is None:
+        return "source-owned"
+    return request.restriction_ref.source_system.value
+
+
 HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
     "path": "/api/v1/idea-signals/high-cash/evaluate",
     "operation_id": "evaluateHighCashIdeaSignal",
@@ -630,6 +789,73 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
                     }
                 }
             },
+        },
+    },
+}
+
+
+MANDATE_RESTRICTION_EVALUATE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/idea-signals/mandate-restriction/evaluate",
+    "operation_id": "evaluateMandateRestrictionIdeaSignal",
+    "summary": "Evaluate a mandate or restriction idea signal",
+    "description": (
+        "Evaluates caller-supplied, source-owned Core, Manage, or Advise evidence for "
+        "mandate, restriction, or suitability-policy review posture. The endpoint is a "
+        "bounded API foundation; it does not fetch upstream sources, approve suitability, "
+        "change a mandate, clear a restriction, publish client communication, or promote a "
+        "supported business feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": EvaluateMandateRestrictionSignalResponse,
+    "tags": ["Idea Signals"],
+    "responses": {
+        200: {
+            "description": "Mandate/restriction signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "outcome": "candidate_created",
+                        "family": "mandate_restriction",
+                        "reasonCodes": [
+                            "mandate_restriction_review",
+                            "review_required",
+                        ],
+                        "unsupportedReasons": [],
+                        "candidate": {
+                            "candidateId": "idea_mandate_restriction_8d57adbf52f7f5a7",
+                            "family": "mandate_restriction",
+                            "lifecycleStatus": "generated",
+                            "reviewPosture": "compliance_review_required",
+                            "evidencePacketId": "iep_mandate_restriction_8d57adbf52f7f5a7",
+                            "supportability": "ready",
+                            "score": "66",
+                            "scorePolicyVersion": "mandate-restriction-review-v1",
+                            "sourceSignalIds": ["signal_mandate_restriction_8d57adbf52f7f5a7"],
+                            "sourceRefs": [
+                                {
+                                    "productId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+                                    "sourceSystem": "lotus-advise",
+                                    "productVersion": "v1",
+                                    "asOfDate": "2026-06-21",
+                                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                                    "dataQualityStatus": "quality_passed",
+                                    "freshness": "current",
+                                }
+                            ],
+                        },
+                        "sourceAuthority": "lotus-advise",
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        400: {
+            "model": ProblemDetails,
+            "description": "Request validation failed.",
+        },
+        403: {
+            "model": ProblemDetails,
+            "description": "Caller lacks the required signal-evaluation capability.",
         },
     },
 }
@@ -763,6 +989,16 @@ def register_idea_signal_routes(app: FastAPI) -> None:
         tags=HIGH_CASH_EVALUATE_ROUTE["tags"],
         responses=HIGH_CASH_EVALUATE_ROUTE["responses"],
     )(evaluate_high_cash_signal)
+    app.post(
+        path=MANDATE_RESTRICTION_EVALUATE_ROUTE["path"],
+        operation_id=MANDATE_RESTRICTION_EVALUATE_ROUTE["operation_id"],
+        summary=MANDATE_RESTRICTION_EVALUATE_ROUTE["summary"],
+        description=MANDATE_RESTRICTION_EVALUATE_ROUTE["description"],
+        status_code=MANDATE_RESTRICTION_EVALUATE_ROUTE["status_code"],
+        response_model=MANDATE_RESTRICTION_EVALUATE_ROUTE["response_model"],
+        tags=MANDATE_RESTRICTION_EVALUATE_ROUTE["tags"],
+        responses=MANDATE_RESTRICTION_EVALUATE_ROUTE["responses"],
+    )(evaluate_mandate_restriction_signal)
     app.post(
         path=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["path"],
         operation_id=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["operation_id"],

@@ -27,6 +27,7 @@ REQUIRED_ARCHETYPES = {
     "bond-maturity-reinvestment",
     "low-income-liquidity-shortfall",
     "missing-benchmark-review",
+    "mandate-restriction-review",
     "missing-risk-profile-review",
     "missing-suitability-context",
 }
@@ -167,6 +168,16 @@ REQUIRED_MISSING_RISK_PROFILE_EVIDENCE = {
     "tests/unit/test_missing_risk_profile_application.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
+REQUIRED_MANDATE_RESTRICTION_EVIDENCE = {
+    "src/app/domain/mandate_restriction_signal.py",
+    "src/app/application/mandate_restriction_signal.py",
+    "src/app/api/idea_signals.py",
+    "tests/unit/test_mandate_restriction_signal_evaluation.py",
+    "tests/unit/test_mandate_restriction_application.py",
+    "tests/integration/test_mandate_restriction_signal_api.py",
+    "POST /api/v1/idea-signals/mandate-restriction/evaluate",
+    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
@@ -176,6 +187,7 @@ FOUNDATION_ARCHETYPES = {
     "concentration-risk-review",
     "high-volatility-drawdown-review",
     "low-income-liquidity-shortfall",
+    "mandate-restriction-review",
     "missing-benchmark-review",
     "missing-risk-profile-review",
     "missing-suitability-context",
@@ -384,6 +396,7 @@ def _validate_foundation_evidence(archetypes: dict[str, object]) -> list[str]:
         ("bond-maturity-reinvestment", REQUIRED_BOND_MATURITY_EVIDENCE),
         ("missing-benchmark-review", REQUIRED_MISSING_BENCHMARK_EVIDENCE),
         ("missing-risk-profile-review", REQUIRED_MISSING_RISK_PROFILE_EVIDENCE),
+        ("mandate-restriction-review", REQUIRED_MANDATE_RESTRICTION_EVIDENCE),
     ):
         errors.extend(_validate_required_evidence(archetypes, archetype_id, required_evidence))
     return errors

@@ -53,6 +53,28 @@ def high_cash_payload(*, suffix: str = "") -> dict[str, Any]:
     }
 
 
+def mandate_restriction_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "restrictionRef": {
+            "productId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+            "sourceSystem": "lotus-advise",
+            "productVersion": "v1",
+            "route": "/advisory/policy-evaluations/pev_001/restriction-posture",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:mandate-restriction-review",
+            "dataQualityStatus": "quality_passed",
+            "freshness": "current",
+        },
+        "restrictionStatus": "REVIEW_REQUIRED",
+        "changedSinceLastReview": True,
+        "actionabilityBlocked": True,
+        "entitlementAllowed": True,
+    }
+
+
 def signal_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -420,6 +442,22 @@ def test_signal_and_candidate_persistence_emit_bounded_operation_events(
         ("signal_evaluation", "accepted", "lotus-core", False, None),
         ("candidate_persistence", "accepted", "lotus-core", False, None),
     ]
+
+
+def test_mandate_restriction_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, idea_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/mandate-restriction/evaluate",
+        json=mandate_restriction_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-advise", False, None)]
 
 
 def test_lifecycle_queue_review_and_feedback_emit_operation_events(
