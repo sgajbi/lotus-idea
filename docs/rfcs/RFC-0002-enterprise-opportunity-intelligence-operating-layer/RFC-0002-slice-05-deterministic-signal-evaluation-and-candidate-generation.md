@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core source-port shape, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core source-port shape, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, missing risk-profile evidence-gap policy, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -427,6 +427,31 @@ Additional implemented missing risk profile foundation:
    live Advise risk-profile proof, data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
+Additional implemented mandate/restriction review foundation:
+
+1. `src/app/domain/mandate_restriction_signal.py` defines
+   `MandateRestrictionSignalPolicy`, `MandateRestrictionSignalInput`, and
+   `evaluate_mandate_restriction_signal` for compliance-review candidates under
+   the mandate or restriction review archetype.
+2. The evaluator consumes only source-owned restriction posture supplied as
+   evidence: restriction status, changed-since-last-review flag,
+   actionability-blocked flag, source freshness, entitlement posture, and
+   source refs. It does not approve suitability, change mandate state, clear
+   restrictions, create orders, create product recommendations, publish client
+   communication, or execute downstream actions.
+3. `src/app/application/mandate_restriction_signal.py` provides the framework-
+   free command wrapper, and `src/app/api/idea_signals.py` exposes the bounded
+   `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over
+   caller-supplied Core, Manage, or Advise evidence refs.
+4. `tests/unit/test_mandate_restriction_signal_evaluation.py`,
+   `tests/unit/test_mandate_restriction_application.py`, and
+   `tests/integration/test_mandate_restriction_signal_api.py` cover positive,
+   not-eligible, stale-source, missing-source, missing-posture, duplicate,
+   entitlement-denied, permission-denied, and source-redaction cases.
+5. This foundation does not include a live upstream source adapter, typed
+   restriction data product, data-mesh certification, Workbench proof,
+   client-publication approval, or supported-feature promotion.
+
 Additional implemented low-income / liquidity-shortfall foundation:
 
 1. `src/app/domain/signal_evaluation.py` now defines
@@ -481,7 +506,8 @@ Not implemented yet:
    candidates,
 7. source-worker certification beyond bounded live Core source-ingestion proof,
 8. certified long-running scheduled daemon runtime and live-service recovery proof,
-9. new API routes beyond the existing caller-supplied foundation endpoint,
+9. source-fetching APIs beyond current caller-supplied high-cash and
+   mandate/restriction foundation endpoints,
 11. Gateway/Workbench proof,
 12. supported-feature promotion,
 13. data-product certification.

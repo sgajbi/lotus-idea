@@ -163,6 +163,40 @@ def test_opportunity_archetype_contract_records_missing_suitability_foundation_w
     assert missing_suitability.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_mandate_restriction_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    mandate_restriction = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "mandate-restriction-review"
+    )
+
+    assert mandate_restriction.implementation_status == "partially_implemented"
+    assert mandate_restriction.first_supported_journey is False
+    assert "lotus-advise:AdvisoryPolicyEvaluationRecord:v1" in (mandate_restriction.source_products)
+    assert "src/app/domain/mandate_restriction_signal.py" in (mandate_restriction.evidence_refs)
+    assert "src/app/application/mandate_restriction_signal.py" in (
+        mandate_restriction.evidence_refs
+    )
+    assert "src/app/api/idea_signals.py" in mandate_restriction.evidence_refs
+    assert "tests/integration/test_mandate_restriction_signal_api.py" in (
+        mandate_restriction.evidence_refs
+    )
+    assert "POST /api/v1/idea-signals/mandate-restriction/evaluate" in (
+        mandate_restriction.evidence_refs
+    )
+    assert "live_restriction_source_proof_missing" in mandate_restriction.blockers
+    assert "typed_restriction_source_product_missing" in mandate_restriction.blockers
+    assert "data_mesh_not_certified" in mandate_restriction.blockers
+    assert "client_publication_not_ready" in mandate_restriction.blockers
+    assert "supported_feature_promotion_missing" in mandate_restriction.blockers
+    assert mandate_restriction.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert mandate_restriction.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_records_low_income_foundation_without_promotion() -> None:
     contract = load_opportunity_archetype_contract()
 
@@ -345,6 +379,24 @@ def test_opportunity_archetype_contract_gate_rejects_missing_benchmark_evidence(
     assert (
         "missing-benchmark-review evidence_refs missing: "
         "src/app/application/missing_benchmark_signal.py"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_missing_mandate_restriction_evidence() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    mandate_restriction = next(
+        archetype
+        for archetype in payload["archetypes"]
+        if archetype["archetype_id"] == "mandate-restriction-review"
+    )
+    mandate_restriction["evidence_refs"].remove("src/app/application/mandate_restriction_signal.py")
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "mandate-restriction-review evidence_refs missing: "
+        "src/app/application/mandate_restriction_signal.py"
     ) in errors
 
 

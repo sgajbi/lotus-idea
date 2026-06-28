@@ -19,6 +19,7 @@ class OpportunityFamily(StrEnum):
     MISSING_BENCHMARK = "missing_benchmark"
     MISSING_RISK_PROFILE = "missing_risk_profile"
     MISSING_SUITABILITY_CONTEXT = "missing_suitability_context"
+    MANDATE_RESTRICTION = "mandate_restriction"
 
 
 class SourceSystem(StrEnum):
@@ -72,6 +73,7 @@ class ReasonCode(StrEnum):
     MISSING_BENCHMARK = "missing_benchmark"
     MISSING_RISK_PROFILE = "missing_risk_profile"
     SUITABILITY_CONTEXT_MISSING = "suitability_context_missing"
+    MANDATE_RESTRICTION_REVIEW = "mandate_restriction_review"
     SOURCE_STALE = "source_stale"
     SOURCE_PARTIAL = "source_partial"
     DUPLICATE_SUPPRESSED = "duplicate_suppressed"

@@ -111,8 +111,8 @@ inclusion.
 RFC-0002 Slice 05 is partially implemented for high-cash / idle-liquidity,
 concentration, underperformance, allocation-drift mandate-review, bond
 maturity / reinvestment, high-volatility / drawdown, missing suitability
-context, missing risk-profile review, and low-income / liquidity-shortfall
-domain policy foundations.
+context, missing risk-profile review, mandate/restriction review, and
+low-income / liquidity-shortfall domain policy foundations.
 `src/app/domain/signal_evaluation.py` consumes source-reported cash-weight
 evidence and Core source refs, creates deterministic `OpportunitySignal`,
 `IdeaEvidencePacket`, and `IdeaCandidate` domain objects for positive cases,
@@ -937,7 +937,7 @@ The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review, underperformance review,
 allocation drift / mandate review, bond maturity / reinvestment,
 high-volatility review, missing suitability context, missing risk-profile
-review, low-income / liquidity shortfall, and missing-benchmark review as
+review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review as
 non-promoted bounded foundations.
 Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
@@ -981,6 +981,14 @@ client-publication, and supported-feature claims. Bond maturity / reinvestment
 is policy-only until Core publishes a governed maturity-bearing HoldingsAsOf
 response or maturity-specific source product; live generation, Workbench,
 client-publication, and supported-feature claims remain blocked.
+Mandate/restriction review is backed by deterministic policy,
+`src/app/application/mandate_restriction_signal.py`, and the bounded
+`POST /api/v1/idea-signals/mandate-restriction/evaluate` API over
+caller-supplied Core, Manage, or Advise source refs. It can create only a
+compliance-review candidate from explicit source-owned restriction posture and
+does not fetch live upstream sources, approve suitability, change mandate
+state, clear product/country restrictions, create orders, publish client
+communication, or promote support.
 A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
@@ -1012,6 +1020,9 @@ proof is supplied.
 Missing risk-profile review still carries typed Advise risk-profile source
 product, live Advise risk-profile proof, data-mesh, Workbench,
 client-publication, and supported-feature blockers.
+Mandate/restriction review still carries live restriction source proof, typed
+restriction source product, Workbench, data-mesh, client-publication, and
+supported-feature blockers.
 Low-income / liquidity shortfall still carries Workbench, data-mesh,
 client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding

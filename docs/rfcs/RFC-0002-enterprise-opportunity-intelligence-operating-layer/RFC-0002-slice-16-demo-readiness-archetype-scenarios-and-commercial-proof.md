@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
 
 ## Outcome
 
@@ -32,7 +32,7 @@ capabilities exist.
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
    concentration-risk, underperformance, allocation-drift, high-volatility /
-   drawdown, missing-suitability, low-income / liquidity-shortfall,
+   drawdown, missing-suitability, mandate/restriction, low-income / liquidity-shortfall,
    missing-benchmark review, and policy-only bond-maturity review foundations.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
@@ -144,7 +144,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    certification, client publication, supported-feature promotion, benchmark
    assignment, benchmark methodology, and benchmark-return calculation remain
    blocked.
-12. Remaining planned archetypes still require source adapters, deterministic
+12. Mandate/restriction review now has a bounded deterministic policy and
+   source-safe caller-supplied API foundation. It can create only
+   compliance-review candidates from explicit source-owned restriction posture
+   and must not be presented as live upstream source integration, mandate
+   change authority, product/country restriction clearance, suitability
+   approval, order creation, Workbench proof, data-mesh certification, client
+   publication, or supported-feature promotion.
+13. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate
