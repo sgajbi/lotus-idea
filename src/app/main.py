@@ -25,6 +25,7 @@ from app.api.review_queues import register_review_queue_routes
 from app.api.review_workflow import register_review_workflow_routes
 from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_routes
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
+from app.api.underperformance_signals import register_underperformance_signal_routes
 from app.errors import problem_response
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.observability import configure_logging, emit_request_diagnostic_event
@@ -53,6 +54,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_missing_benchmark_signal_routes(application)
     register_missing_risk_profile_signal_routes(application)
     register_missing_suitability_signal_routes(application)
+    register_underperformance_signal_routes(application)
     register_candidate_lifecycle_routes(application)
     register_candidate_detail_routes(application)
     register_candidate_evidence_replay_routes(application)

@@ -148,12 +148,14 @@ repository-backed routes. These endpoints do not retrieve live source data,
 certify a data product, expose a Gateway route, or promote a supported business
 feature.
 
+`POST /api/v1/idea-signals/underperformance/evaluate`,
 `POST /api/v1/idea-signals/missing-suitability/evaluate`,
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate`, and
 `POST /api/v1/idea-signals/mandate-restriction/evaluate` extend the same
 internal certified API pattern to caller-supplied source-owned evidence. They
 are design-module/API foundations inside the `lotus-idea` domain service, not
-separate runtime microservices. They do not approve suitability, policy,
+separate runtime microservices. They do not calculate returns, assign
+benchmarks, certify benchmark methodology, approve suitability, policy,
 proposal, sign-off, restriction clearance, mandate state, client publication,
 data-mesh certification, Gateway/Workbench behavior, or supported-feature
 promotion.

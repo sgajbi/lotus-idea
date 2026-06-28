@@ -38,7 +38,13 @@ capabilities exist.
    has a bounded caller-supplied Risk evidence API foundation at
    `POST /api/v1/idea-signals/concentration-risk/evaluate`; it is not Workbench
    proof, client-demo proof, data-mesh certification, trade advice, rebalance
-   action, or supported-feature promotion.
+   action, or supported-feature promotion. Underperformance has the same
+   bounded API-foundation posture at
+   `POST /api/v1/idea-signals/underperformance/evaluate` over caller-supplied
+   Lotus Performance active-return and benchmark-context evidence; it is not
+   returns calculation, benchmark assignment, methodology certification,
+   Workbench proof, client-demo proof, data-mesh certification, trade advice,
+   rebalance action, or supported-feature promotion.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.

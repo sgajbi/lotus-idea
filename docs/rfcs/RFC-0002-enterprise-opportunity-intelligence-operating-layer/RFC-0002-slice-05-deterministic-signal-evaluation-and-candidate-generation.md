@@ -193,7 +193,7 @@ Additional implemented concentration-risk foundation:
 
 Additional implemented underperformance foundation:
 
-1. `src/app/domain/low_income_signal.py` now defines
+1. `src/app/domain/signal_evaluation.py` now defines
    `UnderperformanceSignalPolicy`, `UnderperformanceSignalInput`, and
    `evaluate_underperformance_signal` for source-owned active-return
    underperformance candidates.
@@ -218,7 +218,16 @@ Additional implemented underperformance foundation:
    below-materiality, missing benchmark context, stale source, missing source,
    duplicate, entitlement-denied, source-unavailable, pending async response,
    malformed active-return, and trace-header cases.
-6. `src/app/application/performance_underperformance_live_proof.py`,
+6. `src/app/api/underperformance_signals.py` exposes
+   `POST /api/v1/idea-signals/underperformance/evaluate` as a bounded
+   caller-supplied API foundation over Lotus Performance active-return and
+   benchmark-context evidence. It requires `idea.signal.evaluate` or advisor
+   role, emits bounded operation events, redacts source route/hash fields from
+   candidate responses, and does not fetch Performance sources, calculate
+   returns, assign benchmarks, certify benchmark methodology, recommend trades,
+   create rebalance actions, publish client communication, certify data
+   products, prove Workbench behavior, or promote support.
+7. `src/app/application/performance_underperformance_live_proof.py`,
    `scripts/generate_performance_underperformance_live_proof.py`,
    `scripts/performance_underperformance_live_proof_contract_gate.py`, and
    `make performance-underperformance-live-proof-contract-gate` define a
@@ -228,7 +237,7 @@ Additional implemented underperformance foundation:
    deterministic underperformance candidate generation, then clears only the
    namespaced opportunity-archetype live Performance source blocker when
    consumed by aggregate readiness.
-7. `src/app/application/core_benchmark_assignment_live_proof.py`,
+8. `src/app/application/core_benchmark_assignment_live_proof.py`,
    `scripts/generate_core_benchmark_assignment_live_proof.py`,
    `scripts/core_benchmark_assignment_live_proof_contract_gate.py`, and
    `make core-benchmark-assignment-live-proof-contract-gate` define a

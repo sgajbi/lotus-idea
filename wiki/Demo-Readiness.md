@@ -24,6 +24,15 @@ calculate concentration, approve risk methodology, recommend trades, create
 rebalance actions, certify data mesh, prove Workbench behavior, authorize
 client publication, or promote support.
 
+Underperformance review is an internal bounded foundation only.
+`POST /api/v1/idea-signals/underperformance/evaluate` consumes caller-supplied
+Lotus Performance `ReturnsSeriesBundle:v1` active-return and benchmark-context
+evidence to create advisor-review posture or blocked/not-eligible/suppressed
+outcomes. It does not calculate portfolio returns, calculate benchmark returns,
+assign benchmarks, certify methodology, recommend trades, create rebalance
+actions, prove Workbench behavior, authorize client publication, certify data
+mesh, or promote support.
+
 Missing-benchmark review is an internal bounded foundation only. It can create
 advisor-review evidence-gap candidates from Core-owned benchmark-assignment
 posture, including the bounded

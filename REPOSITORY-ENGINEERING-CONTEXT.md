@@ -138,8 +138,17 @@ support, emits bounded operation events, redacts raw source route/hash details
 from candidate source refs, and does not fetch Risk sources, calculate
 concentration, approve risk methodology, recommend trades, create rebalance
 actions, certify data mesh, prove Workbench behavior, approve client
-publication, or promote a supported feature. `src/app/domain/low_income_signal.py` adds the
-low-income / liquidity-shortfall policy. The low-income foundation uses
+publication, or promote a supported feature. `src/app/api/underperformance_signals.py`
+exposes `POST /api/v1/idea-signals/underperformance/evaluate` as a bounded
+caller-supplied API foundation over Lotus Performance active-return and
+benchmark-context evidence. It enforces `idea.signal.evaluate` or advisor role
+through shared signal API support, emits bounded operation events, redacts raw
+source route/hash details from candidate source refs, and does not fetch
+Performance sources, calculate returns, assign benchmarks, certify benchmark
+methodology, recommend trades, create rebalance actions, certify data mesh,
+prove Workbench behavior, approve client publication, or promote a supported
+feature. `src/app/domain/low_income_signal.py` adds the low-income /
+liquidity-shortfall policy. The low-income foundation uses
 Core-owned `PortfolioCashflowProjection:v1` and
 `PortfolioCashMovementSummary:v1` source refs, source freshness, cashflow
 count, and a projected cumulative cashflow threshold to create only
