@@ -413,6 +413,8 @@
         "make missing-suitability-live-proof-contract-gate",
         "tests/unit/test_missing_suitability_signal_evaluation.py",
         "tests/unit/test_missing_suitability_application.py",
+        "tests/integration/test_missing_suitability_signal_api.py",
+        "POST /api/v1/idea-signals/missing-suitability/evaluate",
         "tests/unit/test_lotus_advise_sources.py",
         "tests/unit/test_missing_suitability_live_proof.py"
       ],

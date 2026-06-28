@@ -85,6 +85,33 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/missing-suitability/evaluate",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Advise policy-evaluation evidence for open suitability, disclosure, consent, approval, or sign-off context.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Advise policy-evaluation posture, source refs, requirement counts, sign-off posture, client-publication posture, and entitlement posture.",
+      "when_not_to_use": "Do not use as a live upstream source-ingestion API, suitability approval, policy approval, proposal approval, sign-off approval, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"policyRef\":{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"route\":\"/advisory/policy-evaluations/pev_001/workflow\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:missing-suitability-context-review\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"evaluationStatus\":\"PENDING_REVIEW\",\"openRequirementCount\":2,\"blockedRequirementCount\":0,\"signOffStatus\":\"PENDING_REVIEW\",\"signOffBlockerCount\":1,\"clientReadyPublication\":\"BLOCKED\",\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_suitability_context\",\"reasonCodes\":[\"suitability_context_missing\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_suitability_context_8d57adbf52f7f5a7\",\"family\":\"missing_suitability_context\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"compliance_review_required\",\"evidencePacketId\":\"iep_missing_suitability_context_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"missing-suitability-context-review-v1\",\"sourceSignalIds\":[\"signal_missing_suitability_context_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_suitability_context\",\"reasonCodes\":[\"review_required\"],\"unsupportedReasons\":[\"source_uncertified\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_returns_compliance_review_candidate",
+        "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_reports_uncertified_publication_blocker",
+        "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_requires_signal_permission",
+        "tests/integration/test_api_operation_events.py::test_missing_suitability_signal_api_emits_bounded_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/high-cash/evaluate-and-persist",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
