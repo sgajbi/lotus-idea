@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -125,11 +125,25 @@ Additional implemented bond-maturity / reinvestment foundation:
    proof artifact that can clear only the live Core maturity source blocker.
    It does not certify data mesh, Workbench behavior, client publication,
    product recommendations, reinvestment advice, or supported-feature status.
-5. `tests/unit/test_bond_maturity_signal_evaluation.py` and
+5. `src/app/api/bond_maturity_signals.py` exposes
+   `POST /api/v1/idea-signals/bond-maturity/evaluate` as a bounded
+   caller-supplied API foundation over Core holdings maturity evidence. It
+   requires `idea.signal.evaluate` or advisor role, emits bounded operation
+   events, redacts source route/hash fields from candidate responses, and does
+   not fetch Core sources, recommend replacement products, calculate
+   reinvestment advice, own maturity schedules, approve planning suitability,
+   create orders, publish client communication, certify data products, prove
+   Workbench behavior, or promote support.
+6. `tests/unit/test_bond_maturity_signal_evaluation.py` and
    `tests/unit/test_bond_maturity_application.py` cover positive,
    outside-window, zero-count, missing-source, missing-maturity-date, stale,
    duplicate, entitlement-denied, source-unavailable, and invalid-policy cases.
-6. The opportunity archetype contract now removes only the
+7. `tests/integration/test_bond_maturity_signal_api.py` and
+   `tests/integration/test_api_operation_events.py` cover route success,
+   outside-window not-eligible posture, stale-source blocking, permission
+   denial, source-redacted response projection, no-authority promotion, and
+   bounded operation-event proof.
+8. The opportunity archetype contract now removes only the
    `maturity_signal_policy_missing` blocker. `maturity_source_contract_missing`,
    `maturity_live_core_source_proof_missing`, data-mesh, Workbench,
    client-publication, and supported-feature blockers remain.

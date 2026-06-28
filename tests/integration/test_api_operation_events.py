@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
+import app.api.bond_maturity_signals as bond_maturity_signals_api
 import app.api.candidate_detail as candidate_detail_api
 import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
@@ -149,6 +150,38 @@ def low_income_payload() -> dict[str, Any]:
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
             "contentHash": "sha256:low-income-cashflow-projection",
+            "dataQualityStatus": "complete",
+            "freshness": "current",
+        },
+        "entitlementAllowed": True,
+    }
+
+
+def bond_maturity_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "sourceReportedNextMaturityDate": "2026-07-10",
+        "sourceReportedMaturingPositionCount": 2,
+        "holdingsRef": {
+            "productId": "lotus-core:HoldingsAsOf:v1",
+            "sourceSystem": "lotus-core",
+            "productVersion": "v1",
+            "route": "/portfolios/PB_SG_GLOBAL_BAL_001/positions",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:bond-maturity-holdings",
+            "dataQualityStatus": "complete",
+            "freshness": "current",
+        },
+        "maturityFactRef": {
+            "productId": "lotus-core:HoldingsAsOf:v1",
+            "sourceSystem": "lotus-core",
+            "productVersion": "v1",
+            "route": "/portfolios/PB_SG_GLOBAL_BAL_001/positions#maturity-date",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:bond-maturity-facts",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },
@@ -607,6 +640,22 @@ def test_low_income_signal_api_emits_bounded_operation_event(
     response = client.post(
         "/api/v1/idea-signals/low-income/evaluate",
         json=low_income_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-core", False, None)]
+
+
+def test_bond_maturity_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, bond_maturity_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/bond-maturity/evaluate",
+        json=bond_maturity_payload(),
         headers=signal_headers(),
     )
 
