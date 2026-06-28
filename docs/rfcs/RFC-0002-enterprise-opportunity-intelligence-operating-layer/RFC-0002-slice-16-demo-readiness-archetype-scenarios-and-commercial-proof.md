@@ -47,19 +47,20 @@ capabilities exist.
    archetype blockers: Risk concentration proof clears the live Risk blocker,
    high-volatility proof clears the live Risk volatility blocker, drawdown
    proof clears the Risk drawdown blocker, Performance underperformance proof
-   clears the live Performance blocker, Core benchmark assignment proof clears
-   the benchmark-assignment source-ref blocker, missing-benchmark Core proof
-   clears only the missing-benchmark live Core source blocker, low-income Core
+   clears the live Performance blocker, missing-benchmark Performance readiness
+   proof clears only the Performance benchmark-readiness blocker, Core benchmark
+   assignment proof clears the benchmark-assignment source-ref blocker,
+   missing-benchmark Core proof clears only the missing-benchmark live Core
+   source blocker, low-income Core
    cashflow proof clears the live Core cashflow source blocker, Manage mandate
    proof clears the portfolio-scoped Manage action-register blocker, Core
    portfolio-state proof clears only the Core portfolio-state source-ref
    blocker, Advise missing-suitability proof clears the live Advise policy
    blocker, and missing risk-profile proof clears only the live Advise
    risk-profile source blocker.
-   Missing-benchmark still keeps Performance benchmark-readiness evidence
-   blocked. Mandate performance/risk health, data-mesh certification,
-   Workbench proof, client-publication, and supported-feature blockers remain
-   intact after Manage and Core portfolio-state proof.
+   Mandate performance/risk health, data-mesh certification, Workbench proof,
+   client-publication, and supported-feature blockers remain intact after
+   source-specific proof.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.

@@ -32,9 +32,10 @@ Allowed status vocabulary:
 
 Missing-benchmark review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It has deterministic policy and Core
-benchmark-assignment source-port proof only; it does not assign benchmarks,
-calculate benchmark returns, certify methodology, prove Workbench behavior,
-authorize client publication, or promote a supported feature.
+benchmark-assignment source-port proof plus bounded Performance benchmark-readiness
+proof consumption; it does not assign benchmarks, calculate performance or
+benchmark returns, certify methodology, prove Workbench behavior, authorize
+client publication, or promote a supported feature.
 
 Missing risk-profile review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It creates advisor-review candidates

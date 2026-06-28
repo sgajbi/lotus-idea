@@ -14,6 +14,7 @@ from app.infrastructure.lotus_performance_sources import (
     LotusPerformanceUnderperformanceSourceAdapter,
 )
 from app.ports.performance_sources import (
+    PerformanceBenchmarkReadinessEvidenceRequest,
     PerformanceSourceEntitlementDenied,
     PerformanceSourceUnavailable,
     PerformanceUnderperformanceEvidenceRequest,
@@ -153,6 +154,25 @@ def test_lotus_performance_adapter_blocks_when_benchmark_context_missing() -> No
     ).fetch_underperformance_evidence(_request())
 
     assert evidence.benchmark_context_available is False
+    assert evidence.performance_diagnostic == "performance_benchmark_context_missing"
+
+
+def test_lotus_performance_adapter_fetches_benchmark_readiness_without_active_return() -> None:
+    payload = _payload()
+    payload.pop("benchmark_context")
+    series = payload["series"]
+    assert isinstance(series, dict)
+    series.pop("cumulative_active_returns")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+    assert evidence.benchmark_context_available is False
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.product_id == "lotus-performance:ReturnsSeriesBundle:v1"
+    assert evidence.performance_ref.route == "/integration/returns/series"
+    assert evidence.performance_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.performance_diagnostic == "performance_benchmark_context_missing"
 
 
@@ -397,3 +417,35 @@ def test_performance_underperformance_request_requires_aware_evaluation_time() -
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
             active_return_threshold=Decimal("-0.005"),
         )
+
+
+def test_performance_benchmark_readiness_request_requires_portfolio_id() -> None:
+    with pytest.raises(ValueError, match="portfolio_id is required"):
+        PerformanceBenchmarkReadinessEvidenceRequest(
+            portfolio_id=" ",
+            as_of_date=AS_OF_DATE,
+            period_name="YTD",
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        )
+
+
+def test_performance_benchmark_readiness_request_requires_aware_evaluation_time() -> None:
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        PerformanceBenchmarkReadinessEvidenceRequest(
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            period_name="YTD",
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+        )
+
+
+def _benchmark_readiness_request() -> PerformanceBenchmarkReadinessEvidenceRequest:
+    return PerformanceBenchmarkReadinessEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        period_name="YTD",
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        reporting_currency="USD",
+        correlation_id="corr-performance",
+        trace_id="trace-performance",
+    )

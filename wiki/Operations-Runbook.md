@@ -143,6 +143,8 @@ optional Core portfolio-state live proof through
 `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`,
 optional missing-benchmark live Core proof through
 `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF`,
+optional missing-benchmark Performance readiness proof through
+`LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF`,
 optional low-income Core cashflow live proof through
 `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF`,
 default Advise proposal route proof through `LOTUS_ADVISE_ROOT` and

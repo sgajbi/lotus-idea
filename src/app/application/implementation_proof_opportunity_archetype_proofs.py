@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from app.application.implementation_proof_capability_updates import _apply_blocker_proof
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
@@ -35,6 +35,10 @@ from app.application.missing_risk_profile_live_proof import (
 from app.application.missing_benchmark_live_proof import (
     MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
     missing_benchmark_live_proof_is_valid,
+)
+from app.application.missing_benchmark_performance_readiness_proof import (
+    MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,
+    missing_benchmark_performance_readiness_proof_is_valid,
 )
 from app.application.performance_underperformance_live_proof import (
     PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
@@ -78,17 +82,14 @@ def _apply_opportunity_archetype_proofs(
     missing_risk_profile_live_proof_ref: str | None,
     missing_benchmark_live_proof: Mapping[str, object] | None,
     missing_benchmark_live_proof_ref: str | None,
+    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None,
+    missing_benchmark_performance_readiness_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if source_ingestion_live_proof_valid:
-        capabilities = tuple(
-            _apply_blocker_proof(
-                capability,
-                capability_ids=("opportunity-archetype-scenarios",),
-                blockers_cleared=HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED,
-                proof_ref=source_ingestion_live_proof_ref,
-            )
-            for capability in capabilities
-        )
+    capabilities = _apply_source_ingestion_live_proof(
+        capabilities,
+        source_ingestion_live_proof_valid=source_ingestion_live_proof_valid,
+        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+    )
     if risk_concentration_live_proof and risk_concentration_live_proof_is_valid(
         risk_concentration_live_proof
     ):
@@ -159,27 +160,63 @@ def _apply_opportunity_archetype_proofs(
             )
             for capability in capabilities
         )
-    if missing_risk_profile_live_proof and missing_risk_profile_live_proof_is_valid(
-        missing_risk_profile_live_proof
-    ):
-        capabilities = tuple(
-            _apply_missing_risk_profile_live_proof(
-                capability,
-                missing_risk_profile_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if missing_benchmark_live_proof and missing_benchmark_live_proof_is_valid(
-        missing_benchmark_live_proof
-    ):
-        capabilities = tuple(
-            _apply_missing_benchmark_live_proof(
-                capability,
-                missing_benchmark_live_proof_ref,
-            )
-            for capability in capabilities
-        )
+    capabilities = _apply_valid_opportunity_proof(
+        capabilities,
+        proof=missing_risk_profile_live_proof,
+        proof_is_valid=missing_risk_profile_live_proof_is_valid,
+        apply_proof=_apply_missing_risk_profile_live_proof,
+        proof_ref=missing_risk_profile_live_proof_ref,
+    )
+    capabilities = _apply_valid_opportunity_proof(
+        capabilities,
+        proof=missing_benchmark_live_proof,
+        proof_is_valid=missing_benchmark_live_proof_is_valid,
+        apply_proof=_apply_missing_benchmark_live_proof,
+        proof_ref=missing_benchmark_live_proof_ref,
+    )
+    capabilities = _apply_valid_opportunity_proof(
+        capabilities,
+        proof=missing_benchmark_performance_readiness_proof,
+        proof_is_valid=missing_benchmark_performance_readiness_proof_is_valid,
+        apply_proof=_apply_missing_benchmark_performance_readiness_proof,
+        proof_ref=missing_benchmark_performance_readiness_proof_ref,
+    )
     return capabilities
+
+
+def _apply_valid_opportunity_proof(
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    *,
+    proof: Mapping[str, object] | None,
+    proof_is_valid: Callable[[Mapping[str, object]], bool],
+    apply_proof: Callable[
+        [ImplementationProofCapabilityReadiness, str | None],
+        ImplementationProofCapabilityReadiness,
+    ],
+    proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not proof or not proof_is_valid(proof):
+        return capabilities
+    return tuple(apply_proof(capability, proof_ref) for capability in capabilities)
+
+
+def _apply_source_ingestion_live_proof(
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    *,
+    source_ingestion_live_proof_valid: bool,
+    source_ingestion_live_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not source_ingestion_live_proof_valid:
+        return capabilities
+    return tuple(
+        _apply_blocker_proof(
+            capability,
+            capability_ids=("opportunity-archetype-scenarios",),
+            blockers_cleared=HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED,
+            proof_ref=source_ingestion_live_proof_ref,
+        )
+        for capability in capabilities
+    )
 
 
 def apply_opportunity_archetype_proofs_from_scope(
@@ -225,6 +262,12 @@ def apply_opportunity_archetype_proofs_from_scope(
         missing_risk_profile_live_proof_ref=_ref(scope, "missing_risk_profile_live_proof_ref"),
         missing_benchmark_live_proof=_payload(scope, "missing_benchmark_live_proof"),
         missing_benchmark_live_proof_ref=_ref(scope, "missing_benchmark_live_proof_ref"),
+        missing_benchmark_performance_readiness_proof=_payload(
+            scope, "missing_benchmark_performance_readiness_proof"
+        ),
+        missing_benchmark_performance_readiness_proof_ref=_ref(
+            scope, "missing_benchmark_performance_readiness_proof_ref"
+        ),
     )
 
 
@@ -381,4 +424,16 @@ def _apply_missing_benchmark_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
         proof_ref=missing_benchmark_live_proof_ref,
+    )
+
+
+def _apply_missing_benchmark_performance_readiness_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    missing_benchmark_performance_readiness_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,
+        proof_ref=missing_benchmark_performance_readiness_proof_ref,
     )

@@ -51,9 +51,44 @@ class PerformanceUnderperformanceEvidence:
     entitlement_allowed: bool = True
 
 
+@dataclass(frozen=True)
+class PerformanceBenchmarkReadinessEvidenceRequest:
+    portfolio_id: str
+    as_of_date: date
+    period_name: str
+    evaluated_at_utc: datetime
+    reporting_currency: str | None = None
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if not self.period_name.strip():
+            raise ValueError("period_name is required")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class PerformanceBenchmarkReadinessEvidence:
+    benchmark_context_available: bool
+    performance_ref: SourceRef | None
+    performance_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
 class PerformanceOpportunitySourcePort(Protocol):
     def fetch_underperformance_evidence(
         self,
         request: PerformanceUnderperformanceEvidenceRequest,
     ) -> PerformanceUnderperformanceEvidence:
         """Fetch source-owned performance evidence for underperformance idea evaluation."""
+
+
+class PerformanceBenchmarkReadinessSourcePort(Protocol):
+    def fetch_benchmark_readiness_evidence(
+        self,
+        request: PerformanceBenchmarkReadinessEvidenceRequest,
+    ) -> PerformanceBenchmarkReadinessEvidence:
+        """Fetch source-owned benchmark-readiness evidence for missing-benchmark review."""

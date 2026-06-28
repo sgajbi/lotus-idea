@@ -169,14 +169,14 @@ def build_implementation_proof_readiness_snapshot(
     missing_risk_profile_live_proof_ref: str | None = None,
     missing_benchmark_live_proof: Mapping[str, object] | None = None,
     missing_benchmark_live_proof_ref: str | None = None,
+    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None = None,
+    missing_benchmark_performance_readiness_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
-    source_ingestion = build_source_ingestion_readiness_snapshot(
-        repository_root=repository_root,
-    )
+    source_ingestion = build_source_ingestion_readiness_snapshot(repository_root=repository_root)
     review_queue = build_review_queue_readiness_snapshot(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
         repository=repository,
@@ -378,6 +378,8 @@ def _apply_available_proofs(
     missing_risk_profile_live_proof_ref: str | None,
     missing_benchmark_live_proof: Mapping[str, object] | None,
     missing_benchmark_live_proof_ref: str | None,
+    missing_benchmark_performance_readiness_proof: Mapping[str, object] | None,
+    missing_benchmark_performance_readiness_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,

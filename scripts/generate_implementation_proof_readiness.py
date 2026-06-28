@@ -197,6 +197,11 @@ def _opportunity_archetype_proof_artifact_inputs(
             artifact_name="Missing benchmark live proof",
             ref_name="Missing benchmark live proof artifact",
         ),
+        "missing_benchmark_performance_readiness": _proof_artifact_input(
+            args.missing_benchmark_performance_readiness_proof,
+            artifact_name="Missing benchmark Performance readiness proof",
+            ref_name="Missing benchmark Performance readiness proof artifact",
+        ),
     }
 
 
