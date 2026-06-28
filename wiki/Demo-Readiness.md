@@ -18,10 +18,12 @@ promotion.
 
 Missing-benchmark review is an internal bounded foundation only. It can create
 advisor-review evidence-gap candidates from Core-owned benchmark-assignment
-posture and can consume bounded Performance benchmark-readiness proof, but it
-does not assign benchmarks, calculate performance or benchmark returns, certify
-methodology, prove Workbench behavior, authorize client publication, or promote
-a supported feature.
+posture, including the bounded
+`POST /api/v1/idea-signals/missing-benchmark/evaluate` API over caller-supplied
+Core evidence, and can consume bounded Performance benchmark-readiness proof,
+but it does not assign benchmarks, calculate performance or benchmark returns,
+certify methodology, prove Workbench behavior, authorize client publication, or
+promote a supported feature.
 
 Missing risk-profile review is an internal bounded foundation only. It can
 create advisor-review evidence-gap candidates from explicit Advise-owned

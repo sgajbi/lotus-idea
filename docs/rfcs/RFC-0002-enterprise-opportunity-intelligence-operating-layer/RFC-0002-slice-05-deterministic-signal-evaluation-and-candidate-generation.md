@@ -233,24 +233,35 @@ Additional implemented missing-benchmark foundation:
    Core source-port wrappers over the existing
    `CoreBenchmarkAssignmentSourcePort`, mapping source unavailable and
    entitlement-denied states to blocked outcomes without candidate creation.
-4. `tests/unit/test_missing_benchmark_signal_evaluation.py` and
+4. `src/app/api/missing_benchmark_signals.py` exposes
+   `POST /api/v1/idea-signals/missing-benchmark/evaluate` as a bounded
+   caller-supplied API foundation over Core benchmark-assignment posture. It
+   requires `idea.signal.evaluate` or advisor role, emits bounded operation
+   events, redacts source route/hash fields from candidate responses, and does
+   not assign benchmarks, calculate performance, certify methodology, publish
+   client communication, or promote support.
+5. `tests/unit/test_missing_benchmark_signal_evaluation.py` and
    `tests/unit/test_missing_benchmark_application.py` cover positive
    evidence-gap creation, ready-assignment suppression, inactive or missing
    assignment posture, stale/missing source, entitlement denial, duplicate
    suppression, source-unavailable handling, and source request mapping.
-5. `src/app/application/missing_benchmark_live_proof.py`,
+6. `tests/integration/test_missing_benchmark_signal_api.py` and
+   `tests/integration/test_api_operation_events.py` cover route success,
+   ready-assignment not-eligible posture, stale-source blocking, permission
+   denial, and operation-event proof.
+7. `src/app/application/missing_benchmark_live_proof.py`,
    `scripts/generate_missing_benchmark_live_proof.py`, and
    `make missing-benchmark-live-proof-contract-gate` define a source-safe live
    Core proof artifact that can clear only the missing-benchmark live Core
    source blocker when it proves a current Core source attempt produced an
    advisor-review missing-benchmark candidate.
-6. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
+8. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
    `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
    `make missing-benchmark-performance-readiness-proof-contract-gate` define a
    source-safe Lotus Performance benchmark-readiness proof artifact that can
    clear only the missing-benchmark Performance source-ref blocker when
    `ReturnsSeriesBundle:v1` evidence proves benchmark readiness was evaluated.
-7. The opportunity archetype contract records `missing-benchmark-review` as a
+9. The opportunity archetype contract records `missing-benchmark-review` as a
    non-promoted bounded foundation. Remaining blockers include Performance
    benchmark-readiness source ref when no valid proof is supplied, data-mesh
    certification, Workbench proof, client publication, and supported-feature

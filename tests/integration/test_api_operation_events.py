@@ -11,6 +11,7 @@ import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.conversion_governance as conversion_governance_api
 import app.api.idea_signals as idea_signals_api
+import app.api.missing_benchmark_signals as missing_benchmark_signals_api
 import app.api.missing_risk_profile_signals as missing_risk_profile_signals_api
 import app.api.missing_suitability_signals as missing_suitability_signals_api
 import app.api.report_evidence as report_evidence_api
@@ -95,6 +96,29 @@ def missing_risk_profile_payload() -> dict[str, Any]:
         "riskProfileStatus": "STALE",
         "riskProfileEffectiveForAsOfDate": False,
         "riskProfileReviewDue": True,
+        "entitlementAllowed": True,
+    }
+
+
+def missing_benchmark_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "benchmarkAssignmentRef": {
+            "productId": "lotus-core:BenchmarkAssignment:v1",
+            "sourceSystem": "lotus-core",
+            "productVersion": "v1",
+            "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:benchmark-assignment-gap",
+            "dataQualityStatus": "complete",
+            "freshness": "current",
+        },
+        "benchmarkIdentityResolved": False,
+        "assignmentEffectiveForAsOfDate": False,
+        "assignmentStatus": "ACTIVE",
+        "assignmentVersionPresent": True,
         "entitlementAllowed": True,
     }
 
@@ -523,6 +547,22 @@ def test_missing_risk_profile_signal_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("signal_evaluation", "accepted", "lotus-advise", False, None)]
+
+
+def test_missing_benchmark_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, missing_benchmark_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-benchmark/evaluate",
+        json=missing_benchmark_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-core", False, None)]
 
 
 def test_missing_suitability_signal_api_emits_bounded_operation_event(

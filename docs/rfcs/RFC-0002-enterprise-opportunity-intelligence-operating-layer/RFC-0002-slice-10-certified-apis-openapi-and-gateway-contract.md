@@ -15,6 +15,7 @@ The first certified API foundations are:
 - `POST /api/v1/idea-signals/missing-suitability/evaluate`
 - `POST /api/v1/idea-signals/missing-risk-profile/evaluate`
 - `POST /api/v1/idea-signals/mandate-restriction/evaluate`
+- `POST /api/v1/idea-signals/missing-benchmark/evaluate`
 - `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`
 - `GET /api/v1/idea-candidates/{candidateId}`
 - `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
@@ -31,14 +32,16 @@ for the high-cash / idle-liquidity signal family. They consume source-reported
 cash weight and source references; they do not fetch upstream data and do not
 calculate official cash, holdings, or portfolio values.
 
-The missing suitability, missing risk-profile, and mandate/restriction signal
-endpoints expose bounded caller-supplied evidence evaluation over source-owned
-Advise, Core, or Manage posture evidence. They create only source-safe review
-candidates or blocked posture, require `idea.signal.evaluate` or advisor role,
-redact raw source routes and content hashes from response candidates, emit
-bounded operation events, and do not approve suitability, policy, proposal,
-sign-off, mandate state, restriction clearance, client publication, Gateway,
-Workbench, data-mesh certification, or supported-feature promotion.
+The missing suitability, missing risk-profile, mandate/restriction, and
+missing-benchmark signal endpoints expose bounded caller-supplied evidence
+evaluation over source-owned Advise, Core, or Manage posture evidence. They
+create only source-safe review candidates or blocked posture, require
+`idea.signal.evaluate` or advisor role, redact raw source routes and content
+hashes from response candidates, emit bounded operation events, and do not
+approve suitability, policy, proposal, sign-off, mandate state, restriction
+clearance, benchmark assignment, benchmark methodology, performance
+calculation, client publication, Gateway, Workbench, data-mesh certification,
+or supported-feature promotion.
 
 `evaluate-and-persist` adds internal candidate persistence through the Slice 06
 repository foundation. It requires `Idempotency-Key` and
@@ -129,70 +132,78 @@ Implementation files:
    suitability-context signal API over caller-supplied Advise policy-evaluation
    evidence with product-safe authorization, source-redacted response
    projection, OpenAPI examples, and operation events.
-3. `src/app/application/high_cash_signal.py`: application command and policy
+3. `src/app/api/missing_benchmark_signals.py`: bounded missing-benchmark
+   signal API over caller-supplied Core benchmark-assignment evidence with
+   product-safe authorization, source-redacted response projection, OpenAPI
+   examples, and operation events.
+4. `src/app/application/high_cash_signal.py`: application command and policy
    orchestration over framework-free domain evaluation and internal
    evaluate-and-persist behavior.
-4. `src/app/domain/signal_evaluation.py`: existing deterministic high-cash
+5. `src/app/domain/signal_evaluation.py`: existing deterministic high-cash
    domain policy reused by the endpoint.
-5. `src/app/domain/persistence.py`: internal idempotency/audit repository used
+6. `src/app/domain/persistence.py`: internal idempotency/audit repository used
    by the evaluate-and-persist and lifecycle transition API foundations.
-6. `src/app/errors.py`: RFC-7807-shaped problem detail body with stable
+7. `src/app/errors.py`: RFC-7807-shaped problem detail body with stable
    `type`, `status`, `code`, `title`, and `detail` fields.
-7. `docs/operations/endpoint-certification-ledger.json`: machine-readable
+8. `docs/operations/endpoint-certification-ledger.json`: machine-readable
    endpoint certification evidence for the new route.
-8. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
+9. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
    authorization/scope mapping, product-safe errors, idempotency-conflict
    handling, OpenAPI examples, and route registration.
-9. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
+10. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
    optional tenant/book/portfolio/client scope filters, product-safe errors,
    OpenAPI examples, and route registration.
-10. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
+11. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
    signal and review routes.
-11. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
+12. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-12. `src/app/application/candidate_lifecycle.py`: application command and
+13. `src/app/application/candidate_lifecycle.py`: application command and
     idempotency payload construction for lifecycle transitions.
-13. `src/app/api/candidate_detail.py`: source-safe candidate detail DTOs,
+14. `src/app/api/candidate_detail.py`: source-safe candidate detail DTOs,
     authorization and caller-scope mapping, redacted source projection,
     product-safe errors, OpenAPI examples, and route registration.
-14. `src/app/application/candidate_detail.py`: persisted candidate snapshot
+15. `src/app/application/candidate_detail.py`: persisted candidate snapshot
     lookup and access-scope matching through the governed repository port.
-15. `src/app/api/candidate_evidence_replay.py`: evidence replay DTOs,
+16. `src/app/api/candidate_evidence_replay.py`: evidence replay DTOs,
     authorization mapping, product-safe errors, OpenAPI examples, operation
     events, and route registration.
-16. `src/app/application/candidate_evidence_replay.py`: command validation and
+17. `src/app/application/candidate_evidence_replay.py`: command validation and
     replay orchestration through the governed repository port.
-17. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
+18. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
     mapping, redacted response projection, product-safe errors, OpenAPI
     examples, and route registration.
-18. `src/app/application/ai_governance.py`: persisted candidate snapshot
+19. `src/app/application/ai_governance.py`: persisted candidate snapshot
     lookup plus deterministic fallback/verifier orchestration without provider
     execution or durable persistence claims.
-19. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
+20. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-20. `src/app/application/conversion_workflow.py`: application commands,
+21. `src/app/application/conversion_workflow.py`: application commands,
     idempotency payload construction, repository precheck, and domain
     invocation for conversion intent/outcome workflow.
-21. `tests/integration/test_review_workflow_api.py`: certified API behavior
+22. `tests/integration/test_review_workflow_api.py`: certified API behavior
    evidence for lifecycle transition, review action, feedback, and conversion
    foundations.
-22. `tests/integration/test_review_queue_api.py`: certified API behavior
+23. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
-23. `tests/integration/test_candidate_detail_api.py`: certified API behavior
+24. `tests/integration/test_candidate_detail_api.py`: certified API behavior
     evidence for source-safe detail projection, workflow summaries, permission,
     missing candidate, and no-authority promotion.
-24. `tests/integration/test_candidate_evidence_replay_api.py`: certified API
+25. `tests/integration/test_candidate_evidence_replay_api.py`: certified API
     behavior evidence for matched, stale-source, hash-mismatch, permission,
     missing candidate, invalid request, and no-authority replay posture.
-25. `tests/integration/test_ai_governance_api.py`: certified API behavior
+26. `tests/integration/test_ai_governance_api.py`: certified API behavior
     evidence for AI fallback, verifier acceptance, blocked output, permission,
     missing candidate, invalid state, and forbidden metadata.
-26. `tests/integration/test_missing_suitability_signal_api.py`: certified API
+27. `tests/integration/test_missing_suitability_signal_api.py`: certified API
     behavior evidence for candidate creation, blocked publication posture,
     permission denial, source-redacted response projection, and no-authority
     promotion.
+28. `tests/integration/test_missing_benchmark_signal_api.py`: certified API
+    behavior evidence for missing-benchmark candidate creation, ready-assignment
+    not-eligible posture, stale-source blocking, permission denial,
+    source-redacted response projection, and no-authority promotion.
 
 ## Current Contract
 
