@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
 
 ## Outcome
 
@@ -32,8 +32,9 @@ capabilities exist.
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
    concentration-risk, underperformance, allocation-drift, high-volatility /
-   drawdown, missing-suitability, mandate/restriction, low-income / liquidity-shortfall,
-   missing-benchmark review, and policy-only bond-maturity review foundations.
+   drawdown, missing-suitability, missing risk-profile, mandate/restriction,
+   low-income / liquidity-shortfall, missing-benchmark review, and policy-only
+   bond-maturity review foundations.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
@@ -50,10 +51,11 @@ capabilities exist.
    the benchmark-assignment source-ref blocker, low-income Core cashflow proof
    clears the live Core cashflow source blocker, Manage mandate proof clears the
    portfolio-scoped Manage action-register blocker, and Advise
-   missing-suitability proof clears the live Advise policy blocker. The
-   missing-benchmark foundation currently records policy/source-port proof
-   only and keeps live Core source proof plus Performance benchmark-readiness
-   evidence blocked. Mandate
+   missing-suitability proof clears the live Advise policy blocker, and
+   missing risk-profile proof clears only the live Advise risk-profile source
+   blocker. The missing-benchmark foundation currently records
+   policy/source-port proof only and keeps live Core source proof plus
+   Performance benchmark-readiness evidence blocked. Mandate
    performance/risk health, Core portfolio-state, data-mesh certification,
    Workbench proof, client-publication, and supported-feature blockers remain
    intact.
@@ -111,7 +113,17 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    suitability live-source blocker; data-mesh certification, Workbench proof,
    client-publication approval, and supported-feature evidence remain required
    before demo use.
-8. Allocation drift / mandate review now has a bounded deterministic policy,
+8. Missing risk-profile review now has a bounded deterministic policy and
+   Lotus Advise `AdvisoryPolicyEvaluationRecord:v1` explicit risk-profile
+   diagnostic source-port/adapter/live-proof foundation. It can create only an
+   advisor-review evidence-gap candidate from Advise-owned missing, stale,
+   expired, or review-due risk-profile diagnostic posture. A valid source-safe
+   live Advise proof clears only
+   `opportunity_archetype_advise_risk_profile_live_source_proof_missing`;
+   typed risk-profile source product proof, data-mesh certification,
+   Workbench proof, client-publication approval, and supported-feature evidence
+   remain required before demo use.
+9. Allocation drift / mandate review now has a bounded deterministic policy,
    Lotus Manage `PortfolioActionRegister:v1` source-port/adapter foundation,
    and source-safe Manage mandate live-proof contract. A valid artifact clears
    only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`;
@@ -119,7 +131,7 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    data-mesh certification, Workbench proof, client-publication approval,
    supported-feature evidence, rebalance authority, action authority, order
    creation, execution, and settlement remain required before demo use.
-9. Low-income / liquidity shortfall now has a bounded deterministic policy,
+10. Low-income / liquidity shortfall now has a bounded deterministic policy,
    Lotus Core cashflow source-port/adapter foundation, source-safe Core
    cashflow live-proof contract, and contract-backed archetype entry. It can
    create only advisor-review candidates from Core
@@ -129,14 +141,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    not be presented as client income-needs planning, funding advice,
    suitability, treasury instruction, Workbench proof, data-mesh certification,
    client publication, or supported-feature promotion.
-10. Bond maturity / reinvestment now has a bounded deterministic policy and
+11. Bond maturity / reinvestment now has a bounded deterministic policy and
    Core source-port shape. It remains blocked for live source generation
    because Core does not yet publish a governed maturity-bearing HoldingsAsOf
    response or maturity-specific source product for `lotus-idea`; no
    reinvestment advice, replacement product recommendation, suitability,
    Workbench proof, data-mesh certification, client publication, or
    supported-feature promotion is implied.
-11. Missing-benchmark review now has a bounded deterministic policy and Core
+12. Missing-benchmark review now has a bounded deterministic policy and Core
    benchmark-assignment source-port wrapper. It can create only advisor-review
    evidence-gap candidates from Core-owned missing, inactive, ineffective, or
    unversioned benchmark assignment posture. Live Core source proof,
@@ -144,14 +156,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    certification, client publication, supported-feature promotion, benchmark
    assignment, benchmark methodology, and benchmark-return calculation remain
    blocked.
-12. Mandate/restriction review now has a bounded deterministic policy and
+13. Mandate/restriction review now has a bounded deterministic policy and
    source-safe caller-supplied API foundation. It can create only
    compliance-review candidates from explicit source-owned restriction posture
    and must not be presented as live upstream source integration, mandate
    change authority, product/country restriction clearance, suitability
    approval, order creation, Workbench proof, data-mesh certification, client
    publication, or supported-feature promotion.
-13. Remaining planned archetypes still require source adapters, deterministic
+14. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate

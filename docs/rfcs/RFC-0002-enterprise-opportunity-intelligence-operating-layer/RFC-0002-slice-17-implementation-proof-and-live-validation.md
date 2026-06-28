@@ -417,6 +417,7 @@ without relying on chat memory.
     readiness, but it proves only governed taxonomy, bounded concentration
     source/policy foundation, bounded high-volatility / drawdown source/policy
     foundation, bounded missing suitability context source/policy foundation,
+    bounded missing risk-profile source/policy foundation,
     bounded low-income / liquidity-shortfall Core cashflow foundation,
     bounded bond-maturity / reinvestment policy foundation without live Core
     maturity source proof,
@@ -425,9 +426,11 @@ without relying on chat memory.
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
     source-backed archetype replay is bounded to optional high-cash live Core,
     concentration live Risk, high-volatility live Risk, drawdown live Risk,
-    low-income live Core cashflow, and missing-suitability live Advise
-    proof artifacts. Missing suitability proof clears only the Advise policy
-    live-source blocker; low-income Core cashflow proof clears only
+    low-income live Core cashflow, missing-suitability live Advise, and
+    missing risk-profile live Advise proof artifacts. Missing suitability
+    proof clears only the Advise policy live-source blocker; missing
+    risk-profile proof clears only the Advise risk-profile live-source
+    blocker; low-income Core cashflow proof clears only
     `opportunity_archetype_live_core_cashflow_source_proof_missing`;
     full Workbench product proof, data-mesh certification, client-publication,
     and supported-feature promotion remain pending.

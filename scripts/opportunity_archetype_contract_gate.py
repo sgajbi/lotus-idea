@@ -163,9 +163,14 @@ REQUIRED_MISSING_BENCHMARK_EVIDENCE = {
 REQUIRED_MISSING_RISK_PROFILE_EVIDENCE = {
     "src/app/domain/missing_risk_profile_signal.py",
     "src/app/application/missing_risk_profile_signal.py",
+    "src/app/application/missing_risk_profile_live_proof.py",
     "src/app/ports/advise_sources.py",
+    "scripts/generate_missing_risk_profile_live_proof.py",
+    "make missing-risk-profile-live-proof-contract-gate",
     "tests/unit/test_missing_risk_profile_signal_evaluation.py",
     "tests/unit/test_missing_risk_profile_application.py",
+    "tests/unit/test_missing_risk_profile_live_proof.py",
+    "tests/unit/test_implementation_proof_readiness_missing_risk_profile.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
 REQUIRED_MANDATE_RESTRICTION_EVIDENCE = {

@@ -971,7 +971,12 @@ posture from `AdvisoryPolicyEvaluationRecord:v1`; generic open suitability or
 policy requirements stay on the missing suitability context path. It can create
 only an advisor-review evidence-gap candidate and does not approve risk
 profiling, suitability, policy, proposal, client publication, or external
-communication. Low-income / liquidity shortfall is backed by
+communication. A source-safe missing risk-profile live-proof artifact can clear
+only the Advise risk-profile live-source blocker when current explicit
+diagnostic evidence produces a deterministic review candidate; it does not
+certify a typed risk-profile source product, risk profiling authority,
+suitability, policy, proposal, data mesh, Workbench, client publication, or
+supported-feature promotion. Low-income / liquidity shortfall is backed by
 deterministic policy, a Lotus Core cashflow source port, a fail-closed HTTP
 adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
 `/portfolios/{portfolio_id}/cashflow-projection`, and focused unit tests that
@@ -1001,6 +1006,8 @@ A valid low-income Core cashflow live-proof artifact clears only the
 low-income / liquidity-shortfall live Core cashflow source blocker.
 A valid missing-suitability live-proof artifact clears only the Advise policy
 live-source blocker.
+A valid missing risk-profile live-proof artifact clears only the Advise
+risk-profile live-source blocker.
 A valid Manage mandate live-proof artifact clears only the portfolio-scoped
 Manage action-register source blocker.
 Concentration still
@@ -1018,8 +1025,8 @@ Missing suitability context still carries data-mesh, Workbench,
 client-publication, and supported-feature blockers after live Advise policy
 proof is supplied.
 Missing risk-profile review still carries typed Advise risk-profile source
-product, live Advise risk-profile proof, data-mesh, Workbench,
-client-publication, and supported-feature blockers.
+product, data-mesh, Workbench, client-publication, and supported-feature
+blockers after live Advise risk-profile proof is supplied.
 Mandate/restriction review still carries live restriction source proof, typed
 restriction source product, Workbench, data-mesh, client-publication, and
 supported-feature blockers.

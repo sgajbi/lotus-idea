@@ -47,10 +47,8 @@ from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
 )
-from app.application.implementation_proof_capability_updates import (
-    _apply_blocker_proof as _apply_blocker_proof,
-    _capability as _capability,
-)
+from app.application.implementation_proof_capability_updates import _apply_blocker_proof
+from app.application.implementation_proof_capability_updates import _capability as _capability
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_opportunity_archetype_proofs,
 )
@@ -165,6 +163,8 @@ def build_implementation_proof_readiness_snapshot(
     manage_mandate_live_proof_ref: str | None = None,
     missing_suitability_live_proof: Mapping[str, object] | None = None,
     missing_suitability_live_proof_ref: str | None = None,
+    missing_risk_profile_live_proof: Mapping[str, object] | None = None,
+    missing_risk_profile_live_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -368,6 +368,8 @@ def _apply_available_proofs(
     manage_mandate_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
+    missing_risk_profile_live_proof: Mapping[str, object] | None,
+    missing_risk_profile_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,
@@ -437,6 +439,8 @@ def _apply_available_proofs(
         manage_mandate_live_proof_ref=manage_mandate_live_proof_ref,
         missing_suitability_live_proof=missing_suitability_live_proof,
         missing_suitability_live_proof_ref=missing_suitability_live_proof_ref,
+        missing_risk_profile_live_proof=missing_risk_profile_live_proof,
+        missing_risk_profile_live_proof_ref=missing_risk_profile_live_proof_ref,
     )
 
 

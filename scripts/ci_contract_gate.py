@@ -72,6 +72,7 @@ REQUIRED_LINT_TARGETS = (
     "low-income-core-cashflow-live-proof-contract-gate",
     "manage-mandate-live-proof-contract-gate",
     "missing-suitability-live-proof-contract-gate",
+    "missing-risk-profile-live-proof-contract-gate",
     "performance-underperformance-live-proof-contract-gate",
     "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
@@ -329,21 +330,14 @@ def validate_makefile(makefile: str) -> list[str]:
         "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
         "source-ingestion-scheduled-worker-check": "scripts/source_ingestion_scheduled_worker_contract_gate.py",
         "source-ingestion-live-proof-contract-gate": "scripts/source_ingestion_live_proof_contract_gate.py",
-        "risk-concentration-live-proof-contract-gate": (
-            "scripts/risk_concentration_live_proof_contract_gate.py"
-        ),
+        "risk-concentration-live-proof-contract-gate": "scripts/risk_concentration_live_proof_contract_gate.py",
         "performance-underperformance-live-proof-contract-gate": "scripts/performance_underperformance_live_proof_contract_gate.py",
         "core-benchmark-assignment-live-proof-contract-gate": "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
         "low-income-core-cashflow-live-proof-contract-gate": "scripts/low_income_core_cashflow_live_proof_contract_gate.py",
-        "risk-drawdown-live-proof-contract-gate": (
-            "scripts/risk_drawdown_live_proof_contract_gate.py"
-        ),
-        "manage-mandate-live-proof-contract-gate": (
-            "scripts/manage_mandate_live_proof_contract_gate.py"
-        ),
-        "missing-suitability-live-proof-contract-gate": (
-            "scripts/missing_suitability_live_proof_contract_gate.py"
-        ),
+        "risk-drawdown-live-proof-contract-gate": "scripts/risk_drawdown_live_proof_contract_gate.py",
+        "manage-mandate-live-proof-contract-gate": "scripts/manage_mandate_live_proof_contract_gate.py",
+        "missing-suitability-live-proof-contract-gate": "scripts/missing_suitability_live_proof_contract_gate.py",
+        "missing-risk-profile-live-proof-contract-gate": "scripts/missing_risk_profile_live_proof_contract_gate.py",
         "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",
         "opportunity-archetype-contract-gate": ("scripts/opportunity_archetype_contract_gate.py"),
         "durable-repository-proof-contract-gate": "scripts/durable_repository_proof_contract_gate.py",

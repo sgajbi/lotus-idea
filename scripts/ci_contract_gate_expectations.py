@@ -206,6 +206,14 @@ REQUIRED_READINESS_WIRING = (
         "--missing-suitability-live-proof",
         "pass optional Advise missing suitability live proof artifact into readiness generation",
     ),
+    (
+        "LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF",
+        "support optional Advise missing risk-profile live proof artifact wiring",
+    ),
+    (
+        "--missing-risk-profile-live-proof",
+        "pass optional Advise missing risk-profile live proof artifact into readiness generation",
+    ),
     ("--core-query-base-url", "support optional Core query-service URL wiring"),
     (
         "--core-query-control-plane-base-url",
