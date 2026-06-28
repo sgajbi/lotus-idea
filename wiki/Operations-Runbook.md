@@ -141,6 +141,8 @@ optional Core benchmark assignment live proof through
 `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`,
 optional Core portfolio-state live proof through
 `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`,
+optional Core bond-maturity live proof through
+`LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF`,
 optional missing-benchmark live Core proof through
 `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF`,
 optional missing-benchmark Performance readiness proof through

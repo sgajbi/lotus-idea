@@ -137,6 +137,7 @@ the canonical target instead of a one-off command:
 | `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes a validated source-safe Lotus Core portfolio-state live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`; it does not certify Manage action-register proof, mandate performance health, mandate risk health, rebalance authority, action authority, order execution, data mesh, Workbench, client publication, or supported-feature promotion. |
+| `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes a validated source-safe Lotus Core HoldingsAsOf maturity live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it does not recommend reinvestment products, forecast cashflows, certify suitability or risk, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes a validated source-safe Lotus Core missing-benchmark live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; it does not assign benchmarks, certify Performance benchmark-readiness evidence, certify benchmark methodology, calculate benchmark composition or returns, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes a validated source-safe Lotus Core cashflow live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes a validated source-safe Lotus Manage mandate live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`; it does not certify mandate performance health, mandate risk health, Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, rebalance authority, action authority, order creation, execution, or settlement. |
@@ -289,9 +290,21 @@ evidence presence, and deterministic low-income / liquidity-shortfall
 candidate posture without storing portfolio identity, request or response
 payloads, correlation IDs, trace IDs, candidate IDs, source routes, cashflow
 amounts, movement details, or client facts. It deliberately retains Workbench,
-data-mesh, client-publication, and supported-feature blockers, and it does not
-infer client income needs, funding advice, treasury instruction, suitability,
-or planning objectives.
+data-mesh, client-publication, supported-feature, suitability, planning,
+funding-advice, and treasury-instruction blockers.
+
+Lotus Core bond-maturity live proof is captured by
+`scripts/generate_bond_maturity_live_proof.py`. A valid artifact referenced
+through `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` clears only
+`opportunity_archetype_maturity_live_core_source_proof_missing` for the
+`opportunity-archetype-scenarios` capability. The artifact proves live
+`lotus-core:HoldingsAsOf:v1` maturity-date evidence, current source refs, next
+maturity-date evidence, and maturing-position count presence without storing
+portfolio identity, request or response payloads, correlation IDs, trace IDs,
+candidate IDs, source routes, positions, holdings, security identifiers,
+maturity dates, or quantities. It deliberately retains data-mesh, Workbench,
+client-publication, product-recommendation, reinvestment-advice, suitability,
+risk, and supported-feature blockers.
 
 Lotus Manage mandate live proof is captured by
 `scripts/generate_manage_mandate_live_proof.py`. A valid artifact referenced
@@ -748,11 +761,17 @@ Implementation-backed evidence:
     `make core-portfolio-state-live-proof-contract-gate`,
 43. Core portfolio-state live-proof tests:
     `tests/unit/test_core_portfolio_state_live_proof.py`,
-44. Low-income Core cashflow live-proof generator:
+44. Bond maturity live-proof generator:
+    `scripts/generate_bond_maturity_live_proof.py`,
+45. Bond maturity live-proof contract gate:
+    `make bond-maturity-live-proof-contract-gate`,
+46. Bond maturity live-proof tests:
+    `tests/unit/test_bond_maturity_live_proof.py`,
+47. Low-income Core cashflow live-proof generator:
     `scripts/generate_low_income_core_cashflow_live_proof.py`,
-43. Low-income Core cashflow live-proof contract gate:
+48. Low-income Core cashflow live-proof contract gate:
     `make low-income-core-cashflow-live-proof-contract-gate`,
-44. Low-income Core cashflow live-proof tests:
+49. Low-income Core cashflow live-proof tests:
     `tests/unit/test_low_income_core_cashflow_live_proof.py`,
 27. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
@@ -909,6 +928,7 @@ make missing-risk-profile-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make core-benchmark-assignment-live-proof-contract-gate
 make core-portfolio-state-live-proof-contract-gate
+make bond-maturity-live-proof-contract-gate
 make low-income-core-cashflow-live-proof-contract-gate
 make downstream-realization-contract-gate
 make runtime-trust-telemetry-snapshot-check

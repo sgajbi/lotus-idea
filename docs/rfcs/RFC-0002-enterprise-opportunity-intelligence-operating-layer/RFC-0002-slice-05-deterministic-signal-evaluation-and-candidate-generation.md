@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core source-port shape, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, missing risk-profile evidence-gap policy, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, missing risk-profile evidence-gap policy, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -114,13 +114,17 @@ Additional implemented bond-maturity / reinvestment foundation:
    It does not recommend a replacement product, calculate reinvestment advice,
    infer suitability, construct orders, or perform portfolio-management
    actions.
-3. `src/app/application/bond_maturity_signal.py` and
-   `src/app/ports/core_sources.py` add the application command and Core source
-   port shape for future Core-owned maturity evidence.
-4. No concrete Core HTTP adapter or live proof is implemented in this slice
-   because current Core served contracts expose instrument `maturity_date`
-   internally but do not yet expose a governed maturity-bearing HoldingsAsOf
-   response or maturity-specific source product for `lotus-idea` consumption.
+3. `src/app/application/bond_maturity_signal.py`,
+   `src/app/infrastructure/lotus_core_sources.py`, and
+   `src/app/ports/core_sources.py` add the application command, Core source
+   port, and Core `HoldingsAsOf:v1` positions adapter for maturity-date
+   evidence.
+4. `src/app/application/bond_maturity_live_proof.py`,
+   `scripts/generate_bond_maturity_live_proof.py`, and
+   `make bond-maturity-live-proof-contract-gate` define a source-safe live
+   proof artifact that can clear only the live Core maturity source blocker.
+   It does not certify data mesh, Workbench behavior, client publication,
+   product recommendations, reinvestment advice, or supported-feature status.
 5. `tests/unit/test_bond_maturity_signal_evaluation.py` and
    `tests/unit/test_bond_maturity_application.py` cover positive,
    outside-window, zero-count, missing-source, missing-maturity-date, stale,

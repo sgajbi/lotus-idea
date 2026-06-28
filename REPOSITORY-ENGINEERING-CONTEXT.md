@@ -146,17 +146,17 @@ low-income / liquidity-shortfall live Core cashflow source blocker while
 retaining Workbench, data-mesh, client-publication, supported-feature,
 suitability, planning, funding-advice, and treasury-instruction boundaries.
 `src/app/domain/bond_maturity_signal.py`,
-`src/app/application/bond_maturity_signal.py`, and
+`src/app/application/bond_maturity_signal.py`,
+`src/app/application/bond_maturity_live_proof.py`,
+`src/app/infrastructure/lotus_core_sources.py`, and
 `src/app/ports/core_sources.py` add the bounded bond-maturity / reinvestment
-policy and Core source-port shape. The policy can create only advisor-review
-candidates from supplied Core-owned maturity facts, source refs, freshness,
-maturing holding count, and entitlement posture. It does not recommend a
-replacement product, calculate reinvestment advice, infer suitability, create
-orders, or certify a Core maturity source contract. Current Core code stores
-instrument `maturity_date`, but the served HoldingsAsOf and instrument lookup
-contracts do not yet expose a governed maturity-bearing source product for
-`lotus-idea`; maturity-source-contract, live Core proof, data-mesh, Workbench,
-client-publication, and supported-feature blockers remain.
+policy, Core `HoldingsAsOf:v1` maturity-date adapter, and source-safe live
+proof contract. The policy can create only advisor-review candidates from
+Core-owned maturity facts, source refs, freshness, maturing holding count, and
+entitlement posture. It does not recommend a replacement product, calculate
+reinvestment advice, infer suitability, create orders, certify data mesh, prove
+Workbench behavior, approve client publication, or promote a supported feature.
+A valid Core maturity proof clears only the live Core maturity source blocker.
 The allocation-drift foundation uses
 `src/app/ports/manage_sources.py`,
 `src/app/application/mandate_health_signal.py`, and
@@ -993,8 +993,8 @@ adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
 prove source-reported projected cumulative cashflow consumption while blocking
 planning, funding-advice, treasury-instruction, suitability, Workbench,
 client-publication, and supported-feature claims. Bond maturity / reinvestment
-is policy-only until Core publishes a governed maturity-bearing HoldingsAsOf
-response or maturity-specific source product; live generation, Workbench,
+consumes governed Core `HoldingsAsOf:v1` maturity dates through a bounded
+source adapter and optional source-safe live proof; Workbench,
 client-publication, and supported-feature claims remain blocked.
 Mandate/restriction review is backed by deterministic policy,
 `src/app/application/mandate_restriction_signal.py`, and the bounded

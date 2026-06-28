@@ -226,10 +226,11 @@ durable operating-context enforcement:
     client publication, rebalance authority, action authority, order execution,
     or supported-feature promotion.
 29. README, repository context, RFC evidence, demo claims, and wiki source now
-    describe the bounded bond-maturity / reinvestment policy foundation while
-    preserving the boundary that no live Core maturity source contract, data
-    mesh certification, Workbench product proof, client publication, product
-    recommendation, reinvestment advice, or supported-feature promotion exists.
+    describe the bounded bond-maturity / reinvestment Core HoldingsAsOf
+    maturity-date live-proof foundation while preserving the boundary that no
+    data-mesh certification, Workbench product proof, client publication,
+    product recommendation, reinvestment advice, or supported-feature promotion
+    exists.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and
