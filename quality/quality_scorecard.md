@@ -40,3 +40,12 @@ silently regress to policy-only evidence while preserving the current
 non-promoted boundary: no Risk source fetch, volatility or drawdown
 calculation, Risk methodology approval, client publication, data-product
 certification, Workbench proof, or supported-feature promotion.
+
+Current slice note: `make opportunity-archetype-contract-gate` now enforces
+API evidence parity for every implemented caller-supplied signal API recorded
+in the opportunity archetype contract. The gate requires API module, route, and
+integration-test evidence for concentration, underperformance, allocation
+drift, bond maturity, high volatility, drawdown, missing suitability, missing
+risk profile, mandate/restriction, low-income, and missing benchmark without
+promoting any foundation to data-mesh certification, Workbench proof, client
+publication, or supported-feature status.

@@ -280,6 +280,13 @@ or unshared source-authority/error/event mechanics.
     fetch, volatility or drawdown calculation, Risk methodology approval,
     rebalance/action/order authority, data-mesh certification, Workbench proof,
     client publication, or supported-feature promotion.
+32. The opportunity archetype evidence contract and contract gate now enforce
+    API-evidence parity for every implemented caller-supplied signal API
+    recorded in the archetype contract. This pins concentration,
+    underperformance, allocation drift, bond maturity, high volatility,
+    drawdown, missing suitability, missing risk profile, mandate/restriction,
+    low income, and missing benchmark API modules, routes, and integration
+    tests without promoting any of those foundations to supported features.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and

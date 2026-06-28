@@ -451,7 +451,14 @@ Additional implemented drawdown-review foundation:
    API module, route, and integration test as implementation evidence for the
    high-volatility / drawdown review archetype, so proof-readiness evidence
    cannot regress to policy-only drawdown proof.
-8. `src/app/application/risk_drawdown_live_proof.py`,
+8. `make opportunity-archetype-contract-gate` now enforces API evidence parity
+   for every implemented caller-supplied signal API recorded in the archetype
+   contract. Concentration, underperformance, allocation drift, bond maturity,
+   high volatility, drawdown, missing suitability, missing risk profile,
+   mandate/restriction, low-income, and missing-benchmark foundations must keep
+   their API module, route, and integration-test evidence refs aligned with the
+   governed archetype contract.
+9. `src/app/application/risk_drawdown_live_proof.py`,
    `scripts/generate_risk_drawdown_live_proof.py`,
    `scripts/risk_drawdown_live_proof_contract_gate.py`, and
    `make risk-drawdown-live-proof-contract-gate` define a source-safe live Risk
@@ -460,7 +467,7 @@ Additional implemented drawdown-review foundation:
    evidence, ready Risk supportability, and deterministic drawdown-review
    candidate generation, then clears only the namespaced opportunity-archetype
    drawdown source blocker when consumed by aggregate readiness.
-9. This foundation does not include data-mesh certification, Workbench proof,
+10. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
 Additional implemented missing suitability context foundation:

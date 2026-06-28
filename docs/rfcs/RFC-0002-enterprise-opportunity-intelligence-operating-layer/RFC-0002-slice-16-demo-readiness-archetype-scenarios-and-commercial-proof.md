@@ -128,6 +128,11 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    archetype contract now pins the high-volatility and drawdown API modules,
    routes, and integration tests as evidence refs, keeping demo-readiness proof
    tied to implemented API surfaces rather than policy-only proof.
+   The contract gate now applies the same API-evidence parity to all
+   implemented caller-supplied signal foundations, so demo-readiness proof for
+   concentration, underperformance, allocation drift, bond maturity, missing
+   suitability, missing risk profile, mandate/restriction, low income, and
+   missing benchmark also remains tied to implemented API routes and tests.
 7. Missing suitability context now has a bounded deterministic policy and
    Lotus Advise `AdvisoryPolicyEvaluationRecord:v1` workflow
    source-port/adapter/live-proof foundation. It can create only a
