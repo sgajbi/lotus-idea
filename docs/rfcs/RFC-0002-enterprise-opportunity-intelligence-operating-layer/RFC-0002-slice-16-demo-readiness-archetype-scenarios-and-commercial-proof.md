@@ -51,14 +51,15 @@ capabilities exist.
    the benchmark-assignment source-ref blocker, missing-benchmark Core proof
    clears only the missing-benchmark live Core source blocker, low-income Core
    cashflow proof clears the live Core cashflow source blocker, Manage mandate
-   proof clears the portfolio-scoped Manage action-register blocker, Advise
-   missing-suitability proof clears the live Advise policy blocker, and missing
-   risk-profile proof clears only the live Advise risk-profile source blocker.
+   proof clears the portfolio-scoped Manage action-register blocker, Core
+   portfolio-state proof clears only the Core portfolio-state source-ref
+   blocker, Advise missing-suitability proof clears the live Advise policy
+   blocker, and missing risk-profile proof clears only the live Advise
+   risk-profile source blocker.
    Missing-benchmark still keeps Performance benchmark-readiness evidence
-   blocked. Mandate
-   performance/risk health, Core portfolio-state, data-mesh certification,
+   blocked. Mandate performance/risk health, data-mesh certification,
    Workbench proof, client-publication, and supported-feature blockers remain
-   intact.
+   intact after Manage and Core portfolio-state proof.
 
 This slice does not create demo-ready material. It deliberately prevents
 commercial proof from getting ahead of implementation-backed runtime evidence.
@@ -125,12 +126,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    remain required before demo use.
 9. Allocation drift / mandate review now has a bounded deterministic policy,
    Lotus Manage `PortfolioActionRegister:v1` source-port/adapter foundation,
-   and source-safe Manage mandate live-proof contract. A valid artifact clears
-   only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`;
-   mandate performance-health, mandate risk-health, Core portfolio-state,
-   data-mesh certification, Workbench proof, client-publication approval,
-   supported-feature evidence, rebalance authority, action authority, order
-   creation, execution, and settlement remain required before demo use.
+   source-safe Manage mandate live-proof contract, and source-safe Core
+   portfolio-state live-proof contract. Valid artifacts clear only
+   `opportunity_archetype_portfolio_scoped_manage_source_proof_missing` and
+   `opportunity_archetype_core_portfolio_state_source_ref_missing`;
+   mandate performance-health, mandate risk-health, data-mesh certification,
+   Workbench proof, client-publication approval, supported-feature evidence,
+   rebalance authority, action authority, order creation, execution, and
+   settlement remain required before demo use.
 10. Low-income / liquidity shortfall now has a bounded deterministic policy,
    Lotus Core cashflow source-port/adapter foundation, source-safe Core
    cashflow live-proof contract, and contract-backed archetype entry. It can

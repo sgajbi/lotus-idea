@@ -46,7 +46,8 @@ Blocking scaffold commands:
 37. `make missing-suitability-live-proof-contract-gate`
 38. `make performance-underperformance-live-proof-contract-gate`
 39. `make core-benchmark-assignment-live-proof-contract-gate`
-40. `make implementation-proof-readiness-check` generates the scheduled-worker
+40. `make core-portfolio-state-live-proof-contract-gate`
+41. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
@@ -54,8 +55,8 @@ Blocking scaffold commands:
     default Manage action route proof artifact, default Report intake route
     proof artifact, default mesh policy proof artifact, and default platform
     mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
-    registration proof artifacts and optional Manage mandate and
-    missing-suitability live Advise proof, then consumes all in
+    registration proof artifacts and optional Core portfolio-state, Manage
+    mandate, and missing-suitability live Advise proof, then consumes all in
     aggregate RFC proof-readiness evidence.
 35. `make supported-features-gate`
 36. `make endpoint-certification-gate`
@@ -93,6 +94,7 @@ durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
+Core portfolio-state live-proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench discovery proof contract validation,
 outbox broker proof contract validation,
