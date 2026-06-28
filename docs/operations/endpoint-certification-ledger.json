@@ -182,6 +182,37 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/high-volatility/evaluate",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Lotus Risk metrics evidence for high-volatility review posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Lotus Risk volatility evidence, Risk supportability posture, and entitlement posture.",
+      "when_not_to_use": "Do not use as a live upstream source-ingestion API, volatility calculation, VaR calculation, tracking-error calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedVolatility\":\"14.25\",\"riskSupportabilityState\":\"ready\",\"riskRef\":{\"productId\":\"lotus-risk:RiskMetricsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"route\":\"/analytics/risk/calculate\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:risk-metrics-report\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"high_volatility\",\"reasonCodes\":[\"volatility_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_high_volatility_8d57adbf52f7f5a7\",\"family\":\"high_volatility\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_volatility_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"72\",\"scorePolicyVersion\":\"high-volatility-attention-v1\",\"sourceSignalIds\":[\"signal_high_volatility_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:RiskMetricsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"high_volatility\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_uncertified\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_returns_review_candidate",
+        "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_reports_below_threshold_not_eligible",
+        "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_reports_non_ready_source_blocker",
+        "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_requires_signal_permission",
+        "tests/integration/test_api_operation_events.py::test_high_volatility_signal_api_emits_bounded_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/mandate-restriction/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

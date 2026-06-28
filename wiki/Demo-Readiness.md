@@ -33,6 +33,14 @@ assign benchmarks, certify methodology, recommend trades, create rebalance
 actions, prove Workbench behavior, authorize client publication, certify data
 mesh, or promote support.
 
+High-volatility review is an internal bounded foundation only.
+`POST /api/v1/idea-signals/high-volatility/evaluate` consumes caller-supplied
+Lotus Risk `RiskMetricsReport:v1` volatility evidence to create
+advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
+fetch Risk sources, calculate volatility, approve Risk methodology, recommend
+trades, create rebalance actions, prove Workbench behavior, authorize client
+publication, certify data mesh, or promote support.
+
 Drawdown review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/drawdown-review/evaluate` consumes caller-supplied
 Lotus Risk `DrawdownAnalyticsReport:v1` maximum-drawdown evidence to create

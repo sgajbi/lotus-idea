@@ -15,6 +15,7 @@ The first certified API foundations are:
 - `POST /api/v1/idea-signals/low-income/evaluate`
 - `POST /api/v1/idea-signals/bond-maturity/evaluate`
 - `POST /api/v1/idea-signals/concentration-risk/evaluate`
+- `POST /api/v1/idea-signals/high-volatility/evaluate`
 - `POST /api/v1/idea-signals/drawdown-review/evaluate`
 - `POST /api/v1/idea-signals/underperformance/evaluate`
 - `POST /api/v1/idea-signals/missing-suitability/evaluate`
@@ -37,7 +38,7 @@ for the high-cash / idle-liquidity signal family. They consume source-reported
 cash weight and source references; they do not fetch upstream data and do not
 calculate official cash, holdings, or portfolio values.
 
-The concentration-risk, drawdown-review, underperformance, low-income, bond-maturity, missing suitability, missing
+The concentration-risk, high-volatility, drawdown-review, underperformance, low-income, bond-maturity, missing suitability, missing
 risk-profile, mandate/restriction, and missing-benchmark signal endpoints
 expose bounded caller-supplied evidence evaluation over source-owned Risk,
 Performance, Core, Advise, or Manage
@@ -46,8 +47,8 @@ posture, require `idea.signal.evaluate` or advisor role, redact raw source
 routes and content hashes from response candidates, emit bounded operation
 events, and do not infer client income needs, provide funding advice, issue
 treasury instructions, approve planning suitability, recommend replacement
-products, calculate reinvestment advice, calculate concentration, calculate drawdown, calculate
-returns, assign benchmarks, approve risk
+products, calculate reinvestment advice, calculate concentration, calculate volatility, calculate
+drawdown, calculate returns, assign benchmarks, approve risk
 methodology, recommend trades, create rebalance actions, own maturity
 schedules, create orders, approve suitability, policy, proposal, sign-off,
 mandate state, restriction clearance, benchmark assignment, benchmark

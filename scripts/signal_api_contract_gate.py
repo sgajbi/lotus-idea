@@ -11,10 +11,13 @@ SIGNAL_API_MODULES = (
     Path("src/app/api/idea_signals.py"),
     Path("src/app/api/bond_maturity_signals.py"),
     Path("src/app/api/concentration_risk_signals.py"),
+    Path("src/app/api/drawdown_review_signals.py"),
+    Path("src/app/api/high_volatility_signals.py"),
     Path("src/app/api/low_income_signals.py"),
     Path("src/app/api/missing_benchmark_signals.py"),
     Path("src/app/api/missing_risk_profile_signals.py"),
     Path("src/app/api/missing_suitability_signals.py"),
+    Path("src/app/api/underperformance_signals.py"),
 )
 
 REQUIRED_SHARED_HELPERS = (

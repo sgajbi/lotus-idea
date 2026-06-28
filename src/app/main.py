@@ -14,6 +14,7 @@ from app.api.downstream_realization import register_downstream_realization_route
 from app.api.downstream_realization_readiness import (
     register_downstream_realization_readiness_routes,
 )
+from app.api.high_volatility_signals import register_high_volatility_signal_routes
 from app.api.idea_signals import register_idea_signal_routes
 from app.api.implementation_proof_readiness import register_implementation_proof_readiness_routes
 from app.api.low_income_signals import register_low_income_signal_routes
@@ -52,6 +53,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_bond_maturity_signal_routes(application)
     register_concentration_risk_signal_routes(application)
     register_drawdown_review_signal_routes(application)
+    register_high_volatility_signal_routes(application)
     register_low_income_signal_routes(application)
     register_missing_benchmark_signal_routes(application)
     register_missing_risk_profile_signal_routes(application)
