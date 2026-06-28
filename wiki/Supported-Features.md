@@ -7,7 +7,10 @@ candidate persistence/replay/idempotency/audit, candidate evidence replay,
 deterministic scoring with review-queue projection, source-safe candidate detail projection, advisor
 review/feedback governance, AI governance redaction/verifier/fallback controls,
 and certified internal AI explanation evaluator and readiness APIs, plus the first certified
-internal high-cash API foundation.
+internal signal API foundations for high-cash, concentration-risk,
+underperformance, allocation-drift, bond-maturity, high-volatility, drawdown,
+low-income, missing suitability, missing risk-profile, mandate/restriction,
+and missing-benchmark review.
 Internal conversion governance and certified internal
 conversion intent/outcome API foundations also exist for review-gated
 conversion tracking, source-authority mapping, and no-authority conversion

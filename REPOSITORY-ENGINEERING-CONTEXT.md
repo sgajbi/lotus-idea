@@ -218,6 +218,16 @@ policy blocks the current store-wide Manage summary from creating a portfolio
 opportunity until portfolio-scoped Manage evidence is proven. This slice does
 not calculate drift, mandate compliance, rebalance actions, orders, execution,
 or settlement inside `lotus-idea`.
+`src/app/api/allocation_drift_signals.py` exposes
+`POST /api/v1/idea-signals/allocation-drift/evaluate` as a bounded
+caller-supplied API foundation over source-owned Manage action-register and
+mandate-health source-ref posture. It enforces `idea.signal.evaluate` or
+advisor role through shared signal API support, emits bounded operation
+events, redacts raw source route/hash details from candidate source refs, and
+does not fetch Manage sources, calculate allocation drift, approve mandate
+compliance, create rebalance actions, create orders, certify data mesh, prove
+Workbench behavior, approve client publication, or promote a supported
+feature.
 `src/app/application/manage_mandate_live_proof.py`,
 `scripts/generate_manage_mandate_live_proof.py`, and
 `make manage-mandate-live-proof-contract-gate` now define a source-safe
@@ -780,6 +790,15 @@ raw source route/hash details from candidate source refs, and does not fetch
 Risk sources, calculate concentration, approve risk methodology, recommend
 trades, create rebalance actions, publish client communication, certify data
 products, prove Gateway/Workbench behavior, or promote a supported feature.
+`POST /api/v1/idea-signals/allocation-drift/evaluate` accepts
+caller-supplied, source-owned Lotus Manage action-register and mandate-health
+source-ref posture evidence, enforces `idea.signal.evaluate` capability or
+advisor role, returns deterministic portfolio-manager review candidate,
+blocked, suppressed, or not-eligible posture, redacts raw source route/hash
+details from candidate source refs, and does not fetch Manage sources,
+calculate allocation drift, approve mandate compliance, create rebalance
+actions, create orders, publish client communication, certify data products,
+prove Gateway/Workbench behavior, or promote a supported feature.
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate` accepts
 caller-supplied, source-owned Advise risk-profile posture evidence, enforces
 `idea.signal.evaluate`, returns source-safe candidate or blocked posture, and

@@ -148,8 +148,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    supported-feature evidence remain required before demo use.
 9. Allocation drift / mandate review now has a bounded deterministic policy,
    Lotus Manage `PortfolioActionRegister:v1` source-port/adapter foundation,
+   bounded caller-supplied
+   `POST /api/v1/idea-signals/allocation-drift/evaluate` API foundation,
    source-safe Manage mandate live-proof contract, and source-safe Core
-   portfolio-state live-proof contract. Valid artifacts clear only
+   portfolio-state live-proof contract. The API can create only
+   portfolio-manager review candidates from source-owned Manage posture and
+   cannot calculate drift, approve mandate compliance, create rebalance
+   actions, create orders, publish client communication, or promote support.
+   Valid artifacts clear only
    `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
    `opportunity_archetype_mandate_performance_health_source_ref_missing`,
    `opportunity_archetype_mandate_risk_health_source_ref_missing`, and

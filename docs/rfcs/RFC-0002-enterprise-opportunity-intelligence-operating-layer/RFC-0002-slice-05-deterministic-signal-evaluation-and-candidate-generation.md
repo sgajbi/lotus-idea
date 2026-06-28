@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -319,14 +319,30 @@ Additional implemented allocation-drift / mandate-review foundation:
    records this as source posture and source-response lineage, but the domain
    policy blocks candidate creation unless future evidence confirms
    portfolio-scoped action-register posture for the requested portfolio.
-5. `tests/unit/test_mandate_health_signal_evaluation.py`,
+5. `src/app/api/allocation_drift_signals.py` exposes
+   `POST /api/v1/idea-signals/allocation-drift/evaluate` as a bounded
+   caller-supplied API foundation over source-owned Manage action-register and
+   mandate-health source-ref posture. It requires `idea.signal.evaluate` or
+   advisor role, emits bounded operation events, redacts source route/hash
+   fields from candidate responses, returns portfolio-manager review
+   candidates or blocked/not-eligible/suppressed posture, and does not fetch
+   Manage sources, calculate allocation drift, approve mandate compliance,
+   create rebalance actions, create orders, publish client communication,
+   certify data products, prove Workbench behavior, or promote support.
+6. `tests/unit/test_mandate_health_signal_evaluation.py`,
    `tests/unit/test_mandate_health_application.py`, and
    `tests/unit/test_lotus_manage_sources.py` cover positive future
    portfolio-scoped evidence, current store-wide-source blocking,
    non-ready/stale/missing Manage evidence, duplicate suppression,
    entitlement denial, source unavailability, malformed counts, trace headers,
    and request validation.
-6. `src/app/application/manage_mandate_live_proof.py`,
+7. `tests/integration/test_allocation_drift_signal_api.py` and
+   `tests/integration/test_api_operation_events.py` cover route success,
+   below-threshold posture, store-wide Manage supportability blocking,
+   non-ready and stale source blockers, permission denial, source-redacted
+   response projection, no-authority promotion, and bounded operation-event
+   proof.
+8. `src/app/application/manage_mandate_live_proof.py`,
    `scripts/generate_manage_mandate_live_proof.py`, and
    `make manage-mandate-live-proof-contract-gate` define the source-safe
    live-proof artifact contract for portfolio-scoped

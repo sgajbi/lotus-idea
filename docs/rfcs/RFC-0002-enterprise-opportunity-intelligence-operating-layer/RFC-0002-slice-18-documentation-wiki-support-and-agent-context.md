@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, Core portfolio-state live proof, low-income Core cashflow live proof, typed Advise mandate/restriction source-product proof, Advise mandate/restriction live proof, typed Advise missing risk-profile source-product proof, missing risk-profile live proof, underperformance, allocation-drift, and drawdown-review API foundation truth, bond-maturity, mandate/restriction, and missing-benchmark policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -29,6 +29,13 @@ evidence as implementation-backed internal posture only. It preserves the
 boundary that `lotus-idea` does not calculate drawdown, approve Risk
 methodology, recommend trades, create rebalance actions, certify data mesh,
 prove Workbench behavior, or promote supported features.
+Documentation truth now also records the allocation-drift / mandate-review
+caller-supplied API foundation over Lotus Manage `PortfolioActionRegister:v1`
+action-register and mandate-health source-ref posture as implementation-backed
+internal posture only. It preserves the boundary that `lotus-idea` does not
+fetch Manage sources, calculate drift, approve mandate compliance, create
+rebalance actions, create orders, certify data mesh, prove Workbench behavior,
+publish to clients, or promote supported features.
 `make signal-api-contract-gate` is blocking through `make lint` and the CI
 contract self-check so future caller-supplied signal API slices cannot
 reintroduce local signal-evaluation permission policy, local outcome mapping,

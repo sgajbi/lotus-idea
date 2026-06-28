@@ -6,6 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.ai_governance as ai_governance_api
+import app.api.allocation_drift_signals as allocation_drift_signals_api
 import app.api.bond_maturity_signals as bond_maturity_signals_api
 import app.api.candidate_detail as candidate_detail_api
 import app.api.candidate_evidence_replay as candidate_evidence_replay_api
@@ -299,6 +300,29 @@ def missing_suitability_payload() -> dict[str, Any]:
         "signOffStatus": "PENDING_REVIEW",
         "signOffBlockerCount": 1,
         "clientReadyPublication": "BLOCKED",
+        "entitlementAllowed": True,
+    }
+
+
+def allocation_drift_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "workflowDecisionCount": 2,
+        "lineageEdgeCount": 4,
+        "manageSupportabilityState": "ready",
+        "portfolioScopeConfirmed": True,
+        "actionRegisterRef": {
+            "productId": "lotus-manage:PortfolioActionRegister:v1",
+            "sourceSystem": "lotus-manage",
+            "productVersion": "v1",
+            "route": "/api/v1/rebalance/supportability/summary",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:portfolio-action-register",
+            "dataQualityStatus": "ready",
+            "freshness": "current",
+        },
         "entitlementAllowed": True,
     }
 
@@ -830,6 +854,22 @@ def test_missing_suitability_signal_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("signal_evaluation", "accepted", "lotus-advise", False, None)]
+
+
+def test_allocation_drift_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, allocation_drift_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate",
+        json=allocation_drift_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-manage", False, None)]
 
 
 def test_lifecycle_queue_review_and_feedback_emit_operation_events(

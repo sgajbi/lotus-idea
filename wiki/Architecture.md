@@ -151,14 +151,16 @@ feature.
 `POST /api/v1/idea-signals/underperformance/evaluate`,
 `POST /api/v1/idea-signals/high-volatility/evaluate`,
 `POST /api/v1/idea-signals/drawdown-review/evaluate`,
+`POST /api/v1/idea-signals/allocation-drift/evaluate`,
 `POST /api/v1/idea-signals/missing-suitability/evaluate`,
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate`, and
 `POST /api/v1/idea-signals/mandate-restriction/evaluate` extend the same
 internal certified API pattern to caller-supplied source-owned evidence. They
 are design-module/API foundations inside the `lotus-idea` domain service, not
 separate runtime microservices. They do not calculate returns, volatility, or drawdown,
-assign benchmarks, certify benchmark or Risk methodology, approve suitability,
-policy, proposal, sign-off, restriction clearance, mandate state, client
+assign benchmarks, calculate allocation drift, certify benchmark or Risk
+methodology, approve suitability, policy, proposal, sign-off, restriction
+clearance, mandate state, rebalance actions, orders, client
 publication, data-mesh certification, Gateway/Workbench behavior, or
 supported-feature promotion.
 
