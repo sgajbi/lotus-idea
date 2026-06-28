@@ -37,6 +37,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) no-sensitive-content-guard" in makefile
     assert "source-observability-contract-gate:" in makefile
     assert "$(MAKE) source-observability-contract-gate" in makefile
+    assert "signal-api-contract-gate:" in makefile
+    assert "$(MAKE) signal-api-contract-gate" in makefile
     assert "implementation-truth-gate:" in makefile
     assert "$(MAKE) implementation-truth-gate" in makefile
     assert "data-mesh-contract-gate:" in makefile
@@ -148,6 +150,15 @@ def test_ci_contract_gate_blocks_missing_source_observability_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) source-observability-contract-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_signal_api_contract_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) signal-api-contract-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) signal-api-contract-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_downgraded_source_ingestion_worker_check() -> None:

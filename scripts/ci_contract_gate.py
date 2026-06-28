@@ -34,6 +34,7 @@ REQUIRED_LINT_TARGETS = (
     "monetary-float-guard",
     "no-sensitive-content-guard",
     "source-observability-contract-gate",
+    "signal-api-contract-gate",
     "operation-metric-contract-gate",
     "ai-model-risk-ops-contract-gate",
     "implementation-truth-gate",
@@ -366,6 +367,7 @@ def validate_makefile(makefile: str) -> list[str]:
             "scripts/outbox_platform_mesh_event_publication_proof_contract_gate.py"
         ),
         "outbox-consumer-contract-gate": "scripts/outbox_consumer_contract_gate.py",
+        "signal-api-contract-gate": "scripts/signal_api_contract_gate.py",
         "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
         "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
     }

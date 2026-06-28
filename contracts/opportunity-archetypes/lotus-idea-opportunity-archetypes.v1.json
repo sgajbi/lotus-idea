@@ -93,8 +93,10 @@
       ],
       "lotus_idea_responsibility": "Queue source-owned concentration evidence for review without recalculating risk.",
       "evidence_refs": [
-        "src/app/domain/low_income_signal.py",
+        "src/app/domain/signal_evaluation.py",
         "src/app/application/concentration_risk_signal.py",
+        "src/app/api/concentration_risk_signals.py",
+        "POST /api/v1/idea-signals/concentration-risk/evaluate",
         "src/app/ports/risk_sources.py",
         "src/app/infrastructure/lotus_risk_sources.py",
         "src/app/application/risk_concentration_live_proof.py",
@@ -102,6 +104,7 @@
         "make risk-concentration-live-proof-contract-gate",
         "tests/unit/test_concentration_risk_signal_evaluation.py",
         "tests/unit/test_concentration_risk_application.py",
+        "tests/integration/test_concentration_risk_signal_api.py",
         "tests/unit/test_lotus_risk_sources.py",
         "tests/unit/test_risk_concentration_live_proof.py",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"

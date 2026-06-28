@@ -130,7 +130,15 @@ reports blocked cash-weight supportability, and does not calculate cash weight
 from cash totals or market values. This remains internal source-adapter
 foundation behavior. `src/app/domain/signal_evaluation.py` also includes
 deterministic concentration, underperformance, and allocation-drift
-mandate-review policies. `src/app/domain/low_income_signal.py` adds the
+mandate-review policies. `src/app/api/concentration_risk_signals.py` exposes
+`POST /api/v1/idea-signals/concentration-risk/evaluate` as a bounded
+caller-supplied API foundation over Lotus Risk concentration evidence. It
+enforces `idea.signal.evaluate` or advisor role through shared signal API
+support, emits bounded operation events, redacts raw source route/hash details
+from candidate source refs, and does not fetch Risk sources, calculate
+concentration, approve risk methodology, recommend trades, create rebalance
+actions, certify data mesh, prove Workbench behavior, approve client
+publication, or promote a supported feature. `src/app/domain/low_income_signal.py` adds the
 low-income / liquidity-shortfall policy. The low-income foundation uses
 Core-owned `PortfolioCashflowProjection:v1` and
 `PortfolioCashMovementSummary:v1` source refs, source freshness, cashflow
@@ -738,6 +746,14 @@ replacement products, calculate reinvestment advice, own maturity schedule
 authority, approve planning suitability, create orders, publish client
 communication, certify data products, prove Gateway/Workbench behavior, or
 promote a supported feature.
+`POST /api/v1/idea-signals/concentration-risk/evaluate` accepts
+caller-supplied, source-owned Lotus Risk concentration evidence, enforces
+`idea.signal.evaluate` capability or advisor role, returns deterministic
+advisor-review candidate, blocked, suppressed, or not-eligible posture, redacts
+raw source route/hash details from candidate source refs, and does not fetch
+Risk sources, calculate concentration, approve risk methodology, recommend
+trades, create rebalance actions, publish client communication, certify data
+products, prove Gateway/Workbench behavior, or promote a supported feature.
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate` accepts
 caller-supplied, source-owned Advise risk-profile posture evidence, enforces
 `idea.signal.evaluate`, returns source-safe candidate or blocked posture, and
@@ -1615,6 +1631,13 @@ or calls, and low-level `log_event` bypasses outside the central observability
 module. Feature code should emit bounded operation events or use the central
 request diagnostic helper so supportability evidence stays product-safe and
 low-cardinality.
+
+`make signal-api-contract-gate` is blocking through `make lint`. It scans the
+caller-supplied signal API modules and fails local copies of signal-evaluation
+permission policy or signal outcome mapping, and requires shared signal API
+support for permission, source-authority, operation-event, and problem-detail
+behavior. This keeps design modularity inside `lotus-idea` without creating a
+new runtime microservice boundary.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`

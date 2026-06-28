@@ -16,6 +16,14 @@ promotion.
 | Downstream realization | Advise, Manage, and Report route-foundation proof can be consumed; bounded Report/Render/Archive materialization proof can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim suitability, rebalance/execution, client publication, or supported-feature promotion. |
 | Data mesh | Proposed products and readiness diagnostics exist. | Present as day-one governance foundation, not certified data-product status. |
 
+Concentration-risk review is an internal bounded foundation only.
+`POST /api/v1/idea-signals/concentration-risk/evaluate` consumes
+caller-supplied Lotus Risk `ConcentrationRiskReport:v1` evidence to create
+advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
+calculate concentration, approve risk methodology, recommend trades, create
+rebalance actions, certify data mesh, prove Workbench behavior, authorize
+client publication, or promote support.
+
 Missing-benchmark review is an internal bounded foundation only. It can create
 advisor-review evidence-gap candidates from Core-owned benchmark-assignment
 posture, including the bounded
