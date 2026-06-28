@@ -743,6 +743,9 @@ Implementation-backed evidence:
    `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`,
 7. opportunity archetype contract gate:
    `make opportunity-archetype-contract-gate`,
+   including allocation-drift API module, endpoint, and integration-test
+   evidence refs so the scenario readiness contract cannot understate the
+   bounded caller-supplied API foundation,
 8. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
 9. AI model-risk operations contract gate:

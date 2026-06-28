@@ -82,9 +82,10 @@ discovery proof artifact, but it does not
 provide full live implementation proof, external broker publication, downstream
 delivery, full Gateway/Workbench live proof, data-product certification, or
 supported-feature promotion. The opportunity archetype scenario readiness
-family is taxonomy and replay-gap evidence only; it does not promote live
-archetype proof, client-ready demo material, or a supported feature. These are
-not externally
+family is taxonomy and replay-gap evidence only; the allocation-drift archetype
+now requires API module, route, and integration-test evidence in the contract
+gate, but that still does not promote live archetype proof, client-ready demo
+material, or a supported feature. These are not externally
 supported features until live source-worker certification, certified
 long-running scheduled source-worker runtime proof, full Workbench live proof,
 downstream acceptance, data-product certification, and supported-feature

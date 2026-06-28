@@ -342,6 +342,10 @@ Additional implemented allocation-drift / mandate-review foundation:
    non-ready and stale source blockers, permission denial, source-redacted
    response projection, no-authority promotion, and bounded operation-event
    proof.
+   `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
+   and `make opportunity-archetype-contract-gate` now pin this API module,
+   route, and integration test as allocation-drift evidence so the archetype
+   proof contract cannot drift back to policy-only evidence.
 8. `src/app/application/manage_mandate_live_proof.py`,
    `scripts/generate_manage_mandate_live_proof.py`, and
    `make manage-mandate-live-proof-contract-gate` define the source-safe

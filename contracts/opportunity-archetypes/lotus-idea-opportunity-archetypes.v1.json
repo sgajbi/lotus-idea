@@ -219,6 +219,7 @@
       "evidence_refs": [
         "src/app/domain/signal_evaluation.py",
         "src/app/application/mandate_health_signal.py",
+        "src/app/api/allocation_drift_signals.py",
         "src/app/application/manage_mandate_live_proof.py",
         "src/app/application/core_portfolio_state_live_proof.py",
         "src/app/ports/manage_sources.py",
@@ -236,6 +237,8 @@
         "tests/unit/test_manage_mandate_live_proof.py",
         "tests/unit/test_core_portfolio_state_live_proof.py",
         "tests/unit/test_implementation_proof_readiness_core_portfolio_state.py",
+        "tests/integration/test_allocation_drift_signal_api.py",
+        "POST /api/v1/idea-signals/allocation-drift/evaluate",
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md"
       ],
       "canonical_scenarios": [

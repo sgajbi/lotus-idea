@@ -24,7 +24,10 @@ posture. The slice is covered by focused API tests, endpoint-certification
 ledger evidence, OpenAPI quality evidence, operation-event proof, repo context,
 RFC, README, demo-claims, and wiki truth, and it keeps
 `make signal-api-contract-gate` coverage current for caller-supplied signal API
-modules. It remains non-promoted: no Manage source fetch, allocation-drift
+modules. `make opportunity-archetype-contract-gate` now also requires the
+allocation-drift API module, route, and integration test as archetype evidence,
+so the proof contract cannot understate the implemented API foundation. It
+remains non-promoted: no Manage source fetch, allocation-drift
 calculation, mandate compliance approval, rebalance action, order creation,
 client publication, data-product certification, Workbench proof, or
 supported-feature promotion.

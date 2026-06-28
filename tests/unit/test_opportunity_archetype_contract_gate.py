@@ -132,11 +132,16 @@ def test_opportunity_archetype_contract_records_manage_foundation_without_promot
     assert allocation_drift.first_supported_journey is False
     assert "lotus-manage:PortfolioActionRegister:v1" in allocation_drift.source_products
     assert "src/app/application/mandate_health_signal.py" in allocation_drift.evidence_refs
+    assert "src/app/api/allocation_drift_signals.py" in allocation_drift.evidence_refs
     assert "src/app/application/manage_mandate_live_proof.py" in allocation_drift.evidence_refs
     assert "src/app/infrastructure/lotus_manage_sources.py" in allocation_drift.evidence_refs
     assert "scripts/generate_manage_mandate_live_proof.py" in allocation_drift.evidence_refs
     assert "make manage-mandate-live-proof-contract-gate" in allocation_drift.evidence_refs
     assert "tests/unit/test_manage_mandate_live_proof.py" in allocation_drift.evidence_refs
+    assert "tests/integration/test_allocation_drift_signal_api.py" in (
+        allocation_drift.evidence_refs
+    )
+    assert "POST /api/v1/idea-signals/allocation-drift/evaluate" in (allocation_drift.evidence_refs)
     assert "portfolio_scoped_manage_source_proof_missing" in allocation_drift.blockers
     assert "manage_source_adapter_missing" not in allocation_drift.blockers
     assert "mandate_health_signal_policy_missing" not in allocation_drift.blockers
@@ -367,13 +372,18 @@ def test_opportunity_archetype_contract_gate_rejects_missing_underperformance_ev
 def test_opportunity_archetype_contract_gate_rejects_missing_manage_evidence() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()
-    payload["archetypes"][3]["evidence_refs"].remove("src/app/application/mandate_health_signal.py")
+    allocation_drift = next(
+        archetype
+        for archetype in payload["archetypes"]
+        if archetype["archetype_id"] == "allocation-drift-mandate-review"
+    )
+    allocation_drift["evidence_refs"].remove("src/app/api/allocation_drift_signals.py")
 
     errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
 
     assert (
         "allocation-drift-mandate-review evidence_refs missing: "
-        "src/app/application/mandate_health_signal.py"
+        "src/app/api/allocation_drift_signals.py"
     ) in errors
 
 
