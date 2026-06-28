@@ -135,6 +135,21 @@ This slice also hardens CI runtime provenance:
    context, quality scorecard, and wiki source now describe the immutable
    action-pin and scoped test-target expectations for future agentic work.
 
+This slice also hardens CI lint-gate contract coverage:
+
+1. `scripts/ci_contract_gate.py` now treats the current `make lint` gate set as
+   an explicit contract for AI model-risk operations proof, Risk
+   high-volatility and drawdown live-proof gates, Advise mandate/restriction
+   live-proof gates, aggregate implementation-proof readiness generation, and
+   runtime trust telemetry preview generation.
+2. The gate fails if a future change removes these blocking calls from
+   `make lint` or replaces the target scripts with weak placeholders.
+3. `tests/unit/test_ci_contract_gate.py` covers those failure cases so the
+   enforcement itself has pass/fail evidence.
+4. This is CI enforcement only. It does not promote supported features,
+   data-mesh certification, live source ingestion, Workbench support, client
+   publication, or production-ready claims.
+
 This slice also hardens downstream realization contract governance:
 
 1. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
