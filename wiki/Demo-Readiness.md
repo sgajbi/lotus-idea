@@ -66,6 +66,14 @@ publication, certify data mesh, or promote support. The opportunity archetype
 contract gate pins the drawdown API module, endpoint, and integration test as
 evidence, so demo-readiness proof cannot rely on policy-only drawdown evidence.
 
+For every implemented caller-supplied signal foundation, the opportunity
+archetype contract gate now pins the API module, endpoint, and integration
+test as evidence. This covers concentration, underperformance, allocation
+drift, bond maturity, high volatility, drawdown, missing suitability, missing
+risk profile, mandate/restriction, low-income, and missing-benchmark review.
+The gate improves proof discipline only; it does not certify data mesh, prove
+Workbench behavior, authorize client publication, or promote support.
+
 Missing-benchmark review is an internal bounded foundation only. It can create
 advisor-review evidence-gap candidates from Core-owned benchmark-assignment
 posture, including the bounded

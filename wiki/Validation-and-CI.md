@@ -306,6 +306,9 @@ Persistence adapter validation:
     high cash / idle liquidity as the first partially implemented journey, and
     blocks external demo promotion, client-publication,
     data-mesh-certification, and supported-feature claims.
+    The same test pack now proves every implemented caller-supplied signal API
+    recorded in the archetype contract is also required by the contract gate:
+    API module, route, and integration-test evidence cannot drift apart.
     `tests/unit/test_risk_concentration_live_proof.py` and
     `make risk-concentration-live-proof-contract-gate` prove the optional Lotus
     Risk concentration live-proof artifact remains source-safe and can clear

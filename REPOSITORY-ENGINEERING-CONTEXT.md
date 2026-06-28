@@ -241,6 +241,13 @@ pin `src/app/api/allocation_drift_signals.py`,
 evidence refs. Future proof-readiness or demo-readiness updates must preserve
 those API refs unless the endpoint is intentionally retired with matching docs,
 tests, OpenAPI, and supported-features truth.
+The same gate now requires API module, route, and integration-test evidence for
+every implemented caller-supplied signal API recorded in the archetype contract:
+concentration risk, underperformance, bond maturity, high volatility,
+drawdown, missing suitability, missing risk profile, mandate/restriction,
+low income, missing benchmark, and allocation drift. This is design-modularity
+and proof-discipline hardening inside the existing service; it does not create
+a separately deployable signal microservice and does not promote support.
 `src/app/application/manage_mandate_live_proof.py`,
 `scripts/generate_manage_mandate_live_proof.py`, and
 `make manage-mandate-live-proof-contract-gate` now define a source-safe
