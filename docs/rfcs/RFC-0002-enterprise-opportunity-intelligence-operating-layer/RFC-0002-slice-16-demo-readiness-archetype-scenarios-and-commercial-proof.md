@@ -33,8 +33,8 @@ capabilities exist.
    first high-cash / idle-liquidity journey, non-promoted bounded
    concentration-risk, underperformance, allocation-drift, high-volatility /
    drawdown, missing-suitability, missing risk-profile, mandate/restriction,
-   low-income / liquidity-shortfall, missing-benchmark review, and policy-only
-   bond-maturity review foundations.
+   low-income / liquidity-shortfall, missing-benchmark review, and bounded
+   Core source-backed bond-maturity review foundations.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
@@ -146,10 +146,10 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    suitability, treasury instruction, Workbench proof, data-mesh certification,
    client publication, or supported-feature promotion.
 11. Bond maturity / reinvestment now has a bounded deterministic policy and
-   Core source-port shape. It remains blocked for live source generation
-   because Core does not yet publish a governed maturity-bearing HoldingsAsOf
-   response or maturity-specific source product for `lotus-idea`; no
-   reinvestment advice, replacement product recommendation, suitability,
+   Core `HoldingsAsOf:v1` maturity-date source-port/adapter/live-proof
+   foundation. A valid source-safe artifact clears only the live Core
+   maturity-source blocker; no reinvestment advice, replacement product
+   recommendation, suitability,
    Workbench proof, data-mesh certification, client publication, or
    supported-feature promotion is implied.
 12. Missing-benchmark review now has a bounded deterministic policy and Core

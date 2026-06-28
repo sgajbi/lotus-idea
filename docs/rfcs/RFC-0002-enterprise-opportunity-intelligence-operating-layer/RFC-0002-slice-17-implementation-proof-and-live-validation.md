@@ -449,8 +449,8 @@ without relying on chat memory.
     foundation, bounded missing suitability context source/policy foundation,
     bounded missing risk-profile source/policy foundation,
     bounded low-income / liquidity-shortfall Core cashflow foundation,
-    bounded bond-maturity / reinvestment policy foundation without live Core
-    maturity source proof,
+    bounded bond-maturity / reinvestment Core HoldingsAsOf maturity-date
+    live-proof foundation,
     optional live Risk concentration/high-volatility/drawdown proof
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
