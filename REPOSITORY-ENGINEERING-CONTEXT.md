@@ -111,8 +111,9 @@ inclusion.
 RFC-0002 Slice 05 is partially implemented for high-cash / idle-liquidity,
 concentration, underperformance, allocation-drift mandate-review, bond
 maturity / reinvestment, high-volatility / drawdown, missing suitability
-context, missing risk-profile review, mandate/restriction review, and
-low-income / liquidity-shortfall domain policy foundations.
+context, missing risk-profile review, mandate/restriction review,
+low-income / liquidity-shortfall, and missing-benchmark domain policy
+foundations.
 `src/app/domain/signal_evaluation.py` consumes source-reported cash-weight
 evidence and Core source refs, creates deterministic `OpportunitySignal`,
 `IdeaEvidencePacket`, and `IdeaCandidate` domain objects for positive cases,
@@ -138,6 +139,15 @@ advisor-review candidates; it does not infer client income needs, funding
 advice, treasury instruction, suitability, or planning objectives.
 `src/app/application/low_income_signal.py` maps Core source evidence into this
 domain policy with entitlement and source-unavailable failure behavior.
+`src/app/api/low_income_signals.py` exposes
+`POST /api/v1/idea-signals/low-income/evaluate` as a bounded caller-supplied
+API foundation over Core cashflow projection and cash movement evidence. It
+enforces `idea.signal.evaluate` or advisor role, emits bounded operation events,
+redacts raw source route/hash details from candidate source refs, and does not
+fetch Core sources, infer client income needs, approve planning suitability,
+provide funding advice, issue treasury instructions, publish client
+communication, certify a data product, prove Workbench behavior, or promote a
+supported feature.
 `src/app/application/low_income_core_cashflow_live_proof.py`,
 `scripts/generate_low_income_core_cashflow_live_proof.py`, and
 `make low-income-core-cashflow-live-proof-contract-gate` define a source-safe
@@ -705,6 +715,14 @@ candidate detail. `POST /api/v1/idea-signals/high-cash/evaluate` accepts
 caller-supplied, source-owned Core evidence references and source-reported cash
 weight, enforces `idea.signal.evaluate` capability or advisor role, and returns
 deterministic candidate, blocked, suppressed, or not-eligible posture.
+`POST /api/v1/idea-signals/low-income/evaluate` accepts caller-supplied,
+source-owned Core cashflow projection and cash movement evidence, enforces
+`idea.signal.evaluate` capability or advisor role, returns deterministic
+advisor-review candidate, blocked, suppressed, or not-eligible posture, redacts
+raw source route/hash details from candidate source refs, and does not infer
+client income needs, approve planning suitability, provide funding advice,
+issue treasury instructions, publish client communication, certify data
+products, prove Gateway/Workbench behavior, or promote a supported feature.
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate` accepts
 caller-supplied, source-owned Advise risk-profile posture evidence, enforces
 `idea.signal.evaluate`, returns source-safe candidate or blocked posture, and
@@ -1010,8 +1028,10 @@ suitability, policy, proposal, data mesh, Workbench, client publication, or
 supported-feature promotion. Low-income / liquidity shortfall is backed by
 deterministic policy, a Lotus Core cashflow source port, a fail-closed HTTP
 adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
-`/portfolios/{portfolio_id}/cashflow-projection`, and focused unit tests that
-prove source-reported projected cumulative cashflow consumption while blocking
+`/portfolios/{portfolio_id}/cashflow-projection`, the bounded
+`POST /api/v1/idea-signals/low-income/evaluate` API over caller-supplied Core
+cashflow evidence, and focused unit/integration tests that prove
+source-reported projected cumulative cashflow consumption while blocking
 planning, funding-advice, treasury-instruction, suitability, Workbench,
 client-publication, and supported-feature claims. Bond maturity / reinvestment
 consumes governed Core `HoldingsAsOf:v1` maturity dates through a bounded

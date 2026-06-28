@@ -11,6 +11,7 @@ import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.conversion_governance as conversion_governance_api
 import app.api.idea_signals as idea_signals_api
+import app.api.low_income_signals as low_income_signals_api
 import app.api.missing_benchmark_signals as missing_benchmark_signals_api
 import app.api.missing_risk_profile_signals as missing_risk_profile_signals_api
 import app.api.missing_suitability_signals as missing_suitability_signals_api
@@ -119,6 +120,38 @@ def missing_benchmark_payload() -> dict[str, Any]:
         "assignmentEffectiveForAsOfDate": False,
         "assignmentStatus": "ACTIVE",
         "assignmentVersionPresent": True,
+        "entitlementAllowed": True,
+    }
+
+
+def low_income_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "sourceReportedMinProjectedCumulativeCashflow": "-12500",
+        "cashMovementCount": 4,
+        "cashMovementRef": {
+            "productId": "lotus-core:PortfolioCashMovementSummary:v1",
+            "sourceSystem": "lotus-core",
+            "productVersion": "v1",
+            "route": "/portfolios/PB_SG_GLOBAL_BAL_001/cash-movement-summary",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:low-income-cash-movement",
+            "dataQualityStatus": "complete",
+            "freshness": "current",
+        },
+        "cashflowProjectionRef": {
+            "productId": "lotus-core:PortfolioCashflowProjection:v1",
+            "sourceSystem": "lotus-core",
+            "productVersion": "v1",
+            "route": "/portfolios/PB_SG_GLOBAL_BAL_001/cashflow-projection",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:low-income-cashflow-projection",
+            "dataQualityStatus": "complete",
+            "freshness": "current",
+        },
         "entitlementAllowed": True,
     }
 
@@ -558,6 +591,22 @@ def test_missing_benchmark_signal_api_emits_bounded_operation_event(
     response = client.post(
         "/api/v1/idea-signals/missing-benchmark/evaluate",
         json=missing_benchmark_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-core", False, None)]
+
+
+def test_low_income_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, low_income_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/low-income/evaluate",
+        json=low_income_payload(),
         headers=signal_headers(),
     )
 

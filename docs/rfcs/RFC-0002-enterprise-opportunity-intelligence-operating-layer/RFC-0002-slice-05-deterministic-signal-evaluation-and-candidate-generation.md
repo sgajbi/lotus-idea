@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -523,23 +523,37 @@ Additional implemented low-income / liquidity-shortfall foundation:
    cashflow breaches the threshold. Missing, stale, malformed, duplicate, or
    entitlement-blocked source evidence does not create a candidate.
 5. `tests/unit/test_low_income_signal_evaluation.py`,
-   `tests/unit/test_low_income_application.py`, and
-   `tests/unit/test_lotus_core_sources.py` cover positive, not-eligible,
-   stale, missing-source, duplicate, entitlement-denied, source-unavailable,
-   malformed-projection, and request-validation cases.
-6. `src/app/application/low_income_core_cashflow_live_proof.py`,
-   `scripts/generate_low_income_core_cashflow_live_proof.py`, and
-   `make low-income-core-cashflow-live-proof-contract-gate` define a
+    `tests/unit/test_low_income_application.py`, and
+    `tests/unit/test_lotus_core_sources.py` cover positive, not-eligible,
+    stale, missing-source, duplicate, entitlement-denied, source-unavailable,
+    malformed-projection, and request-validation cases.
+6. `src/app/api/low_income_signals.py` exposes
+   `POST /api/v1/idea-signals/low-income/evaluate` as a bounded
+   caller-supplied API foundation over Core cashflow projection and cash
+   movement evidence. It requires `idea.signal.evaluate` or advisor role,
+   emits source-authority-preserving operation events, redacts source routes and
+   content hashes from response candidates, and does not fetch Core sources,
+   infer client income needs, approve planning suitability, provide funding
+   advice, issue treasury instructions, publish client communication, certify a
+   data product, or promote a supported feature.
+7. `tests/integration/test_low_income_signal_api.py` and
+   `tests/integration/test_api_operation_events.py` cover candidate creation,
+   not-eligible posture, stale-source blocker, permission denial,
+   source-redacted response projection, and bounded signal-evaluation operation
+   events for the caller-supplied API foundation.
+8. `src/app/application/low_income_core_cashflow_live_proof.py`,
+    `scripts/generate_low_income_core_cashflow_live_proof.py`, and
+    `make low-income-core-cashflow-live-proof-contract-gate` define a
    source-safe live Core cashflow proof artifact. A valid artifact proves live
    `lotus-core:PortfolioCashflowProjection:v1` and
    `lotus-core:PortfolioCashMovementSummary:v1` source calls, current source
    evidence, and deterministic low-income / liquidity-shortfall candidate
    posture, then clears only the namespaced opportunity-archetype live Core
    cashflow source blocker when consumed by aggregate readiness.
-7. This foundation does not include data-mesh certification, Workbench proof,
-   client-publication approval, supported-feature promotion, income-needs
-   certification, funding advice, treasury instruction, suitability, or
-   planning objective proof.
+9. This foundation does not include data-mesh certification, Workbench proof,
+    client-publication approval, supported-feature promotion, income-needs
+    certification, funding advice, treasury instruction, suitability, or
+    planning objective proof.
 
 Not implemented yet:
 
@@ -556,8 +570,8 @@ Not implemented yet:
    proof beyond Core portfolio-state source-ref proof,
 7. source-worker certification beyond bounded live Core source-ingestion proof,
 8. certified long-running scheduled daemon runtime and live-service recovery proof,
-9. source-fetching APIs beyond current caller-supplied high-cash and
-   mandate/restriction foundation endpoints,
+9. source-fetching APIs beyond current caller-supplied signal foundation
+   endpoints,
 11. Gateway/Workbench proof,
 12. supported-feature promotion,
 13. data-product certification.
