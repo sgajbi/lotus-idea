@@ -48,14 +48,14 @@ capabilities exist.
    high-volatility proof clears the live Risk volatility blocker, drawdown
    proof clears the Risk drawdown blocker, Performance underperformance proof
    clears the live Performance blocker, Core benchmark assignment proof clears
-   the benchmark-assignment source-ref blocker, low-income Core cashflow proof
-   clears the live Core cashflow source blocker, Manage mandate proof clears the
-   portfolio-scoped Manage action-register blocker, and Advise
-   missing-suitability proof clears the live Advise policy blocker, and
-   missing risk-profile proof clears only the live Advise risk-profile source
-   blocker. The missing-benchmark foundation currently records
-   policy/source-port proof only and keeps live Core source proof plus
-   Performance benchmark-readiness evidence blocked. Mandate
+   the benchmark-assignment source-ref blocker, missing-benchmark Core proof
+   clears only the missing-benchmark live Core source blocker, low-income Core
+   cashflow proof clears the live Core cashflow source blocker, Manage mandate
+   proof clears the portfolio-scoped Manage action-register blocker, Advise
+   missing-suitability proof clears the live Advise policy blocker, and missing
+   risk-profile proof clears only the live Advise risk-profile source blocker.
+   Missing-benchmark still keeps Performance benchmark-readiness evidence
+   blocked. Mandate
    performance/risk health, Core portfolio-state, data-mesh certification,
    Workbench proof, client-publication, and supported-feature blockers remain
    intact.

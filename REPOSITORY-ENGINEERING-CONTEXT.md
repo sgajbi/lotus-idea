@@ -1039,9 +1039,10 @@ Lotus Core benchmark-assignment source port. It can create only an
 advisor-review evidence-gap candidate when Core-owned benchmark identity,
 effective assignment, active status, or assignment version posture is missing;
 it does not assign a benchmark, calculate benchmark returns, certify
-methodology, or promote support. It still carries missing-benchmark live Core
-source proof, Performance benchmark-readiness source-ref, data-mesh,
-Workbench, client-publication, and supported-feature blockers.
+methodology, or promote support. A valid source-safe missing-benchmark live
+Core proof artifact clears only the missing-benchmark live Core source blocker;
+Performance benchmark-readiness source-ref, data-mesh, Workbench,
+client-publication, and supported-feature blockers remain.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
@@ -1071,6 +1072,13 @@ supplied through aggregate implementation-proof readiness, it clears only
 Performance, data-mesh, Workbench, client-publication, and supported-feature
 blockers intact. It does not assign benchmarks, calculate benchmark returns, or
 certify benchmark methodology.
+`make missing-benchmark-live-proof-contract-gate` validates the optional Lotus
+Core missing-benchmark live-proof artifact. When a valid artifact is supplied
+through aggregate implementation-proof readiness, it clears only
+`opportunity_archetype_missing_benchmark_live_core_source_proof_missing` and
+keeps Performance benchmark-readiness, data-mesh, Workbench, client-publication,
+and supported-feature blockers intact. It does not assign benchmarks, calculate
+benchmark returns, or certify benchmark methodology.
 `make low-income-core-cashflow-live-proof-contract-gate` validates the optional
 Lotus Core cashflow live-proof artifact. When a valid artifact is supplied
 through aggregate implementation-proof readiness, it clears only

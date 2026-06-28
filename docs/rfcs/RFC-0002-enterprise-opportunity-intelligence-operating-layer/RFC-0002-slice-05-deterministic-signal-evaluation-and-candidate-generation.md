@@ -234,11 +234,16 @@ Additional implemented missing-benchmark foundation:
    evidence-gap creation, ready-assignment suppression, inactive or missing
    assignment posture, stale/missing source, entitlement denial, duplicate
    suppression, source-unavailable handling, and source request mapping.
-5. The opportunity archetype contract records `missing-benchmark-review` as a
-   non-promoted bounded foundation. Remaining blockers include live Core
-   missing-benchmark source proof, Performance benchmark-readiness source ref,
-   data-mesh certification, Workbench proof, client publication, and
-   supported-feature promotion.
+5. `src/app/application/missing_benchmark_live_proof.py`,
+   `scripts/generate_missing_benchmark_live_proof.py`, and
+   `make missing-benchmark-live-proof-contract-gate` define a source-safe live
+   Core proof artifact that can clear only the missing-benchmark live Core
+   source blocker when it proves a current Core source attempt produced an
+   advisor-review missing-benchmark candidate.
+6. The opportunity archetype contract records `missing-benchmark-review` as a
+   non-promoted bounded foundation. Remaining blockers include Performance
+   benchmark-readiness source ref, data-mesh certification, Workbench proof,
+   client publication, and supported-feature promotion.
 
 Additional implemented allocation-drift / mandate-review foundation:
 

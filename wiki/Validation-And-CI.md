@@ -186,6 +186,7 @@ Persistence adapter validation:
    consumption, default Manage action route proof generation and consumption,
    optional Manage mandate live proof consumption,
    optional Core benchmark assignment live proof consumption,
+   optional missing-benchmark live Core proof consumption,
    default Report intake route proof generation and consumption, default
    Report materialization proof generation and consumption, default
    platform mesh onboarding proof generation and
