@@ -172,6 +172,11 @@ def _opportunity_archetype_proof_artifact_inputs(
             artifact_name="Core portfolio-state live proof",
             ref_name="Core portfolio-state live proof artifact",
         ),
+        "bond_maturity_live": _proof_artifact_input(
+            args.bond_maturity_live_proof,
+            artifact_name="Bond maturity live proof",
+            ref_name="Bond maturity live proof artifact",
+        ),
         "low_income_core_cashflow_live": _proof_artifact_input(
             args.low_income_core_cashflow_live_proof,
             artifact_name="Low-income Core cashflow live proof",

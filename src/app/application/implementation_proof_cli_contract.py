@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
 from app.application.ai_lineage_store_proof import AI_LINEAGE_STORE_PROOF_ENV
 from app.application.ai_model_risk_operations_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
@@ -181,6 +182,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--core-portfolio-state-live-proof",
         CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
         "Optional lotus-core portfolio-state live source proof artifact path.",
+    ),
+    (
+        "--bond-maturity-live-proof",
+        BOND_MATURITY_LIVE_PROOF_ENV,
+        "Optional lotus-core HoldingsAsOf maturity live source proof artifact path.",
     ),
     (
         "--low-income-core-cashflow-live-proof",

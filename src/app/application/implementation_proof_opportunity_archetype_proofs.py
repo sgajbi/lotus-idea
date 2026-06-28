@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 
+from app.application.bond_maturity_live_proof import (
+    BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
+    bond_maturity_live_proof_is_valid,
+)
 from app.application.implementation_proof_capability_updates import _apply_blocker_proof
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
 from app.application.high_volatility_live_proof import (
@@ -72,6 +76,8 @@ def _apply_opportunity_archetype_proofs(
     core_benchmark_assignment_live_proof_ref: str | None,
     core_portfolio_state_live_proof: Mapping[str, object] | None,
     core_portfolio_state_live_proof_ref: str | None,
+    bond_maturity_live_proof: Mapping[str, object] | None,
+    bond_maturity_live_proof_ref: str | None,
     low_income_core_cashflow_live_proof: Mapping[str, object] | None,
     low_income_core_cashflow_live_proof_ref: str | None,
     manage_mandate_live_proof: Mapping[str, object] | None,
@@ -134,6 +140,11 @@ def _apply_opportunity_archetype_proofs(
     ):
         capabilities = _apply_core_portfolio_state_live_proofs(
             capabilities, core_portfolio_state_live_proof_ref
+        )
+    if bond_maturity_live_proof and bond_maturity_live_proof_is_valid(bond_maturity_live_proof):
+        capabilities = tuple(
+            _apply_bond_maturity_live_proof(capability, bond_maturity_live_proof_ref)
+            for capability in capabilities
         )
     if low_income_core_cashflow_live_proof and low_income_core_cashflow_live_proof_is_valid(
         low_income_core_cashflow_live_proof
@@ -250,6 +261,8 @@ def apply_opportunity_archetype_proofs_from_scope(
         ),
         core_portfolio_state_live_proof=_payload(scope, "core_portfolio_state_live_proof"),
         core_portfolio_state_live_proof_ref=_ref(scope, "core_portfolio_state_live_proof_ref"),
+        bond_maturity_live_proof=_payload(scope, "bond_maturity_live_proof"),
+        bond_maturity_live_proof_ref=_ref(scope, "bond_maturity_live_proof_ref"),
         low_income_core_cashflow_live_proof=_payload(scope, "low_income_core_cashflow_live_proof"),
         low_income_core_cashflow_live_proof_ref=_ref(
             scope, "low_income_core_cashflow_live_proof_ref"
@@ -364,6 +377,18 @@ def _apply_core_portfolio_state_live_proofs(
     return tuple(
         _apply_core_portfolio_state_live_proof(capability, core_portfolio_state_live_proof_ref)
         for capability in capabilities
+    )
+
+
+def _apply_bond_maturity_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    bond_maturity_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
+        proof_ref=bond_maturity_live_proof_ref,
     )
 
 

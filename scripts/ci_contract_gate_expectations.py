@@ -191,6 +191,14 @@ REQUIRED_READINESS_WIRING = (
         "pass optional Core portfolio-state live proof artifact into readiness generation",
     ),
     (
+        "LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF",
+        "support optional Core bond maturity live proof artifact wiring",
+    ),
+    (
+        "--bond-maturity-live-proof",
+        "pass optional Core bond maturity live proof artifact into readiness generation",
+    ),
+    (
         "LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF",
         "support optional Core cashflow live proof artifact wiring",
     ),

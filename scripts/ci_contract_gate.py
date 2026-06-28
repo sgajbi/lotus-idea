@@ -67,6 +67,7 @@ REQUIRED_LINT_TARGETS = (
     "risk-concentration-live-proof-contract-gate",
     "core-benchmark-assignment-live-proof-contract-gate",
     "core-portfolio-state-live-proof-contract-gate",
+    "bond-maturity-live-proof-contract-gate",
     "missing-benchmark-live-proof-contract-gate",
     "missing-benchmark-performance-readiness-proof-contract-gate",
     "low-income-core-cashflow-live-proof-contract-gate",
@@ -334,6 +335,7 @@ def validate_makefile(makefile: str) -> list[str]:
         "performance-underperformance-live-proof-contract-gate": "scripts/performance_underperformance_live_proof_contract_gate.py",
         "core-benchmark-assignment-live-proof-contract-gate": "scripts/core_benchmark_assignment_live_proof_contract_gate.py",
         "core-portfolio-state-live-proof-contract-gate": "scripts/core_portfolio_state_live_proof_contract_gate.py",
+        "bond-maturity-live-proof-contract-gate": "scripts/bond_maturity_live_proof_contract_gate.py",
         "missing-benchmark-live-proof-contract-gate": "scripts/missing_benchmark_live_proof_contract_gate.py",
         "missing-benchmark-performance-readiness-proof-contract-gate": (
             "scripts/missing_benchmark_performance_readiness_proof_contract_gate.py"

@@ -12,6 +12,7 @@ from app.application.ai_workflow_pack_registration_proof import (
 from app.application.ai_workflow_pack_runtime_execution_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
+from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
@@ -58,6 +59,9 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     low_income_path = (
         tmp_path / "output" / "opportunity-archetypes" / "low-income-core-cashflow-live-proof.json"
     )
+    bond_maturity_path = (
+        tmp_path / "output" / "opportunity-archetypes" / "bond-maturity-live-proof.json"
+    )
     for path in (
         durable_path,
         runtime_path,
@@ -70,6 +74,7 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         outbox_path,
         outbox_mesh_event_path,
         platform_mesh_path,
+        bond_maturity_path,
         low_income_path,
     ):
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -118,6 +123,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     monkeypatch.setenv(
         PLATFORM_MESH_ONBOARDING_PROOF_ENV,
         "output/data-mesh/platform-mesh-onboarding-proof.json",
+    )
+    monkeypatch.setenv(
+        BOND_MATURITY_LIVE_PROOF_ENV,
+        "output/opportunity-archetypes/bond-maturity-live-proof.json",
     )
     monkeypatch.setenv(
         LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
@@ -179,6 +188,10 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     }
     assert artifacts.platform_mesh_onboarding_proof_ref == (
         "output/data-mesh/platform-mesh-onboarding-proof.json"
+    )
+    assert artifacts.bond_maturity_live_proof == {"artifact": "bond-maturity-live-proof.json"}
+    assert artifacts.bond_maturity_live_proof_ref == (
+        "output/opportunity-archetypes/bond-maturity-live-proof.json"
     )
     assert artifacts.low_income_core_cashflow_live_proof == {
         "artifact": "low-income-core-cashflow-live-proof.json"

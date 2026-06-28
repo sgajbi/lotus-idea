@@ -17,6 +17,10 @@ from app.application.ai_model_risk_operations_proof import (
     AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
     build_ai_model_risk_operations_proof_payload,
 )
+from app.application.bond_maturity_live_proof import (
+    BOND_MATURITY_LIVE_PROOF_ENV,
+    build_bond_maturity_live_proof_payload,
+)
 from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_ENV,
     build_durable_repository_proof_payload,
@@ -89,6 +93,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_PROOF_ENV, raising=False)
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
+    monkeypatch.delenv(BOND_MATURITY_LIVE_PROOF_ENV, raising=False)
     reset_idea_repository_for_tests()
     client = TestClient(app)
 
@@ -186,6 +191,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-proof.json"
     workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
     report_route_proof_path = tmp_path / "report-intake-route-proof.json"
+    bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
     manifest_path.write_text("{}", encoding="utf-8")
     live_proof_path.write_text(
         json.dumps(
@@ -257,6 +263,10 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         json.dumps(_valid_report_intake_route_proof()),
         encoding="utf-8",
     )
+    bond_maturity_live_proof_path.write_text(
+        json.dumps(_valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc)),
+        encoding="utf-8",
+    )
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
     monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof_path))
     monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
@@ -267,6 +277,7 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
     monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
+    monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
     reset_idea_repository_for_tests()
     client = TestClient(app)
@@ -287,6 +298,10 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
+    assert (
+        "opportunity_archetype_maturity_live_core_source_proof_missing"
+        not in payload["overallBlockers"]
+    )
     assert "report_evidence_pack_live_materialization_proof_missing" in (payload["overallBlockers"])
     assert "workbench_panel_missing" in payload["overallBlockers"]
     assert "platform_mesh_certification_missing" in payload["overallBlockers"]
@@ -319,6 +334,15 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "report intake route proof artifact" in " ".join(
         capabilities["downstream-realization"]["evidenceRefs"]
     )
+    assert (
+        "bond maturity live proof artifact"
+        in capabilities["opportunity-archetype-scenarios"]["evidenceRefs"]
+    )
+    assert (
+        "opportunity_archetype_maturity_live_core_source_proof_missing"
+        not in capabilities["opportunity-archetype-scenarios"]["blockers"]
+    )
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
 
 
 def test_implementation_proof_readiness_api_requires_operator_permission() -> None:
@@ -476,3 +500,21 @@ def _valid_report_intake_route_proof() -> dict[str, object]:
         "supportedFeaturePromoted": False,
         "proofClosed": False,
     }
+
+
+def _valid_bond_maturity_live_proof(*, generated_at_utc: datetime) -> dict[str, object]:
+    return build_bond_maturity_live_proof_payload(
+        generated_at_utc=generated_at_utc,
+        live_core_source_attempted=True,
+        evidence_summary={
+            "runStatus": "completed",
+            "sourceAuthority": "lotus-core",
+            "holdingsRefPresent": True,
+            "maturityFactRefPresent": True,
+            "nextMaturityDatePresent": True,
+            "maturingPositionCountPresent": True,
+            "sourceEvidenceCurrent": True,
+            "maturityDiagnostic": "core_maturity_evidence_ready",
+            "sourceDiagnosticCodes": ["core_maturity_evidence_ready"],
+        },
+    )
