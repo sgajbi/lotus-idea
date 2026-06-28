@@ -219,6 +219,8 @@ async def get_implementation_proof_readiness(
             gateway_workbench_discovery_proof_ref=(
                 proof_artifacts.gateway_workbench_discovery_proof_ref
             ),
+            bond_maturity_live_proof=proof_artifacts.bond_maturity_live_proof,
+            bond_maturity_live_proof_ref=proof_artifacts.bond_maturity_live_proof_ref,
             low_income_core_cashflow_live_proof=(
                 proof_artifacts.low_income_core_cashflow_live_proof
             ),

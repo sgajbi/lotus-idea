@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import date, datetime
+from dataclasses import dataclass, replace
+from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.parse import quote
@@ -11,6 +11,8 @@ from app.infrastructure.downstream_client import DownstreamJsonClient, Downstrea
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentEvidence,
     CoreBenchmarkAssignmentEvidenceRequest,
+    CoreBondMaturityEvidence,
+    CoreBondMaturityEvidenceRequest,
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreLowIncomeEvidence,
@@ -241,6 +243,51 @@ class LotusCoreHighCashSourceAdapter:
             ),
         )
 
+    def fetch_bond_maturity_evidence(
+        self, request: CoreBondMaturityEvidenceRequest
+    ) -> CoreBondMaturityEvidence:
+        portfolio_ref = quote(request.portfolio_id, safe="")
+        as_of = request.as_of_date.isoformat()
+        try:
+            holdings_payload = self._query_client.get_json(
+                f"/portfolios/{portfolio_ref}/positions?as_of_date={as_of}",
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise CoreSourceEntitlementDenied from exc
+            raise CoreSourceUnavailable(code=exc.code) from exc
+
+        holdings_ref = _source_ref(
+            holdings_payload,
+            product_id=HOLDINGS_PRODUCT_ID,
+            route="/portfolios/{portfolio_id}/positions",
+        )
+        maturity_dates = _source_reported_maturity_dates(holdings_payload)
+        upcoming_maturity_dates = tuple(
+            maturity_date for maturity_date in maturity_dates if maturity_date >= request.as_of_date
+        )
+        window_end_date = request.as_of_date + timedelta(days=request.maturity_window_days)
+        maturing_position_count = sum(
+            1
+            for maturity_date in upcoming_maturity_dates
+            if request.as_of_date <= maturity_date <= window_end_date
+        )
+        return CoreBondMaturityEvidence(
+            source_reported_next_maturity_date=(
+                min(upcoming_maturity_dates) if upcoming_maturity_dates else None
+            ),
+            source_reported_maturing_position_count=maturing_position_count,
+            holdings_ref=holdings_ref,
+            maturity_fact_ref=_maturity_fact_ref(holdings_ref),
+            maturity_diagnostic=_bond_maturity_diagnostic(
+                positions_present=_positions_present(holdings_payload),
+                maturity_dates_present=bool(upcoming_maturity_dates),
+                maturing_position_count=maturing_position_count,
+            ),
+        )
+
 
 def _source_reported_cash_weight(payload: dict[str, Any]) -> _CashWeightEvidence:
     for cash_weight_payload in _cash_weight_payloads(payload):
@@ -315,6 +362,13 @@ def _source_ref(payload: dict[str, Any], *, product_id: str, route: str) -> Sour
     )
 
 
+def _maturity_fact_ref(holdings_ref: SourceRef) -> SourceRef:
+    return replace(
+        holdings_ref,
+        content_hash=f"{holdings_ref.content_hash}:maturity-date",
+    )
+
+
 def _datetime_field(payload: dict[str, Any], *keys: str) -> datetime:
     for key in keys:
         value = payload.get(key)
@@ -340,6 +394,66 @@ def _optional_date_field(payload: dict[str, Any], *keys: str) -> date | None:
         if isinstance(value, str) and value.strip():
             return date.fromisoformat(value)
     return None
+
+
+def _source_reported_maturity_dates(payload: dict[str, Any]) -> tuple[date, ...]:
+    maturity_dates: list[date] = []
+    positions = payload.get("positions")
+    if not isinstance(positions, list):
+        return ()
+    for position in positions:
+        if not isinstance(position, dict):
+            continue
+        quantity = _optional_decimal_field(
+            position,
+            "quantity",
+            "positionQuantity",
+            code="core_maturity_quantity_malformed",
+        )
+        if quantity is not None and quantity <= 0:
+            continue
+        try:
+            maturity_date = _optional_date_field(
+                position,
+                "maturity_date",
+                "maturityDate",
+            )
+        except ValueError as exc:
+            raise CoreSourceUnavailable(code="core_maturity_date_malformed") from exc
+        if maturity_date is not None:
+            maturity_dates.append(maturity_date)
+    return tuple(maturity_dates)
+
+
+def _positions_present(payload: dict[str, Any]) -> bool:
+    positions = payload.get("positions")
+    return isinstance(positions, list) and any(isinstance(position, dict) for position in positions)
+
+
+def _optional_decimal_field(payload: dict[str, Any], *keys: str, code: str) -> Decimal | None:
+    for key in keys:
+        if key not in payload:
+            continue
+        value = payload.get(key)
+        if value is None:
+            return None
+        return _decimal_value(value, code=code)
+    return None
+
+
+def _bond_maturity_diagnostic(
+    *,
+    positions_present: bool,
+    maturity_dates_present: bool,
+    maturing_position_count: int,
+) -> str:
+    if not positions_present:
+        return "core_maturity_positions_missing"
+    if not maturity_dates_present:
+        return "core_maturity_date_missing"
+    if maturing_position_count < 1:
+        return "core_maturity_window_empty"
+    return "core_maturity_evidence_ready"
 
 
 def _text_field(payload: dict[str, Any], *keys: str) -> str | None:

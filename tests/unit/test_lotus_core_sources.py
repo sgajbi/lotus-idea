@@ -13,6 +13,7 @@ from app.infrastructure.downstream_client import DownstreamClientConfig, Downstr
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentEvidenceRequest,
+    CoreBondMaturityEvidenceRequest,
     CoreHighCashEvidenceRequest,
     CoreLowIncomeEvidenceRequest,
     CorePortfolioStateEvidenceRequest,
@@ -105,6 +106,17 @@ def _low_income_request() -> CoreLowIncomeEvidenceRequest:
         as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         horizon_days=45,
+        correlation_id="corr-core",
+        trace_id="trace-core",
+    )
+
+
+def _bond_maturity_request() -> CoreBondMaturityEvidenceRequest:
+    return CoreBondMaturityEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        maturity_window_days=30,
         correlation_id="corr-core",
         trace_id="trace-core",
     )
@@ -291,6 +303,132 @@ def test_lotus_core_adapter_fetches_low_income_cashflow_source_products() -> Non
             "?as_of_date=2026-06-21&horizon_days=45&include_projected=true",
         ),
     ]
+
+
+def test_lotus_core_adapter_fetches_bond_maturity_source_product() -> None:
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        assert request.headers["X-Correlation-Id"] == "corr-core"
+        assert request.headers["X-Trace-Id"] == "trace-core"
+        return httpx.Response(
+            200,
+            json=_payload(
+                "HoldingsAsOf",
+                extra={
+                    "positions": [
+                        {
+                            "security_id": "BOND1",
+                            "quantity": "100",
+                            "maturity_date": "2026-07-10",
+                        },
+                        {
+                            "security_id": "BOND2",
+                            "quantity": "50",
+                            "maturityDate": "2026-08-15",
+                        },
+                        {
+                            "security_id": "BOND3",
+                            "quantity": "0",
+                            "maturity_date": "2026-07-05",
+                        },
+                    ]
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+        _bond_maturity_request()
+    )
+
+    assert evidence.source_reported_next_maturity_date == date(2026, 7, 10)
+    assert evidence.source_reported_maturing_position_count == 1
+    assert evidence.holdings_ref is not None
+    assert evidence.holdings_ref.product_id == "lotus-core:HoldingsAsOf:v1"
+    assert evidence.maturity_fact_ref is not None
+    assert evidence.maturity_fact_ref.content_hash.endswith(":maturity-date")
+    assert evidence.maturity_diagnostic == "core_maturity_evidence_ready"
+    assert seen == [
+        "https://core.example/portfolios/PB_SG_GLOBAL_BAL_001/positions?as_of_date=2026-06-21"
+    ]
+
+
+def test_lotus_core_adapter_reports_missing_bond_maturity_dates() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload("HoldingsAsOf", extra={"positions": [{"security_id": "EQ1"}]}),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+        _bond_maturity_request()
+    )
+
+    assert evidence.source_reported_next_maturity_date is None
+    assert evidence.source_reported_maturing_position_count == 0
+    assert evidence.maturity_diagnostic == "core_maturity_date_missing"
+
+
+def test_lotus_core_adapter_reports_bond_maturity_window_empty() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload(
+                "HoldingsAsOf",
+                extra={
+                    "positions": [
+                        {
+                            "security_id": "BOND1",
+                            "quantity": "100",
+                            "maturity_date": "2026-08-15",
+                        }
+                    ]
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+        _bond_maturity_request()
+    )
+
+    assert evidence.source_reported_next_maturity_date == date(2026, 8, 15)
+    assert evidence.source_reported_maturing_position_count == 0
+    assert evidence.maturity_diagnostic == "core_maturity_window_empty"
+
+
+def test_lotus_core_adapter_maps_malformed_bond_maturity_quantity_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload(
+                "HoldingsAsOf",
+                extra={"positions": [{"quantity": "many", "maturity_date": "2026-07-10"}]},
+            ),
+        )
+
+    with pytest.raises(CoreSourceUnavailable) as exc_info:
+        _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+            _bond_maturity_request()
+        )
+
+    assert exc_info.value.code == "core_maturity_quantity_malformed"
+
+
+def test_lotus_core_adapter_maps_malformed_bond_maturity_date_to_source_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload(
+                "HoldingsAsOf",
+                extra={"positions": [{"quantity": "100", "maturity_date": "soon"}]},
+            ),
+        )
+
+    with pytest.raises(CoreSourceUnavailable):
+        _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+            _bond_maturity_request()
+        )
 
 
 def test_lotus_core_adapter_uses_cashflow_projection_total_when_points_are_absent() -> None:
@@ -650,6 +788,13 @@ def test_lotus_core_adapter_maps_low_income_source_error_to_unavailable() -> Non
         adapter.fetch_low_income_evidence(_low_income_request())
 
     assert exc_info.value.code == "upstream_unavailable"
+
+
+def test_lotus_core_adapter_maps_bond_maturity_forbidden_response_to_entitlement_denied() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(CoreSourceEntitlementDenied):
+        adapter.fetch_bond_maturity_evidence(_bond_maturity_request())
 
 
 def test_lotus_core_adapter_maps_missing_runtime_metadata_to_source_unavailable() -> None:

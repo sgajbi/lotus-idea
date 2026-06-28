@@ -14,6 +14,7 @@ from app.application.ai_workflow_pack_registration_proof import (
 from app.application.ai_workflow_pack_runtime_execution_proof import (
     AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
 )
+from app.application.bond_maturity_live_proof import BOND_MATURITY_LIVE_PROOF_ENV
 from app.application.durable_repository_proof import DURABLE_REPOSITORY_PROOF_ENV
 from app.application.gateway_workbench_operational_proof import (
     GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
@@ -65,6 +66,8 @@ class ConfiguredImplementationProofArtifacts:
     gateway_workbench_operational_proof_ref: str | None
     gateway_workbench_discovery_proof: dict[str, Any] | None
     gateway_workbench_discovery_proof_ref: str | None
+    bond_maturity_live_proof: dict[str, Any] | None
+    bond_maturity_live_proof_ref: str | None
     low_income_core_cashflow_live_proof: dict[str, Any] | None
     low_income_core_cashflow_live_proof_ref: str | None
 
@@ -160,6 +163,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "gateway_workbench_discovery_proof",
         "gateway_workbench_discovery_proof_ref",
         "Gateway/Workbench discovery proof",
+    ),
+    (
+        BOND_MATURITY_LIVE_PROOF_ENV,
+        "bond_maturity_live_proof",
+        "bond_maturity_live_proof_ref",
+        "bond maturity live proof",
     ),
     (
         LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
