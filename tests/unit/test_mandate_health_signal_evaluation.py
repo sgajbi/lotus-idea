@@ -34,15 +34,21 @@ def policy() -> MandateHealthSignalPolicy:
     )
 
 
-def source_ref(freshness: EvidenceFreshness = EvidenceFreshness.CURRENT) -> SourceRef:
+def source_ref(
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    *,
+    product_id: str = "lotus-manage:PortfolioActionRegister:v1",
+    source_system: SourceSystem = SourceSystem.LOTUS_MANAGE,
+    content_hash: str = "sha256:portfolio-action-register",
+) -> SourceRef:
     return SourceRef(
-        product_id="lotus-manage:PortfolioActionRegister:v1",
-        source_system=SourceSystem.LOTUS_MANAGE,
+        product_id=product_id,
+        source_system=source_system,
         product_version="v1",
         route="/api/v1/rebalance/supportability/summary",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-action-register",
+        content_hash=content_hash,
         data_quality_status="ready",
         freshness=freshness,
     )
@@ -58,6 +64,7 @@ def mandate_input(
     entitlement_allowed: bool = True,
     duplicate_of_candidate_id: str | None = None,
     include_source_ref: bool = True,
+    include_mandate_health_refs: bool = False,
 ) -> MandateHealthSignalInput:
     return MandateHealthSignalInput(
         as_of_date=AS_OF_DATE,
@@ -67,6 +74,24 @@ def mandate_input(
         portfolio_scope_confirmed=portfolio_scope_confirmed,
         action_register_ref=source_ref(freshness) if include_source_ref else None,
         evaluated_at_utc=EVALUATED_AT,
+        mandate_performance_health_ref=(
+            source_ref(
+                product_id="lotus-performance:MandatePerformanceHealthContext:v1",
+                source_system=SourceSystem.LOTUS_PERFORMANCE,
+                content_hash="sha256:mandate-performance-health",
+            )
+            if include_mandate_health_refs
+            else None
+        ),
+        mandate_risk_health_ref=(
+            source_ref(
+                product_id="lotus-risk:MandateRiskHealthContext:v1",
+                source_system=SourceSystem.LOTUS_RISK,
+                content_hash="sha256:mandate-risk-health",
+            )
+            if include_mandate_health_refs
+            else None
+        ),
         entitlement_allowed=entitlement_allowed,
         duplicate_of_candidate_id=duplicate_of_candidate_id,
     )
@@ -88,6 +113,24 @@ def test_mandate_health_positive_case_creates_pm_review_candidate() -> None:
         ReasonCode.ALLOCATION_DRIFT_ATTENTION,
         ReasonCode.REVIEW_REQUIRED,
     )
+
+
+def test_mandate_health_preserves_source_owned_performance_and_risk_refs() -> None:
+    result = evaluate_mandate_health_signal(
+        mandate_input(include_mandate_health_refs=True),
+        policy(),
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert result.candidate is not None
+    source_product_ids = {
+        source_ref.product_id for source_ref in result.candidate.evidence_packet.source_refs
+    }
+    assert source_product_ids == {
+        "lotus-manage:PortfolioActionRegister:v1",
+        "lotus-performance:MandatePerformanceHealthContext:v1",
+        "lotus-risk:MandateRiskHealthContext:v1",
+    }
 
 
 def test_mandate_health_store_wide_manage_posture_blocks_portfolio_claim() -> None:

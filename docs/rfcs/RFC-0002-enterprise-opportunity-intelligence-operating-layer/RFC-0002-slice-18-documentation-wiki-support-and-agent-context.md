@@ -217,10 +217,11 @@ or unshared source-authority/error/event mechanics.
     service runbooks, quality gate docs, RFC evidence, demo claims, and wiki
     source now describe bounded Manage mandate live proof while preserving the
     boundary that a valid artifact clears only the portfolio-scoped Manage
-    source blocker and does not prove mandate performance or risk health, Core
-    portfolio state, data-mesh certification, Workbench support, client
-    publication, supported features, rebalance authority, action authority,
-    order creation, execution, or settlement.
+    source blocker plus source refs for source-owned mandate performance-health
+    and mandate risk-health contexts, and does not prove Core portfolio state,
+    data-mesh certification, Workbench support, client publication, supported
+    features, rebalance authority, action authority, order creation, execution,
+    or settlement.
 27. README, repository context, `docs/operations/implementation-proof-readiness.md`,
     RFC evidence, demo claims, and wiki source now describe bounded low-income
     Core cashflow live proof while preserving the boundary that a valid

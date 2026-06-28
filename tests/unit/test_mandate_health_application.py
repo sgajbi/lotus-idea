@@ -56,6 +56,16 @@ def test_mandate_health_application_consumes_manage_source_evidence() -> None:
             freshness_bucket="current",
             portfolio_scope_confirmed=True,
             action_register_ref=_source_ref(),
+            mandate_performance_health_ref=_source_ref(
+                product_id="lotus-performance:MandatePerformanceHealthContext:v1",
+                source_system=SourceSystem.LOTUS_PERFORMANCE,
+                content_hash="sha256:mandate-performance-health",
+            ),
+            mandate_risk_health_ref=_source_ref(
+                product_id="lotus-risk:MandateRiskHealthContext:v1",
+                source_system=SourceSystem.LOTUS_RISK,
+                content_hash="sha256:mandate-risk-health",
+            ),
             manage_diagnostic="manage_action_register_ready_portfolio_scope",
         )
     )
@@ -72,6 +82,12 @@ def test_mandate_health_application_consumes_manage_source_evidence() -> None:
         ReasonCode.REVIEW_REQUIRED,
     )
     assert manage_source.requests[0].portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert result.candidate is not None
+    source_product_ids = {
+        source_ref.product_id for source_ref in result.candidate.evidence_packet.source_refs
+    }
+    assert "lotus-performance:MandatePerformanceHealthContext:v1" in source_product_ids
+    assert "lotus-risk:MandateRiskHealthContext:v1" in source_product_ids
 
 
 def test_mandate_health_application_blocks_store_wide_manage_source_evidence() -> None:
@@ -131,15 +147,20 @@ def _command() -> EvaluateMandateHealthFromManageCommand:
     )
 
 
-def _source_ref() -> SourceRef:
+def _source_ref(
+    *,
+    product_id: str = "lotus-manage:PortfolioActionRegister:v1",
+    source_system: SourceSystem = SourceSystem.LOTUS_MANAGE,
+    content_hash: str = "sha256:portfolio-action-register",
+) -> SourceRef:
     return SourceRef(
-        product_id="lotus-manage:PortfolioActionRegister:v1",
-        source_system=SourceSystem.LOTUS_MANAGE,
+        product_id=product_id,
+        source_system=source_system,
         product_version="v1",
         route="/api/v1/rebalance/supportability/summary",
         as_of_date=AS_OF_DATE,
         generated_at_utc=EVALUATED_AT,
-        content_hash="sha256:portfolio-action-register",
+        content_hash=content_hash,
         data_quality_status="ready",
         freshness=EvidenceFreshness.CURRENT,
     )

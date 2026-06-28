@@ -57,7 +57,8 @@ capabilities exist.
    missing-benchmark Core proof clears only the missing-benchmark live Core
    source blocker, low-income Core
    cashflow proof clears the live Core cashflow source blocker, Manage mandate
-   proof clears the portfolio-scoped Manage action-register blocker, Core
+   proof clears the portfolio-scoped Manage action-register blocker plus
+   mandate performance-health and mandate risk-health source-ref blockers, Core
    portfolio-state proof clears only the Core portfolio-state source-ref
    blocker, Advise missing-suitability proof clears the live Advise policy
    blocker, typed mandate/restriction source-product proof clears only the
@@ -139,12 +140,13 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    Lotus Manage `PortfolioActionRegister:v1` source-port/adapter foundation,
    source-safe Manage mandate live-proof contract, and source-safe Core
    portfolio-state live-proof contract. Valid artifacts clear only
-   `opportunity_archetype_portfolio_scoped_manage_source_proof_missing` and
+   `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
+   `opportunity_archetype_mandate_performance_health_source_ref_missing`,
+   `opportunity_archetype_mandate_risk_health_source_ref_missing`, and
    `opportunity_archetype_core_portfolio_state_source_ref_missing`;
-   mandate performance-health, mandate risk-health, data-mesh certification,
-   Workbench proof, client-publication approval, supported-feature evidence,
-   rebalance authority, action authority, order creation, execution, and
-   settlement remain required before demo use.
+   data-mesh certification, Workbench proof, client-publication approval,
+   supported-feature evidence, rebalance authority, action authority, order
+   creation, execution, and settlement remain required before demo use.
 10. Low-income / liquidity shortfall now has a bounded deterministic policy,
    Lotus Core cashflow source-port/adapter foundation, source-safe Core
    cashflow live-proof contract, and contract-backed archetype entry. It can

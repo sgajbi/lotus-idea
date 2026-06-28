@@ -130,6 +130,8 @@ def _write_blocked_source_proof(*, args: argparse.Namespace, error_code: str) ->
                 "sourceEvidenceCurrent": False,
                 "portfolioScopeConfirmed": False,
                 "manageActionRegisterReady": False,
+                "mandatePerformanceHealthSourceRefCurrent": False,
+                "mandateRiskHealthSourceRefCurrent": False,
                 "workflowDecisionCount": 0,
                 "lineageEdgeCount": 0,
             },
@@ -187,6 +189,14 @@ def _evaluation_summary(
         ),
         "portfolioScopeConfirmed": evidence.portfolio_scope_confirmed,
         "manageActionRegisterReady": str(evidence.supportability_state or "").lower() == "ready",
+        "mandatePerformanceHealthSourceRefCurrent": (
+            evidence.mandate_performance_health_ref is not None
+            and evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.CURRENT
+        ),
+        "mandateRiskHealthSourceRefCurrent": (
+            evidence.mandate_risk_health_ref is not None
+            and evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.CURRENT
+        ),
         "workflowDecisionCount": evidence.workflow_decision_count or 0,
         "lineageEdgeCount": evidence.lineage_edge_count or 0,
         "reasonCodes": [reason_code.value for reason_code in evaluation.reason_codes],

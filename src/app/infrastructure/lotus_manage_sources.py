@@ -18,6 +18,8 @@ from app.ports.manage_sources import (
 
 PRODUCT_VERSION = "v1"
 ACTION_REGISTER_PRODUCT_ID = "lotus-manage:PortfolioActionRegister:v1"
+MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID = "lotus-performance:MandatePerformanceHealthContext:v1"
+MANDATE_RISK_HEALTH_PRODUCT_ID = "lotus-risk:MandateRiskHealthContext:v1"
 ACTION_REGISTER_SUPPORTABILITY_ROUTE = "/api/v1/rebalance/supportability/summary"
 
 
@@ -58,6 +60,24 @@ class LotusManageMandateHealthSourceAdapter:
             freshness_bucket=posture.freshness_bucket,
             portfolio_scope_confirmed=posture.portfolio_scope_confirmed,
             action_register_ref=_source_ref(payload, posture=posture, request=request),
+            mandate_performance_health_ref=_source_product_ref(
+                payload,
+                supportability_product_key="mandate_performance_health_ref",
+                camel_key="mandatePerformanceHealthRef",
+                product_id=MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID,
+                source_system=SourceSystem.LOTUS_PERFORMANCE,
+                default_route="/performance/mandate-health-context",
+                request=request,
+            ),
+            mandate_risk_health_ref=_source_product_ref(
+                payload,
+                supportability_product_key="mandate_risk_health_ref",
+                camel_key="mandateRiskHealthRef",
+                product_id=MANDATE_RISK_HEALTH_PRODUCT_ID,
+                source_system=SourceSystem.LOTUS_RISK,
+                default_route="/analytics/risk/mandate-health-context",
+                request=request,
+            ),
             manage_diagnostic=_diagnostic(posture),
         )
 
@@ -107,6 +127,104 @@ def _source_ref(
     )
 
 
+def _source_product_ref(
+    payload: dict[str, Any],
+    *,
+    supportability_product_key: str,
+    camel_key: str,
+    product_id: str,
+    source_system: SourceSystem,
+    default_route: str,
+    request: ManageMandateHealthEvidenceRequest,
+) -> SourceRef | None:
+    supportability = _optional_object_field(payload, "supportability")
+    ref_payload = _source_ref_payload(
+        payload,
+        supportability=supportability,
+        supportability_product_key=supportability_product_key,
+        camel_key=camel_key,
+        product_id=product_id,
+    )
+    if ref_payload is None:
+        return None
+    return SourceRef(
+        product_id=product_id,
+        source_system=source_system,
+        product_version=_text_field(ref_payload, "product_version")
+        or _text_field(ref_payload, "productVersion")
+        or PRODUCT_VERSION,
+        route=_text_field(ref_payload, "route")
+        or _text_field(ref_payload, "source_route")
+        or _text_field(ref_payload, "sourceRoute")
+        or default_route,
+        as_of_date=request.as_of_date,
+        generated_at_utc=_generated_at(ref_payload, fallback=request.evaluated_at_utc),
+        content_hash=_content_hash(ref_payload),
+        data_quality_status=_text_field(ref_payload, "data_quality_status")
+        or _text_field(ref_payload, "dataQualityStatus")
+        or _text_field(ref_payload, "health_state")
+        or _text_field(ref_payload, "healthState")
+        or "unknown",
+        freshness=_freshness_from_ref_payload(ref_payload),
+    )
+
+
+def _source_ref_payload(
+    payload: dict[str, Any],
+    *,
+    supportability: dict[str, Any],
+    supportability_product_key: str,
+    camel_key: str,
+    product_id: str,
+) -> dict[str, Any] | None:
+    for container in (payload, supportability):
+        for key in (supportability_product_key, camel_key):
+            value = container.get(key)
+            if isinstance(value, dict):
+                return value
+    for container in (payload, supportability):
+        for key in ("source_refs", "sourceRefs"):
+            value = container.get(key)
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict) and _ref_product_id(item) == product_id:
+                        return item
+    return None
+
+
+def _ref_product_id(payload: dict[str, Any]) -> str | None:
+    for key in ("product_id", "productId", "source_product_id", "sourceProductId"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _freshness_from_ref_payload(payload: dict[str, Any]) -> EvidenceFreshness:
+    for key in ("freshness", "freshness_bucket", "freshnessBucket"):
+        value = payload.get(key)
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"current", "same_day", "ready"}:
+                return EvidenceFreshness.CURRENT
+            if normalized == "stale":
+                return EvidenceFreshness.STALE
+            if normalized in {"unavailable", "missing"}:
+                return EvidenceFreshness.UNAVAILABLE
+    status = (
+        _text_field(payload, "data_quality_status")
+        or _text_field(payload, "dataQualityStatus")
+        or _text_field(payload, "health_state")
+        or _text_field(payload, "healthState")
+        or ""
+    ).lower()
+    return (
+        EvidenceFreshness.CURRENT
+        if status in {"ready", "attention"}
+        else EvidenceFreshness.UNAVAILABLE
+    )
+
+
 def _optional_object_field(payload: dict[str, Any], key: str) -> dict[str, Any]:
     value = payload.get(key)
     if value is None:
@@ -153,6 +271,8 @@ def _generated_at(payload: dict[str, Any], *, fallback: datetime) -> datetime:
     for key in (
         "generated_at",
         "generatedAt",
+        "generated_at_utc",
+        "generatedAtUtc",
         "newest_operation_created_at",
         "newest_run_created_at",
     ):
@@ -167,6 +287,8 @@ def _generated_at(payload: dict[str, Any], *, fallback: datetime) -> datetime:
 
 def _content_hash(payload: dict[str, Any]) -> str:
     for key in (
+        "content_hash",
+        "contentHash",
         "request_fingerprint",
         "requestFingerprint",
         "source_batch_fingerprint",

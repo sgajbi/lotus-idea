@@ -180,6 +180,8 @@ class MandateHealthSignalInput:
     portfolio_scope_confirmed: bool
     action_register_ref: SourceRef | None
     evaluated_at_utc: datetime
+    mandate_performance_health_ref: SourceRef | None = None
+    mandate_risk_health_ref: SourceRef | None = None
     entitlement_allowed: bool = True
     access_scope: ReviewAccessScope | None = None
     duplicate_of_candidate_id: str | None = None
@@ -617,7 +619,15 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
 
-    source_refs = (source_input.action_register_ref,)
+    source_refs = tuple(
+        source_ref
+        for source_ref in (
+            source_input.action_register_ref,
+            source_input.mandate_performance_health_ref,
+            source_input.mandate_risk_health_ref,
+        )
+        if source_ref is not None
+    )
     identity = _stable_mandate_health_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
         signal_id=f"signal_allocation_drift_{identity}",

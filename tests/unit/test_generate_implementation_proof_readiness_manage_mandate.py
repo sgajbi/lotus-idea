@@ -25,6 +25,8 @@ def test_generate_implementation_proof_readiness_uses_explicit_manage_mandate_li
                     "sourceEvidenceCurrent": True,
                     "portfolioScopeConfirmed": True,
                     "manageActionRegisterReady": True,
+                    "mandatePerformanceHealthSourceRefCurrent": True,
+                    "mandateRiskHealthSourceRefCurrent": True,
                     "workflowDecisionCount": 2,
                     "lineageEdgeCount": 1,
                     "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
@@ -61,10 +63,11 @@ def test_generate_implementation_proof_readiness_uses_explicit_manage_mandate_li
     )
     assert (
         "opportunity_archetype_mandate_performance_health_source_ref_missing"
-        in (archetypes["blockers"])
+        not in (archetypes["blockers"])
     )
     assert (
-        "opportunity_archetype_mandate_risk_health_source_ref_missing" in (archetypes["blockers"])
+        "opportunity_archetype_mandate_risk_health_source_ref_missing"
+        not in (archetypes["blockers"])
     )
     assert (
         "opportunity_archetype_core_portfolio_state_source_ref_missing" in (archetypes["blockers"])

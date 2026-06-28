@@ -322,11 +322,12 @@ Additional implemented allocation-drift / mandate-review foundation:
    `make manage-mandate-live-proof-contract-gate` define the source-safe
    live-proof artifact contract for portfolio-scoped
    `lotus-manage:PortfolioActionRegister:v1` posture. A valid artifact clears
-   only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`
-   in aggregate readiness. It does not certify mandate performance health,
-   mandate risk health, Core portfolio state, data mesh, Workbench behavior,
-   client publication, supported-feature promotion, rebalance authority,
-   action authority, order creation, execution, or settlement.
+   only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
+   `opportunity_archetype_mandate_performance_health_source_ref_missing`, and
+   `opportunity_archetype_mandate_risk_health_source_ref_missing` in aggregate
+   readiness. It does not certify Core portfolio state, data mesh, Workbench
+   behavior, client publication, supported-feature promotion, rebalance
+   authority, action authority, order creation, execution, or settlement.
 
 Additional implemented high-volatility foundation:
 
@@ -610,7 +611,8 @@ Not implemented yet:
    authority,
 5. mandate risk-health source refs from the governed Risk source authority,
 6. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
-   proof beyond Core portfolio-state source-ref proof,
+   live proof beyond the source-safe Manage mandate proof contract and Core
+   portfolio-state source-ref proof,
 7. source-worker certification beyond bounded live Core source-ingestion proof,
 8. certified long-running scheduled daemon runtime and live-service recovery proof,
 9. source-fetching APIs beyond current caller-supplied signal foundation

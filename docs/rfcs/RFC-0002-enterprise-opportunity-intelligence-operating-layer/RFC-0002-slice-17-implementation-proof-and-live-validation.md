@@ -360,8 +360,9 @@ Prove the complete supported opportunity journey end to end.
     source-safe Lotus Manage mandate live-proof artifact. Aggregate readiness
     can consume a valid artifact to clear only
     `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
-    while preserving mandate performance-health, mandate risk-health, Core
-    portfolio-state, data-mesh, Workbench, client-publication,
+    `opportunity_archetype_mandate_performance_health_source_ref_missing`, and
+    `opportunity_archetype_mandate_risk_health_source_ref_missing`, while
+    preserving Core portfolio-state, data-mesh, Workbench, client-publication,
     supported-feature, rebalance, action, and order-execution blockers.
 34. `src/app/application/core_portfolio_state_live_proof.py`,
     `scripts/generate_core_portfolio_state_live_proof.py`, and
@@ -422,10 +423,11 @@ without relying on chat memory.
    execution, order creation, client communication, and supported-feature
    promotion remain pending.
 9. Manage mandate live proof is now explicit in aggregate readiness evidence,
-   but it proves only portfolio-scoped Manage action-register source posture.
-   Mandate performance-health, mandate risk-health, Core portfolio-state,
-   data-mesh, Workbench, client-publication, supported-feature, rebalance,
-   action, and order-execution proof remain pending.
+   and proves only portfolio-scoped Manage action-register source posture plus
+   current source refs for source-owned mandate performance-health and mandate
+   risk-health contexts. Core portfolio-state, data-mesh, Workbench,
+   client-publication, supported-feature, rebalance, action, and order-execution
+   proof remain pending.
 10. Core portfolio-state live proof is now explicit in aggregate readiness
    evidence, but it proves only current `PortfolioStateSnapshot:v1` source-ref
    posture. Portfolio-scoped Manage proof, mandate performance-health, mandate

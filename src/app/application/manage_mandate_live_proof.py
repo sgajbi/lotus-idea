@@ -12,11 +12,11 @@ MANAGE_MANDATE_LIVE_PROOF_SCHEMA_VERSION = "lotus-idea.manage-mandate.live-proof
 
 MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED = (
     "opportunity_archetype_portfolio_scoped_manage_source_proof_missing",
+    "opportunity_archetype_mandate_performance_health_source_ref_missing",
+    "opportunity_archetype_mandate_risk_health_source_ref_missing",
 )
 
 REMAINING_CERTIFICATION_BLOCKERS = (
-    "opportunity_archetype_mandate_performance_health_source_ref_missing",
-    "opportunity_archetype_mandate_risk_health_source_ref_missing",
     "opportunity_archetype_core_portfolio_state_source_ref_missing",
     "opportunity_archetype_data_mesh_not_certified",
     "opportunity_archetype_workbench_product_proof_missing",
@@ -79,6 +79,12 @@ def build_manage_mandate_live_proof_payload(
         "sourceEvidenceCurrent": bool(evaluation_summary.get("sourceEvidenceCurrent")),
         "portfolioScopeConfirmed": bool(evaluation_summary.get("portfolioScopeConfirmed")),
         "manageActionRegisterReady": bool(evaluation_summary.get("manageActionRegisterReady")),
+        "mandatePerformanceHealthSourceRefCurrent": bool(
+            evaluation_summary.get("mandatePerformanceHealthSourceRefCurrent")
+        ),
+        "mandateRiskHealthSourceRefCurrent": bool(
+            evaluation_summary.get("mandateRiskHealthSourceRefCurrent")
+        ),
         "workflowDecisionCount": _non_negative_int_or_zero(
             evaluation_summary.get("workflowDecisionCount")
         ),
@@ -116,6 +122,8 @@ def manage_mandate_live_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         and payload.get("sourceEvidenceCurrent") is True
         and payload.get("portfolioScopeConfirmed") is True
         and payload.get("manageActionRegisterReady") is True
+        and payload.get("mandatePerformanceHealthSourceRefCurrent") is True
+        and payload.get("mandateRiskHealthSourceRefCurrent") is True
         and _positive_int(payload.get("workflowDecisionCount"))
         and _positive_int(payload.get("lineageEdgeCount"))
         and payload.get("rebalanceExecutionAuthorityGranted") is False
@@ -150,6 +158,10 @@ def _proof_blockers(
         blockers.append("manage_portfolio_scope_not_confirmed")
     if not bool(evaluation_summary.get("manageActionRegisterReady")):
         blockers.append("manage_action_register_not_ready")
+    if not bool(evaluation_summary.get("mandatePerformanceHealthSourceRefCurrent")):
+        blockers.append("mandate_performance_health_source_ref_missing")
+    if not bool(evaluation_summary.get("mandateRiskHealthSourceRefCurrent")):
+        blockers.append("mandate_risk_health_source_ref_missing")
     if not _positive_int(evaluation_summary.get("workflowDecisionCount")):
         blockers.append("manage_workflow_decision_evidence_missing")
     if not _positive_int(evaluation_summary.get("lineageEdgeCount")):

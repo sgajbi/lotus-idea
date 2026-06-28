@@ -138,6 +138,80 @@ def test_lotus_manage_adapter_recognizes_explicit_portfolio_scope_flag() -> None
     assert evidence.portfolio_scope_confirmed is True
 
 
+def test_lotus_manage_adapter_preserves_mandate_health_source_refs() -> None:
+    payload = _payload(
+        extra={
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+            "sourceRefs": [
+                {
+                    "productId": "lotus-performance:MandatePerformanceHealthContext:v1",
+                    "productVersion": "v1",
+                    "route": "/performance/mandate-health-context",
+                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                    "contentHash": "sha256:mandate-performance-health",
+                    "dataQualityStatus": "ready",
+                    "freshness": "current",
+                },
+                {
+                    "productId": "lotus-risk:MandateRiskHealthContext:v1",
+                    "productVersion": "v1",
+                    "route": "/analytics/risk/mandate-health-context",
+                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                    "contentHash": "sha256:mandate-risk-health",
+                    "dataQualityStatus": "attention",
+                    "freshness": "same_day",
+                },
+            ],
+        }
+    )
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.mandate_performance_health_ref is not None
+    assert (
+        evidence.mandate_performance_health_ref.product_id
+        == "lotus-performance:MandatePerformanceHealthContext:v1"
+    )
+    assert evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.mandate_performance_health_ref.content_hash == (
+        "sha256:mandate-performance-health"
+    )
+    assert evidence.mandate_risk_health_ref is not None
+    assert evidence.mandate_risk_health_ref.product_id == "lotus-risk:MandateRiskHealthContext:v1"
+    assert evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.mandate_risk_health_ref.data_quality_status == "attention"
+
+
+def test_lotus_manage_adapter_accepts_nested_mandate_health_refs() -> None:
+    payload = _payload()
+    supportability = payload["supportability"]
+    assert isinstance(supportability, dict)
+    supportability["mandatePerformanceHealthRef"] = {
+        "content_hash": "sha256:performance-nested",
+        "health_state": "ready",
+        "freshness_bucket": "current",
+    }
+    supportability["mandateRiskHealthRef"] = {
+        "content_hash": "sha256:risk-nested",
+        "health_state": "unavailable",
+    }
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.mandate_performance_health_ref is not None
+    assert (
+        evidence.mandate_performance_health_ref.product_id
+        == "lotus-performance:MandatePerformanceHealthContext:v1"
+    )
+    assert evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.mandate_risk_health_ref is not None
+    assert evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
 def test_lotus_manage_adapter_maps_forbidden_source_response_to_entitlement_denied() -> None:
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
 

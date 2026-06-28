@@ -41,10 +41,10 @@ def test_implementation_proof_readiness_uses_manage_mandate_live_proof_without_p
     assert "opportunity_archetype_portfolio_scoped_manage_source_proof_missing" not in (
         snapshot.overall_blockers
     )
-    assert "opportunity_archetype_mandate_performance_health_source_ref_missing" in (
+    assert "opportunity_archetype_mandate_performance_health_source_ref_missing" not in (
         snapshot.overall_blockers
     )
-    assert "opportunity_archetype_mandate_risk_health_source_ref_missing" in (
+    assert "opportunity_archetype_mandate_risk_health_source_ref_missing" not in (
         snapshot.overall_blockers
     )
     assert "opportunity_archetype_core_portfolio_state_source_ref_missing" in (
@@ -65,10 +65,12 @@ def test_implementation_proof_readiness_uses_manage_mandate_live_proof_without_p
     assert "opportunity_archetype_portfolio_scoped_manage_source_proof_missing" not in (
         archetypes.blockers
     )
-    assert "opportunity_archetype_mandate_performance_health_source_ref_missing" in (
+    assert "opportunity_archetype_mandate_performance_health_source_ref_missing" not in (
         archetypes.blockers
     )
-    assert "opportunity_archetype_mandate_risk_health_source_ref_missing" in archetypes.blockers
+    assert "opportunity_archetype_mandate_risk_health_source_ref_missing" not in (
+        archetypes.blockers
+    )
     assert "opportunity_archetype_core_portfolio_state_source_ref_missing" in archetypes.blockers
     assert "opportunity_archetype_client_publication_not_ready" in archetypes.blockers
     assert "opportunity_archetype_supported_feature_promotion_missing" in archetypes.blockers
@@ -91,6 +93,8 @@ def _valid_manage_mandate_live_proof() -> dict[str, object]:
             "sourceEvidenceCurrent": True,
             "portfolioScopeConfirmed": True,
             "manageActionRegisterReady": True,
+            "mandatePerformanceHealthSourceRefCurrent": True,
+            "mandateRiskHealthSourceRefCurrent": True,
             "workflowDecisionCount": 2,
             "lineageEdgeCount": 1,
             "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
