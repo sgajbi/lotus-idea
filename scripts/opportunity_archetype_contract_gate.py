@@ -89,14 +89,22 @@ REQUIRED_MANAGE_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
     "src/app/application/mandate_health_signal.py",
     "src/app/application/manage_mandate_live_proof.py",
+    "src/app/application/core_portfolio_state_live_proof.py",
     "src/app/ports/manage_sources.py",
+    "src/app/ports/core_sources.py",
     "src/app/infrastructure/lotus_manage_sources.py",
+    "src/app/infrastructure/lotus_core_sources.py",
     "scripts/generate_manage_mandate_live_proof.py",
+    "scripts/generate_core_portfolio_state_live_proof.py",
     "make manage-mandate-live-proof-contract-gate",
+    "make core-portfolio-state-live-proof-contract-gate",
     "tests/unit/test_mandate_health_signal_evaluation.py",
     "tests/unit/test_mandate_health_application.py",
     "tests/unit/test_lotus_manage_sources.py",
+    "tests/unit/test_lotus_core_sources.py",
     "tests/unit/test_manage_mandate_live_proof.py",
+    "tests/unit/test_core_portfolio_state_live_proof.py",
+    "tests/unit/test_implementation_proof_readiness_core_portfolio_state.py",
 }
 REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
@@ -473,12 +481,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Validate lotus-idea opportunity archetype and scenario contract posture."
     )
-    parser.add_argument(
-        "--contract-path",
-        type=Path,
-        default=OPPORTUNITY_ARCHETYPE_CONTRACT_PATH,
-        help="Repository-relative opportunity archetype contract path.",
-    )
+    parser.add_argument("--contract-path", type=Path, default=OPPORTUNITY_ARCHETYPE_CONTRACT_PATH)
     return parser.parse_args()
 
 

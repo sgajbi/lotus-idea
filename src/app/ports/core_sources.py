@@ -72,6 +72,29 @@ class CoreBenchmarkAssignmentEvidence:
 
 
 @dataclass(frozen=True)
+class CorePortfolioStateEvidenceRequest:
+    portfolio_id: str
+    as_of_date: date
+    evaluated_at_utc: datetime
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class CorePortfolioStateEvidence:
+    portfolio_state_ref: SourceRef | None
+    source_evidence_available: bool
+    portfolio_state_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
+@dataclass(frozen=True)
 class CoreLowIncomeEvidenceRequest:
     portfolio_id: str
     as_of_date: date
@@ -139,6 +162,13 @@ class CoreBenchmarkAssignmentSourcePort(Protocol):
         self, request: CoreBenchmarkAssignmentEvidenceRequest
     ) -> CoreBenchmarkAssignmentEvidence:
         """Fetch source-owned Core benchmark assignment evidence for opportunity context."""
+
+
+class CorePortfolioStateSourcePort(Protocol):
+    def fetch_portfolio_state_evidence(
+        self, request: CorePortfolioStateEvidenceRequest
+    ) -> CorePortfolioStateEvidence:
+        """Fetch source-owned Core portfolio state evidence for opportunity context."""
 
 
 class CoreLowIncomeSourcePort(Protocol):

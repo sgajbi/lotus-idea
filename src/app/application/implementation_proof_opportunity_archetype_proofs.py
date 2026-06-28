@@ -12,6 +12,10 @@ from app.application.core_benchmark_assignment_live_proof import (
     CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
     core_benchmark_assignment_live_proof_is_valid,
 )
+from app.application.core_portfolio_state_live_proof import (
+    CORE_PORTFOLIO_STATE_LIVE_BLOCKERS_CLEARED,
+    core_portfolio_state_live_proof_is_valid,
+)
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
     low_income_core_cashflow_live_proof_is_valid,
@@ -62,6 +66,8 @@ def _apply_opportunity_archetype_proofs(
     performance_underperformance_live_proof_ref: str | None,
     core_benchmark_assignment_live_proof: Mapping[str, object] | None,
     core_benchmark_assignment_live_proof_ref: str | None,
+    core_portfolio_state_live_proof: Mapping[str, object] | None,
+    core_portfolio_state_live_proof_ref: str | None,
     low_income_core_cashflow_live_proof: Mapping[str, object] | None,
     low_income_core_cashflow_live_proof_ref: str | None,
     manage_mandate_live_proof: Mapping[str, object] | None,
@@ -121,6 +127,12 @@ def _apply_opportunity_archetype_proofs(
                 core_benchmark_assignment_live_proof_ref,
             )
             for capability in capabilities
+        )
+    if core_portfolio_state_live_proof and core_portfolio_state_live_proof_is_valid(
+        core_portfolio_state_live_proof
+    ):
+        capabilities = _apply_core_portfolio_state_live_proofs(
+            capabilities, core_portfolio_state_live_proof_ref
         )
     if low_income_core_cashflow_live_proof and low_income_core_cashflow_live_proof_is_valid(
         low_income_core_cashflow_live_proof
@@ -199,6 +211,8 @@ def apply_opportunity_archetype_proofs_from_scope(
         core_benchmark_assignment_live_proof_ref=_ref(
             scope, "core_benchmark_assignment_live_proof_ref"
         ),
+        core_portfolio_state_live_proof=_payload(scope, "core_portfolio_state_live_proof"),
+        core_portfolio_state_live_proof_ref=_ref(scope, "core_portfolio_state_live_proof_ref"),
         low_income_core_cashflow_live_proof=_payload(scope, "low_income_core_cashflow_live_proof"),
         low_income_core_cashflow_live_proof_ref=_ref(
             scope, "low_income_core_cashflow_live_proof_ref"
@@ -285,6 +299,28 @@ def _apply_core_benchmark_assignment_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
         proof_ref=core_benchmark_assignment_live_proof_ref,
+    )
+
+
+def _apply_core_portfolio_state_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    core_portfolio_state_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=CORE_PORTFOLIO_STATE_LIVE_BLOCKERS_CLEARED,
+        proof_ref=core_portfolio_state_live_proof_ref,
+    )
+
+
+def _apply_core_portfolio_state_live_proofs(
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    core_portfolio_state_live_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return tuple(
+        _apply_core_portfolio_state_live_proof(capability, core_portfolio_state_live_proof_ref)
+        for capability in capabilities
     )
 
 
