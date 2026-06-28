@@ -97,18 +97,23 @@ durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
+AI model-risk operations proof validation,
 Core portfolio-state live-proof contract validation,
+Risk high-volatility and drawdown live-proof contract validation,
+Advise mandate/restriction live-proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench discovery proof contract validation,
 outbox broker proof contract validation,
-implementation-proof readiness artifact generation, source-observability
-contract validation, operation metric contract validation, AI model-risk
+implementation-proof readiness artifact generation, runtime trust telemetry preview generation,
+source-observability contract validation, operation metric contract validation, AI model-risk
 operations contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
 scoped test-target variables for focused fix-forward validation, and pass/fail unit coverage for
-the CI contract gate itself.
+the CI contract gate itself. The CI contract gate now explicitly fails if these current blocking
+lint gates are removed from `make lint`, so agent-driven quality controls cannot quietly become
+optional local commands.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 

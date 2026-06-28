@@ -9,6 +9,7 @@ sys.path.append(str(Path(__file__).resolve().parent))
 from ci_contract_gate_expectations import (  # noqa: E402
     GENERATED_READINESS_ARTIFACTS,
     PASSED_READINESS_ARTIFACTS,
+    REQUIRED_LINT_TARGETS,
     REQUIRED_READINESS_WIRING,
 )
 
@@ -25,60 +26,6 @@ PINNED_ACTIONS: dict[str, tuple[str, str]] = {
     "reviewdog/action-actionlint": ("6fb7acc99f4a1008869fa8a0f09cfca740837d9d", "v1.72.0"),
 }
 
-REQUIRED_LINT_TARGETS = (
-    "ci-contract-gate",
-    "repository-hygiene-gate",
-    "maintainability-gate",
-    "documentation-contract-gate",
-    "quality-scorecard-gate",
-    "monetary-float-guard",
-    "no-sensitive-content-guard",
-    "source-observability-contract-gate",
-    "signal-api-contract-gate",
-    "operation-metric-contract-gate",
-    "ai-model-risk-ops-contract-gate",
-    "implementation-truth-gate",
-    "data-mesh-contract-gate",
-    "mesh-policy-proof-contract-gate",
-    "opportunity-archetype-contract-gate",
-    "downstream-realization-contract-gate",
-    "downstream-route-contract-proof-gate",
-    "outbox-event-contract-gate",
-    "outbox-consumer-contract-gate",
-    "migration-contract-gate",
-    "migration-execution-gate",
-    "durable-repository-proof-contract-gate",
-    "runtime-trust-telemetry-proof-contract-gate",
-    "ai-lineage-store-proof-contract-gate",
-    "ai-workflow-pack-registration-proof-contract-gate",
-    "ai-workflow-pack-runtime-execution-proof-contract-gate",
-    "report-intake-route-proof-contract-gate",
-    "report-materialization-proof-contract-gate",
-    "workbench-read-path-proof-contract-gate",
-    "gateway-workbench-operational-proof-contract-gate",
-    "gateway-workbench-discovery-proof-contract-gate",
-    "outbox-broker-proof-contract-gate",
-    "outbox-consumer-runtime-proof-contract-gate",
-    "outbox-platform-mesh-event-publication-proof-contract-gate",
-    "platform-mesh-onboarding-proof-contract-gate",
-    "source-ingestion-worker-check",
-    "source-ingestion-scheduled-worker-check",
-    "source-ingestion-live-proof-contract-gate",
-    "risk-concentration-live-proof-contract-gate",
-    "core-benchmark-assignment-live-proof-contract-gate",
-    "core-portfolio-state-live-proof-contract-gate",
-    "bond-maturity-live-proof-contract-gate",
-    "missing-benchmark-live-proof-contract-gate",
-    "missing-benchmark-performance-readiness-proof-contract-gate",
-    "low-income-core-cashflow-live-proof-contract-gate",
-    "manage-mandate-live-proof-contract-gate",
-    "missing-suitability-live-proof-contract-gate",
-    "missing-risk-profile-live-proof-contract-gate",
-    "performance-underperformance-live-proof-contract-gate",
-    "runtime-trust-telemetry-snapshot-check",
-    "supported-features-gate",
-    "endpoint-certification-gate",
-)
 REQUIRED_TARGETS = (
     *REQUIRED_LINT_TARGETS,
     "postgres-integration-gate",
@@ -370,11 +317,23 @@ def validate_makefile(makefile: str) -> list[str]:
         "signal-api-contract-gate": "scripts/signal_api_contract_gate.py",
         "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
         "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
+        "ai-model-risk-operations-proof-contract-gate": (
+            "scripts/ai_model_risk_operations_proof_contract_gate.py"
+        ),
+        "high-volatility-live-proof-contract-gate": (
+            "scripts/high_volatility_live_proof_contract_gate.py"
+        ),
     }
     for target, script in script_target_expectations.items():
         if script not in _target_block(makefile, target):
             errors.append(f"Makefile {target} target must run `{script}`")
     errors.extend(_validate_implementation_proof_readiness_target(makefile))
+    runtime_preview_check = _target_block(makefile, "runtime-trust-telemetry-preview-check")
+    if "scripts/generate_runtime_trust_telemetry_preview.py" not in runtime_preview_check:
+        errors.append(
+            "Makefile runtime-trust-telemetry-preview-check target must run "
+            "`scripts/generate_runtime_trust_telemetry_preview.py`"
+        )
     runtime_snapshot_check = _target_block(makefile, "runtime-trust-telemetry-snapshot-check")
     if "scripts/generate_runtime_trust_telemetry_snapshot.py" not in runtime_snapshot_check:
         errors.append(

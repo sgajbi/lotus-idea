@@ -48,6 +48,7 @@ make source-observability-contract-gate
 make signal-api-contract-gate
 make operation-metric-contract-gate
 make ai-model-risk-ops-contract-gate
+make ai-model-risk-operations-proof-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make mesh-policy-proof-contract-gate
@@ -96,12 +97,14 @@ Baseline required checks include lint, format check, typecheck, architecture bou
 repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
 OpenAPI quality, source-observability contract enforcement, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
-AI model-risk operations contract enforcement,
+AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,
 safe migration execution dry-run validation, PostgreSQL runtime proof in PR/main GitHub lanes,
 durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
+Risk high-volatility and drawdown live-proof contract validation,
+Advise mandate/restriction live-proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench operational proof contract validation,
@@ -117,7 +120,10 @@ contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
-jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint.
+jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
+`make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
+`make lint`, including implementation-proof readiness and runtime trust telemetry preview
+generation, so enforcement cannot silently degrade into optional local commands.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
