@@ -336,6 +336,7 @@ make risk-drawdown-live-proof-contract-gate
 make core-benchmark-assignment-live-proof-contract-gate
 make core-portfolio-state-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
+make mandate-restriction-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make missing-risk-profile-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate

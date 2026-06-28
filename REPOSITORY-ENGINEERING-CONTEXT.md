@@ -1001,9 +1001,16 @@ Mandate/restriction review is backed by deterministic policy,
 `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over
 caller-supplied Core, Manage, or Advise source refs. It can create only a
 compliance-review candidate from explicit source-owned restriction posture and
-does not fetch live upstream sources, approve suitability, change mandate
-state, clear product/country restrictions, create orders, publish client
-communication, or promote support.
+does not approve suitability, change mandate state, clear product/country
+restrictions, create orders, publish client communication, or promote support.
+`src/app/application/mandate_restriction_live_proof.py`,
+`scripts/generate_mandate_restriction_live_proof.py`, and
+`make mandate-restriction-live-proof-contract-gate` define a source-safe Advise
+mandate/restriction live-proof path. A valid artifact referenced through
+`LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF` clears only the live restriction
+source proof blocker when current `AdvisoryPolicyEvaluationRecord:v1` evidence
+carries an explicit source-owned restriction diagnostic; generic Advise policy
+diagnostics do not validate this proof.
 A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof
@@ -1022,6 +1029,8 @@ A valid missing risk-profile live-proof artifact clears only the Advise
 risk-profile live-source blocker.
 A valid Manage mandate live-proof artifact clears only the portfolio-scoped
 Manage action-register source blocker.
+A valid mandate/restriction live-proof artifact clears only the Advise live
+restriction source blocker.
 Concentration still
 carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries live Performance,
@@ -1039,9 +1048,11 @@ proof is supplied.
 Missing risk-profile review still carries typed Advise risk-profile source
 product, data-mesh, Workbench, client-publication, and supported-feature
 blockers after live Advise risk-profile proof is supplied.
-Mandate/restriction review still carries live restriction source proof, typed
-restriction source product, Workbench, data-mesh, client-publication, and
-supported-feature blockers.
+Mandate/restriction review still carries typed restriction source product,
+Workbench, data-mesh, client-publication, and supported-feature blockers after
+live Advise restriction proof is supplied, and it still does not clear
+restrictions, change mandate state, approve policy/suitability/proposals, or
+create rebalance/order authority.
 Low-income / liquidity shortfall still carries Workbench, data-mesh,
 client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding
