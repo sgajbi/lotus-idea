@@ -182,6 +182,11 @@ def _opportunity_archetype_proof_artifact_inputs(
             artifact_name="Missing suitability live proof",
             ref_name="Missing suitability live proof artifact",
         ),
+        "missing_risk_profile_live": _proof_artifact_input(
+            args.missing_risk_profile_live_proof,
+            artifact_name="Missing risk-profile live proof",
+            ref_name="Missing risk-profile live proof artifact",
+        ),
     }
 
 

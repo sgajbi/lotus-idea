@@ -73,6 +73,7 @@ make core-benchmark-assignment-live-proof-contract-gate
 make low-income-core-cashflow-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
+make missing-risk-profile-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make implementation-proof-readiness-check
 make runtime-trust-telemetry-preview-check
@@ -305,10 +306,12 @@ Persistence adapter validation:
     Lotus Core cashflow live-proof artifact remains source-safe and can clear
     only the namespaced low-income Core cashflow source blocker when valid
     evidence is supplied.
-    `tests/unit/test_missing_suitability_live_proof.py` and
-    `make missing-suitability-live-proof-contract-gate` prove the optional
-    Lotus Advise policy-evaluation live-proof artifact remains source-safe and
-    can clear only the namespaced missing-suitability Advise source blocker
+    `tests/unit/test_missing_suitability_live_proof.py`,
+    `tests/unit/test_missing_risk_profile_live_proof.py`,
+    `make missing-suitability-live-proof-contract-gate`, and
+    `make missing-risk-profile-live-proof-contract-gate` prove the optional
+    Lotus Advise policy-evaluation and risk-profile live-proof artifacts remain
+    source-safe and can clear only their namespaced Advise source blockers
     when valid evidence is supplied.
     `tests/unit/test_implementation_proof_readiness.py`,
     `tests/unit/test_generate_implementation_proof_readiness.py`, and

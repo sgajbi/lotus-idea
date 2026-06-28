@@ -31,6 +31,9 @@ from app.application.low_income_core_cashflow_live_proof import (
 from app.application.manage_mandate_live_proof import MANAGE_MANDATE_LIVE_PROOF_ENV
 from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
 from app.application.missing_suitability_live_proof import MISSING_SUITABILITY_LIVE_PROOF_ENV
+from app.application.missing_risk_profile_live_proof import (
+    MISSING_RISK_PROFILE_LIVE_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
@@ -181,5 +184,10 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--missing-suitability-live-proof",
         MISSING_SUITABILITY_LIVE_PROOF_ENV,
         "Optional lotus-advise missing suitability live source proof artifact path.",
+    ),
+    (
+        "--missing-risk-profile-live-proof",
+        MISSING_RISK_PROFILE_LIVE_PROOF_ENV,
+        "Optional lotus-advise missing risk-profile live source proof artifact path.",
     ),
 )

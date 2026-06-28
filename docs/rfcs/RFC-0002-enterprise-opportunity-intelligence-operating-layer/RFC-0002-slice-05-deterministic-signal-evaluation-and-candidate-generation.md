@@ -423,9 +423,15 @@ Additional implemented missing risk profile foundation:
    current/not-eligible, stale, expired, review-due, missing-source,
    missing-posture, duplicate, entitlement-denied, source-unavailable, generic
    suitability diagnostic suppression, and request-routing cases.
-6. This foundation does not include a typed Advise risk-profile source product,
-   live Advise risk-profile proof, data-mesh certification, Workbench proof,
-   client-publication approval, or supported-feature promotion.
+6. `src/app/application/missing_risk_profile_live_proof.py`,
+   `scripts/generate_missing_risk_profile_live_proof.py`, and
+   `make missing-risk-profile-live-proof-contract-gate` define a source-safe
+   Advise risk-profile diagnostic proof artifact. A valid artifact can clear
+   only `opportunity_archetype_advise_risk_profile_live_source_proof_missing`
+   in aggregate readiness.
+7. This foundation does not include a typed Advise risk-profile source product,
+   data-mesh certification, Workbench proof, client-publication approval, or
+   supported-feature promotion.
 
 Additional implemented mandate/restriction review foundation:
 

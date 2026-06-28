@@ -24,6 +24,10 @@ from app.application.missing_suitability_live_proof import (
     MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
     missing_suitability_live_proof_is_valid,
 )
+from app.application.missing_risk_profile_live_proof import (
+    MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
+    missing_risk_profile_live_proof_is_valid,
+)
 from app.application.performance_underperformance_live_proof import (
     PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
     performance_underperformance_live_proof_is_valid,
@@ -60,6 +64,8 @@ def _apply_opportunity_archetype_proofs(
     manage_mandate_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
+    missing_risk_profile_live_proof: Mapping[str, object] | None,
+    missing_risk_profile_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if source_ingestion_live_proof_valid:
         capabilities = tuple(
@@ -132,6 +138,16 @@ def _apply_opportunity_archetype_proofs(
             _apply_missing_suitability_live_proof(
                 capability,
                 missing_suitability_live_proof_ref,
+            )
+            for capability in capabilities
+        )
+    if missing_risk_profile_live_proof and missing_risk_profile_live_proof_is_valid(
+        missing_risk_profile_live_proof
+    ):
+        capabilities = tuple(
+            _apply_missing_risk_profile_live_proof(
+                capability,
+                missing_risk_profile_live_proof_ref,
             )
             for capability in capabilities
         )
@@ -231,4 +247,16 @@ def _apply_missing_suitability_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
         proof_ref=missing_suitability_live_proof_ref,
+    )
+
+
+def _apply_missing_risk_profile_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    missing_risk_profile_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
+        proof_ref=missing_risk_profile_live_proof_ref,
     )
