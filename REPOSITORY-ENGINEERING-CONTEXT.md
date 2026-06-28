@@ -1603,7 +1603,11 @@ business/operator endpoints must name an `idea.*` capability, document
 product-safe 403 behavior, preserve Gateway and Workbench boundaries, preserve
 the no-supported-feature-promotion boundary, reference
 `scripts/openapi_quality_gate.py` evidence, and cite bounded operation-event
-test evidence before remaining `certified`.
+test evidence before remaining `certified`. Certified business/operator
+endpoints must also cite at least one non-operation-event integration API
+behavior test and at least one negative or degraded-path test. This keeps API
+certification aligned to the test pyramid and prevents schema-only, unit-only,
+or telemetry-only evidence from being treated as implementation proof.
 For endpoints with implemented bounded read-only Gateway publication, the same
 gate also requires `docs/operations/endpoint-certification-ledger.json` to name
 the exact `lotus-gateway` route and to keep Workbench proof, data-product

@@ -28,7 +28,10 @@ blocks weak certification by requiring:
 9. bounded operation-event test evidence for every certified business/operator endpoint,
 10. exact bounded read-only `lotus-gateway` route citation before a ledger entry can claim Gateway
     publication, while still preserving Workbench, data-product, client-ready publication, and
-    supported-feature boundaries.
+    supported-feature boundaries,
+11. at least one non-operation-event integration API behavior test and at least one negative or
+    degraded-path test reference for every certified business/operator endpoint, so endpoint
+    certification cannot be based only on schema examples, unit tests, or telemetry assertions.
 
 ## Certified Foundation Endpoints
 

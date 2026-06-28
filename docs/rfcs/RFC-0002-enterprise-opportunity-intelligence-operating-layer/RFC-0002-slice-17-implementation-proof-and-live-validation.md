@@ -28,12 +28,18 @@ Prove the complete supported opportunity journey end to end.
 5. Unit and integration tests prove blocked posture, source-safe output,
    permission denial, timezone validation, unavailable-contract handling, and
    bounded `implementation_proof_readiness_read` operation events.
-6. `GET /api/v1/downstream-realization/readiness` now supplies the downstream
+6. `make endpoint-certification-gate` now requires every certified
+   business/operator endpoint to cite both a non-operation-event integration
+   API behavior test and negative or degraded-path test evidence, in addition
+   to existing OpenAPI, product-safe error, capability, boundary, and
+   operation-event evidence. This prevents API certification from relying only
+   on schema examples, unit-only assertions, or telemetry-only tests.
+7. `GET /api/v1/downstream-realization/readiness` now supplies the downstream
    realization proof family used by the aggregate diagnostic. It reports
    Advise, Manage, Report, Render, and Archive blockers with current
    conversion/report workflow counts, while preserving the no-downstream-call
    and no-supported-feature boundary.
-7. `GET /api/v1/outbox-delivery/readiness` and
+8. `GET /api/v1/outbox-delivery/readiness` and
    `POST /api/v1/outbox-delivery/run-once` now supply the outbox-delivery
    proof family used by the aggregate diagnostic. Readiness reports broker,
    downstream-consumer, platform mesh-event, Gateway/Workbench, and

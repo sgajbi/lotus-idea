@@ -36,6 +36,19 @@ BOUNDARY_TERMS = ("Gateway", "Workbench", "supported-feature promotion")
 CAPABILITY_PATTERN = re.compile(r"\bidea\.[a-z0-9.-]+\b")
 TEST_REFERENCE_PATTERN = re.compile(r"^(?P<path>tests/.+\.py)::(?P<test>[A-Za-z_][A-Za-z0-9_]*)$")
 OPERATION_EVENT_TEST_TERMS = ("operation_event", "operation_events")
+NEGATIVE_OR_DEGRADED_TEST_TERMS = (
+    "blocked",
+    "conflict",
+    "denied",
+    "draining",
+    "invalid",
+    "not_found",
+    "reject",
+    "report",
+    "require",
+    "stale",
+    "unavailable",
+)
 GATEWAY_PUBLICATION_ROUTES = {
     ("GET", "/api/v1/idea-candidates/{candidateId}"): (
         "GET /api/v1/ideas/candidates/{candidate_id}"
@@ -185,8 +198,41 @@ def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
             f"{operation}: certified endpoint must reference bounded operation-event test evidence"
         )
 
+    errors.extend(_validate_certified_endpoint_test_pyramid(operation, test_evidence))
     errors.extend(_validate_gateway_publication_posture(endpoint))
 
+    return errors
+
+
+def _validate_certified_endpoint_test_pyramid(
+    operation: tuple[str, str], test_evidence: object
+) -> list[str]:
+    if not isinstance(test_evidence, list):
+        return [f"{operation}: certified endpoint test_evidence must be a list"]
+
+    references = [str(reference) for reference in test_evidence]
+    errors: list[str] = []
+    if not any(
+        reference.startswith("tests/integration/")
+        and not any(term in reference for term in OPERATION_EVENT_TEST_TERMS)
+        for reference in references
+    ):
+        errors.append(
+            f"{operation}: certified endpoint must reference at least one integration API "
+            "behavior test"
+        )
+
+    test_names = [
+        reference.split("::", maxsplit=1)[1].lower()
+        for reference in references
+        if "::" in reference
+    ]
+    if not any(
+        term in test_name for test_name in test_names for term in NEGATIVE_OR_DEGRADED_TEST_TERMS
+    ):
+        errors.append(
+            f"{operation}: certified endpoint must reference negative or degraded-path test evidence"
+        )
     return errors
 
 
