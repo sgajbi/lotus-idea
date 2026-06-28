@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, and low-income / liquidity shortfall are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, low-income / liquidity shortfall, and missing-benchmark review are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
 
 ## Outcome
 
@@ -32,8 +32,8 @@ capabilities exist.
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
    concentration-risk, underperformance, allocation-drift, high-volatility /
-   drawdown, missing-suitability, low-income / liquidity-shortfall, and
-   policy-only bond-maturity review foundations.
+   drawdown, missing-suitability, low-income / liquidity-shortfall,
+   missing-benchmark review, and policy-only bond-maturity review foundations.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
@@ -50,7 +50,10 @@ capabilities exist.
    the benchmark-assignment source-ref blocker, low-income Core cashflow proof
    clears the live Core cashflow source blocker, Manage mandate proof clears the
    portfolio-scoped Manage action-register blocker, and Advise
-   missing-suitability proof clears the live Advise policy blocker. Mandate
+   missing-suitability proof clears the live Advise policy blocker. The
+   missing-benchmark foundation currently records policy/source-port proof
+   only and keeps live Core source proof plus Performance benchmark-readiness
+   evidence blocked. Mandate
    performance/risk health, Core portfolio-state, data-mesh certification,
    Workbench proof, client-publication, and supported-feature blockers remain
    intact.
@@ -133,7 +136,15 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    reinvestment advice, replacement product recommendation, suitability,
    Workbench proof, data-mesh certification, client publication, or
    supported-feature promotion is implied.
-11. Remaining planned archetypes still require source adapters, deterministic
+11. Missing-benchmark review now has a bounded deterministic policy and Core
+   benchmark-assignment source-port wrapper. It can create only advisor-review
+   evidence-gap candidates from Core-owned missing, inactive, ineffective, or
+   unversioned benchmark assignment posture. Live Core source proof,
+   Performance benchmark-readiness source refs, Workbench proof, data-mesh
+   certification, client publication, supported-feature promotion, benchmark
+   assignment, benchmark methodology, and benchmark-return calculation remain
+   blocked.
+12. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate

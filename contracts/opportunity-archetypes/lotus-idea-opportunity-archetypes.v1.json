@@ -493,6 +493,62 @@
         "client_publication_not_ready",
         "supported_feature_promotion_missing"
       ]
+    },
+    {
+      "archetype_id": "missing-benchmark-review",
+      "display_name": "Missing benchmark review",
+      "implementation_status": "partially_implemented",
+      "source_authority_status": "source_owned",
+      "first_supported_journey": false,
+      "advisor_audience": "advisor",
+      "source_products": [
+        "lotus-core:BenchmarkAssignment:v1",
+        "lotus-performance:ReturnsSeriesBundle:v1"
+      ],
+      "lotus_idea_responsibility": "Convert Core-owned missing, inactive, ineffective, or unversioned benchmark-assignment posture into an evidence-gap review candidate without assigning a benchmark, calculating benchmark returns, changing methodology, or promoting support.",
+      "evidence_refs": [
+        "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+        "src/app/domain/missing_benchmark_signal.py",
+        "src/app/application/missing_benchmark_signal.py",
+        "src/app/ports/core_sources.py",
+        "src/app/infrastructure/lotus_core_sources.py",
+        "tests/unit/test_missing_benchmark_signal_evaluation.py",
+        "tests/unit/test_missing_benchmark_application.py",
+        "tests/unit/test_lotus_core_sources.py"
+      ],
+      "canonical_scenarios": [
+        {
+          "scenario_id": "advisor-missing-benchmark-review",
+          "scenario_status": "bounded_foundation",
+          "scenario_type": "governance_gap_review",
+          "audience": "advisor",
+          "proof_status": "not_client_demo_ready",
+          "supported_feature_promoted": false,
+          "required_evidence": [
+            "Core benchmark assignment source ref",
+            "missing, inactive, ineffective, or unversioned benchmark posture",
+            "source freshness",
+            "advisor review posture",
+            "blocked benchmark assignment authority boundary"
+          ],
+          "remaining_blockers": [
+            "missing_benchmark_live_core_source_proof_missing",
+            "performance_benchmark_readiness_source_ref_missing",
+            "workbench_product_proof_missing",
+            "data_mesh_not_certified",
+            "client_publication_not_ready",
+            "supported_feature_promotion_missing"
+          ]
+        }
+      ],
+      "blockers": [
+        "missing_benchmark_live_core_source_proof_missing",
+        "performance_benchmark_readiness_source_ref_missing",
+        "workbench_product_proof_missing",
+        "data_mesh_not_certified",
+        "client_publication_not_ready",
+        "supported_feature_promotion_missing"
+      ]
     }
   ]
 }
