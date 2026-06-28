@@ -16,6 +16,12 @@ promotion.
 | Downstream realization | Advise, Manage, and Report route-foundation proof can be consumed; bounded Report/Render/Archive materialization proof can be consumed when sibling `lotus-report` evidence is present. | Describe domain boundaries; do not claim suitability, rebalance/execution, client publication, or supported-feature promotion. |
 | Data mesh | Proposed products and readiness diagnostics exist. | Present as day-one governance foundation, not certified data-product status. |
 
+Missing-benchmark review is an internal bounded foundation only. It can create
+advisor-review evidence-gap candidates from Core-owned benchmark-assignment
+posture, but it does not assign benchmarks, calculate benchmark returns,
+certify methodology, prove Workbench behavior, authorize client publication, or
+promote a supported feature.
+
 ## Client Demo Flow
 
 ```mermaid

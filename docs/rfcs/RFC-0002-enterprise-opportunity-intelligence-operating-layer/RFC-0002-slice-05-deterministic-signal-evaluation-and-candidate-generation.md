@@ -213,6 +213,33 @@ Additional implemented underperformance foundation:
    by aggregate readiness. It does not assign benchmarks, calculate benchmark
    returns, certify benchmark methodology, or promote underperformance support.
 
+Additional implemented missing-benchmark foundation:
+
+1. `src/app/domain/missing_benchmark_signal.py` defines
+   `MissingBenchmarkSignalPolicy`, `MissingBenchmarkSignalInput`, and
+   `evaluate_missing_benchmark_signal` for advisor-review evidence-gap
+   candidates when Core-owned benchmark assignment evidence is missing,
+   inactive, ineffective for the as-of date, or missing a version.
+2. The evaluator consumes only `lotus-core:BenchmarkAssignment:v1` source refs,
+   freshness, entitlement posture, benchmark identity resolution, effective
+   assignment posture, active status, and assignment version presence. It does
+   not assign benchmarks, calculate benchmark returns, certify methodology, or
+   infer suitability.
+3. `src/app/application/missing_benchmark_signal.py` adds direct command and
+   Core source-port wrappers over the existing
+   `CoreBenchmarkAssignmentSourcePort`, mapping source unavailable and
+   entitlement-denied states to blocked outcomes without candidate creation.
+4. `tests/unit/test_missing_benchmark_signal_evaluation.py` and
+   `tests/unit/test_missing_benchmark_application.py` cover positive
+   evidence-gap creation, ready-assignment suppression, inactive or missing
+   assignment posture, stale/missing source, entitlement denial, duplicate
+   suppression, source-unavailable handling, and source request mapping.
+5. The opportunity archetype contract records `missing-benchmark-review` as a
+   non-promoted bounded foundation. Remaining blockers include live Core
+   missing-benchmark source proof, Performance benchmark-readiness source ref,
+   data-mesh certification, Workbench proof, client publication, and
+   supported-feature promotion.
+
 Additional implemented allocation-drift / mandate-review foundation:
 
 1. `src/app/domain/signal_evaluation.py` now defines

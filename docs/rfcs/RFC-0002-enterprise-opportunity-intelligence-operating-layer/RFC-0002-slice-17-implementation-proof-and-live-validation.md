@@ -317,6 +317,13 @@ Prove the complete supported opportunity journey end to end.
     preserving live Performance, data-mesh, Workbench, client-publication, and
     supported-feature blockers. The proof does not assign benchmarks,
     calculate benchmark returns, or certify benchmark methodology.
+33. `src/app/domain/missing_benchmark_signal.py` and
+    `src/app/application/missing_benchmark_signal.py` now define a bounded
+    missing-benchmark review policy and Core benchmark-assignment source-port
+    wrapper. This is deterministic policy/source-port proof only; live Core
+    missing-benchmark source proof, Performance benchmark-readiness evidence,
+    data-mesh, Workbench, client-publication, and supported-feature blockers
+    remain intact.
 33. `src/app/application/low_income_core_cashflow_live_proof.py`,
     `scripts/generate_low_income_core_cashflow_live_proof.py`, and
     `make low-income-core-cashflow-live-proof-contract-gate` now define and

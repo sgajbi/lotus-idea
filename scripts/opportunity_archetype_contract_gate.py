@@ -26,6 +26,7 @@ REQUIRED_ARCHETYPES = {
     "high-volatility-drawdown-review",
     "bond-maturity-reinvestment",
     "low-income-liquidity-shortfall",
+    "missing-benchmark-review",
     "missing-suitability-context",
 }
 REQUIRED_SOURCE_OF_TRUTH = {
@@ -147,6 +148,16 @@ REQUIRED_BOND_MATURITY_EVIDENCE = {
     "tests/unit/test_bond_maturity_application.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
+REQUIRED_MISSING_BENCHMARK_EVIDENCE = {
+    "src/app/domain/missing_benchmark_signal.py",
+    "src/app/application/missing_benchmark_signal.py",
+    "src/app/ports/core_sources.py",
+    "src/app/infrastructure/lotus_core_sources.py",
+    "tests/unit/test_missing_benchmark_signal_evaluation.py",
+    "tests/unit/test_missing_benchmark_application.py",
+    "tests/unit/test_lotus_core_sources.py",
+    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
@@ -156,6 +167,7 @@ FOUNDATION_ARCHETYPES = {
     "concentration-risk-review",
     "high-volatility-drawdown-review",
     "low-income-liquidity-shortfall",
+    "missing-benchmark-review",
     "missing-suitability-context",
     "underperformance-review",
 }
@@ -341,8 +353,7 @@ def _validate_archetypes(
                 "missing-suitability-context evidence_refs missing: " + ", ".join(missing_evidence)
             )
 
-    errors.extend(_validate_low_income_evidence(archetypes))
-    errors.extend(_validate_bond_maturity_evidence(archetypes))
+    errors.extend(_validate_foundation_evidence(archetypes))
 
     for archetype_id, archetype in archetypes.items():
         if archetype_id == "high-cash-idle-liquidity":
@@ -353,6 +364,14 @@ def _validate_archetypes(
             continue
         if archetype.implementation_status not in PLANNED_ARCHETYPE_STATUSES:
             errors.append(f"{archetype_id}: non-initial archetypes must remain planned")
+    return errors
+
+
+def _validate_foundation_evidence(archetypes: dict[str, object]) -> list[str]:
+    errors: list[str] = []
+    errors.extend(_validate_low_income_evidence(archetypes))
+    errors.extend(_validate_bond_maturity_evidence(archetypes))
+    errors.extend(_validate_missing_benchmark_evidence(archetypes))
     return errors
 
 
@@ -380,6 +399,19 @@ def _validate_bond_maturity_evidence(
     if not missing_evidence:
         return []
     return ["bond-maturity-reinvestment evidence_refs missing: " + ", ".join(missing_evidence)]
+
+
+def _validate_missing_benchmark_evidence(
+    archetypes: dict[str, object],
+) -> list[str]:
+    missing_benchmark = archetypes.get("missing-benchmark-review")
+    if missing_benchmark is None:
+        return []
+    evidence_refs = getattr(missing_benchmark, "evidence_refs", ())
+    missing_evidence = sorted(REQUIRED_MISSING_BENCHMARK_EVIDENCE - set(evidence_refs))
+    if not missing_evidence:
+        return []
+    return ["missing-benchmark-review evidence_refs missing: " + ", ".join(missing_evidence)]
 
 
 def _validate_evidence_refs(

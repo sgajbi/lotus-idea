@@ -935,8 +935,9 @@ contract at
 The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review, underperformance review,
 allocation drift / mandate review, bond maturity / reinvestment,
-high-volatility review, missing suitability context, and low-income /
-liquidity shortfall as non-promoted bounded foundations.
+high-volatility review, missing suitability context, low-income /
+liquidity shortfall, and missing-benchmark review as non-promoted bounded
+foundations.
 Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
 source-safe live-proof artifact contract, and focused unit tests.
@@ -1005,6 +1006,14 @@ Low-income / liquidity shortfall still carries Workbench, data-mesh,
 client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding
 advice, treasury instruction, suitability, or planning objectives.
+Missing-benchmark review is backed by deterministic policy and the existing
+Lotus Core benchmark-assignment source port. It can create only an
+advisor-review evidence-gap candidate when Core-owned benchmark identity,
+effective assignment, active status, or assignment version posture is missing;
+it does not assign a benchmark, calculate benchmark returns, certify
+methodology, or promote support. It still carries missing-benchmark live Core
+source proof, Performance benchmark-readiness source-ref, data-mesh,
+Workbench, client-publication, and supported-feature blockers.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion

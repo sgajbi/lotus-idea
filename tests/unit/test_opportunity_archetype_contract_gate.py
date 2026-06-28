@@ -219,6 +219,39 @@ def test_opportunity_archetype_contract_records_bond_maturity_foundation_without
     assert bond_maturity.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_missing_benchmark_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    missing_benchmark = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "missing-benchmark-review"
+    )
+
+    assert missing_benchmark.implementation_status == "partially_implemented"
+    assert missing_benchmark.first_supported_journey is False
+    assert "lotus-core:BenchmarkAssignment:v1" in missing_benchmark.source_products
+    assert "lotus-performance:ReturnsSeriesBundle:v1" in missing_benchmark.source_products
+    assert "src/app/domain/missing_benchmark_signal.py" in missing_benchmark.evidence_refs
+    assert "src/app/application/missing_benchmark_signal.py" in missing_benchmark.evidence_refs
+    assert "src/app/ports/core_sources.py" in missing_benchmark.evidence_refs
+    assert "src/app/infrastructure/lotus_core_sources.py" in missing_benchmark.evidence_refs
+    assert "tests/unit/test_missing_benchmark_signal_evaluation.py" in (
+        missing_benchmark.evidence_refs
+    )
+    assert "tests/unit/test_missing_benchmark_application.py" in missing_benchmark.evidence_refs
+    assert "tests/unit/test_lotus_core_sources.py" in missing_benchmark.evidence_refs
+    assert "missing_benchmark_live_core_source_proof_missing" in missing_benchmark.blockers
+    assert "performance_benchmark_readiness_source_ref_missing" in (missing_benchmark.blockers)
+    assert "data_mesh_not_certified" in missing_benchmark.blockers
+    assert "client_publication_not_ready" in missing_benchmark.blockers
+    assert "supported_feature_promotion_missing" in missing_benchmark.blockers
+    assert missing_benchmark.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert missing_benchmark.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()
@@ -294,6 +327,24 @@ def test_opportunity_archetype_contract_gate_rejects_missing_suitability_evidenc
     assert (
         "missing-suitability-context evidence_refs missing: "
         "src/app/application/missing_suitability_signal.py"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_missing_benchmark_evidence() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    missing_benchmark = next(
+        archetype
+        for archetype in payload["archetypes"]
+        if archetype["archetype_id"] == "missing-benchmark-review"
+    )
+    missing_benchmark["evidence_refs"].remove("src/app/application/missing_benchmark_signal.py")
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "missing-benchmark-review evidence_refs missing: "
+        "src/app/application/missing_benchmark_signal.py"
     ) in errors
 
 

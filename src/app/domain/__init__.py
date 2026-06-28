@@ -80,6 +80,11 @@ from app.domain.missing_suitability_signal import (
     MissingSuitabilityContextSignalPolicy,
     evaluate_missing_suitability_context_signal,
 )
+from app.domain.missing_benchmark_signal import (
+    MissingBenchmarkSignalInput,
+    MissingBenchmarkSignalPolicy,
+    evaluate_missing_benchmark_signal,
+)
 from app.domain.bond_maturity_signal import (
     BondMaturitySignalInput,
     BondMaturitySignalPolicy,
@@ -264,6 +269,8 @@ __all__ = [
     "MandateHealthSignalPolicy",
     "MissingSuitabilityContextSignalInput",
     "MissingSuitabilityContextSignalPolicy",
+    "MissingBenchmarkSignalInput",
+    "MissingBenchmarkSignalPolicy",
     "UnderperformanceSignalInput",
     "UnderperformanceSignalPolicy",
     "CandidatePersistenceDecision",
@@ -304,6 +311,7 @@ __all__ = [
     "evaluate_high_volatility_signal",
     "evaluate_low_income_signal",
     "evaluate_mandate_health_signal",
+    "evaluate_missing_benchmark_signal",
     "evaluate_missing_suitability_context_signal",
     "evaluate_underperformance_signal",
     "DEFAULT_REVIEW_ACTION_POLICY",
