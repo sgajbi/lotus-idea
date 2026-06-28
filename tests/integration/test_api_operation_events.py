@@ -12,6 +12,7 @@ import app.api.candidate_lifecycle as candidate_lifecycle_api
 import app.api.conversion_governance as conversion_governance_api
 import app.api.idea_signals as idea_signals_api
 import app.api.missing_risk_profile_signals as missing_risk_profile_signals_api
+import app.api.missing_suitability_signals as missing_suitability_signals_api
 import app.api.report_evidence as report_evidence_api
 import app.api.review_queues as review_queues_api
 import app.api.review_workflow as review_workflow_api
@@ -94,6 +95,31 @@ def missing_risk_profile_payload() -> dict[str, Any]:
         "riskProfileStatus": "STALE",
         "riskProfileEffectiveForAsOfDate": False,
         "riskProfileReviewDue": True,
+        "entitlementAllowed": True,
+    }
+
+
+def missing_suitability_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "policyRef": {
+            "productId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+            "sourceSystem": "lotus-advise",
+            "productVersion": "v1",
+            "route": "/advisory/policy-evaluations/pev_001/workflow",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:missing-suitability-context-review",
+            "dataQualityStatus": "quality_passed",
+            "freshness": "current",
+        },
+        "evaluationStatus": "PENDING_REVIEW",
+        "openRequirementCount": 2,
+        "blockedRequirementCount": 0,
+        "signOffStatus": "PENDING_REVIEW",
+        "signOffBlockerCount": 1,
+        "clientReadyPublication": "BLOCKED",
         "entitlementAllowed": True,
     }
 
@@ -492,6 +518,22 @@ def test_missing_risk_profile_signal_api_emits_bounded_operation_event(
     response = client.post(
         "/api/v1/idea-signals/missing-risk-profile/evaluate",
         json=missing_risk_profile_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-advise", False, None)]
+
+
+def test_missing_suitability_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, missing_suitability_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-suitability/evaluate",
+        json=missing_suitability_payload(),
         headers=signal_headers(),
     )
 

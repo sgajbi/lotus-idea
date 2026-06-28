@@ -711,6 +711,13 @@ caller-supplied, source-owned Advise risk-profile posture evidence, enforces
 does not approve risk profiling, suitability, policy, proposal, client
 publication, typed data-product certification, Gateway, Workbench, or supported
 feature promotion.
+`POST /api/v1/idea-signals/missing-suitability/evaluate` accepts
+caller-supplied, source-owned Advise policy-evaluation evidence, enforces
+`idea.signal.evaluate`, returns source-safe compliance-review candidate or
+blocked posture, redacts raw source route/hash details from candidate source
+refs, and does not approve suitability, policy, proposal, sign-off, client
+publication, data-product certification, Gateway, Workbench, or supported
+feature promotion.
 `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` uses the same source
 evidence contract, requires `idea.candidate.persist` plus `Idempotency-Key`,
 and persists created candidates through the internal in-memory
