@@ -60,6 +60,35 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/bond-maturity/evaluate",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Core holdings maturity evidence for bond-maturity / reinvestment review posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Core holdings maturity source refs, next maturity date, maturing position count, and entitlement posture.",
+      "when_not_to_use": "Do not use as a live upstream source-ingestion API, replacement product recommendation, reinvestment advice, maturity schedule authority, planning suitability approval, order/execution authority, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedNextMaturityDate\":\"2026-07-10\",\"sourceReportedMaturingPositionCount\":2,\"holdingsRef\":{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/positions\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:bond-maturity-holdings\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"maturityFactRef\":{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/positions#maturity-date\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:bond-maturity-facts\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"bond_maturity\",\"reasonCodes\":[\"maturity_window\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_bond_maturity_8d57adbf52f7f5a7\",\"family\":\"bond_maturity\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_bond_maturity_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"bond-maturity-review-v1\",\"sourceSignalIds\":[\"signal_bond_maturity_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"bond_maturity\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"bond_maturity\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_signal_api_returns_review_candidate",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_signal_api_reports_outside_window_not_eligible",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_signal_api_requires_signal_permission",
+        "tests/integration/test_api_operation_events.py::test_bond_maturity_signal_api_emits_bounded_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/mandate-restriction/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

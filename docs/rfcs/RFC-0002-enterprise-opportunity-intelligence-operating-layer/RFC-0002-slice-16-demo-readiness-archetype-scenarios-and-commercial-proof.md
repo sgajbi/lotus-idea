@@ -146,12 +146,15 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    suitability, treasury instruction, Workbench proof, data-mesh certification,
    client publication, or supported-feature promotion.
 11. Bond maturity / reinvestment now has a bounded deterministic policy and
-   Core `HoldingsAsOf:v1` maturity-date source-port/adapter/live-proof
-   foundation. A valid source-safe artifact clears only the live Core
-   maturity-source blocker; no reinvestment advice, replacement product
-   recommendation, suitability,
-   Workbench proof, data-mesh certification, client publication, or
-   supported-feature promotion is implied.
+   Core `HoldingsAsOf:v1` maturity-date source-port/adapter/live-proof plus
+   caller-supplied API foundation. The API can create only advisor-review
+   candidates from Core-owned maturity facts and cannot recommend products,
+   calculate reinvestment advice, approve suitability, create orders, publish
+   client communication, or promote support. A valid source-safe artifact
+   clears only the live Core maturity-source blocker; no replacement product
+   recommendation, reinvestment advice, maturity schedule authority,
+   suitability, order execution, Workbench proof, data-mesh certification,
+   client publication, or supported-feature promotion is implied.
 12. Missing-benchmark review now has a bounded deterministic policy and Core
    benchmark-assignment source-port wrapper. It can create only advisor-review
    evidence-gap candidates from Core-owned missing, inactive, ineffective, or

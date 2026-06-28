@@ -73,6 +73,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("POST", "/api/v1/idea-candidates/{candidateId}/feedback"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/lifecycle-transitions"),
         ("POST", "/api/v1/idea-candidates/{candidateId}/review-actions"),
+        ("POST", "/api/v1/idea-signals/bond-maturity/evaluate"),
         ("POST", "/api/v1/idea-signals/high-cash/evaluate"),
         ("POST", "/api/v1/idea-signals/high-cash/evaluate-and-persist"),
         ("POST", "/api/v1/idea-signals/low-income/evaluate"),

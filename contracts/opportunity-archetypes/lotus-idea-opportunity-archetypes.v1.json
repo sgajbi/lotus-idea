@@ -282,14 +282,17 @@
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
         "src/app/domain/bond_maturity_signal.py",
         "src/app/application/bond_maturity_signal.py",
+        "src/app/api/bond_maturity_signals.py",
         "src/app/application/bond_maturity_live_proof.py",
         "src/app/infrastructure/lotus_core_sources.py",
         "src/app/ports/core_sources.py",
+        "POST /api/v1/idea-signals/bond-maturity/evaluate",
         "scripts/generate_bond_maturity_live_proof.py",
         "make bond-maturity-live-proof-contract-gate",
         "tests/unit/test_bond_maturity_signal_evaluation.py",
         "tests/unit/test_bond_maturity_application.py",
-        "tests/unit/test_bond_maturity_live_proof.py"
+        "tests/unit/test_bond_maturity_live_proof.py",
+        "tests/integration/test_bond_maturity_signal_api.py"
       ],
       "canonical_scenarios": [
         {

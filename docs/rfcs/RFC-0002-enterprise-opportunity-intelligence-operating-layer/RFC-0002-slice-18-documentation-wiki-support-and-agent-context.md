@@ -225,12 +225,13 @@ durable operating-context enforcement:
     performance health, mandate risk health, data mesh, Workbench behavior,
     client publication, rebalance authority, action authority, order execution,
     or supported-feature promotion.
-29. README, repository context, RFC evidence, demo claims, and wiki source now
-    describe the bounded bond-maturity / reinvestment Core HoldingsAsOf
-    maturity-date live-proof foundation while preserving the boundary that no
+29. README, repository context, API certification docs, RFC evidence, demo
+    claims, and wiki source now describe the bounded bond-maturity /
+    reinvestment Core HoldingsAsOf maturity-date policy, caller-supplied API
+    foundation, and live-proof foundation while preserving the boundary that no
     data-mesh certification, Workbench product proof, client publication,
-    product recommendation, reinvestment advice, or supported-feature promotion
-    exists.
+    product recommendation, reinvestment advice, maturity schedule authority,
+    order execution, or supported-feature promotion exists.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and
@@ -238,8 +239,8 @@ Gateway/Workbench discovery proof only; it does not add full
 Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled
 runtime proof. The bond-maturity / reinvestment update records only
-deterministic policy and source-port truth; it does not prove source-backed
-generation or promote a client-ready reinvestment journey.
+deterministic policy, caller-supplied API, and source-port truth; it does not
+prove source-backed generation or promote a client-ready reinvestment journey.
 
 ## Required Work
 

@@ -157,16 +157,22 @@ retaining Workbench, data-mesh, client-publication, supported-feature,
 suitability, planning, funding-advice, and treasury-instruction boundaries.
 `src/app/domain/bond_maturity_signal.py`,
 `src/app/application/bond_maturity_signal.py`,
+`src/app/api/bond_maturity_signals.py`,
 `src/app/application/bond_maturity_live_proof.py`,
 `src/app/infrastructure/lotus_core_sources.py`, and
 `src/app/ports/core_sources.py` add the bounded bond-maturity / reinvestment
-policy, Core `HoldingsAsOf:v1` maturity-date adapter, and source-safe live
-proof contract. The policy can create only advisor-review candidates from
-Core-owned maturity facts, source refs, freshness, maturing holding count, and
-entitlement posture. It does not recommend a replacement product, calculate
-reinvestment advice, infer suitability, create orders, certify data mesh, prove
-Workbench behavior, approve client publication, or promote a supported feature.
-A valid Core maturity proof clears only the live Core maturity source blocker.
+policy, Core `HoldingsAsOf:v1` maturity-date adapter, bounded caller-supplied
+API foundation, and source-safe live proof contract. The policy and
+`POST /api/v1/idea-signals/bond-maturity/evaluate` can create only
+advisor-review candidates from Core-owned maturity facts, source refs,
+freshness, maturing holding count, and entitlement posture. The API enforces
+`idea.signal.evaluate` or advisor role, emits bounded operation events, redacts
+raw source route/hash details from candidate source refs, and does not fetch
+Core sources, recommend a replacement product, calculate reinvestment advice,
+infer planning suitability, create orders, publish client communication,
+certify data mesh, prove Workbench behavior, approve client publication, or
+promote a supported feature. A valid Core maturity proof clears only the live
+Core maturity source blocker.
 The allocation-drift foundation uses
 `src/app/ports/manage_sources.py`,
 `src/app/application/mandate_health_signal.py`, and
@@ -723,6 +729,15 @@ raw source route/hash details from candidate source refs, and does not infer
 client income needs, approve planning suitability, provide funding advice,
 issue treasury instructions, publish client communication, certify data
 products, prove Gateway/Workbench behavior, or promote a supported feature.
+`POST /api/v1/idea-signals/bond-maturity/evaluate` accepts caller-supplied,
+source-owned Core holdings maturity evidence, enforces `idea.signal.evaluate`
+capability or advisor role, returns deterministic advisor-review candidate,
+blocked, suppressed, or not-eligible posture, redacts raw source route/hash
+details from candidate source refs, and does not fetch Core sources, recommend
+replacement products, calculate reinvestment advice, own maturity schedule
+authority, approve planning suitability, create orders, publish client
+communication, certify data products, prove Gateway/Workbench behavior, or
+promote a supported feature.
 `POST /api/v1/idea-signals/missing-risk-profile/evaluate` accepts
 caller-supplied, source-owned Advise risk-profile posture evidence, enforces
 `idea.signal.evaluate`, returns source-safe candidate or blocked posture, and
@@ -1035,8 +1050,13 @@ source-reported projected cumulative cashflow consumption while blocking
 planning, funding-advice, treasury-instruction, suitability, Workbench,
 client-publication, and supported-feature claims. Bond maturity / reinvestment
 consumes governed Core `HoldingsAsOf:v1` maturity dates through a bounded
-source adapter and optional source-safe live proof; Workbench,
-client-publication, and supported-feature claims remain blocked.
+source adapter, `POST /api/v1/idea-signals/bond-maturity/evaluate` over
+caller-supplied Core holdings maturity evidence, and optional source-safe live
+proof; focused unit/integration tests prove source-reported next maturity date
+and maturing position count consumption while replacement product
+recommendation, reinvestment advice, maturity schedule authority, planning
+suitability, order execution, Workbench, data-mesh, client-publication, and
+supported-feature claims remain blocked.
 Mandate/restriction review is backed by deterministic policy,
 `src/app/application/mandate_restriction_signal.py`, and the bounded
 `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over
@@ -1280,12 +1300,15 @@ logs; fix or document the owned warning source instead.
    `lotus-risk`, `lotus-advise`, `lotus-manage`, `lotus-report`, and `lotus-ai`.
    `idea_repository.py` owns the central repository workflow protocols used by
    application orchestration, and `core_sources.py` owns the high-cash,
-   benchmark-assignment, and low-income Core evidence ports.
+   benchmark-assignment, bond-maturity, and low-income Core evidence ports.
 6. `src/app/infrastructure/`: HTTP/database/message adapters behind ports. The
    current Core adapter preserves source-data product refs, requires Core to
-   report cash weight explicitly rather than deriving it locally, and consumes
-   Core cashflow products for bounded low-income / liquidity-shortfall
-   review without moving cashflow methodology into `lotus-idea`. The layer also
+   report cash weight explicitly rather than deriving it locally, consumes Core
+   holdings maturity evidence for bounded bond-maturity / reinvestment review
+   without moving maturity-schedule authority or reinvestment advice into
+   `lotus-idea`, and consumes Core cashflow products for bounded low-income /
+   liquidity-shortfall review without moving cashflow methodology into
+   `lotus-idea`. The layer also
    contains source-safe downstream realization adapter foundations for
    Advise/Manage/Report handoff envelopes, migration execution helpers,
    PostgreSQL codec helpers, and `PostgresIdeaRepository`, which is tested as a
