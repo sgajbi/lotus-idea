@@ -30,6 +30,7 @@ class DownstreamRouteContractProfile:
     route_valid_field: str
     owner_repository: str
     source_authority: str
+    downstream_authority: str
     contract_source_authority: str
     contract_authority_field: str | None
     approved_producer_product: str
@@ -47,7 +48,8 @@ ADVISE_PROPOSAL_ROUTE_PROFILE = DownstreamRouteContractProfile(
     proof_scope="source_safe_advise_proposal_route_only",
     route_valid_field="adviseProposalRouteProofValid",
     owner_repository="lotus-advise",
-    source_authority="lotus-advise",
+    source_authority="lotus-idea",
+    downstream_authority="lotus-advise",
     contract_source_authority="lotus-idea",
     contract_authority_field="proposal_authority",
     approved_producer_product="lotus-idea:IdeaCandidate:v1",
@@ -81,6 +83,7 @@ MANAGE_ACTION_ROUTE_PROFILE = DownstreamRouteContractProfile(
     route_valid_field="manageActionRouteProofValid",
     owner_repository="lotus-manage",
     source_authority="lotus-manage",
+    downstream_authority="lotus-manage",
     contract_source_authority="lotus-manage",
     contract_authority_field=None,
     approved_producer_product="lotus-idea:IdeaCandidate:v1",
@@ -201,6 +204,7 @@ def _build_route_contract_proof_payload(
         "evidenceRefs": profile.evidence_refs,
         "targetRoute": profile.target_route,
         "sourceAuthority": profile.source_authority,
+        "downstreamAuthority": profile.downstream_authority,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": timezone_aware_generated_at_utc,
             "fileEvidencePresent": file_evidence_present,
@@ -240,6 +244,8 @@ def _route_contract_proof_is_valid(
     if payload.get("targetRoute") != profile.target_route:
         return False
     if payload.get("sourceAuthority") != profile.source_authority:
+        return False
+    if payload.get("downstreamAuthority") != profile.downstream_authority:
         return False
     if payload.get("downstreamExecutionProven") is not False:
         return False
@@ -323,7 +329,7 @@ def _contract_retains_downstream_authority(
     authority_field = profile.contract_authority_field
     if authority_field is None:
         return True
-    return payload.get(authority_field) == profile.source_authority
+    return payload.get(authority_field) == profile.downstream_authority
 
 
 def _downstream_contract_preserves_non_proof_boundaries(
