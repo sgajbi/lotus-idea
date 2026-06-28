@@ -13,6 +13,9 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
 from app.application.core_benchmark_assignment_live_proof import (
     CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
 )
+from app.application.core_portfolio_state_live_proof import (
+    CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
+)
 from app.application.downstream_route_contract_proof import (
     ADVISE_PROPOSAL_ROUTE_PROOF_ENV,
     MANAGE_ACTION_ROUTE_PROOF_ENV,
@@ -170,6 +173,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--core-benchmark-assignment-live-proof",
         CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF_ENV,
         "Optional lotus-core benchmark assignment live source proof artifact path.",
+    ),
+    (
+        "--core-portfolio-state-live-proof",
+        CORE_PORTFOLIO_STATE_LIVE_PROOF_ENV,
+        "Optional lotus-core portfolio-state live source proof artifact path.",
     ),
     (
         "--low-income-core-cashflow-live-proof",

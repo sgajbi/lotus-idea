@@ -15,6 +15,8 @@ from app.ports.core_sources import (
     CoreHighCashEvidenceRequest,
     CoreLowIncomeEvidence,
     CoreLowIncomeEvidenceRequest,
+    CorePortfolioStateEvidence,
+    CorePortfolioStateEvidenceRequest,
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
@@ -159,6 +161,39 @@ class LotusCoreHighCashSourceAdapter:
                 assignment_status=assignment_status,
                 assignment_version_present=assignment_version_present,
             ),
+        )
+
+    def fetch_portfolio_state_evidence(
+        self, request: CorePortfolioStateEvidenceRequest
+    ) -> CorePortfolioStateEvidence:
+        portfolio_ref = quote(request.portfolio_id, safe="")
+        as_of = request.as_of_date.isoformat()
+        try:
+            portfolio_state_payload = self._query_control_plane_client.post_json(
+                f"/integration/portfolios/{portfolio_ref}/core-snapshot",
+                json_payload={
+                    "as_of_date": as_of,
+                    "snapshot_mode": "BASELINE",
+                    "consumer_system": "lotus-idea",
+                    "tenant_id": "default",
+                    "sections": ["portfolio_state", "portfolio_totals"],
+                },
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise CoreSourceEntitlementDenied from exc
+            raise CoreSourceUnavailable(code=exc.code) from exc
+
+        return CorePortfolioStateEvidence(
+            portfolio_state_ref=_source_ref(
+                portfolio_state_payload,
+                product_id=PORTFOLIO_STATE_PRODUCT_ID,
+                route="/integration/portfolios/{portfolio_id}/core-snapshot",
+            ),
+            source_evidence_available=True,
+            portfolio_state_diagnostic="core_portfolio_state_ready",
         )
 
     def fetch_low_income_evidence(

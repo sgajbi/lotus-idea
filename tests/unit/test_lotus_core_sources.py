@@ -15,6 +15,7 @@ from app.ports.core_sources import (
     CoreBenchmarkAssignmentEvidenceRequest,
     CoreHighCashEvidenceRequest,
     CoreLowIncomeEvidenceRequest,
+    CorePortfolioStateEvidenceRequest,
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
@@ -82,6 +83,16 @@ def _benchmark_assignment_request() -> CoreBenchmarkAssignmentEvidenceRequest:
         portfolio_id="PB_SG_GLOBAL_BAL_001",
         as_of_date=AS_OF_DATE,
         reporting_currency="USD",
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        correlation_id="corr-core",
+        trace_id="trace-core",
+    )
+
+
+def _portfolio_state_request() -> CorePortfolioStateEvidenceRequest:
+    return CorePortfolioStateEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
         evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
         correlation_id="corr-core",
         trace_id="trace-core",
@@ -182,6 +193,45 @@ def test_lotus_core_adapter_fetches_benchmark_assignment_source_product() -> Non
         (
             "POST",
             "https://core.example/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment",
+        )
+    ]
+
+
+def test_lotus_core_adapter_fetches_portfolio_state_source_product() -> None:
+    seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, str(request.url)))
+        assert request.headers["X-Correlation-Id"] == "corr-core"
+        assert request.headers["X-Trace-Id"] == "trace-core"
+        assert json.loads(request.content) == {
+            "as_of_date": "2026-06-21",
+            "snapshot_mode": "BASELINE",
+            "consumer_system": "lotus-idea",
+            "tenant_id": "default",
+            "sections": ["portfolio_state", "portfolio_totals"],
+        }
+        return httpx.Response(
+            200,
+            json=_payload(
+                "PortfolioStateSnapshot",
+                extra={"request_fingerprint": "core-snapshot-fingerprint"},
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_portfolio_state_evidence(
+        _portfolio_state_request()
+    )
+
+    assert evidence.portfolio_state_ref is not None
+    assert evidence.portfolio_state_ref.product_id == "lotus-core:PortfolioStateSnapshot:v1"
+    assert evidence.portfolio_state_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.source_evidence_available is True
+    assert evidence.portfolio_state_diagnostic == "core_portfolio_state_ready"
+    assert seen == [
+        (
+            "POST",
+            "https://core.example/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
         )
     ]
 
@@ -558,6 +608,13 @@ def test_lotus_core_adapter_maps_benchmark_assignment_forbidden_response_to_enti
         adapter.fetch_benchmark_assignment_evidence(_benchmark_assignment_request())
 
 
+def test_lotus_core_adapter_maps_portfolio_state_forbidden_response_to_entitlement_denied() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(CoreSourceEntitlementDenied):
+        adapter.fetch_portfolio_state_evidence(_portfolio_state_request())
+
+
 def test_lotus_core_adapter_maps_low_income_forbidden_response_to_entitlement_denied() -> None:
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
 
@@ -570,6 +627,13 @@ def test_lotus_core_adapter_maps_benchmark_assignment_source_error_to_unavailabl
 
     with pytest.raises(CoreSourceUnavailable):
         adapter.fetch_benchmark_assignment_evidence(_benchmark_assignment_request())
+
+
+def test_lotus_core_adapter_maps_portfolio_state_source_error_to_unavailable() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(CoreSourceUnavailable):
+        adapter.fetch_portfolio_state_evidence(_portfolio_state_request())
 
 
 def test_lotus_core_adapter_maps_high_cash_source_error_to_unavailable() -> None:
@@ -810,6 +874,24 @@ def test_core_benchmark_assignment_evidence_request_requires_portfolio_id() -> N
 def test_core_benchmark_assignment_evidence_request_requires_aware_evaluation_time() -> None:
     with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
         CoreBenchmarkAssignmentEvidenceRequest(
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+        )
+
+
+def test_core_portfolio_state_evidence_request_requires_portfolio_id() -> None:
+    with pytest.raises(ValueError, match="portfolio_id is required"):
+        CorePortfolioStateEvidenceRequest(
+            portfolio_id=" ",
+            as_of_date=AS_OF_DATE,
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        )
+
+
+def test_core_portfolio_state_evidence_request_requires_aware_evaluation_time() -> None:
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        CorePortfolioStateEvidenceRequest(
             portfolio_id="PB_SG_GLOBAL_BAL_001",
             as_of_date=AS_OF_DATE,
             evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
