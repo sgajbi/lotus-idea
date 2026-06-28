@@ -116,6 +116,8 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
 6. High-volatility / drawdown review now has bounded deterministic policies, Lotus Risk
    `RiskMetricsReport:v1` and `DrawdownAnalyticsReport:v1`
    source-port/adapter foundations, the bounded
+   `POST /api/v1/idea-signals/high-volatility/evaluate` caller-supplied API
+   foundation, the bounded
    `POST /api/v1/idea-signals/drawdown-review/evaluate` caller-supplied API
    foundation, and source-safe live Risk volatility and drawdown proof
    contracts. Valid artifacts can clear only

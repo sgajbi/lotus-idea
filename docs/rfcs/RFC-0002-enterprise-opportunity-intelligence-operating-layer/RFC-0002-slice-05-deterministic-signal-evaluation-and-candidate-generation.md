@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, drawdown-review caller-supplied API foundation, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -377,6 +377,15 @@ Additional implemented high-volatility foundation:
 7. This high-volatility foundation does not include drawdown-specific source
    proof, data-mesh certification, Workbench proof, or supported-feature
    promotion.
+8. `src/app/api/high_volatility_signals.py` exposes
+   `POST /api/v1/idea-signals/high-volatility/evaluate` as a bounded
+   caller-supplied API foundation over Lotus Risk `RiskMetricsReport:v1`
+   volatility evidence. It requires `idea.signal.evaluate` or advisor role,
+   emits bounded operation events, redacts source route/hash fields from
+   candidate responses, and does not fetch Risk sources, calculate volatility,
+   approve Risk methodology, recommend trades, create rebalance actions,
+   publish client communication, certify data products, prove Workbench
+   behavior, or promote support.
 
 Additional implemented drawdown-review foundation:
 

@@ -147,6 +147,14 @@ source route/hash details from candidate source refs, and does not fetch
 Performance sources, calculate returns, assign benchmarks, certify benchmark
 methodology, recommend trades, create rebalance actions, certify data mesh,
 prove Workbench behavior, approve client publication, or promote a supported
+feature. `src/app/api/high_volatility_signals.py` exposes
+`POST /api/v1/idea-signals/high-volatility/evaluate` as a bounded
+caller-supplied API foundation over Lotus Risk `RiskMetricsReport:v1`
+volatility evidence. It uses the shared signal API support, emits bounded
+operation events, redacts raw source route/hash details from candidate source
+refs, and does not fetch Risk sources, calculate volatility, approve Risk
+methodology, recommend trades, create rebalance actions, certify data mesh,
+prove Workbench behavior, approve client publication, or promote a supported
 feature. `src/app/api/drawdown_review_signals.py` exposes
 `POST /api/v1/idea-signals/drawdown-review/evaluate` as a bounded
 caller-supplied API foundation over Lotus Risk `DrawdownAnalyticsReport:v1`
@@ -1052,7 +1060,10 @@ opportunity claims. High volatility is backed by deterministic policy, a Lotus
 Risk `RiskMetricsReport:v1` source port, a fail-closed HTTP adapter over
 `POST /analytics/risk/calculate`, a source-safe live-proof artifact contract,
 and focused unit tests that prove source-reported volatility consumption,
-non-ready risk supportability blocking, and no local risk-methodology calculation. Drawdown review is backed by deterministic policy, a Lotus Risk
+non-ready risk supportability blocking, and no local risk-methodology
+calculation, plus a bounded caller-supplied API foundation at
+`POST /api/v1/idea-signals/high-volatility/evaluate` with endpoint
+certification and operation-event evidence. Drawdown review is backed by deterministic policy, a Lotus Risk
 `DrawdownAnalyticsReport:v1` source port, a fail-closed HTTP adapter over
 `POST /analytics/risk/drawdown`, a source-safe live-proof artifact contract,
 and focused unit tests that prove source-reported max-drawdown consumption,
