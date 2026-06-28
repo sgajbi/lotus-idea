@@ -99,6 +99,11 @@ def test_opportunity_archetype_contract_records_underperformance_foundation_with
     assert underperformance.first_supported_journey is False
     assert "lotus-performance:ReturnsSeriesBundle:v1" in underperformance.source_products
     assert "src/app/application/underperformance_signal.py" in underperformance.evidence_refs
+    assert "src/app/api/underperformance_signals.py" in underperformance.evidence_refs
+    assert "POST /api/v1/idea-signals/underperformance/evaluate" in (underperformance.evidence_refs)
+    assert "tests/integration/test_underperformance_signal_api.py" in (
+        underperformance.evidence_refs
+    )
     assert (
         "src/app/application/performance_underperformance_live_proof.py"
         in underperformance.evidence_refs

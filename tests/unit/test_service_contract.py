@@ -82,6 +82,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("POST", "/api/v1/idea-signals/missing-benchmark/evaluate"),
         ("POST", "/api/v1/idea-signals/missing-risk-profile/evaluate"),
         ("POST", "/api/v1/idea-signals/missing-suitability/evaluate"),
+        ("POST", "/api/v1/idea-signals/underperformance/evaluate"),
         ("POST", "/api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"),
         ("GET", "/health"),
         ("GET", "/health/live"),

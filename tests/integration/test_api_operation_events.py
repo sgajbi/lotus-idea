@@ -20,6 +20,7 @@ import app.api.missing_suitability_signals as missing_suitability_signals_api
 import app.api.report_evidence as report_evidence_api
 import app.api.review_queues as review_queues_api
 import app.api.review_workflow as review_workflow_api
+import app.api.underperformance_signals as underperformance_signals_api
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
@@ -206,6 +207,27 @@ def concentration_risk_payload() -> dict[str, Any]:
             "generatedAtUtc": "2026-06-21T10:00:00Z",
             "contentHash": "sha256:concentration-risk-report",
             "dataQualityStatus": "quality_passed",
+            "freshness": "current",
+        },
+        "entitlementAllowed": True,
+    }
+
+
+def underperformance_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "sourceReportedActiveReturn": "-0.0125",
+        "benchmarkContextAvailable": True,
+        "performanceRef": {
+            "productId": "lotus-performance:ReturnsSeriesBundle:v1",
+            "sourceSystem": "lotus-performance",
+            "productVersion": "v1",
+            "route": "/integration/returns/series",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:returns-series-bundle",
+            "dataQualityStatus": "ready",
             "freshness": "current",
         },
         "entitlementAllowed": True,
@@ -700,6 +722,22 @@ def test_concentration_risk_signal_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("signal_evaluation", "accepted", "lotus-risk", False, None)]
+
+
+def test_underperformance_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, underperformance_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/underperformance/evaluate",
+        json=underperformance_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-performance", False, None)]
 
 
 def test_missing_suitability_signal_api_emits_bounded_operation_event(
