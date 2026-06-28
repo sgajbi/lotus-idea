@@ -77,6 +77,7 @@ make bond-maturity-live-proof-contract-gate
 make low-income-core-cashflow-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
 make mandate-restriction-live-proof-contract-gate
+make mandate-restriction-source-product-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make missing-risk-profile-source-product-proof-contract-gate
 make missing-risk-profile-live-proof-contract-gate
@@ -106,6 +107,7 @@ durable repository proof contract validation,
 runtime trust telemetry proof contract validation,
 Risk high-volatility and drawdown live-proof contract validation,
 Advise mandate/restriction live-proof contract validation,
+Advise mandate/restriction source-product proof contract validation,
 report-intake route proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench operational proof contract validation,

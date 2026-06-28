@@ -34,6 +34,9 @@ from app.application.low_income_core_cashflow_live_proof import (
 )
 from app.application.manage_mandate_live_proof import MANAGE_MANDATE_LIVE_PROOF_ENV
 from app.application.mandate_restriction_live_proof import MANDATE_RESTRICTION_LIVE_PROOF_ENV
+from app.application.mandate_restriction_source_product_proof import (
+    MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_ENV,
+)
 from app.application.mesh_policy_proof import MESH_POLICY_PROOF_ENV
 from app.application.missing_benchmark_live_proof import MISSING_BENCHMARK_LIVE_PROOF_ENV
 from app.application.missing_benchmark_performance_readiness_proof import (
@@ -206,6 +209,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--mandate-restriction-live-proof",
         MANDATE_RESTRICTION_LIVE_PROOF_ENV,
         "Optional lotus-advise mandate/restriction live source proof artifact path.",
+    ),
+    (
+        "--mandate-restriction-source-product-proof",
+        MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_ENV,
+        "Optional lotus-advise typed mandate/restriction source-product proof artifact path.",
     ),
     (
         "--missing-suitability-live-proof",

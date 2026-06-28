@@ -192,6 +192,11 @@ def _opportunity_archetype_proof_artifact_inputs(
             artifact_name="Mandate/restriction live proof",
             ref_name="Mandate/restriction live proof artifact",
         ),
+        "mandate_restriction_source_product": _proof_artifact_input(
+            args.mandate_restriction_source_product_proof,
+            artifact_name="Mandate/restriction source-product proof",
+            ref_name="Mandate/restriction source-product proof artifact",
+        ),
         "missing_suitability_live": _proof_artifact_input(
             args.missing_suitability_live_proof,
             artifact_name="Missing suitability live proof",

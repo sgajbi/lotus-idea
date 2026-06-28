@@ -133,6 +133,8 @@ live proof through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
 `LOTUS_CORE_QUERY_BASE_URL`, `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL`,
 optional missing-suitability live Advise proof through
 `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`,
+optional typed mandate/restriction source-product proof through
+`LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF`,
 optional typed missing risk-profile source-product proof through
 `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF`,
 optional missing risk-profile live Advise proof through
@@ -504,8 +506,9 @@ client-ready publication, or supported-feature promotion.
 source-ingestion worker deploy-proof artifact, durable repository proof
 artifact, runtime trust telemetry proof artifact, Workbench read-path proof,
 Advise proposal route proof artifact, missing-suitability live Advise proof
-artifact, typed missing risk-profile source-product proof artifact, missing
-risk-profile live Advise proof artifact, Manage mandate live proof artifact, Core benchmark assignment live
+artifact, typed mandate/restriction source-product proof artifact, typed
+missing risk-profile source-product proof artifact, missing risk-profile live
+Advise proof artifact, Manage mandate live proof artifact, Core benchmark assignment live
 proof artifact, Core portfolio-state live proof artifact, Manage action route proof artifact,
 Report intake route proof artifact, Report materialization proof artifact,
 mesh policy proof artifact, platform mesh

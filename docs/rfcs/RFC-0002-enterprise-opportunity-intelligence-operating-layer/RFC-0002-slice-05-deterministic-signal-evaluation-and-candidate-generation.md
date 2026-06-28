@@ -526,9 +526,23 @@ Additional implemented mandate/restriction review foundation:
    `tests/integration/test_mandate_restriction_signal_api.py` cover positive,
    not-eligible, stale-source, missing-source, missing-posture, duplicate,
    entitlement-denied, permission-denied, and source-redaction cases.
-5. This foundation does not include a live upstream source adapter, typed
-   restriction data product, data-mesh certification, Workbench proof,
-   client-publication approval, or supported-feature promotion.
+5. `src/app/application/mandate_restriction_source_product_proof.py`,
+   `scripts/generate_mandate_restriction_source_product_proof.py`, and
+   `make mandate-restriction-source-product-proof-contract-gate` define a
+   source-safe typed Advise mandate/restriction source-product proof artifact.
+   A valid artifact can clear only
+   `opportunity_archetype_typed_restriction_source_product_missing` in
+   aggregate readiness.
+6. `src/app/application/mandate_restriction_live_proof.py`,
+   `scripts/generate_mandate_restriction_live_proof.py`, and
+   `make mandate-restriction-live-proof-contract-gate` define a separate
+   source-safe live Advise mandate/restriction diagnostic proof. A valid
+   artifact can clear only
+   `opportunity_archetype_live_restriction_source_proof_missing` in aggregate
+   readiness.
+7. This foundation does not include restriction clearance, mandate-state
+   authority, data-mesh certification, Workbench proof, client-publication
+   approval, or supported-feature promotion.
 
 Additional implemented low-income / liquidity-shortfall foundation:
 
