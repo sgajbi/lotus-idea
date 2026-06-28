@@ -80,6 +80,11 @@ from app.domain.missing_suitability_signal import (
     MissingSuitabilityContextSignalPolicy,
     evaluate_missing_suitability_context_signal,
 )
+from app.domain.bond_maturity_signal import (
+    BondMaturitySignalInput,
+    BondMaturitySignalPolicy,
+    evaluate_bond_maturity_signal,
+)
 from app.domain.low_income_signal import (
     LowIncomeSignalInput,
     LowIncomeSignalPolicy,
@@ -243,6 +248,8 @@ __all__ = [
     "SuppressionReason",
     "UnsupportedEvidenceReason",
     "transition_candidate",
+    "BondMaturitySignalInput",
+    "BondMaturitySignalPolicy",
     "ConcentrationRiskSignalInput",
     "ConcentrationRiskSignalPolicy",
     "DrawdownReviewSignalInput",
@@ -290,6 +297,7 @@ __all__ = [
     "ReportEvidencePackResult",
     "ReportEvidenceSourceSummary",
     "request_report_evidence_pack",
+    "evaluate_bond_maturity_signal",
     "evaluate_concentration_risk_signal",
     "evaluate_drawdown_review_signal",
     "evaluate_high_cash_signal",

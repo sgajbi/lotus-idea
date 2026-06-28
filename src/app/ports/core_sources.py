@@ -99,6 +99,34 @@ class CoreLowIncomeEvidence:
     entitlement_allowed: bool = True
 
 
+@dataclass(frozen=True)
+class CoreBondMaturityEvidenceRequest:
+    portfolio_id: str
+    as_of_date: date
+    evaluated_at_utc: datetime
+    maturity_window_days: int = 30
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if self.maturity_window_days < 1 or self.maturity_window_days > 366:
+            raise ValueError("maturity_window_days must be between 1 and 366")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
+@dataclass(frozen=True)
+class CoreBondMaturityEvidence:
+    source_reported_next_maturity_date: date | None
+    source_reported_maturing_position_count: int | None
+    holdings_ref: SourceRef | None
+    maturity_fact_ref: SourceRef | None
+    maturity_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
 class CoreOpportunitySourcePort(Protocol):
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
@@ -118,3 +146,10 @@ class CoreLowIncomeSourcePort(Protocol):
         self, request: CoreLowIncomeEvidenceRequest
     ) -> CoreLowIncomeEvidence:
         """Fetch source-owned Core cashflow evidence for low-income/liquidity review."""
+
+
+class CoreBondMaturitySourcePort(Protocol):
+    def fetch_bond_maturity_evidence(
+        self, request: CoreBondMaturityEvidenceRequest
+    ) -> CoreBondMaturityEvidence:
+        """Fetch source-owned Core maturity evidence for bond maturity review."""

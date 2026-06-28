@@ -1,6 +1,6 @@
 # RFC-0002 Slice 18: Documentation, Wiki, Support, And Agent Context
 
-Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, low-income Core cashflow live proof, client-demo process, and downstream contract documentation synchronized
+Status: Partially implemented - API certification, outbox readiness, implementation-proof, live source-proof contract, scheduled-worker proof contract, durable repository proof contract, runtime telemetry proof contract, bounded Workbench read-path proof, bounded Gateway/Workbench operational proof, bounded Gateway/Workbench discovery proof, bounded downstream route proof, bounded outbox broker proof, bounded outbox platform mesh event publication proof, mesh policy proof, AI lineage store proof, Manage mandate live proof, low-income Core cashflow live proof, bond-maturity policy foundation truth, client-demo process, and downstream contract documentation synchronized
 
 ## Outcome
 
@@ -217,13 +217,20 @@ durable operating-context enforcement:
     not certify client income needs, funding advice, treasury instruction,
     suitability, planning objectives, data mesh, Workbench behavior, client
     publication, or supported-feature promotion.
+28. README, repository context, RFC evidence, demo claims, and wiki source now
+    describe the bounded bond-maturity / reinvestment policy foundation while
+    preserving the boundary that no live Core maturity source contract, data
+    mesh certification, Workbench product proof, client publication, product
+    recommendation, reinvestment advice, or supported-feature promotion exists.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and
 Gateway/Workbench discovery proof only; it does not add full
 Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled
-runtime proof.
+runtime proof. The bond-maturity / reinvestment update records only
+deterministic policy and source-port truth; it does not prove source-backed
+generation or promote a client-ready reinvestment journey.
 
 ## Required Work
 

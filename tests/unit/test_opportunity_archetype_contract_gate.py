@@ -191,6 +191,34 @@ def test_opportunity_archetype_contract_records_low_income_foundation_without_pr
     assert low_income.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_bond_maturity_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    bond_maturity = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "bond-maturity-reinvestment"
+    )
+
+    assert bond_maturity.implementation_status == "partially_implemented"
+    assert bond_maturity.first_supported_journey is False
+    assert "lotus-core:HoldingsAsOf:v1" in bond_maturity.source_products
+    assert "src/app/domain/bond_maturity_signal.py" in bond_maturity.evidence_refs
+    assert "src/app/application/bond_maturity_signal.py" in bond_maturity.evidence_refs
+    assert "src/app/ports/core_sources.py" in bond_maturity.evidence_refs
+    assert "tests/unit/test_bond_maturity_signal_evaluation.py" in (bond_maturity.evidence_refs)
+    assert "tests/unit/test_bond_maturity_application.py" in bond_maturity.evidence_refs
+    assert "maturity_source_contract_missing" in bond_maturity.blockers
+    assert "maturity_signal_policy_missing" not in bond_maturity.blockers
+    assert "data_mesh_not_certified" in bond_maturity.blockers
+    assert "client_publication_not_ready" in bond_maturity.blockers
+    assert "supported_feature_promotion_missing" in bond_maturity.blockers
+    assert bond_maturity.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert bond_maturity.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_gate_rejects_demo_ready_claim() -> None:
     module = _load_contract_gate_script()
     payload = _contract_payload()

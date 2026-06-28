@@ -109,9 +109,9 @@ manifest evidence is used to catch source-product drift or premature mesh
 inclusion.
 
 RFC-0002 Slice 05 is partially implemented for high-cash / idle-liquidity,
-concentration, underperformance, allocation-drift mandate-review,
-high-volatility / drawdown, missing suitability context, and low-income /
-liquidity-shortfall domain policy foundations.
+concentration, underperformance, allocation-drift mandate-review, bond
+maturity / reinvestment, high-volatility / drawdown, missing suitability
+context, and low-income / liquidity-shortfall domain policy foundations.
 `src/app/domain/signal_evaluation.py` consumes source-reported cash-weight
 evidence and Core source refs, creates deterministic `OpportunitySignal`,
 `IdeaEvidencePacket`, and `IdeaCandidate` domain objects for positive cases,
@@ -144,6 +144,18 @@ Core cashflow live-proof contract. A valid artifact clears only the
 low-income / liquidity-shortfall live Core cashflow source blocker while
 retaining Workbench, data-mesh, client-publication, supported-feature,
 suitability, planning, funding-advice, and treasury-instruction boundaries.
+`src/app/domain/bond_maturity_signal.py`,
+`src/app/application/bond_maturity_signal.py`, and
+`src/app/ports/core_sources.py` add the bounded bond-maturity / reinvestment
+policy and Core source-port shape. The policy can create only advisor-review
+candidates from supplied Core-owned maturity facts, source refs, freshness,
+maturing holding count, and entitlement posture. It does not recommend a
+replacement product, calculate reinvestment advice, infer suitability, create
+orders, or certify a Core maturity source contract. Current Core code stores
+instrument `maturity_date`, but the served HoldingsAsOf and instrument lookup
+contracts do not yet expose a governed maturity-bearing source product for
+`lotus-idea`; maturity-source-contract, live Core proof, data-mesh, Workbench,
+client-publication, and supported-feature blockers remain.
 The allocation-drift foundation uses
 `src/app/ports/manage_sources.py`,
 `src/app/application/mandate_health_signal.py`, and
@@ -922,9 +934,9 @@ contract at
 `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.
 The contract records high cash / idle liquidity as the first partially
 implemented journey and concentration risk review, underperformance review,
-allocation drift / mandate review, high-volatility review, missing suitability
-context, and low-income / liquidity shortfall as non-promoted bounded
-foundations.
+allocation drift / mandate review, bond maturity / reinvestment,
+high-volatility review, missing suitability context, and low-income /
+liquidity shortfall as non-promoted bounded foundations.
 Concentration is backed by deterministic
 policy, a Lotus Risk concentration source port, a fail-closed HTTP adapter, a
 source-safe live-proof artifact contract, and focused unit tests.
@@ -957,7 +969,10 @@ adapter over `/portfolios/{portfolio_id}/cash-movement-summary` and
 `/portfolios/{portfolio_id}/cashflow-projection`, and focused unit tests that
 prove source-reported projected cumulative cashflow consumption while blocking
 planning, funding-advice, treasury-instruction, suitability, Workbench,
-client-publication, and supported-feature claims. Bond maturity remains planned.
+client-publication, and supported-feature claims. Bond maturity / reinvestment
+is policy-only until Core publishes a governed maturity-bearing HoldingsAsOf
+response or maturity-specific source product; live generation, Workbench,
+client-publication, and supported-feature claims remain blocked.
 A valid Risk concentration live-proof
 artifact clears only the live
 Risk source blocker, and a valid Performance underperformance live-proof

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 16: Demo Readiness, Archetype Scenarios, And Commercial Proof
 
-Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, high-volatility / drawdown review, missing suitability context, and low-income / liquidity shortfall are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
+Status: Partially implemented - proof-readiness diagnostic consumes the governed archetype/scenario contract as blocked scenario readiness; concentration risk review, underperformance review, allocation-drift mandate review, bond maturity / reinvestment, high-volatility / drawdown review, missing suitability context, and low-income / liquidity shortfall are non-promoted bounded foundations with source-specific proof contracts where implemented; demo claims remain blocked
 
 ## Outcome
 
@@ -32,9 +32,8 @@ capabilities exist.
    now records the governed opportunity archetype and scenario taxonomy for the
    first high-cash / idle-liquidity journey, non-promoted bounded
    concentration-risk, underperformance, allocation-drift, high-volatility /
-   drawdown, missing-suitability, and low-income / liquidity-shortfall review
-   foundations, and planned
-   bond-maturity journeys.
+   drawdown, missing-suitability, low-income / liquidity-shortfall, and
+   policy-only bond-maturity review foundations.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.
@@ -127,7 +126,14 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    not be presented as client income-needs planning, funding advice,
    suitability, treasury instruction, Workbench proof, data-mesh certification,
    client publication, or supported-feature promotion.
-10. Remaining planned archetypes still require source adapters, deterministic
+10. Bond maturity / reinvestment now has a bounded deterministic policy and
+   Core source-port shape. It remains blocked for live source generation
+   because Core does not yet publish a governed maturity-bearing HoldingsAsOf
+   response or maturity-specific source product for `lotus-idea`; no
+   reinvestment advice, replacement product recommendation, suitability,
+   Workbench proof, data-mesh certification, client publication, or
+   supported-feature promotion is implied.
+11. Remaining planned archetypes still require source adapters, deterministic
    signal policies, and cross-repo authority proof.
 
 ## Acceptance Gate
