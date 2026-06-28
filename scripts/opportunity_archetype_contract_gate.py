@@ -139,11 +139,20 @@ REQUIRED_LOW_INCOME_EVIDENCE = {
     "tests/unit/test_lotus_core_sources.py",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
 }
+REQUIRED_BOND_MATURITY_EVIDENCE = {
+    "src/app/domain/bond_maturity_signal.py",
+    "src/app/application/bond_maturity_signal.py",
+    "src/app/ports/core_sources.py",
+    "tests/unit/test_bond_maturity_signal_evaluation.py",
+    "tests/unit/test_bond_maturity_application.py",
+    "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
+}
 PLANNED_ARCHETYPE_STATUSES = {"planned"}
 SUPPORTED_STATUSES = {"partially_implemented", "planned"}
 SUPPORTED_SCENARIO_STATUSES = {"bounded_foundation", "planned"}
 FOUNDATION_ARCHETYPES = {
     "allocation-drift-mandate-review",
+    "bond-maturity-reinvestment",
     "concentration-risk-review",
     "high-volatility-drawdown-review",
     "low-income-liquidity-shortfall",
@@ -333,6 +342,7 @@ def _validate_archetypes(
             )
 
     errors.extend(_validate_low_income_evidence(archetypes))
+    errors.extend(_validate_bond_maturity_evidence(archetypes))
 
     for archetype_id, archetype in archetypes.items():
         if archetype_id == "high-cash-idle-liquidity":
@@ -357,6 +367,19 @@ def _validate_low_income_evidence(
     if not missing_evidence:
         return []
     return ["low-income-liquidity-shortfall evidence_refs missing: " + ", ".join(missing_evidence)]
+
+
+def _validate_bond_maturity_evidence(
+    archetypes: dict[str, object],
+) -> list[str]:
+    bond_maturity = archetypes.get("bond-maturity-reinvestment")
+    if bond_maturity is None:
+        return []
+    evidence_refs = getattr(bond_maturity, "evidence_refs", ())
+    missing_evidence = sorted(REQUIRED_BOND_MATURITY_EVIDENCE - set(evidence_refs))
+    if not missing_evidence:
+        return []
+    return ["bond-maturity-reinvestment evidence_refs missing: " + ", ".join(missing_evidence)]
 
 
 def _validate_evidence_refs(
