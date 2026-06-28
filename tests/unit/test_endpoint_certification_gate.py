@@ -97,6 +97,44 @@ def test_endpoint_certification_gate_blocks_missing_operation_event_evidence() -
     ) in errors
 
 
+def test_endpoint_certification_gate_blocks_missing_integration_behavior_evidence() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/unit/test_security_caller_context.py::test_permission_denied_response_is_product_safe",
+            "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events",
+        ]
+    )
+
+    errors = module._validate_certified_endpoint_test_pyramid(
+        ("POST", "/api/v1/example"), endpoint["test_evidence"]
+    )
+
+    assert errors == [
+        "('POST', '/api/v1/example'): certified endpoint must reference at least one "
+        "integration API behavior test"
+    ]
+
+
+def test_endpoint_certification_gate_blocks_missing_negative_or_degraded_evidence() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_creates_candidate_from_source_owned_evidence",
+            "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events",
+        ]
+    )
+
+    errors = module._validate_certified_endpoint_test_pyramid(
+        ("POST", "/api/v1/example"), endpoint["test_evidence"]
+    )
+
+    assert errors == [
+        "('POST', '/api/v1/example'): certified endpoint must reference negative or "
+        "degraded-path test evidence"
+    ]
+
+
 def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
     module = _load_endpoint_certification_gate()
     endpoint = {
@@ -110,7 +148,8 @@ def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
         ),
         "error_examples": ["403 returns product-safe Problem Details."],
         "test_evidence": [
-            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+            "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_permission_and_valid_request",
+            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
         ],
         "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
     }
@@ -136,7 +175,8 @@ def test_endpoint_certification_gate_accepts_bounded_gateway_publication_boundar
         ),
         "error_examples": ["403 returns product-safe Problem Details."],
         "test_evidence": [
-            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+            "tests/integration/test_review_queue_api.py::test_review_queue_api_requires_permission",
+            "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
         ],
         "openapi_evidence": "scripts/openapi_quality_gate.py validates the operation.",
     }
@@ -232,3 +272,20 @@ def test_endpoint_certification_gate_validates_json_examples() -> None:
     )
 
     assert "('POST', '/api/v1/example'): response_examples[1] must be valid JSON" in errors[0]
+
+
+def _certified_endpoint(*, test_evidence: list[str]) -> dict[str, object]:
+    return {
+        "method": "POST",
+        "path": "/api/v1/example",
+        "certification_status": "certified",
+        "owner": "lotus-idea owners",
+        "purpose": "Example endpoint.",
+        "when_to_use": "Use with idea.example.read capability.",
+        "when_not_to_use": "Do not use as Gateway, Workbench, or supported-feature promotion.",
+        "request_examples": ["{}"],
+        "response_examples": ["{}"],
+        "error_examples": ["403 returns product-safe Problem Details."],
+        "test_evidence": test_evidence,
+        "openapi_evidence": "scripts/openapi_quality_gate.py validates this endpoint.",
+    }
