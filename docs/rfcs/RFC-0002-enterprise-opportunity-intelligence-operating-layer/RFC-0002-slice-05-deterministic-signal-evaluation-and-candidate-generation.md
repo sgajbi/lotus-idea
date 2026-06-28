@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, missing risk-profile evidence-gap policy, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -445,7 +445,15 @@ Additional implemented missing risk profile foundation:
    Advise risk-profile diagnostic proof artifact. A valid artifact can clear
    only `opportunity_archetype_advise_risk_profile_live_source_proof_missing`
    in aggregate readiness.
-7. This foundation does not include a typed Advise risk-profile source product,
+7. `src/app/api/idea_signals.py` exposes the bounded
+   `POST /api/v1/idea-signals/missing-risk-profile/evaluate` API over
+   caller-supplied Advise evidence refs. The endpoint returns source-safe
+   candidate or blocked posture only and redacts raw route and content-hash
+   details from candidate source refs.
+8. `tests/integration/test_missing_risk_profile_signal_api.py` covers
+   candidate creation, stale-source blocking, permission denial, and
+   source-redaction behavior for the certified API contract.
+9. This foundation does not include a typed Advise risk-profile source product,
    data-mesh certification, Workbench proof, client-publication approval, or
    supported-feature promotion.
 
