@@ -150,14 +150,14 @@ def test_docs_and_wiki_route_agents_to_mesh_readiness_truth() -> None:
         "docs/operations/mesh-readiness.md",
         "wiki/Architecture.md",
         "wiki/Integrations.md",
-        "wiki/Security-And-Governance.md",
-        "wiki/Validation-And-CI.md",
+        "wiki/Security-and-Governance.md",
+        "wiki/Validation-and-CI.md",
     ):
         content = _read(path)
         assert "lotus-idea-products.v1.json" in content or "mesh" in content.lower()
 
     assert "not certified" in _read("docs/operations/mesh-readiness.md")
-    assert "blocked" in _read("wiki/Security-And-Governance.md")
+    assert "blocked" in _read("wiki/Security-and-Governance.md")
 
 
 def test_rfc_index_and_main_rfc_match_data_mesh_foundation_truth() -> None:

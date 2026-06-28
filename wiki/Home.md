@@ -14,7 +14,7 @@ supported yet.
 | --- | --- | --- |
 | Business and product | [Overview](Overview) and [Supported Features](Supported-Features) | Current capability truth, ownership boundaries, and promotion requirements. |
 | Sales and demo | [Demo Readiness](Demo-Readiness) and [Roadmap](Roadmap) | Implementation-backed talk tracks, do-not-claim rules, and planned capability framing. |
-| Operations and support | [Operations Runbook](Operations-Runbook), [Validation and CI](Validation-And-CI), and [Security and Governance](Security-And-Governance) | Supportability posture, diagnostics, gates, and incident first checks. |
+| Operations and support | [Operations Runbook](Operations-Runbook), [Validation and CI](Validation-and-CI), and [Security and Governance](Security-and-Governance) | Supportability posture, diagnostics, gates, and incident first checks. |
 | Engineering and agents | [Architecture](Architecture), [Integrations](Integrations), [Development Workflow](Development-Workflow), and [RFC Index](RFC-Index) | Source authority, API foundations, repo-native commands, and RFC slice truth. |
 
 ## Start Here
@@ -23,12 +23,12 @@ supported yet.
 2. [Architecture](Architecture)
 3. [Getting Started](Getting-Started)
 4. [Development Workflow](Development-Workflow)
-5. [Validation and CI](Validation-And-CI)
+5. [Validation and CI](Validation-and-CI)
 6. [RFC Index](RFC-Index)
 7. [Integrations](Integrations)
 8. [Supported Features](Supported-Features)
 9. [Operations Runbook](Operations-Runbook)
-10. [Security and Governance](Security-And-Governance)
+10. [Security and Governance](Security-and-Governance)
 11. [Demo Readiness](Demo-Readiness)
 12. [Roadmap](Roadmap)
 

@@ -184,7 +184,7 @@ REQUIRED_SURFACES = (
         ("Current Operation Event Diagnostics", "API Certification Reference"),
     ),
     DocumentationSurface(
-        "wiki/Validation-And-CI.md",
+        "wiki/Validation-and-CI.md",
         40,
         ("make documentation-contract-gate", "Branch hygiene policy"),
     ),
@@ -199,7 +199,7 @@ REQUIRED_SURFACES = (
         ("Current posture", "Promotion rule"),
     ),
     DocumentationSurface(
-        "wiki/Security-And-Governance.md",
+        "wiki/Security-and-Governance.md",
         15,
         ("Security", "Governance"),
     ),
@@ -313,7 +313,7 @@ POLISHED_SURFACES = (
         1,
     ),
     PolishedDocumentationSurface(
-        "wiki/Validation-And-CI.md",
+        "wiki/Validation-and-CI.md",
         ("## Gate Map",),
         1,
         1,
