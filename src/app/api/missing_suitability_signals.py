@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import Enum
-from typing import Any, TypedDict
 
 from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idea_signals import (
@@ -15,35 +13,19 @@ from app.api.idea_signals import (
     ReviewAccessScopeRequest,
     SourceRefRequest,
 )
+from app.api.signal_api_support import (
+    RouteMetadata,
+    emit_signal_evaluation_event,
+    signal_permission_problem_or_none,
+    source_authority_from_refs,
+)
 from app.application.missing_suitability_signal import (
     EvaluateMissingSuitabilityContextSignalCommand,
     evaluate_missing_suitability_context_signal_command,
 )
 from app.domain import SignalEvaluationResult
-from app.errors import ProblemDetails, problem_response
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
-from app.security.caller_context import (
-    CapabilityPolicy,
-    PermissionDeniedError,
-    require_capability,
-)
-
-
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
-
-_EVALUATE_MISSING_SUITABILITY_POLICY = CapabilityPolicy.for_roles(
-    required_capability="idea.signal.evaluate",
-    allowed_roles=("advisor",),
-)
+from app.errors import ProblemDetails
+from app.observability import emit_foundation_operation_event
 
 
 class EvaluateMissingSuitabilitySignalRequest(CamelModel):
@@ -187,52 +169,25 @@ async def evaluate_missing_suitability_signal(
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
     )
-    source_authority = _policy_source_authority(request)
-    try:
-        require_capability(caller, _EVALUATE_MISSING_SUITABILITY_POLICY)
-    except PermissionDeniedError:
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.PERMISSION_DENIED,
-            source_authority=source_authority,
-            error_code="permission_denied",
-        )
-        return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to evaluate idea signals.",
-        )
+    source_authority = source_authority_from_refs((request.policy_ref,))
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
 
     result = evaluate_missing_suitability_context_signal_command(request.to_command())
-    emit_foundation_operation_event(
-        IdeaOperation.SIGNAL_EVALUATION,
-        _operation_outcome_from_signal_evaluation(result),
+    emit_signal_evaluation_event(
+        result=result,
         source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
     )
     return EvaluateMissingSuitabilitySignalResponse.from_domain(
         result,
         source_authority=source_authority,
     )
-
-
-def _operation_outcome_from_signal_evaluation(
-    result: SignalEvaluationResult,
-) -> OperationOutcome:
-    outcome = result.outcome.value
-    if outcome == "candidate_created":
-        return OperationOutcome.ACCEPTED
-    if outcome == "suppressed":
-        return OperationOutcome.SUPPRESSED
-    if outcome == "not_eligible":
-        return OperationOutcome.NOT_ELIGIBLE
-    return OperationOutcome.BLOCKED
-
-
-def _policy_source_authority(request: EvaluateMissingSuitabilitySignalRequest) -> str:
-    if request.policy_ref is None:
-        return "source-owned"
-    return request.policy_ref.source_system.value
 
 
 MISSING_SUITABILITY_EVALUATE_ROUTE: RouteMetadata = {

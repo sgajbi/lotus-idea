@@ -10,6 +10,7 @@ import app.api.bond_maturity_signals as bond_maturity_signals_api
 import app.api.candidate_detail as candidate_detail_api
 import app.api.candidate_evidence_replay as candidate_evidence_replay_api
 import app.api.candidate_lifecycle as candidate_lifecycle_api
+import app.api.concentration_risk_signals as concentration_risk_signals_api
 import app.api.conversion_governance as conversion_governance_api
 import app.api.idea_signals as idea_signals_api
 import app.api.low_income_signals as low_income_signals_api
@@ -183,6 +184,28 @@ def bond_maturity_payload() -> dict[str, Any]:
             "generatedAtUtc": "2026-06-21T10:00:00Z",
             "contentHash": "sha256:bond-maturity-facts",
             "dataQualityStatus": "complete",
+            "freshness": "current",
+        },
+        "entitlementAllowed": True,
+    }
+
+
+def concentration_risk_payload() -> dict[str, Any]:
+    return {
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "topPositionWeightCurrent": "0.18",
+        "topIssuerWeightCurrent": "0.24",
+        "issuerCoverageStatus": "complete",
+        "concentrationRef": {
+            "productId": "lotus-risk:ConcentrationRiskReport:v1",
+            "sourceSystem": "lotus-risk",
+            "productVersion": "v1",
+            "route": "/analytics/risk/concentration",
+            "asOfDate": "2026-06-21",
+            "generatedAtUtc": "2026-06-21T10:00:00Z",
+            "contentHash": "sha256:concentration-risk-report",
+            "dataQualityStatus": "quality_passed",
             "freshness": "current",
         },
         "entitlementAllowed": True,
@@ -661,6 +684,22 @@ def test_bond_maturity_signal_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("signal_evaluation", "accepted", "lotus-core", False, None)]
+
+
+def test_concentration_risk_signal_api_emits_bounded_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, concentration_risk_signals_api)
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate",
+        json=concentration_risk_payload(),
+        headers=signal_headers(),
+    )
+
+    assert response.status_code == 200
+    assert events == [("signal_evaluation", "accepted", "lotus-risk", False, None)]
 
 
 def test_missing_suitability_signal_api_emits_bounded_operation_event(

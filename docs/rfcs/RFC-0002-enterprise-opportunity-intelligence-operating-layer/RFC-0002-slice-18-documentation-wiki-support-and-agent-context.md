@@ -11,6 +11,17 @@ Update durable documentation and agent guidance to match implemented truth.
 This slice is partially implemented for API certification documentation truth and
 durable operating-context enforcement:
 
+Current documentation truth also records the concentration-risk caller-supplied
+API foundation and shared signal API support module as implementation-backed
+internal foundations only. They harden source-authority, authorization,
+operation-event, and problem-detail behavior without adding a runtime
+microservice boundary or promoting Risk methodology, trade advice, rebalance,
+Workbench, data-mesh, client-publication, or supported-feature claims.
+`make signal-api-contract-gate` is blocking through `make lint` and the CI
+contract self-check so future caller-supplied signal API slices cannot
+reintroduce local signal-evaluation permission policy, local outcome mapping,
+or unshared source-authority/error/event mechanics.
+
 1. `docs/operations/api-certification.md` now lists the full certified internal
    foundation endpoint inventory from
    `docs/operations/endpoint-certification-ledger.json`, including high-cash

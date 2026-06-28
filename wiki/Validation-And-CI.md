@@ -45,6 +45,7 @@ make quality-scorecard-gate
 make monetary-float-guard
 make no-sensitive-content-guard
 make source-observability-contract-gate
+make signal-api-contract-gate
 make operation-metric-contract-gate
 make ai-model-risk-ops-contract-gate
 make implementation-truth-gate
@@ -94,7 +95,7 @@ make clean
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
-OpenAPI quality, source-observability contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+OpenAPI quality, source-observability contract enforcement, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,
@@ -461,6 +462,11 @@ The source-observability contract gate blocks ad hoc application logging in
 request diagnostic helper rather than raw `print()`, direct Python logging, or
 low-level `log_event` calls. Request diagnostics log route templates rather
 than raw URL paths.
+
+The signal API contract gate blocks duplicated caller-supplied signal API
+authorization, source-authority, operation-event, and error-model mechanics.
+Signal routes must use shared signal API support so future slices do not
+reintroduce copy-pasted policy or inconsistent problem-detail behavior.
 
 The operation-metric contract gate validates
 `contracts/observability/lotus-idea-operation-metrics.v1.json` against the

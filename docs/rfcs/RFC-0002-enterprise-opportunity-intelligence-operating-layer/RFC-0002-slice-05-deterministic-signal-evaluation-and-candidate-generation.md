@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -150,7 +150,7 @@ Additional implemented bond-maturity / reinvestment foundation:
 
 Additional implemented concentration-risk foundation:
 
-1. `src/app/domain/missing_suitability_signal.py` now defines
+1. `src/app/domain/signal_evaluation.py` now defines
    `ConcentrationRiskSignalPolicy`, `ConcentrationRiskSignalInput`, and
    `evaluate_concentration_risk_signal` for source-owned concentration
    attention candidates.
@@ -172,7 +172,16 @@ Additional implemented concentration-risk foundation:
    `tests/unit/test_lotus_risk_sources.py` cover positive, below-materiality,
    stale, partial-coverage, missing-source, duplicate, entitlement-denied,
    source-unavailable, malformed-measure, trace-header, and persistence cases.
-6. `src/app/application/risk_concentration_live_proof.py`,
+6. `src/app/api/concentration_risk_signals.py` exposes
+   `POST /api/v1/idea-signals/concentration-risk/evaluate` over
+   caller-supplied Lotus Risk `ConcentrationRiskReport:v1` evidence. The route
+   uses shared signal API support for permission, source-authority, operation
+   event, and RFC-7807 problem-detail behavior, creates only advisor-review
+   concentration candidates or blocked/not-eligible/suppressed posture, and
+   does not calculate concentration, approve risk methodology, recommend
+   trades, create rebalance actions, certify data mesh, prove Workbench
+   behavior, authorize client publication, or promote support.
+7. `src/app/application/risk_concentration_live_proof.py`,
    `scripts/generate_risk_concentration_live_proof.py`,
    `scripts/risk_concentration_live_proof_contract_gate.py`, and
    `make risk-concentration-live-proof-contract-gate` define a source-safe live

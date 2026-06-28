@@ -34,7 +34,11 @@ capabilities exist.
    concentration-risk, underperformance, allocation-drift, high-volatility /
    drawdown, missing-suitability, missing risk-profile, mandate/restriction,
    low-income / liquidity-shortfall, missing-benchmark review, and bounded
-   Core source-backed bond-maturity review foundations.
+   Core source-backed bond-maturity review foundations. Concentration-risk also
+   has a bounded caller-supplied Risk evidence API foundation at
+   `POST /api/v1/idea-signals/concentration-risk/evaluate`; it is not Workbench
+   proof, client-demo proof, data-mesh certification, trade advice, rebalance
+   action, or supported-feature promotion.
    `make opportunity-archetype-contract-gate` protects the contract from
    unsupported demo, client-publication, data-mesh certification, or
    supported-feature promotion claims.

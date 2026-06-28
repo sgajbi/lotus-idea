@@ -2,15 +2,19 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
-from enum import Enum
-from typing import Any, TypedDict
 
 from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.api.signal_api_support import (
+    RouteMetadata,
+    emit_signal_evaluation_event,
+    operation_outcome_from_signal_evaluation,
+    signal_permission_problem_or_none,
+    source_authority_from_refs,
+)
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashSignalCommand,
@@ -33,6 +37,7 @@ from app.domain import (
 from app.domain.access_scope import ReviewAccessScope
 from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
@@ -40,21 +45,6 @@ from app.security.caller_context import (
 )
 
 
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
-
-_EVALUATE_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
-    required_capability="idea.signal.evaluate",
-    allowed_roles=("advisor",),
-)
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )
@@ -404,7 +394,12 @@ class EvaluateHighCashSignalResponse(CamelModel):
     )
 
     @classmethod
-    def from_domain(cls, result: SignalEvaluationResult) -> "EvaluateHighCashSignalResponse":
+    def from_domain(
+        cls,
+        result: SignalEvaluationResult,
+        *,
+        source_authority: str,
+    ) -> "EvaluateHighCashSignalResponse":
         return cls(
             outcome=result.outcome.value,
             family=result.family.value,
@@ -415,7 +410,7 @@ class EvaluateHighCashSignalResponse(CamelModel):
                 if result.candidate is not None
                 else None
             ),
-            sourceAuthority="lotus-core",
+            sourceAuthority=source_authority,
             supportedFeaturePromoted=False,
         )
 
@@ -510,29 +505,22 @@ async def evaluate_high_cash_signal(
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
     )
-    try:
-        require_capability(caller, _EVALUATE_HIGH_CASH_POLICY)
-    except PermissionDeniedError:
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.PERMISSION_DENIED,
-            source_authority="lotus-core",
-            error_code="permission_denied",
-        )
-        return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to evaluate idea signals.",
-        )
+    source_authority = _high_cash_source_authority(request)
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
 
     result = evaluate_high_cash_signal_command(request.to_command())
-    emit_foundation_operation_event(
-        IdeaOperation.SIGNAL_EVALUATION,
-        _operation_outcome_from_signal_evaluation(result),
-        source_authority="lotus-core",
+    emit_signal_evaluation_event(
+        result=result,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
     )
-    return EvaluateHighCashSignalResponse.from_domain(result)
+    return EvaluateHighCashSignalResponse.from_domain(result, source_authority=source_authority)
 
 
 async def evaluate_mandate_restriction_signal(
@@ -546,28 +534,20 @@ async def evaluate_mandate_restriction_signal(
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
     )
-    source_authority = _restriction_source_authority(request)
-    try:
-        require_capability(caller, _EVALUATE_HIGH_CASH_POLICY)
-    except PermissionDeniedError:
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.PERMISSION_DENIED,
-            source_authority=source_authority,
-            error_code="permission_denied",
-        )
-        return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to evaluate idea signals.",
-        )
+    source_authority = source_authority_from_refs((request.restriction_ref,))
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
 
     result = evaluate_mandate_restriction_signal_command(request.to_command())
-    emit_foundation_operation_event(
-        IdeaOperation.SIGNAL_EVALUATION,
-        _operation_outcome_from_signal_evaluation(result),
+    emit_signal_evaluation_event(
+        result=result,
         source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
     )
     return EvaluateMandateRestrictionSignalResponse.from_domain(
         result,
@@ -616,6 +596,7 @@ async def evaluate_and_persist_high_cash_signal(
             detail="Idempotency-Key is required.",
         )
 
+    source_authority = _high_cash_source_authority(request)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     result = evaluate_and_persist_high_cash_signal_command(
@@ -652,11 +633,14 @@ async def evaluate_and_persist_high_cash_signal(
             ),
             evaluation=result.evaluation,
         ),
-        source_authority="lotus-core",
+        source_authority=source_authority,
         durable_storage_backed=durable_storage_backed,
     )
     return EvaluateAndPersistHighCashSignalResponse(
-        evaluation=EvaluateHighCashSignalResponse.from_domain(result.evaluation),
+        evaluation=EvaluateHighCashSignalResponse.from_domain(
+            result.evaluation,
+            source_authority=source_authority,
+        ),
         persistence=(
             CandidatePersistenceSummaryResponse.from_record(
                 decision=result.persistence.decision,
@@ -670,26 +654,13 @@ async def evaluate_and_persist_high_cash_signal(
     )
 
 
-def _operation_outcome_from_signal_evaluation(
-    result: SignalEvaluationResult,
-) -> OperationOutcome:
-    outcome = result.outcome.value
-    if outcome == "candidate_created":
-        return OperationOutcome.ACCEPTED
-    if outcome == "suppressed":
-        return OperationOutcome.SUPPRESSED
-    if outcome == "not_eligible":
-        return OperationOutcome.NOT_ELIGIBLE
-    return OperationOutcome.BLOCKED
-
-
 def _operation_outcome_from_candidate_persistence(
     *,
     persistence_decision: CandidatePersistenceDecision | None,
     evaluation: SignalEvaluationResult,
 ) -> OperationOutcome:
     if persistence_decision is None:
-        return _operation_outcome_from_signal_evaluation(evaluation)
+        return operation_outcome_from_signal_evaluation(evaluation)
     if persistence_decision is CandidatePersistenceDecision.ACCEPTED:
         return OperationOutcome.ACCEPTED
     if persistence_decision is CandidatePersistenceDecision.REPLAYED:
@@ -699,10 +670,16 @@ def _operation_outcome_from_candidate_persistence(
     return OperationOutcome.CONFLICT
 
 
-def _restriction_source_authority(request: EvaluateMandateRestrictionSignalRequest) -> str:
-    if request.restriction_ref is None:
-        return "source-owned"
-    return request.restriction_ref.source_system.value
+def _high_cash_source_authority(request: EvaluateHighCashSignalRequest) -> str:
+    evidence = request.source_evidence
+    return source_authority_from_refs(
+        (
+            evidence.portfolio_state_ref,
+            evidence.holdings_ref,
+            evidence.cash_movement_ref,
+            evidence.cashflow_projection_ref,
+        )
+    )
 
 
 HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
