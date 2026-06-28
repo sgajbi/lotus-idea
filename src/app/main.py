@@ -13,6 +13,7 @@ from app.api.downstream_realization_readiness import (
 )
 from app.api.idea_signals import register_idea_signal_routes
 from app.api.implementation_proof_readiness import register_implementation_proof_readiness_routes
+from app.api.missing_benchmark_signals import register_missing_benchmark_signal_routes
 from app.api.missing_risk_profile_signals import register_missing_risk_profile_signal_routes
 from app.api.missing_suitability_signals import register_missing_suitability_signal_routes
 from app.api.outbox_delivery_readiness import register_outbox_delivery_readiness_routes
@@ -43,6 +44,7 @@ def create_app() -> FastAPI:
 
 def _register_product_routes(application: FastAPI) -> None:
     register_idea_signal_routes(application)
+    register_missing_benchmark_signal_routes(application)
     register_missing_risk_profile_signal_routes(application)
     register_missing_suitability_signal_routes(application)
     register_candidate_lifecycle_routes(application)

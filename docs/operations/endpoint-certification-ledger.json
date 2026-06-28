@@ -85,6 +85,35 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/missing-benchmark/evaluate",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Core benchmark-assignment evidence for missing, inactive, ineffective, or unversioned benchmark posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Core benchmark-assignment posture, source refs, assignment status, version posture, effective-date posture, and entitlement posture.",
+      "when_not_to_use": "Do not use as a live upstream source-ingestion API, benchmark-assignment authority, benchmark methodology authority, portfolio or benchmark performance calculation, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"benchmarkAssignmentRef\":{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:benchmark-assignment-gap\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"benchmarkIdentityResolved\":false,\"assignmentEffectiveForAsOfDate\":false,\"assignmentStatus\":\"ACTIVE\",\"assignmentVersionPresent\":true,\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"missing_benchmark\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_benchmark_8d57adbf52f7f5a7\",\"family\":\"missing_benchmark\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_benchmark_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"68\",\"scorePolicyVersion\":\"missing-benchmark-review-v1\",\"sourceSignalIds\":[\"signal_missing_benchmark_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_returns_review_candidate",
+        "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_reports_ready_assignment_not_eligible",
+        "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_missing_benchmark_signal_api.py::test_missing_benchmark_signal_api_requires_signal_permission",
+        "tests/integration/test_api_operation_events.py::test_missing_benchmark_signal_api_emits_bounded_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/missing-suitability/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

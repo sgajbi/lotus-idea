@@ -647,6 +647,7 @@
         "src/app/application/missing_benchmark_signal.py",
         "src/app/application/missing_benchmark_live_proof.py",
         "src/app/application/missing_benchmark_performance_readiness_proof.py",
+        "src/app/api/missing_benchmark_signals.py",
         "src/app/ports/core_sources.py",
         "src/app/ports/performance_sources.py",
         "src/app/infrastructure/lotus_core_sources.py",
@@ -660,8 +661,10 @@
         "tests/unit/test_missing_benchmark_live_proof.py",
         "tests/unit/test_missing_benchmark_performance_readiness_proof.py",
         "tests/unit/test_implementation_proof_readiness_missing_benchmark.py",
+        "tests/integration/test_missing_benchmark_signal_api.py",
         "tests/unit/test_lotus_core_sources.py",
-        "tests/unit/test_lotus_performance_sources.py"
+        "tests/unit/test_lotus_performance_sources.py",
+        "POST /api/v1/idea-signals/missing-benchmark/evaluate"
       ],
       "canonical_scenarios": [
         {

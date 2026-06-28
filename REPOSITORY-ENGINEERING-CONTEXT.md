@@ -718,6 +718,14 @@ blocked posture, redacts raw source route/hash details from candidate source
 refs, and does not approve suitability, policy, proposal, sign-off, client
 publication, data-product certification, Gateway, Workbench, or supported
 feature promotion.
+`POST /api/v1/idea-signals/missing-benchmark/evaluate` accepts
+caller-supplied, source-owned Core benchmark-assignment posture evidence,
+enforces `idea.signal.evaluate`, returns source-safe advisor-review candidate,
+blocked, suppressed, or not-eligible posture, redacts raw source route/hash
+details from candidate source refs, and does not assign benchmarks, certify
+benchmark methodology, calculate portfolio or benchmark performance, publish
+client communication, certify data products, prove Gateway/Workbench behavior,
+or promote a supported feature.
 `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` uses the same source
 evidence contract, requires `idea.candidate.persist` plus `Idempotency-Key`,
 and persists created candidates through the internal in-memory
@@ -1071,16 +1079,17 @@ client-publication, and supported-feature blockers after live Core cashflow
 proof is supplied, and it still does not certify client income needs, funding
 advice, treasury instruction, suitability, or planning objectives.
 Missing-benchmark review is backed by deterministic policy, the existing
-Lotus Core benchmark-assignment source port, and bounded Lotus Performance
-benchmark-readiness proof consumption over `ReturnsSeriesBundle:v1`. It can create only an
-advisor-review evidence-gap candidate when Core-owned benchmark identity,
-effective assignment, active status, or assignment version posture is missing;
-it does not assign a benchmark, calculate performance or benchmark returns,
-certify methodology, or promote support. A valid source-safe missing-benchmark
-live Core proof artifact clears only the missing-benchmark live Core source
-blocker; a valid source-safe Performance benchmark-readiness proof artifact
-clears only the missing-benchmark Performance source-ref blocker. Data-mesh,
-Workbench, client-publication, and supported-feature blockers remain.
+Lotus Core benchmark-assignment source port, a bounded caller-supplied API, and
+bounded Lotus Performance benchmark-readiness proof consumption over
+`ReturnsSeriesBundle:v1`. It can create only an advisor-review evidence-gap
+candidate when Core-owned benchmark identity, effective assignment, active
+status, or assignment version posture is missing; it does not assign a
+benchmark, calculate performance or benchmark returns, certify methodology, or
+promote support. A valid source-safe missing-benchmark live Core proof artifact
+clears only the missing-benchmark live Core source blocker; a valid source-safe
+Performance benchmark-readiness proof artifact clears only the missing-benchmark
+Performance source-ref blocker. Data-mesh, Workbench, client-publication, and
+supported-feature blockers remain.
 The
 `make opportunity-archetype-contract-gate` command blocks unsupported demo,
 client publication, data-mesh certification, and supported-feature promotion
