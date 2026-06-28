@@ -169,6 +169,8 @@ def build_implementation_proof_readiness_snapshot(
     mandate_restriction_live_proof_ref: str | None = None,
     missing_suitability_live_proof: Mapping[str, object] | None = None,
     missing_suitability_live_proof_ref: str | None = None,
+    missing_risk_profile_source_product_proof: Mapping[str, object] | None = None,
+    missing_risk_profile_source_product_proof_ref: str | None = None,
     missing_risk_profile_live_proof: Mapping[str, object] | None = None,
     missing_risk_profile_live_proof_ref: str | None = None,
     missing_benchmark_live_proof: Mapping[str, object] | None = None,
@@ -225,10 +227,7 @@ def build_implementation_proof_readiness_snapshot(
         downstream_realization=downstream_realization,
         supported_feature_count=supported_feature_count,
     )
-    capabilities = _apply_available_proofs_from_scope(
-        capabilities=capabilities,
-        scope=locals(),
-    )
+    capabilities = _apply_available_proofs_from_scope(capabilities=capabilities, scope=locals())
     return _readiness_snapshot(
         evaluated_at_utc=evaluated_at_utc,
         supported_feature_count=supported_feature_count,
@@ -379,6 +378,8 @@ def _apply_available_proofs(
     mandate_restriction_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
+    missing_risk_profile_source_product_proof: Mapping[str, object] | None,
+    missing_risk_profile_source_product_proof_ref: str | None,
     missing_risk_profile_live_proof: Mapping[str, object] | None,
     missing_risk_profile_live_proof_ref: str | None,
     missing_benchmark_live_proof: Mapping[str, object] | None,

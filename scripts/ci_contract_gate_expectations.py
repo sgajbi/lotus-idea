@@ -52,6 +52,7 @@ REQUIRED_LINT_TARGETS = (
     "manage-mandate-live-proof-contract-gate",
     "mandate-restriction-live-proof-contract-gate",
     "missing-suitability-live-proof-contract-gate",
+    "missing-risk-profile-source-product-proof-contract-gate",
     "missing-risk-profile-live-proof-contract-gate",
     "performance-underperformance-live-proof-contract-gate",
     "implementation-proof-readiness-check",
@@ -115,6 +116,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     ),
     "missing-suitability-live-proof-contract-gate": (
         "scripts/missing_suitability_live_proof_contract_gate.py"
+    ),
+    "missing-risk-profile-source-product-proof-contract-gate": (
+        "scripts/missing_risk_profile_source_product_proof_contract_gate.py"
     ),
     "missing-risk-profile-live-proof-contract-gate": (
         "scripts/missing_risk_profile_live_proof_contract_gate.py"
@@ -406,8 +410,20 @@ REQUIRED_READINESS_WIRING = (
         "support optional Advise missing risk-profile live proof artifact wiring",
     ),
     (
+        "LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF",
+        "support optional Advise missing risk-profile source-product proof artifact wiring",
+    ),
+    (
+        "LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_OUTPUT",
+        "support default Advise missing risk-profile source-product proof output wiring",
+    ),
+    (
         "--missing-risk-profile-live-proof",
         "pass optional Advise missing risk-profile live proof artifact into readiness generation",
+    ),
+    (
+        "--missing-risk-profile-source-product-proof",
+        "pass optional Advise missing risk-profile source-product proof artifact into readiness generation",
     ),
     ("--core-query-base-url", "support optional Core query-service URL wiring"),
     (

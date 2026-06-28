@@ -462,11 +462,13 @@ without relying on chat memory.
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full
     source-backed archetype replay is bounded to optional high-cash live Core,
     concentration live Risk, high-volatility live Risk, drawdown live Risk,
-    low-income live Core cashflow, missing-suitability live Advise, and
-    missing risk-profile live Advise proof artifacts. Missing suitability
-    proof clears only the Advise policy live-source blocker; missing
-    risk-profile proof clears only the Advise risk-profile live-source
-    blocker; low-income Core cashflow proof clears only
+    low-income live Core cashflow, missing-suitability live Advise, typed
+    missing risk-profile source-product, and missing risk-profile live Advise
+    proof artifacts. Missing suitability proof clears only the Advise policy
+    live-source blocker; typed missing risk-profile source-product proof clears
+    only `opportunity_archetype_typed_advise_risk_profile_source_product_missing`;
+    missing risk-profile live proof clears only the Advise risk-profile
+    live-source blocker; low-income Core cashflow proof clears only
     `opportunity_archetype_live_core_cashflow_source_proof_missing`;
     full Workbench product proof, data-mesh certification, client-publication,
     and supported-feature promotion remain pending.

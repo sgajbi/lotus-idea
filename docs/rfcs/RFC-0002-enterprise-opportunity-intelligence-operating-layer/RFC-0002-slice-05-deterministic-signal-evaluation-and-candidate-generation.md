@@ -481,23 +481,29 @@ Additional implemented missing risk profile foundation:
    current/not-eligible, stale, expired, review-due, missing-source,
    missing-posture, duplicate, entitlement-denied, source-unavailable, generic
    suitability diagnostic suppression, and request-routing cases.
-6. `src/app/application/missing_risk_profile_live_proof.py`,
+6. `src/app/application/missing_risk_profile_source_product_proof.py`,
+   `scripts/generate_missing_risk_profile_source_product_proof.py`, and
+   `make missing-risk-profile-source-product-proof-contract-gate` define a
+   source-safe typed Advise risk-profile source-product proof artifact. A
+   valid artifact can clear only
+   `opportunity_archetype_typed_advise_risk_profile_source_product_missing`
+   in aggregate readiness.
+7. `src/app/application/missing_risk_profile_live_proof.py`,
    `scripts/generate_missing_risk_profile_live_proof.py`, and
    `make missing-risk-profile-live-proof-contract-gate` define a source-safe
    Advise risk-profile diagnostic proof artifact. A valid artifact can clear
    only `opportunity_archetype_advise_risk_profile_live_source_proof_missing`
    in aggregate readiness.
-7. `src/app/api/idea_signals.py` exposes the bounded
+8. `src/app/api/idea_signals.py` exposes the bounded
    `POST /api/v1/idea-signals/missing-risk-profile/evaluate` API over
    caller-supplied Advise evidence refs. The endpoint returns source-safe
    candidate or blocked posture only and redacts raw route and content-hash
    details from candidate source refs.
-8. `tests/integration/test_missing_risk_profile_signal_api.py` covers
+9. `tests/integration/test_missing_risk_profile_signal_api.py` covers
    candidate creation, stale-source blocking, permission denial, and
    source-redaction behavior for the certified API contract.
-9. This foundation does not include a typed Advise risk-profile source product,
-   data-mesh certification, Workbench proof, client-publication approval, or
-   supported-feature promotion.
+10. This foundation does not include data-mesh certification, Workbench proof,
+    client-publication approval, or supported-feature promotion.
 
 Additional implemented mandate/restriction review foundation:
 

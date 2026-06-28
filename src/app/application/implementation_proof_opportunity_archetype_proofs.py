@@ -40,6 +40,10 @@ from app.application.missing_risk_profile_live_proof import (
     MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
     missing_risk_profile_live_proof_is_valid,
 )
+from app.application.missing_risk_profile_source_product_proof import (
+    MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED,
+    missing_risk_profile_source_product_proof_is_valid,
+)
 from app.application.missing_benchmark_live_proof import (
     MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
     missing_benchmark_live_proof_is_valid,
@@ -102,6 +106,8 @@ def _apply_opportunity_archetype_proofs(
     mandate_restriction_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
+    missing_risk_profile_source_product_proof: Mapping[str, object] | None,
+    missing_risk_profile_source_product_proof_ref: str | None,
     missing_risk_profile_live_proof: Mapping[str, object] | None,
     missing_risk_profile_live_proof_ref: str | None,
     missing_benchmark_live_proof: Mapping[str, object] | None,
@@ -192,6 +198,12 @@ def _opportunity_proof_steps(scope: Mapping[str, object]) -> tuple[OpportunityPr
             "missing_suitability_live",
             missing_suitability_live_proof_is_valid,
             _apply_missing_suitability_live_proof,
+        ),
+        _proof_step(
+            scope,
+            "missing_risk_profile_source_product",
+            missing_risk_profile_source_product_proof_is_valid,
+            _apply_missing_risk_profile_source_product_proof,
         ),
         _proof_step(
             scope,
@@ -306,6 +318,12 @@ def apply_opportunity_archetype_proofs_from_scope(
         mandate_restriction_live_proof_ref=_ref(scope, "mandate_restriction_live_proof_ref"),
         missing_suitability_live_proof=_payload(scope, "missing_suitability_live_proof"),
         missing_suitability_live_proof_ref=_ref(scope, "missing_suitability_live_proof_ref"),
+        missing_risk_profile_source_product_proof=_payload(
+            scope, "missing_risk_profile_source_product_proof"
+        ),
+        missing_risk_profile_source_product_proof_ref=_ref(
+            scope, "missing_risk_profile_source_product_proof_ref"
+        ),
         missing_risk_profile_live_proof=_payload(scope, "missing_risk_profile_live_proof"),
         missing_risk_profile_live_proof_ref=_ref(scope, "missing_risk_profile_live_proof_ref"),
         missing_benchmark_live_proof=_payload(scope, "missing_benchmark_live_proof"),
@@ -474,6 +492,18 @@ def _apply_missing_risk_profile_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
         proof_ref=missing_risk_profile_live_proof_ref,
+    )
+
+
+def _apply_missing_risk_profile_source_product_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    missing_risk_profile_source_product_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED,
+        proof_ref=missing_risk_profile_source_product_proof_ref,
     )
 
 

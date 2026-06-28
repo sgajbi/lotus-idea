@@ -78,6 +78,7 @@ make low-income-core-cashflow-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
 make mandate-restriction-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
+make missing-risk-profile-source-product-proof-contract-gate
 make missing-risk-profile-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
 make implementation-proof-readiness-check
