@@ -456,7 +456,8 @@ without relying on chat memory.
     source/policy foundation, bounded high-volatility / drawdown source/policy
     foundation, bounded missing suitability context source/policy foundation,
     bounded missing risk-profile source/policy foundation,
-    bounded low-income / liquidity-shortfall Core cashflow foundation,
+    bounded allocation-drift / mandate-review Manage caller-supplied API
+    foundation, bounded low-income / liquidity-shortfall Core cashflow foundation,
     bounded bond-maturity / reinvestment Core HoldingsAsOf maturity-date
     live-proof foundation,
     optional live Risk concentration/high-volatility/drawdown proof

@@ -31,6 +31,38 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/allocation-drift/evaluate",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Evaluate caller-supplied, source-owned Manage action-register evidence for allocation-drift / mandate-review posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Manage action-register posture, workflow decision count, lineage edge count, portfolio-scoped evidence confirmation, and entitlement posture.",
+      "when_not_to_use": "Do not use as a live upstream source-ingestion API, allocation-drift calculation, mandate compliance approval, suitability approval, rebalance action, order instruction, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"workflowDecisionCount\":2,\"lineageEdgeCount\":4,\"manageSupportabilityState\":\"ready\",\"portfolioScopeConfirmed\":true,\"actionRegisterRef\":{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"route\":\"/api/v1/rebalance/supportability/summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-action-register\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"allocation_drift_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_allocation_drift_8d57adbf52f7f5a7\",\"family\":\"allocation_drift\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"pm_review_required\",\"evidencePacketId\":\"iep_allocation_drift_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"allocation-drift-mandate-review-v1\",\"sourceSignalIds\":[\"signal_allocation_drift_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"not_eligible\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"below_materiality\"],\"unsupportedReasons\":[],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"missing_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_returns_pm_review_candidate",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_below_threshold_not_eligible",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_blocks_store_wide_manage_posture",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_non_ready_source_blocker",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_api_requires_signal_permission",
+        "tests/integration/test_api_operation_events.py::test_allocation_drift_signal_api_emits_bounded_operation_event"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/low-income/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.ai_governance import register_ai_governance_routes
+from app.api.allocation_drift_signals import register_allocation_drift_signal_routes
 from app.api.bond_maturity_signals import register_bond_maturity_signal_routes
 from app.api.candidate_detail import register_candidate_detail_routes
 from app.api.candidate_evidence_replay import register_candidate_evidence_replay_routes
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
 
 def _register_product_routes(application: FastAPI) -> None:
     register_idea_signal_routes(application)
+    register_allocation_drift_signal_routes(application)
     register_bond_maturity_signal_routes(application)
     register_concentration_risk_signal_routes(application)
     register_drawdown_review_signal_routes(application)

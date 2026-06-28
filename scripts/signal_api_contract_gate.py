@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 SIGNAL_API_MODULES = (
+    Path("src/app/api/allocation_drift_signals.py"),
     Path("src/app/api/idea_signals.py"),
     Path("src/app/api/bond_maturity_signals.py"),
     Path("src/app/api/concentration_risk_signals.py"),

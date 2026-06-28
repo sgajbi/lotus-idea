@@ -33,6 +33,15 @@ assign benchmarks, certify methodology, recommend trades, create rebalance
 actions, prove Workbench behavior, authorize client publication, certify data
 mesh, or promote support.
 
+Allocation-drift / mandate-review is an internal bounded foundation only.
+`POST /api/v1/idea-signals/allocation-drift/evaluate` consumes
+caller-supplied Lotus Manage `PortfolioActionRegister:v1` action-register
+posture and mandate-health source refs to create portfolio-manager review
+posture or blocked/not-eligible/suppressed outcomes. It does not fetch Manage
+sources, calculate allocation drift, approve mandate compliance, recommend or
+create rebalance actions, create orders, prove Workbench behavior, authorize
+client publication, certify data mesh, or promote support.
+
 High-volatility review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/high-volatility/evaluate` consumes caller-supplied
 Lotus Risk `RiskMetricsReport:v1` volatility evidence to create
