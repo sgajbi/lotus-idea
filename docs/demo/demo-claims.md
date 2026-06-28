@@ -30,6 +30,15 @@ Allowed status vocabulary:
 | Metadata diagnostics | `Implemented` | `/metadata`, e2e smoke test. | Domain metadata is service-specific. | Add service-owned metadata only when implementation needs it. |
 | RFC-0002 implementation proof readiness diagnostic | `Partially implemented` | `GET /api/v1/implementation-proof/readiness`, endpoint certification ledger, unit/integration tests, generated readiness artifact proof, AI lineage store proof generation/consumption, default Advise proposal route, Manage action route, Report intake route, Report materialization, outbox broker, outbox consumer runtime, and outbox platform mesh event publication proof generation/consumption when evidence is present, and `implementation_proof_readiness_read` operation event. | Operator diagnostic only; it aggregates blockers and source-of-truth refs across source ingestion, advisor queue, AI explanation, data mesh, runtime telemetry, outbox delivery and bounded outbox proof family, Workbench, downstream realization, and supported-feature promotion; it does not provide full live implementation proof, `lotus-ai` runtime execution, certified external broker publication, full Workbench live proof, suitability/rebalance authority, data-product certification, client-ready publication, or supported-feature promotion. | Use it to drive the next proof slices; do not use it as demo evidence until every reported blocker is cleared by implementation-backed proof. |
 
+Drawdown review API proof is now part of the internal opportunity archetype
+foundation. `POST /api/v1/idea-signals/drawdown-review/evaluate` consumes only
+caller-supplied Lotus Risk `DrawdownAnalyticsReport:v1` maximum-drawdown
+evidence and is covered by bounded API, endpoint-certification, and
+operation-event tests. It does not fetch Risk sources, calculate drawdown,
+approve Risk methodology, recommend trades, create rebalance actions, prove
+Workbench behavior, authorize client publication, certify data mesh, or promote
+a supported feature.
+
 Missing-benchmark review is now an internal bounded foundation under the
 opportunity archetype/scenario contract. It has deterministic policy and Core
 benchmark-assignment source-port proof plus bounded Performance benchmark-readiness

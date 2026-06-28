@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof foundation, bond-maturity / reinvestment deterministic policy plus Core HoldingsAsOf maturity-date source adapter/live-proof and caller-supplied API foundation, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations, drawdown-review caller-supplied API foundation, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -405,7 +405,16 @@ Additional implemented drawdown-review foundation:
    below-materiality, stale, non-ready, missing-source, duplicate,
    entitlement-denied, source-unavailable, malformed-measure, trace-header, and
    request-validation cases.
-6. `src/app/application/risk_drawdown_live_proof.py`,
+6. `src/app/api/drawdown_review_signals.py` exposes
+   `POST /api/v1/idea-signals/drawdown-review/evaluate` as a bounded
+   caller-supplied API foundation over Lotus Risk
+   `DrawdownAnalyticsReport:v1` maximum-drawdown evidence. It requires
+   `idea.signal.evaluate` or advisor role, emits bounded operation events,
+   redacts source route/hash fields from candidate responses, and does not
+   fetch Risk sources, calculate drawdown, approve risk methodology,
+   recommend trades, create rebalance actions, publish client communication,
+   certify data products, prove Workbench behavior, or promote support.
+7. `src/app/application/risk_drawdown_live_proof.py`,
    `scripts/generate_risk_drawdown_live_proof.py`,
    `scripts/risk_drawdown_live_proof_contract_gate.py`, and
    `make risk-drawdown-live-proof-contract-gate` define a source-safe live Risk
@@ -414,7 +423,7 @@ Additional implemented drawdown-review foundation:
    evidence, ready Risk supportability, and deterministic drawdown-review
    candidate generation, then clears only the namespaced opportunity-archetype
    drawdown source blocker when consumed by aggregate readiness.
-7. This foundation does not include data-mesh certification, Workbench proof,
+8. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
 Additional implemented missing suitability context foundation:

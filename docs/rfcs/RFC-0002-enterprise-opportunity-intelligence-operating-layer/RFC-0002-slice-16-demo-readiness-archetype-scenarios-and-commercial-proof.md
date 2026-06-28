@@ -113,10 +113,12 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    benchmark context from `lotus-performance:ReturnsSeriesBundle:v1`, blocks
    missing benchmark context, and does not calculate performance methodology
    inside `lotus-idea`.
-6. High-volatility review now has a bounded deterministic policy, Lotus Risk
+6. High-volatility / drawdown review now has bounded deterministic policies, Lotus Risk
    `RiskMetricsReport:v1` and `DrawdownAnalyticsReport:v1`
-   source-port/adapter foundations, and source-safe live Risk volatility and
-   drawdown proof contracts. Valid artifacts can clear only
+   source-port/adapter foundations, the bounded
+   `POST /api/v1/idea-signals/drawdown-review/evaluate` caller-supplied API
+   foundation, and source-safe live Risk volatility and drawdown proof
+   contracts. Valid artifacts can clear only
    `opportunity_archetype_live_risk_volatility_source_proof_missing` and
    `opportunity_archetype_drawdown_source_proof_missing`; data-mesh
    certification, Workbench proof, client-publication approval, and

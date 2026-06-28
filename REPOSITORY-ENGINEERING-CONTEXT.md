@@ -147,6 +147,14 @@ source route/hash details from candidate source refs, and does not fetch
 Performance sources, calculate returns, assign benchmarks, certify benchmark
 methodology, recommend trades, create rebalance actions, certify data mesh,
 prove Workbench behavior, approve client publication, or promote a supported
+feature. `src/app/api/drawdown_review_signals.py` exposes
+`POST /api/v1/idea-signals/drawdown-review/evaluate` as a bounded
+caller-supplied API foundation over Lotus Risk `DrawdownAnalyticsReport:v1`
+maximum-drawdown evidence. It uses the shared signal API support, emits bounded
+operation events, redacts raw source route/hash details from candidate source
+refs, and does not fetch Risk sources, calculate drawdown, approve Risk
+methodology, recommend trades, create rebalance actions, certify data mesh,
+prove Workbench behavior, approve client publication, or promote a supported
 feature. `src/app/domain/low_income_signal.py` adds the low-income /
 liquidity-shortfall policy. The low-income foundation uses
 Core-owned `PortfolioCashflowProjection:v1` and
@@ -1048,7 +1056,10 @@ non-ready risk supportability blocking, and no local risk-methodology calculatio
 `DrawdownAnalyticsReport:v1` source port, a fail-closed HTTP adapter over
 `POST /analytics/risk/drawdown`, a source-safe live-proof artifact contract,
 and focused unit tests that prove source-reported max-drawdown consumption,
-non-ready risk supportability blocking, and no local risk-methodology calculation. Missing suitability
+non-ready risk supportability blocking, and no local risk-methodology
+calculation, plus a bounded caller-supplied API foundation at
+`POST /api/v1/idea-signals/drawdown-review/evaluate` with endpoint
+certification and operation-event evidence. Missing suitability
 context is backed by deterministic policy, a Lotus Advise
 `AdvisoryPolicyEvaluationRecord:v1` workflow source port, a fail-closed HTTP
 adapter over `GET /advisory/policy-evaluations/{evaluation_id}/workflow`, and

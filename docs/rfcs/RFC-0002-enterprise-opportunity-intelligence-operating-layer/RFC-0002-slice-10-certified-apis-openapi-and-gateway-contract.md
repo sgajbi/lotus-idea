@@ -15,6 +15,7 @@ The first certified API foundations are:
 - `POST /api/v1/idea-signals/low-income/evaluate`
 - `POST /api/v1/idea-signals/bond-maturity/evaluate`
 - `POST /api/v1/idea-signals/concentration-risk/evaluate`
+- `POST /api/v1/idea-signals/drawdown-review/evaluate`
 - `POST /api/v1/idea-signals/underperformance/evaluate`
 - `POST /api/v1/idea-signals/missing-suitability/evaluate`
 - `POST /api/v1/idea-signals/missing-risk-profile/evaluate`
@@ -36,7 +37,7 @@ for the high-cash / idle-liquidity signal family. They consume source-reported
 cash weight and source references; they do not fetch upstream data and do not
 calculate official cash, holdings, or portfolio values.
 
-The concentration-risk, underperformance, low-income, bond-maturity, missing suitability, missing
+The concentration-risk, drawdown-review, underperformance, low-income, bond-maturity, missing suitability, missing
 risk-profile, mandate/restriction, and missing-benchmark signal endpoints
 expose bounded caller-supplied evidence evaluation over source-owned Risk,
 Performance, Core, Advise, or Manage
@@ -45,7 +46,7 @@ posture, require `idea.signal.evaluate` or advisor role, redact raw source
 routes and content hashes from response candidates, emit bounded operation
 events, and do not infer client income needs, provide funding advice, issue
 treasury instructions, approve planning suitability, recommend replacement
-products, calculate reinvestment advice, calculate concentration, calculate
+products, calculate reinvestment advice, calculate concentration, calculate drawdown, calculate
 returns, assign benchmarks, approve risk
 methodology, recommend trades, create rebalance actions, own maturity
 schedules, create orders, approve suitability, policy, proposal, sign-off,
@@ -158,6 +159,11 @@ Implementation files:
    signal API over caller-supplied Lotus Risk concentration evidence with
    shared product-safe authorization, source-redacted response projection,
    OpenAPI examples, operation events, and no local risk-methodology authority.
+7. `src/app/api/drawdown_review_signals.py`: bounded drawdown-review signal
+   API over caller-supplied Lotus Risk drawdown analytics evidence with shared
+   product-safe authorization, source-redacted response projection, OpenAPI
+   examples, operation events, and no local Risk drawdown calculation or
+   risk-methodology authority.
 7. `src/app/api/signal_api_support.py`: shared signal API route metadata,
    permission, source-authority, operation outcome, and problem-detail support
    used by caller-supplied signal endpoints for design modularity without a new
@@ -243,6 +249,10 @@ Implementation files:
     behavior evidence for concentration-risk review candidate creation,
     below-threshold not-eligible posture, partial issuer-coverage blocking,
     stale-source blocking, permission denial, and no-authority promotion.
+36. `tests/integration/test_drawdown_review_signal_api.py`: certified API
+    behavior evidence for drawdown-review candidate creation, below-threshold
+    not-eligible posture, non-ready source blocking, stale-source blocking,
+    permission denial, and no-authority promotion.
 36. `tests/integration/test_api_operation_events.py`: bounded operation-event
     evidence for certified signal endpoint posture.
 
@@ -251,8 +261,8 @@ Implementation files:
 The evaluate endpoint returns deterministic posture only:
 
 1. `candidate_created` when all source evidence is current, entitlement is
-   allowed, and the source-reported high-cash, concentration-risk, low-income,
-   or maturity evidence satisfies the relevant policy threshold or review
+   allowed, and the source-reported high-cash, concentration-risk, drawdown,
+   low-income, or maturity evidence satisfies the relevant policy threshold or review
    window,
 2. `blocked` for stale/missing source evidence, missing source-reported metric,
    or entitlement denial,
