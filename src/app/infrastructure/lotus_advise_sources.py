@@ -59,7 +59,7 @@ class LotusAdvisePolicyEvaluationSourceAdapter:
             sign_off_blocker_count=posture.sign_off_blocker_count,
             client_ready_publication=posture.client_ready_publication,
             policy_ref=_source_ref(payload, request=request, route=route),
-            advise_diagnostic=_diagnostic(posture),
+            advise_diagnostic=_diagnostic(posture, payload),
         )
 
 
@@ -254,7 +254,10 @@ def _freshness(*payloads: dict[str, Any]) -> EvidenceFreshness:
     return EvidenceFreshness.UNAVAILABLE
 
 
-def _diagnostic(posture: _PolicyEvaluationPosture) -> str:
+def _diagnostic(posture: _PolicyEvaluationPosture, payload: dict[str, Any]) -> str:
+    explicit_diagnostic = _source_diagnostic(payload)
+    if explicit_diagnostic is not None:
+        return explicit_diagnostic
     if posture.evaluation_status is None or posture.sign_off_status is None:
         return "advise_policy_evaluation_source_partial"
     if posture.open_requirement_count > 0 or posture.blocked_requirement_count > 0:
@@ -262,3 +265,17 @@ def _diagnostic(posture: _PolicyEvaluationPosture) -> str:
     if posture.sign_off_blocker_count > 0:
         return "advise_policy_sign_off_blocked"
     return "advise_policy_context_available"
+
+
+def _source_diagnostic(payload: dict[str, Any]) -> str | None:
+    for key in ("advise_diagnostic", "diagnostic", "source_diagnostic"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    for key in ("diagnostic_codes", "source_diagnostic_codes"):
+        value = payload.get(key)
+        if isinstance(value, list):
+            for item in value:
+                if isinstance(item, str) and item.strip():
+                    return item.strip()
+    return None

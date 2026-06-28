@@ -132,6 +132,16 @@ def test_lotus_advise_adapter_url_encodes_evaluation_id() -> None:
     ]
 
 
+def test_lotus_advise_adapter_prefers_source_declared_diagnostic() -> None:
+    payload = _payload(extra={"diagnostic_codes": ["mandate_restriction_review_required"]})
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_policy_evaluation_evidence(_request())
+
+    assert evidence.advise_diagnostic == "mandate_restriction_review_required"
+
+
 def test_lotus_advise_adapter_maps_forbidden_source_response_to_entitlement_denied() -> None:
     adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
 
