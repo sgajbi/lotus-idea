@@ -151,6 +151,36 @@ def test_opportunity_archetype_contract_records_manage_foundation_without_promot
     assert allocation_drift.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_risk_signal_api_evidence_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    risk_review = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "high-volatility-drawdown-review"
+    )
+
+    assert risk_review.implementation_status == "partially_implemented"
+    assert risk_review.first_supported_journey is False
+    assert "lotus-risk:RiskMetricsReport:v1" in risk_review.source_products
+    assert "lotus-risk:DrawdownAnalyticsReport:v1" in risk_review.source_products
+    assert "src/app/application/high_volatility_signal.py" in risk_review.evidence_refs
+    assert "src/app/api/high_volatility_signals.py" in risk_review.evidence_refs
+    assert "src/app/api/drawdown_review_signals.py" in risk_review.evidence_refs
+    assert "POST /api/v1/idea-signals/high-volatility/evaluate" in (risk_review.evidence_refs)
+    assert "POST /api/v1/idea-signals/drawdown-review/evaluate" in (risk_review.evidence_refs)
+    assert "tests/integration/test_high_volatility_signal_api.py" in (risk_review.evidence_refs)
+    assert "tests/integration/test_drawdown_review_signal_api.py" in (risk_review.evidence_refs)
+    assert "make high-volatility-live-proof-contract-gate" in risk_review.evidence_refs
+    assert "make risk-drawdown-live-proof-contract-gate" in risk_review.evidence_refs
+    assert "data_mesh_not_certified" in risk_review.blockers
+    assert "supported_feature_promotion_missing" in risk_review.blockers
+    assert risk_review.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert risk_review.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_records_missing_suitability_foundation_without_promotion() -> (
     None
 ):
@@ -384,6 +414,26 @@ def test_opportunity_archetype_contract_gate_rejects_missing_manage_evidence() -
     assert (
         "allocation-drift-mandate-review evidence_refs missing: "
         "src/app/api/allocation_drift_signals.py"
+    ) in errors
+
+
+def test_opportunity_archetype_contract_gate_rejects_missing_risk_signal_api_evidence() -> None:
+    module = _load_contract_gate_script()
+    payload = _contract_payload()
+    risk_review = next(
+        archetype
+        for archetype in payload["archetypes"]
+        if archetype["archetype_id"] == "high-volatility-drawdown-review"
+    )
+    risk_review["evidence_refs"].remove("src/app/api/high_volatility_signals.py")
+    risk_review["evidence_refs"].remove("tests/integration/test_drawdown_review_signal_api.py")
+
+    errors = module.validate_opportunity_archetype_contract_payload(module._parse_payload(payload))
+
+    assert (
+        "high-volatility-drawdown-review evidence_refs missing: "
+        "src/app/api/high_volatility_signals.py, "
+        "tests/integration/test_drawdown_review_signal_api.py"
     ) in errors
 
 

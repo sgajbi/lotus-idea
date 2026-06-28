@@ -314,10 +314,17 @@ Persistence adapter validation:
     `make high-volatility-live-proof-contract-gate` prove the optional Lotus
     Risk volatility live-proof artifact remains source-safe and can clear only
     the namespaced volatility source blocker when valid evidence is supplied.
+    `tests/unit/test_opportunity_archetype_contract_gate.py` and
+    `make opportunity-archetype-contract-gate` also require the
+    high-volatility API module, route, and integration test as archetype
+    evidence.
     `tests/unit/test_risk_drawdown_live_proof.py` and
     `make risk-drawdown-live-proof-contract-gate` prove the optional Lotus Risk
     drawdown live-proof artifact remains source-safe and can clear only the
     namespaced drawdown source blocker when valid evidence is supplied.
+    `tests/unit/test_opportunity_archetype_contract_gate.py` and
+    `make opportunity-archetype-contract-gate` also require the drawdown API
+    module, route, and integration test as archetype evidence.
     `tests/unit/test_performance_underperformance_live_proof.py` and
     `make performance-underperformance-live-proof-contract-gate` prove the
     optional Lotus Performance underperformance live-proof artifact remains

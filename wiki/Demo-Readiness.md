@@ -51,7 +51,10 @@ Lotus Risk `RiskMetricsReport:v1` volatility evidence to create
 advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
 fetch Risk sources, calculate volatility, approve Risk methodology, recommend
 trades, create rebalance actions, prove Workbench behavior, authorize client
-publication, certify data mesh, or promote support.
+publication, certify data mesh, or promote support. The opportunity archetype
+contract gate pins the high-volatility API module, endpoint, and integration
+test as evidence, so demo-readiness proof cannot rely on policy-only
+high-volatility evidence.
 
 Drawdown review is an internal bounded foundation only.
 `POST /api/v1/idea-signals/drawdown-review/evaluate` consumes caller-supplied
@@ -59,7 +62,9 @@ Lotus Risk `DrawdownAnalyticsReport:v1` maximum-drawdown evidence to create
 advisor-review posture or blocked/not-eligible/suppressed outcomes. It does not
 fetch Risk sources, calculate drawdown, approve Risk methodology, recommend
 trades, create rebalance actions, prove Workbench behavior, authorize client
-publication, certify data mesh, or promote support.
+publication, certify data mesh, or promote support. The opportunity archetype
+contract gate pins the drawdown API module, endpoint, and integration test as
+evidence, so demo-readiness proof cannot rely on policy-only drawdown evidence.
 
 Missing-benchmark review is an internal bounded foundation only. It can create
 advisor-review evidence-gap candidates from Core-owned benchmark-assignment

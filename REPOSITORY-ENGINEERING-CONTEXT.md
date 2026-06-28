@@ -163,7 +163,13 @@ operation events, redacts raw source route/hash details from candidate source
 refs, and does not fetch Risk sources, calculate drawdown, approve Risk
 methodology, recommend trades, create rebalance actions, certify data mesh,
 prove Workbench behavior, approve client publication, or promote a supported
-feature. `src/app/domain/low_income_signal.py` adds the low-income /
+feature. The opportunity archetype contract and
+`make opportunity-archetype-contract-gate` pin the high-volatility and
+drawdown API modules, routes, and integration tests as high-volatility /
+drawdown evidence refs. Future proof-readiness or demo-readiness updates must
+preserve those API refs unless the endpoints are intentionally retired with
+matching docs, tests, OpenAPI, and supported-features truth.
+`src/app/domain/low_income_signal.py` adds the low-income /
 liquidity-shortfall policy. The low-income foundation uses
 Core-owned `PortfolioCashflowProjection:v1` and
 `PortfolioCashMovementSummary:v1` source refs, source freshness, cashflow

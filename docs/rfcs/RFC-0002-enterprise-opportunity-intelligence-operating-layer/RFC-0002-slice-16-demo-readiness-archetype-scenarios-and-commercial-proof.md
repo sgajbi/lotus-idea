@@ -124,7 +124,10 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    `opportunity_archetype_live_risk_volatility_source_proof_missing` and
    `opportunity_archetype_drawdown_source_proof_missing`; data-mesh
    certification, Workbench proof, client-publication approval, and
-   supported-feature evidence remain required before demo use.
+   supported-feature evidence remain required before demo use. The governed
+   archetype contract now pins the high-volatility and drawdown API modules,
+   routes, and integration tests as evidence refs, keeping demo-readiness proof
+   tied to implemented API surfaces rather than policy-only proof.
 7. Missing suitability context now has a bounded deterministic policy and
    Lotus Advise `AdvisoryPolicyEvaluationRecord:v1` workflow
    source-port/adapter/live-proof foundation. It can create only a

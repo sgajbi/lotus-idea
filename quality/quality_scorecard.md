@@ -31,3 +31,12 @@ remains non-promoted: no Manage source fetch, allocation-drift
 calculation, mandate compliance approval, rebalance action, order creation,
 client publication, data-product certification, Workbench proof, or
 supported-feature promotion.
+
+Current slice note: the high-volatility / drawdown archetype evidence contract
+now requires the high-volatility and drawdown caller-supplied API modules,
+routes, and integration tests. This hardens
+`make opportunity-archetype-contract-gate` so Risk review proof-readiness cannot
+silently regress to policy-only evidence while preserving the current
+non-promoted boundary: no Risk source fetch, volatility or drawdown
+calculation, Risk methodology approval, client publication, data-product
+certification, Workbench proof, or supported-feature promotion.
