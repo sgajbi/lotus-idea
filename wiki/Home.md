@@ -10,18 +10,18 @@ and validation exist.
 
 ## Start Here
 
-1. [Overview](Overview.md)
-2. [Architecture](Architecture.md)
-3. [Getting Started](Getting-Started.md)
-4. [Development Workflow](Development-Workflow.md)
-5. [Validation And CI](Validation-And-CI.md)
-6. [RFC Index](RFC-Index.md)
-7. [Integrations](Integrations.md)
-8. [Supported Features](Supported-Features.md)
-9. [Operations Runbook](Operations-Runbook.md)
-10. [Security And Governance](Security-And-Governance.md)
-11. [Demo Readiness](Demo-Readiness.md)
-12. [Roadmap](Roadmap.md)
+1. [Overview](Overview)
+2. [Architecture](Architecture)
+3. [Getting Started](Getting-Started)
+4. [Development Workflow](Development-Workflow)
+5. [Validation and CI](Validation-And-CI)
+6. [RFC Index](RFC-Index)
+7. [Integrations](Integrations)
+8. [Supported Features](Supported-Features)
+9. [Operations Runbook](Operations-Runbook)
+10. [Security and Governance](Security-And-Governance)
+11. [Demo Readiness](Demo-Readiness)
+12. [Roadmap](Roadmap)
 
 ## Boundary
 
