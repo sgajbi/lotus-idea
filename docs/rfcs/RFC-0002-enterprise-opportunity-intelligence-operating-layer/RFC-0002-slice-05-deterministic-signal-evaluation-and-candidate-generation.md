@@ -406,6 +406,10 @@ Additional implemented high-volatility foundation:
    approve Risk methodology, recommend trades, create rebalance actions,
    publish client communication, certify data products, prove Workbench
    behavior, or promote support.
+9. The opportunity archetype contract gate now requires the high-volatility
+   API module, route, and integration test as implementation evidence for the
+   high-volatility / drawdown review archetype, so proof-readiness evidence
+   cannot regress to policy-only high-volatility proof.
 
 Additional implemented drawdown-review foundation:
 
@@ -443,7 +447,11 @@ Additional implemented drawdown-review foundation:
    fetch Risk sources, calculate drawdown, approve risk methodology,
    recommend trades, create rebalance actions, publish client communication,
    certify data products, prove Workbench behavior, or promote support.
-7. `src/app/application/risk_drawdown_live_proof.py`,
+7. The opportunity archetype contract gate now requires the drawdown-review
+   API module, route, and integration test as implementation evidence for the
+   high-volatility / drawdown review archetype, so proof-readiness evidence
+   cannot regress to policy-only drawdown proof.
+8. `src/app/application/risk_drawdown_live_proof.py`,
    `scripts/generate_risk_drawdown_live_proof.py`,
    `scripts/risk_drawdown_live_proof_contract_gate.py`, and
    `make risk-drawdown-live-proof-contract-gate` define a source-safe live Risk
@@ -452,7 +460,7 @@ Additional implemented drawdown-review foundation:
    evidence, ready Risk supportability, and deterministic drawdown-review
    candidate generation, then clears only the namespaced opportunity-archetype
    drawdown source blocker when consumed by aggregate readiness.
-8. This foundation does not include data-mesh certification, Workbench proof,
+9. This foundation does not include data-mesh certification, Workbench proof,
    client-publication approval, or supported-feature promotion.
 
 Additional implemented missing suitability context foundation:

@@ -273,6 +273,13 @@ or unshared source-authority/error/event mechanics.
     API evidence only and not Manage source fetch, drift calculation, mandate
     approval, rebalance/action/order authority, data-mesh certification,
     Workbench proof, client publication, or supported-feature promotion.
+31. The high-volatility / drawdown opportunity archetype evidence contract now
+    pins the high-volatility and drawdown caller-supplied API modules, routes,
+    and integration tests in addition to Risk source-proof evidence,
+    preserving the boundary that this is API evidence only and not Risk source
+    fetch, volatility or drawdown calculation, Risk methodology approval,
+    rebalance/action/order authority, data-mesh certification, Workbench proof,
+    client publication, or supported-feature promotion.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and
