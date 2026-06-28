@@ -64,11 +64,8 @@ jobs:
       matrix:
         include:
           - suite: unit
-            path: tests/unit
           - suite: integration
-            path: tests/integration
           - suite: e2e
-            path: tests/e2e
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
@@ -78,9 +75,7 @@ jobs:
       - name: Install
         run: make install
       - name: Run tests with coverage data
-        env:
-          COVERAGE_FILE: .coverage.${{ matrix.suite }}
-        run: ./.venv/bin/python -m pytest ${{ matrix.path }} --cov=src --cov-report=
+        run: make test-${{ matrix.suite }}-coverage
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:

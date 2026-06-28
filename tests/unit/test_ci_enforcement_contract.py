@@ -52,6 +52,12 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "source-ingestion-worker-check:" in makefile
     assert "$(MAKE) source-ingestion-worker-check" in makefile
     assert "scripts/source_ingestion_worker_contract_gate.py" in makefile
+    assert "test-unit-coverage:" in makefile
+    assert "test-integration-coverage:" in makefile
+    assert "test-e2e-coverage:" in makefile
+    assert (
+        "test-coverage: test-unit-coverage test-integration-coverage test-e2e-coverage" in makefile
+    )
     assert "postgres-integration-gate:" in makefile
     assert "tests/integration/test_postgres_runtime_integration.py" in makefile
     assert (
@@ -312,6 +318,30 @@ def test_ci_contract_gate_blocks_soft_failed_workflow_jobs(tmp_path: Path) -> No
     errors = module.validate_workflows(workflow_dir)
 
     assert "feature-lane.yml must not contain `continue-on-error:`" in errors
+
+
+def test_ci_contract_gate_blocks_raw_workflow_pytest_shortcuts(tmp_path: Path) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    workflow_dir.mkdir(parents=True)
+    for workflow_name in module.WORKFLOW_EXPECTATIONS:
+        source = ROOT / ".github" / "workflows" / workflow_name
+        target = workflow_dir / workflow_name
+        target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+    feature_lane = workflow_dir / "feature-lane.yml"
+    feature_lane.write_text(
+        feature_lane.read_text(encoding="utf-8").replace(
+            "run: make test-unit",
+            "run: ./.venv/bin/python -m pytest tests/unit",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert "feature-lane.yml missing `make test-unit`" in errors
+    assert "feature-lane.yml must not contain `run: ./.venv/bin/python -m pytest`" in errors
 
 
 def test_ci_contract_gate_rejects_workflows_without_parseable_jobs() -> None:

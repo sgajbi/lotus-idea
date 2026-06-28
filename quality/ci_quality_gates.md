@@ -110,10 +110,10 @@ operations contract validation, governed generated-artifact cleanup, PostgreSQL 
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
-scoped test-target variables for focused fix-forward validation, and pass/fail unit coverage for
-the CI contract gate itself. The CI contract gate now explicitly fails if these current blocking
-lint gates are removed from `make lint`, so agent-driven quality controls cannot quietly become
-optional local commands.
+scoped test-target variables for focused fix-forward validation, repo-native GitHub test and
+coverage target usage, and pass/fail unit coverage for the CI contract gate itself. The CI contract
+gate now explicitly fails if these current blocking lint gates are removed from `make lint`, so
+agent-driven quality controls cannot quietly become optional local commands.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
@@ -125,6 +125,20 @@ make test-e2e E2E_TESTS=tests/e2e/test_service_contract.py
 
 The defaults remain the full unit, integration, and e2e suites. The CI contract gate blocks
 removal of `UNIT_TESTS`, `INTEGRATION_TESTS`, and `E2E_TESTS` wiring.
+
+Coverage collection also stays on the Makefile surface:
+
+```powershell
+make test-unit-coverage
+make test-integration-coverage
+make test-e2e-coverage
+make test-coverage
+```
+
+`test-coverage` runs the three suite-level coverage targets before `make coverage-gate`. GitHub
+Feature, PR Merge, and Main Releasability lanes must call the repo-native test and coverage targets
+instead of raw workflow `pytest` commands; `make ci-contract-gate` rejects workflow shortcuts so
+future agents cannot make GitHub appear green while bypassing local governance.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also

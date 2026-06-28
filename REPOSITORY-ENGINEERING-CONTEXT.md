@@ -1568,11 +1568,12 @@ security, Docker, release-evidence, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded
 workflow timeouts, no `continue-on-error: true` in critical lanes,
 implementation-truth enforcement, non-suppressed auto-merge token usage,
-workflow-dispatch access, or merged-PR main-releasability dispatch from local
-or GitHub validation. Unit coverage proves current pass behavior and failure
-cases for floating action tags, wrong verified SHAs, missing action-version
-provenance, and removal of current blocking lint gates from the repo-native
-quality path.
+workflow-dispatch access, repo-native GitHub test and coverage target usage,
+or merged-PR main-releasability dispatch from local or GitHub validation. Unit
+coverage proves current pass behavior and failure cases for floating action
+tags, wrong verified SHAs, missing action-version provenance, raw workflow
+`pytest` shortcuts, weakened coverage-target selectors, and removal of current
+blocking lint gates from the repo-native quality path.
 
 `make repository-hygiene-gate` is blocking through `make lint`. It scans
 tracked Git files and fails if generated Python cache files, local coverage
