@@ -54,6 +54,8 @@ def test_manage_mandate_live_proof_payload_is_source_safe_and_not_promoted() -> 
     assert payload["sourceEvidenceCurrent"] is True
     assert payload["portfolioScopeConfirmed"] is True
     assert payload["manageActionRegisterReady"] is True
+    assert payload["mandatePerformanceHealthSourceRefCurrent"] is True
+    assert payload["mandateRiskHealthSourceRefCurrent"] is True
     assert payload["workflowDecisionCount"] == 2
     assert payload["lineageEdgeCount"] == 1
     assert payload["rebalanceExecutionAuthorityGranted"] is False
@@ -63,7 +65,9 @@ def test_manage_mandate_live_proof_payload_is_source_safe_and_not_promoted() -> 
     assert payload["proofClosed"] is False
     assert payload["proofBlockers"] == []
     assert payload["aggregateBlockersCleared"] == [
-        "opportunity_archetype_portfolio_scoped_manage_source_proof_missing"
+        "opportunity_archetype_portfolio_scoped_manage_source_proof_missing",
+        "opportunity_archetype_mandate_performance_health_source_ref_missing",
+        "opportunity_archetype_mandate_risk_health_source_ref_missing",
     ]
     assert manage_mandate_live_proof_is_valid(payload) is True
     serialized = json.dumps(payload)
@@ -101,6 +105,8 @@ def test_blocked_manage_mandate_live_proof_does_not_validate() -> None:
     assert "manage_source_evidence_not_current" in payload["proofBlockers"]
     assert "manage_portfolio_scope_not_confirmed" in payload["proofBlockers"]
     assert "manage_action_register_not_ready" in payload["proofBlockers"]
+    assert "mandate_performance_health_source_ref_missing" in payload["proofBlockers"]
+    assert "mandate_risk_health_source_ref_missing" in payload["proofBlockers"]
     assert "manage_workflow_decision_evidence_missing" in payload["proofBlockers"]
     assert "manage_lineage_evidence_missing" in payload["proofBlockers"]
     assert "no_allocation_drift_mandate_candidate_generated" in payload["proofBlockers"]
@@ -116,6 +122,8 @@ def test_manage_mandate_live_proof_records_missing_live_source_attempt() -> None
             "sourceEvidenceCurrent": True,
             "portfolioScopeConfirmed": True,
             "manageActionRegisterReady": True,
+            "mandatePerformanceHealthSourceRefCurrent": True,
+            "mandateRiskHealthSourceRefCurrent": True,
             "workflowDecisionCount": 2,
             "lineageEdgeCount": 1,
             "sourceDiagnosticCodes": "not-a-list",
@@ -129,6 +137,22 @@ def test_manage_mandate_live_proof_records_missing_live_source_attempt() -> None
     assert payload["reasonCodes"] == []
     assert payload["unsupportedReasons"] == []
     assert "manage_portfolio_scoped_source_proof_missing" in payload["proofBlockers"]
+    assert manage_mandate_live_proof_is_valid(payload) is False
+
+
+def test_manage_mandate_live_proof_requires_source_owned_health_refs() -> None:
+    payload = build_manage_mandate_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_manage_source_attempted=True,
+        evaluation_summary={
+            **_valid_summary(),
+            "mandatePerformanceHealthSourceRefCurrent": True,
+            "mandateRiskHealthSourceRefCurrent": False,
+        },
+    )
+
+    assert "mandate_performance_health_source_ref_missing" not in payload["proofBlockers"]
+    assert "mandate_risk_health_source_ref_missing" in payload["proofBlockers"]
     assert manage_mandate_live_proof_is_valid(payload) is False
 
 
@@ -217,6 +241,8 @@ def test_manage_mandate_live_proof_cli_writes_source_safe_artifact(
     assert payload["candidateGenerated"] is True
     assert payload["sourceEvidenceCurrent"] is True
     assert payload["portfolioScopeConfirmed"] is True
+    assert payload["mandatePerformanceHealthSourceRefCurrent"] is True
+    assert payload["mandateRiskHealthSourceRefCurrent"] is True
     assert payload["rebalanceExecutionAuthorityGranted"] is False
     assert (
         "opportunity_archetype_portfolio_scoped_manage_source_proof_missing"
@@ -277,6 +303,8 @@ def _valid_summary() -> dict[str, object]:
         "sourceEvidenceCurrent": True,
         "portfolioScopeConfirmed": True,
         "manageActionRegisterReady": True,
+        "mandatePerformanceHealthSourceRefCurrent": True,
+        "mandateRiskHealthSourceRefCurrent": True,
         "workflowDecisionCount": 2,
         "lineageEdgeCount": 1,
         "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
@@ -304,7 +332,36 @@ def _manage_evidence() -> ManageMandateHealthEvidence:
             data_quality_status="ready",
             freshness=EvidenceFreshness.CURRENT,
         ),
+        mandate_performance_health_ref=_source_ref(
+            product_id="lotus-performance:MandatePerformanceHealthContext:v1",
+            source_system=SourceSystem.LOTUS_PERFORMANCE,
+            content_hash="sha256:mandate-performance-health",
+        ),
+        mandate_risk_health_ref=_source_ref(
+            product_id="lotus-risk:MandateRiskHealthContext:v1",
+            source_system=SourceSystem.LOTUS_RISK,
+            content_hash="sha256:mandate-risk-health",
+        ),
         manage_diagnostic="manage_action_register_ready_portfolio_scope",
+    )
+
+
+def _source_ref(
+    *,
+    product_id: str,
+    source_system: SourceSystem,
+    content_hash: str,
+) -> SourceRef:
+    return SourceRef(
+        product_id=product_id,
+        source_system=source_system,
+        product_version="v1",
+        route="/api/v1/rebalance/supportability/summary",
+        as_of_date=AS_OF_DATE,
+        generated_at_utc=GENERATED_AT,
+        content_hash=content_hash,
+        data_quality_status="ready",
+        freshness=EvidenceFreshness.CURRENT,
     )
 
 

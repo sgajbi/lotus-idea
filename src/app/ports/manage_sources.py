@@ -41,6 +41,8 @@ class ManageMandateHealthEvidence:
     freshness_bucket: str | None
     portfolio_scope_confirmed: bool
     action_register_ref: SourceRef | None
+    mandate_performance_health_ref: SourceRef | None = None
+    mandate_risk_health_ref: SourceRef | None = None
     manage_diagnostic: str | None = None
     entitlement_allowed: bool = True
 

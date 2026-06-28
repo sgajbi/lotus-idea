@@ -198,11 +198,12 @@ or settlement inside `lotus-idea`.
 `make manage-mandate-live-proof-contract-gate` now define a source-safe
 Manage mandate live-proof contract. A valid artifact referenced through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` clears only
-`opportunity_archetype_portfolio_scoped_manage_source_proof_missing` for
-allocation-drift / mandate-review readiness. Mandate performance-health,
-mandate risk-health, Core portfolio-state, data-mesh, Workbench,
-client-publication, supported-feature, rebalance, action, and order-execution
-blockers remain.
+`opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
+`opportunity_archetype_mandate_performance_health_source_ref_missing`, and
+`opportunity_archetype_mandate_risk_health_source_ref_missing` for
+allocation-drift / mandate-review readiness. Core portfolio-state, data-mesh,
+Workbench, client-publication, supported-feature, rebalance, action, and
+order-execution blockers remain.
 `src/app/application/core_portfolio_state_live_proof.py`,
 `scripts/generate_core_portfolio_state_live_proof.py`, and
 `make core-portfolio-state-live-proof-contract-gate` now define a source-safe
@@ -1128,7 +1129,8 @@ typed Advise risk-profile source-product blocker.
 A valid missing risk-profile live-proof artifact clears only the Advise
 risk-profile live-source blocker.
 A valid Manage mandate live-proof artifact clears only the portfolio-scoped
-Manage action-register source blocker.
+Manage action-register source blocker and current source refs for source-owned
+mandate performance-health and mandate risk-health contexts.
 A valid mandate/restriction live-proof artifact clears only the Advise live
 restriction source blocker.
 A valid mandate/restriction source-product proof artifact clears only the typed
@@ -1138,10 +1140,9 @@ carries data-mesh certification, Workbench, client-publication, and
 supported-feature blockers; underperformance still carries live Performance,
 data-mesh, Workbench, client-publication, and supported-feature blockers after
 Core benchmark assignment proof is supplied. Allocation drift still carries
-mandate performance-health source-ref, mandate risk-health source-ref,
 data-mesh, Workbench, client-publication, supported-feature, rebalance, action,
-and order-execution blockers after live Manage mandate and Core
-portfolio-state proofs are supplied. High volatility / drawdown
+and order-execution blockers after live Manage mandate and Core portfolio-state
+proofs are supplied. High volatility / drawdown
 review still carries data-mesh, Workbench, client-publication, and
 supported-feature blockers after live Risk volatility and drawdown proofs are supplied.
 Missing suitability context still carries data-mesh, Workbench,
@@ -1221,7 +1222,8 @@ supplied through aggregate implementation-proof readiness, it clears only
 `opportunity_archetype_core_portfolio_state_source_ref_missing` and keeps
 portfolio-scoped Manage, mandate performance-health, mandate risk-health,
 data-mesh, Workbench, client-publication, supported-feature, rebalance, action,
-and order-execution blockers intact.
+and order-execution blockers intact unless a separate valid Manage mandate
+live-proof artifact supplies those source refs.
 `make missing-benchmark-live-proof-contract-gate` validates the optional Lotus
 Core missing-benchmark live-proof artifact. When a valid artifact is supplied
 through aggregate implementation-proof readiness, it clears only

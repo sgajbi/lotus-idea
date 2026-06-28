@@ -55,6 +55,8 @@ REQUIRED_TOP_LEVEL_KEYS = {
     "sourceEvidenceCurrent",
     "portfolioScopeConfirmed",
     "manageActionRegisterReady",
+    "mandatePerformanceHealthSourceRefCurrent",
+    "mandateRiskHealthSourceRefCurrent",
     "workflowDecisionCount",
     "lineageEdgeCount",
     "sourceDiagnosticCodes",
@@ -90,6 +92,8 @@ def validate_manage_mandate_live_proof_contract() -> list[str]:
             "sourceEvidenceCurrent": True,
             "portfolioScopeConfirmed": True,
             "manageActionRegisterReady": True,
+            "mandatePerformanceHealthSourceRefCurrent": True,
+            "mandateRiskHealthSourceRefCurrent": True,
             "workflowDecisionCount": 2,
             "lineageEdgeCount": 1,
             "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
@@ -115,10 +119,11 @@ def validate_manage_mandate_live_proof_contract() -> list[str]:
     if payload.get("proofClosed") is not False:
         errors.append("manage mandate proof must remain open while blockers remain")
     if payload.get("aggregateBlockersCleared") != list(MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED):
-        errors.append("manage mandate proof must clear only the portfolio-scoped Manage blocker")
+        errors.append(
+            "manage mandate proof must clear only portfolio-scoped Manage plus "
+            "source-owned mandate performance/risk health source-ref blockers"
+        )
     for blocker in (
-        "opportunity_archetype_mandate_performance_health_source_ref_missing",
-        "opportunity_archetype_mandate_risk_health_source_ref_missing",
         "opportunity_archetype_core_portfolio_state_source_ref_missing",
         "opportunity_archetype_data_mesh_not_certified",
         "opportunity_archetype_workbench_product_proof_missing",
@@ -141,6 +146,8 @@ def validate_manage_mandate_live_proof_contract() -> list[str]:
             "sourceEvidenceCurrent": False,
             "portfolioScopeConfirmed": False,
             "manageActionRegisterReady": False,
+            "mandatePerformanceHealthSourceRefCurrent": False,
+            "mandateRiskHealthSourceRefCurrent": False,
             "workflowDecisionCount": 0,
             "lineageEdgeCount": 0,
             "evaluationOutcome": "blocked",
