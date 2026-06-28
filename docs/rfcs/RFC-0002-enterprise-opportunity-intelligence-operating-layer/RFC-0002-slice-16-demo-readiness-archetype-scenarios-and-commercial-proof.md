@@ -151,7 +151,10 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    bounded caller-supplied
    `POST /api/v1/idea-signals/allocation-drift/evaluate` API foundation,
    source-safe Manage mandate live-proof contract, and source-safe Core
-   portfolio-state live-proof contract. The API can create only
+   portfolio-state live-proof contract. The governed archetype contract and
+   `make opportunity-archetype-contract-gate` require the allocation-drift API
+   module, route, and integration test as evidence refs, preventing demo
+   readiness from being inferred from policy-only evidence. The API can create only
    portfolio-manager review candidates from source-owned Manage posture and
    cannot calculate drift, approve mandate compliance, create rebalance
    actions, create orders, publish client communication, or promote support.

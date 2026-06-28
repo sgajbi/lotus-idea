@@ -228,6 +228,13 @@ does not fetch Manage sources, calculate allocation drift, approve mandate
 compliance, create rebalance actions, create orders, certify data mesh, prove
 Workbench behavior, approve client publication, or promote a supported
 feature.
+The opportunity archetype contract and `make opportunity-archetype-contract-gate`
+pin `src/app/api/allocation_drift_signals.py`,
+`POST /api/v1/idea-signals/allocation-drift/evaluate`, and
+`tests/integration/test_allocation_drift_signal_api.py` as allocation-drift
+evidence refs. Future proof-readiness or demo-readiness updates must preserve
+those API refs unless the endpoint is intentionally retired with matching docs,
+tests, OpenAPI, and supported-features truth.
 `src/app/application/manage_mandate_live_proof.py`,
 `scripts/generate_manage_mandate_live_proof.py`, and
 `make manage-mandate-live-proof-contract-gate` now define a source-safe

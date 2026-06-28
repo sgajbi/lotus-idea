@@ -86,6 +86,7 @@ REQUIRED_UNDERPERFORMANCE_EVIDENCE = {
 REQUIRED_MANAGE_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
     "src/app/application/mandate_health_signal.py",
+    "src/app/api/allocation_drift_signals.py",
     "src/app/application/manage_mandate_live_proof.py",
     "src/app/application/core_portfolio_state_live_proof.py",
     "src/app/ports/manage_sources.py",
@@ -103,6 +104,8 @@ REQUIRED_MANAGE_EVIDENCE = {
     "tests/unit/test_manage_mandate_live_proof.py",
     "tests/unit/test_core_portfolio_state_live_proof.py",
     "tests/unit/test_implementation_proof_readiness_core_portfolio_state.py",
+    "tests/integration/test_allocation_drift_signal_api.py",
+    "POST /api/v1/idea-signals/allocation-drift/evaluate",
 }
 REQUIRED_HIGH_VOLATILITY_EVIDENCE = {
     "src/app/domain/signal_evaluation.py",
@@ -353,51 +356,6 @@ def _validate_archetypes(
             errors.append(
                 "high-cash-idle-liquidity evidence_refs missing: " + ", ".join(missing_evidence)
             )
-    concentration = archetypes.get("concentration-risk-review")
-    if concentration is not None:
-        missing_evidence = sorted(
-            REQUIRED_CONCENTRATION_EVIDENCE - set(concentration.evidence_refs)
-        )
-        if missing_evidence:
-            errors.append(
-                "concentration-risk-review evidence_refs missing: " + ", ".join(missing_evidence)
-            )
-    underperformance = archetypes.get("underperformance-review")
-    if underperformance is not None:
-        missing_evidence = sorted(
-            REQUIRED_UNDERPERFORMANCE_EVIDENCE - set(underperformance.evidence_refs)
-        )
-        if missing_evidence:
-            errors.append(
-                "underperformance-review evidence_refs missing: " + ", ".join(missing_evidence)
-            )
-    allocation_drift = archetypes.get("allocation-drift-mandate-review")
-    if allocation_drift is not None:
-        missing_evidence = sorted(REQUIRED_MANAGE_EVIDENCE - set(allocation_drift.evidence_refs))
-        if missing_evidence:
-            errors.append(
-                "allocation-drift-mandate-review evidence_refs missing: "
-                + ", ".join(missing_evidence)
-            )
-    high_volatility = archetypes.get("high-volatility-drawdown-review")
-    if high_volatility is not None:
-        missing_evidence = sorted(
-            REQUIRED_HIGH_VOLATILITY_EVIDENCE - set(high_volatility.evidence_refs)
-        )
-        if missing_evidence:
-            errors.append(
-                "high-volatility-drawdown-review evidence_refs missing: "
-                + ", ".join(missing_evidence)
-            )
-    missing_suitability = archetypes.get("missing-suitability-context")
-    if missing_suitability is not None:
-        missing_evidence = sorted(
-            REQUIRED_MISSING_SUITABILITY_EVIDENCE - set(missing_suitability.evidence_refs)
-        )
-        if missing_evidence:
-            errors.append(
-                "missing-suitability-context evidence_refs missing: " + ", ".join(missing_evidence)
-            )
     errors.extend(_validate_foundation_evidence(archetypes))
 
     for archetype_id, archetype in archetypes.items():
@@ -415,6 +373,11 @@ def _validate_archetypes(
 def _validate_foundation_evidence(archetypes: dict[str, object]) -> list[str]:
     errors: list[str] = []
     for archetype_id, required_evidence in (
+        ("concentration-risk-review", REQUIRED_CONCENTRATION_EVIDENCE),
+        ("underperformance-review", REQUIRED_UNDERPERFORMANCE_EVIDENCE),
+        ("allocation-drift-mandate-review", REQUIRED_MANAGE_EVIDENCE),
+        ("high-volatility-drawdown-review", REQUIRED_HIGH_VOLATILITY_EVIDENCE),
+        ("missing-suitability-context", REQUIRED_MISSING_SUITABILITY_EVIDENCE),
         ("low-income-liquidity-shortfall", REQUIRED_LOW_INCOME_EVIDENCE),
         ("bond-maturity-reinvestment", REQUIRED_BOND_MATURITY_EVIDENCE),
         ("missing-benchmark-review", REQUIRED_MISSING_BENCHMARK_EVIDENCE),

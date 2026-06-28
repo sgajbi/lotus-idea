@@ -36,6 +36,10 @@ internal posture only. It preserves the boundary that `lotus-idea` does not
 fetch Manage sources, calculate drift, approve mandate compliance, create
 rebalance actions, create orders, certify data mesh, prove Workbench behavior,
 publish to clients, or promote supported features.
+The opportunity archetype contract and `make opportunity-archetype-contract-gate`
+now also require the allocation-drift API module, route, and integration test
+as evidence refs so proof-readiness and demo-readiness docs cannot regress to
+policy-only evidence.
 `make signal-api-contract-gate` is blocking through `make lint` and the CI
 contract self-check so future caller-supplied signal API slices cannot
 reintroduce local signal-evaluation permission policy, local outcome mapping,
@@ -263,6 +267,12 @@ or unshared source-authority/error/event mechanics.
     data-mesh certification, Workbench product proof, client publication,
     product recommendation, reinvestment advice, maturity schedule authority,
     order execution, or supported-feature promotion exists.
+30. The allocation-drift opportunity archetype evidence contract now pins the
+    caller-supplied API module, route, and integration test in addition to
+    Manage/Core source-proof evidence, preserving the boundary that this is
+    API evidence only and not Manage source fetch, drift calculation, mandate
+    approval, rebalance/action/order authority, data-mesh certification,
+    Workbench proof, client publication, or supported-feature promotion.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and
