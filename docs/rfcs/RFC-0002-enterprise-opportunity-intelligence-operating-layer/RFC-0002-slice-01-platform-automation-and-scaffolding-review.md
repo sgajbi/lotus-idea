@@ -21,8 +21,8 @@ been addressed in `lotus-platform`:
    the standard repo-local wiki baseline to `automation/New-Lotus-Service.ps1`.
 2. The generated wiki baseline includes `_Sidebar.md`, `Home.md`,
    `Overview.md`, `Architecture.md`, `Getting-Started.md`,
-   `Development-Workflow.md`, `Validation-And-CI.md`,
-   `Operations-Runbook.md`, `Security-And-Governance.md`, `Integrations.md`,
+   `Development-Workflow.md`, `Validation-and-CI.md`,
+   `Operations-Runbook.md`, `Security-and-Governance.md`, `Integrations.md`,
    `Roadmap.md`, and `Supported-Features.md`.
 3. `lotus-platform/tests/unit/test_repository_hygiene_scaffold_contract.py`
    asserts that generated services contain the standard wiki page set,
@@ -69,7 +69,7 @@ The missing authored pages were:
 
 1. `Getting-Started.md`,
 2. `Development-Workflow.md`,
-3. `Validation-And-CI.md`,
+3. `Validation-and-CI.md`,
 4. `Roadmap.md`.
 
 This is a platform-scaffold issue, not just a `lotus-idea` local documentation
