@@ -43,11 +43,13 @@ Blocking scaffold commands:
 34. `make high-volatility-live-proof-contract-gate`
 35. `make risk-drawdown-live-proof-contract-gate`
 36. `make manage-mandate-live-proof-contract-gate`
-37. `make missing-suitability-live-proof-contract-gate`
-38. `make performance-underperformance-live-proof-contract-gate`
-39. `make core-benchmark-assignment-live-proof-contract-gate`
-40. `make core-portfolio-state-live-proof-contract-gate`
-41. `make implementation-proof-readiness-check` generates the scheduled-worker
+37. `make mandate-restriction-live-proof-contract-gate`
+38. `make missing-suitability-live-proof-contract-gate`
+39. `make missing-risk-profile-live-proof-contract-gate`
+40. `make performance-underperformance-live-proof-contract-gate`
+41. `make core-benchmark-assignment-live-proof-contract-gate`
+42. `make core-portfolio-state-live-proof-contract-gate`
+43. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
@@ -56,8 +58,9 @@ Blocking scaffold commands:
     proof artifact, default mesh policy proof artifact, and default platform
     mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
     registration proof artifacts and optional Core portfolio-state, Manage
-    mandate, and missing-suitability live Advise proof, then consumes all in
-    aggregate RFC proof-readiness evidence.
+    mandate, Advise mandate/restriction, missing-suitability, and missing
+    risk-profile live proof, then consumes all in aggregate RFC proof-readiness
+    evidence.
 35. `make supported-features-gate`
 36. `make endpoint-certification-gate`
 37. `make postgres-integration-gate`

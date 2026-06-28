@@ -74,6 +74,7 @@ make core-portfolio-state-live-proof-contract-gate
 make bond-maturity-live-proof-contract-gate
 make low-income-core-cashflow-live-proof-contract-gate
 make manage-mandate-live-proof-contract-gate
+make mandate-restriction-live-proof-contract-gate
 make missing-suitability-live-proof-contract-gate
 make missing-risk-profile-live-proof-contract-gate
 make performance-underperformance-live-proof-contract-gate
