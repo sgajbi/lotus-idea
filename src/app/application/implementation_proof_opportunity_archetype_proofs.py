@@ -58,6 +58,18 @@ from app.application.risk_drawdown_live_proof import (
 )
 from app.application.source_ingestion_live_proof import HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED
 
+OpportunityProofValidator = Callable[[Mapping[str, object]], bool]
+OpportunityProofApplicator = Callable[
+    [ImplementationProofCapabilityReadiness, str | None],
+    ImplementationProofCapabilityReadiness,
+]
+OpportunityProofStep = tuple[
+    Mapping[str, object] | None,
+    OpportunityProofValidator,
+    OpportunityProofApplicator,
+    str | None,
+]
+
 
 def _apply_opportunity_archetype_proofs(
     *,
@@ -96,102 +108,94 @@ def _apply_opportunity_archetype_proofs(
         source_ingestion_live_proof_valid=source_ingestion_live_proof_valid,
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
     )
-    if risk_concentration_live_proof and risk_concentration_live_proof_is_valid(
-        risk_concentration_live_proof
-    ):
-        capabilities = tuple(
-            _apply_risk_concentration_live_proof(capability, risk_concentration_live_proof_ref)
-            for capability in capabilities
-        )
-    if high_volatility_live_proof and high_volatility_live_proof_is_valid(
-        high_volatility_live_proof
-    ):
-        capabilities = tuple(
-            _apply_high_volatility_live_proof(capability, high_volatility_live_proof_ref)
-            for capability in capabilities
-        )
-    if risk_drawdown_live_proof and risk_drawdown_live_proof_is_valid(risk_drawdown_live_proof):
-        capabilities = tuple(
-            _apply_risk_drawdown_live_proof(capability, risk_drawdown_live_proof_ref)
-            for capability in capabilities
-        )
-    if performance_underperformance_live_proof and performance_underperformance_live_proof_is_valid(
-        performance_underperformance_live_proof
-    ):
-        capabilities = tuple(
-            _apply_performance_underperformance_live_proof(
-                capability,
-                performance_underperformance_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if core_benchmark_assignment_live_proof and core_benchmark_assignment_live_proof_is_valid(
-        core_benchmark_assignment_live_proof
-    ):
-        capabilities = tuple(
-            _apply_core_benchmark_assignment_live_proof(
-                capability,
-                core_benchmark_assignment_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if core_portfolio_state_live_proof and core_portfolio_state_live_proof_is_valid(
-        core_portfolio_state_live_proof
-    ):
-        capabilities = _apply_core_portfolio_state_live_proofs(
-            capabilities, core_portfolio_state_live_proof_ref
-        )
-    if bond_maturity_live_proof and bond_maturity_live_proof_is_valid(bond_maturity_live_proof):
-        capabilities = tuple(
-            _apply_bond_maturity_live_proof(capability, bond_maturity_live_proof_ref)
-            for capability in capabilities
-        )
-    if low_income_core_cashflow_live_proof and low_income_core_cashflow_live_proof_is_valid(
-        low_income_core_cashflow_live_proof
-    ):
-        capabilities = tuple(
-            _apply_low_income_core_cashflow_live_proof(
-                capability,
-                low_income_core_cashflow_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    if manage_mandate_live_proof and manage_mandate_live_proof_is_valid(manage_mandate_live_proof):
-        capabilities = tuple(
-            _apply_manage_mandate_live_proof(capability, manage_mandate_live_proof_ref)
-            for capability in capabilities
-        )
-    if missing_suitability_live_proof and missing_suitability_live_proof_is_valid(
-        missing_suitability_live_proof
-    ):
-        capabilities = tuple(
-            _apply_missing_suitability_live_proof(
-                capability,
-                missing_suitability_live_proof_ref,
-            )
-            for capability in capabilities
-        )
-    capabilities = _apply_valid_opportunity_proof(
-        capabilities,
-        proof=missing_risk_profile_live_proof,
-        proof_is_valid=missing_risk_profile_live_proof_is_valid,
-        apply_proof=_apply_missing_risk_profile_live_proof,
-        proof_ref=missing_risk_profile_live_proof_ref,
+    proof_steps: tuple[OpportunityProofStep, ...] = (
+        (
+            risk_concentration_live_proof,
+            risk_concentration_live_proof_is_valid,
+            _apply_risk_concentration_live_proof,
+            risk_concentration_live_proof_ref,
+        ),
+        (
+            high_volatility_live_proof,
+            high_volatility_live_proof_is_valid,
+            _apply_high_volatility_live_proof,
+            high_volatility_live_proof_ref,
+        ),
+        (
+            risk_drawdown_live_proof,
+            risk_drawdown_live_proof_is_valid,
+            _apply_risk_drawdown_live_proof,
+            risk_drawdown_live_proof_ref,
+        ),
+        (
+            performance_underperformance_live_proof,
+            performance_underperformance_live_proof_is_valid,
+            _apply_performance_underperformance_live_proof,
+            performance_underperformance_live_proof_ref,
+        ),
+        (
+            core_benchmark_assignment_live_proof,
+            core_benchmark_assignment_live_proof_is_valid,
+            _apply_core_benchmark_assignment_live_proof,
+            core_benchmark_assignment_live_proof_ref,
+        ),
+        (
+            core_portfolio_state_live_proof,
+            core_portfolio_state_live_proof_is_valid,
+            _apply_core_portfolio_state_live_proof,
+            core_portfolio_state_live_proof_ref,
+        ),
+        (
+            bond_maturity_live_proof,
+            bond_maturity_live_proof_is_valid,
+            _apply_bond_maturity_live_proof,
+            bond_maturity_live_proof_ref,
+        ),
+        (
+            low_income_core_cashflow_live_proof,
+            low_income_core_cashflow_live_proof_is_valid,
+            _apply_low_income_core_cashflow_live_proof,
+            low_income_core_cashflow_live_proof_ref,
+        ),
+        (
+            manage_mandate_live_proof,
+            manage_mandate_live_proof_is_valid,
+            _apply_manage_mandate_live_proof,
+            manage_mandate_live_proof_ref,
+        ),
+        (
+            missing_suitability_live_proof,
+            missing_suitability_live_proof_is_valid,
+            _apply_missing_suitability_live_proof,
+            missing_suitability_live_proof_ref,
+        ),
+        (
+            missing_risk_profile_live_proof,
+            missing_risk_profile_live_proof_is_valid,
+            _apply_missing_risk_profile_live_proof,
+            missing_risk_profile_live_proof_ref,
+        ),
+        (
+            missing_benchmark_live_proof,
+            missing_benchmark_live_proof_is_valid,
+            _apply_missing_benchmark_live_proof,
+            missing_benchmark_live_proof_ref,
+        ),
+        (
+            missing_benchmark_performance_readiness_proof,
+            missing_benchmark_performance_readiness_proof_is_valid,
+            _apply_missing_benchmark_performance_readiness_proof,
+            missing_benchmark_performance_readiness_proof_ref,
+        ),
     )
-    capabilities = _apply_valid_opportunity_proof(
-        capabilities,
-        proof=missing_benchmark_live_proof,
-        proof_is_valid=missing_benchmark_live_proof_is_valid,
-        apply_proof=_apply_missing_benchmark_live_proof,
-        proof_ref=missing_benchmark_live_proof_ref,
-    )
-    capabilities = _apply_valid_opportunity_proof(
-        capabilities,
-        proof=missing_benchmark_performance_readiness_proof,
-        proof_is_valid=missing_benchmark_performance_readiness_proof_is_valid,
-        apply_proof=_apply_missing_benchmark_performance_readiness_proof,
-        proof_ref=missing_benchmark_performance_readiness_proof_ref,
-    )
+    for proof, proof_is_valid, apply_proof, proof_ref in proof_steps:
+        capabilities = _apply_valid_opportunity_proof(
+            capabilities,
+            proof=proof,
+            proof_is_valid=proof_is_valid,
+            apply_proof=apply_proof,
+            proof_ref=proof_ref,
+        )
     return capabilities
 
 
@@ -367,16 +371,6 @@ def _apply_core_portfolio_state_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=CORE_PORTFOLIO_STATE_LIVE_BLOCKERS_CLEARED,
         proof_ref=core_portfolio_state_live_proof_ref,
-    )
-
-
-def _apply_core_portfolio_state_live_proofs(
-    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    core_portfolio_state_live_proof_ref: str | None,
-) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    return tuple(
-        _apply_core_portfolio_state_live_proof(capability, core_portfolio_state_live_proof_ref)
-        for capability in capabilities
     )
 
 

@@ -177,7 +177,6 @@ def build_implementation_proof_readiness_snapshot(
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
         raise ValueError("evaluated_at_utc must be timezone-aware")
-
     source_ingestion = build_source_ingestion_readiness_snapshot(repository_root=repository_root)
     review_queue = build_review_queue_readiness_snapshot(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=evaluated_at_utc),
@@ -229,7 +228,6 @@ def build_implementation_proof_readiness_snapshot(
         capabilities=capabilities,
         scope=locals(),
     )
-
     return _readiness_snapshot(
         evaluated_at_utc=evaluated_at_utc,
         supported_feature_count=supported_feature_count,
