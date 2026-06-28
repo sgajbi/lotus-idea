@@ -194,9 +194,14 @@ REQUIRED_MISSING_RISK_PROFILE_EVIDENCE = {
 REQUIRED_MANDATE_RESTRICTION_EVIDENCE = {
     "src/app/domain/mandate_restriction_signal.py",
     "src/app/application/mandate_restriction_signal.py",
+    "src/app/application/mandate_restriction_live_proof.py",
     "src/app/api/idea_signals.py",
+    "scripts/generate_mandate_restriction_live_proof.py",
+    "make mandate-restriction-live-proof-contract-gate",
     "tests/unit/test_mandate_restriction_signal_evaluation.py",
     "tests/unit/test_mandate_restriction_application.py",
+    "tests/unit/test_mandate_restriction_live_proof.py",
+    "tests/unit/test_implementation_proof_readiness_mandate_restriction.py",
     "tests/integration/test_mandate_restriction_signal_api.py",
     "POST /api/v1/idea-signals/mandate-restriction/evaluate",
     "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
@@ -262,7 +267,6 @@ def validate_opportunity_archetype_contract_payload(
         errors.append("opportunity archetype contract must not promote supported features")
     if contract.data_mesh_certified:
         errors.append("opportunity archetype contract must not claim data-mesh certification")
-
     errors.extend(_validate_source_of_truth(contract, repository_root=repository_root))
     errors.extend(_validate_archetypes(contract, repository_root=repository_root))
     return errors
@@ -306,7 +310,6 @@ def _validate_archetypes(
         errors.append(
             "opportunity archetype contract contains unsupported archetypes: " + ", ".join(extra)
         )
-
     first_journeys = [
         archetype.archetype_id
         for archetype in contract.archetypes
@@ -314,7 +317,6 @@ def _validate_archetypes(
     ]
     if first_journeys != ["high-cash-idle-liquidity"]:
         errors.append("high-cash-idle-liquidity must be the only first supported journey")
-
     for archetype in contract.archetypes:
         if archetype.implementation_status not in SUPPORTED_STATUSES:
             errors.append(f"{archetype.archetype_id}: unsupported implementation_status")
@@ -347,7 +349,6 @@ def _validate_archetypes(
             errors.append(
                 "high-cash-idle-liquidity evidence_refs missing: " + ", ".join(missing_evidence)
             )
-
     concentration = archetypes.get("concentration-risk-review")
     if concentration is not None:
         missing_evidence = sorted(
@@ -357,7 +358,6 @@ def _validate_archetypes(
             errors.append(
                 "concentration-risk-review evidence_refs missing: " + ", ".join(missing_evidence)
             )
-
     underperformance = archetypes.get("underperformance-review")
     if underperformance is not None:
         missing_evidence = sorted(
@@ -367,7 +367,6 @@ def _validate_archetypes(
             errors.append(
                 "underperformance-review evidence_refs missing: " + ", ".join(missing_evidence)
             )
-
     allocation_drift = archetypes.get("allocation-drift-mandate-review")
     if allocation_drift is not None:
         missing_evidence = sorted(REQUIRED_MANAGE_EVIDENCE - set(allocation_drift.evidence_refs))
@@ -376,7 +375,6 @@ def _validate_archetypes(
                 "allocation-drift-mandate-review evidence_refs missing: "
                 + ", ".join(missing_evidence)
             )
-
     high_volatility = archetypes.get("high-volatility-drawdown-review")
     if high_volatility is not None:
         missing_evidence = sorted(
@@ -387,7 +385,6 @@ def _validate_archetypes(
                 "high-volatility-drawdown-review evidence_refs missing: "
                 + ", ".join(missing_evidence)
             )
-
     missing_suitability = archetypes.get("missing-suitability-context")
     if missing_suitability is not None:
         missing_evidence = sorted(
@@ -397,7 +394,6 @@ def _validate_archetypes(
             errors.append(
                 "missing-suitability-context evidence_refs missing: " + ", ".join(missing_evidence)
             )
-
     errors.extend(_validate_foundation_evidence(archetypes))
 
     for archetype_id, archetype in archetypes.items():

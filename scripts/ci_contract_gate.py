@@ -284,26 +284,21 @@ def validate_makefile(makefile: str) -> list[str]:
     for target in REQUIRED_TARGETS:
         if not re.search(rf"^{re.escape(target)}:", makefile, re.MULTILINE):
             errors.append(f"Makefile missing required target `{target}`")
-
     for selector, error in REQUIRED_TEST_SELECTORS.items():
         if selector not in makefile:
             errors.append(error)
-
     lint_block = _target_block(makefile, "lint")
     for call in REQUIRED_LINT_CALLS:
         if call not in lint_block:
             errors.append(f"Makefile lint target must call `{call}`")
-
     check_deps = _target_deps(makefile, "check")
     for dependency in REQUIRED_CHECK_DEPS:
         if dependency not in check_deps:
             errors.append(f"Makefile check target missing `{dependency}`")
-
     ci_deps = _target_deps(makefile, "ci")
     for dependency in REQUIRED_CI_DEPS:
         if dependency not in ci_deps:
             errors.append(f"Makefile ci target missing `{dependency}`")
-
     test_target_expectations = {
         "test-unit": "$(VENV_PYTHON) -m pytest $(UNIT_TESTS)",
         "test-integration": "$(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS)",
@@ -317,7 +312,6 @@ def validate_makefile(makefile: str) -> list[str]:
     for selector in ("$(UNIT_TESTS)", "$(INTEGRATION_TESTS)", "$(E2E_TESTS)"):
         if selector not in coverage_block:
             errors.append(f"Makefile test-coverage target must use `{selector}`")
-
     security_audit = _target_block(makefile, "security-audit")
     if "-m pip_audit" not in security_audit:
         errors.append("Makefile security-audit target must run pip-audit")
@@ -342,6 +336,9 @@ def validate_makefile(makefile: str) -> list[str]:
         "low-income-core-cashflow-live-proof-contract-gate": "scripts/low_income_core_cashflow_live_proof_contract_gate.py",
         "risk-drawdown-live-proof-contract-gate": "scripts/risk_drawdown_live_proof_contract_gate.py",
         "manage-mandate-live-proof-contract-gate": "scripts/manage_mandate_live_proof_contract_gate.py",
+        "mandate-restriction-live-proof-contract-gate": (
+            "scripts/mandate_restriction_live_proof_contract_gate.py"
+        ),
         "missing-suitability-live-proof-contract-gate": "scripts/missing_suitability_live_proof_contract_gate.py",
         "missing-risk-profile-live-proof-contract-gate": "scripts/missing_risk_profile_live_proof_contract_gate.py",
         "mesh-policy-proof-contract-gate": "scripts/mesh_policy_proof_contract_gate.py",

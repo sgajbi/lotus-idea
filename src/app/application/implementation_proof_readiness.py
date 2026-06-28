@@ -165,6 +165,8 @@ def build_implementation_proof_readiness_snapshot(
     low_income_core_cashflow_live_proof_ref: str | None = None,
     manage_mandate_live_proof: Mapping[str, object] | None = None,
     manage_mandate_live_proof_ref: str | None = None,
+    mandate_restriction_live_proof: Mapping[str, object] | None = None,
+    mandate_restriction_live_proof_ref: str | None = None,
     missing_suitability_live_proof: Mapping[str, object] | None = None,
     missing_suitability_live_proof_ref: str | None = None,
     missing_risk_profile_live_proof: Mapping[str, object] | None = None,
@@ -210,7 +212,6 @@ def build_implementation_proof_readiness_snapshot(
         repository_root=repository_root,
     )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
-
     capabilities = _build_base_capabilities(
         source_ingestion=source_ingestion,
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
@@ -374,6 +375,8 @@ def _apply_available_proofs(
     low_income_core_cashflow_live_proof_ref: str | None,
     manage_mandate_live_proof: Mapping[str, object] | None,
     manage_mandate_live_proof_ref: str | None,
+    mandate_restriction_live_proof: Mapping[str, object] | None,
+    mandate_restriction_live_proof_ref: str | None,
     missing_suitability_live_proof: Mapping[str, object] | None,
     missing_suitability_live_proof_ref: str | None,
     missing_risk_profile_live_proof: Mapping[str, object] | None,
