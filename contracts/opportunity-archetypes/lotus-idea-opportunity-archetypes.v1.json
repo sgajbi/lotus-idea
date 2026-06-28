@@ -625,10 +625,15 @@
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
         "src/app/domain/missing_benchmark_signal.py",
         "src/app/application/missing_benchmark_signal.py",
+        "src/app/application/missing_benchmark_live_proof.py",
         "src/app/ports/core_sources.py",
         "src/app/infrastructure/lotus_core_sources.py",
+        "scripts/generate_missing_benchmark_live_proof.py",
+        "make missing-benchmark-live-proof-contract-gate",
         "tests/unit/test_missing_benchmark_signal_evaluation.py",
         "tests/unit/test_missing_benchmark_application.py",
+        "tests/unit/test_missing_benchmark_live_proof.py",
+        "tests/unit/test_implementation_proof_readiness_missing_benchmark.py",
         "tests/unit/test_lotus_core_sources.py"
       ],
       "canonical_scenarios": [

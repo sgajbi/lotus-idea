@@ -50,7 +50,7 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_capability_updates import _apply_blocker_proof
 from app.application.implementation_proof_capability_updates import _capability as _capability
 from app.application.implementation_proof_opportunity_archetype_proofs import (
-    _apply_opportunity_archetype_proofs,
+    apply_opportunity_archetype_proofs_from_scope,
 )
 from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
@@ -165,6 +165,8 @@ def build_implementation_proof_readiness_snapshot(
     missing_suitability_live_proof_ref: str | None = None,
     missing_risk_profile_live_proof: Mapping[str, object] | None = None,
     missing_risk_profile_live_proof_ref: str | None = None,
+    missing_benchmark_live_proof: Mapping[str, object] | None = None,
+    missing_benchmark_live_proof_ref: str | None = None,
     repository_root: Path = REPOSITORY_ROOT,
 ) -> ImplementationProofReadinessSnapshot:
     if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
@@ -370,6 +372,8 @@ def _apply_available_proofs(
     missing_suitability_live_proof_ref: str | None,
     missing_risk_profile_live_proof: Mapping[str, object] | None,
     missing_risk_profile_live_proof_ref: str | None,
+    missing_benchmark_live_proof: Mapping[str, object] | None,
+    missing_benchmark_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_storage_and_runtime_proofs(
         capabilities=capabilities,
@@ -419,28 +423,11 @@ def _apply_available_proofs(
         gateway_workbench_discovery_proof=gateway_workbench_discovery_proof,
         gateway_workbench_discovery_proof_ref=gateway_workbench_discovery_proof_ref,
     )
-    return _apply_opportunity_archetype_proofs(
+    return apply_opportunity_archetype_proofs_from_scope(
         capabilities=capabilities,
         source_ingestion_live_proof_valid=source_ingestion.live_core_source_proof_valid,
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
-        risk_concentration_live_proof=risk_concentration_live_proof,
-        risk_concentration_live_proof_ref=risk_concentration_live_proof_ref,
-        high_volatility_live_proof=high_volatility_live_proof,
-        high_volatility_live_proof_ref=high_volatility_live_proof_ref,
-        risk_drawdown_live_proof=risk_drawdown_live_proof,
-        risk_drawdown_live_proof_ref=risk_drawdown_live_proof_ref,
-        performance_underperformance_live_proof=performance_underperformance_live_proof,
-        performance_underperformance_live_proof_ref=performance_underperformance_live_proof_ref,
-        core_benchmark_assignment_live_proof=core_benchmark_assignment_live_proof,
-        core_benchmark_assignment_live_proof_ref=core_benchmark_assignment_live_proof_ref,
-        low_income_core_cashflow_live_proof=low_income_core_cashflow_live_proof,
-        low_income_core_cashflow_live_proof_ref=low_income_core_cashflow_live_proof_ref,
-        manage_mandate_live_proof=manage_mandate_live_proof,
-        manage_mandate_live_proof_ref=manage_mandate_live_proof_ref,
-        missing_suitability_live_proof=missing_suitability_live_proof,
-        missing_suitability_live_proof_ref=missing_suitability_live_proof_ref,
-        missing_risk_profile_live_proof=missing_risk_profile_live_proof,
-        missing_risk_profile_live_proof_ref=missing_risk_profile_live_proof_ref,
+        scope=locals(),
     )
 
 

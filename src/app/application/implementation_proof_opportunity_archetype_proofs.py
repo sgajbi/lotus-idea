@@ -28,6 +28,10 @@ from app.application.missing_risk_profile_live_proof import (
     MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
     missing_risk_profile_live_proof_is_valid,
 )
+from app.application.missing_benchmark_live_proof import (
+    MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
+    missing_benchmark_live_proof_is_valid,
+)
 from app.application.performance_underperformance_live_proof import (
     PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
     performance_underperformance_live_proof_is_valid,
@@ -66,6 +70,8 @@ def _apply_opportunity_archetype_proofs(
     missing_suitability_live_proof_ref: str | None,
     missing_risk_profile_live_proof: Mapping[str, object] | None,
     missing_risk_profile_live_proof_ref: str | None,
+    missing_benchmark_live_proof: Mapping[str, object] | None,
+    missing_benchmark_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if source_ingestion_live_proof_valid:
         capabilities = tuple(
@@ -151,7 +157,75 @@ def _apply_opportunity_archetype_proofs(
             )
             for capability in capabilities
         )
+    if missing_benchmark_live_proof and missing_benchmark_live_proof_is_valid(
+        missing_benchmark_live_proof
+    ):
+        capabilities = tuple(
+            _apply_missing_benchmark_live_proof(
+                capability,
+                missing_benchmark_live_proof_ref,
+            )
+            for capability in capabilities
+        )
     return capabilities
+
+
+def apply_opportunity_archetype_proofs_from_scope(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    source_ingestion_live_proof_valid: bool,
+    source_ingestion_live_proof_ref: str | None,
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    return _apply_opportunity_archetype_proofs(
+        capabilities=capabilities,
+        source_ingestion_live_proof_valid=source_ingestion_live_proof_valid,
+        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+        risk_concentration_live_proof=_payload(scope, "risk_concentration_live_proof"),
+        risk_concentration_live_proof_ref=_ref(scope, "risk_concentration_live_proof_ref"),
+        high_volatility_live_proof=_payload(scope, "high_volatility_live_proof"),
+        high_volatility_live_proof_ref=_ref(scope, "high_volatility_live_proof_ref"),
+        risk_drawdown_live_proof=_payload(scope, "risk_drawdown_live_proof"),
+        risk_drawdown_live_proof_ref=_ref(scope, "risk_drawdown_live_proof_ref"),
+        performance_underperformance_live_proof=_payload(
+            scope, "performance_underperformance_live_proof"
+        ),
+        performance_underperformance_live_proof_ref=_ref(
+            scope, "performance_underperformance_live_proof_ref"
+        ),
+        core_benchmark_assignment_live_proof=_payload(
+            scope, "core_benchmark_assignment_live_proof"
+        ),
+        core_benchmark_assignment_live_proof_ref=_ref(
+            scope, "core_benchmark_assignment_live_proof_ref"
+        ),
+        low_income_core_cashflow_live_proof=_payload(scope, "low_income_core_cashflow_live_proof"),
+        low_income_core_cashflow_live_proof_ref=_ref(
+            scope, "low_income_core_cashflow_live_proof_ref"
+        ),
+        manage_mandate_live_proof=_payload(scope, "manage_mandate_live_proof"),
+        manage_mandate_live_proof_ref=_ref(scope, "manage_mandate_live_proof_ref"),
+        missing_suitability_live_proof=_payload(scope, "missing_suitability_live_proof"),
+        missing_suitability_live_proof_ref=_ref(scope, "missing_suitability_live_proof_ref"),
+        missing_risk_profile_live_proof=_payload(scope, "missing_risk_profile_live_proof"),
+        missing_risk_profile_live_proof_ref=_ref(scope, "missing_risk_profile_live_proof_ref"),
+        missing_benchmark_live_proof=_payload(scope, "missing_benchmark_live_proof"),
+        missing_benchmark_live_proof_ref=_ref(scope, "missing_benchmark_live_proof_ref"),
+    )
+
+
+def _payload(scope: Mapping[str, object], name: str) -> Mapping[str, object] | None:
+    value = scope.get(name)
+    if isinstance(value, Mapping):
+        return value
+    return None
+
+
+def _ref(scope: Mapping[str, object], name: str) -> str | None:
+    value = scope.get(name)
+    if isinstance(value, str):
+        return value
+    return None
 
 
 def _apply_risk_concentration_live_proof(
@@ -259,4 +333,16 @@ def _apply_missing_risk_profile_live_proof(
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
         proof_ref=missing_risk_profile_live_proof_ref,
+    )
+
+
+def _apply_missing_benchmark_live_proof(
+    capability: ImplementationProofCapabilityReadiness,
+    missing_benchmark_live_proof_ref: str | None,
+) -> ImplementationProofCapabilityReadiness:
+    return _apply_blocker_proof(
+        capability,
+        capability_ids=("opportunity-archetype-scenarios",),
+        blockers_cleared=MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
+        proof_ref=missing_benchmark_live_proof_ref,
     )

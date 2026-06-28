@@ -139,6 +139,8 @@ optional Manage mandate live proof through
 `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`,
 optional Core benchmark assignment live proof through
 `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`,
+optional missing-benchmark live Core proof through
+`LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF`,
 optional low-income Core cashflow live proof through
 `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF`,
 default Advise proposal route proof through `LOTUS_ADVISE_ROOT` and
