@@ -52,6 +52,35 @@ def test_opportunity_archetype_contract_preserves_not_certified_boundaries() -> 
     )
 
 
+def test_opportunity_archetype_gate_requires_all_implemented_signal_api_evidence() -> None:
+    module = _load_contract_gate_script()
+    contract = load_opportunity_archetype_contract()
+    required_by_archetype = {
+        "concentration-risk-review": module.REQUIRED_CONCENTRATION_EVIDENCE,
+        "underperformance-review": module.REQUIRED_UNDERPERFORMANCE_EVIDENCE,
+        "allocation-drift-mandate-review": module.REQUIRED_MANAGE_EVIDENCE,
+        "bond-maturity-reinvestment": module.REQUIRED_BOND_MATURITY_EVIDENCE,
+        "high-volatility-drawdown-review": module.REQUIRED_HIGH_VOLATILITY_EVIDENCE,
+        "low-income-liquidity-shortfall": module.REQUIRED_LOW_INCOME_EVIDENCE,
+        "mandate-restriction-review": module.REQUIRED_MANDATE_RESTRICTION_EVIDENCE,
+        "missing-benchmark-review": module.REQUIRED_MISSING_BENCHMARK_EVIDENCE,
+        "missing-risk-profile-review": module.REQUIRED_MISSING_RISK_PROFILE_EVIDENCE,
+        "missing-suitability-context": module.REQUIRED_MISSING_SUITABILITY_EVIDENCE,
+    }
+
+    for archetype in contract.archetypes:
+        api_evidence_refs = {
+            ref
+            for ref in archetype.evidence_refs
+            if ref.startswith("src/app/api/")
+            or ref.startswith("POST /api/v1/idea-signals/")
+            or ref.startswith("tests/integration/test_")
+        }
+        if not api_evidence_refs:
+            continue
+        assert api_evidence_refs <= required_by_archetype[archetype.archetype_id]
+
+
 def test_opportunity_archetype_contract_records_concentration_foundation_without_promotion() -> (
     None
 ):
@@ -197,7 +226,14 @@ def test_opportunity_archetype_contract_records_missing_suitability_foundation_w
     assert "lotus-advise:AdvisoryPolicyEvaluationRecord:v1" in missing_suitability.source_products
     assert "src/app/domain/missing_suitability_signal.py" in missing_suitability.evidence_refs
     assert "src/app/application/missing_suitability_signal.py" in missing_suitability.evidence_refs
+    assert "src/app/api/missing_suitability_signals.py" in missing_suitability.evidence_refs
     assert "src/app/infrastructure/lotus_advise_sources.py" in (missing_suitability.evidence_refs)
+    assert "POST /api/v1/idea-signals/missing-suitability/evaluate" in (
+        missing_suitability.evidence_refs
+    )
+    assert "tests/integration/test_missing_suitability_signal_api.py" in (
+        missing_suitability.evidence_refs
+    )
     assert "tests/unit/test_missing_suitability_signal_evaluation.py" in (
         missing_suitability.evidence_refs
     )
@@ -245,6 +281,45 @@ def test_opportunity_archetype_contract_records_mandate_restriction_foundation_w
     assert mandate_restriction.canonical_scenarios[0].proof_status == "not_client_demo_ready"
 
 
+def test_opportunity_archetype_contract_records_missing_risk_profile_foundation_without_promotion() -> (
+    None
+):
+    contract = load_opportunity_archetype_contract()
+
+    missing_risk_profile = next(
+        archetype
+        for archetype in contract.archetypes
+        if archetype.archetype_id == "missing-risk-profile-review"
+    )
+
+    assert missing_risk_profile.implementation_status == "partially_implemented"
+    assert missing_risk_profile.first_supported_journey is False
+    assert "lotus-advise:AdvisoryPolicyEvaluationRecord:v1" in (
+        missing_risk_profile.source_products
+    )
+    assert "src/app/domain/missing_risk_profile_signal.py" in (missing_risk_profile.evidence_refs)
+    assert "src/app/application/missing_risk_profile_signal.py" in (
+        missing_risk_profile.evidence_refs
+    )
+    assert "src/app/api/missing_risk_profile_signals.py" in (missing_risk_profile.evidence_refs)
+    assert "POST /api/v1/idea-signals/missing-risk-profile/evaluate" in (
+        missing_risk_profile.evidence_refs
+    )
+    assert "tests/integration/test_missing_risk_profile_signal_api.py" in (
+        missing_risk_profile.evidence_refs
+    )
+    assert "tests/unit/test_missing_risk_profile_signal_evaluation.py" in (
+        missing_risk_profile.evidence_refs
+    )
+    assert "typed_advise_risk_profile_source_product_missing" in (missing_risk_profile.blockers)
+    assert "advise_risk_profile_live_source_proof_missing" in (missing_risk_profile.blockers)
+    assert "data_mesh_not_certified" in missing_risk_profile.blockers
+    assert "client_publication_not_ready" in missing_risk_profile.blockers
+    assert "supported_feature_promotion_missing" in missing_risk_profile.blockers
+    assert missing_risk_profile.canonical_scenarios[0].scenario_status == "bounded_foundation"
+    assert missing_risk_profile.canonical_scenarios[0].proof_status == "not_client_demo_ready"
+
+
 def test_opportunity_archetype_contract_records_low_income_foundation_without_promotion() -> None:
     contract = load_opportunity_archetype_contract()
 
@@ -259,10 +334,13 @@ def test_opportunity_archetype_contract_records_low_income_foundation_without_pr
     assert "lotus-core:PortfolioCashflowProjection:v1" in low_income.source_products
     assert "lotus-core:PortfolioCashMovementSummary:v1" in low_income.source_products
     assert "src/app/application/low_income_signal.py" in low_income.evidence_refs
+    assert "src/app/api/low_income_signals.py" in low_income.evidence_refs
     assert "src/app/application/low_income_core_cashflow_live_proof.py" in low_income.evidence_refs
     assert "src/app/infrastructure/lotus_core_sources.py" in low_income.evidence_refs
     assert "scripts/generate_low_income_core_cashflow_live_proof.py" in low_income.evidence_refs
     assert "make low-income-core-cashflow-live-proof-contract-gate" in low_income.evidence_refs
+    assert "POST /api/v1/idea-signals/low-income/evaluate" in low_income.evidence_refs
+    assert "tests/integration/test_low_income_signal_api.py" in low_income.evidence_refs
     assert "tests/unit/test_low_income_signal_evaluation.py" in low_income.evidence_refs
     assert "tests/unit/test_low_income_core_cashflow_live_proof.py" in low_income.evidence_refs
     assert "live_core_cashflow_source_proof_missing" in low_income.blockers
@@ -289,11 +367,14 @@ def test_opportunity_archetype_contract_records_bond_maturity_foundation_without
     assert "lotus-core:HoldingsAsOf:v1" in bond_maturity.source_products
     assert "src/app/domain/bond_maturity_signal.py" in bond_maturity.evidence_refs
     assert "src/app/application/bond_maturity_signal.py" in bond_maturity.evidence_refs
+    assert "src/app/api/bond_maturity_signals.py" in bond_maturity.evidence_refs
     assert "src/app/application/bond_maturity_live_proof.py" in bond_maturity.evidence_refs
     assert "src/app/infrastructure/lotus_core_sources.py" in bond_maturity.evidence_refs
     assert "src/app/ports/core_sources.py" in bond_maturity.evidence_refs
     assert "scripts/generate_bond_maturity_live_proof.py" in bond_maturity.evidence_refs
     assert "make bond-maturity-live-proof-contract-gate" in bond_maturity.evidence_refs
+    assert "POST /api/v1/idea-signals/bond-maturity/evaluate" in bond_maturity.evidence_refs
+    assert "tests/integration/test_bond_maturity_signal_api.py" in bond_maturity.evidence_refs
     assert "tests/unit/test_bond_maturity_signal_evaluation.py" in (bond_maturity.evidence_refs)
     assert "tests/unit/test_bond_maturity_application.py" in bond_maturity.evidence_refs
     assert "tests/unit/test_bond_maturity_live_proof.py" in bond_maturity.evidence_refs
@@ -324,6 +405,7 @@ def test_opportunity_archetype_contract_records_missing_benchmark_foundation_wit
     assert "lotus-performance:ReturnsSeriesBundle:v1" in missing_benchmark.source_products
     assert "src/app/domain/missing_benchmark_signal.py" in missing_benchmark.evidence_refs
     assert "src/app/application/missing_benchmark_signal.py" in missing_benchmark.evidence_refs
+    assert "src/app/api/missing_benchmark_signals.py" in missing_benchmark.evidence_refs
     assert "src/app/application/missing_benchmark_live_proof.py" in (
         missing_benchmark.evidence_refs
     )
@@ -331,6 +413,12 @@ def test_opportunity_archetype_contract_records_missing_benchmark_foundation_wit
     assert "src/app/infrastructure/lotus_core_sources.py" in missing_benchmark.evidence_refs
     assert "scripts/generate_missing_benchmark_live_proof.py" in (missing_benchmark.evidence_refs)
     assert "make missing-benchmark-live-proof-contract-gate" in missing_benchmark.evidence_refs
+    assert "POST /api/v1/idea-signals/missing-benchmark/evaluate" in (
+        missing_benchmark.evidence_refs
+    )
+    assert "tests/integration/test_missing_benchmark_signal_api.py" in (
+        missing_benchmark.evidence_refs
+    )
     assert "tests/unit/test_missing_benchmark_signal_evaluation.py" in (
         missing_benchmark.evidence_refs
     )
