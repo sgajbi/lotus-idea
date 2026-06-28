@@ -162,7 +162,9 @@ evidence exits non-zero so contract mismatch is not hidden.
 A valid Advise artifact proves only that `lotus-advise` owns a live route for
 source-safe idea proposal intake, with `lotus-idea` retained as the candidate
 evidence source authority and `lotus-advise` retained as proposal and
-suitability authority. A valid Manage artifact proves only that
+suitability authority. The artifact records that split as
+`sourceAuthority: lotus-idea` and `downstreamAuthority: lotus-advise`.
+A valid Manage artifact proves only that
 `lotus-manage` owns a live route for source-safe idea action intake. Both
 artifacts deliberately keep these blockers:
 
