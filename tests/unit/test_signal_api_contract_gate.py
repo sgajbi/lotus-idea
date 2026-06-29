@@ -41,7 +41,7 @@ def test_signal_api_contract_gate_blocks_local_signal_permission_policy(
         tmp_path,
         module_path,
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "emit_signal_evaluation_event, source_authority_from_refs\n"
+        "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n"
         "from app.security.caller_context import CapabilityPolicy\n\n"
         "LOCAL_POLICY = CapabilityPolicy.for_roles(\n"
         "    required_capability='idea.signal.evaluate', allowed_roles=('advisor',)\n"
@@ -66,7 +66,7 @@ def test_signal_api_contract_gate_blocks_local_signal_outcome_helper(
         tmp_path,
         module_path,
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "emit_signal_evaluation_event, source_authority_from_refs\n\n"
+        "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n\n"
         "def _operation_outcome_from_signal_evaluation(result):\n"
         "    return 'accepted'\n",
     )
@@ -100,5 +100,35 @@ def test_signal_api_contract_gate_requires_shared_signal_helpers(
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`signal_permission_problem_or_none` support",
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
+        "`signal_problem_responses` support",
+        "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`source_authority_from_refs` support",
+    ]
+
+
+def test_signal_api_contract_gate_requires_shared_problem_response_metadata(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    module_path = Path("src/app/api/concentration_risk_signals.py")
+    _write_signal_module(
+        tmp_path,
+        module_path,
+        "from app.api.signal_api_support import signal_permission_problem_or_none, "
+        "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n\n"
+        "CONCENTRATION_RISK_EVALUATE_ROUTE = {\n"
+        "    'responses': {\n"
+        "        200: {'description': 'ok'},\n"
+        "        400: {'description': 'Request validation failed.'},\n"
+        "        403: {'description': 'Caller lacks permission.'},\n"
+        "    },\n"
+        "}\n",
+    )
+    setattr(module, "SIGNAL_API_MODULES", (module_path,))
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/concentration_risk_signals.py:3: signal evaluation routes must compose "
+        "`signal_problem_responses()` for product-safe OpenAPI 400/403 examples"
     ]

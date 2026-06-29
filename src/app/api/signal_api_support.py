@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from app.domain import SignalEvaluationResult
-from app.errors import problem_response
+from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import (
     CallerContext,
@@ -50,6 +50,41 @@ def source_authority_from_refs(source_refs: Iterable[_SourceRefLike | None]) -> 
     if len(source_systems) == 1:
         return next(iter(source_systems))
     return "source-owned"
+
+
+def signal_problem_responses() -> dict[int | str, dict[str, Any]]:
+    return {
+        status.HTTP_400_BAD_REQUEST: {
+            "model": ProblemDetails,
+            "description": "Request validation failed.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "type": "about:blank",
+                        "status": status.HTTP_400_BAD_REQUEST,
+                        "code": "invalid_request",
+                        "title": "Invalid request",
+                        "detail": "Request validation failed. Correct the request fields and retry.",
+                    }
+                }
+            },
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": ProblemDetails,
+            "description": "Caller lacks the required signal-evaluation capability.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "type": "about:blank",
+                        "status": status.HTTP_403_FORBIDDEN,
+                        "code": "permission_denied",
+                        "title": "Permission denied",
+                        "detail": "The caller is not permitted to evaluate idea signals.",
+                    }
+                }
+            },
+        },
+    }
 
 
 def operation_outcome_from_signal_evaluation(

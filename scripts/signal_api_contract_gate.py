@@ -24,6 +24,7 @@ SIGNAL_API_MODULES = (
 REQUIRED_SHARED_HELPERS = (
     "signal_permission_problem_or_none",
     "emit_signal_evaluation_event",
+    "signal_problem_responses",
     "source_authority_from_refs",
 )
 
@@ -50,6 +51,23 @@ def _keyword_value(node: ast.Call, keyword_name: str) -> str | None:
             if isinstance(keyword.value.value, str):
                 return keyword.value.value
     return None
+
+
+def _route_dict_value(node: ast.Dict, key_name: str) -> ast.AST | None:
+    for key, value in zip(node.keys, node.values, strict=True):
+        if isinstance(key, ast.Constant) and key.value == key_name:
+            return value
+    return None
+
+
+def _responses_include_signal_problem_responses(node: ast.AST | None) -> bool:
+    if not isinstance(node, ast.Dict):
+        return False
+    for key, value in zip(node.keys, node.values, strict=True):
+        if key is None and isinstance(value, ast.Call):
+            if _call_name(value.func) == "signal_problem_responses":
+                return True
+    return False
 
 
 def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
@@ -82,6 +100,21 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
                 errors.append(
                     f"{relative_path}:{node.lineno}: signal evaluation permission policy "
                     "must be centralized in signal_api_support"
+                )
+
+        if (
+            isinstance(node, ast.Assign)
+            and isinstance(node.value, ast.Dict)
+            and any(
+                isinstance(target, ast.Name) and target.id.endswith("_EVALUATE_ROUTE")
+                for target in node.targets
+            )
+        ):
+            responses = _route_dict_value(node.value, "responses")
+            if not _responses_include_signal_problem_responses(responses):
+                errors.append(
+                    f"{relative_path}:{node.lineno}: signal evaluation routes must compose "
+                    "`signal_problem_responses()` for product-safe OpenAPI 400/403 examples"
                 )
 
     return errors
