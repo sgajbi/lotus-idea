@@ -201,7 +201,7 @@ docker compose up --build
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
 | `make report-materialization-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence materialization proof contract without certifying client publication or supported features. |
-| `make signal-api-contract-gate` | Block duplicated caller-supplied signal API permission, source-authority, problem-detail, and operation-event mechanics so signal routes use shared support. |
+| `make signal-api-contract-gate` | Block duplicated caller-supplied signal API permission, source-authority, product-safe 400/403 `ProblemDetails` OpenAPI examples, and operation-event mechanics so signal routes use shared support. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
 | `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
@@ -262,8 +262,8 @@ Local controls keep implementation claims grounded:
 - `make documentation-contract-gate` protects the README, repo context, docs, quality pages, evidence guide, and wiki pages.
 - `make source-observability-contract-gate` prevents raw logs, raw `print()`, direct Python logging, and unsafe observability bypasses.
 - `make signal-api-contract-gate` prevents copy-pasted signal evaluation policy,
-  source-authority, operation-event, and error-model code in caller-supplied
-  signal APIs.
+  source-authority, operation-event, error-model code, and weak 400/403
+  `ProblemDetails` OpenAPI examples in caller-supplied signal APIs.
 - `make operation-metric-contract-gate` keeps the operation metric catalog
   synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
   Gateway/Workbench, or supported-feature overclaims.
