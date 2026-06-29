@@ -18,6 +18,7 @@ from app.api.signal_api_support import (
     RouteMetadata,
     emit_signal_evaluation_event,
     signal_permission_problem_or_none,
+    signal_problem_responses,
     source_authority_from_refs,
 )
 from app.application.concentration_risk_signal import (
@@ -25,7 +26,6 @@ from app.application.concentration_risk_signal import (
     evaluate_concentration_risk_signal_command,
 )
 from app.domain import SignalEvaluationResult
-from app.errors import ProblemDetails
 from app.observability import emit_foundation_operation_event
 
 
@@ -238,11 +238,7 @@ CONCENTRATION_RISK_EVALUATE_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks the required signal-evaluation capability.",
-        },
+        **signal_problem_responses(),
     },
 }
 

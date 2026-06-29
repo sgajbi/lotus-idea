@@ -13,6 +13,7 @@ from app.api.signal_api_support import (
     emit_signal_evaluation_event,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
+    signal_problem_responses,
     source_authority_from_refs,
 )
 from app.application.high_cash_signal import (
@@ -737,36 +738,7 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {
-            "model": ProblemDetails,
-            "description": "Request validation failed.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": 400,
-                        "code": "invalid_request",
-                        "title": "Invalid request",
-                        "detail": "Request validation failed. Correct the request fields and retry.",
-                    }
-                }
-            },
-        },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks the required signal-evaluation capability.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": 403,
-                        "code": "permission_denied",
-                        "title": "Permission denied",
-                        "detail": "The caller is not permitted to evaluate idea signals.",
-                    }
-                }
-            },
-        },
+        **signal_problem_responses(),
     },
 }
 
@@ -826,14 +798,7 @@ MANDATE_RESTRICTION_EVALUATE_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {
-            "model": ProblemDetails,
-            "description": "Request validation failed.",
-        },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks the required signal-evaluation capability.",
-        },
+        **signal_problem_responses(),
     },
 }
 
