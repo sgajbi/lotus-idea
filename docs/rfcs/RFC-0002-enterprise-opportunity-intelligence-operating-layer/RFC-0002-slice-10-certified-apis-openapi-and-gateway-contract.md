@@ -173,9 +173,9 @@ Implementation files:
    operation events, and no local drift calculation, mandate approval,
    rebalance action, order, or downstream authority.
 9. `src/app/api/signal_api_support.py`: shared signal API route metadata,
-   permission, source-authority, operation outcome, and problem-detail support
-   used by caller-supplied signal endpoints for design modularity without a new
-   runtime service boundary.
+   permission, source-authority, operation outcome, and product-safe 400/403
+   `ProblemDetails` OpenAPI response metadata used by caller-supplied signal
+   endpoints for design modularity without a new runtime service boundary.
 10. `src/app/application/high_cash_signal.py`: application command and policy
    orchestration over framework-free domain evaluation and internal
    evaluate-and-persist behavior.

@@ -559,6 +559,11 @@ bounded read-only Gateway publication, the gate requires the ledger to cite the 
 `lotus-gateway` route and still preserve Workbench, data-product, client-ready publication, and
 supported-feature boundaries.
 
+The signal API contract gate blocks weak caller-supplied opportunity signal API posture. It requires
+shared permission, source-authority, operation-event, outcome-mapping, and product-safe 400/403
+`ProblemDetails` OpenAPI response metadata, so new signal families cannot introduce copy-pasted or
+weaker error-model documentation.
+
 Data-mesh foundation checks:
 
 1. repo-owned proposed producer and consumer declarations must exist,

@@ -1745,8 +1745,10 @@ low-cardinality.
 caller-supplied signal API modules and fails local copies of signal-evaluation
 permission policy or signal outcome mapping, and requires shared signal API
 support for permission, source-authority, operation-event, and problem-detail
-behavior. This keeps design modularity inside `lotus-idea` without creating a
-new runtime microservice boundary.
+behavior. It also requires every signal evaluation route metadata block to
+compose the shared product-safe 400/403 `ProblemDetails` OpenAPI examples from
+`signal_problem_responses()`. This keeps design modularity inside `lotus-idea`
+without creating a new runtime microservice boundary.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`

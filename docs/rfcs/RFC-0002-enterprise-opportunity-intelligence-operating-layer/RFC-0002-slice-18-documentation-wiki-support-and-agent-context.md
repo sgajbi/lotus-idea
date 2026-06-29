@@ -43,7 +43,10 @@ policy-only evidence.
 `make signal-api-contract-gate` is blocking through `make lint` and the CI
 contract self-check so future caller-supplied signal API slices cannot
 reintroduce local signal-evaluation permission policy, local outcome mapping,
-or unshared source-authority/error/event mechanics.
+or unshared source-authority/error/event mechanics. It also requires signal
+evaluation route metadata to compose the shared product-safe 400/403
+`ProblemDetails` OpenAPI examples, preventing weak or inconsistent error-model
+documentation across opportunity signal APIs.
 
 1. `docs/operations/api-certification.md` now lists the full certified internal
    foundation endpoint inventory from
