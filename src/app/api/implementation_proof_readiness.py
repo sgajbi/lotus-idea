@@ -9,6 +9,11 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import (
+    invalid_request_metadata,
+    permission_denied_metadata,
+    service_unavailable_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     configured_implementation_proof_artifacts,
@@ -22,7 +27,7 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -320,15 +325,19 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks implementation proof readiness permission.",
-        },
-        503: {
-            "model": ProblemDetails,
-            "description": "Readiness source contracts are unavailable.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the implementation proof readiness request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read implementation proof readiness.",
+            description="Caller lacks implementation proof readiness permission.",
+        ),
+        **service_unavailable_metadata(
+            code="readiness_source_contracts_unavailable",
+            title="Implementation proof readiness unavailable",
+            detail="Readiness source contracts are unavailable.",
+            description="Readiness source contracts are unavailable.",
+        ),
     },
 }
 

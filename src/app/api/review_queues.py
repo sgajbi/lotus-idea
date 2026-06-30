@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
+from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -20,7 +21,7 @@ from app.application.review_queue import (
 )
 from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
 from app.domain.access_scope import QueueAccessScopeFilter
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -447,14 +448,19 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": (
+        **invalid_request_metadata(
+            detail="Correct the advisor review queue request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail=(
+                "The caller is not permitted to read the advisor review queue or "
+                "requested a queue scope outside their entitlements."
+            ),
+            description=(
                 "Caller lacks advisor queue read permission or requested scope is outside "
                 "caller entitlements."
             ),
-        },
+        ),
     },
 }
 
@@ -514,11 +520,13 @@ ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks queue readiness read permission.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the advisor review queue readiness request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read advisor review queue readiness.",
+            description="Caller lacks queue readiness read permission.",
+        ),
     },
 }
 

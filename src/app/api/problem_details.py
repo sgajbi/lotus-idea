@@ -95,6 +95,22 @@ def conflict_metadata(
     )
 
 
+def service_unavailable_metadata(
+    *,
+    code: str,
+    title: str,
+    detail: str,
+    description: str,
+) -> dict[int | str, dict[str, Any]]:
+    return problem_response_metadata(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        code=code,
+        title=title,
+        detail=detail,
+        description=description,
+    )
+
+
 def permission_denied_problem(detail: str) -> JSONResponse:
     return problem_response(
         status_code=status.HTTP_403_FORBIDDEN,

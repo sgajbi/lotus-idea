@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     SourceIngestionRuntime,
@@ -24,7 +25,7 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -437,10 +438,10 @@ SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks source-ingestion readiness read permission.",
-        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read source-ingestion readiness.",
+            description="Caller lacks source-ingestion readiness read permission.",
+        ),
     },
 }
 
@@ -500,10 +501,10 @@ SOURCE_INGESTION_RUN_ONCE_ROUTE: RouteMetadata = {
                 }
             },
         },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks source-ingestion run permission.",
-        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to run source ingestion.",
+            description="Caller lacks source-ingestion run permission.",
+        ),
     },
 }
 

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     build_outbox_publisher_from_environment as _build_outbox_publisher_from_environment,
@@ -24,7 +25,7 @@ from app.application.outbox_delivery_readiness import (
     build_outbox_delivery_readiness_snapshot,
     outbox_delivery_certification_blockers,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -416,10 +417,10 @@ OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks outbox delivery readiness read permission.",
-        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read outbox delivery readiness.",
+            description="Caller lacks outbox delivery readiness read permission.",
+        ),
     },
 }
 
@@ -469,11 +470,13 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks outbox delivery run permission.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the outbox delivery run-once request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to run outbox delivery.",
+            description="Caller lacks outbox delivery run permission.",
+        ),
     },
 }
 

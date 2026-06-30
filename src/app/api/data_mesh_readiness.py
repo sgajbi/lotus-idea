@@ -8,13 +8,14 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import permission_denied_metadata, service_unavailable_metadata
 from app.api.route_metadata import RouteMetadata
 from app.application.data_mesh_readiness import (
     DataMeshProductReadiness,
     DataMeshReadinessSnapshot,
     build_data_mesh_readiness_snapshot,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -206,14 +207,16 @@ DATA_MESH_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks data-mesh readiness read permission.",
-        },
-        503: {
-            "model": ProblemDetails,
-            "description": "Repo-authored data-mesh readiness contracts are unavailable.",
-        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read data-mesh readiness.",
+            description="Caller lacks data-mesh readiness read permission.",
+        ),
+        **service_unavailable_metadata(
+            code="data_mesh_contracts_unavailable",
+            title="Data-mesh readiness unavailable",
+            detail="Repo-authored data-mesh readiness contracts are unavailable.",
+            description="Repo-authored data-mesh readiness contracts are unavailable.",
+        ),
     },
 }
 

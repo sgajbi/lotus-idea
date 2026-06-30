@@ -8,6 +8,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idea_signals import SourceRefRequest
+from app.api.problem_details import (
+    invalid_request_metadata,
+    not_found_metadata,
+    permission_denied_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -18,7 +23,7 @@ from app.application.candidate_evidence_replay import (
     replay_candidate_evidence,
 )
 from app.domain import CandidatePersistenceRecord, EvidenceReplayResult, EvidenceReplayStatus
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,
@@ -226,9 +231,19 @@ CANDIDATE_EVIDENCE_REPLAY_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks evidence replay permission."},
-        404: {"model": ProblemDetails, "description": "Candidate was not found."},
+        **invalid_request_metadata(
+            detail="Correct the candidate evidence replay request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to replay idea candidate evidence.",
+            description="Caller lacks evidence replay permission.",
+        ),
+        **not_found_metadata(
+            code="candidate_not_found",
+            title="Candidate not found",
+            detail="No idea candidate exists for the requested candidateId.",
+            description="Candidate was not found.",
+        ),
     },
 }
 

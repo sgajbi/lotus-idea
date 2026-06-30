@@ -38,6 +38,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) source-observability-contract-gate" in makefile
     assert "api-route-metadata-gate:" in makefile
     assert "$(MAKE) api-route-metadata-gate" in makefile
+    assert "openapi-problem-details-example-gate:" in makefile
+    assert "$(MAKE) openapi-problem-details-example-gate" in makefile
     assert "signal-api-contract-gate:" in makefile
     assert "$(MAKE) signal-api-contract-gate" in makefile
     assert "implementation-truth-gate:" in makefile
@@ -216,6 +218,15 @@ def test_ci_contract_gate_blocks_missing_api_route_metadata_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) api-route-metadata-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_openapi_problem_details_example_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) openapi-problem-details-example-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) openapi-problem-details-example-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_missing_signal_api_contract_gate() -> None:
@@ -430,6 +441,24 @@ def _load_api_route_metadata_gate() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_openapi_problem_details_example_gate() -> ModuleType:
+    script_path = ROOT / "scripts" / "openapi_problem_details_example_gate.py"
+    spec = importlib.util.spec_from_file_location(
+        "openapi_problem_details_example_gate", script_path
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_openapi_problem_details_example_gate_passes_current_repository() -> None:
+    module = _load_openapi_problem_details_example_gate()
+
+    assert module.validate_problem_details_examples() == []
 
 
 def test_api_route_metadata_gate_passes_current_repository() -> None:
