@@ -289,8 +289,11 @@ This slice also adopts GitHub Security-tab controls where they add durable
 signal without widening lotus-idea's product boundary:
 
 1. Repository settings now enable Dependabot alerts/security updates, secret
-   scanning with push protection, and CodeQL default setup for GitHub-owned
-   static analysis.
+   scanning with push protection, private vulnerability reporting, and CodeQL
+   default setup for GitHub-owned static analysis over Python and GitHub
+   Actions. GitHub currently reports non-provider secret patterns and secret
+   validity checks as disabled for this repository, so they are not claimed as
+   active release controls.
 2. `SECURITY.md` defines the supported security baseline, private
    vulnerability reporting path, source-safe report-content boundary, and
    lotus-idea product-ownership limits.
@@ -305,6 +308,22 @@ signal without widening lotus-idea's product boundary:
    certify service-to-service authentication, platform entitlement proof, live
    threat monitoring, production incident response, or supported-feature
    promotion.
+
+This slice also hardens workflow coverage enforcement after issue review showed
+raw workflow coverage commands duplicating the repository gate:
+
+1. `scripts/coverage_gate.py` now accepts `--coverage-dir`, and the Makefile
+   exposes `COVERAGE_DATA_DIR ?= .` so local runs and downloaded GitHub
+   coverage artifacts use the same gate implementation.
+2. PR Merge and Main Releasability combined coverage jobs now call
+   `make coverage-gate COVERAGE_DATA_DIR=coverage-data` instead of invoking
+   `coverage combine` and `coverage report --fail-under=99` directly.
+3. `scripts/ci_contract_gate.py` rejects raw workflow-level coverage combine
+   and report shortcuts, and unit tests cover Makefile target drift plus PR and
+   main workflow regression cases.
+4. This is CI enforcement only. It does not weaken the 99% coverage threshold,
+   expand product support, certify live data products, or promote supported
+   features.
 
 This slice also hardens Manage source-ref freshness vocabulary after issue
 review showed a repeatable source-authority drift pattern:

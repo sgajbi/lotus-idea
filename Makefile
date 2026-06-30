@@ -4,6 +4,7 @@ VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
 INTEGRATION_TESTS ?= tests/integration
 E2E_TESTS ?= tests/e2e
+COVERAGE_DATA_DIR ?= .
 CONTAINER_IMAGE_NAME ?= backend-service:ci-test
 CONTAINER_BASE_IMAGE ?= python:3.12-slim
 CONTAINER_SCAN_OUTPUT ?= output/security/container-image-scan.trivy.json
@@ -428,7 +429,7 @@ test-coverage: test-unit-coverage test-integration-coverage test-e2e-coverage
 	$(MAKE) coverage-gate
 
 coverage-gate:
-	$(VENV_PYTHON) scripts/coverage_gate.py
+	$(VENV_PYTHON) scripts/coverage_gate.py --coverage-dir $(COVERAGE_DATA_DIR)
 
 security-audit:
 	$(VENV_PYTHON) -m pip_audit -r requirements/shared-runtime.lock.txt -r requirements/ci-tooling.lock.txt

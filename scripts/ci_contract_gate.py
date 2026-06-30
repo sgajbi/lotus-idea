@@ -11,6 +11,7 @@ from ci_contract_gate_expectations import (  # noqa: E402
     PASSED_READINESS_ARTIFACTS,
     REQUIRED_LINT_TARGETS,
     REQUIRED_READINESS_WIRING,
+    REQUIRED_TEST_SELECTORS,
     SCRIPT_TARGET_EXPECTATIONS,
     TEST_TARGET_EXPECTATIONS,
 )
@@ -19,6 +20,10 @@ from ci_release_evidence_contract import (  # noqa: E402
     validate_dependency_governance,
     validate_dockerfile_runtime,
     validate_release_evidence_targets,
+)
+from ci_workflow_contract_expectations import (  # noqa: E402
+    PROHIBITED_WORKFLOW_PATTERNS,
+    WORKFLOW_EXPECTATIONS,
 )
 from security_tab_governance_contract import validate_security_tab_governance_files  # noqa: E402
 
@@ -84,146 +89,6 @@ REQUIRED_CI_DEPS = (
     "test-coverage",
     "security-audit",
 )
-REQUIRED_TEST_SELECTORS = {
-    "UNIT_TESTS ?= tests/unit": "Makefile must define UNIT_TESTS for scoped unit validation",
-    "INTEGRATION_TESTS ?= tests/integration": (
-        "Makefile must define INTEGRATION_TESTS for scoped integration validation"
-    ),
-    "E2E_TESTS ?= tests/e2e": "Makefile must define E2E_TESTS for scoped e2e validation",
-}
-WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
-    "feature-lane.yml": (
-        "permissions:\n  contents: read",
-        "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
-        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
-        "reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0",
-        "make lint",
-        "make typecheck",
-        "make architecture-boundary-gate",
-        "make openapi-gate",
-        "make security-audit",
-        "make test-unit",
-    ),
-    "pr-merge-gate.yml": (
-        "permissions:\n  contents: read",
-        "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
-        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
-        "reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0",
-        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
-        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1",
-        "docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0",
-        "suite: unit",
-        "suite: integration",
-        "suite: e2e",
-        "make test-${{ matrix.suite }}-coverage",
-        "make lint",
-        "make typecheck",
-        "make architecture-boundary-gate",
-        "make openapi-gate",
-        "make security-audit",
-        "coverage report --fail-under=99",
-        "PostgreSQL Runtime Proof",
-        "postgres:18-alpine",
-        "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED",
-        "LOTUS_IDEA_POSTGRES_INTEGRATION_URL",
-        "make postgres-integration-gate",
-        "make docker-build",
-        'CONTAINER_BASE_IMAGE: "python:3.12-slim"',
-        'TRIVY_IMAGE: "aquasec/trivy:0.71.2"',
-        "make container-image-scan",
-        "NODE_OPTIONS: --no-deprecation",
-    ),
-    "main-releasability.yml": (
-        "workflow_dispatch:",
-        "merged-pr-main-releasability.yml as the authoritative",
-        "permissions:\n  contents: read",
-        "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
-        "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
-        "reviewdog/action-actionlint@6fb7acc99f4a1008869fa8a0f09cfca740837d9d # v1.72.0",
-        "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1",
-        "actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1",
-        "docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0",
-        "suite: unit",
-        "suite: integration",
-        "suite: e2e",
-        "make test-${{ matrix.suite }}-coverage",
-        "make lint",
-        "make typecheck",
-        "make architecture-boundary-gate",
-        "make openapi-gate",
-        "make security-audit",
-        "coverage report --fail-under=99",
-        "PostgreSQL Runtime Proof",
-        "postgres:18-alpine",
-        "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED",
-        "LOTUS_IDEA_POSTGRES_INTEGRATION_URL",
-        "make postgres-integration-gate",
-        "make docker-build",
-        'CONTAINER_BASE_IMAGE: "python:3.12-slim"',
-        'TRIVY_IMAGE: "aquasec/trivy:0.71.2"',
-        "make container-image-scan",
-        "make release-sbom",
-        "sbom.cdx.json",
-        "            output/security/container-image-scan.trivy.json",
-        "cyclonedx-bom==7.3.0",
-        "aquasec/trivy:0.71.2",
-        "release-evidence.json",
-        '"docker_base_image": os.environ["CONTAINER_BASE_IMAGE"]',
-        '"container_scanner": os.environ["TRIVY_IMAGE"]',
-        "main-releasability-release-evidence",
-        "NODE_OPTIONS: --no-deprecation",
-    ),
-    "pr-auto-merge.yml": (
-        "pull_request_target:",
-        "contents: read",
-        "github.event.pull_request.head.repo.fork == false",
-        "secrets.LOTUS_AUTOMERGE_TOKEN",
-        "LOTUS_AUTOMERGE_TOKEN is required",
-        "Resource not accessible by personal access token",
-        "gh pr merge",
-        "--auto --rebase --delete-branch",
-    ),
-    "merged-pr-main-releasability.yml": (
-        "pull_request_target:",
-        "types: [closed]",
-        "actions: write",
-        "contents: read",
-        "github.event.pull_request.merged == true",
-        "github.event.pull_request.base.ref == 'main'",
-        "gh workflow run main-releasability.yml",
-        "--ref main",
-    ),
-}
-
-PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
-    "feature-lane.yml": (
-        "pull_request_target:",
-        "contents: write",
-        "pull-requests: write",
-        "continue-on-error:",
-        "run: ./.venv/bin/python -m pytest",
-        "pip install cyclonedx-bom",
-    ),
-    "pr-merge-gate.yml": (
-        "pull_request_target:",
-        "contents: write",
-        "pull-requests: write",
-        "continue-on-error:",
-        "run: ./.venv/bin/python -m pytest",
-        "pip install cyclonedx-bom",
-    ),
-    "main-releasability.yml": (
-        "  push:",
-        "pull_request_target:",
-        "contents: write",
-        "pull-requests: write",
-        "continue-on-error:",
-        "run: ./.venv/bin/python -m pytest",
-        "pip install cyclonedx-bom",
-    ),
-    "pr-auto-merge.yml": ("continue-on-error:",),
-    "merged-pr-main-releasability.yml": ("continue-on-error:",),
-}
 READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
 
 
@@ -306,6 +171,12 @@ def _validate_test_targets(makefile: str) -> list[str]:
             errors.append(f"Makefile test-coverage target must call `{target}`")
     if "$(MAKE) coverage-gate" not in coverage_block:
         errors.append("Makefile test-coverage target must call `$(MAKE) coverage-gate`")
+    coverage_gate_block = _target_block(makefile, "coverage-gate")
+    expected_gate_command = (
+        "$(VENV_PYTHON) scripts/coverage_gate.py --coverage-dir $(COVERAGE_DATA_DIR)"
+    )
+    if expected_gate_command not in coverage_gate_block:
+        errors.append(f"Makefile coverage-gate target must run `{expected_gate_command}`")
     return errors
 
 
