@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers, route metadata governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, and private domain import boundary governance normalized behind shared public surfaces with blocking enforcement retained
+Status: Partially implemented - runtime composition providers, route metadata governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, and public proof capability update APIs normalized behind shared public surfaces with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -46,7 +46,15 @@ Implemented in this slice:
 10. Cross-module callers now use public `app.domain` exports for domain
     invariants. `make private-import-boundary-gate` blocks direct imports of
     private `app.domain.*` helpers across `src`, `tests`, and `scripts` while
-    leaving broader application/proof-helper cleanup as future refactoring.
+    leaving broader application-helper and persistence-codec cleanup as future
+    refactoring.
+11. Implementation-proof readiness now uses public
+    `app.application.implementation_proof_capability_updates` functions for
+    blocker clearance and capability readiness construction. The same
+    `make private-import-boundary-gate` target blocks reintroducing private
+    imports from that shared proof helper module. This is design modularity
+    inside the existing `lotus-idea` service; it does not create a separately
+    scalable runtime microservice or promote proof-readiness support.
 
 Validation evidence from the cleanup slice:
 
@@ -63,6 +71,7 @@ Validation evidence from the cleanup slice:
 11. `.venv\Scripts\python.exe scripts\api_problem_details_boundary_gate.py`
 12. `.venv\Scripts\python.exe scripts\private_import_boundary_gate.py`
 13. `.venv\Scripts\python.exe -m pytest tests\unit\test_private_import_boundary_gate.py tests\unit\test_ci_enforcement_contract.py tests\unit\test_missing_suitability_signal_evaluation.py -q`
+14. `.venv\Scripts\python.exe -m pytest tests\unit\test_private_import_boundary_gate.py tests\unit\test_implementation_proof_readiness.py tests\unit\test_implementation_proof_readiness_gateway_discovery.py tests\unit\test_implementation_proof_readiness_gateway_workbench.py -q`
 
 ## Remaining Work
 
@@ -73,9 +82,11 @@ The broader cleanup slice is not complete. Remaining work includes:
 2. continued route-module normalization as candidate lifecycle, review,
    feedback, queue, conversion, downstream realization, and operator readiness
    surfaces grow,
-3. documentation/wiki/context synchronization for each material repository
+3. continued cleanup of application helpers and persistence codecs as each
+   boundary becomes measured and low-noise,
+4. documentation/wiki/context synchronization for each material repository
    structure change,
-4. periodic dead-code, duplicate-vocabulary, and unsupported-claim checks before
+5. periodic dead-code, duplicate-vocabulary, and unsupported-claim checks before
    supported-feature promotion.
 
 ## Outcome

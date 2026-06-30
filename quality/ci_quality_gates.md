@@ -111,7 +111,7 @@ outbox broker proof contract validation,
 implementation-proof readiness artifact generation, runtime trust telemetry preview generation,
 source-observability contract validation, API route metadata validation,
 API ProblemDetails boundary validation, OpenAPI ProblemDetails example validation,
-private domain import boundary validation, operation metric contract validation, AI model-risk
+protected private import boundary validation, operation metric contract validation, AI model-risk
 operations contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
@@ -155,10 +155,12 @@ durable persistence and migration behavior cannot become an implicit or forgotte
 `scripts`. The thresholds are set above the current measured baseline so the gate prevents new
 agent-generated bloat without forcing unrelated refactors into every feature slice.
 
-`make private-import-boundary-gate` blocks private `app.domain.*` imports from other modules.
-Domain helpers may remain private inside their owning file, but cross-module callers must use
-public, named APIs. The gate is deliberately scoped to domain ownership; broader cleanup of
-application proof-helper and persistence-codec private imports remains future refactoring work.
+`make private-import-boundary-gate` blocks private imports from protected module surfaces:
+`app.domain.*` and `app.application.implementation_proof_capability_updates`. Domain helpers may
+remain private inside their owning file, and proof capability updates now expose public
+`apply_blocker_proof` and `build_capability_readiness` functions for cross-module proof-readiness
+composition. Broader application helper and persistence-codec cleanup remains future refactoring
+work until each boundary is measured and low-noise.
 
 `make monetary-float-guard` blocks money-like `float` usage in application
 source. The guard is AST-backed and fails monetary `float` annotations,

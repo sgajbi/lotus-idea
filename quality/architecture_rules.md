@@ -30,7 +30,8 @@ Run `make architecture-boundary-gate` for blocking CI enforcement. Run
 evidence.
 
 Domain modules may keep private helpers for local readability, but cross-module callers must use
-public domain APIs exported through `app.domain`. `make private-import-boundary-gate` blocks
-`from app.domain.some_module import _private_helper` style imports across `src`, `tests`, and
-`scripts`; it is intentionally scoped to the domain boundary and does not claim the broader
-application/proof-helper cleanup is complete.
+public domain APIs exported through `app.domain`. Shared implementation-proof capability updates
+must also use public functions from `app.application.implementation_proof_capability_updates`.
+`make private-import-boundary-gate` blocks private imports from those protected modules across
+`src`, `tests`, and `scripts`; it remains a measured design-modularity rule and does not imply a
+runtime service split or complete cleanup of every application helper.

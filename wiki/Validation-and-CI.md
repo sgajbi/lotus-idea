@@ -111,7 +111,7 @@ make clean
 ```
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
-repository hygiene, maintainability thresholds, private domain import boundary enforcement, documentation contract enforcement,
+repository hygiene, maintainability thresholds, protected private import boundary enforcement, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
 OpenAPI quality, source-observability contract enforcement, API route metadata governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
@@ -479,12 +479,13 @@ The maintainability gate blocks oversized Python files/functions in source, test
 trees. It is calibrated above the current baseline so new agentic work must split or refactor
 large additions instead of normalizing hard-to-review modules.
 
-The private import boundary gate blocks direct imports from private
-`app.domain.*` helpers across source, tests, and scripts. Domain modules may use
-private local helpers internally, but cross-module callers must use public,
-named domain APIs exported through `app.domain`. The gate is intentionally
-scoped to domain ownership and does not claim broader application proof-helper
-or persistence-codec cleanup is complete.
+The private import boundary gate blocks direct imports from private helpers in
+protected module surfaces: `app.domain.*` and
+`app.application.implementation_proof_capability_updates`. Domain modules may
+use private local helpers internally, while shared proof-readiness composition
+uses public `apply_blocker_proof` and `build_capability_readiness` functions.
+The gate is intentionally scoped to measured boundaries and does not claim
+complete application-helper or persistence-codec cleanup.
 
 The monetary-float guard blocks money-like `float` annotations, literals, and
 conversions in application source. It is AST-backed and intentionally allows
