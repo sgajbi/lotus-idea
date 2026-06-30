@@ -290,6 +290,13 @@ documentation across opportunity signal APIs.
     drawdown, missing suitability, missing risk profile, mandate/restriction,
     low income, and missing benchmark API modules, routes, and integration
     tests without promoting any of those foundations to supported features.
+33. The repo-local wiki now includes dedicated `API-Surface` and
+    `Troubleshooting` pages, both linked from `Home` and `_Sidebar`, so API
+    readers and operators have first-stop maps before entering the longer
+    operations and validation runbooks. The pages summarize current
+    implementation-backed API posture, problem-response expectations, wiki
+    publication handling, and first-response diagnostics without promoting a
+    supported feature.
 
 This documentation slice does not promote any supported feature. It records
 bounded Workbench read-path proof, Gateway/Workbench operational proof, and

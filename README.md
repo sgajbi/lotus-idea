@@ -305,7 +305,7 @@ Local controls keep implementation claims grounded:
 
 ## Documentation Map
 
-Product and operator overview: [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md), and [wiki/Integrations.md](wiki/Integrations.md). Governance and release posture: [wiki/Validation-and-CI.md](wiki/Validation-and-CI.md), [wiki/Supported-Features.md](wiki/Supported-Features.md), and [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md).
+Product and operator overview: [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md), [wiki/API-Surface.md](wiki/API-Surface.md), [wiki/Integrations.md](wiki/Integrations.md), and [wiki/Troubleshooting.md](wiki/Troubleshooting.md). Governance and release posture: [wiki/Validation-and-CI.md](wiki/Validation-and-CI.md), [wiki/Supported-Features.md](wiki/Supported-Features.md), and [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md).
 Implementation evidence: [docs/rfcs/README.md](docs/rfcs/README.md) and [docs/operations/api-certification.md](docs/operations/api-certification.md). Client-demo process, client-facing brief, and template: [wiki/Demo-Readiness.md](wiki/Demo-Readiness.md) and [docs/demo/README.md](docs/demo/README.md).
 
 Repo-local `wiki/` is the authored source of truth. The GitHub wiki is a publication target and should be updated through the platform wiki sync flow after merge to `main`.

@@ -1,0 +1,68 @@
+# API Surface
+
+This page is the first-stop map for `lotus-idea` API readers. It summarizes
+the implemented route families and routes deeper review to the certified
+endpoint ledger, OpenAPI gate, and operation runbooks. It is not a supported
+business-feature catalogue.
+
+Current API posture: internal foundation and operator diagnostics only. Bounded
+read-only Gateway publication exists for advisor queue and candidate detail,
+but full Workbench proof, data-product certification, client-ready publication,
+and supported-feature promotion remain blocked until their own evidence gates
+pass.
+
+## Route Families
+
+| Family | Routes | Current use | Boundary |
+| --- | --- | --- | --- |
+| Health and metadata | `GET /health`, `GET /health/live`, `GET /health/ready`, `GET /metadata` | Platform smoke checks, readiness probes, service inventory. | No business capability, source quality, or portfolio supportability proof. |
+| Caller-supplied opportunity signals | `POST /api/v1/idea-signals/*/evaluate` | Deterministic candidate posture over source-owned evidence supplied by authorized callers. | No upstream source fetch, official calculation ownership, Gateway/Workbench support, or supported-feature promotion. |
+| Candidate persistence and lifecycle | `POST /api/v1/idea-signals/high-cash/evaluate-and-persist`, `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions`, `GET /api/v1/idea-candidates/{candidateId}`, `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` | Internal persisted candidate, idempotency, lifecycle, detail, and evidence-replay foundations. | Process-local by default; PostgreSQL-backed only when configured and migrated. No downstream authority or client-ready publication. |
+| Review workflow | `GET /api/v1/review-queues/advisor`, `GET /api/v1/review-queues/advisor/readiness`, `POST /api/v1/idea-candidates/{candidateId}/review-actions`, `POST /api/v1/idea-candidates/{candidateId}/feedback` | Source-safe advisor queue projection, readiness diagnostics, review decisions, and feedback capture. | Advisor queue/detail have bounded read-only Gateway publication; Workbench and supported review-product promotion remain blocked. |
+| AI explanation governance | `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`, `GET /api/v1/ai-explanations/readiness` | Deterministic fallback/verifier evaluation and model-risk readiness diagnostics. | No provider call, no autonomous advice, no `lotus-ai` runtime proof, and no client-ready explanation claim. |
+| Conversion and report evidence | `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`, `POST /api/v1/conversion-intents/{conversionIntentId}/outcomes`, `POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs` | Internal review-gated intent, outcome posture, and report evidence-pack request recording. | No suitability approval, rebalance/execution authority, report rendering, archive record, or client publication. |
+| Downstream realization | `GET /api/v1/downstream-realization/readiness`, `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`, `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Planned-contract readiness and source-safe submission posture through configured adapters. | No authoritative downstream outcome, route-existence proof by default, suitability, execution, materialization, or support promotion. |
+| Source ingestion and outbox operations | `GET /api/v1/source-ingestion/readiness`, `POST /api/v1/source-ingestion/run-once`, `GET /api/v1/outbox-delivery/readiness`, `POST /api/v1/outbox-delivery/run-once` | Operator diagnostics and bounded run-once actions over configured internal foundations. | No long-running scheduler certification, live broker certification, downstream delivery proof, or supported ingestion/event product. |
+| Data mesh and implementation proof | `GET /api/v1/data-mesh/readiness`, `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`, `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`, `GET /api/v1/implementation-proof/readiness` | Source-safe readiness, telemetry, and aggregate proof-blocker diagnostics. | Diagnostics only; no mesh certification, Gateway/Workbench discovery, live implementation proof, or supported-feature promotion. |
+
+## Request And Error Model
+
+| Control | Current expectation |
+| --- | --- |
+| Authorization | API routes fail closed through platform caller-context roles and `idea.*` capabilities. |
+| Idempotency | Mutating workflow routes require `Idempotency-Key` and return replay or conflict posture instead of duplicating state. |
+| Source authority | Signal routes consume source-owned evidence and carry source refs; `lotus-idea` does not recompute official performance, risk, accounting, suitability, or report facts. |
+| Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples for request validation and permission failures. |
+| Sensitive data | Responses and diagnostics must not expose raw source payloads, raw idempotency keys, portfolio identifiers in aggregate diagnostics, prompt/provider payloads, or broker payloads. |
+
+## Evidence Paths
+
+| Evidence | Use |
+| --- | --- |
+| [API certification guide](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/api-certification.md) | Human-readable endpoint inventory, intended use, boundaries, and test evidence. |
+| [Endpoint certification ledger](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/endpoint-certification-ledger.json) | Machine-readable source for endpoint certification and evidence references. |
+| [OpenAPI quality gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/openapi_quality_gate.py) | Contract documentation and example validation. |
+| [Endpoint certification gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/endpoint_certification_gate.py) | Synchronizes OpenAPI operations with certification evidence and supported-boundary language. |
+| [Operations Runbook](Operations-Runbook) | Operator diagnostics, readiness semantics, proof-artifact interpretation, and first checks. |
+| [Validation and CI](Validation-and-CI) | Repo-native gates that block weak API, OpenAPI, documentation, and supported-feature claims. |
+
+## Copy-Paste Checks
+
+```powershell
+make openapi-gate
+make endpoint-certification-gate
+make signal-api-contract-gate
+make documentation-contract-gate
+```
+
+Use `make check` before PR when an API route, schema, OpenAPI description,
+endpoint ledger row, or wiki API claim changes.
+
+## Do Not Infer
+
+Certified API foundation does not mean the product is externally supported.
+Do not infer client publication, suitability approval, rebalance authority,
+official risk/performance methodology, report rendering, archive authority,
+data-mesh certification, live provider execution, or Workbench support unless
+the owning repository evidence, `supported-features`, docs/wiki truth, CI, and
+mainline validation all agree.
