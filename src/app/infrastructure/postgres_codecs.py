@@ -44,6 +44,96 @@ from app.domain.review_governance import (
     ReviewActorRole,
 )
 
+__all__ = (
+    "ai_explanation_lineage_from_json",
+    "ai_explanation_lineage_to_json",
+    "conversion_intent_from_json",
+    "conversion_intent_to_json",
+    "conversion_outcome_from_json",
+    "conversion_outcome_to_json",
+    "decode_datetime",
+    "feedback_event_from_json",
+    "feedback_event_to_json",
+    "idea_candidate_from_json",
+    "idea_candidate_to_json",
+    "read_json_object",
+    "read_row_value",
+    "report_evidence_pack_from_json",
+    "report_evidence_pack_to_json",
+    "review_decision_from_json",
+    "review_decision_to_json",
+)
+
+
+def read_row_value(row: Any, key: str) -> Any:
+    return _row(row, key)
+
+
+def read_json_object(row: Any, key: str) -> dict[str, Any]:
+    return _json(row, key)
+
+
+def decode_datetime(value: Any) -> datetime:
+    return _datetime(value)
+
+
+def idea_candidate_to_json(candidate: IdeaCandidate) -> dict[str, Any]:
+    return _candidate_to_json(candidate)
+
+
+def idea_candidate_from_json(payload: Mapping[str, Any]) -> IdeaCandidate:
+    return _candidate_from_json(payload)
+
+
+def review_decision_to_json(decision: GovernedReviewDecision) -> dict[str, Any]:
+    return _review_decision_to_json(decision)
+
+
+def review_decision_from_json(payload: Mapping[str, Any]) -> GovernedReviewDecision:
+    return _review_decision_from_json(payload)
+
+
+def feedback_event_to_json(feedback: GovernedFeedbackEvent) -> dict[str, Any]:
+    return _feedback_event_to_json(feedback)
+
+
+def feedback_event_from_json(payload: Mapping[str, Any]) -> GovernedFeedbackEvent:
+    return _feedback_event_from_json(payload)
+
+
+def conversion_intent_to_json(intent: GovernedConversionIntent) -> dict[str, Any]:
+    return _conversion_intent_to_json(intent)
+
+
+def conversion_intent_from_json(payload: Mapping[str, Any]) -> GovernedConversionIntent:
+    return _conversion_intent_from_json(payload)
+
+
+def conversion_outcome_to_json(outcome: GovernedConversionOutcome) -> dict[str, Any]:
+    return _conversion_outcome_to_json(outcome)
+
+
+def conversion_outcome_from_json(payload: Mapping[str, Any]) -> GovernedConversionOutcome:
+    return _conversion_outcome_from_json(payload)
+
+
+def report_evidence_pack_to_json(pack: GovernedReportEvidencePack) -> dict[str, Any]:
+    return _report_evidence_pack_to_json(pack)
+
+
+def report_evidence_pack_from_json(payload: Mapping[str, Any]) -> GovernedReportEvidencePack:
+    return _report_evidence_pack_from_json(payload)
+
+
+def ai_explanation_lineage_to_json(record: AIExplanationLineageRecord) -> dict[str, Any]:
+    return _ai_explanation_lineage_to_json(record)
+
+
+def ai_explanation_lineage_from_json(
+    payload: Mapping[str, Any],
+) -> AIExplanationLineageRecord:
+    return _ai_explanation_lineage_from_json(payload)
+
 
 def _row(row: Any, key: str) -> Any:
     if isinstance(row, Mapping):

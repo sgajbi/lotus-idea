@@ -42,22 +42,22 @@ from app.domain.review_governance import (
     ReviewActionResult,
 )
 from app.infrastructure.postgres_codecs import (
-    _ai_explanation_lineage_from_json,
-    _ai_explanation_lineage_to_json,
-    _candidate_from_json,
-    _candidate_to_json,
-    _conversion_intent_from_json,
-    _conversion_intent_to_json,
-    _conversion_outcome_from_json,
-    _conversion_outcome_to_json,
-    _feedback_event_from_json,
-    _feedback_event_to_json,
-    _json,
-    _report_evidence_pack_from_json,
-    _report_evidence_pack_to_json,
-    _review_decision_from_json,
-    _review_decision_to_json,
-    _row,
+    ai_explanation_lineage_from_json,
+    ai_explanation_lineage_to_json,
+    conversion_intent_from_json,
+    conversion_intent_to_json,
+    conversion_outcome_from_json,
+    conversion_outcome_to_json,
+    feedback_event_from_json,
+    feedback_event_to_json,
+    idea_candidate_from_json,
+    idea_candidate_to_json,
+    read_json_object,
+    read_row_value,
+    report_evidence_pack_from_json,
+    report_evidence_pack_to_json,
+    review_decision_from_json,
+    review_decision_to_json,
 )
 
 
@@ -405,11 +405,11 @@ class PostgresIdeaRepository:
         )
         records: dict[str, CandidatePersistenceRecord] = {}
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             records[candidate_id] = CandidatePersistenceRecord(
-                candidate=_candidate_from_json(_json(row, "candidate_json")),
-                evidence_hash=_row(row, "evidence_hash"),
-                persisted_at_utc=_row(row, "persisted_at_utc"),
+                candidate=idea_candidate_from_json(read_json_object(row, "candidate_json")),
+                evidence_hash=read_row_value(row, "evidence_hash"),
+                persisted_at_utc=read_row_value(row, "persisted_at_utc"),
             )
         return records
 
@@ -427,12 +427,12 @@ class PostgresIdeaRepository:
         records: dict[str, IdempotencyRecord] = {}
         candidates: dict[str, str] = {}
         for row in cursor.fetchall():
-            key = _row(row, "idempotency_key")
+            key = read_row_value(row, "idempotency_key")
             records[key] = IdempotencyRecord(
                 key=key,
-                payload_hash=_row(row, "payload_hash"),
+                payload_hash=read_row_value(row, "payload_hash"),
             )
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             if candidate_id is not None:
                 candidates[key] = candidate_id
         return records, candidates
@@ -450,16 +450,16 @@ class PostgresIdeaRepository:
             """
         )
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             record = records.get(candidate_id)
             if record is None:
                 continue
             entry = LifecycleHistoryEntry(
                 candidate_id=candidate_id,
-                source_status=IdeaLifecycleStatus(_row(row, "source_status")),
-                target_status=IdeaLifecycleStatus(_row(row, "target_status")),
-                actor_subject=_row(row, "actor_subject"),
-                changed_at_utc=_row(row, "changed_at_utc"),
+                source_status=IdeaLifecycleStatus(read_row_value(row, "source_status")),
+                target_status=IdeaLifecycleStatus(read_row_value(row, "target_status")),
+                actor_subject=read_row_value(row, "actor_subject"),
+                changed_at_utc=read_row_value(row, "changed_at_utc"),
             )
             records[candidate_id] = replace(
                 record,
@@ -480,16 +480,16 @@ class PostgresIdeaRepository:
             """
         )
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             if candidate_id is None or candidate_id not in records:
                 continue
             record = records[candidate_id]
             event = AuditEvent(
-                event_type=_row(row, "event_type"),
-                actor_subject=_row(row, "actor_subject"),
-                outcome=_row(row, "outcome"),
-                attributes=_json(row, "attributes_json"),
-                occurred_at_utc=_row(row, "occurred_at_utc"),
+                event_type=read_row_value(row, "event_type"),
+                actor_subject=read_row_value(row, "actor_subject"),
+                outcome=read_row_value(row, "outcome"),
+                attributes=read_json_object(row, "attributes_json"),
+                occurred_at_utc=read_row_value(row, "occurred_at_utc"),
             )
             records[candidate_id] = replace(
                 record,
@@ -510,20 +510,20 @@ class PostgresIdeaRepository:
         events: dict[str, OutboxEventRecord] = {}
         for row in cursor.fetchall():
             event = OutboxEventRecord(
-                event_id=_row(row, "outbox_event_id"),
-                event_type=_row(row, "event_type"),
-                aggregate_type=_row(row, "aggregate_type"),
-                aggregate_id=_row(row, "aggregate_id"),
-                schema_version=_row(row, "schema_version"),
-                payload=_json(row, "payload_json"),
-                status=OutboxEventStatus(_row(row, "status")),
-                occurred_at_utc=_row(row, "occurred_at_utc"),
-                idempotency_fingerprint=_row(row, "idempotency_fingerprint"),
-                correlation_id=_row(row, "correlation_id"),
-                causation_id=_row(row, "causation_id"),
-                published_at_utc=_row(row, "published_at_utc"),
-                failure_reason=_row(row, "failure_reason"),
-                retry_count=_row(row, "retry_count"),
+                event_id=read_row_value(row, "outbox_event_id"),
+                event_type=read_row_value(row, "event_type"),
+                aggregate_type=read_row_value(row, "aggregate_type"),
+                aggregate_id=read_row_value(row, "aggregate_id"),
+                schema_version=read_row_value(row, "schema_version"),
+                payload=read_json_object(row, "payload_json"),
+                status=OutboxEventStatus(read_row_value(row, "status")),
+                occurred_at_utc=read_row_value(row, "occurred_at_utc"),
+                idempotency_fingerprint=read_row_value(row, "idempotency_fingerprint"),
+                correlation_id=read_row_value(row, "correlation_id"),
+                causation_id=read_row_value(row, "causation_id"),
+                published_at_utc=read_row_value(row, "published_at_utc"),
+                failure_reason=read_row_value(row, "failure_reason"),
+                retry_count=read_row_value(row, "retry_count"),
             )
             events[event.event_id] = event
         return events
@@ -541,11 +541,11 @@ class PostgresIdeaRepository:
             """
         )
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             record = records.get(candidate_id)
             if record is None:
                 continue
-            decision = _review_decision_from_json(_json(row, "decision_json"))
+            decision = review_decision_from_json(read_json_object(row, "decision_json"))
             records[candidate_id] = replace(
                 record,
                 review_decisions=(*record.review_decisions, decision),
@@ -564,11 +564,11 @@ class PostgresIdeaRepository:
             """
         )
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             record = records.get(candidate_id)
             if record is None:
                 continue
-            feedback = _feedback_event_from_json(_json(row, "feedback_json"))
+            feedback = feedback_event_from_json(read_json_object(row, "feedback_json"))
             records[candidate_id] = replace(
                 record,
                 feedback_events=(*record.feedback_events, feedback),
@@ -588,12 +588,12 @@ class PostgresIdeaRepository:
         )
         candidates: dict[str, str] = {}
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             record = records.get(candidate_id)
             if record is None:
                 continue
-            intent_id = _row(row, "conversion_intent_id")
-            intent = _conversion_intent_from_json(_json(row, "intent_json"))
+            intent_id = read_row_value(row, "conversion_intent_id")
+            intent = conversion_intent_from_json(read_json_object(row, "intent_json"))
             records[candidate_id] = replace(
                 record,
                 conversion_intents=(*record.conversion_intents, intent),
@@ -615,12 +615,12 @@ class PostgresIdeaRepository:
         )
         candidates: dict[str, str] = {}
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             record = records.get(candidate_id)
             if record is None:
                 continue
-            request_id = _row(row, "ai_explanation_request_id")
-            lineage_record = _ai_explanation_lineage_from_json(_json(row, "lineage_json"))
+            request_id = read_row_value(row, "ai_explanation_request_id")
+            lineage_record = ai_explanation_lineage_from_json(read_json_object(row, "lineage_json"))
             records[candidate_id] = replace(
                 record,
                 ai_explanation_lineage_records=(
@@ -649,11 +649,11 @@ class PostgresIdeaRepository:
             for intent in record.conversion_intents
         }
         for row in cursor.fetchall():
-            candidate_id = intent_candidates.get(_row(row, "conversion_intent_id"))
+            candidate_id = intent_candidates.get(read_row_value(row, "conversion_intent_id"))
             if candidate_id is None:
                 continue
             record = records[candidate_id]
-            outcome = _conversion_outcome_from_json(_json(row, "outcome_json"))
+            outcome = conversion_outcome_from_json(read_json_object(row, "outcome_json"))
             records[candidate_id] = replace(
                 record,
                 conversion_outcomes=(*record.conversion_outcomes, outcome),
@@ -673,12 +673,14 @@ class PostgresIdeaRepository:
         )
         candidates: dict[str, str] = {}
         for row in cursor.fetchall():
-            candidate_id = _row(row, "candidate_id")
+            candidate_id = read_row_value(row, "candidate_id")
             record = records.get(candidate_id)
             if record is None:
                 continue
-            pack_id = _row(row, "report_evidence_pack_id")
-            evidence_pack = _report_evidence_pack_from_json(_json(row, "evidence_pack_json"))
+            pack_id = read_row_value(row, "report_evidence_pack_id")
+            evidence_pack = report_evidence_pack_from_json(
+                read_json_object(row, "evidence_pack_json")
+            )
             records[candidate_id] = replace(
                 record,
                 report_evidence_packs=(*record.report_evidence_packs, evidence_pack),
@@ -707,7 +709,7 @@ class PostgresIdeaRepository:
                 candidate.review_posture.value,
                 candidate.evidence_packet.evidence_packet_id,
                 record.evidence_hash,
-                Jsonb(_candidate_to_json(candidate)),
+                Jsonb(idea_candidate_to_json(candidate)),
                 record.persisted_at_utc,
                 candidate.updated_at_utc,
             ),
@@ -819,7 +821,7 @@ class PostgresIdeaRepository:
                     candidate_id,
                     decision.action.value,
                     decision.actor_subject,
-                    Jsonb(_review_decision_to_json(decision)),
+                    Jsonb(review_decision_to_json(decision)),
                     decision.decided_at_utc,
                 ),
             )
@@ -842,7 +844,7 @@ class PostgresIdeaRepository:
                     feedback.feedback.feedback_id,
                     candidate_id,
                     feedback.actor_subject,
-                    Jsonb(_feedback_event_to_json(feedback)),
+                    Jsonb(feedback_event_to_json(feedback)),
                     feedback.feedback.recorded_at_utc,
                 ),
             )
@@ -866,7 +868,7 @@ class PostgresIdeaRepository:
                     candidate_id,
                     intent.intent.target.value,
                     intent.actor_subject,
-                    Jsonb(_conversion_intent_to_json(intent)),
+                    Jsonb(conversion_intent_to_json(intent)),
                     intent.intent.requested_at_utc,
                 ),
             )
@@ -889,7 +891,7 @@ class PostgresIdeaRepository:
                     outcome.conversion_intent_id,
                     outcome.source_system.value,
                     outcome.outcome.status.value,
-                    Jsonb(_conversion_outcome_to_json(outcome)),
+                    Jsonb(conversion_outcome_to_json(outcome)),
                     outcome.outcome.recorded_at_utc,
                 ),
             )
@@ -914,7 +916,7 @@ class PostgresIdeaRepository:
                     evidence_pack.conversion_intent_id,
                     evidence_pack.purpose.value,
                     evidence_pack.evidence_content_hash,
-                    Jsonb(_report_evidence_pack_to_json(evidence_pack)),
+                    Jsonb(report_evidence_pack_to_json(evidence_pack)),
                     evidence_pack.requested_at_utc,
                 ),
             )
@@ -948,7 +950,7 @@ class PostgresIdeaRepository:
                     lineage_record.fallback_used,
                     lineage_record.fallback_reason,
                     lineage_record.lineage_hash,
-                    Jsonb(_ai_explanation_lineage_to_json(lineage_record)),
+                    Jsonb(ai_explanation_lineage_to_json(lineage_record)),
                     lineage_record.requested_at_utc,
                     lineage_record.evaluated_at_utc,
                 ),
