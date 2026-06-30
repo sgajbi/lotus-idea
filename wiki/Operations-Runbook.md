@@ -406,6 +406,29 @@ certify live Core source ingestion, external broker publication, downstream
 execution, Gateway/Workbench behavior, client publication, or supported-feature
 promotion.
 
+## Inbound HTTP Boundary Controls
+
+`lotus-idea` also owns explicit inbound HTTP boundary controls at FastAPI
+startup:
+
+| Control | Configuration | Boundary |
+| --- | --- | --- |
+| Trusted hosts | `LOTUS_IDEA_TRUSTED_HOSTS`, comma-separated, default `*` | Rejects untrusted `Host` headers with `400 invalid_host` without echoing the rejected host. |
+| CORS allowlist | `LOTUS_IDEA_CORS_ALLOWED_ORIGINS`, comma-separated, default empty | Browser origins are denied unless explicitly allowlisted. |
+| Request size | `LOTUS_IDEA_MAX_REQUEST_BODY_BYTES`, default `1048576` | Rejects oversized requests with `413 request_too_large` before route processing. |
+| Write media type | Always on for `POST`, `PUT`, and `PATCH` bodies | Rejects non-JSON write requests with `415 unsupported_media_type`. |
+| Security headers | Always on | Adds HSTS, no-sniff, frame-deny, no-referrer, locked-down permissions, and default-deny CSP headers. |
+
+Rejected boundary requests return source-safe `ProblemDetails`. They must not
+include rejected host values, raw bodies, authorization headers, cookies,
+portfolio identifiers, client identifiers, or source payloads. The
+`X-Correlation-Id` response header is the support handle for structured-log
+lookup.
+
+These controls are service-boundary hardening only. They do not certify
+Gateway/Workbench browser support, public external API support, data-mesh
+certification, client publication, or supported-feature promotion.
+
 RFC-0002 will add support runbooks for:
 
 1. upstream source unavailable,
