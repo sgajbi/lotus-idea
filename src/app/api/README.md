@@ -3,6 +3,13 @@
 Keep routes thin. Route modules should validate HTTP input, call application services, and map
 application results into response DTOs. Do not put business rules or downstream clients here.
 
+## Runtime Dependencies
+
+Use `app.api.runtime_dependencies` as the only API-layer facade for runtime composition helpers.
+Route modules must not import `app.runtime` directly. This keeps repository providers, source
+workers, outbox publishers, proof-artifact paths, and downstream realization clients behind one
+reviewable API dependency boundary while preserving in-process design modularity.
+
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response

@@ -86,6 +86,21 @@ This slice also hardens repository hygiene:
 5. README, repository context, enterprise-readiness guidance, quality
    scorecard, and wiki source now describe the new source-tree hygiene control.
 
+This slice also hardens API/runtime architecture boundaries:
+
+1. `src/app/api/runtime_dependencies.py` is the only API-layer module permitted
+   to import `app.runtime` composition helpers.
+2. Route modules now depend on that facade instead of importing runtime
+   repository providers, source-ingestion runtime, outbox publisher wiring,
+   proof-artifact configuration, or downstream realization clients directly.
+3. `scripts/architecture_boundary_gate.py` now blocks direct `app.runtime`
+   imports from API routes while allowing only the explicit facade.
+4. `tests/unit/test_ci_enforcement_contract.py` covers the allowed facade and
+   the failure case for a route that imports runtime composition directly.
+5. API docs, architecture rules, repository context, RFC evidence, quality
+   scorecard, and wiki source describe the stronger boundary without promoting
+   any product, data-mesh, Workbench, downstream, or supported-feature claim.
+
 This slice also hardens generated-artifact cleanup:
 
 1. `scripts/clean_generated_artifacts.py` provides a testable cleanup utility

@@ -104,8 +104,8 @@ flowchart LR
     Idea -->|"review-gated intent, submission posture, outcome tracking"| Downstream
 ```
 
-- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, repository
-  provider selection, and certified internal API foundations.
+- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified
+  internal API foundations, and the route runtime dependency facade.
 - `src/app/application/`: use-case orchestration for signal evaluation,
   source ingestion, candidate detail, evidence replay, review queues,
   lifecycle, feedback, AI diagnostics, conversion, report evidence, downstream

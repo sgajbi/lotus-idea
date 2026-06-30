@@ -2,7 +2,9 @@
 
 Use the Lotus layered backend default:
 
-1. `src/app/api` routers/controllers stay thin and depend on `application`,
+1. `src/app/api` routers/controllers stay thin and depend on `application`; route modules must not
+   import `app.runtime` directly and must use `app.api.runtime_dependencies` for runtime
+   composition helpers,
 2. `src/app/application` services orchestrate use cases and depend on `domain` and `ports`,
 3. `src/app/domain` logic stays framework-free and must not import FastAPI, API DTOs, infrastructure, persistence, or HTTP clients,
 4. `src/app/infrastructure` sits behind `ports` adapters,
@@ -13,6 +15,11 @@ Use the Lotus layered backend default:
 7. `src/app/resilience` owns retry, backoff, timeout, and circuit-breaker policy primitives; concrete downstream clients still belong behind `ports` in `infrastructure`,
 8. `src/app/observability` owns structured logging, correlation, tracing, and metrics helpers,
 9. generated or scaffold placeholders must be replaced with implementation truth before promotion.
+
+The only API-layer module permitted to import `app.runtime` is
+`src/app/api/runtime_dependencies.py`. It is the explicit facade for repository providers,
+source-ingestion runtime, outbox publisher wiring, downstream realization clients, and proof-artifact
+configuration used by route handlers.
 
 Run `make architecture-boundary-gate` for blocking CI enforcement. Run
 `make architecture-boundary-report` when a report artifact is needed for scorecard or review

@@ -38,7 +38,10 @@ from app.domain import (
 from app.domain.access_scope import ReviewAccessScope
 from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,

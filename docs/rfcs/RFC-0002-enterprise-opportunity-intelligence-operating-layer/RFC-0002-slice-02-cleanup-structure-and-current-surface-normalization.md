@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers normalized and architecture-boundary enforcement retained
+Status: Partially implemented - runtime composition providers normalized behind the API runtime dependency facade and architecture-boundary enforcement retained
 
 ## Current Implementation Evidence
 
@@ -28,6 +28,10 @@ Implemented in this slice:
    enforce that runtime composition may wire repositories, source adapters,
    publishers, workers, and proof generators but must not import API routes,
    HTTP DTOs, FastAPI, or Starlette.
+7. `src/app/api/runtime_dependencies.py` now owns the API-layer facade for
+   runtime composition helpers used by route modules. API routes no longer
+   import `app.runtime` directly, and the blocking architecture-boundary gate
+   now fails any route that bypasses this facade.
 
 Validation evidence from the cleanup slice:
 
@@ -35,6 +39,8 @@ Validation evidence from the cleanup slice:
 2. `.venv\Scripts\python.exe -m pytest tests\integration\test_high_cash_signal_api.py tests\unit\test_service_contract.py -q`
 3. `make architecture-boundary-gate`
 4. `make test-unit UNIT_TESTS=tests/unit/test_ci_enforcement_contract.py`
+5. `.venv\Scripts\python.exe -m pytest tests\unit\test_ci_enforcement_contract.py -q`
+6. `.venv\Scripts\python.exe -m ruff check scripts\architecture_boundary_gate.py src\app\api tests\unit\test_ci_enforcement_contract.py`
 
 ## Remaining Work
 

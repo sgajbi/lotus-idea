@@ -16,7 +16,10 @@ from app.api.problem_details import (
     permission_denied_problem,
     not_found_metadata,
 )
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
     apply_candidate_lifecycle_transition_to_repository,

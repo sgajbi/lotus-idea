@@ -114,6 +114,58 @@ def test_architecture_boundary_gate_detects_runtime_api_leakage(
     }
 
 
+def test_architecture_boundary_gate_allows_api_runtime_dependency_facade(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    module = _load_architecture_boundary_gate()
+    source_root = tmp_path / "src" / "app"
+    facade_path = source_root / "api" / "runtime_dependencies.py"
+    facade_path.parent.mkdir(parents=True)
+    facade_path.write_text(
+        "from app.runtime.repository_state import get_idea_repository\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "SRC_ROOT", source_root)
+    monkeypatch.setattr(module, "API_RUNTIME_DEPENDENCY_FACADE", facade_path)
+
+    assert module.validate_architecture_boundaries() == []
+
+
+def test_architecture_boundary_gate_blocks_api_runtime_import_outside_facade(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    module = _load_architecture_boundary_gate()
+    source_root = tmp_path / "src" / "app"
+    route_path = source_root / "api" / "unsafe_route.py"
+    route_path.parent.mkdir(parents=True)
+    route_path.write_text(
+        "from app.runtime.repository_state import get_idea_repository\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "SRC_ROOT", source_root)
+    monkeypatch.setattr(
+        module, "API_RUNTIME_DEPENDENCY_FACADE", source_root / "api" / "runtime_dependencies.py"
+    )
+
+    violations = module.validate_architecture_boundaries()
+
+    assert violations == [
+        {
+            "path": "src\\app\\api\\unsafe_route.py",
+            "module": "app.api.unsafe_route",
+            "layer": "api",
+            "import": "app.runtime.repository_state",
+            "rule": module.LAYER_RULES["api"]["description"],
+        }
+    ]
+
+
 def _load_ci_contract_gate() -> ModuleType:
     script_path = ROOT / "scripts" / "ci_contract_gate.py"
     spec = importlib.util.spec_from_file_location("ci_contract_gate", script_path)

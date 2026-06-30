@@ -30,6 +30,7 @@ pass.
 | Control | Current expectation |
 | --- | --- |
 | Authorization | API routes fail closed through platform caller-context roles and `idea.*` capabilities. |
+| Runtime composition | API routes use `app.api.runtime_dependencies` as the only facade for repository providers, source-ingestion runtime, outbox publisher wiring, proof-artifact configuration, and downstream realization clients. Direct route imports from `app.runtime` are blocked by `make architecture-boundary-gate`. |
 | Idempotency | Mutating workflow routes require `Idempotency-Key` and return replay or conflict posture instead of duplicating state. |
 | Source authority | Signal routes consume source-owned evidence and carry source refs; `lotus-idea` does not recompute official performance, risk, accounting, suitability, or report facts. |
 | Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples. Workflow/operator routes use shared `app.api.problem_details` metadata for concrete 400/403/404/409 examples; caller-supplied signal routes use `app.api.signal_api_support` for their stricter route-family contract. |

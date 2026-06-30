@@ -8,7 +8,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.api.runtime_dependencies import (
+    SourceIngestionRuntime,
+    SourceIngestionRuntimeBlocker,
+    build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from app.application.source_ingestion import (
     HighCashSourceIngestionBatchResult,
     HighCashSourceIngestionDecision,
@@ -30,11 +36,6 @@ from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
     require_role_and_capability,
-)
-from app.runtime.source_ingestion_state import (
-    SourceIngestionRuntime,
-    SourceIngestionRuntimeBlocker,
-    build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
 )
 
 
