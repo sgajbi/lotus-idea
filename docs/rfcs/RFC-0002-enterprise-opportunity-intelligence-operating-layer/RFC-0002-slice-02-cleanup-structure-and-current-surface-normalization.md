@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers, route metadata governance, API ProblemDetails boundary governance, and OpenAPI ProblemDetails example governance normalized behind shared API support modules with blocking enforcement retained
+Status: Partially implemented - runtime composition providers, route metadata governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, and private domain import boundary governance normalized behind shared public surfaces with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -43,6 +43,10 @@ Implemented in this slice:
    modules from importing low-level `app.errors` directly, and
    `make openapi-problem-details-example-gate` blocks public `ProblemDetails`
    responses without examples.
+10. Cross-module callers now use public `app.domain` exports for domain
+    invariants. `make private-import-boundary-gate` blocks direct imports of
+    private `app.domain.*` helpers across `src`, `tests`, and `scripts` while
+    leaving broader application/proof-helper cleanup as future refactoring.
 
 Validation evidence from the cleanup slice:
 
@@ -57,6 +61,8 @@ Validation evidence from the cleanup slice:
 9. `.venv\Scripts\python.exe scripts\openapi_problem_details_example_gate.py`
 10. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_problem_details.py tests\unit\test_ci_enforcement_contract.py -q`
 11. `.venv\Scripts\python.exe scripts\api_problem_details_boundary_gate.py`
+12. `.venv\Scripts\python.exe scripts\private_import_boundary_gate.py`
+13. `.venv\Scripts\python.exe -m pytest tests\unit\test_private_import_boundary_gate.py tests\unit\test_ci_enforcement_contract.py tests\unit\test_missing_suitability_signal_evaluation.py -q`
 
 ## Remaining Work
 

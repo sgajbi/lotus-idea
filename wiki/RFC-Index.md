@@ -29,10 +29,14 @@ Current RFC-0002 implementation-start baseline:
    `app.api.route_metadata.RouteMetadata` contract enforced by
    `make api-route-metadata-gate`. Workflow and operator `ProblemDetails`
    OpenAPI examples are now enforced by
-   `make openapi-problem-details-example-gate`. It remains a cleanup slice only
-   and does not promote a business feature.
-4. Slice 03 implements the pure domain model and lifecycle foundation without
-   API, persistence, or supported-feature promotion.
+   `make openapi-problem-details-example-gate`. Public domain API ownership is
+   protected by `make private-import-boundary-gate`, which blocks private
+   `app.domain.*` helper imports without claiming broader application helper
+   cleanup is complete. It remains a cleanup slice only and does not promote a
+   business feature.
+4. Slice 03 implements the pure domain model and lifecycle foundation with
+   public domain API boundary enforcement, without API, persistence, or
+   supported-feature promotion.
 5. Slice 04 partially implements the source-authority and data-mesh baseline,
    including proposed producer contracts, consumer dependencies, blocked static
    trust telemetry, SLO/access/evidence policy files, and a repo-native
