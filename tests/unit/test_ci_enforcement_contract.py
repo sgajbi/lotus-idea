@@ -255,7 +255,7 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
         "Makefile container-image-scan target must use the governed Docker socket mount" in errors
     )
     assert "Makefile container-image-scan target must use the governed container workdir" in errors
-    assert "Makefile must pin `TRIVY_IMAGE` to `aquasec/trivy:0.71.2`" in errors
+    assert "Makefile must govern `TRIVY_IMAGE` as `aquasec/trivy:0.71.2`" in errors
     assert "Makefile container-image-scan target must fail on governed findings" in errors
 
 

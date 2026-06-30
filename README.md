@@ -158,7 +158,7 @@ Run the Docker entrypoint from a clean checkout:
 docker compose up --build
 ```
 
-Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs only runtime dependencies, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image identity in CI release evidence, and remains runtime-parity evidence only, not production, Workbench, data-mesh, client-publication, or supported-feature proof.
+Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs only runtime dependencies, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image references plus resolved immutable digests in CI release evidence, and remains runtime-parity evidence only, not production, Workbench, data-mesh, client-publication, or supported-feature proof.
 
 ## Common Commands
 
