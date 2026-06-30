@@ -54,7 +54,12 @@ class RecordingCoreSource(CoreOpportunitySourcePort):
         return self.evidence
 
 
-def source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef:
+def source_ref(
+    product_id: str,
+    *,
+    content_hash: str | None = None,
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+) -> SourceRef:
     return SourceRef(
         product_id=product_id,
         source_system=SourceSystem.LOTUS_CORE,
@@ -64,7 +69,7 @@ def source_ref(product_id: str, *, content_hash: str | None = None) -> SourceRef
         generated_at_utc=EVALUATED_AT,
         content_hash=content_hash or f"sha256:{product_id}",
         data_quality_status="complete",
-        freshness=EvidenceFreshness.CURRENT,
+        freshness=freshness,
     )
 
 
@@ -73,13 +78,22 @@ def core_evidence(
     cash_weight: Decimal | None = Decimal("0.18"),
     holdings_hash: str = "sha256:lotus-core:HoldingsAsOf:v1",
     cash_weight_diagnostic: str | None = "core_cash_weight_supported",
+    freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
 ) -> CoreHighCashEvidence:
     return CoreHighCashEvidence(
         source_reported_cash_weight=cash_weight,
-        portfolio_state_ref=source_ref("lotus-core:PortfolioStateSnapshot:v1"),
-        holdings_ref=source_ref("lotus-core:HoldingsAsOf:v1", content_hash=holdings_hash),
-        cash_movement_ref=source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
-        cashflow_projection_ref=source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+        portfolio_state_ref=source_ref("lotus-core:PortfolioStateSnapshot:v1", freshness=freshness),
+        holdings_ref=source_ref(
+            "lotus-core:HoldingsAsOf:v1",
+            content_hash=holdings_hash,
+            freshness=freshness,
+        ),
+        cash_movement_ref=source_ref(
+            "lotus-core:PortfolioCashMovementSummary:v1", freshness=freshness
+        ),
+        cashflow_projection_ref=source_ref(
+            "lotus-core:PortfolioCashflowProjection:v1", freshness=freshness
+        ),
         cash_weight_diagnostic=cash_weight_diagnostic,
     )
 
@@ -305,6 +319,25 @@ def test_blocks_source_ingestion_with_core_cash_weight_diagnostic_without_persis
     )
     assert result.signal_result.source_diagnostic_codes == (
         "core_cash_weight_blocked_missing_denominator",
+    )
+    assert result.signal_result.persistence is None
+    assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_blocks_source_ingestion_when_core_freshness_is_unproven_without_persisting() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(evidence=core_evidence(freshness=EvidenceFreshness.UNAVAILABLE))
+
+    result = ingest_high_cash_signal_from_core(
+        command(),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.decision is HighCashSourceIngestionDecision.BLOCKED
+    assert result.signal_result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.signal_result.evaluation.unsupported_reasons == (
+        UnsupportedEvidenceReason.STALE_SOURCE,
     )
     assert result.signal_result.persistence is None
     assert len(repository.snapshot().candidate_records) == 0

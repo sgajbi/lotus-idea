@@ -40,6 +40,16 @@ def _payload(product_name: str, *, extra: dict[str, Any] | None = None) -> dict[
     return payload
 
 
+def _payload_without_freshness(
+    product_name: str, *, extra: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    payload = _payload(product_name, extra=extra)
+    payload.pop("freshness", None)
+    payload.pop("freshness_status", None)
+    payload.pop("freshnessStatus", None)
+    return payload
+
+
 def _adapter(handler: httpx.MockTransport) -> LotusCoreHighCashSourceAdapter:
     return LotusCoreHighCashSourceAdapter(
         DownstreamJsonClient(
@@ -958,8 +968,12 @@ def test_lotus_core_adapter_maps_malformed_nested_cash_weight_to_source_unavaila
 @pytest.mark.parametrize(
     ("freshness", "expected"),
     [
+        ("CURRENT_SOURCE", EvidenceFreshness.CURRENT),
+        ("current", EvidenceFreshness.CURRENT),
+        ("STALE_SOURCE", EvidenceFreshness.STALE),
         ("EXPIRED_SOURCE", EvidenceFreshness.EXPIRED),
         ("SOURCE_UNAVAILABLE", EvidenceFreshness.UNAVAILABLE),
+        ("unexpected", EvidenceFreshness.UNAVAILABLE),
     ],
 )
 def test_lotus_core_adapter_maps_additional_freshness_metadata(
@@ -986,26 +1000,126 @@ def test_lotus_core_adapter_maps_additional_freshness_metadata(
     assert evidence.portfolio_state_ref.freshness is expected
 
 
-def test_lotus_core_adapter_maps_stale_freshness_metadata() -> None:
+def test_lotus_core_adapter_maps_missing_high_cash_freshness_to_unavailable() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         if request.method == "POST":
             return httpx.Response(
                 200,
-                json=_payload("PortfolioStateSnapshot", extra={"freshness": "STALE_SOURCE"}),
+                json=_payload_without_freshness("PortfolioStateSnapshot"),
             )
         if "cash-balances" in str(request.url):
             return httpx.Response(
                 200,
-                json=_payload("HoldingsAsOf", extra={"sourceReportedCashWeight": "0.18"}),
+                json=_payload_without_freshness(
+                    "HoldingsAsOf", extra={"sourceReportedCashWeight": "0.18"}
+                ),
             )
         if "cash-movement-summary" in str(request.url):
-            return httpx.Response(200, json=_payload("PortfolioCashMovementSummary"))
-        return httpx.Response(200, json=_payload("PortfolioCashflowProjection"))
+            return httpx.Response(
+                200, json=_payload_without_freshness("PortfolioCashMovementSummary")
+            )
+        return httpx.Response(200, json=_payload_without_freshness("PortfolioCashflowProjection"))
 
     evidence = _adapter(httpx.MockTransport(handler)).fetch_high_cash_evidence(_request())
 
+    source_refs = (
+        evidence.portfolio_state_ref,
+        evidence.holdings_ref,
+        evidence.cash_movement_ref,
+        evidence.cashflow_projection_ref,
+    )
+    non_null_source_refs = tuple(source_ref for source_ref in source_refs if source_ref is not None)
+    assert len(non_null_source_refs) == 4
+    assert all(
+        source_ref.freshness is EvidenceFreshness.UNAVAILABLE for source_ref in non_null_source_refs
+    )
+
+
+def test_lotus_core_adapter_maps_missing_benchmark_assignment_freshness_to_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload_without_freshness(
+                "BenchmarkAssignment",
+                extra={
+                    "benchmark_id": "BMK_PB_GLOBAL_BALANCED_60_40",
+                    "effective_from": "2026-01-01",
+                    "assignment_status": "active",
+                    "assignment_version": 3,
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_benchmark_assignment_evidence(
+        _benchmark_assignment_request()
+    )
+
+    assert evidence.benchmark_assignment_ref is not None
+    assert evidence.benchmark_assignment_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
+def test_lotus_core_adapter_maps_missing_portfolio_state_freshness_to_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json=_payload_without_freshness("PortfolioStateSnapshot"))
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_portfolio_state_evidence(
+        _portfolio_state_request()
+    )
+
     assert evidence.portfolio_state_ref is not None
-    assert evidence.portfolio_state_ref.freshness is EvidenceFreshness.STALE
+    assert evidence.portfolio_state_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
+def test_lotus_core_adapter_maps_missing_low_income_freshness_to_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        if "cash-movement-summary" in str(request.url):
+            return httpx.Response(
+                200,
+                json=_payload_without_freshness(
+                    "PortfolioCashMovementSummary", extra={"cashflow_count": 1}
+                ),
+            )
+        return httpx.Response(
+            200,
+            json=_payload_without_freshness(
+                "PortfolioCashflowProjection", extra={"total_net_cashflow": "-11000"}
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_low_income_evidence(
+        _low_income_request()
+    )
+
+    assert evidence.cash_movement_ref is not None
+    assert evidence.cashflow_projection_ref is not None
+    assert evidence.cash_movement_ref.freshness is EvidenceFreshness.UNAVAILABLE
+    assert evidence.cashflow_projection_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
+def test_lotus_core_adapter_maps_missing_bond_maturity_freshness_to_unavailable() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            json=_payload_without_freshness(
+                "HoldingsAsOf",
+                extra={
+                    "maturitySummary": {
+                        "nextMaturityDate": "2026-07-10",
+                        "maturingPositionCount": 1,
+                        "source_batch_fingerprint": "bond-maturity-summary",
+                    }
+                },
+            ),
+        )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
+        _bond_maturity_request()
+    )
+
+    assert evidence.holdings_ref is not None
+    assert evidence.maturity_fact_ref is not None
+    assert evidence.holdings_ref.freshness is EvidenceFreshness.UNAVAILABLE
+    assert evidence.maturity_fact_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
 def test_core_high_cash_evidence_request_requires_portfolio_id() -> None:
