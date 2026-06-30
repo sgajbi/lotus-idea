@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import io
 import subprocess
+from email.message import Message
 from urllib import error
 
 from scripts.container_runtime_smoke import (
@@ -11,33 +13,16 @@ from scripts.container_runtime_smoke import (
 )
 
 
-class _Response:
-    def __init__(self, status: int, body: bytes) -> None:
-        self.status = status
-        self._body = body
-
-    def __enter__(self) -> "_Response":
-        return self
-
-    def __exit__(self, *_args: object) -> None:
-        return None
-
-    def read(self) -> bytes:
-        return self._body
-
-    def close(self) -> None:
-        return None
-
-
 def test_probe_endpoint_accepts_default_degraded_readiness() -> None:
     def urlopen(_url: str, *, timeout: int) -> object:
         assert timeout == 5
+        headers = Message()
         raise error.HTTPError(
             url="http://127.0.0.1:18330/health/ready",
             code=503,
             msg="Service Unavailable",
-            hdrs=None,
-            fp=_Response(503, b'{"status":"degraded"}'),
+            hdrs=headers,
+            fp=io.BytesIO(b'{"status":"degraded"}'),
         )
 
     result = probe_endpoint(
