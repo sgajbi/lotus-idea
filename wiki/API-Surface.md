@@ -34,7 +34,7 @@ pass.
 | Route metadata | API routes use the shared `app.api.route_metadata.RouteMetadata` contract for route-registration metadata. Local route metadata clones are blocked by `make api-route-metadata-gate`. |
 | Idempotency | Mutating workflow routes require `Idempotency-Key` and return replay or conflict posture instead of duplicating state. |
 | Source authority | Signal routes consume source-owned evidence and carry source refs; `lotus-idea` does not recompute official performance, risk, accounting, suitability, or report facts. |
-| Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples. Workflow/operator routes use shared `app.api.problem_details` metadata for concrete 400/403/404/409 examples; caller-supplied signal routes use `app.api.signal_api_support` for their stricter route-family contract. |
+| Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples. Workflow/operator routes use shared `app.api.problem_details` metadata for concrete 400/403/404/409/503 examples; `make openapi-problem-details-example-gate` blocks missing OpenAPI examples. Caller-supplied signal routes use `app.api.signal_api_support` for their stricter route-family contract. |
 | Sensitive data | Responses and diagnostics must not expose raw source payloads, raw idempotency keys, portfolio identifiers in aggregate diagnostics, prompt/provider payloads, or broker payloads. |
 
 ## Evidence Paths
@@ -44,6 +44,7 @@ pass.
 | [API certification guide](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/api-certification.md) | Human-readable endpoint inventory, intended use, boundaries, and test evidence. |
 | [Endpoint certification ledger](https://github.com/sgajbi/lotus-idea/blob/main/docs/operations/endpoint-certification-ledger.json) | Machine-readable source for endpoint certification and evidence references. |
 | [OpenAPI quality gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/openapi_quality_gate.py) | Contract documentation and example validation. |
+| [ProblemDetails example gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/openapi_problem_details_example_gate.py) | Generated OpenAPI check that every public `ProblemDetails` response has a product-safe example. |
 | [Endpoint certification gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/endpoint_certification_gate.py) | Synchronizes OpenAPI operations with certification evidence and supported-boundary language. |
 | [Operations Runbook](Operations-Runbook) | Operator diagnostics, readiness semantics, proof-artifact interpretation, and first checks. |
 | [Validation and CI](Validation-and-CI) | Repo-native gates that block weak API, OpenAPI, documentation, and supported-feature claims. |
@@ -54,6 +55,7 @@ pass.
 make openapi-gate
 make endpoint-certification-gate
 make api-route-metadata-gate
+make openapi-problem-details-example-gate
 make signal-api-contract-gate
 make documentation-contract-gate
 ```

@@ -27,8 +27,10 @@ Current RFC-0002 implementation-start baseline:
    the blocking architecture-boundary gate protects both directions of the
    API/runtime boundary, and route metadata dictionaries use the shared
    `app.api.route_metadata.RouteMetadata` contract enforced by
-   `make api-route-metadata-gate`. It remains a cleanup slice only and does not
-   promote a business feature.
+   `make api-route-metadata-gate`. Workflow and operator `ProblemDetails`
+   OpenAPI examples are now enforced by
+   `make openapi-problem-details-example-gate`. It remains a cleanup slice only
+   and does not promote a business feature.
 4. Slice 03 implements the pure domain model and lifecycle foundation without
    API, persistence, or supported-feature promotion.
 5. Slice 04 partially implements the source-authority and data-mesh baseline,

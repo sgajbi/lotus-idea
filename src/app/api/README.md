@@ -23,7 +23,8 @@ Use `app.api.problem_details` for shared product-safe RFC-7807 response
 metadata and common permission/request failures. Route modules should keep
 route-specific error codes and descriptions, but the OpenAPI response shape
 must remain consistent: `type`, `status`, `code`, `title`, and product-safe
-`detail`.
+`detail`. `make openapi-problem-details-example-gate` blocks public
+ProblemDetails response metadata that lacks an OpenAPI example.
 
 Signal routes use `app.api.signal_api_support` because their permission,
 source-authority, operation-event, and 400/403 OpenAPI metadata are governed as

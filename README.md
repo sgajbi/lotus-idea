@@ -200,7 +200,7 @@ docker compose up --build
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
 | `make report-materialization-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence materialization proof contract without certifying client publication or supported features. |
-| `make signal-api-contract-gate` | Block duplicated caller-supplied signal API permission, source-authority, product-safe 400/403 `ProblemDetails` OpenAPI examples, and operation-event mechanics so signal routes use shared support. |
+| `make openapi-problem-details-example-gate`, `make signal-api-contract-gate` | Block missing public `ProblemDetails` OpenAPI examples and duplicated caller-supplied signal API permission, source-authority, 400/403 examples, and operation-event mechanics. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
 | `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
