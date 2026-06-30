@@ -117,8 +117,8 @@ flowchart LR
   protocols.
 - `src/app/infrastructure/`: Core, Performance, Risk, and Manage source adapters,
   migration helpers,
-  outbox publisher adapter, PostgreSQL codecs, and PostgreSQL repository
-  adapter.
+  outbox publisher adapter, public PostgreSQL codec APIs, and PostgreSQL
+  repository adapter.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded operation events.
 - `src/app/security/`: caller context and fail-closed authorization policy.

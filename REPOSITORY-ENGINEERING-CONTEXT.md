@@ -99,6 +99,11 @@ examples, and `make openapi-problem-details-example-gate` blocks public
 API route modules also import runtime ProblemDetails response helpers through
 `src/app/api/problem_details.py`; `make api-problem-details-boundary-gate`
 blocks direct route imports from low-level `app.errors`.
+The PostgreSQL repository adapter now consumes public
+`src/app/infrastructure/postgres_codecs.py` functions for row access, JSON
+object decoding, datetime decoding, and domain JSON serialization; the
+private-import boundary gate blocks future cross-module imports from private
+codec helpers.
 This is structural cleanup only and does not promote a supported business
 feature.
 
@@ -548,6 +553,8 @@ snapshots, and rolls back on database flush failure.
 `src/app/infrastructure/postgres_codecs.py` isolates PostgreSQL JSON
 serialization/deserialization helpers so adapter growth preserves the
 maintainability gate instead of normalizing an oversized infrastructure module.
+Cross-module callers must use its public codec API; private helper imports from
+that module are blocked by `make private-import-boundary-gate`.
 `src/app/application/durable_repository_proof.py`,
 `scripts/generate_durable_repository_proof.py`, and
 `make durable-repository-proof-contract-gate` now define and enforce a
@@ -1443,8 +1450,8 @@ logs; fix or document the owned warning source instead.
    `lotus-idea`. The layer also
    contains source-safe downstream realization adapter foundations for
    Advise/Manage/Report handoff envelopes, migration execution helpers,
-   PostgreSQL codec helpers, and `PostgresIdeaRepository`, which is tested as a
-   durable repository adapter and selected by API runtime wiring when
+   public PostgreSQL codec APIs, and `PostgresIdeaRepository`, which is tested
+   as a durable repository adapter and selected by API runtime wiring when
    `LOTUS_IDEA_DATABASE_URL` is configured.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
    diagnostics, bounded idea operation events, safe metric-label policy, and audit event helpers.
@@ -1719,9 +1726,12 @@ public, named domain APIs exported through `app.domain` so opportunity
 lifecycle, evidence, and source-authority invariants do not become hidden test
 or application coupling. Shared implementation-proof readiness code must use
 public `apply_blocker_proof` and `build_capability_readiness` functions from
-`app.application.implementation_proof_capability_updates`. The gate remains
-intentionally scoped to measured boundaries; broader application-helper and
-persistence-codec cleanup remains future refactoring work.
+`app.application.implementation_proof_capability_updates`. PostgreSQL repository
+code must use public `app.infrastructure.postgres_codecs` functions for row,
+JSON, datetime, and domain serialization behavior instead of importing private
+codec helpers. The gate remains intentionally scoped to measured boundaries;
+broader application-helper cleanup and adapter-internal codec cleanup remain
+future refactoring work.
 
 `make documentation-contract-gate` is blocking through `make lint`. It protects
 the durable agent and operator context surface: `AGENTS.md`, `README.md`,

@@ -32,6 +32,7 @@ evidence.
 Domain modules may keep private helpers for local readability, but cross-module callers must use
 public domain APIs exported through `app.domain`. Shared implementation-proof capability updates
 must also use public functions from `app.application.implementation_proof_capability_updates`.
-`make private-import-boundary-gate` blocks private imports from those protected modules across
-`src`, `tests`, and `scripts`; it remains a measured design-modularity rule and does not imply a
-runtime service split or complete cleanup of every application helper.
+PostgreSQL repository callers must use public `app.infrastructure.postgres_codecs` APIs rather
+than private codec helpers. `make private-import-boundary-gate` blocks private imports from those
+protected modules across `src`, `tests`, and `scripts`; it remains a measured design-modularity
+rule and does not imply a runtime service split or complete cleanup of every application helper.
