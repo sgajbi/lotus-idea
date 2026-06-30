@@ -29,6 +29,12 @@ from app.infrastructure.downstream_client import (
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import CoreOpportunitySourcePort
 
+SOURCE_INGESTION_MAX_CONNECTIONS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS"
+SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
+    "LOTUS_IDEA_SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS"
+)
+SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_POOL_TIMEOUT_SECONDS"
+
 
 @dataclass(frozen=True)
 class SourceIngestionRuntime:
@@ -38,6 +44,11 @@ class SourceIngestionRuntime:
     core_base_url_configured: bool
     core_query_base_url_configured: bool
     core_query_control_plane_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.core_source, "close", None)
+        if callable(close):
+            close()
 
 
 @dataclass(frozen=True)
@@ -124,14 +135,27 @@ def _core_source_client_configs(
             f"or {CORE_BASE_URL_ENV} must provide a compatibility fallback."
         )
     timeout_seconds = _timeout_seconds_from_environment()
+    max_connections = _positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20)
+    max_keepalive_connections = _positive_int_env(
+        SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV, default=10
+    )
+    pool_timeout_seconds = _positive_float_env(
+        SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV, default=2.0
+    )
     return (
         DownstreamClientConfig(
             base_url=core_source_urls.query_base_url,
             timeout_seconds=timeout_seconds,
+            max_connections=max_connections,
+            max_keepalive_connections=max_keepalive_connections,
+            pool_timeout_seconds=pool_timeout_seconds,
         ),
         DownstreamClientConfig(
             base_url=core_source_urls.query_control_plane_base_url,
             timeout_seconds=timeout_seconds,
+            max_connections=max_connections,
+            max_keepalive_connections=max_keepalive_connections,
+            pool_timeout_seconds=pool_timeout_seconds,
         ),
     )
 
@@ -144,15 +168,26 @@ def _read_manifest(path: Path) -> dict[str, Any]:
 
 
 def _timeout_seconds_from_environment() -> float:
-    raw_timeout = os.getenv(TIMEOUT_SECONDS_ENV, "2.0")
+    return _positive_float_env(TIMEOUT_SECONDS_ENV, default=2.0)
+
+
+def _positive_float_env(name: str, *, default: float) -> float:
+    raw_timeout = os.getenv(name, str(default))
     try:
         timeout = float(raw_timeout)
     except ValueError as exc:
-        raise DownstreamClientConfigurationError(
-            "source ingestion timeout seconds must be numeric"
-        ) from exc
+        raise DownstreamClientConfigurationError(f"{name} must be numeric") from exc
     if timeout <= 0:
-        raise DownstreamClientConfigurationError(
-            "source ingestion timeout seconds must be positive"
-        )
+        raise DownstreamClientConfigurationError(f"{name} must be positive")
     return timeout
+
+
+def _positive_int_env(name: str, *, default: int) -> int:
+    raw_value = os.getenv(name, str(default))
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise DownstreamClientConfigurationError(f"{name} must be an integer") from exc
+    if value <= 0:
+        raise DownstreamClientConfigurationError(f"{name} must be positive")
+    return value

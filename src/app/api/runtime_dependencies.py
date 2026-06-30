@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from app.runtime.downstream_realization_state import (
     DownstreamRealizationClientsUnavailableError,
+    close_downstream_realization_clients,
     get_conversion_realization_clients,
     get_report_evidence_pack_realization_client,
 )
@@ -31,6 +32,7 @@ __all__ = [
     "SourceIngestionRuntimeBlocker",
     "build_outbox_publisher_from_environment",
     "build_source_ingestion_runtime_from_environment",
+    "close_downstream_realization_clients",
     "configured_implementation_proof_artifacts",
     "get_conversion_realization_clients",
     "get_idea_repository",

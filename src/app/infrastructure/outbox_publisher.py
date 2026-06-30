@@ -21,6 +21,9 @@ class OutboxBrokerPublisherConfig:
     base_url: str
     publish_path: str = "/events/lotus-idea/outbox"
     timeout_seconds: float = 2.0
+    max_connections: int = 20
+    max_keepalive_connections: int = 10
+    pool_timeout_seconds: float = 2.0
 
     def __post_init__(self) -> None:
         if not self.publish_path.startswith("/"):
@@ -33,6 +36,9 @@ class OutboxBrokerPublisherConfig:
             DownstreamClientConfig(
                 base_url=self.base_url,
                 timeout_seconds=self.timeout_seconds,
+                max_connections=self.max_connections,
+                max_keepalive_connections=self.max_keepalive_connections,
+                pool_timeout_seconds=self.pool_timeout_seconds,
             )
         except ValueError as exc:
             raise OutboxPublisherConfigurationError(str(exc)) from exc
@@ -49,6 +55,9 @@ class HttpOutboxEventPublisher:
             DownstreamClientConfig(
                 base_url=config.base_url,
                 timeout_seconds=config.timeout_seconds,
+                max_connections=config.max_connections,
+                max_keepalive_connections=config.max_keepalive_connections,
+                pool_timeout_seconds=config.pool_timeout_seconds,
             )
         )
 
@@ -63,6 +72,9 @@ class HttpOutboxEventPublisher:
         except DownstreamServiceError as exc:
             return OutboxPublishOutcome.rejected_by_publisher(_failure_reason(exc))
         return OutboxPublishOutcome.accepted_by_publisher()
+
+    def close(self) -> None:
+        self._client.close()
 
 
 def _event_envelope(event: OutboxEventRecord) -> dict[str, Any]:

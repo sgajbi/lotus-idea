@@ -13,6 +13,13 @@ from app.infrastructure.outbox_publisher import (
     OutboxBrokerPublisherConfig,
     OutboxPublisherConfigurationError,
 )
+from app.runtime.outbox_publisher_state import (
+    OUTBOX_BROKER_MAX_CONNECTIONS_ENV,
+    OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV,
+    OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV,
+    build_outbox_publisher_from_environment,
+)
+from app.application.outbox_delivery_readiness import OUTBOX_BROKER_URL_ENV
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -106,6 +113,17 @@ def test_http_outbox_event_publisher_maps_transport_error_to_unavailable() -> No
             "query string",
         ),
         ({"base_url": "https://broker.example", "timeout_seconds": 0}, "positive"),
+        ({"base_url": "https://broker.example", "max_connections": 0}, "positive"),
+        ({"base_url": "https://broker.example", "max_keepalive_connections": 0}, "positive"),
+        (
+            {
+                "base_url": "https://broker.example",
+                "max_connections": 2,
+                "max_keepalive_connections": 3,
+            },
+            "must not exceed",
+        ),
+        ({"base_url": "https://broker.example", "pool_timeout_seconds": 0}, "positive"),
     ],
 )
 def test_outbox_broker_publisher_config_rejects_invalid_configuration(
@@ -114,6 +132,46 @@ def test_outbox_broker_publisher_config_rejects_invalid_configuration(
 ) -> None:
     with pytest.raises(OutboxPublisherConfigurationError, match=message):
         OutboxBrokerPublisherConfig(**config_kwargs)
+
+
+@pytest.mark.parametrize(
+    ("env_name", "env_value"),
+    [
+        (OUTBOX_BROKER_MAX_CONNECTIONS_ENV, "0"),
+        (OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV, "0"),
+        (OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV, "0"),
+    ],
+)
+def test_outbox_publisher_state_rejects_invalid_resource_settings(
+    monkeypatch: pytest.MonkeyPatch,
+    env_name: str,
+    env_value: str,
+) -> None:
+    monkeypatch.setenv(OUTBOX_BROKER_URL_ENV, "https://broker.example")
+    monkeypatch.setenv(env_name, env_value)
+
+    result = build_outbox_publisher_from_environment()
+
+    assert result == "outbox_broker_configuration_invalid"
+
+
+def test_http_outbox_event_publisher_close_releases_owned_client() -> None:
+    class CloseAwareDownstreamClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = CloseAwareDownstreamClient()
+    publisher = HttpOutboxEventPublisher(
+        OutboxBrokerPublisherConfig(base_url="https://broker.example"),
+        client=client,  # type: ignore[arg-type]
+    )
+
+    publisher.close()
+
+    assert client.closed is True
 
 
 def publisher_with_transport(transport: httpx.MockTransport) -> HttpOutboxEventPublisher:

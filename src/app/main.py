@@ -32,6 +32,7 @@ from app.api.underperformance_signals import register_underperformance_signal_ro
 from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.problem_details import problem_details_response as problem_response
 from app.api.runtime_dependencies import idea_repository_runtime_posture
+from app.runtime.downstream_realization_state import close_downstream_realization_clients
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.observability import configure_logging, emit_request_diagnostic_event
 
@@ -47,6 +48,7 @@ def create_app() -> FastAPI:
     _register_product_routes(application)
     _register_platform_routes(application)
     Instrumentator().instrument(application).expose(application, include_in_schema=False)
+    application.router.add_event_handler("shutdown", close_downstream_realization_clients)
     configure_logging()
     return application
 

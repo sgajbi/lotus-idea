@@ -22,6 +22,9 @@ class DownstreamServiceError(Exception):
 class DownstreamClientConfig:
     base_url: str
     timeout_seconds: float = 2.0
+    max_connections: int = 20
+    max_keepalive_connections: int = 10
+    pool_timeout_seconds: float = 2.0
 
     def __post_init__(self) -> None:
         parsed = urlparse(self.base_url)
@@ -31,6 +34,32 @@ class DownstreamClientConfig:
             )
         if self.timeout_seconds <= 0:
             raise DownstreamClientConfigurationError("Downstream timeout_seconds must be positive.")
+        if self.max_connections <= 0:
+            raise DownstreamClientConfigurationError("Downstream max_connections must be positive.")
+        if self.max_keepalive_connections <= 0:
+            raise DownstreamClientConfigurationError(
+                "Downstream max_keepalive_connections must be positive."
+            )
+        if self.max_keepalive_connections > self.max_connections:
+            raise DownstreamClientConfigurationError(
+                "Downstream max_keepalive_connections must not exceed max_connections."
+            )
+        if self.pool_timeout_seconds <= 0:
+            raise DownstreamClientConfigurationError(
+                "Downstream pool_timeout_seconds must be positive."
+            )
+
+    def limits(self) -> httpx.Limits:
+        return httpx.Limits(
+            max_connections=self.max_connections,
+            max_keepalive_connections=self.max_keepalive_connections,
+        )
+
+    def timeout(self) -> httpx.Timeout:
+        return httpx.Timeout(
+            timeout=self.timeout_seconds,
+            pool=self.pool_timeout_seconds,
+        )
 
 
 def build_trace_headers(
@@ -52,10 +81,26 @@ def build_trace_headers(
 class DownstreamJsonClient:
     def __init__(self, config: DownstreamClientConfig, client: httpx.Client | None = None) -> None:
         self._config = config
+        self._owns_client = client is None
         self._client = client or httpx.Client(
             base_url=config.base_url,
-            timeout=config.timeout_seconds,
+            timeout=config.timeout(),
+            limits=config.limits(),
         )
+
+    @property
+    def owns_client(self) -> bool:
+        return self._owns_client
+
+    def close(self) -> None:
+        if self._owns_client:
+            self._client.close()
+
+    def __enter__(self) -> "DownstreamJsonClient":
+        return self
+
+    def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
+        self.close()
 
     def get_json(
         self,

@@ -213,9 +213,16 @@ flowchart LR
     now owns the publisher protocol, and `src/app/infrastructure/outbox_publisher.py`
     implements a source-safe HTTP adapter that posts bounded event envelopes,
     propagates correlation/causation headers, and maps broker failures to
-    bounded publisher reasons. This is internal recoverability and adapter
-    foundation only; certified live broker runtime, downstream consumers, and
-    event-publication support remain unimplemented.
+    bounded publisher reasons. The broker publisher uses the shared downstream
+    HTTP client resource model with explicit timeout, connection-pool,
+    keepalive, and pool-timeout limits from
+    `LOTUS_IDEA_OUTBOX_BROKER_TIMEOUT_SECONDS`,
+    `LOTUS_IDEA_OUTBOX_BROKER_MAX_CONNECTIONS`,
+    `LOTUS_IDEA_OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS`, and
+    `LOTUS_IDEA_OUTBOX_BROKER_POOL_TIMEOUT_SECONDS`; invalid values fail
+    closed before publication is attempted. This is internal recoverability and
+    adapter foundation only; certified live broker runtime, downstream
+    consumers, and event-publication support remain unimplemented.
 16. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
     delivery readiness for operators. The diagnostic reports aggregate status

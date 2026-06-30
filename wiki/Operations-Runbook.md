@@ -374,6 +374,38 @@ coverage residue should be removed before branch hygiene checks. The command
 uses the governed cleanup utility and does not remove `.git`, `.venv`, or
 dependency cache directories.
 
+## Outbound HTTP Resource Controls
+
+`lotus-idea` owns explicit outbound HTTP resource controls for Core source
+ingestion, Advise/Manage/Report realization submission, and outbox broker
+publication. The shared downstream client validates request timeout,
+connection-pool, keepalive, and pool-timeout settings and exposes close
+semantics for owned clients.
+
+Configured runtime families:
+
+1. source ingestion: `LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS`,
+   `LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS`,
+   `LOTUS_IDEA_SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS`, and
+   `LOTUS_IDEA_SOURCE_INGESTION_POOL_TIMEOUT_SECONDS`,
+2. downstream realization:
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`, and
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+3. outbox broker: `LOTUS_IDEA_OUTBOX_BROKER_TIMEOUT_SECONDS`,
+   `LOTUS_IDEA_OUTBOX_BROKER_MAX_CONNECTIONS`,
+   `LOTUS_IDEA_OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS`, and
+   `LOTUS_IDEA_OUTBOX_BROKER_POOL_TIMEOUT_SECONDS`.
+
+Invalid or inconsistent settings fail closed before outbound work is attempted.
+Runtime-cached realization clients close on application shutdown and test reset;
+source-ingestion runtime objects expose `close()` for deterministic cleanup.
+These controls improve operability and capacity posture only. They do not
+certify live Core source ingestion, external broker publication, downstream
+execution, Gateway/Workbench behavior, client publication, or supported-feature
+promotion.
+
 RFC-0002 will add support runbooks for:
 
 1. upstream source unavailable,
