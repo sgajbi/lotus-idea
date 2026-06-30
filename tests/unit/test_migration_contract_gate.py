@@ -141,6 +141,38 @@ def test_migration_contract_gate_blocks_missing_upgrade_constraint_rollback(
     )
 
 
+def test_migration_contract_gate_blocks_table_unsafe_rollback_alter(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    forward = tmp_path / "003_outbox_event_contract_constraints.sql"
+    rollback = tmp_path / "003_outbox_event_contract_constraints.rollback.sql"
+    forward.write_text(
+        (ROOT / "migrations" / "003_outbox_event_contract_constraints.sql").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+    rollback.write_text(
+        "ALTER TABLE idea_outbox_event\n"
+        "    DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_event_type;\n",
+        encoding="utf-8",
+    )
+
+    migration = module.MigrationContract(
+        version="003",
+        forward_path=forward,
+        rollback_path=rollback,
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=("ADD CONSTRAINT ck_idea_outbox_event_event_type",),
+        required_rollback_fragments=("DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_event_type",),
+    )
+    errors = module.validate_migration_contracts((migration,))
+
+    assert "Migration 003 rollback line 1 uses ALTER TABLE without IF EXISTS" in errors
+
+
 def test_migration_contract_gate_blocks_missing_rollback_table(tmp_path: Path) -> None:
     module = _load_migration_contract_gate()
     forward = tmp_path / "001_idea_repository_foundation.sql"

@@ -188,6 +188,7 @@ def _validate_forward_sql(migration: MigrationContract, forward_sql: str) -> lis
 
 def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> list[str]:
     errors: list[str] = []
+    errors.extend(_validate_table_safe_rollback_alter_statements(migration, rollback_sql))
     for index in migration.required_indexes:
         if not _contains_sql_statement(rollback_sql, f"DROP INDEX IF EXISTS {index};"):
             errors.append(f"Migration {migration.version} rollback missing index `{index}`")
@@ -198,6 +199,20 @@ def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> l
     for fragment in migration.required_rollback_fragments:
         if fragment.upper() not in upper_rollback:
             errors.append(f"Migration {migration.version} rollback SQL missing `{fragment}`")
+    return errors
+
+
+def _validate_table_safe_rollback_alter_statements(
+    migration: MigrationContract,
+    rollback_sql: str,
+) -> list[str]:
+    errors: list[str] = []
+    for match in re.finditer(r"\bALTER\s+TABLE\s+(?!IF\s+EXISTS\b)", rollback_sql, re.IGNORECASE):
+        line_number = rollback_sql.count("\n", 0, match.start()) + 1
+        errors.append(
+            f"Migration {migration.version} rollback line {line_number} uses "
+            "ALTER TABLE without IF EXISTS"
+        )
     return errors
 
 
