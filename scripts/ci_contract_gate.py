@@ -14,8 +14,15 @@ from ci_contract_gate_expectations import (  # noqa: E402
     SCRIPT_TARGET_EXPECTATIONS,
     TEST_TARGET_EXPECTATIONS,
 )
+from ci_e2e_contract import validate_e2e_suite  # noqa: E402
+from ci_release_evidence_contract import (  # noqa: E402
+    validate_dependency_governance,
+    validate_release_evidence_targets,
+)
 
 MAKEFILE_PATH = ROOT / "Makefile"
+PYPROJECT_PATH = ROOT / "pyproject.toml"
+CI_TOOLING_LOCK_PATH = ROOT / "requirements" / "ci-tooling.lock.txt"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
 E2E_TESTS_DIR = ROOT / "tests" / "e2e"
 ACTION_USE_RE = re.compile(r"uses:\s+(?P<action>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@(?P<ref>[^ \t#]+)")
@@ -45,6 +52,8 @@ REQUIRED_TARGETS = (
     "coverage-gate",
     "security-audit",
     "docker-build",
+    "release-sbom",
+    "container-image-scan",
 )
 REQUIRED_LINT_CALLS = tuple(f"$(MAKE) {target}" for target in REQUIRED_LINT_TARGETS)
 REQUIRED_CHECK_DEPS = (
@@ -116,6 +125,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "LOTUS_IDEA_POSTGRES_INTEGRATION_URL",
         "make postgres-integration-gate",
         "make docker-build",
+        "make container-image-scan",
         "NODE_OPTIONS: --no-deprecation",
     ),
     "main-releasability.yml": (
@@ -143,7 +153,12 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "LOTUS_IDEA_POSTGRES_INTEGRATION_URL",
         "make postgres-integration-gate",
         "make docker-build",
-        "cyclonedx-py environment",
+        "make container-image-scan",
+        "make release-sbom",
+        "sbom.cdx.json",
+        "            output/security/container-image-scan.trivy.json",
+        "cyclonedx-bom==7.3.0",
+        "aquasec/trivy:0.71.2",
         "release-evidence.json",
         "main-releasability-release-evidence",
         "NODE_OPTIONS: --no-deprecation",
@@ -177,6 +192,7 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "pull-requests: write",
         "continue-on-error:",
         "run: ./.venv/bin/python -m pytest",
+        "pip install cyclonedx-bom",
     ),
     "pr-merge-gate.yml": (
         "pull_request_target:",
@@ -184,6 +200,7 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "pull-requests: write",
         "continue-on-error:",
         "run: ./.venv/bin/python -m pytest",
+        "pip install cyclonedx-bom",
     ),
     "main-releasability.yml": (
         "pull_request_target:",
@@ -191,26 +208,12 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "pull-requests: write",
         "continue-on-error:",
         "run: ./.venv/bin/python -m pytest",
+        "pip install cyclonedx-bom",
     ),
     "pr-auto-merge.yml": ("continue-on-error:",),
     "merged-pr-main-releasability.yml": ("continue-on-error:",),
 }
 READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
-REQUIRED_E2E_WORKFLOW_FILES: dict[str, tuple[str, ...]] = {
-    "test_critical_idea_workflow.py": (
-        "test_critical_idea_workflow_preserves_authority_boundaries",
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        "/api/v1/review-queues/advisor",
-        "/api/v1/idea-candidates/{candidate_id}/review-actions",
-        "/api/v1/idea-candidates/{candidate_id}/conversion-intents",
-        "/api/v1/conversion-intents/critical-e2e-conversion-report-001/report-evidence-packs",
-        '"grantsDownstreamAuthority"',
-        '"grantsClientPublicationAuthority"',
-        '"createsRenderedOutput"',
-        '"clientReadyPublicationRequested"',
-        '"supportedFeaturePromoted"',
-    )
-}
 
 
 def _read(path: Path) -> str:
@@ -341,6 +344,7 @@ def validate_makefile(makefile: str) -> list[str]:
         *_validate_aggregate_makefile_targets(makefile),
         *_validate_test_targets(makefile),
         *_validate_security_audit_target(makefile),
+        *validate_release_evidence_targets(makefile),
         *_validate_script_targets(makefile),
         *_validate_support_targets(makefile),
     ]
@@ -362,25 +366,6 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
                 errors.append(f"{workflow_name} must not contain `{prohibited}`")
         errors.extend(_validate_job_timeouts(workflow_name, content))
         errors.extend(_validate_action_pins(workflow_name, content))
-    return errors
-
-
-def validate_e2e_suite(tests_dir: Path) -> list[str]:
-    errors: list[str] = []
-    if not tests_dir.exists():
-        return [f"Missing {tests_dir.relative_to(ROOT).as_posix()}"]
-
-    for filename, required_fragments in REQUIRED_E2E_WORKFLOW_FILES.items():
-        test_path = tests_dir / filename
-        if not test_path.exists():
-            errors.append(f"tests/e2e missing required critical workflow proof `{filename}`")
-            continue
-        content = _read(test_path)
-        for fragment in required_fragments:
-            if fragment not in content:
-                errors.append(
-                    f"tests/e2e/{filename} missing critical workflow assertion `{fragment}`"
-                )
     return errors
 
 
@@ -461,8 +446,21 @@ def _job_blocks(workflow: str) -> dict[str, str]:
 def validate_ci_contract() -> list[str]:
     if not MAKEFILE_PATH.exists():
         return [f"Missing {MAKEFILE_PATH.relative_to(ROOT).as_posix()}"]
+    dependency_errors: list[str] = []
+    if not PYPROJECT_PATH.exists():
+        dependency_errors.append("Missing pyproject.toml")
+        pyproject = ""
+    else:
+        pyproject = _read(PYPROJECT_PATH)
+    if not CI_TOOLING_LOCK_PATH.exists():
+        dependency_errors.append("Missing requirements/ci-tooling.lock.txt")
+        ci_tooling_lock = ""
+    else:
+        ci_tooling_lock = _read(CI_TOOLING_LOCK_PATH)
     return [
         *validate_makefile(_read(MAKEFILE_PATH)),
+        *dependency_errors,
+        *validate_dependency_governance(pyproject, ci_tooling_lock),
         *validate_workflows(WORKFLOWS_DIR),
         *validate_e2e_suite(E2E_TESTS_DIR),
     ]

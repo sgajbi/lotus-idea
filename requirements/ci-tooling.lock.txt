@@ -6,3 +6,4 @@ pytest-cov==7.1.0
 httpx2==2.4.0
 coverage==7.14.2
 pip-audit==2.10.1
+cyclonedx-bom==7.3.0
