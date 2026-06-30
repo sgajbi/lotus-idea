@@ -6,9 +6,11 @@ from pathlib import Path
 from app.application.gateway_workbench_operational_proof import (
     build_gateway_workbench_operational_proof_payload,
 )
+from app.application.implementation_proof_capability_updates import (
+    build_capability_readiness,
+)
 from app.application.implementation_proof_readiness import (
     _apply_gateway_workbench_operational_proof,
-    _capability,
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
@@ -19,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_gateway_workbench_operational_proof_application_is_noop_for_other_capability() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "workbench-product-proof",
         "Workbench product realization",
         readiness_status="blocked",

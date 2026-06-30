@@ -47,8 +47,8 @@ from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
 )
-from app.application.implementation_proof_capability_updates import _apply_blocker_proof
-from app.application.implementation_proof_capability_updates import _capability as _capability
+from app.application.implementation_proof_capability_updates import apply_blocker_proof
+from app.application.implementation_proof_capability_updates import build_capability_readiness
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     apply_opportunity_archetype_proofs_from_scope,
 )
@@ -666,7 +666,7 @@ def _apply_downstream_route_contract_proof(
     blockers_cleared: tuple[str, ...],
     proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=(capability_id,),
         blockers_cleared=blockers_cleared,
@@ -678,7 +678,7 @@ def _apply_report_materialization_proof(
     capability: ImplementationProofCapabilityReadiness,
     report_materialization_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("downstream-realization",),
         blockers_cleared=REPORT_MATERIALIZATION_BLOCKERS_CLEARED,
@@ -690,7 +690,7 @@ def _apply_mesh_policy_proof(
     capability: ImplementationProofCapabilityReadiness,
     mesh_policy_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("data-mesh-certification",),
         blockers_cleared=MESH_POLICY_BLOCKERS_CLEARED,
@@ -707,7 +707,7 @@ def _apply_durable_repository_proof(
     evidence_refs = capability.evidence_refs
     if durable_repository_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, durable_repository_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -726,7 +726,7 @@ def _apply_runtime_trust_telemetry_proof(
     capability: ImplementationProofCapabilityReadiness,
     runtime_trust_telemetry_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         blockers_cleared=RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
         proof_ref=runtime_trust_telemetry_proof_ref,
@@ -742,7 +742,7 @@ def _apply_workbench_read_path_proof(
     evidence_refs = capability.evidence_refs
     if workbench_read_path_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, workbench_read_path_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -761,7 +761,7 @@ def _apply_gateway_workbench_operational_proof(
     capability: ImplementationProofCapabilityReadiness,
     gateway_workbench_operational_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("source-ingestion", "outbox-delivery"),
         blockers_cleared=GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED,
@@ -773,7 +773,7 @@ def _apply_gateway_workbench_discovery_proof(
     capability: ImplementationProofCapabilityReadiness,
     gateway_workbench_discovery_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("data-mesh-certification", "runtime-trust-telemetry-preview"),
         blockers_cleared=GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
@@ -792,7 +792,7 @@ def _apply_ai_lineage_store_proof(
     evidence_refs = capability.evidence_refs
     if ai_lineage_store_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, ai_lineage_store_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -820,7 +820,7 @@ def _apply_ai_model_risk_operations_proof(
     evidence_refs = capability.evidence_refs
     if ai_model_risk_operations_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, ai_model_risk_operations_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -846,7 +846,7 @@ def _apply_ai_workflow_pack_registration_proof(
         evidence_refs = tuple(
             dict.fromkeys((*evidence_refs, ai_workflow_pack_registration_proof_ref))
         )
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -874,7 +874,7 @@ def _apply_ai_workflow_pack_runtime_execution_proof(
         evidence_refs = tuple(
             dict.fromkeys((*evidence_refs, ai_workflow_pack_runtime_execution_proof_ref))
         )
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -904,7 +904,7 @@ def _apply_outbox_broker_proof(
     evidence_refs = capability.evidence_refs
     if outbox_broker_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_broker_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -929,7 +929,7 @@ def _apply_outbox_consumer_runtime_proof(
     evidence_refs = capability.evidence_refs
     if outbox_consumer_runtime_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, outbox_consumer_runtime_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -957,7 +957,7 @@ def _apply_platform_mesh_onboarding_proof(
     evidence_refs = capability.evidence_refs
     if platform_mesh_onboarding_proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, platform_mesh_onboarding_proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -993,7 +993,7 @@ def _source_ingestion_capability(
         evidence_refs.append(live_proof_ref)
     if snapshot.scheduled_worker_deploy_proof_valid and scheduled_worker_proof_ref:
         evidence_refs.append(scheduled_worker_proof_ref)
-    return _capability(
+    return build_capability_readiness(
         "source-ingestion",
         "Source-owned high-cash signal ingestion",
         readiness_status=snapshot.run_once_configuration_status,
@@ -1009,7 +1009,7 @@ def _source_ingestion_capability(
 def _review_queue_capability(
     snapshot: ReviewQueueReadinessSnapshot,
 ) -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "advisor-review-queue",
         "Deterministic advisor review queue",
         readiness_status=snapshot.readiness_status,
@@ -1027,7 +1027,7 @@ def _review_queue_capability(
 def _ai_explanation_capability(
     snapshot: AIExplanationReadinessSnapshot,
 ) -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "ai-explanation",
         "AI-assisted explanation governance",
         readiness_status=snapshot.readiness_status,
@@ -1049,7 +1049,7 @@ def _ai_explanation_capability(
 def _data_mesh_capability(
     snapshot: DataMeshReadinessSnapshot,
 ) -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "data-mesh-certification",
         "Data-mesh producer and consumer certification",
         readiness_status=snapshot.lifecycle_status,
@@ -1071,7 +1071,7 @@ def _data_mesh_capability(
 def _runtime_trust_telemetry_capability(
     snapshot: RuntimeTrustTelemetryPreview,
 ) -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "runtime-trust-telemetry-preview",
         "Source-safe runtime trust telemetry preview",
         readiness_status=("ready" if snapshot.certification_ready else "blocked"),
@@ -1092,7 +1092,7 @@ def _runtime_trust_telemetry_capability(
 def _outbox_delivery_capability(
     snapshot: OutboxDeliveryReadinessSnapshot,
 ) -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "outbox-delivery",
         "Internal outbox delivery foundation",
         readiness_status=snapshot.readiness_status,
@@ -1120,7 +1120,7 @@ def _outbox_delivery_capability(
 
 
 def _workbench_product_capability() -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "workbench-product-proof",
         "Workbench product realization",
         readiness_status="planned",
@@ -1149,7 +1149,7 @@ def _downstream_realization_capability(
             for evidence_ref in contract.evidence_refs
         )
     )
-    return _capability(
+    return build_capability_readiness(
         "downstream-realization",
         "Advise, Manage, Report, Render, and Archive realization",
         readiness_status=snapshot.readiness_status,
@@ -1174,7 +1174,7 @@ def _downstream_realization_capability(
 def _supported_feature_capability(
     supported_feature_count: int,
 ) -> ImplementationProofCapabilityReadiness:
-    return _capability(
+    return build_capability_readiness(
         "supported-feature-promotion",
         "Implementation-backed supported-feature promotion",
         readiness_status="blocked",

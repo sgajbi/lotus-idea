@@ -6,7 +6,7 @@ from app.application.bond_maturity_live_proof import (
     BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
     bond_maturity_live_proof_is_valid,
 )
-from app.application.implementation_proof_capability_updates import _apply_blocker_proof
+from app.application.implementation_proof_capability_updates import apply_blocker_proof
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
 from app.application.high_volatility_live_proof import (
     HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
@@ -277,7 +277,7 @@ def _apply_source_ingestion_live_proof(
     if not source_ingestion_live_proof_valid:
         return capabilities
     return tuple(
-        _apply_blocker_proof(
+        apply_blocker_proof(
             capability,
             capability_ids=("opportunity-archetype-scenarios",),
             blockers_cleared=HIGH_CASH_LIVE_CORE_BLOCKERS_CLEARED,
@@ -373,7 +373,7 @@ def _apply_risk_concentration_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     risk_concentration_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=RISK_CONCENTRATION_LIVE_BLOCKERS_CLEARED,
@@ -385,7 +385,7 @@ def _apply_high_volatility_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     high_volatility_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
@@ -397,7 +397,7 @@ def _apply_risk_drawdown_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     risk_drawdown_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=RISK_DRAWDOWN_LIVE_BLOCKERS_CLEARED,
@@ -409,7 +409,7 @@ def _apply_performance_underperformance_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     performance_underperformance_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=PERFORMANCE_UNDERPERFORMANCE_LIVE_BLOCKERS_CLEARED,
@@ -421,7 +421,7 @@ def _apply_core_benchmark_assignment_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     core_benchmark_assignment_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=CORE_BENCHMARK_ASSIGNMENT_LIVE_BLOCKERS_CLEARED,
@@ -433,7 +433,7 @@ def _apply_core_portfolio_state_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     core_portfolio_state_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=CORE_PORTFOLIO_STATE_LIVE_BLOCKERS_CLEARED,
@@ -445,7 +445,7 @@ def _apply_bond_maturity_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     bond_maturity_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
@@ -457,7 +457,7 @@ def _apply_low_income_core_cashflow_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     low_income_core_cashflow_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=LOW_INCOME_CORE_CASHFLOW_LIVE_BLOCKERS_CLEARED,
@@ -469,7 +469,7 @@ def _apply_manage_mandate_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     manage_mandate_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MANAGE_MANDATE_LIVE_BLOCKERS_CLEARED,
@@ -481,7 +481,7 @@ def _apply_mandate_restriction_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     mandate_restriction_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MANDATE_RESTRICTION_LIVE_BLOCKERS_CLEARED,
@@ -493,7 +493,7 @@ def _apply_mandate_restriction_source_product_proof(
     capability: ImplementationProofCapabilityReadiness,
     mandate_restriction_source_product_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED,
@@ -505,7 +505,7 @@ def _apply_missing_suitability_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     missing_suitability_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_SUITABILITY_LIVE_BLOCKERS_CLEARED,
@@ -517,7 +517,7 @@ def _apply_missing_risk_profile_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     missing_risk_profile_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_RISK_PROFILE_LIVE_BLOCKERS_CLEARED,
@@ -529,7 +529,7 @@ def _apply_missing_risk_profile_source_product_proof(
     capability: ImplementationProofCapabilityReadiness,
     missing_risk_profile_source_product_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED,
@@ -541,7 +541,7 @@ def _apply_missing_benchmark_live_proof(
     capability: ImplementationProofCapabilityReadiness,
     missing_benchmark_live_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_BENCHMARK_LIVE_BLOCKERS_CLEARED,
@@ -553,7 +553,7 @@ def _apply_missing_benchmark_performance_readiness_proof(
     capability: ImplementationProofCapabilityReadiness,
     missing_benchmark_performance_readiness_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    return _apply_blocker_proof(
+    return apply_blocker_proof(
         capability,
         capability_ids=("opportunity-archetype-scenarios",),
         blockers_cleared=MISSING_BENCHMARK_PERFORMANCE_READINESS_BLOCKERS_CLEARED,

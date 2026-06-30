@@ -9,9 +9,11 @@ from app.application.gateway_workbench_discovery_proof import (
 from app.application.gateway_workbench_operational_proof import (
     build_gateway_workbench_operational_proof_payload,
 )
+from app.application.implementation_proof_capability_updates import (
+    build_capability_readiness,
+)
 from app.application.implementation_proof_readiness import (
     _apply_gateway_workbench_discovery_proof,
-    _capability,
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.platform_mesh_onboarding_proof import (
@@ -27,7 +29,7 @@ GENERATED_AT_UTC = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 
 
 def test_gateway_workbench_discovery_proof_application_is_noop_for_other_capability() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "source-ingestion",
         "Source ingestion",
         readiness_status="blocked",

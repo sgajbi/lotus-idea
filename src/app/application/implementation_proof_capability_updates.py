@@ -5,7 +5,7 @@ from app.application.implementation_proof_models import (
 )
 
 
-def _apply_blocker_proof(
+def apply_blocker_proof(
     capability: ImplementationProofCapabilityReadiness,
     *,
     capability_ids: tuple[str, ...] | None = None,
@@ -20,7 +20,7 @@ def _apply_blocker_proof(
     evidence_refs = capability.evidence_refs
     if proof_ref:
         evidence_refs = tuple(dict.fromkeys((*evidence_refs, proof_ref)))
-    return _capability(
+    return build_capability_readiness(
         capability.capability_id,
         capability.name,
         readiness_status=capability.readiness_status,
@@ -33,7 +33,7 @@ def _apply_blocker_proof(
     )
 
 
-def _capability(
+def build_capability_readiness(
     capability_id: str,
     name: str,
     *,

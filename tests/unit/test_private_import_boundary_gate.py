@@ -29,7 +29,28 @@ def test_private_import_boundary_gate_blocks_cross_module_private_import(tmp_pat
 
     assert errors == [
         "src/app/api/consumer.py:1: private import `_private_helper` from "
-        "`app.domain.source_module` must use a public domain API"
+        "`app.domain.source_module` must use a public module API"
+    ]
+
+
+def test_private_import_boundary_gate_blocks_private_proof_capability_import(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    consumer_module = tmp_path / "src" / "app" / "application" / "consumer.py"
+    consumer_module.parent.mkdir(parents=True)
+    consumer_module.write_text(
+        "from app.application.implementation_proof_capability_updates import "
+        "_apply_blocker_proof\n",
+        encoding="utf-8",
+    )
+
+    errors = module.validate_private_import_boundaries(tmp_path)
+
+    assert errors == [
+        "src/app/application/consumer.py:1: private import `_apply_blocker_proof` "
+        "from `app.application.implementation_proof_capability_updates` must use "
+        "a public module API"
     ]
 
 
@@ -45,7 +66,21 @@ def test_private_import_boundary_gate_allows_public_imports(tmp_path: Path) -> N
     assert module.validate_private_import_boundaries(tmp_path) == []
 
 
-def test_private_import_boundary_gate_does_not_overreach_application_helpers(
+def test_private_import_boundary_gate_allows_public_proof_capability_import(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    consumer_module = tmp_path / "src" / "app" / "application" / "consumer.py"
+    consumer_module.parent.mkdir(parents=True)
+    consumer_module.write_text(
+        "from app.application.implementation_proof_capability_updates import apply_blocker_proof\n",
+        encoding="utf-8",
+    )
+
+    assert module.validate_private_import_boundaries(tmp_path) == []
+
+
+def test_private_import_boundary_gate_does_not_overreach_unmeasured_application_helpers(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
