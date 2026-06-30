@@ -42,7 +42,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.access_scope import ReviewAccessScope
-from app.errors import ProblemDetails, problem_response
+from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,

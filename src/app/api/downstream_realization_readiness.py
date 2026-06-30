@@ -20,7 +20,7 @@ from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
 from app.application.report_intake_route_proof import load_report_intake_route_proof_from_env
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

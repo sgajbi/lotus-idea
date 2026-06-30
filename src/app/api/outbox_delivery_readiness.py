@@ -25,7 +25,7 @@ from app.application.outbox_delivery_readiness import (
     build_outbox_delivery_readiness_snapshot,
     outbox_delivery_certification_blockers,
 )
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

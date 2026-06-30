@@ -29,7 +29,7 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import ConversionTarget, SourceSystem
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

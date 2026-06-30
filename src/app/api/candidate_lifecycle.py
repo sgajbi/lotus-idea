@@ -30,7 +30,7 @@ from app.domain import (
     LifecyclePersistenceResult,
     ReasonCode,
 )
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 

@@ -27,7 +27,7 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

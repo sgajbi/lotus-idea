@@ -5,7 +5,8 @@ from typing import Any
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from app.errors import ProblemDetails, problem_response
+from app.errors import ProblemDetails as ProblemDetails
+from app.errors import problem_response as _problem_response
 
 
 def problem_response_metadata(
@@ -111,8 +112,23 @@ def service_unavailable_metadata(
     )
 
 
+def problem_details_response(
+    *,
+    status_code: int,
+    code: str,
+    title: str,
+    detail: str,
+) -> JSONResponse:
+    return _problem_response(
+        status_code=status_code,
+        code=code,
+        title=title,
+        detail=detail,
+    )
+
+
 def permission_denied_problem(detail: str) -> JSONResponse:
-    return problem_response(
+    return problem_details_response(
         status_code=status.HTTP_403_FORBIDDEN,
         code="permission_denied",
         title="Permission denied",
@@ -121,7 +137,7 @@ def permission_denied_problem(detail: str) -> JSONResponse:
 
 
 def invalid_request_problem(detail: str) -> JSONResponse:
-    return problem_response(
+    return problem_details_response(
         status_code=status.HTTP_400_BAD_REQUEST,
         code="invalid_request",
         title="Invalid request",

@@ -25,7 +25,7 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
