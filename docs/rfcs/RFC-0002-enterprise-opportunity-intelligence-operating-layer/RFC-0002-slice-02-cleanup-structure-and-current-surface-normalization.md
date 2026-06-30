@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers, route metadata governance, API DTO base-model governance, shared signal DTO governance, signal caller-context dependency governance, API ProblemDetails boundary governance, API idempotency boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, public proof capability update APIs, and public PostgreSQL codec APIs normalized behind shared public surfaces with blocking enforcement retained
+Status: Partially implemented - runtime composition providers, route metadata governance, API DTO base-model governance, shared signal DTO governance, signal caller-context and entitlement-scope dependency governance, API ProblemDetails boundary governance, API idempotency boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, public proof capability update APIs, and public PostgreSQL codec APIs normalized behind shared public surfaces with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -90,13 +90,19 @@ Implemented in this slice:
     promote support.
 17. Caller-supplied signal routes now use
     `src/app/api/caller_headers.py` and its `CallerContextHeaders` FastAPI
-    dependency alias for standard `X-Caller-Subject`, `X-Caller-Roles`, and
-    `X-Caller-Capabilities` binding. `make signal-api-contract-gate` blocks
-    route-local caller-context header clones in signal modules while preserving
-    existing signal permission and problem-detail behavior. This is API
-    design-modularity and error-model hardening inside the existing service; it
-    does not create a runtime signal microservice, broaden entitlement
-    semantics, or promote caller-supplied signal APIs as supported features.
+    dependency alias for standard `X-Caller-Subject`, `X-Caller-Roles`,
+    `X-Caller-Capabilities`, `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`,
+    `X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` binding. Signal
+    permission checks pass each request's `accessScope` into
+    `signal_permission_problem_or_none(...)`, which rejects scoped requests
+    when caller entitlement-scope headers are absent or do not cover the
+    requested tenant/book/portfolio/client. `make signal-api-contract-gate`
+    blocks route-local caller-context header clones and scope-unaware signal
+    permission checks while preserving shared signal problem-detail behavior.
+    This is API design-modularity and error-model hardening inside the existing
+    service; it does not create a runtime signal microservice, certify live
+    source entitlement, or promote caller-supplied signal APIs as supported
+    features.
 
 Validation evidence from the cleanup slice:
 
@@ -130,6 +136,8 @@ Validation evidence from the cleanup slice:
 28. `make signal-api-contract-gate`
 29. `.venv\Scripts\python.exe -m pytest tests\unit\test_signal_api_contract_gate.py tests\unit\test_security_caller_context.py tests\integration\test_concentration_risk_signal_api.py -q`
 30. `.venv\Scripts\python.exe -m ruff check src\app\api\caller_headers.py src\app\api\allocation_drift_signals.py src\app\api\bond_maturity_signals.py src\app\api\concentration_risk_signals.py src\app\api\drawdown_review_signals.py src\app\api\high_volatility_signals.py src\app\api\idea_signals.py src\app\api\low_income_signals.py src\app\api\missing_benchmark_signals.py src\app\api\missing_risk_profile_signals.py src\app\api\missing_suitability_signals.py src\app\api\underperformance_signals.py scripts\signal_api_contract_gate.py tests\unit\test_signal_api_contract_gate.py tests\unit\test_security_caller_context.py`
+31. `make signal-api-contract-gate`
+32. `.venv\Scripts\python.exe -m pytest tests\unit\test_signal_api_contract_gate.py tests\unit\test_signal_api_support.py tests\unit\test_security_caller_context.py tests\integration\test_concentration_risk_signal_api.py -q`
 
 ## Remaining Work
 

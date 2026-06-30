@@ -118,6 +118,16 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
                 )
 
         if (
+            isinstance(node, ast.Call)
+            and _call_name(node.func) == "signal_permission_problem_or_none"
+        ):
+            if not any(keyword.arg == "requested_access_scope" for keyword in node.keywords):
+                errors.append(
+                    f"{relative_path}:{node.lineno}: signal permission checks must pass "
+                    "`requested_access_scope` for entitlement-scope intersection"
+                )
+
+        if (
             isinstance(node, ast.Assign)
             and isinstance(node.value, ast.Dict)
             and any(

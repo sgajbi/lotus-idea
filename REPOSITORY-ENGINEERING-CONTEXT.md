@@ -1790,13 +1790,17 @@ low-cardinality.
 `make signal-api-contract-gate` is blocking through `make lint`. It scans the
 caller-supplied signal API modules and fails local copies of signal-evaluation
 permission policy or signal outcome mapping, route-local `X-Caller-*`
-caller-context header binding, and requires shared signal API support for
-caller-context headers, permission, source-authority, operation-event, and
-problem-detail behavior. It also requires every signal evaluation route
-metadata block to compose the shared product-safe 400/403 `ProblemDetails`
-OpenAPI examples from `signal_problem_responses()`. This keeps design
-modularity inside `lotus-idea` without creating a new runtime microservice
-boundary.
+caller-context header binding, and scope-unaware signal permission checks.
+Caller-supplied signal routes must parse identity, capability, and entitlement
+scope through `CallerContextHeaders`, then pass each request's `accessScope`
+into `signal_permission_problem_or_none(...)`. Scoped requests fail closed with
+product-safe 403 behavior when caller entitlement-scope headers are absent or
+do not cover the requested tenant/book/portfolio/client. The gate also requires
+shared signal API support for source-authority, operation-event, and
+problem-detail behavior, and every signal evaluation route metadata block must
+compose the shared product-safe 400/403 `ProblemDetails` OpenAPI examples from
+`signal_problem_responses()`. This keeps design modularity inside `lotus-idea`
+without creating a new runtime microservice boundary.
 
 Workflow and operator route modules plus `app.main` exception handlers should
 use `src/app/api/problem_details.py` for shared product-safe RFC-7807 OpenAPI
