@@ -6,6 +6,7 @@ __pycache__/
 .coverage
 .coverage.*
 coverage.xml
+sbom.cdx.json
 htmlcov/
 dist/
 build/

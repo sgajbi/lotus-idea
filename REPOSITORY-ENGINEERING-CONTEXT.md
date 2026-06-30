@@ -522,32 +522,33 @@ Recent issue-derived patterns to preserve:
    addition to domain request-id replay protection,
 12. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
-13. generated proof and quality evidence must be reproducible from current
+13. release evidence artifacts must name their scope, target artifact or
+   dependency source, generator, path, and non-proof boundary before being cited
+   as release proof,
+14. generated proof and quality evidence must be reproducible from current
    gate rules or be documented as on-demand evidence rather than current proof,
-14. documentation should record the durable rule, not only the one-off fix.
+15. documentation should record the durable rule, not only the one-off fix.
 
 Current open issue priorities that should shape the next implementation slices:
 
-1. GitHub issue `#272`: bind SBOM/container/release evidence to runtime
-   artifacts before claiming release proof.
-2. GitHub issue `#270`: add container startup/health smoke evidence before
+1. GitHub issue `#270`: add container startup/health smoke evidence before
    release image confidence claims.
-3. GitHub issue `#267`: bind caller-context authorization headers to trusted
+2. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-4. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+3. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
    writes.
-5. GitHub issue `#268`: require API idempotency for AI explanation lineage
+4. GitHub issue `#268`: require API idempotency for AI explanation lineage
    writes.
-6. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
+5. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
    Docker release proof gates or document a governed light/full split.
-7. GitHub issue `#260`: require aggregate provenance for source-ingestion live
+6. GitHub issue `#260`: require aggregate provenance for source-ingestion live
    proof consumption.
-8. GitHub issue `#269`: keep architecture boundary report evidence
+7. GitHub issue `#269`: keep architecture boundary report evidence
    synchronized with current gate rules.
 
-Issues `#271`, `#265`, `#264`, `#262`, `#261`, and `#259` have branch-local
-fixes and validation evidence, but they must not be claimed closed until merged
-to `main`, CI is green, and QA or issue-closure evidence exists.
+Issues `#272`, `#271`, `#265`, `#264`, `#262`, `#261`, and `#259` have
+branch-local fixes and validation evidence, but they must not be claimed closed
+until merged to `main`, CI is green, and QA or issue-closure evidence exists.
 
 Close or claim issue progress only after implementation, tests, docs/context
 truth, and validation evidence exist. Keep issue count under control by fixing
@@ -647,7 +648,7 @@ Current gaps remain explicit:
 11. no trusted-ingress proof for caller-context authorization headers,
 12. no PostgreSQL same-candidate stale-write guard across all mutations,
 13. no API-level idempotency contract for AI explanation lineage writes,
-14. no release-artifact-bound SBOM/container proof,
+14. no full container-image SBOM, registry attestation, or startup health proof,
 15. no deterministic freshness check for committed architecture boundary
     report evidence.
 

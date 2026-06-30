@@ -270,6 +270,30 @@ This slice also hardens runtime Docker and release image identity governance:
    capacity, live source ingestion, Workbench support, data-product readiness,
    client publication, or supported-feature promotion.
 
+This slice also hardens release SBOM scope after GitHub issue `#272` showed
+Main Releasability uploaded an ambiguous CI-environment SBOM beside image scan
+evidence:
+
+1. `make release-sbom` now generates `sbom.cdx.json` from
+   `requirements/shared-runtime.lock.txt` with the pinned CycloneDX tool and
+   project metadata, rather than inventorying the CI virtual environment.
+2. Main Releasability records the built service image reference and local image
+   id, then writes `sboms[]` release metadata with SBOM path, scope, target
+   artifact, target artifact id, dependency source, project metadata,
+   generator, format, and non-proof boundary.
+3. `scripts/ci_release_evidence_contract.py`,
+   `scripts/ci_workflow_contract_expectations.py`, and focused tests reject
+   ambiguous `cyclonedx_py environment` SBOM generation, missing runtime
+   lockfile source, missing reproducible/project metadata flags, and missing
+   release-manifest SBOM target/scope fields.
+4. `scripts/clean_generated_artifacts.py` and `.gitignore` treat the generated
+   `sbom.cdx.json` as local release evidence, not repository source truth.
+5. This is runtime Python dependency SBOM evidence only. It does not certify a
+   full container-image SBOM, registry attestation, production signing,
+   container startup health, Workbench support, data-product certification,
+   client-ready publication, or supported-feature promotion. Container OS and
+   packaged-image vulnerability posture remains the Trivy image scan's scope.
+
 This slice also hardens post-merge Main Releasability signal quality:
 
 1. `main-releasability.yml` is now `workflow_dispatch` only. Normal merged PRs

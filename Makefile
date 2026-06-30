@@ -450,7 +450,7 @@ docker-build:
 	docker build --build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE) -t $(CONTAINER_IMAGE_NAME) .
 
 release-sbom:
-	$(VENV_PYTHON) -m cyclonedx_py environment --output-format JSON --output-file sbom.cdx.json
+	$(VENV_PYTHON) -m cyclonedx_py requirements requirements/shared-runtime.lock.txt --pyproject pyproject.toml --output-reproducible --output-format JSON --output-file sbom.cdx.json
 
 container-image-scan:
 	mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))

@@ -128,6 +128,46 @@ def test_ci_contract_gate_blocks_removed_release_digest_fields(
     )
 
 
+def test_ci_contract_gate_blocks_removed_release_sbom_scope_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '"scope": "runtime_python_dependencies"',
+        '"scope": "ambiguous_environment"',
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        'main-releasability.yml missing `"scope": "runtime_python_dependencies"`'
+        in module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_removed_release_sbom_target_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '"target_artifact": os.environ["CONTAINER_IMAGE_NAME"]',
+        '"target_artifact": "unknown"',
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        'main-releasability.yml missing `"target_artifact": os.environ["CONTAINER_IMAGE_NAME"]`'
+        in module.validate_ci_contract()
+    )
+
+
 def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(
