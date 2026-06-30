@@ -287,7 +287,11 @@ data-product certification, or supported-feature promotion. `lotus-gateway`
 publishes this as a bounded read-only route at
 `GET /api/v1/ideas/candidates/{candidate_id}` while preserving `lotus-idea`
 source authority and forwarding caller entitlement-scope headers for
-`lotus-idea` fail-closed access checks.
+`lotus-idea` fail-closed access checks. Durable PostgreSQL providers now serve
+ordinary candidate-detail reads through a repository-side projection over the
+requested candidate and related detail rows instead of hydrating whole
+repository snapshots; this is an internal module boundary, not a separate
+runtime service.
 
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` is the certified
 internal candidate evidence replay API foundation. It compares caller-supplied

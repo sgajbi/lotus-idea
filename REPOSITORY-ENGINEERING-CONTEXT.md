@@ -651,7 +651,7 @@ fail-closed, and has bounded read-only Gateway forwarding proof for the queue
 route. Candidate detail now applies the same caller entitlement-scope headers
 fail-closed before returning persisted candidate detail, and Gateway forwards
 those headers on the published detail route. This is not yet a supported queue
-or candidate-detail product: database-backed queue
+or candidate-detail product: database-backed queue and candidate-detail
 projection proof exists only inside the opt-in PostgreSQL runtime proof.
 Workbench proof, data-product certification, trust telemetry, and
 supported-feature promotion remain planned.
@@ -922,7 +922,13 @@ source-safe candidate detail projection over persisted snapshots, redacted
 evidence, lifecycle history, review/feedback/conversion/report summaries, and
 audit summary posture, applies caller entitlement-scope headers fail-closed
 when present, and avoids exposing source routes, raw evidence hashes, or
-downstream authority. `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
+downstream authority. The durable PostgreSQL repository provider exposes an
+internal candidate-detail projection contract that reads the requested
+candidate and related lifecycle, audit, review, feedback, conversion,
+report-evidence, and AI-lineage rows by candidate or conversion-intent key
+without hydrating unrelated outbox, downstream submission, idempotency, or
+whole-store snapshot state; this is design modularity inside the existing
+runtime, not a separate service boundary. `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
 exposes internal operator replay posture over current source refs and persisted
 evidence hashes with matched, stale-source, hash-mismatch, expired, and
 not-found outcomes, without live Core calls, raw source export, downstream

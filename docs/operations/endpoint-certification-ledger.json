@@ -420,7 +420,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return a source-safe internal detail projection for a persisted idea candidate, including redacted source evidence, lifecycle history, review, feedback, conversion, report-evidence, audit summary posture, and caller entitlement-scope enforcement when scope headers are present.",
       "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 11 API foundation when an internal caller has idea.candidate.detail.read capability or an advisor/operator role, is within any provided caller entitlement scope, and needs a source-safe evidence-drawer projection for an existing candidate.",
-      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}, including entitlement-scope header forwarding. Do not use as Workbench product proof, data-product certification proof, source-system route disclosure, raw evidence export, downstream authority, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}, including entitlement-scope header forwarding. Durable PostgreSQL providers use repository-side candidate-detail projection for ordinary detail reads. Do not use as Workbench product proof, data-product certification proof, source-system route disclosure, raw evidence export, downstream authority, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/idea-candidates/idea_high_cash_8d57adbf52f7f5a7 with X-Caller-Capabilities: idea.candidate.detail.read",
         "GET /api/v1/idea-candidates/idea_high_cash_8d57adbf52f7f5a7 with X-Caller-Capabilities: idea.candidate.detail.read and X-Caller-Portfolio-Ids: PB_SG_GLOBAL_BAL_001"
@@ -439,7 +439,9 @@
         "tests/integration/test_candidate_detail_api.py::test_candidate_detail_api_requires_permission_and_existing_candidate",
         "tests/integration/test_candidate_detail_api.py::test_candidate_detail_api_applies_caller_entitlement_scope_fail_closed",
         "tests/integration/test_candidate_detail_api.py::test_candidate_detail_api_rejects_blank_entitlement_scope_header_safely",
-        "tests/integration/test_api_operation_events.py::test_candidate_detail_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_candidate_detail_api_emits_bounded_operation_event",
+        "tests/unit/test_candidate_detail_application.py::test_candidate_detail_uses_projection_repository_without_snapshot",
+        "tests/unit/test_postgres_candidate_detail.py::test_postgres_repository_loads_candidate_detail_without_whole_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

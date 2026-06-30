@@ -58,6 +58,11 @@ class CandidateSnapshotRepository(Protocol):
 
 
 @runtime_checkable
+class CandidateDetailProjectionRepository(Protocol):
+    def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None: ...
+
+
+@runtime_checkable
 class ReviewQueueProjectionRepository(Protocol):
     def review_queue_candidate_page(
         self,

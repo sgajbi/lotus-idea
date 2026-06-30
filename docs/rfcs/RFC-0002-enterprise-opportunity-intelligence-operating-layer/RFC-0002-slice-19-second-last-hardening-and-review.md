@@ -409,3 +409,24 @@ counting outbox state through whole-store repository snapshots:
    not certify external broker publication, downstream delivery, platform mesh
    event publication, Gateway/Workbench support, client-ready publication, or
    supported-feature promotion.
+
+This slice also applies the same bounded durable-read pattern to the
+candidate-detail path after issue review showed other bounded API reads could
+still depend on whole-store repository snapshots:
+
+1. `CandidateDetailProjectionRepository` defines an internal candidate-detail
+   projection contract; this is design modularity only, not a new runtime
+   service boundary.
+2. `PostgresIdeaRepository.candidate_record_by_id(...)` reads the requested
+   candidate from `idea_candidate_record` and attaches lifecycle, audit,
+   review, feedback, conversion, report-evidence, and AI-lineage rows through
+   candidate-id or conversion-intent-id filters instead of hydrating unrelated
+   repository state.
+3. Candidate-detail application tests prove the projection bypasses
+   `snapshot()` while preserving entitlement-scope denial. PostgreSQL adapter
+   tests prove the detail read does not select outbox, downstream submission,
+   or idempotency tables and returns `None` without querying child tables when
+   the candidate is missing.
+4. This is production-scale internal read-path hardening only. It does not
+   certify Workbench support, data-product promotion, client-ready
+   publication, downstream authority, or supported-feature promotion.
