@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -275,7 +276,7 @@ async def record_conversion_intent(
     )
     try:
         _require_conversion_caller(caller, capability=_CONVERSION_INTENT_CAPABILITY)
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = request_conversion_intent_to_repository(
@@ -359,7 +360,7 @@ async def record_conversion_outcome(
     )
     try:
         _require_conversion_caller(caller, capability=_CONVERSION_OUTCOME_CAPABILITY)
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = record_conversion_outcome_to_repository(
@@ -431,11 +432,6 @@ async def record_conversion_outcome(
 def _require_conversion_caller(caller: CallerContext, *, capability: str) -> None:
     if not caller.has_capability(capability):
         raise PermissionDeniedError(capability)
-
-
-def _validate_idempotency_key(idempotency_key: str) -> None:
-    if not idempotency_key.strip():
-        raise ValueError("idempotency key is required")
 
 
 def _problem_for_conversion_persistence(

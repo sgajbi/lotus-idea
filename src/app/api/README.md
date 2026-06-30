@@ -17,6 +17,15 @@ modules should not define local `RouteMetadata` or `SignalRouteMetadata` clones;
 api-route-metadata-gate` blocks duplicate metadata types so OpenAPI route declarations stay on one
 reviewable API contract.
 
+## Idempotency
+
+Use `app.api.idempotency.validate_idempotency_key` when mutating workflow
+routes require `Idempotency-Key`. Route modules should not define local
+idempotency validator clones; `make api-idempotency-boundary-gate` blocks
+duplicates so blank-key request handling stays consistent across lifecycle,
+review, feedback, conversion, report-evidence, and downstream realization
+routes.
+
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response

@@ -98,6 +98,9 @@ handlers now use `src/app/api/problem_details.py` for product-safe
 `make openapi-problem-details-example-gate` blocks public `ProblemDetails`
 responses that lack examples. `make api-problem-details-boundary-gate` blocks
 direct API route or app-entrypoint imports from low-level `app.errors`.
+Mutating workflow route modules now use `src/app/api/idempotency.py` for
+shared `Idempotency-Key` blank-key validation, and `make
+api-idempotency-boundary-gate` blocks route-local validator clones.
 The PostgreSQL repository adapter now consumes public
 `src/app/infrastructure/postgres_codecs.py` functions for row access, JSON
 object decoding, datetime decoding, and domain JSON serialization; the
@@ -1792,8 +1795,11 @@ feedback, conversion, report-evidence, readiness/operator APIs, or entrypoint
 exception handling. It covers 400/403/404/409/503 OpenAPI examples and is
 backed by `make api-problem-details-boundary-gate` and `make
 openapi-problem-details-example-gate`.
-This is design modularity only; it
-does not imply a separately scalable `lotus-idea` sub-service.
+Mutating workflow routes should use `src/app/api/idempotency.py` for shared
+`Idempotency-Key` validation instead of copying route-local validators; `make
+api-idempotency-boundary-gate` blocks clone reintroduction. This is design
+modularity only; it does not imply a separately scalable `lotus-idea`
+sub-service.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`

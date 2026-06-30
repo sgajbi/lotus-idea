@@ -59,6 +59,7 @@ make no-sensitive-content-guard
 make source-observability-contract-gate
 make api-route-metadata-gate
 make api-problem-details-boundary-gate
+make api-idempotency-boundary-gate
 make openapi-problem-details-example-gate
 make signal-api-contract-gate
 make operation-metric-contract-gate

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -142,7 +143,7 @@ async def record_candidate_lifecycle_transition(
     )
     try:
         _require_lifecycle_caller(caller)
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = apply_candidate_lifecycle_transition_to_repository(
@@ -216,11 +217,6 @@ async def record_candidate_lifecycle_transition(
 def _require_lifecycle_caller(caller: CallerContext) -> None:
     if not caller.has_capability(_LIFECYCLE_TRANSITION_CAPABILITY):
         raise PermissionDeniedError(_LIFECYCLE_TRANSITION_CAPABILITY)
-
-
-def _validate_idempotency_key(idempotency_key: str) -> None:
-    if not idempotency_key.strip():
-        raise ValueError("idempotency key is required")
 
 
 def _problem_for_lifecycle_persistence(

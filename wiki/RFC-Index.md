@@ -29,8 +29,10 @@ Current RFC-0002 implementation-start baseline:
    `app.api.route_metadata.RouteMetadata` contract enforced by
    `make api-route-metadata-gate`. Workflow and operator `ProblemDetails`
    OpenAPI examples are now enforced by
-   `make openapi-problem-details-example-gate`. Public domain API ownership is
-   protected by `make private-import-boundary-gate`, which blocks private
+   `make openapi-problem-details-example-gate`. Mutating workflow routes use
+   shared `app.api.idempotency` validation enforced by `make
+   api-idempotency-boundary-gate`. Public domain API ownership is protected by
+   `make private-import-boundary-gate`, which blocks private
    `app.domain.*` helper imports. The same gate now protects the shared
    implementation-proof capability update module, so proof-readiness code uses
    public `apply_blocker_proof` and `build_capability_readiness` functions

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -308,7 +309,7 @@ async def record_review_action(
             caller,
             capability=_REVIEW_ACTION_CAPABILITY,
         )
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = apply_review_action_to_repository(
@@ -403,7 +404,7 @@ async def record_feedback(
             caller,
             capability=_FEEDBACK_CAPABILITY,
         )
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = record_feedback_to_repository(
@@ -481,11 +482,6 @@ def _require_mutating_caller(
     if len(matching_roles) != 1:
         raise PermissionDeniedError("idea.review.actor_role")
     return matching_roles[0]
-
-
-def _validate_idempotency_key(idempotency_key: str) -> None:
-    if not idempotency_key.strip():
-        raise ValueError("idempotency key is required")
 
 
 def _problem_for_review_persistence(

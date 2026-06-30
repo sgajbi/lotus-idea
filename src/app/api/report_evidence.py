@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -239,7 +240,7 @@ async def record_report_evidence_pack(
     )
     try:
         _require_report_evidence_caller(caller)
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         result = request_report_evidence_pack_to_repository(
@@ -308,11 +309,6 @@ async def record_report_evidence_pack(
 def _require_report_evidence_caller(caller: CallerContext) -> None:
     if not caller.has_capability(_REPORT_EVIDENCE_PACK_CAPABILITY):
         raise PermissionDeniedError(_REPORT_EVIDENCE_PACK_CAPABILITY)
-
-
-def _validate_idempotency_key(idempotency_key: str) -> None:
-    if not idempotency_key.strip():
-        raise ValueError("idempotency key is required")
 
 
 def _problem_for_evidence_pack_persistence(

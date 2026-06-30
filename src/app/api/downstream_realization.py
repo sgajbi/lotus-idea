@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -99,7 +100,7 @@ async def submit_conversion_intent_downstream(
     )
     try:
         _require_submission_caller(caller)
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         clients = get_conversion_realization_clients()
     except PermissionDeniedError:
         _emit_downstream_submission_event(
@@ -168,7 +169,7 @@ async def submit_report_evidence_pack_downstream(
     )
     try:
         _require_submission_caller(caller)
-        _validate_idempotency_key(idempotency_key)
+        validate_idempotency_key(idempotency_key)
         report_client = get_report_evidence_pack_realization_client()
     except PermissionDeniedError:
         _emit_downstream_submission_event(
@@ -224,11 +225,6 @@ async def submit_report_evidence_pack_downstream(
 def _require_submission_caller(caller: CallerContext) -> None:
     if not caller.has_capability(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY):
         raise PermissionDeniedError(_DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY)
-
-
-def _validate_idempotency_key(idempotency_key: str) -> None:
-    if not idempotency_key.strip():
-        raise ValueError("idempotency key is required")
 
 
 def _request_correlation_id(request: Request) -> str | None:

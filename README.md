@@ -200,7 +200,7 @@ docker compose up --build
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
 | `make report-materialization-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence materialization proof contract without certifying client publication or supported features. |
-| `make api-problem-details-boundary-gate`, `make openapi-problem-details-example-gate`, `make signal-api-contract-gate` | Block direct API route or app-entrypoint imports from `app.errors`, missing public `ProblemDetails` OpenAPI examples, and duplicated caller-supplied signal API permission, source-authority, 400/403 examples, and operation-event mechanics. |
+| `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make openapi-problem-details-example-gate`, `make signal-api-contract-gate` | Block direct API route or app-entrypoint imports from `app.errors`, route-local idempotency validator clones, missing public `ProblemDetails` OpenAPI examples, and duplicated caller-supplied signal API permission, source-authority, 400/403 examples, and operation-event mechanics. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
 | `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
@@ -261,9 +261,8 @@ Local controls keep implementation claims grounded:
 - `make documentation-contract-gate` protects the README, repo context, docs, quality pages, evidence guide, and wiki pages.
 - `make source-observability-contract-gate` prevents raw logs, raw `print()`, direct Python logging, and unsafe observability bypasses.
 - `make api-route-metadata-gate` prevents duplicate route metadata type definitions outside `app.api.route_metadata`.
-- `make signal-api-contract-gate` prevents copy-pasted signal evaluation policy,
-  source-authority, operation-event, error-model code, and weak 400/403
-  `ProblemDetails` OpenAPI examples in caller-supplied signal APIs.
+- `make api-idempotency-boundary-gate` prevents route-local `Idempotency-Key` validator clones outside `app.api.idempotency`.
+- `make signal-api-contract-gate` prevents copied signal evaluation policy, source-authority, operation-event, error-model code, and weak 400/403 `ProblemDetails` OpenAPI examples.
 - `make operation-metric-contract-gate` keeps the operation metric catalog
   synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
   Gateway/Workbench, or supported-feature overclaims.
