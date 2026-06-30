@@ -67,8 +67,12 @@ LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF ?=
 
 ifeq ($(OS),Windows_NT)
 VENV_PYTHON := $(VENV_DIR)/Scripts/python.exe
+DOCKER_SOCKET_MOUNT := //var/run/docker.sock:/var/run/docker.sock
+DOCKER_WORKDIR := //work
 else
 VENV_PYTHON := $(VENV_DIR)/bin/python
+DOCKER_SOCKET_MOUNT := /var/run/docker.sock:/var/run/docker.sock
+DOCKER_WORKDIR := /work
 endif
 
 install:
@@ -439,8 +443,8 @@ release-sbom:
 	$(VENV_PYTHON) -m cyclonedx_py environment --output-format JSON --output-file sbom.cdx.json
 
 container-image-scan:
-	$(VENV_PYTHON) -c "from pathlib import Path; Path('$(CONTAINER_SCAN_OUTPUT)').parent.mkdir(parents=True, exist_ok=True)"
-	docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$(CURDIR):/work" -w /work $(TRIVY_IMAGE) image --severity $(CONTAINER_SCAN_SEVERITY) --exit-code 1 --ignore-unfixed --format json --output $(CONTAINER_SCAN_OUTPUT) $(CONTAINER_IMAGE_NAME)
+	mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))
+	docker run --rm -v $(DOCKER_SOCKET_MOUNT) -v "$(CURDIR):/work" -w $(DOCKER_WORKDIR) $(TRIVY_IMAGE) image --severity $(CONTAINER_SCAN_SEVERITY) --exit-code 1 --ignore-unfixed --format json --output $(CONTAINER_SCAN_OUTPUT) $(CONTAINER_IMAGE_NAME)
 
 clean:
 	python scripts/clean_generated_artifacts.py
