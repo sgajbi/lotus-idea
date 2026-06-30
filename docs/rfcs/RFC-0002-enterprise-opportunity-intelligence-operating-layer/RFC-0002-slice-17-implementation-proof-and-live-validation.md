@@ -458,8 +458,8 @@ without relying on chat memory.
     bounded missing risk-profile source/policy foundation,
     bounded allocation-drift / mandate-review Manage caller-supplied API
     foundation, bounded low-income / liquidity-shortfall Core cashflow foundation,
-    bounded bond-maturity / reinvestment Core HoldingsAsOf maturity-date
-    live-proof foundation,
+    bounded bond-maturity / reinvestment policy, caller-supplied API, and
+    fail-closed Core maturity-summary live-source contract,
     optional live Risk concentration/high-volatility/drawdown proof
     consumption, and visible scenario blockers. Upstream consumer approval for
     `lotus-risk:ConcentrationRiskReport:v1` is source-approved; full

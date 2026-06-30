@@ -124,3 +124,29 @@ def test_source_observability_contract_gate_blocks_manage_payload_hash_fallback(
         "src/app/infrastructure/lotus_manage_sources.py:7: hashlib.sha256 fallback is "
         "prohibited because upstream source-ref hashes must be source-authored",
     ]
+
+
+def test_source_observability_contract_gate_blocks_core_maturity_position_scan(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_python(
+        tmp_path / "src" / "app" / "infrastructure" / "lotus_core_sources.py",
+        "def _source_reported_maturity_dates(payload: dict[str, object]) -> tuple[object, ...]:\n"
+        '    positions = payload.get("positions")\n'
+        "    for position in positions:\n"
+        "        pass\n"
+        "    return ()\n",
+    )
+
+    errors = module.validate_source_observability_contract(tmp_path)
+
+    reason = (
+        "Core bond-maturity evidence must consume explicit Core-owned maturity summary facts, "
+        "not local raw-position maturity scans"
+    )
+    assert errors == [
+        f"src/app/infrastructure/lotus_core_sources.py:1: {reason}",
+        f"src/app/infrastructure/lotus_core_sources.py:2: {reason}",
+        f"src/app/infrastructure/lotus_core_sources.py:3: {reason}",
+    ]

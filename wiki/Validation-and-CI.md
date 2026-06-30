@@ -352,9 +352,11 @@ Persistence adapter validation:
     valid evidence is supplied.
     `tests/unit/test_bond_maturity_live_proof.py` and
     `make bond-maturity-live-proof-contract-gate` prove the optional Lotus Core
-    HoldingsAsOf maturity live-proof artifact remains source-safe and can clear
-    only the namespaced bond-maturity live Core source blocker when valid
-    evidence is supplied.
+    maturity-summary live-proof artifact remains source-safe and can clear only
+    the namespaced bond-maturity live Core source blocker after explicit Core
+    maturity summary evidence is supplied. Until then, the live adapter fails
+    closed as `core_maturity_summary_missing` rather than deriving maturity
+    dates or counts from raw positions.
     `tests/unit/test_low_income_core_cashflow_live_proof.py` and
     `make low-income-core-cashflow-live-proof-contract-gate` prove the optional
     Lotus Core cashflow live-proof artifact remains source-safe and can clear

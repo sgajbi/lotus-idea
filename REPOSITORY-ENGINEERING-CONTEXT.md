@@ -227,8 +227,12 @@ suitability, planning, funding-advice, and treasury-instruction boundaries.
 `src/app/application/bond_maturity_live_proof.py`,
 `src/app/infrastructure/lotus_core_sources.py`, and
 `src/app/ports/core_sources.py` add the bounded bond-maturity / reinvestment
-policy, Core `HoldingsAsOf:v1` maturity-date adapter, bounded caller-supplied
-API foundation, and source-safe live proof contract. The policy and
+policy, bounded caller-supplied API foundation, and fail-closed Core
+source-adapter contract for explicit maturity summary facts. The live adapter
+does not derive maturity dates or maturing-position counts from raw Core
+positions; it raises `core_maturity_summary_missing` until Core publishes
+source-owned maturity summary evidence, tracked by `sgajbi/lotus-core#686`.
+The policy and
 `POST /api/v1/idea-signals/bond-maturity/evaluate` can create only
 advisor-review candidates from Core-owned maturity facts, source refs,
 freshness, maturing holding count, and entitlement posture. The API enforces
@@ -237,8 +241,9 @@ raw source route/hash details from candidate source refs, and does not fetch
 Core sources, recommend a replacement product, calculate reinvestment advice,
 infer planning suitability, create orders, publish client communication,
 certify data mesh, prove Workbench behavior, approve client publication, or
-promote a supported feature. A valid Core maturity proof clears only the live
-Core maturity source blocker.
+promote a supported feature. A valid Core maturity proof can clear only the
+live Core maturity source blocker after explicit source-owned maturity summary
+facts are available.
 The allocation-drift foundation uses
 `src/app/ports/manage_sources.py`,
 `src/app/application/mandate_health_signal.py`, and
@@ -1175,14 +1180,16 @@ cashflow evidence, and focused unit/integration tests that prove
 source-reported projected cumulative cashflow consumption while blocking
 planning, funding-advice, treasury-instruction, suitability, Workbench,
 client-publication, and supported-feature claims. Bond maturity / reinvestment
-consumes governed Core `HoldingsAsOf:v1` maturity dates through a bounded
-source adapter, `POST /api/v1/idea-signals/bond-maturity/evaluate` over
-caller-supplied Core holdings maturity evidence, and optional source-safe live
-proof; focused unit/integration tests prove source-reported next maturity date
-and maturing position count consumption while replacement product
-recommendation, reinvestment advice, maturity schedule authority, planning
-suitability, order execution, Workbench, data-mesh, client-publication, and
-supported-feature claims remain blocked.
+evaluates caller-supplied Core maturity evidence through
+`POST /api/v1/idea-signals/bond-maturity/evaluate` and keeps the live Core
+source-adapter path blocked unless Core supplies explicit source-owned maturity
+summary facts. The adapter no longer derives maturity dates or counts from raw
+positions; missing summary evidence maps to `core_maturity_summary_missing`.
+Focused unit/integration tests prove source-reported next maturity date and
+maturing position count consumption through bounded evidence while replacement
+product recommendation, reinvestment advice, maturity schedule authority,
+planning suitability, order execution, Workbench, data-mesh,
+client-publication, and supported-feature claims remain blocked.
 Mandate/restriction review is backed by deterministic policy,
 `src/app/application/mandate_restriction_signal.py`, and the bounded
 `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over

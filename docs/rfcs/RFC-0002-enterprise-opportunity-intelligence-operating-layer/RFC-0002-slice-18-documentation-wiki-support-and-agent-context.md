@@ -265,8 +265,8 @@ documentation across opportunity signal APIs.
     or supported-feature promotion.
 29. README, repository context, API certification docs, RFC evidence, demo
     claims, and wiki source now describe the bounded bond-maturity /
-    reinvestment Core HoldingsAsOf maturity-date policy, caller-supplied API
-    foundation, and live-proof foundation while preserving the boundary that no
+    reinvestment policy, caller-supplied API foundation, and fail-closed Core
+    maturity-summary source-adapter contract while preserving the boundary that no
     data-mesh certification, Workbench product proof, client publication,
     product recommendation, reinvestment advice, maturity schedule authority,
     order execution, or supported-feature promotion exists.
@@ -304,8 +304,9 @@ Gateway/Workbench discovery proof only; it does not add full
 Gateway/Workbench live proof, data-product certification, downstream
 realization, live source certification, or certified long-running scheduled
 runtime proof. The bond-maturity / reinvestment update records only
-deterministic policy, caller-supplied API, and source-port truth; it does not
-prove source-backed generation or promote a client-ready reinvestment journey.
+deterministic policy, caller-supplied API, and fail-closed source-port truth; it
+does not prove source-backed generation or promote a client-ready reinvestment
+journey.
 
 ## Required Work
 

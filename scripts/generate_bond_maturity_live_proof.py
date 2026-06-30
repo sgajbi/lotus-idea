@@ -101,7 +101,7 @@ def _write_blocked_source_proof(*, args: argparse.Namespace, error_code: str) ->
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Generate source-safe live Core HoldingsAsOf maturity proof."
+        description="Generate source-safe live Core maturity-summary proof."
     )
     parser.add_argument("--core-query-base-url", default=os.getenv(CORE_QUERY_BASE_URL_ENV))
     parser.add_argument("--core-base-url", default=os.getenv(CORE_BASE_URL_ENV))
