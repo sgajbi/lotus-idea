@@ -349,8 +349,10 @@ Advise, Manage, or Report target route from planned posture to the proved
 route only when merged sibling evidence is present. These artifacts are route
 evidence only; they are not suitability, mandate/rebalance, execution,
 materialization, or supported-feature proof.
-The endpoint
-does not call downstream services, create
+When PostgreSQL is active, the readiness counts come from a repository-side
+projection over `idea_conversion_intent`, `idea_conversion_outcome`, and
+`idea_report_evidence_pack_request` rather than whole-store snapshot
+hydration. The endpoint does not call downstream services, create
 proposals, create manage actions, materialize reports, render output, archive
 records, authorize client-ready publication, or promote a supported feature.
 

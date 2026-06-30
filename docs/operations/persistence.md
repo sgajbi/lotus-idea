@@ -249,6 +249,10 @@ flowchart LR
     PostgreSQL-backed readiness uses repository-side aggregate queries against
     `idea_outbox_event` for status counts, expired leases, and delivery-ready
     count instead of materializing the whole idea repository snapshot.
+    Downstream realization readiness now follows the same pattern for workflow
+    counts: PostgreSQL reads `idea_conversion_intent`,
+    `idea_conversion_outcome`, and `idea_report_evidence_pack_request`
+    directly instead of hydrating unrelated repository state.
 17. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
     through the service boundary for operators. It does not mutate pending
     records when broker configuration is absent or invalid, and successful runs

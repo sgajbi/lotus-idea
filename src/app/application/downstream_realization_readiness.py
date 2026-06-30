@@ -26,7 +26,11 @@ from app.application.report_materialization_proof import (
     REPORT_MATERIALIZATION_ROUTE,
     report_materialization_proof_is_valid,
 )
-from app.ports.idea_repository import CandidateSnapshotRepository
+from app.ports.idea_repository import (
+    CandidateSnapshotRepository,
+    DownstreamRealizationReadinessProjectionRepository,
+    DownstreamRealizationReadinessRepositorySummary,
+)
 
 
 @dataclass(frozen=True)
@@ -113,13 +117,7 @@ def build_downstream_realization_readiness_snapshot(
     report_materialization_proof: Mapping[str, object] | None = None,
     report_materialization_proof_ref: str | None = None,
 ) -> DownstreamRealizationReadinessSnapshot:
-    snapshot = repository.snapshot()
-    records = tuple(snapshot.candidate_records.values())
-    conversion_intent_count = sum(len(record.conversion_intents) for record in records)
-    conversion_outcome_count = sum(len(record.conversion_outcomes) for record in records)
-    report_evidence_pack_request_count = sum(
-        len(record.report_evidence_packs) for record in records
-    )
+    readiness_summary = _downstream_realization_readiness_summary(repository)
     capabilities: tuple[DownstreamRealizationCapabilityReadiness, ...] = (
         _advise_conversion_capability(),
         _manage_conversion_capability(),
@@ -155,9 +153,9 @@ def build_downstream_realization_readiness_snapshot(
         supportability_status=("supported" if certification_ready else "not_certified"),
         certification_ready=certification_ready,
         durable_storage_backed=durable_storage_backed,
-        conversion_intent_count=conversion_intent_count,
-        conversion_outcome_count=conversion_outcome_count,
-        report_evidence_pack_request_count=report_evidence_pack_request_count,
+        conversion_intent_count=readiness_summary.conversion_intent_count,
+        conversion_outcome_count=readiness_summary.conversion_outcome_count,
+        report_evidence_pack_request_count=(readiness_summary.report_evidence_pack_request_count),
         downstream_adapter_foundation_present=True,
         source_of_truth={
             "conversion_workflow": "src/app/application/conversion_workflow.py",
@@ -185,6 +183,22 @@ def build_downstream_realization_readiness_snapshot(
         capabilities=capabilities,
         downstream_contracts=downstream_contracts,
         supported_feature_promoted=False,
+    )
+
+
+def _downstream_realization_readiness_summary(
+    repository: CandidateSnapshotRepository,
+) -> DownstreamRealizationReadinessRepositorySummary:
+    if isinstance(repository, DownstreamRealizationReadinessProjectionRepository):
+        return repository.downstream_realization_readiness_summary()
+    snapshot = repository.snapshot()
+    records = tuple(snapshot.candidate_records.values())
+    return DownstreamRealizationReadinessRepositorySummary(
+        conversion_intent_count=sum(len(record.conversion_intents) for record in records),
+        conversion_outcome_count=sum(len(record.conversion_outcomes) for record in records),
+        report_evidence_pack_request_count=sum(
+            len(record.report_evidence_packs) for record in records
+        ),
     )
 
 

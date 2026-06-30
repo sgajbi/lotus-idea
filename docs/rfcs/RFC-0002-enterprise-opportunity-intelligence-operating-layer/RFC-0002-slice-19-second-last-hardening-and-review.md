@@ -482,3 +482,24 @@ repository snapshots before adapter calls:
 4. This is production-scale internal read-path hardening only. It does not
    certify downstream execution, route existence, suitability/rebalance/report
    authority, client-ready publication, or supported-feature promotion.
+
+This slice also applies the bounded durable-read pattern to downstream
+realization readiness counts after the same issue-review pattern showed
+operator diagnostics should not pay whole-store snapshot cost for narrow
+workflow totals:
+
+1. `DownstreamRealizationReadinessProjectionRepository` and
+   `DownstreamRealizationReadinessRepositorySummary` define an internal
+   readiness-count projection for conversion intents, conversion outcomes, and
+   report evidence-pack requests; this is design modularity only, not a
+   separate downstream-realization runtime service.
+2. `PostgresIdeaRepository.downstream_realization_readiness_summary(...)`
+   queries only `idea_conversion_intent`, `idea_conversion_outcome`, and
+   `idea_report_evidence_pack_request` for the operator readiness counts.
+3. Application tests prove the readiness builder uses the projection without
+   calling `snapshot()`. PostgreSQL tests prove the count query avoids
+   candidate, audit, outbox, downstream submission, and AI-lineage tables.
+4. This is production-scale internal operator-readiness hardening only. It does
+   not certify downstream execution, route existence, suitability/rebalance/
+   report authority, client-ready publication, Gateway/Workbench support, or
+   supported-feature promotion.

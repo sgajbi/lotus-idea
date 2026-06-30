@@ -17,6 +17,7 @@ from app.application.report_intake_route_proof import (
     REPORT_INTAKE_ROUTE_PROOF_SCHEMA_VERSION,
 )
 from app.domain import IdeaRepositorySnapshot, InMemoryIdeaRepository
+from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from tests.support.downstream_route_contract_fixtures import (
     valid_advise_route_proof,
     valid_manage_route_proof,
@@ -96,6 +97,27 @@ def test_downstream_realization_readiness_counts_internal_workflow_records() -> 
     assert snapshot.conversion_intent_count == 2
     assert snapshot.conversion_outcome_count == 1
     assert snapshot.report_evidence_pack_request_count == 1
+    assert snapshot.certification_ready is False
+
+
+def test_downstream_realization_readiness_uses_repository_projection_without_snapshot() -> None:
+    repository = _ProjectionOnlyDownstreamReadinessRepository(
+        DownstreamRealizationReadinessRepositorySummary(
+            conversion_intent_count=2,
+            conversion_outcome_count=1,
+            report_evidence_pack_request_count=3,
+        )
+    )
+
+    snapshot = build_downstream_realization_readiness_snapshot(
+        repository=repository,
+        durable_storage_backed=True,
+    )
+
+    assert repository.projection_calls == 1
+    assert snapshot.conversion_intent_count == 2
+    assert snapshot.conversion_outcome_count == 1
+    assert snapshot.report_evidence_pack_request_count == 3
     assert snapshot.certification_ready is False
 
 
@@ -249,6 +271,21 @@ def test_downstream_realization_readiness_uses_advise_and_manage_route_proofs_wi
     assert manage_contract.route_fit_status == "route_foundation_proven_not_certified"
     assert "output/downstream/advise-proposal-route-proof.json" in (advise_contract.evidence_refs)
     assert "output/downstream/manage-action-route-proof.json" in manage_contract.evidence_refs
+
+
+class _ProjectionOnlyDownstreamReadinessRepository:
+    def __init__(self, summary: DownstreamRealizationReadinessRepositorySummary) -> None:
+        self.summary = summary
+        self.projection_calls = 0
+
+    def downstream_realization_readiness_summary(
+        self,
+    ) -> DownstreamRealizationReadinessRepositorySummary:
+        self.projection_calls += 1
+        return self.summary
+
+    def snapshot(self) -> IdeaRepositorySnapshot:
+        raise AssertionError("downstream readiness projection must not call snapshot")
 
 
 def _valid_report_intake_route_proof() -> dict[str, object]:

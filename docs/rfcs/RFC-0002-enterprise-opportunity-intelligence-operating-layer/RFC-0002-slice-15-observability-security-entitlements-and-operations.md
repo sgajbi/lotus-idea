@@ -122,12 +122,18 @@ foundation:
     Archive blockers. The route requires both the `operator` role and
     `idea.downstream-realization.readiness.read`, returns source-safe workflow
     counts only, and emits bounded `downstream_realization_readiness_read`
-    operation events.
+    operation events. Durable PostgreSQL providers compute those workflow
+    counts through a repository-side projection over only
+    `idea_conversion_intent`, `idea_conversion_outcome`, and
+    `idea_report_evidence_pack_request`, without materializing candidate,
+    audit, outbox, downstream-submission, or AI-lineage state.
 26. `tests/unit/test_downstream_realization_readiness.py` and
-    `tests/integration/test_downstream_realization_readiness_api.py` prove the
-    blocked/not-certified posture, source-authority boundaries, role plus
-    capability enforcement, product-safe payloads, and operation-event behavior
-    for the downstream realization readiness diagnostic.
+    `tests/unit/test_postgres_downstream_readiness.py`, plus
+    `tests/integration/test_downstream_realization_readiness_api.py`, prove the
+    blocked/not-certified posture, source-authority boundaries, repository-side
+    readiness projection without `snapshot()` hydration, role plus capability
+    enforcement, product-safe payloads, and operation-event behavior for the
+    downstream realization readiness diagnostic.
 27. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose certified internal outbox
     delivery readiness for aggregate backlog, status counts, durable repository

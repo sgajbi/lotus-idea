@@ -86,6 +86,9 @@ from app.infrastructure.postgres_downstream_lookup import (
     load_conversion_intent_by_id,
     load_report_evidence_pack_by_id,
 )
+from app.infrastructure.postgres_downstream_readiness import (
+    load_downstream_realization_readiness_summary,
+)
 from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
     load_review_queue_candidate_page,
@@ -93,6 +96,7 @@ from app.infrastructure.postgres_review_queue import (
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
 from app.ports.idea_repository import ReviewQueueRepositoryPage
+from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 
 
 _T = TypeVar("_T")
@@ -119,6 +123,11 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
 
     def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:
         return load_candidate_record_by_id(self._connection, candidate_id)
+
+    def downstream_realization_readiness_summary(
+        self,
+    ) -> DownstreamRealizationReadinessRepositorySummary:
+        return load_downstream_realization_readiness_summary(self._connection)
 
     def persist_candidate(
         self,
