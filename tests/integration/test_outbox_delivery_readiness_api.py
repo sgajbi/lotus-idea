@@ -20,6 +20,7 @@ from app.domain import (
 from app.main import app
 from app.ports.outbox_publisher import OutboxPublishOutcome
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
+from app.runtime.settings import RUNTIME_PROFILE_ENV
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -194,6 +195,28 @@ def test_outbox_delivery_run_once_api_blocks_without_broker_configuration(
     assert "eventId" not in response.text
     assert "idea_high_cash_001" not in response.text
     assert "idea.candidate.persisted.v1:idempotency" not in response.text
+    assert (
+        resettable_repository_snapshot().outbox_events[event.event_id].status
+        is OutboxEventStatus.PENDING
+    )
+
+
+def test_outbox_delivery_run_once_api_blocks_when_durable_repository_is_required(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(RUNTIME_PROFILE_ENV, "production")
+    monkeypatch.setenv(OUTBOX_BROKER_URL_ENV, "https://broker.example.invalid")
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers=outbox_delivery_run_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json()["code"] == "durable_repository_not_configured"
     assert (
         resettable_repository_snapshot().outbox_events[event.event_id].status
         is OutboxEventStatus.PENDING

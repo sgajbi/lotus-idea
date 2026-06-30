@@ -7,7 +7,11 @@ import httpx
 import pytest
 
 from app.domain import OutboxEventRecord, build_candidate_outbox_event
-from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
+from app.infrastructure.downstream_client import (
+    DownstreamClientConfig,
+    DownstreamJsonClient,
+    DownstreamServiceError,
+)
 from app.infrastructure.outbox_publisher import (
     HttpOutboxEventPublisher,
     OutboxBrokerPublisherConfig,
@@ -17,6 +21,7 @@ from app.runtime.outbox_publisher_state import (
     OUTBOX_BROKER_MAX_CONNECTIONS_ENV,
     OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV,
     OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV,
+    OUTBOX_BROKER_TIMEOUT_SECONDS_ENV,
     build_outbox_publisher_from_environment,
 )
 from app.application.outbox_delivery_readiness import OUTBOX_BROKER_URL_ENV
@@ -104,6 +109,35 @@ def test_http_outbox_event_publisher_maps_transport_error_to_unavailable() -> No
 
 
 @pytest.mark.parametrize(
+    ("upstream_code", "failure_reason"),
+    [
+        ("upstream_timeout", "publisher_timeout"),
+        ("upstream_malformed_response", "publisher_malformed_response"),
+    ],
+)
+def test_http_outbox_event_publisher_maps_broker_client_errors_to_bounded_reasons(
+    upstream_code: str,
+    failure_reason: str,
+) -> None:
+    class RaisingBrokerClient:
+        def post_json(self, *_args: object, **_kwargs: object) -> object:
+            raise DownstreamServiceError(code=upstream_code)
+
+        def close(self) -> None:
+            return None
+
+    publisher = HttpOutboxEventPublisher(
+        OutboxBrokerPublisherConfig(base_url="https://broker.example"),
+        client=RaisingBrokerClient(),  # type: ignore[arg-type]
+    )
+
+    outcome = publisher.publish(outbox_event())
+
+    assert outcome.accepted is False
+    assert outcome.failure_reason == failure_reason
+
+
+@pytest.mark.parametrize(
     ("config_kwargs", "message"),
     [
         ({"base_url": "not-a-url"}, "absolute HTTP"),
@@ -137,8 +171,13 @@ def test_outbox_broker_publisher_config_rejects_invalid_configuration(
 @pytest.mark.parametrize(
     ("env_name", "env_value"),
     [
+        (OUTBOX_BROKER_TIMEOUT_SECONDS_ENV, "not-numeric"),
+        (OUTBOX_BROKER_TIMEOUT_SECONDS_ENV, "0"),
+        (OUTBOX_BROKER_MAX_CONNECTIONS_ENV, "not-integer"),
         (OUTBOX_BROKER_MAX_CONNECTIONS_ENV, "0"),
+        (OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV, "not-integer"),
         (OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV, "0"),
+        (OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV, "not-numeric"),
         (OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV, "0"),
     ],
 )

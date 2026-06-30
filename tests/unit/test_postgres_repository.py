@@ -396,6 +396,41 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
         == approved.candidate_id
     )
 
+    replacement_connection = FakePostgresConnection()
+    PostgresIdeaRepository(replacement_connection).replace_snapshot(recovered)
+    replaced = PostgresIdeaRepository(replacement_connection).snapshot()
+
+    assert replacement_connection.commits == 1
+    assert replacement_connection.rollbacks == 0
+    assert replaced.candidate_records.keys() == recovered.candidate_records.keys()
+    assert len(replacement_connection.rows["idea_lifecycle_history"]) == 3
+    assert len(replacement_connection.rows["idea_review_decision"]) == 1
+    assert len(replacement_connection.rows["idea_feedback_event"]) == 1
+    assert len(replacement_connection.rows["idea_conversion_intent"]) == 1
+    assert len(replacement_connection.rows["idea_conversion_outcome"]) == 1
+    assert len(replacement_connection.rows["idea_report_evidence_pack_request"]) == 1
+    assert len(replacement_connection.rows["idea_outbox_event"]) == 8
+
+
+def test_postgres_repository_rolls_back_failed_snapshot_replacement() -> None:
+    source_connection = FakePostgresConnection()
+    source_repository = PostgresIdeaRepository(source_connection)
+    candidate = high_cash_candidate()
+    source_repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:replace-rollback",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    target_connection = FakePostgresConnection(fail_on_insert="idea_outbox_event")
+
+    with pytest.raises(RuntimeError, match="insert failed for idea_outbox_event"):
+        PostgresIdeaRepository(target_connection).replace_snapshot(source_repository.snapshot())
+
+    assert target_connection.commits == 0
+    assert target_connection.rollbacks == 1
+
 
 def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() -> None:
     connection = FakePostgresConnection()
@@ -528,6 +563,19 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         lease_attempt_id="attempt-3",
         published_at_utc=EVALUATED_AT + timedelta(minutes=1),
     )
+    already_published = PostgresIdeaRepository(connection).mark_outbox_event_published(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-3",
+        published_at_utc=EVALUATED_AT + timedelta(minutes=2),
+    )
+    missing_failure = PostgresIdeaRepository(connection).mark_outbox_event_failed(
+        "missing-event",
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-missing",
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
     reloaded = PostgresIdeaRepository(connection).snapshot().outbox_events[event.event_id]
 
     assert first_claim[0].status is OutboxEventStatus.LEASED
@@ -540,6 +588,8 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     assert retryable == (failed.event,)
     assert retry_claim[0].status is OutboxEventStatus.LEASED
     assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert already_published.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
+    assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
     assert reloaded.status is OutboxEventStatus.PUBLISHED
     assert reloaded.published_at_utc == EVALUATED_AT + timedelta(minutes=1)
     assert reloaded.failure_reason is None

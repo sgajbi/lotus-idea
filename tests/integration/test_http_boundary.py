@@ -1,14 +1,21 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import create_app
 from app.middleware.http_boundary import (
     CORS_ALLOWED_ORIGINS_ENV,
+    HttpBoundaryConfig,
+    HttpBoundaryConfigurationError,
     MAX_REQUEST_BODY_BYTES_ENV,
     TRUSTED_HOSTS_ENV,
+    _content_length,
+    http_boundary_config_from_environment,
 )
+from starlette.requests import Request
 
 
 def test_http_boundary_adds_secure_response_headers() -> None:
@@ -99,3 +106,54 @@ def test_json_write_request_rejects_unsupported_content_type() -> None:
     assert response.status_code == 415
     assert response.json()["code"] == "unsupported_media_type"
     assert "PB_SG_GLOBAL_BAL_001" not in response.text
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"trusted_hosts": ()}, "trusted_hosts must not be empty"),
+        ({"trusted_hosts": ("testserver", " ")}, "trusted_hosts must not contain blanks"),
+        (
+            {"cors_allowed_origins": ("https://workbench.example", "")},
+            "cors_allowed_origins must not contain blanks",
+        ),
+        ({"max_request_body_bytes": 0}, "max_request_body_bytes must be positive"),
+    ],
+)
+def test_http_boundary_config_rejects_unsafe_static_configuration(
+    kwargs: dict[str, Any],
+    message: str,
+) -> None:
+    with pytest.raises(HttpBoundaryConfigurationError, match=message):
+        HttpBoundaryConfig(**kwargs)
+
+
+@pytest.mark.parametrize(
+    ("configured_limit", "message"),
+    [
+        ("not-a-number", f"{MAX_REQUEST_BODY_BYTES_ENV} must be an integer"),
+        ("0", f"{MAX_REQUEST_BODY_BYTES_ENV} must be positive"),
+    ],
+)
+def test_http_boundary_environment_rejects_invalid_request_size(
+    monkeypatch: pytest.MonkeyPatch,
+    configured_limit: str,
+    message: str,
+) -> None:
+    monkeypatch.setenv(MAX_REQUEST_BODY_BYTES_ENV, configured_limit)
+
+    with pytest.raises(HttpBoundaryConfigurationError, match=message):
+        http_boundary_config_from_environment()
+
+
+def test_malformed_content_length_is_ignored_for_boundary_decision() -> None:
+    request = Request(
+        {
+            "type": "http",
+            "method": "POST",
+            "path": "/health",
+            "headers": [(b"content-length", b"not-a-number")],
+        }
+    )
+
+    assert _content_length(request) is None
