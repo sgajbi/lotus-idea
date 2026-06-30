@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import UTC, datetime
 import json
 from pathlib import Path
+import tempfile
+from typing import Any
 
 import pytest
 
@@ -20,7 +22,7 @@ from app.application.durable_repository_proof import build_durable_repository_pr
 from app.application.implementation_proof_capability_updates import (
     build_capability_readiness,
 )
-from app.application.implementation_proof_readiness import (
+from app.application.implementation_proof_consumption import (
     _apply_ai_lineage_store_proof,
     _apply_ai_workflow_pack_registration_proof,
     _apply_ai_workflow_pack_runtime_execution_proof,
@@ -29,6 +31,8 @@ from app.application.implementation_proof_readiness import (
     _apply_outbox_broker_proof,
     _apply_platform_mesh_onboarding_proof,
     _apply_report_materialization_proof,
+)
+from app.application.implementation_proof_readiness import (
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
@@ -59,6 +63,7 @@ from app.application.report_materialization_proof import (
 from app.application.runtime_trust_telemetry_proof import (
     build_runtime_trust_telemetry_proof_payload,
 )
+from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.source_ingestion_live_proof import (
     build_source_ingestion_live_proof_payload,
 )
@@ -93,6 +98,18 @@ from tests.support.downstream_route_contract_fixtures import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[str, Any]:
+    with tempfile.TemporaryDirectory() as directory:
+        artifact_path = Path(directory) / "proof.json"
+        artifact_path.write_text(json.dumps(payload), encoding="utf-8")
+        return bind_aggregate_proof_provenance(
+            payload,
+            artifact_path=artifact_path,
+            proof_ref=proof_ref,
+            repository_root=ROOT,
+        )
 
 
 def test_implementation_proof_capability_status_is_derived_from_remaining_blockers() -> None:
@@ -415,9 +432,13 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
 def test_implementation_proof_readiness_uses_durable_repository_proof_without_support_promotion() -> (
     None
 ):
-    proof = build_durable_repository_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/persistence/durable-repository-proof.json"
+    proof = _bound_aggregate_proof(
+        build_durable_repository_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -425,7 +446,7 @@ def test_implementation_proof_readiness_uses_durable_repository_proof_without_su
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         durable_repository_proof=proof,
-        durable_repository_proof_ref="output/persistence/durable-repository-proof.json",
+        durable_repository_proof_ref=proof_ref,
     )
 
     assert "durable_repository_not_configured" not in snapshot.overall_blockers
@@ -506,9 +527,13 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
 def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_without_mesh_certification() -> (
     None
 ):
-    proof = build_runtime_trust_telemetry_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
+    proof = _bound_aggregate_proof(
+        build_runtime_trust_telemetry_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -516,9 +541,7 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         runtime_trust_telemetry_proof=proof,
-        runtime_trust_telemetry_proof_ref=(
-            "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
-        ),
+        runtime_trust_telemetry_proof_ref=proof_ref,
     )
 
     assert "runtime_candidate_snapshot_missing" not in snapshot.overall_blockers
@@ -534,9 +557,13 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
 
 
 def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runtime_claim() -> None:
-    proof = build_ai_lineage_store_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/ai/ai-lineage-store-proof.json"
+    proof = _bound_aggregate_proof(
+        build_ai_lineage_store_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -544,7 +571,7 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         ai_lineage_store_proof=proof,
-        ai_lineage_store_proof_ref="output/ai/ai-lineage-store-proof.json",
+        ai_lineage_store_proof_ref=proof_ref,
     )
 
     assert "certified_ai_lineage_store_missing" not in snapshot.overall_blockers
@@ -571,10 +598,14 @@ def test_implementation_proof_readiness_uses_ai_lineage_store_proof_without_runt
 def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof_without_runtime_claim(
     tmp_path: Path,
 ) -> None:
-    proof = build_ai_workflow_pack_registration_proof_payload(
-        generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
+    proof_ref = "output/ai/ai-workflow-pack-registration-proof.json"
+    proof = _bound_aggregate_proof(
+        build_ai_workflow_pack_registration_proof_payload(
+            generated_at_utc=datetime(2026, 6, 25, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            lotus_ai_root=write_lotus_ai_workflow_pack_fixture(tmp_path),
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -582,9 +613,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         ai_workflow_pack_registration_proof=proof,
-        ai_workflow_pack_registration_proof_ref=(
-            "output/ai/ai-workflow-pack-registration-proof.json"
-        ),
+        ai_workflow_pack_registration_proof_ref=proof_ref,
     )
 
     assert "workflow_pack_runtime_contract_not_certified" not in snapshot.overall_blockers
@@ -610,10 +639,14 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_registration_proof
 def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_proof_without_publication_claim(
     tmp_path: Path,
 ) -> None:
-    proof = build_ai_workflow_pack_runtime_execution_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
+    proof_ref = "output/ai/ai-workflow-pack-runtime-execution-proof.json"
+    proof = _bound_aggregate_proof(
+        build_ai_workflow_pack_runtime_execution_proof_payload(
+            generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            lotus_ai_root=write_lotus_ai_workflow_pack_runtime_execution_fixture(tmp_path),
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -621,9 +654,7 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         ai_workflow_pack_runtime_execution_proof=proof,
-        ai_workflow_pack_runtime_execution_proof_ref=(
-            "output/ai/ai-workflow-pack-runtime-execution-proof.json"
-        ),
+        ai_workflow_pack_runtime_execution_proof_ref=proof_ref,
     )
 
     assert "lotus_ai_runtime_execution_missing" not in snapshot.overall_blockers
@@ -651,9 +682,13 @@ def test_implementation_proof_readiness_uses_ai_workflow_pack_runtime_execution_
 def test_implementation_proof_readiness_uses_ai_model_risk_operations_proof_without_product_claim() -> (
     None
 ):
-    proof = build_ai_model_risk_operations_proof_payload(
-        generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/ai/ai-model-risk-operations-proof.json"
+    proof = _bound_aggregate_proof(
+        build_ai_model_risk_operations_proof_payload(
+            generated_at_utc=datetime(2026, 6, 26, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -661,7 +696,7 @@ def test_implementation_proof_readiness_uses_ai_model_risk_operations_proof_with
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         ai_model_risk_operations_proof=proof,
-        ai_model_risk_operations_proof_ref="output/ai/ai-model-risk-operations-proof.json",
+        ai_model_risk_operations_proof_ref=proof_ref,
     )
 
     assert "model_risk_operations_dashboard_not_certified" not in snapshot.overall_blockers
@@ -684,9 +719,13 @@ def test_implementation_proof_readiness_uses_ai_model_risk_operations_proof_with
 
 
 def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_promotion() -> None:
-    proof = build_workbench_read_path_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/workbench/workbench-read-path-proof.json"
+    proof = _bound_aggregate_proof(
+        build_workbench_read_path_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -694,7 +733,7 @@ def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_p
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         workbench_read_path_proof=proof,
-        workbench_read_path_proof_ref="output/workbench/workbench-read-path-proof.json",
+        workbench_read_path_proof_ref=proof_ref,
     )
 
     assert "workbench_gateway_bff_consumption_proof_missing" not in snapshot.overall_blockers
@@ -716,9 +755,13 @@ def test_implementation_proof_readiness_uses_workbench_read_path_proof_without_p
 
 
 def test_readiness_uses_outbox_broker_proof_without_support_promotion() -> None:
-    proof = build_outbox_broker_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/outbox/outbox-broker-proof.json"
+    proof = _bound_aggregate_proof(
+        build_outbox_broker_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -726,7 +769,7 @@ def test_readiness_uses_outbox_broker_proof_without_support_promotion() -> None:
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         outbox_broker_proof=proof,
-        outbox_broker_proof_ref="output/outbox/outbox-broker-proof.json",
+        outbox_broker_proof_ref=proof_ref,
     )
 
     assert "outbox_broker_not_configured" not in snapshot.overall_blockers
@@ -755,10 +798,14 @@ def test_readiness_uses_outbox_broker_proof_without_support_promotion() -> None:
 def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_without_certification(
     tmp_path: Path,
 ) -> None:
-    proof = build_platform_mesh_onboarding_proof_payload(
-        generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        platform_root=_write_platform_mesh_fixture(tmp_path),
+    proof_ref = "output/data-mesh/platform-mesh-onboarding-proof.json"
+    proof = _bound_aggregate_proof(
+        build_platform_mesh_onboarding_proof_payload(
+            generated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            platform_root=_write_platform_mesh_fixture(tmp_path),
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -766,7 +813,7 @@ def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_with
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         platform_mesh_onboarding_proof=proof,
-        platform_mesh_onboarding_proof_ref=("output/data-mesh/platform-mesh-onboarding-proof.json"),
+        platform_mesh_onboarding_proof_ref=proof_ref,
     )
 
     assert "platform_source_manifest_inclusion_missing" not in snapshot.overall_blockers
@@ -800,9 +847,13 @@ def test_implementation_proof_readiness_uses_platform_mesh_onboarding_proof_with
 
 
 def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certification() -> None:
-    proof = build_mesh_policy_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
+    proof_ref = "output/data-mesh/mesh-policy-proof.json"
+    proof = _bound_aggregate_proof(
+        build_mesh_policy_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -810,7 +861,7 @@ def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certifica
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         mesh_policy_proof=proof,
-        mesh_policy_proof_ref="output/data-mesh/mesh-policy-proof.json",
+        mesh_policy_proof_ref=proof_ref,
     )
 
     assert "mesh_slo_policy_certification_missing" not in snapshot.overall_blockers
@@ -838,12 +889,16 @@ def test_implementation_proof_readiness_uses_mesh_policy_proof_without_certifica
 
 
 def test_readiness_uses_report_intake_route_proof_without_materialization() -> None:
+    proof_ref = "output/downstream/report-intake-route-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 24, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        report_intake_route_proof=_valid_report_intake_route_proof(),
-        report_intake_route_proof_ref="output/downstream/report-intake-route-proof.json",
+        report_intake_route_proof=_bound_aggregate_proof(
+            _valid_report_intake_route_proof(),
+            proof_ref,
+        ),
+        report_intake_route_proof_ref=proof_ref,
     )
 
     assert "lotus_report_live_intake_route_proof_missing" not in snapshot.overall_blockers
@@ -871,14 +926,22 @@ def test_readiness_uses_report_intake_route_proof_without_materialization() -> N
 def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_without_authority() -> (
     None
 ):
+    advise_proof_ref = "output/downstream/advise-proposal-route-proof.json"
+    manage_proof_ref = "output/downstream/manage-action-route-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        advise_proposal_route_proof=valid_advise_route_proof(),
-        advise_proposal_route_proof_ref="output/downstream/advise-proposal-route-proof.json",
-        manage_action_route_proof=valid_manage_route_proof(),
-        manage_action_route_proof_ref="output/downstream/manage-action-route-proof.json",
+        advise_proposal_route_proof=_bound_aggregate_proof(
+            valid_advise_route_proof(),
+            advise_proof_ref,
+        ),
+        advise_proposal_route_proof_ref=advise_proof_ref,
+        manage_action_route_proof=_bound_aggregate_proof(
+            valid_manage_route_proof(),
+            manage_proof_ref,
+        ),
+        manage_action_route_proof_ref=manage_proof_ref,
     )
 
     assert "advise_live_contract_proof_missing" not in snapshot.overall_blockers
@@ -900,14 +963,22 @@ def test_implementation_proof_readiness_uses_advise_and_manage_route_proofs_with
 def test_implementation_proof_readiness_uses_report_materialization_proof_without_publication() -> (
     None
 ):
+    report_intake_proof_ref = "output/downstream/report-intake-route-proof.json"
+    report_materialization_proof_ref = "output/downstream/report-materialization-proof.json"
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        report_intake_route_proof=_valid_report_intake_route_proof(),
-        report_intake_route_proof_ref="output/downstream/report-intake-route-proof.json",
-        report_materialization_proof=_valid_report_materialization_proof(),
-        report_materialization_proof_ref="output/downstream/report-materialization-proof.json",
+        report_intake_route_proof=_bound_aggregate_proof(
+            _valid_report_intake_route_proof(),
+            report_intake_proof_ref,
+        ),
+        report_intake_route_proof_ref=report_intake_proof_ref,
+        report_materialization_proof=_bound_aggregate_proof(
+            _valid_report_materialization_proof(),
+            report_materialization_proof_ref,
+        ),
+        report_materialization_proof_ref=report_materialization_proof_ref,
     )
 
     assert "lotus_report_live_intake_route_proof_missing" not in snapshot.overall_blockers

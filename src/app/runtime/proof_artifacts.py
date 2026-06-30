@@ -30,6 +30,7 @@ from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
 )
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
+from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
@@ -196,15 +197,21 @@ def configured_implementation_proof_artifacts(
 
     for env_name, proof_field, ref_field, artifact_name in _JSON_PROOF_ARTIFACTS:
         path = _configured_path(env_name, root=root)
-        artifact_fields[proof_field] = _read_optional_json_object(
-            path,
-            artifact_name=artifact_name,
-        )
-        artifact_fields[ref_field] = _source_safe_artifact_ref(
+        proof_ref = _source_safe_artifact_ref(
             path,
             root=root,
             artifact_name=f"{artifact_name} artifact",
         )
+        payload = _read_optional_json_object(path, artifact_name=artifact_name)
+        if payload is not None and path is not None and proof_ref is not None:
+            payload = bind_aggregate_proof_provenance(
+                payload,
+                artifact_path=path,
+                proof_ref=proof_ref,
+                repository_root=root,
+            )
+        artifact_fields[proof_field] = payload
+        artifact_fields[ref_field] = proof_ref
 
     return ConfiguredImplementationProofArtifacts(**artifact_fields)
 

@@ -123,6 +123,24 @@ The repo-native `make implementation-proof-readiness-check` target accepts the
 same live-evidence inputs through Make variables, so release reviewers can use
 the canonical target instead of a one-off command:
 
+## Aggregate Proof Provenance
+
+Aggregate readiness consumes optional JSON proof artifacts only after both the
+family proof contract and the aggregate provenance check pass. The CLI and
+runtime artifact loader attach `aggregateProofProvenance` with the source-safe
+proof ref, artifact SHA-256, current source revision, source-tree dirty flag,
+and proof generation timestamp before any optional proof can clear a blocker.
+
+Blockers remain in place when the provenance envelope is missing, the proof ref
+does not match the consumed artifact, `generatedAtUtc` is future-dated or older
+than the 24-hour freshness window, or the source revision does not match the
+current Lotus Idea source revision. Runtimes without a local `.git` checkout
+must set `LOTUS_IDEA_SOURCE_REVISION` to the deployed commit or deterministic
+source identifier when they expect optional proof artifacts to clear aggregate
+readiness blockers. This provenance binding is internal implementation
+evidence; it is not data-mesh certification, client-publication approval, or
+supported-feature promotion.
+
 | Variable | Effect |
 | --- | --- |
 | `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC` | Overrides the deterministic proof timestamp. |

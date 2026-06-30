@@ -135,67 +135,74 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
 
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
 
-    assert artifacts.durable_repository_proof == {"artifact": "durable-repository-proof.json"}
+    _assert_bound_artifact(artifacts.durable_repository_proof, "durable-repository-proof.json")
     assert artifacts.durable_repository_proof_ref == (
         "output/persistence/durable-repository-proof.json"
     )
-    assert artifacts.runtime_trust_telemetry_proof == {
-        "artifact": "runtime-trust-telemetry-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.runtime_trust_telemetry_proof, "runtime-trust-telemetry-proof.json"
+    )
     assert artifacts.runtime_trust_telemetry_proof_ref == (
         "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
     )
-    assert artifacts.ai_lineage_store_proof == {"artifact": "ai-lineage-store-proof.json"}
+    _assert_bound_artifact(artifacts.ai_lineage_store_proof, "ai-lineage-store-proof.json")
     assert artifacts.ai_lineage_store_proof_ref == "output/ai/ai-lineage-store-proof.json"
-    assert artifacts.ai_workflow_pack_registration_proof == {
-        "artifact": "ai-workflow-pack-registration-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.ai_workflow_pack_registration_proof,
+        "ai-workflow-pack-registration-proof.json",
+    )
     assert artifacts.ai_workflow_pack_registration_proof_ref == (
         "output/ai/ai-workflow-pack-registration-proof.json"
     )
-    assert artifacts.ai_workflow_pack_runtime_execution_proof == {
-        "artifact": "ai-workflow-pack-runtime-execution-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.ai_workflow_pack_runtime_execution_proof,
+        "ai-workflow-pack-runtime-execution-proof.json",
+    )
     assert artifacts.ai_workflow_pack_runtime_execution_proof_ref == (
         "output/ai/ai-workflow-pack-runtime-execution-proof.json"
     )
-    assert artifacts.workbench_read_path_proof == {"artifact": "workbench-read-path-proof.json"}
+    _assert_bound_artifact(artifacts.workbench_read_path_proof, "workbench-read-path-proof.json")
     assert (
         artifacts.workbench_read_path_proof_ref == "output/workbench/workbench-read-path-proof.json"
     )
-    assert artifacts.gateway_workbench_operational_proof == {
-        "artifact": "gateway-workbench-operational-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.gateway_workbench_operational_proof,
+        "gateway-workbench-operational-proof.json",
+    )
     assert artifacts.gateway_workbench_operational_proof_ref == (
         "output/workbench/gateway-workbench-operational-proof.json"
     )
-    assert artifacts.gateway_workbench_discovery_proof == {
-        "artifact": "gateway-workbench-discovery-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.gateway_workbench_discovery_proof,
+        "gateway-workbench-discovery-proof.json",
+    )
     assert artifacts.gateway_workbench_discovery_proof_ref == (
         "output/workbench/gateway-workbench-discovery-proof.json"
     )
-    assert artifacts.outbox_broker_proof == {"artifact": "outbox-broker-proof.json"}
+    _assert_bound_artifact(artifacts.outbox_broker_proof, "outbox-broker-proof.json")
     assert artifacts.outbox_broker_proof_ref == "output/outbox/outbox-broker-proof.json"
-    assert artifacts.outbox_platform_mesh_event_publication_proof == {
-        "artifact": "outbox-platform-mesh-event-publication-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.outbox_platform_mesh_event_publication_proof,
+        "outbox-platform-mesh-event-publication-proof.json",
+    )
     assert artifacts.outbox_platform_mesh_event_publication_proof_ref == (
         "output/outbox/outbox-platform-mesh-event-publication-proof.json"
     )
-    assert artifacts.platform_mesh_onboarding_proof == {
-        "artifact": "platform-mesh-onboarding-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.platform_mesh_onboarding_proof,
+        "platform-mesh-onboarding-proof.json",
+    )
     assert artifacts.platform_mesh_onboarding_proof_ref == (
         "output/data-mesh/platform-mesh-onboarding-proof.json"
     )
-    assert artifacts.bond_maturity_live_proof == {"artifact": "bond-maturity-live-proof.json"}
+    _assert_bound_artifact(artifacts.bond_maturity_live_proof, "bond-maturity-live-proof.json")
     assert artifacts.bond_maturity_live_proof_ref == (
         "output/opportunity-archetypes/bond-maturity-live-proof.json"
     )
-    assert artifacts.low_income_core_cashflow_live_proof == {
-        "artifact": "low-income-core-cashflow-live-proof.json"
-    }
+    _assert_bound_artifact(
+        artifacts.low_income_core_cashflow_live_proof,
+        "low-income-core-cashflow-live-proof.json",
+    )
     assert artifacts.low_income_core_cashflow_live_proof_ref == (
         "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
     )
@@ -211,3 +218,15 @@ def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
 
     with pytest.raises(ValueError, match="durable repository proof must be a JSON object"):
         configured_implementation_proof_artifacts(repository_root=tmp_path)
+
+
+def _assert_bound_artifact(payload: dict[str, object] | None, artifact_name: str) -> None:
+    assert payload is not None
+    assert payload["artifact"] == artifact_name
+    provenance = payload["aggregateProofProvenance"]
+    assert isinstance(provenance, dict)
+    assert provenance["repository"] == "lotus-idea"
+    assert isinstance(provenance["artifactSha256"], str)
+    assert len(provenance["artifactSha256"]) == 64
+    assert isinstance(provenance["sourceRevision"], str)
+    assert provenance["sourceRevision"]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from datetime import datetime
 
 from app.application.bond_maturity_live_proof import (
     BOND_MATURITY_LIVE_BLOCKERS_CLEARED,
@@ -8,6 +9,7 @@ from app.application.bond_maturity_live_proof import (
 )
 from app.application.implementation_proof_capability_updates import apply_blocker_proof
 from app.application.implementation_proof_models import ImplementationProofCapabilityReadiness
+from app.application.proof_provenance import aggregate_proof_artifact_is_current
 from app.application.high_volatility_live_proof import (
     HIGH_VOLATILITY_LIVE_BLOCKERS_CLEARED,
     high_volatility_live_proof_is_valid,
@@ -88,6 +90,7 @@ def _apply_opportunity_archetype_proofs(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     source_ingestion_live_proof_valid: bool,
     source_ingestion_live_proof_ref: str | None,
+    evaluated_at_utc: datetime,
     risk_concentration_live_proof: Mapping[str, object] | None,
     risk_concentration_live_proof_ref: str | None,
     high_volatility_live_proof: Mapping[str, object] | None,
@@ -133,6 +136,7 @@ def _apply_opportunity_archetype_proofs(
             proof_is_valid=proof_is_valid,
             apply_proof=apply_proof,
             proof_ref=proof_ref,
+            evaluated_at_utc=evaluated_at_utc,
         )
     return capabilities
 
@@ -262,8 +266,15 @@ def _apply_valid_opportunity_proof(
         ImplementationProofCapabilityReadiness,
     ],
     proof_ref: str | None,
+    evaluated_at_utc: datetime,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if not proof or not proof_is_valid(proof):
+        return capabilities
+    if not aggregate_proof_artifact_is_current(
+        proof,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_ref=proof_ref,
+    ):
         return capabilities
     return tuple(apply_proof(capability, proof_ref) for capability in capabilities)
 
@@ -292,12 +303,14 @@ def apply_opportunity_archetype_proofs_from_scope(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     source_ingestion_live_proof_valid: bool,
     source_ingestion_live_proof_ref: str | None,
+    evaluated_at_utc: datetime,
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     return _apply_opportunity_archetype_proofs(
         capabilities=capabilities,
         source_ingestion_live_proof_valid=source_ingestion_live_proof_valid,
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
         risk_concentration_live_proof=_payload(scope, "risk_concentration_live_proof"),
         risk_concentration_live_proof_ref=_ref(scope, "risk_concentration_live_proof_ref"),
         high_volatility_live_proof=_payload(scope, "high_volatility_live_proof"),
