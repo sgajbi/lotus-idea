@@ -454,8 +454,10 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         "those entitlements automatically and rejects broader query scopes fail-closed. "
         "This is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
         "with bounded read-only Gateway publication; it does not expose a Workbench "
-        "product surface, durable queue store, data-product certification, or "
-        "supported feature."
+        "product surface, data-product certification, or supported feature. "
+        "When the durable PostgreSQL repository is active, the advisor queue read path "
+        "uses a repository-side bounded candidate projection instead of whole-store "
+        "snapshot hydration."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": AdvisorReviewQueueResponse,
@@ -529,7 +531,9 @@ ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
         "queue projection. The diagnostic reports aggregate queue counts, exclusion "
         "counts, durable-storage posture, and certification blockers only; it does "
         "not expose candidate identifiers, access-scope identifiers, Workbench proof, "
-        "data-product certification, PM/compliance queue support, or a supported feature."
+        "data-product certification, PM/compliance queue support, or a supported feature. "
+        "Repository-side pagination is certified only for the durable PostgreSQL "
+        "repository provider."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": ReviewQueueReadinessResponse,

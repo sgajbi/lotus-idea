@@ -18,6 +18,7 @@ from app.application.review_queue import (
 )
 from app.domain import (
     CandidatePersistenceDecision,
+    CandidatePersistenceRecord,
     EvidenceFreshness,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
@@ -29,6 +30,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
+from app.ports.idea_repository import ReviewQueueRepositoryPage
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -173,6 +175,71 @@ def test_build_review_queue_from_repository_pages_reviewable_items_deterministic
     assert first_page.page.has_next_page is True
     assert second_page.page.offset == 1
     assert second_page.page.next_offset == 2
+
+
+def test_build_review_queue_from_repository_uses_repository_side_page_projection() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_ids = [
+        persist_high_cash_candidate(
+            repository,
+            cash_weight=Decimal("0.18") + Decimal(index) / Decimal("100"),
+            suffix=f"-repository-page-{index}",
+            idempotency_key=f"signal-ingestion:high-cash:repository-page-{index}",
+        )
+        for index in range(3)
+    ]
+    snapshot = repository.snapshot()
+    second_record = snapshot.candidate_records[sorted(candidate_ids)[1]]
+
+    class RepositorySidePageRepository:
+        def __init__(self, record: CandidatePersistenceRecord) -> None:
+            self.record = record
+            self.snapshot_called = False
+            self.requested_limit: int | None = None
+            self.requested_offset: int | None = None
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            self.snapshot_called = True
+            raise AssertionError("repository-side queue page must not call snapshot")
+
+        def review_queue_candidate_page(
+            self,
+            *,
+            access_scope_filter: QueueAccessScopeFilter | None,
+            limit: int,
+            offset: int,
+        ) -> ReviewQueueRepositoryPage:
+            assert access_scope_filter is None
+            self.requested_limit = limit
+            self.requested_offset = offset
+            return ReviewQueueRepositoryPage(
+                candidate_records=(self.record,),
+                total_reviewable_item_count=3,
+                total_excluded_candidate_count=0,
+            )
+
+    paged_repository = RepositorySidePageRepository(second_record)
+
+    page = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            limit=1,
+            offset=1,
+        ),
+        repository=paged_repository,
+    )
+
+    assert paged_repository.snapshot_called is False
+    assert paged_repository.requested_limit == 1
+    assert paged_repository.requested_offset == 1
+    assert [item.candidate.candidate_id for item in page.items] == [
+        second_record.candidate.candidate_id
+    ]
+    assert [item.rank for item in page.items] == [2]
+    assert page.exclusions == ()
+    assert page.page.total_reviewable_item_count == 3
+    assert page.page.returned_item_count == 1
+    assert page.page.next_offset == 2
 
 
 def test_build_review_queue_from_repository_pages_scope_filtered_items_and_exclusions() -> None:
@@ -450,6 +517,43 @@ def test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers() 
     assert "durable_repository_not_configured" not in snapshot.certification_blockers
     assert "repository_side_queue_pagination_not_certified" in snapshot.certification_blockers
     assert "workbench_product_proof_missing" in snapshot.certification_blockers
+
+
+def test_build_review_queue_readiness_snapshot_clears_repository_side_pagination_blocker() -> None:
+    repository = InMemoryIdeaRepository()
+    persist_high_cash_candidate(repository)
+
+    class RepositorySidePageRepository:
+        def __init__(self, wrapped: InMemoryIdeaRepository) -> None:
+            self.wrapped = wrapped
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            return self.wrapped.snapshot()
+
+        def review_queue_candidate_page(
+            self,
+            *,
+            access_scope_filter: QueueAccessScopeFilter | None,
+            limit: int,
+            offset: int,
+        ) -> ReviewQueueRepositoryPage:
+            del access_scope_filter, limit, offset
+            return ReviewQueueRepositoryPage(
+                candidate_records=(),
+                total_reviewable_item_count=0,
+                total_excluded_candidate_count=0,
+            )
+
+    snapshot = build_review_queue_readiness_snapshot(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=EVALUATED_AT),
+        repository=RepositorySidePageRepository(repository),
+        durable_storage_backed=True,
+    )
+
+    assert snapshot.repository_side_pagination_certified is True
+    assert "repository_side_queue_pagination_not_certified" not in snapshot.certification_blockers
+    assert "workbench_product_proof_missing" in snapshot.certification_blockers
+    assert "data_product_certification_missing" in snapshot.certification_blockers
 
 
 def test_build_review_queue_readiness_snapshot_reads_repository_once() -> None:

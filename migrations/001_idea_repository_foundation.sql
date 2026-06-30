@@ -133,6 +133,15 @@ CREATE TABLE IF NOT EXISTS idea_downstream_submission (
 CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_family_status
     ON idea_candidate_record (family, lifecycle_status, review_posture);
 
+CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_review_queue_order
+    ON idea_candidate_record (
+        lifecycle_status,
+        review_posture,
+        ((candidate_json->'score'->>'score')::numeric) DESC,
+        (candidate_json->>'created_at_utc'),
+        candidate_id
+    );
+
 CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_evidence_hash
     ON idea_candidate_record (evidence_hash);
 

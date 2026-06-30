@@ -923,11 +923,15 @@ authority, Workbench proof, data-product certification, or
 supported-feature promotion. `GET /api/v1/review-queues/advisor` exposes deterministic
 advisor queue projection over persisted candidate snapshots, optional
 tenant/book/portfolio/client scope filters, and bounded `limit`/`offset`
-paging with a default page size of 25 and maximum page size of 100. The
-readiness diagnostic intentionally keeps
-`repository_side_queue_pagination_not_certified` blocked until a durable
-repository paged query is implemented and proven; the current API page contract
-is a bounded foundation, not a production-scale durable queue store claim. The review-action
+paging with a default page size of 25 and maximum page size of 100. The durable
+PostgreSQL repository provider exposes a repository-side advisor queue
+candidate projection over `idea_candidate_record` with eligibility, scope,
+stable ordering, dedupe, count, and `LIMIT`/`OFFSET` bounds so ordinary queue
+page reads do not hydrate unrelated outbox, downstream, report-evidence, or AI
+lineage tables. The readiness diagnostic clears
+`repository_side_queue_pagination_not_certified` only for durable providers
+with that certified projection; Workbench, data-product, runtime trust
+telemetry, and supported-feature blockers remain. The review-action
 and feedback APIs expose internal review workflow persistence over the same
 repository provider and return accepted, replayed, not-found, conflict,
 permission, or invalid-state posture without granting downstream authority.

@@ -15,6 +15,7 @@ DROP INDEX IF EXISTS idx_idea_lifecycle_history_candidate_time;
 DROP INDEX IF EXISTS idx_idea_idempotency_record_candidate;
 DROP INDEX IF EXISTS idx_idea_candidate_record_persisted_at;
 DROP INDEX IF EXISTS idx_idea_candidate_record_evidence_hash;
+DROP INDEX IF EXISTS idx_idea_candidate_record_review_queue_order;
 DROP INDEX IF EXISTS idx_idea_candidate_record_family_status;
 
 DROP TABLE IF EXISTS idea_report_evidence_pack_request;

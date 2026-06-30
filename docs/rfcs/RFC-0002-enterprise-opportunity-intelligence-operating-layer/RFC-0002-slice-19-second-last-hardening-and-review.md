@@ -322,3 +322,28 @@ review showed a repeatable source-authority drift pattern:
    move Manage supportability ownership into `lotus-idea`, certify live source
    ingestion, promote Workbench support, or widen downstream execution
    authority.
+
+This slice also hardens the advisor review queue durable read path after issue
+review showed the API page contract was bounded while PostgreSQL still used a
+whole-store snapshot:
+
+1. `ReviewQueueProjectionRepository` and `ReviewQueueRepositoryPage` define an
+   internal bounded repository page interface; this is design modularity only,
+   not a new runtime service boundary.
+2. `PostgresIdeaRepository.review_queue_candidate_page(...)` reads only
+   `idea_candidate_record`, applies lifecycle/posture/supportability,
+   caller-scope, stable score/created-time ordering, source-signal dedupe,
+   counts, and `LIMIT`/`OFFSET` bounds before hydrating the page window.
+3. Migration 001 now includes
+   `idx_idea_candidate_record_review_queue_order`, and
+   `migration_contract_gate.py` requires that index so the hot queue path stays
+   index-backed.
+4. Review queue application tests prove repository-side page projections bypass
+   `snapshot()` for ordinary page reads and clear only the
+   `repository_side_queue_pagination_not_certified` blocker when durable
+   storage exposes the projection. PostgreSQL adapter tests prove the page read
+   does not select outbox, downstream submission, report evidence-pack, or AI
+   lineage tables.
+5. This is production-scale internal read-path hardening only. It does not
+   certify Workbench support, data-product promotion, PM/compliance queue
+   support, client-ready publication, or supported-feature promotion.

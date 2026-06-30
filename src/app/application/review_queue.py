@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from types import MappingProxyType
 from typing import Mapping
@@ -17,7 +17,11 @@ from app.domain import (
     ReviewQueueProjection,
     build_review_queue,
 )
-from app.ports.idea_repository import CandidateSnapshotRepository
+from app.ports.idea_repository import (
+    CandidateSnapshotRepository,
+    ReviewQueueProjectionRepository,
+    ReviewQueueRepositoryPage,
+)
 
 
 DEFAULT_REVIEW_QUEUE_PAGE_LIMIT = 25
@@ -118,6 +122,13 @@ def build_review_queue_from_repository(
     repository: CandidateSnapshotRepository,
     policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
 ) -> ReviewQueuePage:
+    if not command.snoozes and isinstance(repository, ReviewQueueProjectionRepository):
+        repository_page = repository.review_queue_candidate_page(
+            access_scope_filter=command.access_scope_filter,
+            limit=command.limit,
+            offset=command.offset,
+        )
+        return _page_repository_review_queue(repository_page, command=command, policy=policy)
     snapshot = repository.snapshot()
     queue = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
     return _page_review_queue(queue, command=command)
@@ -132,6 +143,10 @@ def build_review_queue_readiness_snapshot(
 ) -> ReviewQueueReadinessSnapshot:
     snapshot = repository.snapshot()
     queue = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
+    repository_side_pagination_certified = durable_storage_backed and isinstance(
+        repository,
+        ReviewQueueProjectionRepository,
+    )
     exclusion_counts = {
         reason.value: sum(1 for exclusion in queue.exclusions if exclusion.reason is reason)
         for reason in QueueExclusionReason
@@ -139,6 +154,7 @@ def build_review_queue_readiness_snapshot(
     candidates = tuple(record.candidate for record in snapshot.candidate_records.values())
     certification_blockers = _review_queue_certification_blockers(
         durable_storage_backed=durable_storage_backed,
+        repository_side_pagination_certified=repository_side_pagination_certified,
     )
     return ReviewQueueReadinessSnapshot(
         repository="lotus-idea",
@@ -152,7 +168,7 @@ def build_review_queue_readiness_snapshot(
         scored_candidate_count=sum(1 for candidate in candidates if candidate.score is not None),
         unscored_candidate_count=sum(1 for candidate in candidates if candidate.score is None),
         durable_storage_backed=durable_storage_backed,
-        repository_side_pagination_certified=False,
+        repository_side_pagination_certified=repository_side_pagination_certified,
         readiness_status=("ready" if not certification_blockers else "blocked"),
         supportability_status="not_certified",
         certification_blockers=certification_blockers,
@@ -160,19 +176,65 @@ def build_review_queue_readiness_snapshot(
     )
 
 
-def _review_queue_certification_blockers(*, durable_storage_backed: bool) -> tuple[str, ...]:
+def _review_queue_certification_blockers(
+    *,
+    durable_storage_backed: bool,
+    repository_side_pagination_certified: bool,
+) -> tuple[str, ...]:
     blockers: list[str] = []
     if not durable_storage_backed:
         blockers.append("durable_repository_not_configured")
+    if not repository_side_pagination_certified:
+        blockers.append("repository_side_queue_pagination_not_certified")
     blockers.extend(
         (
-            "repository_side_queue_pagination_not_certified",
             "workbench_product_proof_missing",
             "data_product_certification_missing",
             "certified_runtime_trust_telemetry_missing",
         )
     )
     return tuple(blockers)
+
+
+def _page_repository_review_queue(
+    repository_page: ReviewQueueRepositoryPage,
+    *,
+    command: BuildReviewQueueFromRepositoryCommand,
+    policy: IdeaScoringPolicy,
+) -> ReviewQueuePage:
+    queue = build_review_queue(
+        tuple(record.candidate for record in repository_page.candidate_records),
+        policy=policy,
+        evaluated_at_utc=command.evaluated_at_utc,
+        access_scope_filter=command.access_scope_filter,
+    )
+    ranked_items = tuple(
+        replace(item, rank=command.offset + index + 1) for index, item in enumerate(queue.items)
+    )
+    total_window_count = max(
+        repository_page.total_reviewable_item_count,
+        repository_page.total_excluded_candidate_count,
+    )
+    next_offset = command.offset + command.limit
+    has_next_page = next_offset < total_window_count
+    return ReviewQueuePage(
+        projection=ReviewQueueProjection(
+            policy_version=queue.policy_version,
+            evaluated_at_utc=queue.evaluated_at_utc,
+            items=ranked_items,
+            exclusions=(),
+        ),
+        page=ReviewQueuePageMetadata(
+            limit=command.limit,
+            offset=command.offset,
+            returned_item_count=len(ranked_items),
+            total_reviewable_item_count=repository_page.total_reviewable_item_count,
+            returned_exclusion_count=0,
+            total_excluded_candidate_count=repository_page.total_excluded_candidate_count,
+            next_offset=(next_offset if has_next_page else None),
+            has_next_page=has_next_page,
+        ),
+    )
 
 
 def _build_review_queue_from_snapshot(
