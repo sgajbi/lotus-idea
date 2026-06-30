@@ -31,9 +31,11 @@ Current RFC-0002 implementation-start baseline:
    OpenAPI examples are now enforced by
    `make openapi-problem-details-example-gate`. Public domain API ownership is
    protected by `make private-import-boundary-gate`, which blocks private
-   `app.domain.*` helper imports without claiming broader application helper
-   cleanup is complete. It remains a cleanup slice only and does not promote a
-   business feature.
+   `app.domain.*` helper imports. The same gate now protects the shared
+   implementation-proof capability update module, so proof-readiness code uses
+   public `apply_blocker_proof` and `build_capability_readiness` functions
+   instead of importing private proof helpers. It remains a cleanup slice only
+   and does not promote a business feature.
 4. Slice 03 implements the pure domain model and lifecycle foundation with
    public domain API boundary enforcement, without API, persistence, or
    supported-feature promotion.

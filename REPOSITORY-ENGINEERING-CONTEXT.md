@@ -1713,13 +1713,15 @@ baseline and prevent future agentic changes from normalizing large, hard-to-revi
 modules.
 
 `make private-import-boundary-gate` is blocking through `make lint`. It scans
-`src`, `tests`, and `scripts` for cross-module imports from private
-`app.domain.*` helpers. Domain modules may keep local private helpers, but
-callers must use public, named domain APIs exported through `app.domain` so
-opportunity lifecycle, evidence, and source-authority invariants do not become
-hidden test or application coupling. The gate is intentionally scoped to the
-domain boundary; broader application proof-helper and persistence-codec cleanup
-remains future refactoring work.
+`src`, `tests`, and `scripts` for cross-module imports from protected private
+helpers. Domain modules may keep local private helpers, but callers must use
+public, named domain APIs exported through `app.domain` so opportunity
+lifecycle, evidence, and source-authority invariants do not become hidden test
+or application coupling. Shared implementation-proof readiness code must use
+public `apply_blocker_proof` and `build_capability_readiness` functions from
+`app.application.implementation_proof_capability_updates`. The gate remains
+intentionally scoped to measured boundaries; broader application-helper and
+persistence-codec cleanup remains future refactoring work.
 
 `make documentation-contract-gate` is blocking through `make lint`. It protects
 the durable agent and operator context surface: `AGENTS.md`, `README.md`,

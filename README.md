@@ -105,10 +105,10 @@ flowchart LR
 ```
 
 - `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified internal API foundations, shared route metadata, and the route runtime dependency facade.
-- `src/app/application/`: use-case orchestration for signal evaluation,
-  source ingestion, candidate detail, evidence replay, review queues,
+- `src/app/application/`: use-case orchestration for signal evaluation, source ingestion,
+  candidate detail, evidence replay, review queues,
   lifecycle, feedback, AI diagnostics, conversion, report evidence, downstream
-  realization submission foundations, and readiness views.
+  realization submission foundations, readiness views, and public proof capability update helpers.
 - `src/app/domain/`: framework-free domain models, policies, scoring,
   lifecycle, review, AI governance, conversion, report evidence, persistence
   records, idempotency, replay, audit primitives, outbox records, retry/dead-letter
