@@ -176,12 +176,15 @@ returns aggregate decision counts only. It does not expose portfolio ids, raw
 source payloads, raw idempotency keys, or candidate ids.
 The internal `GET /api/v1/outbox-delivery/readiness` diagnostic is available
 for operators with `idea.outbox-delivery.readiness.read` to inspect aggregate
-outbox backlog, retry/dead-letter posture, durable repository posture, broker
-configuration posture, publisher-adapter presence, and remaining certification
-blockers. The internal `POST /api/v1/outbox-delivery/run-once` action is
+outbox backlog, leased and expired-lease posture, retry/dead-letter posture,
+durable repository posture, broker configuration posture, publisher-adapter
+presence, and remaining certification blockers. The internal
+`POST /api/v1/outbox-delivery/run-once` action is
 available for operators with `idea.outbox-delivery.run` to run one bounded
 delivery pass through the active repository and configured publisher adapter.
-It fails closed and leaves records untouched when broker configuration is
+It claims a bounded batch with lease owner, attempt id, and expiry before
+broker publication, completes or fails only when the same attempt still owns the
+lease, and fails closed leaving records untouched when broker configuration is
 missing or invalid. Neither endpoint exposes event identifiers, aggregate
 identifiers, raw idempotency keys, broker payloads, source payloads, or
 downstream claims. Both remain `not_certified` until platform mesh event

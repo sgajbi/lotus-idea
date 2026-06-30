@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 import os
 from pathlib import Path
 from types import MappingProxyType
@@ -24,6 +25,7 @@ OUTBOX_CONSUMER_CONTRACT_PATH = (
 @dataclass(frozen=True)
 class OutboxDeliveryStatusCounts:
     pending_count: int
+    leased_count: int
     failed_count: int
     published_count: int
     dead_letter_count: int
@@ -31,7 +33,11 @@ class OutboxDeliveryStatusCounts:
     @property
     def total_count(self) -> int:
         return (
-            self.pending_count + self.failed_count + self.published_count + self.dead_letter_count
+            self.pending_count
+            + self.leased_count
+            + self.failed_count
+            + self.published_count
+            + self.dead_letter_count
         )
 
 
@@ -45,6 +51,7 @@ class OutboxDeliveryReadinessSnapshot:
     external_broker_configured: bool
     external_broker_publisher_adapter_present: bool
     delivery_ready_count: int
+    expired_lease_count: int
     max_retry_count: int
     status_counts: OutboxDeliveryStatusCounts
     source_of_truth: Mapping[str, str]
@@ -67,13 +74,22 @@ def build_outbox_delivery_readiness_snapshot(
     repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
     max_retry_count: int = DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+    evaluated_at_utc: datetime | None = None,
 ) -> OutboxDeliveryReadinessSnapshot:
     if max_retry_count <= 0:
         raise ValueError("max_retry_count must be positive")
+    evaluated_at = evaluated_at_utc or datetime.now(UTC)
+    _require_aware_utc(evaluated_at, "evaluated_at_utc")
 
-    status_counts = _status_counts(repository)
+    status_counts, expired_lease_count = _status_counts(
+        repository,
+        evaluated_at_utc=evaluated_at,
+    )
     delivery_ready_count = len(
-        repository.outbox_events_for_delivery(max_retry_count=max_retry_count)
+        repository.outbox_events_for_delivery(
+            max_retry_count=max_retry_count,
+            evaluated_at_utc=evaluated_at,
+        )
     )
     configuration_blockers = _configuration_blockers()
     certification_blockers = outbox_delivery_certification_blockers()
@@ -88,6 +104,7 @@ def build_outbox_delivery_readiness_snapshot(
         external_broker_configured=bool(os.getenv(OUTBOX_BROKER_URL_ENV, "").strip()),
         external_broker_publisher_adapter_present=True,
         delivery_ready_count=delivery_ready_count,
+        expired_lease_count=expired_lease_count,
         max_retry_count=max_retry_count,
         status_counts=status_counts,
         source_of_truth={
@@ -115,20 +132,34 @@ def build_outbox_delivery_readiness_snapshot(
 
 def _status_counts(
     repository: CandidateSnapshotRepository,
-) -> OutboxDeliveryStatusCounts:
+    *,
+    evaluated_at_utc: datetime,
+) -> tuple[OutboxDeliveryStatusCounts, int]:
     counts = {
         OutboxEventStatus.PENDING: 0,
+        OutboxEventStatus.LEASED: 0,
         OutboxEventStatus.FAILED: 0,
         OutboxEventStatus.PUBLISHED: 0,
         OutboxEventStatus.DEAD_LETTER: 0,
     }
+    expired_lease_count = 0
     for event in repository.snapshot().outbox_events.values():
         counts[event.status] += 1
-    return OutboxDeliveryStatusCounts(
-        pending_count=counts[OutboxEventStatus.PENDING],
-        failed_count=counts[OutboxEventStatus.FAILED],
-        published_count=counts[OutboxEventStatus.PUBLISHED],
-        dead_letter_count=counts[OutboxEventStatus.DEAD_LETTER],
+        if (
+            event.status is OutboxEventStatus.LEASED
+            and event.lease_expires_at_utc is not None
+            and event.lease_expires_at_utc <= evaluated_at_utc
+        ):
+            expired_lease_count += 1
+    return (
+        OutboxDeliveryStatusCounts(
+            pending_count=counts[OutboxEventStatus.PENDING],
+            leased_count=counts[OutboxEventStatus.LEASED],
+            failed_count=counts[OutboxEventStatus.FAILED],
+            published_count=counts[OutboxEventStatus.PUBLISHED],
+            dead_letter_count=counts[OutboxEventStatus.DEAD_LETTER],
+        ),
+        expired_lease_count,
     )
 
 
@@ -158,3 +189,10 @@ def _platform_mesh_event_certification_blocker() -> str:
     if OUTBOX_EVENT_CONTRACT_PATH.is_file():
         return "platform_mesh_event_publication_proof_missing"
     return "platform_mesh_event_contract_missing"
+
+
+def _require_aware_utc(value: datetime, field_name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field_name} must be timezone-aware")
+    if value.utcoffset() != UTC.utcoffset(value):
+        raise ValueError(f"{field_name} must be UTC")

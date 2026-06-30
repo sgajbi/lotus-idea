@@ -30,6 +30,7 @@ FORBIDDEN_OUTBOX_PAYLOAD_KEYS = frozenset(
 
 class OutboxEventStatus(StrEnum):
     PENDING = "pending"
+    LEASED = "leased"
     FAILED = "failed"
     DEAD_LETTER = "dead_letter"
     PUBLISHED = "published"
@@ -51,6 +52,9 @@ class OutboxEventRecord:
     published_at_utc: datetime | None = None
     failure_reason: str | None = None
     retry_count: int = 0
+    lease_owner: str | None = None
+    lease_attempt_id: str | None = None
+    lease_expires_at_utc: datetime | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.event_id, "event_id")
@@ -61,8 +65,20 @@ class OutboxEventRecord:
         _require_aware_utc(self.occurred_at_utc, "occurred_at_utc")
         if self.published_at_utc is not None:
             _require_aware_utc(self.published_at_utc, "published_at_utc")
+        if self.lease_expires_at_utc is not None:
+            _require_aware_utc(self.lease_expires_at_utc, "lease_expires_at_utc")
         if self.retry_count < 0:
             raise ValueError("retry_count cannot be negative")
+        if self.status is OutboxEventStatus.LEASED:
+            _require_text(self.lease_owner or "", "lease_owner")
+            _require_text(self.lease_attempt_id or "", "lease_attempt_id")
+            if self.lease_expires_at_utc is None:
+                raise ValueError("lease_expires_at_utc is required for leased outbox events")
+        elif any(
+            value is not None
+            for value in (self.lease_owner, self.lease_attempt_id, self.lease_expires_at_utc)
+        ):
+            raise ValueError("lease metadata is allowed only for leased outbox events")
         if self.status is OutboxEventStatus.PUBLISHED and self.published_at_utc is None:
             raise ValueError("published_at_utc is required for published outbox events")
         if self.status in {OutboxEventStatus.FAILED, OutboxEventStatus.DEAD_LETTER}:
@@ -107,6 +123,27 @@ def build_candidate_outbox_event(
     )
 
 
+def lease_outbox_event(
+    event: OutboxEventRecord,
+    *,
+    lease_owner: str,
+    lease_attempt_id: str,
+    lease_expires_at_utc: datetime,
+) -> OutboxEventRecord:
+    _require_text(lease_owner, "lease_owner")
+    _require_text(lease_attempt_id, "lease_attempt_id")
+    _require_aware_utc(lease_expires_at_utc, "lease_expires_at_utc")
+    return replace(
+        event,
+        status=OutboxEventStatus.LEASED,
+        published_at_utc=None,
+        failure_reason=None,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        lease_expires_at_utc=lease_expires_at_utc,
+    )
+
+
 def mark_outbox_event_published(
     event: OutboxEventRecord,
     *,
@@ -118,6 +155,9 @@ def mark_outbox_event_published(
         status=OutboxEventStatus.PUBLISHED,
         published_at_utc=published_at_utc,
         failure_reason=None,
+        lease_owner=None,
+        lease_attempt_id=None,
+        lease_expires_at_utc=None,
     )
 
 
@@ -127,9 +167,8 @@ def mark_outbox_event_failed(
     failure_reason: str,
     max_retry_count: int,
 ) -> OutboxEventRecord:
-    _require_text(failure_reason, "failure_reason")
+    validate_outbox_failure_reason(failure_reason)
     _require_positive(max_retry_count, "max_retry_count")
-    _reject_sensitive_failure_reason(failure_reason)
     retry_count = event.retry_count + 1
     status = (
         OutboxEventStatus.DEAD_LETTER
@@ -142,7 +181,15 @@ def mark_outbox_event_failed(
         published_at_utc=None,
         failure_reason=failure_reason,
         retry_count=retry_count,
+        lease_owner=None,
+        lease_attempt_id=None,
+        lease_expires_at_utc=None,
     )
+
+
+def validate_outbox_failure_reason(failure_reason: str) -> None:
+    _require_text(failure_reason, "failure_reason")
+    _reject_sensitive_failure_reason(failure_reason)
 
 
 def _event_id(

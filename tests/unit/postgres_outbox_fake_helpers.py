@@ -1,0 +1,110 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Any, Protocol, Sequence
+
+from app.domain import OutboxEventStatus
+
+
+class FakeOutboxConnection(Protocol):
+    rows: dict[str, list[dict[str, Any]]]
+
+
+def claim_outbox_event_rows(
+    connection: FakeOutboxConnection,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    max_retry_count = params[2]
+    claimed_at_utc: datetime = params[4]
+    limit = params[5]
+    lease_owner = params[7]
+    lease_attempt_id = params[8]
+    lease_expires_at_utc = params[9]
+    candidates = [
+        row
+        for row in connection.rows["idea_outbox_event"]
+        if _delivery_ready(row, max_retry_count=max_retry_count, claimed_at_utc=claimed_at_utc)
+    ]
+    candidates.sort(key=lambda row: (row["occurred_at_utc"], row["outbox_event_id"]))
+    claimed = candidates[:limit]
+    for row in claimed:
+        row["status"] = OutboxEventStatus.LEASED.value
+        row["failure_reason"] = None
+        row["lease_owner"] = lease_owner
+        row["lease_attempt_id"] = lease_attempt_id
+        row["lease_expires_at_utc"] = lease_expires_at_utc
+    return [dict(row) for row in claimed]
+
+
+def publish_outbox_event_row(
+    connection: FakeOutboxConnection,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    status, published_at_utc, event_id, leased_status, lease_owner, lease_attempt_id = params
+    for row in _matching_leased_rows(
+        connection, event_id, leased_status, lease_owner, lease_attempt_id
+    ):
+        row["status"] = status
+        row["published_at_utc"] = published_at_utc
+        row["failure_reason"] = None
+        _clear_lease(row)
+        return [dict(row)]
+    return []
+
+
+def fail_outbox_event_row(
+    connection: FakeOutboxConnection,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    max_retry_count, dead_status, failed_status, failure_reason, event_id, leased_status = params[
+        :6
+    ]
+    lease_owner = params[6]
+    lease_attempt_id = params[7]
+    for row in _matching_leased_rows(
+        connection, event_id, leased_status, lease_owner, lease_attempt_id
+    ):
+        row["retry_count"] += 1
+        row["status"] = dead_status if row["retry_count"] >= max_retry_count else failed_status
+        row["published_at_utc"] = None
+        row["failure_reason"] = failure_reason
+        _clear_lease(row)
+        return [dict(row)]
+    return []
+
+
+def _delivery_ready(row: dict[str, Any], *, max_retry_count: int, claimed_at_utc: datetime) -> bool:
+    return (
+        row["status"] == OutboxEventStatus.PENDING.value
+        or (
+            row["status"] == OutboxEventStatus.FAILED.value and row["retry_count"] < max_retry_count
+        )
+        or (
+            row["status"] == OutboxEventStatus.LEASED.value
+            and row["lease_expires_at_utc"] is not None
+            and row["lease_expires_at_utc"] <= claimed_at_utc
+        )
+    )
+
+
+def _matching_leased_rows(
+    connection: FakeOutboxConnection,
+    event_id: str,
+    leased_status: str,
+    lease_owner: str,
+    lease_attempt_id: str,
+) -> list[dict[str, Any]]:
+    return [
+        row
+        for row in connection.rows["idea_outbox_event"]
+        if row["outbox_event_id"] == event_id
+        and row["status"] == leased_status
+        and row["lease_owner"] == lease_owner
+        and row["lease_attempt_id"] == lease_attempt_id
+    ]
+
+
+def _clear_lease(row: dict[str, Any]) -> None:
+    row["lease_owner"] = None
+    row["lease_attempt_id"] = None
+    row["lease_expires_at_utc"] = None

@@ -8,7 +8,7 @@ from psycopg.types.json import Jsonb
 
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
-from app.domain.events import OutboxEventRecord, OutboxEventStatus
+from app.domain.events import OutboxEventRecord
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
@@ -21,6 +21,7 @@ from app.domain.ideas import (
 )
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
 from app.domain.idempotency import IdempotencyRecord
+from app.domain.outbox_delivery_state import OutboxDeliveryResult
 from app.domain.persistence import (
     CandidatePersistenceRecord,
     CandidatePersistenceResult,
@@ -31,7 +32,6 @@ from app.domain.persistence import (
     IdeaRepositorySnapshot,
     LifecycleHistoryEntry,
     LifecyclePersistenceResult,
-    OutboxDeliveryResult,
     ReviewPersistenceResult,
 )
 from app.domain.report_evidence import (
@@ -58,6 +58,12 @@ from app.infrastructure.postgres_codecs import (
     report_evidence_pack_to_json,
     review_decision_from_json,
     review_decision_to_json,
+)
+from app.infrastructure.postgres_outbox_delivery import (
+    claim_outbox_events_for_delivery as claim_postgres_outbox_events_for_delivery,
+    mark_outbox_event_failed as mark_postgres_outbox_event_failed,
+    mark_outbox_event_published as mark_postgres_outbox_event_published,
+    outbox_event_from_row,
 )
 
 
@@ -278,39 +284,67 @@ class PostgresIdeaRepository:
         *,
         limit: int = 100,
         max_retry_count: int = 3,
+        evaluated_at_utc: datetime | None = None,
     ) -> tuple[OutboxEventRecord, ...]:
         repository = InMemoryIdeaRepository(self.snapshot())
         return repository.outbox_events_for_delivery(
             limit=limit,
             max_retry_count=max_retry_count,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+
+    def claim_outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+        lease_owner: str,
+        lease_attempt_id: str,
+        claimed_at_utc: datetime,
+        lease_expires_at_utc: datetime,
+    ) -> tuple[OutboxEventRecord, ...]:
+        return claim_postgres_outbox_events_for_delivery(
+            self._connection,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            claimed_at_utc=claimed_at_utc,
+            lease_expires_at_utc=lease_expires_at_utc,
         )
 
     def mark_outbox_event_published(
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         published_at_utc: datetime,
     ) -> OutboxDeliveryResult:
-        return self._mutate(
-            lambda repository: repository.mark_outbox_event_published(
-                event_id,
-                published_at_utc=published_at_utc,
-            )
+        return mark_postgres_outbox_event_published(
+            self._connection,
+            event_id,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            published_at_utc=published_at_utc,
         )
 
     def mark_outbox_event_failed(
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         failure_reason: str,
         max_retry_count: int = 3,
     ) -> OutboxDeliveryResult:
-        return self._mutate(
-            lambda repository: repository.mark_outbox_event_failed(
-                event_id,
-                failure_reason=failure_reason,
-                max_retry_count=max_retry_count,
-            )
+        return mark_postgres_outbox_event_failed(
+            self._connection,
+            event_id,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            failure_reason=failure_reason,
+            max_retry_count=max_retry_count,
         )
 
     def record_ai_explanation_lineage(
@@ -502,29 +536,15 @@ class PostgresIdeaRepository:
             SELECT outbox_event_id, event_type, aggregate_type, aggregate_id,
                    schema_version, payload_json, status, occurred_at_utc,
                    idempotency_fingerprint, correlation_id, causation_id,
-                   published_at_utc, failure_reason, retry_count
+                   published_at_utc, failure_reason, retry_count,
+                   lease_owner, lease_attempt_id, lease_expires_at_utc
             FROM idea_outbox_event
             ORDER BY occurred_at_utc, outbox_event_id
             """
         )
         events: dict[str, OutboxEventRecord] = {}
         for row in cursor.fetchall():
-            event = OutboxEventRecord(
-                event_id=read_row_value(row, "outbox_event_id"),
-                event_type=read_row_value(row, "event_type"),
-                aggregate_type=read_row_value(row, "aggregate_type"),
-                aggregate_id=read_row_value(row, "aggregate_id"),
-                schema_version=read_row_value(row, "schema_version"),
-                payload=read_json_object(row, "payload_json"),
-                status=OutboxEventStatus(read_row_value(row, "status")),
-                occurred_at_utc=read_row_value(row, "occurred_at_utc"),
-                idempotency_fingerprint=read_row_value(row, "idempotency_fingerprint"),
-                correlation_id=read_row_value(row, "correlation_id"),
-                causation_id=read_row_value(row, "causation_id"),
-                published_at_utc=read_row_value(row, "published_at_utc"),
-                failure_reason=read_row_value(row, "failure_reason"),
-                retry_count=read_row_value(row, "retry_count"),
-            )
+            event = outbox_event_from_row(row)
             events[event.event_id] = event
         return events
 
@@ -967,8 +987,11 @@ class PostgresIdeaRepository:
                 outbox_event_id, event_type, aggregate_type, aggregate_id,
                 schema_version, payload_json, status, occurred_at_utc,
                 idempotency_fingerprint, correlation_id, causation_id,
-                published_at_utc, failure_reason, retry_count
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                published_at_utc, failure_reason, retry_count, lease_owner,
+                lease_attempt_id, lease_expires_at_utc
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
             """,
             (
                 event.event_id,
@@ -985,6 +1008,9 @@ class PostgresIdeaRepository:
                 event.published_at_utc,
                 event.failure_reason,
                 event.retry_count,
+                event.lease_owner,
+                event.lease_attempt_id,
+                event.lease_expires_at_utc,
             ),
         )
 

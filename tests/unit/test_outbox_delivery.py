@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
-from app.application.outbox_delivery import run_outbox_delivery_once
+from app.application.outbox_delivery import OutboxDeliveryRunSummary, run_outbox_delivery_once
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
@@ -27,6 +27,27 @@ class AcceptingPublisher:
 
     def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
         self.events.append(event)
+        return OutboxPublishOutcome.accepted_by_publisher()
+
+
+class ReentrantPublisher:
+    def __init__(self, repository: InMemoryIdeaRepository) -> None:
+        self.repository = repository
+        self.events: list[OutboxEventRecord] = []
+        self.second_worker_events: list[OutboxEventRecord] = []
+        self.second_summary: OutboxDeliveryRunSummary | None = None
+
+    def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
+        self.events.append(event)
+        second_worker = AcceptingPublisher()
+        self.second_summary = run_outbox_delivery_once(
+            self.repository,
+            second_worker,
+            lease_owner="worker-2",
+            lease_attempt_id="attempt-2",
+            delivered_at_utc=DELIVERED_AT,
+        )
+        self.second_worker_events = second_worker.events
         return OutboxPublishOutcome.accepted_by_publisher()
 
 
@@ -74,13 +95,43 @@ class DeliveryEdgeRepository:
         *,
         limit: int = 100,
         max_retry_count: int = 3,
+        evaluated_at_utc: datetime | None = None,
     ) -> tuple[OutboxEventRecord, ...]:
         return (self.event,)
+
+    def claim_outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+        lease_owner: str,
+        lease_attempt_id: str,
+        claimed_at_utc: datetime,
+        lease_expires_at_utc: datetime,
+    ) -> tuple[OutboxEventRecord, ...]:
+        if self.event.status not in {OutboxEventStatus.PENDING, OutboxEventStatus.FAILED}:
+            return ()
+        return (
+            self.event
+            if self.event.status is OutboxEventStatus.LEASED
+            else OutboxEventRecord(
+                **{
+                    **self.event.__dict__,
+                    "status": OutboxEventStatus.LEASED,
+                    "failure_reason": None,
+                    "lease_owner": lease_owner,
+                    "lease_attempt_id": lease_attempt_id,
+                    "lease_expires_at_utc": lease_expires_at_utc,
+                }
+            ),
+        )
 
     def mark_outbox_event_published(
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         published_at_utc: datetime,
     ) -> OutboxDeliveryResult:
         return OutboxDeliveryResult(decision=self.publish_decision, event=self.event)
@@ -89,6 +140,8 @@ class DeliveryEdgeRepository:
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         failure_reason: str,
         max_retry_count: int = 3,
     ) -> OutboxDeliveryResult:
@@ -104,6 +157,8 @@ def test_run_outbox_delivery_once_marks_published_events_source_safely() -> None
     summary = run_outbox_delivery_once(
         repository,
         publisher,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         delivered_at_utc=DELIVERED_AT,
     )
     published = repository.snapshot().outbox_events[event.event_id]
@@ -113,7 +168,8 @@ def test_run_outbox_delivery_once_marks_published_events_source_safely() -> None
     assert summary.failed_count == 0
     assert summary.dead_lettered_count == 0
     assert summary.external_broker_publication_supported is False
-    assert publisher.events == [event]
+    assert len(publisher.events) == 1
+    assert publisher.events[0].status is OutboxEventStatus.LEASED
     assert published.status is OutboxEventStatus.PUBLISHED
     assert published.published_at_utc == DELIVERED_AT
 
@@ -125,12 +181,16 @@ def test_run_outbox_delivery_once_retries_then_dead_letters_failed_events() -> N
     first = run_outbox_delivery_once(
         repository,
         RejectingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         max_retry_count=2,
         delivered_at_utc=DELIVERED_AT,
     )
     second = run_outbox_delivery_once(
         repository,
         RejectingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-2",
         max_retry_count=2,
         delivered_at_utc=DELIVERED_AT,
     )
@@ -153,6 +213,8 @@ def test_run_outbox_delivery_once_maps_exceptions_to_bounded_failure_reason() ->
     summary = run_outbox_delivery_once(
         repository,
         RaisingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         max_retry_count=3,
         delivered_at_utc=DELIVERED_AT,
     )
@@ -180,11 +242,13 @@ def test_run_outbox_delivery_once_skips_non_deliverable_events() -> None:
     summary = run_outbox_delivery_once(
         repository,
         AcceptingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         delivered_at_utc=DELIVERED_AT,
     )
 
-    assert summary.attempted_count == 1
-    assert summary.skipped_count == 1
+    assert summary.attempted_count == 0
+    assert summary.skipped_count == 0
     assert summary.published_count == 0
 
 
@@ -198,12 +262,37 @@ def test_run_outbox_delivery_once_counts_repository_race_as_skipped() -> None:
     summary = run_outbox_delivery_once(
         repository,
         AcceptingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         delivered_at_utc=DELIVERED_AT,
     )
 
     assert summary.attempted_count == 1
     assert summary.skipped_count == 1
     assert summary.published_count == 0
+
+
+def test_run_outbox_delivery_once_claims_before_publishing_to_fence_second_worker() -> None:
+    event = outbox_event("idea.review.recorded.v1")
+    repository = repository_with_events(event)
+    publisher = ReentrantPublisher(repository)
+
+    summary = run_outbox_delivery_once(
+        repository,
+        publisher,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
+        delivered_at_utc=DELIVERED_AT,
+    )
+    published = repository.snapshot().outbox_events[event.event_id]
+
+    assert summary.attempted_count == 1
+    assert summary.published_count == 1
+    assert publisher.events[0].status is OutboxEventStatus.LEASED
+    assert publisher.second_summary is not None
+    assert publisher.second_summary.attempted_count == 0
+    assert publisher.second_worker_events == []
+    assert published.status is OutboxEventStatus.PUBLISHED
 
 
 def test_run_outbox_delivery_once_uses_bounded_default_failure_reason() -> None:
@@ -213,6 +302,8 @@ def test_run_outbox_delivery_once_uses_bounded_default_failure_reason() -> None:
     summary = run_outbox_delivery_once(
         repository,
         NoReasonRejectingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         delivered_at_utc=DELIVERED_AT,
     )
 
@@ -225,6 +316,8 @@ def test_run_outbox_delivery_once_rejects_non_positive_limit() -> None:
         run_outbox_delivery_once(
             repository_with_events(outbox_event("idea.invalid.arguments.v1")),
             AcceptingPublisher(),
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-1",
             limit=0,
         )
 
@@ -234,6 +327,8 @@ def test_run_outbox_delivery_once_rejects_non_positive_retry_limit() -> None:
         run_outbox_delivery_once(
             repository_with_events(outbox_event("idea.invalid.arguments.v1")),
             AcceptingPublisher(),
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-1",
             max_retry_count=0,
         )
 
@@ -256,6 +351,8 @@ def test_run_outbox_delivery_once_requires_utc_delivery_time(
         run_outbox_delivery_once(
             repository_with_events(outbox_event("idea.invalid-time.v1")),
             AcceptingPublisher(),
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-1",
             delivered_at_utc=delivered_at_utc,
         )
 

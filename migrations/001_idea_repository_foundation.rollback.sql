@@ -7,6 +7,7 @@ DROP INDEX IF EXISTS idx_idea_conversion_intent_candidate_target;
 DROP INDEX IF EXISTS idx_idea_feedback_event_candidate_time;
 DROP INDEX IF EXISTS idx_idea_review_decision_candidate_time;
 DROP INDEX IF EXISTS idx_idea_outbox_event_aggregate_time;
+DROP INDEX IF EXISTS idx_idea_outbox_event_lease_expiry;
 DROP INDEX IF EXISTS idx_idea_outbox_event_status_time;
 DROP INDEX IF EXISTS idx_idea_audit_event_candidate_time;
 DROP INDEX IF EXISTS idx_idea_lifecycle_history_candidate_time;

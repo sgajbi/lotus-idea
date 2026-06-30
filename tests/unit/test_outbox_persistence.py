@@ -1,0 +1,218 @@
+from __future__ import annotations
+
+from datetime import UTC, datetime, timedelta
+
+import pytest
+
+from app.domain import (
+    IdeaRepositorySnapshot,
+    InMemoryIdeaRepository,
+    OutboxDeliveryDecision,
+    OutboxEventRecord,
+    OutboxEventStatus,
+    build_candidate_outbox_event,
+)
+
+
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+
+def outbox_repository() -> tuple[InMemoryIdeaRepository, OutboxEventRecord]:
+    event = build_candidate_outbox_event(
+        event_type="idea.candidate.persisted.v1",
+        aggregate_id="idea-high-cash-001",
+        occurred_at_utc=EVALUATED_AT,
+        payload={"source_hash": "sha256:portfolio-state"},
+        idempotency_key="signal-ingestion:outbox-event:001",
+    )
+    repository = InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={},
+            idempotency_records={},
+            idempotency_candidates={},
+            outbox_events={event.event_id: event},
+        )
+    )
+    return repository, event
+
+
+def claim_event(
+    repository: InMemoryIdeaRepository,
+    event_id: str,
+    *,
+    attempt_id: str,
+    owner: str = "worker-1",
+) -> OutboxEventRecord:
+    claimed = repository.claim_outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=3,
+        lease_owner=owner,
+        lease_attempt_id=attempt_id,
+        claimed_at_utc=EVALUATED_AT,
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+    )
+    for event in claimed:
+        if event.event_id == event_id:
+            return event
+    raise AssertionError(f"event was not claimed: {event_id}")
+
+
+def test_outbox_event_payload_rejects_sensitive_source_and_client_keys() -> None:
+    with pytest.raises(ValueError, match="sensitive keys"):
+        build_candidate_outbox_event(
+            event_type="idea.candidate.persisted.v1",
+            aggregate_id="idea_high_cash_001",
+            occurred_at_utc=EVALUATED_AT,
+            payload={"portfolio_id": "PB_SG_GLOBAL_BAL_001"},
+            idempotency_key="signal-ingestion:high-cash:001",
+        )
+
+
+def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> None:
+    repository, event = outbox_repository()
+
+    claimed = claim_event(repository, event.event_id, attempt_id="attempt-failed-1")
+    failed = repository.mark_outbox_event_failed(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-failed-1",
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
+    retryable = repository.outbox_events_for_delivery(limit=10, max_retry_count=2)
+    claimed_retry = claim_event(repository, event.event_id, attempt_id="attempt-failed-2")
+    dead_lettered = repository.mark_outbox_event_failed(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-failed-2",
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
+    delivered = repository.outbox_events_for_delivery(limit=10, max_retry_count=2)
+    published_after_dead_letter = repository.mark_outbox_event_published(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-failed-2",
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    failed_after_dead_letter = repository.mark_outbox_event_failed(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-failed-2",
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
+
+    assert claimed.status is OutboxEventStatus.LEASED
+    assert failed.decision is OutboxDeliveryDecision.ACCEPTED
+    assert failed.event is not None
+    assert failed.event.status is OutboxEventStatus.FAILED
+    assert failed.event.retry_count == 1
+    assert retryable == (failed.event,)
+    assert claimed_retry.status is OutboxEventStatus.LEASED
+    assert dead_lettered.decision is OutboxDeliveryDecision.DEAD_LETTERED
+    assert dead_lettered.event is not None
+    assert dead_lettered.event.status is OutboxEventStatus.DEAD_LETTER
+    assert dead_lettered.event.retry_count == 2
+    assert delivered == ()
+    assert published_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED
+    assert failed_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED
+
+
+def test_outbox_delivery_marks_event_published_once() -> None:
+    repository, event = outbox_repository()
+
+    claimed = claim_event(repository, event.event_id, attempt_id="attempt-publish-1")
+    published = repository.mark_outbox_event_published(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-publish-1",
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    second = repository.mark_outbox_event_published(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-publish-1",
+        published_at_utc=datetime(2026, 6, 21, 10, 2, tzinfo=UTC),
+    )
+
+    assert claimed.status is OutboxEventStatus.LEASED
+    assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert published.event is not None
+    assert published.event.status is OutboxEventStatus.PUBLISHED
+    assert published.event.published_at_utc == datetime(2026, 6, 21, 10, 1, tzinfo=UTC)
+    assert published.event.failure_reason is None
+    assert second.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
+    assert repository.outbox_events_for_delivery() == ()
+
+
+def test_outbox_delivery_returns_not_found_and_terminal_statuses() -> None:
+    repository, event = outbox_repository()
+
+    missing_publish = repository.mark_outbox_event_published(
+        "missing-event",
+        lease_owner="worker-1",
+        lease_attempt_id="missing-attempt",
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    missing_failure = repository.mark_outbox_event_failed(
+        "missing-event",
+        lease_owner="worker-1",
+        lease_attempt_id="missing-attempt",
+        failure_reason="publisher_unavailable",
+    )
+    claimed = claim_event(repository, event.event_id, attempt_id="attempt-terminal-1")
+    published = repository.mark_outbox_event_published(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-terminal-1",
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    failed_after_published = repository.mark_outbox_event_failed(
+        event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-terminal-1",
+        failure_reason="publisher_unavailable",
+    )
+
+    assert missing_publish.decision is OutboxDeliveryDecision.NOT_FOUND
+    assert missing_publish.event is None
+    assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
+    assert missing_failure.event is None
+    assert claimed.status is OutboxEventStatus.LEASED
+    assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert failed_after_published.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
+
+
+def test_outbox_delivery_rejects_invalid_delivery_arguments() -> None:
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(ValueError, match="limit must be positive"):
+        repository.outbox_events_for_delivery(limit=0)
+    with pytest.raises(ValueError, match="event_id is required"):
+        repository.mark_outbox_event_published(
+            " ",
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-invalid",
+            published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        )
+    with pytest.raises(ValueError, match="published_at_utc must be timezone-aware"):
+        repository.mark_outbox_event_published(
+            "missing-event",
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-invalid",
+            published_at_utc=datetime(2026, 6, 21, 10, 1),
+        )
+
+
+def test_outbox_failure_reason_rejects_sensitive_identifiers() -> None:
+    repository, event = outbox_repository()
+    claim_event(repository, event.event_id, attempt_id="attempt-sensitive")
+
+    with pytest.raises(ValueError, match="sensitive keys"):
+        repository.mark_outbox_event_failed(
+            event.event_id,
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-sensitive",
+            failure_reason="portfolio_id leaked in downstream error",
+        )

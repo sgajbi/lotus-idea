@@ -85,8 +85,10 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
     assert payload["externalBrokerConfigured"] is False
     assert payload["externalBrokerPublisherAdapterPresent"] is True
     assert payload["deliveryReadyCount"] == 2
+    assert payload["expiredLeaseCount"] == 0
     assert payload["statusCounts"] == {
         "pendingCount": 1,
+        "leasedCount": 0,
         "failedCount": 1,
         "publishedCount": 0,
         "deadLetterCount": 0,
@@ -255,7 +257,9 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
     assert payload["externalBrokerConfigured"] is True
     assert payload["supportedFeaturePromoted"] is False
     assert "external_broker_runtime_proof_missing" in payload["certificationBlockers"]
-    assert publisher.events == [event]
+    assert len(publisher.events) == 1
+    assert publisher.events[0].event_id == event.event_id
+    assert publisher.events[0].status is OutboxEventStatus.LEASED
     assert (
         resettable_repository_snapshot().outbox_events[event.event_id].status
         is OutboxEventStatus.PUBLISHED

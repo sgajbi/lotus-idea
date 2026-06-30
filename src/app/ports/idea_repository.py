@@ -164,12 +164,26 @@ class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
         *,
         limit: int = 100,
         max_retry_count: int = 3,
+        evaluated_at_utc: datetime | None = None,
+    ) -> tuple[OutboxEventRecord, ...]: ...
+
+    def claim_outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+        lease_owner: str,
+        lease_attempt_id: str,
+        claimed_at_utc: datetime,
+        lease_expires_at_utc: datetime,
     ) -> tuple[OutboxEventRecord, ...]: ...
 
     def mark_outbox_event_published(
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         published_at_utc: datetime,
     ) -> OutboxDeliveryResult: ...
 
@@ -177,6 +191,8 @@ class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         failure_reason: str,
         max_retry_count: int = 3,
     ) -> OutboxDeliveryResult: ...

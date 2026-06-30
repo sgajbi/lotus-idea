@@ -45,8 +45,10 @@ from app.domain.events import (
     OutboxEventRecord,
     OutboxEventStatus,
     build_candidate_outbox_event,
+    lease_outbox_event,
     mark_outbox_event_failed,
     mark_outbox_event_published,
+    validate_outbox_failure_reason,
 )
 from app.domain.ideas import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
@@ -106,6 +108,10 @@ from app.domain.low_income_signal import (
     LowIncomeSignalPolicy,
     evaluate_low_income_signal,
 )
+from app.domain.outbox_delivery_state import (
+    OutboxDeliveryDecision,
+    OutboxDeliveryResult,
+)
 from app.domain.persistence import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -121,8 +127,6 @@ from app.domain.persistence import (
     LifecyclePersistenceDecision,
     LifecyclePersistenceResult,
     LifecycleHistoryEntry,
-    OutboxDeliveryDecision,
-    OutboxDeliveryResult,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
     evidence_hash_for_candidate,
@@ -237,8 +241,10 @@ __all__ = [
     "OutboxEventRecord",
     "OutboxEventStatus",
     "build_candidate_outbox_event",
+    "lease_outbox_event",
     "mark_outbox_event_failed",
     "mark_outbox_event_published",
+    "validate_outbox_failure_reason",
     "ALLOWED_LIFECYCLE_TRANSITIONS",
     "ConversionOutcomeStatus",
     "ConversionTarget",

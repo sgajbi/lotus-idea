@@ -141,17 +141,21 @@ Implemented first-wave internal scope:
     `src/app/application/outbox_delivery.py`,
     `src/app/ports/outbox_publisher.py`, and
     `src/app/ports/idea_repository.py` now add the first internal outbox
-    delivery semantics. Delivery-ready reads include pending events and
-    retryable failed events below the configured retry limit. Status updates can
-    mark an event published, failed for retry, or dead-lettered when the retry
-    limit is reached. Publisher exceptions are mapped to bounded
+    delivery semantics. Delivery-ready reads include pending events, retryable
+    failed events below the configured retry limit, and expired leases. Delivery
+    runs claim a bounded batch with lease owner, attempt id, and expiry before
+    broker publication, publish only claimed events, and complete or fail
+    delivery only when the same owner/attempt still owns the lease. Status
+    updates can mark an event published, failed for retry, or dead-lettered when
+    the retry limit is reached. Publisher exceptions are mapped to bounded
     `publisher_unavailable` failure reason codes, failure reasons reject
     source/client-sensitive marker names, and run summaries expose aggregate
     counts only. `src/app/infrastructure/outbox_publisher.py` adds a
     source-safe HTTP broker-publisher adapter foundation with bounded envelopes,
     trace headers, and product-safe failure reasons. `PostgresIdeaRepository`
-    persists the same status transitions through the existing
-    `idea_outbox_event` table. This is not certified live broker runtime,
+    persists claim/lease metadata and uses row-scoped claim plus conditional
+    completion/failure updates through the existing `idea_outbox_event` table.
+    This is not certified live broker runtime,
     downstream delivery, Gateway event publication, data-product certification,
     or supported-feature promotion.
     `contracts/outbox-events/lotus-idea-outbox-events.v1.json` and
@@ -189,8 +193,8 @@ Implemented first-wave internal scope:
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
     requires the `operator` role and `idea.outbox-delivery.readiness.read`,
-    returns aggregate status counts, delivery-ready backlog, durable repository
-    posture, broker configuration posture, publisher-adapter presence,
+    returns aggregate status counts, delivery-ready backlog, leased and expired
+    lease counts, durable repository posture, broker configuration posture, publisher-adapter presence,
     source-of-truth paths, and certification blockers, and emits bounded
     `outbox_delivery_readiness_read` operation events. It does not expose event identifiers, aggregate
     identifiers, raw idempotency keys, broker payloads, downstream contracts,
