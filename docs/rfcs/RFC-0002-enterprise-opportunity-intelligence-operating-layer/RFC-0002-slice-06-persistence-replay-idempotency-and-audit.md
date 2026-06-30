@@ -227,9 +227,12 @@ Implemented first-wave internal scope:
 24. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
     serialization/deserialization helpers from the repository adapter so future
     persistence growth does not erode source-file maintainability gates.
-25. `src/app/runtime/repository_state.py` now selects the process-local
-    `InMemoryIdeaRepository` by default and selects `PostgresIdeaRepository`
-    when `LOTUS_IDEA_DATABASE_URL` is configured. psycopg connections use
+25. `src/app/runtime/settings.py` now owns runtime profile semantics, and
+    `src/app/runtime/repository_state.py` selects `PostgresIdeaRepository` when
+    `LOTUS_IDEA_DATABASE_URL` is configured. `local` and `test` profiles may use
+    the process-local `InMemoryIdeaRepository`; `demo`, `staging`, and
+    `production` degrade readiness and fail write-capable routes closed before
+    in-memory mutation when durable storage is absent. psycopg connections use
     mapping rows so the adapter receives the row shape it enforces. Runtime
     composition stays outside the API layer and app root.
 26. Repository-backed API routes now derive `durableStorageBacked` responses and
@@ -237,7 +240,8 @@ Implemented first-wave internal scope:
     instead of hardcoding storage posture. Default local/test runtime remains
     process-local and continues to report `durableStorageBacked=false`; a
     configured PostgreSQL runtime reports `durableStorageBacked=true` for the
-    repository-backed foundation routes.
+    repository-backed foundation routes. Production-like profiles without
+    durable storage return `durable_repository_not_configured` before mutation.
 27. `tests/integration/test_postgres_runtime_integration.py` now runs the
     first real PostgreSQL runtime proof. It applies the governed schema,
     persists a high-cash candidate through

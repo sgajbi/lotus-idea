@@ -38,6 +38,12 @@
 - General health: /health
 - Metadata: /metadata
 
+`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. `local` and `test` allow
+process-local repository writes for development and automated tests. `demo`,
+`staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`; without it,
+`/health/ready` returns degraded runtime posture and write-capable routes fail
+closed with `durable_repository_not_configured` before mutating in-memory state.
+
 ## Incident First Checks
 
 ```mermaid
@@ -56,6 +62,9 @@ flowchart TD
 
 1. Check container logs for request failures and stack traces.
 2. Verify /health/ready and metrics endpoint.
+   If readiness is degraded with `durable_repository_not_configured`, either
+   configure `LOTUS_IDEA_DATABASE_URL` for the production-like profile or switch
+   the runtime profile explicitly to `local`/`test` for non-production work.
 3. Run local parity check (`make ci`) before hotfix PR.
 4. For persistence or repository-provider changes, run
    `make postgres-integration-gate` with `LOTUS_IDEA_POSTGRES_INTEGRATION_URL`

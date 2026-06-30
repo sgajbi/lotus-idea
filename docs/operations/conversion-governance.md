@@ -41,8 +41,11 @@ Current non-supported scope:
 3. no conversion data product is certified,
 4. no supported feature is promoted,
 5. the API foundations report `supportedFeaturePromoted=false`,
-6. `durableStorageBacked` is `false` by default and `true` only when
-   `LOTUS_IDEA_DATABASE_URL` activates the PostgreSQL repository provider.
+6. `durableStorageBacked` is `false` only for allowed `local`/`test`
+   process-local writes and `true` when `LOTUS_IDEA_DATABASE_URL` activates the
+   PostgreSQL repository provider. `demo`, `staging`, and `production` fail
+   closed with `durable_repository_not_configured` when durable storage is
+   absent.
    `make postgres-integration-gate` now proves the report conversion
    intent/outcome path against a real PostgreSQL runtime, but this remains
    internal workflow-state proof only.

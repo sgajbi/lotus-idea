@@ -6,8 +6,9 @@ AI explanation, advisor queue, review-action, feedback, and candidate evidence
 replay API foundations, and conversion governance plus certified internal
 conversion intent/outcome and report evidence-pack API foundations. The service
 remains internal foundation only:
-repository-backed API persistence is process-local by default and
-PostgreSQL-backed only when `LOTUS_IDEA_DATABASE_URL` is configured. Accepted
+repository-backed API persistence is process-local only for explicit
+`local`/`test` runtime profiles and PostgreSQL-backed when
+`LOTUS_IDEA_DATABASE_URL` is configured. Accepted
 internal mutations also create source-safe outbox records with internal
 retry/dead-letter delivery state semantics and a source-safe HTTP
 broker-publisher adapter foundation, and source-safe downstream adapter
@@ -26,6 +27,11 @@ feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service when
 `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured, including schema
 rollback/reapply recovery.
+Runtime profile is explicit: `LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`,
+`local` and `test` allow process-local writes, and `demo`, `staging`, and
+`production` require `LOTUS_IDEA_DATABASE_URL`. Missing durable storage in a
+production-like profile degrades `/health/ready` and makes write-capable routes
+return `durable_repository_not_configured` before any in-memory mutation.
 Internal high-cash source-ingestion orchestration now exists as an application
 foundation over the Core source port and repository port. It generates a
 source-ingestion idempotency key when one is not supplied and classifies
