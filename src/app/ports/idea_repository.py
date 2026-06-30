@@ -42,6 +42,17 @@ class ReviewQueueRepositoryPage:
         return True
 
 
+@dataclass(frozen=True)
+class OutboxDeliveryReadinessRepositorySummary:
+    pending_count: int
+    leased_count: int
+    failed_count: int
+    published_count: int
+    dead_letter_count: int
+    expired_lease_count: int
+    delivery_ready_count: int
+
+
 class CandidateSnapshotRepository(Protocol):
     def snapshot(self) -> IdeaRepositorySnapshot: ...
 
@@ -55,6 +66,16 @@ class ReviewQueueProjectionRepository(Protocol):
         limit: int,
         offset: int,
     ) -> ReviewQueueRepositoryPage: ...
+
+
+@runtime_checkable
+class OutboxDeliveryReadinessProjectionRepository(Protocol):
+    def outbox_delivery_readiness_summary(
+        self,
+        *,
+        max_retry_count: int,
+        evaluated_at_utc: datetime,
+    ) -> OutboxDeliveryReadinessRepositorySummary: ...
 
 
 class CandidatePersistenceRepository(Protocol):

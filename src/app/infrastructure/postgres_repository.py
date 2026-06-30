@@ -78,6 +78,7 @@ from app.infrastructure.postgres_outbox_delivery import (
     mark_outbox_event_published as mark_postgres_outbox_event_published,
     outbox_event_from_row,
 )
+from app.infrastructure.postgres_outbox_repository import PostgresOutboxRepositoryMixin
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_review_queue import (
@@ -91,7 +92,7 @@ from app.ports.idea_repository import ReviewQueueRepositoryPage
 _T = TypeVar("_T")
 
 
-class PostgresIdeaRepository:
+class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
     """PostgreSQL-backed implementation of the governed idea repository ports."""
 
     durable_storage_backed = True
@@ -291,20 +292,6 @@ class PostgresIdeaRepository:
                 idempotency_key=idempotency_key,
                 payload=payload,
             )
-        )
-
-    def outbox_events_for_delivery(
-        self,
-        *,
-        limit: int = 100,
-        max_retry_count: int = 3,
-        evaluated_at_utc: datetime | None = None,
-    ) -> tuple[OutboxEventRecord, ...]:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.outbox_events_for_delivery(
-            limit=limit,
-            max_retry_count=max_retry_count,
-            evaluated_at_utc=evaluated_at_utc,
         )
 
     def claim_outbox_events_for_delivery(

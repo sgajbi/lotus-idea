@@ -432,12 +432,14 @@ Persistence adapter validation:
    source-safe AI explanation lineage through the API without promoting
    `lotus-ai` runtime execution or AI explanation support.
 21. `tests/unit/test_outbox_delivery_readiness.py` and
-   `tests/integration/test_outbox_delivery_readiness_api.py` prove the
+   `tests/unit/test_postgres_outbox_readiness.py`, plus
+   `tests/integration/test_outbox_delivery_readiness_api.py`, prove the
    outbox delivery readiness diagnostic and run-once operator action for
    aggregate backlog/status posture, durable repository posture, broker
    configuration posture, publisher-adapter presence, blocked-without-broker
    behavior, configured-publisher delivery path, operator plus capability
-   enforcement, product-safe payloads, UTC request validation, and bounded
+   enforcement, PostgreSQL repository-side readiness projection without
+   whole-snapshot hydration, product-safe payloads, UTC request validation, and bounded
    `not_certified` operation events without exposing event identifiers, raw
    idempotency keys, source payloads, broker payloads, or downstream contract
    details.
@@ -695,6 +697,14 @@ certification, unit tests, and integration tests. Its passing checks certify
 the diagnostic route and durable PostgreSQL repository-side page projection
 only; they do not certify Gateway/Workbench support, data-product promotion,
 PM/compliance queue support, client-ready publication, or supported-feature
+promotion.
+
+The internal outbox-delivery-readiness endpoint is covered by OpenAPI,
+endpoint certification, unit tests, and integration tests. Its passing checks
+certify the diagnostic route and durable PostgreSQL repository-side outbox
+status/ready-count projection only; they do not certify external broker
+publication, downstream delivery, platform mesh event publication,
+Gateway/Workbench support, client-ready publication, or supported-feature
 promotion.
 
 The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint

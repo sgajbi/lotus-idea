@@ -36,6 +36,56 @@ def claim_outbox_event_rows(
     return [dict(row) for row in claimed]
 
 
+def outbox_delivery_ready_rows(
+    connection: FakeOutboxConnection,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    max_retry_count = params[2]
+    evaluated_at_utc: datetime = params[4]
+    limit = params[5]
+    rows = [
+        row
+        for row in connection.rows["idea_outbox_event"]
+        if _delivery_ready(row, max_retry_count=max_retry_count, claimed_at_utc=evaluated_at_utc)
+    ]
+    rows.sort(key=lambda row: (row["occurred_at_utc"], row["outbox_event_id"]))
+    return [dict(row) for row in rows[:limit]]
+
+
+def outbox_readiness_summary_row(
+    connection: FakeOutboxConnection,
+    params: Sequence[Any],
+) -> list[dict[str, int]]:
+    evaluated_at_utc: datetime = params[6]
+    max_retry_count = params[9]
+    rows = connection.rows["idea_outbox_event"]
+    return [
+        {
+            "pending_count": _count_status(rows, OutboxEventStatus.PENDING),
+            "leased_count": _count_status(rows, OutboxEventStatus.LEASED),
+            "failed_count": _count_status(rows, OutboxEventStatus.FAILED),
+            "published_count": _count_status(rows, OutboxEventStatus.PUBLISHED),
+            "dead_letter_count": _count_status(rows, OutboxEventStatus.DEAD_LETTER),
+            "expired_lease_count": sum(
+                1
+                for row in rows
+                if row["status"] == OutboxEventStatus.LEASED.value
+                and row["lease_expires_at_utc"] is not None
+                and row["lease_expires_at_utc"] <= evaluated_at_utc
+            ),
+            "delivery_ready_count": sum(
+                1
+                for row in rows
+                if _delivery_ready(
+                    row,
+                    max_retry_count=max_retry_count,
+                    claimed_at_utc=evaluated_at_utc,
+                )
+            ),
+        }
+    ]
+
+
 def publish_outbox_event_row(
     connection: FakeOutboxConnection,
     params: Sequence[Any],
@@ -85,6 +135,10 @@ def _delivery_ready(row: dict[str, Any], *, max_retry_count: int, claimed_at_utc
             and row["lease_expires_at_utc"] <= claimed_at_utc
         )
     )
+
+
+def _count_status(rows: Sequence[dict[str, Any]], status: OutboxEventStatus) -> int:
+    return sum(1 for row in rows if row["status"] == status.value)
 
 
 def _matching_leased_rows(

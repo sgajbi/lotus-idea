@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once with PostgreSQL repository-side readiness projection, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
 
 ## Outcome
 
@@ -136,12 +136,16 @@ foundation:
     the `operator` role and
     `idea.outbox-delivery.readiness.read`, returns source-safe aggregate counts
     only, and emits bounded `outbox_delivery_readiness_read` operation events.
+    Durable PostgreSQL providers compute the readiness summary with bounded
+    `idea_outbox_event` aggregate queries instead of materializing unrelated
+    repository snapshots.
 28. `tests/unit/test_outbox_delivery_readiness.py` and
-    `tests/integration/test_outbox_delivery_readiness_api.py` prove the
+    `tests/unit/test_postgres_outbox_readiness.py`, plus
+    `tests/integration/test_outbox_delivery_readiness_api.py`, prove the
     blocked/not-certified posture, broker-configured still-blocked posture,
-    invalid retry-limit guard, role plus capability enforcement, product-safe
-    payloads, and operation-event behavior for the outbox delivery readiness
-    diagnostic.
+    invalid retry-limit guard, repository-side projection without snapshot
+    hydration, role plus capability enforcement, product-safe payloads, and
+    operation-event behavior for the outbox delivery readiness diagnostic.
 29. `POST /api/v1/outbox-delivery/run-once` exposes the bounded outbox
     delivery orchestration as an internal operator action with
     `idea.outbox-delivery.run`. It emits bounded

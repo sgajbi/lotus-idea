@@ -10,6 +10,7 @@ from app.domain.events import (
 )
 from app.domain.outbox_delivery_state import OutboxDeliveryDecision, OutboxDeliveryResult
 from app.infrastructure.postgres_codecs import read_json_object, read_row_value
+from app.ports.idea_repository import OutboxDeliveryReadinessRepositorySummary
 
 
 class PostgresCursor(Protocol):
@@ -94,6 +95,97 @@ def claim_outbox_events_for_delivery(
     except Exception:
         connection.rollback()
         raise
+
+
+def load_outbox_events_for_delivery(
+    connection: PostgresConnection,
+    *,
+    limit: int,
+    max_retry_count: int,
+    evaluated_at_utc: datetime,
+) -> tuple[OutboxEventRecord, ...]:
+    _require_positive(limit, "limit")
+    _require_positive(max_retry_count, "max_retry_count")
+    _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""
+            /* lotus-idea outbox-delivery-ready-events */
+            SELECT {OUTBOX_EVENT_RETURNING_COLUMNS}
+            FROM idea_outbox_event
+            WHERE status = %s
+               OR (status = %s AND retry_count < %s)
+               OR (status = %s AND lease_expires_at_utc <= %s)
+            ORDER BY occurred_at_utc, outbox_event_id
+            LIMIT %s
+            """,
+            (
+                OutboxEventStatus.PENDING.value,
+                OutboxEventStatus.FAILED.value,
+                max_retry_count,
+                OutboxEventStatus.LEASED.value,
+                evaluated_at_utc,
+                limit,
+            ),
+        )
+        return tuple(outbox_event_from_row(row) for row in cursor.fetchall())
+
+
+def load_outbox_delivery_readiness_summary(
+    connection: PostgresConnection,
+    *,
+    max_retry_count: int,
+    evaluated_at_utc: datetime,
+) -> OutboxDeliveryReadinessRepositorySummary:
+    _require_positive(max_retry_count, "max_retry_count")
+    _require_aware_utc(evaluated_at_utc, "evaluated_at_utc")
+    with connection.cursor() as cursor:
+        cursor.execute(
+            """
+            /* lotus-idea outbox-readiness-summary */
+            SELECT
+                COUNT(*) FILTER (WHERE status = %s) AS pending_count,
+                COUNT(*) FILTER (WHERE status = %s) AS leased_count,
+                COUNT(*) FILTER (WHERE status = %s) AS failed_count,
+                COUNT(*) FILTER (WHERE status = %s) AS published_count,
+                COUNT(*) FILTER (WHERE status = %s) AS dead_letter_count,
+                COUNT(*) FILTER (
+                    WHERE status = %s AND lease_expires_at_utc <= %s
+                ) AS expired_lease_count,
+                COUNT(*) FILTER (
+                    WHERE status = %s
+                       OR (status = %s AND retry_count < %s)
+                       OR (status = %s AND lease_expires_at_utc <= %s)
+                ) AS delivery_ready_count
+            FROM idea_outbox_event
+            """,
+            (
+                OutboxEventStatus.PENDING.value,
+                OutboxEventStatus.LEASED.value,
+                OutboxEventStatus.FAILED.value,
+                OutboxEventStatus.PUBLISHED.value,
+                OutboxEventStatus.DEAD_LETTER.value,
+                OutboxEventStatus.LEASED.value,
+                evaluated_at_utc,
+                OutboxEventStatus.PENDING.value,
+                OutboxEventStatus.FAILED.value,
+                max_retry_count,
+                OutboxEventStatus.LEASED.value,
+                evaluated_at_utc,
+            ),
+        )
+        rows = cursor.fetchall()
+    if not rows:
+        return OutboxDeliveryReadinessRepositorySummary(
+            pending_count=0,
+            leased_count=0,
+            failed_count=0,
+            published_count=0,
+            dead_letter_count=0,
+            expired_lease_count=0,
+            delivery_ready_count=0,
+        )
+    return _outbox_readiness_summary_from_row(rows[0])
 
 
 def mark_outbox_event_published(
@@ -217,6 +309,18 @@ def outbox_event_from_row(row: Any) -> OutboxEventRecord:
         lease_owner=read_row_value(row, "lease_owner"),
         lease_attempt_id=read_row_value(row, "lease_attempt_id"),
         lease_expires_at_utc=read_row_value(row, "lease_expires_at_utc"),
+    )
+
+
+def _outbox_readiness_summary_from_row(row: Any) -> OutboxDeliveryReadinessRepositorySummary:
+    return OutboxDeliveryReadinessRepositorySummary(
+        pending_count=read_row_value(row, "pending_count"),
+        leased_count=read_row_value(row, "leased_count"),
+        failed_count=read_row_value(row, "failed_count"),
+        published_count=read_row_value(row, "published_count"),
+        dead_letter_count=read_row_value(row, "dead_letter_count"),
+        expired_lease_count=read_row_value(row, "expired_lease_count"),
+        delivery_ready_count=read_row_value(row, "delivery_ready_count"),
     )
 
 

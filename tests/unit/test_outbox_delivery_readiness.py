@@ -17,7 +17,9 @@ from app.domain import (
     lease_outbox_event,
     mark_outbox_event_failed,
     mark_outbox_event_published,
+    OutboxDeliveryResult,
 )
+from app.ports.idea_repository import OutboxDeliveryReadinessRepositorySummary
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -103,6 +105,40 @@ def test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_confi
     )
 
 
+def test_outbox_delivery_readiness_uses_repository_projection_without_snapshot(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(OUTBOX_BROKER_URL_ENV, raising=False)
+    repository = ProjectionOnlyOutboxRepository(
+        OutboxDeliveryReadinessRepositorySummary(
+            pending_count=2,
+            leased_count=3,
+            failed_count=4,
+            published_count=5,
+            dead_letter_count=6,
+            expired_lease_count=1,
+            delivery_ready_count=7,
+        )
+    )
+
+    snapshot = build_outbox_delivery_readiness_snapshot(
+        repository=repository,
+        durable_storage_backed=True,
+        max_retry_count=4,
+        evaluated_at_utc=PUBLISHED_AT,
+    )
+
+    assert repository.summary_request == (4, PUBLISHED_AT)
+    assert snapshot.delivery_ready_count == 7
+    assert snapshot.expired_lease_count == 1
+    assert snapshot.status_counts.pending_count == 2
+    assert snapshot.status_counts.leased_count == 3
+    assert snapshot.status_counts.failed_count == 4
+    assert snapshot.status_counts.published_count == 5
+    assert snapshot.status_counts.dead_letter_count == 6
+    assert snapshot.status_counts.total_count == 20
+
+
 def test_outbox_delivery_readiness_rejects_invalid_retry_limit() -> None:
     with pytest.raises(ValueError, match="max_retry_count must be positive"):
         build_outbox_delivery_readiness_snapshot(
@@ -172,3 +208,63 @@ def repository_with_events(*events: OutboxEventRecord) -> InMemoryIdeaRepository
             outbox_events={event.event_id: event for event in events},
         )
     )
+
+
+class ProjectionOnlyOutboxRepository:
+    def __init__(self, summary: OutboxDeliveryReadinessRepositorySummary) -> None:
+        self.summary = summary
+        self.summary_request: tuple[int, datetime] | None = None
+
+    def outbox_delivery_readiness_summary(
+        self,
+        *,
+        max_retry_count: int,
+        evaluated_at_utc: datetime,
+    ) -> OutboxDeliveryReadinessRepositorySummary:
+        self.summary_request = (max_retry_count, evaluated_at_utc)
+        return self.summary
+
+    def snapshot(self) -> IdeaRepositorySnapshot:
+        raise AssertionError("readiness projection must not require repository snapshot")
+
+    def outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+        evaluated_at_utc: datetime | None = None,
+    ) -> tuple[OutboxEventRecord, ...]:
+        raise AssertionError("readiness projection must not hydrate delivery-ready events")
+
+    def claim_outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+        lease_owner: str,
+        lease_attempt_id: str,
+        claimed_at_utc: datetime,
+        lease_expires_at_utc: datetime,
+    ) -> tuple[OutboxEventRecord, ...]:
+        raise AssertionError("readiness projection must not claim events")
+
+    def mark_outbox_event_published(
+        self,
+        event_id: str,
+        *,
+        lease_owner: str,
+        lease_attempt_id: str,
+        published_at_utc: datetime,
+    ) -> OutboxDeliveryResult:
+        raise AssertionError("readiness projection must not publish events")
+
+    def mark_outbox_event_failed(
+        self,
+        event_id: str,
+        *,
+        lease_owner: str,
+        lease_attempt_id: str,
+        failure_reason: str,
+        max_retry_count: int = 3,
+    ) -> OutboxDeliveryResult:
+        raise AssertionError("readiness projection must not fail events")

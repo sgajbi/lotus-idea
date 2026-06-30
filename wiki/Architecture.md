@@ -226,6 +226,9 @@ invalid, and returns aggregate decision counts only.
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, delivery-ready backlog, durable repository posture, broker
 configuration posture, publisher-adapter presence, and certification blockers.
+PostgreSQL-backed readiness computes status, expired-lease, and ready-count
+posture through repository-side `idea_outbox_event` projections instead of a
+whole idea repository snapshot.
 `POST /api/v1/outbox-delivery/run-once` exposes the bounded internal operator
 action for one delivery pass through the active repository and configured
 publisher adapter. It fails closed when broker configuration is absent or
