@@ -4,6 +4,7 @@ REQUIRED_LINT_TARGETS = (
     "ci-contract-gate",
     "repository-hygiene-gate",
     "maintainability-gate",
+    "private-import-boundary-gate",
     "documentation-contract-gate",
     "quality-scorecard-gate",
     "monetary-float-guard",
@@ -175,6 +176,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "high-volatility-live-proof-contract-gate": (
         "scripts/high_volatility_live_proof_contract_gate.py"
     ),
+    "private-import-boundary-gate": "scripts/private_import_boundary_gate.py",
 }
 
 GENERATED_READINESS_ARTIFACTS = (

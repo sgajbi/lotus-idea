@@ -79,6 +79,7 @@ from app.domain.missing_suitability_signal import (
     MissingSuitabilityContextSignalInput,
     MissingSuitabilityContextSignalPolicy,
     evaluate_missing_suitability_context_signal,
+    validate_missing_suitability_counts,
 )
 from app.domain.missing_risk_profile_signal import (
     MissingRiskProfileSignalInput,
@@ -329,6 +330,7 @@ __all__ = [
     "evaluate_missing_benchmark_signal",
     "evaluate_missing_risk_profile_signal",
     "evaluate_missing_suitability_context_signal",
+    "validate_missing_suitability_counts",
     "evaluate_underperformance_signal",
     "DEFAULT_REVIEW_ACTION_POLICY",
     "FeedbackCommand",

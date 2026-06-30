@@ -26,6 +26,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) repository-hygiene-gate" in makefile
     assert "maintainability-gate:" in makefile
     assert "$(MAKE) maintainability-gate" in makefile
+    assert "private-import-boundary-gate:" in makefile
+    assert "$(MAKE) private-import-boundary-gate" in makefile
     assert "documentation-contract-gate:" in makefile
     assert "$(MAKE) documentation-contract-gate" in makefile
     assert "quality-scorecard-gate:" in makefile
@@ -202,6 +204,15 @@ def test_ci_contract_gate_blocks_missing_repository_hygiene_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) repository-hygiene-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_private_import_boundary_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) private-import-boundary-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) private-import-boundary-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_missing_source_observability_gate() -> None:
