@@ -10,16 +10,21 @@ from app.application.outbox_platform_mesh_event_publication_proof import (
     build_outbox_platform_mesh_event_publication_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
 from tests.unit.test_implementation_proof_readiness import ROOT, _write_platform_mesh_fixture
 
 
 def test_outbox_platform_mesh_event_proof_clears_only_mesh_event_blocker(
     tmp_path: Path,
 ) -> None:
-    proof = build_outbox_platform_mesh_event_publication_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        repository_root=ROOT,
-        platform_root=_write_platform_mesh_fixture(tmp_path),
+    proof_ref = "output/outbox/outbox-platform-mesh-event-publication-proof.json"
+    proof = bound_aggregate_proof(
+        build_outbox_platform_mesh_event_publication_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            repository_root=ROOT,
+            platform_root=_write_platform_mesh_fixture(tmp_path),
+        ),
+        proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -27,9 +32,7 @@ def test_outbox_platform_mesh_event_proof_clears_only_mesh_event_blocker(
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         outbox_platform_mesh_event_publication_proof=proof,
-        outbox_platform_mesh_event_publication_proof_ref=(
-            "output/outbox/outbox-platform-mesh-event-publication-proof.json"
-        ),
+        outbox_platform_mesh_event_publication_proof_ref=proof_ref,
     )
 
     assert "platform_mesh_event_publication_proof_missing" not in snapshot.overall_blockers

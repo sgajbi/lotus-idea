@@ -11,18 +11,27 @@ from app.application.outbox_consumer_runtime_proof import (
     build_outbox_consumer_runtime_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_implementation_proof_readiness_uses_outbox_consumer_runtime_proof_boundary() -> None:
-    broker_proof = build_outbox_broker_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    broker_proof_ref = "output/outbox/outbox-broker-proof.json"
+    consumer_proof_ref = "output/outbox/outbox-consumer-runtime-proof.json"
+    broker_proof = bound_aggregate_proof(
+        build_outbox_broker_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        broker_proof_ref,
     )
-    consumer_proof = build_outbox_consumer_runtime_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        repository_root=ROOT,
+    consumer_proof = bound_aggregate_proof(
+        build_outbox_consumer_runtime_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            repository_root=ROOT,
+        ),
+        consumer_proof_ref,
     )
 
     snapshot = build_implementation_proof_readiness_snapshot(
@@ -30,9 +39,9 @@ def test_implementation_proof_readiness_uses_outbox_consumer_runtime_proof_bound
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         outbox_broker_proof=broker_proof,
-        outbox_broker_proof_ref="output/outbox/outbox-broker-proof.json",
+        outbox_broker_proof_ref=broker_proof_ref,
         outbox_consumer_runtime_proof=consumer_proof,
-        outbox_consumer_runtime_proof_ref="output/outbox/outbox-consumer-runtime-proof.json",
+        outbox_consumer_runtime_proof_ref=consumer_proof_ref,
     )
 
     assert "outbox_broker_not_configured" not in snapshot.overall_blockers

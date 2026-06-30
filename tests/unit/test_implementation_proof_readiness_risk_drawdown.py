@@ -7,6 +7,9 @@ from app.application.implementation_proof_readiness import (
 )
 from app.application.risk_drawdown_live_proof import build_risk_drawdown_live_proof_payload
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+PROOF_REF = "output/opportunity/risk-drawdown-live-proof.json"
 
 
 def test_implementation_proof_readiness_retains_drawdown_blocker_without_live_proof() -> None:
@@ -31,7 +34,7 @@ def test_implementation_proof_readiness_uses_drawdown_live_proof_without_promoti
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         risk_drawdown_live_proof=_valid_risk_drawdown_live_proof(),
-        risk_drawdown_live_proof_ref="output/opportunity/risk-drawdown-live-proof.json",
+        risk_drawdown_live_proof_ref=PROOF_REF,
     )
 
     assert "opportunity_archetype_drawdown_source_proof_missing" not in (snapshot.overall_blockers)
@@ -63,18 +66,21 @@ def test_implementation_proof_readiness_uses_drawdown_live_proof_without_promoti
 
 
 def _valid_risk_drawdown_live_proof() -> dict[str, object]:
-    return build_risk_drawdown_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_risk_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-risk",
-            "sourceProductId": "lotus-risk:DrawdownAnalyticsReport:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "riskSupportabilityReady": True,
-            "sourceDiagnosticCodes": ["risk_drawdown_source_ready"],
-            "reasonCodes": ["drawdown_attention"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_risk_drawdown_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_risk_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-risk",
+                "sourceProductId": "lotus-risk:DrawdownAnalyticsReport:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "riskSupportabilityReady": True,
+                "sourceDiagnosticCodes": ["risk_drawdown_source_ready"],
+                "reasonCodes": ["drawdown_attention"],
+                "unsupportedReasons": [],
+            },
+        ),
+        PROOF_REF,
     )

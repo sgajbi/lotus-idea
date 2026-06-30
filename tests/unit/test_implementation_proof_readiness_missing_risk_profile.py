@@ -12,6 +12,10 @@ from app.application.missing_risk_profile_source_product_proof import (
     build_missing_risk_profile_source_product_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+SOURCE_PRODUCT_PROOF_REF = "output/opportunity/missing-risk-profile-source-product-proof.json"
+LIVE_PROOF_REF = "output/opportunity/missing-risk-profile-live-proof.json"
 
 
 def test_implementation_proof_readiness_retains_missing_risk_profile_blocker_without_proof() -> (
@@ -49,9 +53,7 @@ def test_implementation_proof_readiness_uses_missing_risk_profile_source_product
         missing_risk_profile_source_product_proof=(
             _valid_missing_risk_profile_source_product_proof()
         ),
-        missing_risk_profile_source_product_proof_ref=(
-            "output/opportunity/missing-risk-profile-source-product-proof.json"
-        ),
+        missing_risk_profile_source_product_proof_ref=SOURCE_PRODUCT_PROOF_REF,
     )
 
     assert "opportunity_archetype_typed_advise_risk_profile_source_product_missing" not in (
@@ -95,9 +97,7 @@ def test_implementation_proof_readiness_uses_missing_risk_profile_live_proof_wit
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         missing_risk_profile_live_proof=_valid_missing_risk_profile_live_proof(),
-        missing_risk_profile_live_proof_ref=(
-            "output/opportunity/missing-risk-profile-live-proof.json"
-        ),
+        missing_risk_profile_live_proof_ref=LIVE_PROOF_REF,
     )
 
     assert "opportunity_archetype_advise_risk_profile_live_source_proof_missing" not in (
@@ -142,13 +142,9 @@ def test_implementation_proof_readiness_combines_missing_risk_profile_source_pro
         missing_risk_profile_source_product_proof=(
             _valid_missing_risk_profile_source_product_proof()
         ),
-        missing_risk_profile_source_product_proof_ref=(
-            "output/opportunity/missing-risk-profile-source-product-proof.json"
-        ),
+        missing_risk_profile_source_product_proof_ref=SOURCE_PRODUCT_PROOF_REF,
         missing_risk_profile_live_proof=_valid_missing_risk_profile_live_proof(),
-        missing_risk_profile_live_proof_ref=(
-            "output/opportunity/missing-risk-profile-live-proof.json"
-        ),
+        missing_risk_profile_live_proof_ref=LIVE_PROOF_REF,
     )
 
     assert "opportunity_archetype_typed_advise_risk_profile_source_product_missing" not in (
@@ -167,23 +163,29 @@ def test_implementation_proof_readiness_combines_missing_risk_profile_source_pro
 
 
 def _valid_missing_risk_profile_live_proof() -> dict[str, object]:
-    return build_missing_risk_profile_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
-        live_advise_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-advise",
-            "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "sourceDiagnosticCodes": ["risk_profile_missing"],
-            "reasonCodes": ["missing_risk_profile", "review_required"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_missing_risk_profile_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+            live_advise_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-advise",
+                "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "sourceDiagnosticCodes": ["risk_profile_missing"],
+                "reasonCodes": ["missing_risk_profile", "review_required"],
+                "unsupportedReasons": [],
+            },
+        ),
+        LIVE_PROOF_REF,
     )
 
 
 def _valid_missing_risk_profile_source_product_proof() -> dict[str, object]:
-    return build_missing_risk_profile_source_product_proof_payload(
-        generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+    return bound_aggregate_proof(
+        build_missing_risk_profile_source_product_proof_payload(
+            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+        ),
+        SOURCE_PRODUCT_PROOF_REF,
     )

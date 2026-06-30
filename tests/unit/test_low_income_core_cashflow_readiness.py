@@ -9,6 +9,7 @@ from app.application.low_income_core_cashflow_live_proof import (
     build_low_income_core_cashflow_live_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
 
 
 LOW_INCOME_PROOF_REF = "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
@@ -50,18 +51,21 @@ def test_readiness_uses_low_income_core_cashflow_proof_without_promotion() -> No
 
 
 def _valid_low_income_core_cashflow_live_proof() -> dict[str, object]:
-    return build_low_income_core_cashflow_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_core_source_attempted=True,
-        evidence_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-core",
-            "cashMovementRefPresent": True,
-            "cashflowProjectionRefPresent": True,
-            "cashMovementCountPresent": True,
-            "projectedCumulativeCashflowPresent": True,
-            "sourceEvidenceCurrent": True,
-            "cashflowDiagnostic": "core_cashflow_liquidity_evidence_ready",
-            "sourceDiagnosticCodes": ["core_cashflow_liquidity_evidence_ready"],
-        },
+    return bound_aggregate_proof(
+        build_low_income_core_cashflow_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_core_source_attempted=True,
+            evidence_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-core",
+                "cashMovementRefPresent": True,
+                "cashflowProjectionRefPresent": True,
+                "cashMovementCountPresent": True,
+                "projectedCumulativeCashflowPresent": True,
+                "sourceEvidenceCurrent": True,
+                "cashflowDiagnostic": "core_cashflow_liquidity_evidence_ready",
+                "sourceDiagnosticCodes": ["core_cashflow_liquidity_evidence_ready"],
+            },
+        ),
+        LOW_INCOME_PROOF_REF,
     )

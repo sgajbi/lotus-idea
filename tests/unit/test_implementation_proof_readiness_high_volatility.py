@@ -7,6 +7,9 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+PROOF_REF = "output/opportunity/high-volatility-live-proof.json"
 
 
 def test_implementation_proof_readiness_retains_high_volatility_blocker_without_live_proof() -> (
@@ -37,7 +40,7 @@ def test_implementation_proof_readiness_uses_high_volatility_live_proof_without_
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         high_volatility_live_proof=_valid_high_volatility_live_proof(),
-        high_volatility_live_proof_ref="output/opportunity/high-volatility-live-proof.json",
+        high_volatility_live_proof_ref=PROOF_REF,
     )
 
     assert "opportunity_archetype_live_risk_volatility_source_proof_missing" not in (
@@ -69,18 +72,21 @@ def test_implementation_proof_readiness_uses_high_volatility_live_proof_without_
 
 
 def _valid_high_volatility_live_proof() -> dict[str, object]:
-    return build_high_volatility_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_risk_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-risk",
-            "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "riskSupportabilityReady": True,
-            "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
-            "reasonCodes": ["volatility_attention"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_high_volatility_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_risk_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-risk",
+                "sourceProductId": "lotus-risk:RiskMetricsReport:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "riskSupportabilityReady": True,
+                "sourceDiagnosticCodes": ["risk_volatility_source_ready"],
+                "reasonCodes": ["volatility_attention"],
+                "unsupportedReasons": [],
+            },
+        ),
+        PROOF_REF,
     )

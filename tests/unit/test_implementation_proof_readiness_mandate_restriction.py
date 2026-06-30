@@ -12,6 +12,10 @@ from app.application.mandate_restriction_source_product_proof import (
     build_mandate_restriction_source_product_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+LIVE_PROOF_REF = "output/opportunity/mandate-restriction-live-proof.json"
+SOURCE_PRODUCT_PROOF_REF = "output/opportunity/mandate-restriction-source-product-proof.json"
 
 
 def test_implementation_proof_readiness_retains_mandate_restriction_blocker_without_proof() -> None:
@@ -46,9 +50,7 @@ def test_implementation_proof_readiness_uses_mandate_restriction_source_product_
         mandate_restriction_source_product_proof=(
             _valid_mandate_restriction_source_product_proof()
         ),
-        mandate_restriction_source_product_proof_ref=(
-            "output/opportunity/mandate-restriction-source-product-proof.json"
-        ),
+        mandate_restriction_source_product_proof_ref=SOURCE_PRODUCT_PROOF_REF,
     )
 
     assert "opportunity_archetype_typed_restriction_source_product_missing" not in (
@@ -90,9 +92,7 @@ def test_implementation_proof_readiness_uses_mandate_restriction_live_proof_with
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         mandate_restriction_live_proof=_valid_mandate_restriction_live_proof(),
-        mandate_restriction_live_proof_ref=(
-            "output/opportunity/mandate-restriction-live-proof.json"
-        ),
+        mandate_restriction_live_proof_ref=LIVE_PROOF_REF,
     )
 
     assert "opportunity_archetype_live_restriction_source_proof_missing" not in (
@@ -133,15 +133,11 @@ def test_implementation_proof_readiness_combines_mandate_restriction_source_proo
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         mandate_restriction_live_proof=_valid_mandate_restriction_live_proof(),
-        mandate_restriction_live_proof_ref=(
-            "output/opportunity/mandate-restriction-live-proof.json"
-        ),
+        mandate_restriction_live_proof_ref=LIVE_PROOF_REF,
         mandate_restriction_source_product_proof=(
             _valid_mandate_restriction_source_product_proof()
         ),
-        mandate_restriction_source_product_proof_ref=(
-            "output/opportunity/mandate-restriction-source-product-proof.json"
-        ),
+        mandate_restriction_source_product_proof_ref=SOURCE_PRODUCT_PROOF_REF,
     )
 
     assert "opportunity_archetype_live_restriction_source_proof_missing" not in (
@@ -160,24 +156,30 @@ def test_implementation_proof_readiness_combines_mandate_restriction_source_proo
 
 
 def _valid_mandate_restriction_live_proof() -> dict[str, object]:
-    return build_mandate_restriction_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
-        live_advise_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-advise",
-            "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "restrictionReviewReady": True,
-            "sourceDiagnosticCodes": ["mandate_restriction_review_required"],
-            "reasonCodes": ["mandate_restriction_review", "review_required"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_mandate_restriction_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+            live_advise_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-advise",
+                "sourceProductId": "lotus-advise:AdvisoryPolicyEvaluationRecord:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "restrictionReviewReady": True,
+                "sourceDiagnosticCodes": ["mandate_restriction_review_required"],
+                "reasonCodes": ["mandate_restriction_review", "review_required"],
+                "unsupportedReasons": [],
+            },
+        ),
+        LIVE_PROOF_REF,
     )
 
 
 def _valid_mandate_restriction_source_product_proof() -> dict[str, object]:
-    return build_mandate_restriction_source_product_proof_payload(
-        generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+    return bound_aggregate_proof(
+        build_mandate_restriction_source_product_proof_payload(
+            generated_at_utc=datetime(2026, 6, 28, 0, 0, tzinfo=UTC),
+        ),
+        SOURCE_PRODUCT_PROOF_REF,
     )
