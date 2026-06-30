@@ -325,6 +325,25 @@ raw workflow coverage commands duplicating the repository gate:
    expand product support, certify live data products, or promote supported
    features.
 
+This slice also adds report-only CI timing/signal evidence after issue review
+showed workflow duration and failure signal existed only in GitHub UI/API:
+
+1. `scripts/ci_signal_evidence.py` generates source-safe
+   `ci-signal-evidence.json` from GitHub run-job metadata, including job and
+   step duration, conclusion, critical path, failure category, and
+   `thresholdEnforced: false`.
+2. Feature Lane, PR Merge Gate, and Main Releasability upload lane-specific CI
+   signal evidence artifacts through `if: always()` jobs with `actions: read`.
+3. Main Releasability `release-evidence.json` references
+   `main-releasability-ci-signal-evidence` and `ci-signal-evidence.json` so
+   release evidence can link to timing/support evidence without embedding live
+   GitHub API payloads.
+4. `make ci-signal-evidence-contract-gate`, `scripts/ci_contract_gate.py`, and
+   unit tests validate schema/source-safety and block workflow wiring drift.
+5. This is measured-baseline evidence only. It does not add duration
+   thresholds, weaken existing CI gates, certify production capacity, or promote
+   supported features.
+
 This slice also hardens Manage source-ref freshness vocabulary after issue
 review showed a repeatable source-authority drift pattern:
 

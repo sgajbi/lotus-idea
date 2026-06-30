@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  actions: read
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -197,6 +198,8 @@ jobs:
                       "sbom_generator": "cyclonedx-bom==7.3.0",
                       "container_scan_path": "output/security/container-image-scan.trivy.json",
                       "container_scanner": os.environ["TRIVY_IMAGE"],
+                      "ci_signal_evidence_path": "ci-signal-evidence.json",
+                      "ci_signal_evidence_artifact": "main-releasability-ci-signal-evidence",
                   },
                   indent=2,
               ),
@@ -210,4 +213,36 @@ jobs:
             sbom.cdx.json
             output/security/container-image-scan.trivy.json
             release-evidence.json
+          if-no-files-found: error
+
+  ci-signal-evidence:
+    name: Main Releasability / CI Signal Evidence
+    if: always()
+    needs:
+      [
+        workflow-lint,
+        lint-typecheck-security,
+        test-suites,
+        coverage-gate,
+        postgres-runtime-proof,
+        docker-build,
+      ]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Fetch run job metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs > ci-jobs.json
+      - name: Generate CI signal evidence
+        run: python scripts/ci_signal_evidence.py --jobs-json ci-jobs.json --output ci-signal-evidence.json
+      - name: Upload CI signal evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: main-releasability-ci-signal-evidence
+          path: ci-signal-evidence.json
           if-no-files-found: error
