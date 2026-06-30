@@ -72,6 +72,7 @@ Blocking scaffold commands:
 52. `make coverage-gate`
 53. `make security-audit`
 54. `make docker-build`
+55. `make container-runtime-smoke`
 
 Support commands:
 
@@ -114,7 +115,7 @@ source-observability contract validation, API route metadata validation,
 API ProblemDetails boundary validation, OpenAPI ProblemDetails example validation,
 protected private import boundary validation, operation metric contract validation, AI model-risk
 operations contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
-security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
+security audit, Docker build, packaged container startup smoke proof, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
 scoped test-target variables for focused fix-forward validation, repo-native GitHub test and
@@ -164,6 +165,16 @@ dependency source, project metadata, target service image reference, and built
 image id. This is not a full container image SBOM; container OS and packaged
 image posture remain covered by the Trivy image scan.
 
+PR Merge Gate and Main Releasability now run `make container-runtime-smoke`
+after `make docker-build` and before Docker release evidence can pass. The
+target starts the built `backend-service:ci-test` image, probes `/health`,
+`/health/live`, and reachable default-profile `/health/ready`, captures
+container logs on failure, and always removes the smoke container. The readiness
+probe accepts `200` or the default fail-closed `503` because the local packaged
+runtime may not have durable write storage configured; this is startup and
+health-surface proof, not production readiness, live upstream connectivity, or
+supported-feature proof.
+
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell
@@ -205,8 +216,9 @@ without introducing duration pass/fail thresholds.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also
-depends on the PostgreSQL proof, but the runtime proof is listed as a first-class required status so
-durable persistence and migration behavior cannot become an implicit or forgotten prerequisite.
+depends on the PostgreSQL proof and runs `make container-runtime-smoke` after the image build, but
+the runtime proof is listed as a first-class required status so durable persistence and migration
+behavior cannot become an implicit or forgotten prerequisite.
 
 `make maintainability-gate` blocks oversized Python files/functions across `src`, `tests`, and
 `scripts`. The thresholds are set above the current measured baseline so the gate prevents new

@@ -144,7 +144,8 @@ runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
 non-root container execution, governed Docker base/scanner image identity and
 resolved digest provenance in release evidence, runtime Python dependency SBOM
-evidence tied to the built service image reference/id, bounded GitHub job timeouts, no soft-failed
+evidence tied to the built service image reference/id, packaged container startup
+smoke proof over health/live/readiness, bounded GitHub job timeouts, no soft-failed
 critical jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, including implementation-proof readiness and runtime trust telemetry preview
@@ -187,6 +188,14 @@ CycloneDX tool, and `release-evidence.json` records the SBOM scope, generator,
 dependency source, project metadata, target service image reference, and built image id.
 Container OS/package posture remains the Trivy image scan's responsibility; the SBOM is
 not represented as a full image SBOM or registry attestation.
+
+PR Merge Gate and Main Releasability also run `make container-runtime-smoke`
+after the Docker image build. The target starts the built image, probes
+`/health` and `/health/live` for `200`, requires `/health/ready` to be reachable
+with either `200` or the default-profile fail-closed `503`, prints container
+logs on failure, and removes the container. This is packaged runtime startup
+proof, not production deployment, live upstream connectivity, Workbench,
+data-mesh certification, client publication, or supported-feature proof.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 

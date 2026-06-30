@@ -278,6 +278,22 @@ def test_ci_contract_gate_blocks_ambiguous_environment_release_sbom() -> None:
     assert "Makefile release-sbom target must not generate an ambiguous environment SBOM" in errors
 
 
+def test_ci_contract_gate_blocks_missing_container_runtime_smoke() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        _read("Makefile")
+        .replace("container-runtime-smoke", "container-runtime-optional")
+        .replace("CONTAINER_SMOKE_TIMEOUT_SECONDS ?= 45", "")
+        .replace("--startup-timeout-seconds $(CONTAINER_SMOKE_TIMEOUT_SECONDS)", "")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile missing required target `container-runtime-smoke`" in errors
+    assert "Makefile must govern the container runtime smoke startup timeout" in errors
+    assert "Makefile container-runtime-smoke target must use the governed startup timeout" in errors
+
+
 def test_ci_contract_gate_blocks_missing_repository_hygiene_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace("$(MAKE) repository-hygiene-gate", "")

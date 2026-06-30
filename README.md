@@ -158,7 +158,7 @@ Run the Docker entrypoint from a clean checkout:
 docker compose up --build
 ```
 
-Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs only runtime dependencies, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image references plus resolved immutable digests in CI release evidence, and ties a runtime Python dependency SBOM from `requirements/shared-runtime.lock.txt` to the built service image reference/id. This remains runtime-parity evidence only, not production, full container-image SBOM, registry attestation, Workbench, data-mesh, client-publication, or supported-feature proof.
+Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs only runtime dependencies, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image references plus resolved immutable digests in CI release evidence, runs a bounded container startup smoke proof over `/health`, `/health/live`, and reachable default-profile `/health/ready`, and ties a runtime Python dependency SBOM from `requirements/shared-runtime.lock.txt` to the built service image reference/id. This remains runtime-parity evidence only, not production, full container-image SBOM, registry attestation, Workbench, data-mesh, client-publication, or supported-feature proof.
 
 ## Common Commands
 
@@ -208,6 +208,7 @@ Compose uses `.env.example` defaults and optional ignored `.env` overrides; the 
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
 | `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
 | `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
+| `make container-runtime-smoke` | Start the built `backend-service:ci-test` image, probe `/health`, `/health/live`, and reachable default-profile `/health/ready`, print container logs on failure, and always remove the smoke container. |
 | `make check` | Run the local PR-grade gate set. |
 | `make ci` | Run the broader CI-equivalent local suite. |
 | `make clean` | Remove ignored generated test, coverage, build, and Python cache artifacts without touching `.venv`, `.git`, or dependency caches. |
@@ -226,12 +227,9 @@ flowchart LR
 
 Run `make lint`, `make typecheck`, and `make test-unit` for feature-lane
 feedback; run `make check`, `make postgres-integration-gate`,
-`make security-audit`, and `make docker-build` for PR-grade proof.
+`make security-audit`, `make docker-build`, and `make container-runtime-smoke`
+for PR-grade runtime proof.
 Governance-focused changes should also run `make documentation-contract-gate`, `make implementation-truth-gate`, `make quality-scorecard-gate`, `make opportunity-archetype-contract-gate`, `make downstream-realization-contract-gate`, and `make supported-features-gate`.
-
-The same controls are explained in [wiki/Validation-and-CI.md](wiki/Validation-and-CI.md),
-[quality/ci_quality_gates.md](quality/ci_quality_gates.md), and
-[quality/quality_scorecard.md](quality/quality_scorecard.md).
 
 ## Runtime And Operations
 

@@ -60,6 +60,7 @@ REQUIRED_TARGETS = (
     "coverage-gate",
     "security-audit",
     "docker-build",
+    "container-runtime-smoke",
     "release-sbom",
     "container-image-scan",
 )
