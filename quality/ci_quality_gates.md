@@ -16,42 +16,43 @@ Blocking scaffold commands:
 7. `make no-sensitive-content-guard`
 8. `make source-observability-contract-gate`
 9. `make api-route-metadata-gate`
-10. `make openapi-problem-details-example-gate`
-11. `make operation-metric-contract-gate`
-12. `make ai-model-risk-ops-contract-gate`
-13. `make ai-model-risk-operations-proof-contract-gate`
-14. `make implementation-truth-gate`
-15. `make data-mesh-contract-gate`
-16. `make mesh-policy-proof-contract-gate`
-17. `make opportunity-archetype-contract-gate`
-18. `make downstream-realization-contract-gate`
-19. `make migration-contract-gate`
-20. `make migration-execution-gate`
-21. `make durable-repository-proof-contract-gate`
-22. `make runtime-trust-telemetry-proof-contract-gate`
-23. `make ai-lineage-store-proof-contract-gate`
-24. `make ai-workflow-pack-registration-proof-contract-gate`
-25. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
-26. `make workbench-read-path-proof-contract-gate`
-27. `make gateway-workbench-operational-proof-contract-gate`
-28. `make gateway-workbench-discovery-proof-contract-gate`
-29. `make outbox-broker-proof-contract-gate`
-30. `make platform-mesh-onboarding-proof-contract-gate`
-31. `make downstream-route-contract-proof-gate`
-32. `make source-ingestion-worker-check`
-33. `make source-ingestion-scheduled-worker-check`
-34. `make source-ingestion-live-proof-contract-gate`
-35. `make risk-concentration-live-proof-contract-gate`
-36. `make high-volatility-live-proof-contract-gate`
-37. `make risk-drawdown-live-proof-contract-gate`
-38. `make manage-mandate-live-proof-contract-gate`
-39. `make mandate-restriction-live-proof-contract-gate`
-40. `make missing-suitability-live-proof-contract-gate`
-41. `make missing-risk-profile-live-proof-contract-gate`
-42. `make performance-underperformance-live-proof-contract-gate`
-43. `make core-benchmark-assignment-live-proof-contract-gate`
-44. `make core-portfolio-state-live-proof-contract-gate`
-45. `make implementation-proof-readiness-check` generates the scheduled-worker
+10. `make api-problem-details-boundary-gate`
+11. `make openapi-problem-details-example-gate`
+12. `make operation-metric-contract-gate`
+13. `make ai-model-risk-ops-contract-gate`
+14. `make ai-model-risk-operations-proof-contract-gate`
+15. `make implementation-truth-gate`
+16. `make data-mesh-contract-gate`
+17. `make mesh-policy-proof-contract-gate`
+18. `make opportunity-archetype-contract-gate`
+19. `make downstream-realization-contract-gate`
+20. `make migration-contract-gate`
+21. `make migration-execution-gate`
+22. `make durable-repository-proof-contract-gate`
+23. `make runtime-trust-telemetry-proof-contract-gate`
+24. `make ai-lineage-store-proof-contract-gate`
+25. `make ai-workflow-pack-registration-proof-contract-gate`
+26. `make ai-workflow-pack-runtime-execution-proof-contract-gate`
+27. `make workbench-read-path-proof-contract-gate`
+28. `make gateway-workbench-operational-proof-contract-gate`
+29. `make gateway-workbench-discovery-proof-contract-gate`
+30. `make outbox-broker-proof-contract-gate`
+31. `make platform-mesh-onboarding-proof-contract-gate`
+32. `make downstream-route-contract-proof-gate`
+33. `make source-ingestion-worker-check`
+34. `make source-ingestion-scheduled-worker-check`
+35. `make source-ingestion-live-proof-contract-gate`
+36. `make risk-concentration-live-proof-contract-gate`
+37. `make high-volatility-live-proof-contract-gate`
+38. `make risk-drawdown-live-proof-contract-gate`
+39. `make manage-mandate-live-proof-contract-gate`
+40. `make mandate-restriction-live-proof-contract-gate`
+41. `make missing-suitability-live-proof-contract-gate`
+42. `make missing-risk-profile-live-proof-contract-gate`
+43. `make performance-underperformance-live-proof-contract-gate`
+44. `make core-benchmark-assignment-live-proof-contract-gate`
+45. `make core-portfolio-state-live-proof-contract-gate`
+46. `make implementation-proof-readiness-check` generates the scheduled-worker
     deploy-proof artifact, durable repository proof artifact, runtime trust
     telemetry proof artifact, Workbench read-path proof artifact,
     Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
@@ -63,13 +64,13 @@ Blocking scaffold commands:
     mandate, Advise mandate/restriction, missing-suitability, and missing
     risk-profile live proof, then consumes all in aggregate RFC proof-readiness
     evidence.
-46. `make supported-features-gate`
-47. `make endpoint-certification-gate`
-48. `make postgres-integration-gate`
-49. `make openapi-gate`
-50. `make coverage-gate`
-51. `make security-audit`
-52. `make docker-build`
+47. `make supported-features-gate`
+48. `make endpoint-certification-gate`
+49. `make postgres-integration-gate`
+50. `make openapi-gate`
+51. `make coverage-gate`
+52. `make security-audit`
+53. `make docker-build`
 
 Cleanup support command:
 
@@ -108,7 +109,7 @@ Gateway/Workbench discovery proof contract validation,
 outbox broker proof contract validation,
 implementation-proof readiness artifact generation, runtime trust telemetry preview generation,
 source-observability contract validation, API route metadata validation,
-OpenAPI ProblemDetails example validation, operation metric contract validation, AI model-risk
+API ProblemDetails boundary validation, OpenAPI ProblemDetails example validation, operation metric contract validation, AI model-risk
 operations contract validation, governed generated-artifact cleanup, PostgreSQL runtime proof, coverage,
 security audit, Docker build, release evidence, least-privilege workflow permissions, bounded job
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
