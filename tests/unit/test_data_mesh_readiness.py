@@ -26,6 +26,7 @@ def test_data_mesh_readiness_snapshot_reports_not_certified_posture() -> None:
         "data_mesh_not_certified",
         "producer_products_not_active",
         "certified_runtime_trust_telemetry_missing",
+        "runtime_trust_telemetry_product_coverage_incomplete",
         "platform_source_manifest_inclusion_missing",
         "platform_catalog_inclusion_missing",
         "mesh_slo_policy_certification_missing",
@@ -38,6 +39,9 @@ def test_data_mesh_readiness_snapshot_reports_not_certified_posture() -> None:
         "producer_declaration": "contracts/domain-data-products/lotus-idea-products.v1.json",
         "consumer_declaration": "contracts/domain-data-products/lotus-idea-consumers.v1.json",
         "trust_telemetry": "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
+        "trust_telemetry_coverage": (
+            "contracts/trust-telemetry/lotus-idea-product-coverage.telemetry.v1.json"
+        ),
         "slo_policy": "contracts/mesh-slo/lotus-idea-idea-candidate.slo.v1.json",
         "access_policy": "contracts/mesh-access/lotus-idea-idea-candidate.access.v1.json",
         "evidence_policy": (
@@ -104,6 +108,7 @@ def _write_contracts(
         "certification_gates_before_promotion": ["runtime telemetry"],
     } | (readiness_overrides or {})
     telemetry = {"blocking": {"blocked": True}}
+    telemetry_coverage = {"coverage_status": "incomplete"}
 
     _write_json(
         repository_root / "contracts/domain-data-products/lotus-idea-products.v1.json",
@@ -116,6 +121,10 @@ def _write_contracts(
     _write_json(
         repository_root / "contracts/trust-telemetry/idea-candidate.telemetry.v1.json",
         telemetry,
+    )
+    _write_json(
+        repository_root / "contracts/trust-telemetry/lotus-idea-product-coverage.telemetry.v1.json",
+        telemetry_coverage,
     )
 
 

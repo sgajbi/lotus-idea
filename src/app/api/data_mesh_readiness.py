@@ -173,7 +173,11 @@ DATA_MESH_READINESS_ROUTE: RouteMetadata = {
                         "sourceOfTruth": {
                             "producer_declaration": (
                                 "contracts/domain-data-products/lotus-idea-products.v1.json"
-                            )
+                            ),
+                            "trust_telemetry_coverage": (
+                                "contracts/trust-telemetry/"
+                                "lotus-idea-product-coverage.telemetry.v1.json"
+                            ),
                         },
                         "products": [
                             {
@@ -186,6 +190,7 @@ DATA_MESH_READINESS_ROUTE: RouteMetadata = {
                             "data_mesh_not_certified",
                             "producer_products_not_active",
                             "certified_runtime_trust_telemetry_missing",
+                            "runtime_trust_telemetry_product_coverage_incomplete",
                             "platform_source_manifest_inclusion_missing",
                             "platform_catalog_inclusion_missing",
                             "mesh_slo_policy_certification_missing",

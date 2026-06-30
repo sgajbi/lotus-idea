@@ -17,6 +17,7 @@ from app.api.runtime_dependencies import (
 )
 from app.api.temporal_validation import is_timezone_aware
 from app.application.runtime_trust_telemetry import (
+    RuntimeTrustTelemetryProductPosture,
     RuntimeTrustTelemetryPreview,
     build_runtime_trust_telemetry_preview,
     build_runtime_trust_telemetry_snapshot,
@@ -71,6 +72,10 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
     certification_ready: bool = Field(..., alias="certificationReady")
     certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
     supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
+    product_coverage: tuple["RuntimeTrustTelemetryProductPostureResponse", ...] = Field(
+        ...,
+        alias="productCoverage",
+    )
 
     @classmethod
     def from_domain(
@@ -99,7 +104,61 @@ class RuntimeTrustTelemetryPreviewResponse(CamelModel):
             certificationStatus=snapshot.certification_status,
             certificationReady=snapshot.certification_ready,
             certificationBlockers=snapshot.certification_blockers,
+            productCoverage=tuple(
+                RuntimeTrustTelemetryProductPostureResponse.from_domain(posture)
+                for posture in snapshot.product_postures
+            ),
             supportedFeaturePromoted=snapshot.supported_feature_promoted,
+        )
+
+
+class RuntimeTrustTelemetryProductPostureResponse(CamelModel):
+    product_id: str = Field(..., alias="productId")
+    product_name: str = Field(..., alias="productName")
+    product_version: str = Field(..., alias="productVersion")
+    lifecycle_status: str = Field(..., alias="lifecycleStatus")
+    freshness_class: str = Field(..., alias="freshnessClass")
+    coverage_status: str = Field(..., alias="coverageStatus")
+    runtime_backed: bool = Field(..., alias="runtimeBacked")
+    observed_record_count: int = Field(..., alias="observedRecordCount")
+    current_source_ref_count: int = Field(..., alias="currentSourceRefCount")
+    stale_or_unavailable_source_ref_count: int = Field(
+        ...,
+        alias="staleOrUnavailableSourceRefCount",
+    )
+    freshness_state: str = Field(..., alias="freshnessState")
+    completeness_status: str = Field(..., alias="completenessStatus")
+    reconciliation_status: str = Field(..., alias="reconciliationStatus")
+    data_quality_status: str = Field(..., alias="dataQualityStatus")
+    lineage_materialized: bool = Field(..., alias="lineageMaterialized")
+    source_batch_evidence_available: bool = Field(..., alias="sourceBatchEvidenceAvailable")
+    consumer_exposure_status: str = Field(..., alias="consumerExposureStatus")
+    certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
+
+    @classmethod
+    def from_domain(
+        cls,
+        posture: RuntimeTrustTelemetryProductPosture,
+    ) -> "RuntimeTrustTelemetryProductPostureResponse":
+        return cls(
+            productId=posture.product_id,
+            productName=posture.product_name,
+            productVersion=posture.product_version,
+            lifecycleStatus=posture.lifecycle_status,
+            freshnessClass=posture.freshness_class,
+            coverageStatus=posture.coverage_status,
+            runtimeBacked=posture.runtime_backed,
+            observedRecordCount=posture.observed_record_count,
+            currentSourceRefCount=posture.current_source_ref_count,
+            staleOrUnavailableSourceRefCount=posture.stale_or_unavailable_source_ref_count,
+            freshnessState=posture.freshness_state,
+            completenessStatus=posture.completeness_status,
+            reconciliationStatus=posture.reconciliation_status,
+            dataQualityStatus=posture.data_quality_status,
+            lineageMaterialized=posture.lineage_materialized,
+            sourceBatchEvidenceAvailable=posture.source_batch_evidence_available,
+            consumerExposureStatus=posture.consumer_exposure_status,
+            certificationBlockers=posture.certification_blockers,
         )
 
 
@@ -128,6 +187,27 @@ class RuntimeTrustTelemetryEvidenceResponse(BaseModel):
     source_artifact_uri: str
 
 
+class RuntimeTrustTelemetryProductCoverageSnapshotResponse(BaseModel):
+    product_id: str
+    product_name: str
+    product_version: str
+    lifecycle_status: str
+    freshness_class: str
+    coverage_status: str
+    runtime_backed: bool
+    observed_record_count: int
+    current_source_ref_count: int
+    stale_or_unavailable_source_ref_count: int
+    freshness_state: str
+    completeness_status: str
+    reconciliation_status: str
+    data_quality_status: str
+    lineage_materialized: bool
+    source_batch_evidence_available: bool
+    consumer_exposure_status: str
+    certification_blockers: list[str]
+
+
 class RuntimeTrustTelemetrySnapshotResponse(BaseModel):
     contract_id: str
     contract_version: str
@@ -144,6 +224,7 @@ class RuntimeTrustTelemetrySnapshotResponse(BaseModel):
     data_quality_status: str
     lineage: RuntimeTrustTelemetryLineageResponse
     blocking: RuntimeTrustTelemetryBlockingResponse
+    product_coverage: list[RuntimeTrustTelemetryProductCoverageSnapshotResponse]
     observed_trust_metadata: Mapping[str, str]
     evidence: RuntimeTrustTelemetryEvidenceResponse
 
@@ -344,6 +425,33 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
                             "gateway_workbench_discovery_proof_missing",
                             "supported_feature_promotion_missing",
                         ],
+                        "productCoverage": [
+                            {
+                                "productId": "lotus-idea:IdeaCandidate:v1",
+                                "productName": "IdeaCandidate",
+                                "productVersion": "v1",
+                                "lifecycleStatus": "proposed",
+                                "freshnessClass": "daily",
+                                "coverageStatus": "runtime_backed",
+                                "runtimeBacked": True,
+                                "observedRecordCount": 2,
+                                "currentSourceRefCount": 8,
+                                "staleOrUnavailableSourceRefCount": 0,
+                                "freshnessState": "current",
+                                "completenessStatus": "partial",
+                                "reconciliationStatus": "not_applicable",
+                                "dataQualityStatus": "quality_passed",
+                                "lineageMaterialized": True,
+                                "sourceBatchEvidenceAvailable": True,
+                                "consumerExposureStatus": "not_exposed_platform_not_certified",
+                                "certificationBlockers": [
+                                    "platform_source_manifest_inclusion_missing",
+                                    "platform_mesh_certification_missing",
+                                    "gateway_workbench_discovery_proof_missing",
+                                    "supported_feature_promotion_missing",
+                                ],
+                            }
+                        ],
                         "supportedFeaturePromoted": False,
                     }
                 }
@@ -415,6 +523,33 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
                                 "proof, and supported-feature promotion remain pending."
                             ),
                         },
+                        "product_coverage": [
+                            {
+                                "product_id": "lotus-idea:IdeaCandidate:v1",
+                                "product_name": "IdeaCandidate",
+                                "product_version": "v1",
+                                "lifecycle_status": "proposed",
+                                "freshness_class": "daily",
+                                "coverage_status": "runtime_backed",
+                                "runtime_backed": True,
+                                "observed_record_count": 2,
+                                "current_source_ref_count": 8,
+                                "stale_or_unavailable_source_ref_count": 0,
+                                "freshness_state": "current",
+                                "completeness_status": "partial",
+                                "reconciliation_status": "not_applicable",
+                                "data_quality_status": "quality_passed",
+                                "lineage_materialized": True,
+                                "source_batch_evidence_available": True,
+                                "consumer_exposure_status": "not_exposed_platform_not_certified",
+                                "certification_blockers": [
+                                    "platform_source_manifest_inclusion_missing",
+                                    "platform_mesh_certification_missing",
+                                    "gateway_workbench_discovery_proof_missing",
+                                    "supported_feature_promotion_missing",
+                                ],
+                            }
+                        ],
                         "observed_trust_metadata": {
                             "product_name": "IdeaCandidate",
                             "product_version": "v1",

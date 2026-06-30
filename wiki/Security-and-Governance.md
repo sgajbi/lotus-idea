@@ -51,11 +51,17 @@ requires the `operator` role and
 does not expose candidate identifiers, source routes, evidence hashes,
 portfolio identifiers, client identifiers, platform source-manifest inclusion,
 or product certification.
+It now includes product coverage for every producer product declared in
+`contracts/domain-data-products/lotus-idea-products.v1.json`, including
+explicit `blocked_not_runtime_backed` posture where a declared product is not
+independently materialized at runtime. This is coverage transparency, not data
+mesh certification.
 
 `make runtime-trust-telemetry-snapshot-check` emits the source-safe runtime
 snapshot for `IdeaCandidate:v1` under ignored `output/trust-telemetry/runtime/`.
-It is contract-shaped evidence for operators and CI, not product certification
-or supported-feature promotion.
+The snapshot includes the same product coverage posture and is contract-shaped
+evidence for operators and CI, not product certification or supported-feature
+promotion.
 `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot` exposes the same
 contract-shaped posture as a certified internal operator diagnostic. It
 requires the `operator` role and `idea.mesh.trust-telemetry.snapshot.read`,

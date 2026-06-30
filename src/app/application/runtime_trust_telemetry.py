@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 from datetime import UTC, datetime
+import json
+from pathlib import Path
 from types import MappingProxyType
 from typing import Any, Mapping
 
@@ -16,6 +18,46 @@ PRODUCT_VERSION = "v1"
 REPOSITORY = "lotus-idea"
 RUNTIME_TELEMETRY_OUTPUT_PATH = "output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json"
 DAILY_MAX_ALLOWED_AGE_SECONDS = 86_400
+PRODUCER_DECLARATION_PATH = Path("contracts/domain-data-products/lotus-idea-products.v1.json")
+REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+COMMON_PRODUCT_CERTIFICATION_BLOCKERS = (
+    "platform_source_manifest_inclusion_missing",
+    "platform_mesh_certification_missing",
+    "gateway_workbench_discovery_proof_missing",
+    "supported_feature_promotion_missing",
+)
+RUNTIME_BACKED_PRODUCT_IDS = {
+    "lotus-idea:IdeaCandidate:v1",
+    "lotus-idea:IdeaEvidencePacket:v1",
+    "lotus-idea:AdvisorOpportunityQueue:v1",
+    "lotus-idea:IdeaReviewDecision:v1",
+    "lotus-idea:IdeaFeedbackEvent:v1",
+    "lotus-idea:IdeaConversionIntent:v1",
+    "lotus-idea:IdeaConversionOutcome:v1",
+    "lotus-idea:IdeaTrustTelemetry:v1",
+}
+
+
+@dataclass(frozen=True)
+class RuntimeTrustTelemetryProductPosture:
+    product_id: str
+    product_name: str
+    product_version: str
+    lifecycle_status: str
+    freshness_class: str
+    coverage_status: str
+    runtime_backed: bool
+    observed_record_count: int
+    current_source_ref_count: int
+    stale_or_unavailable_source_ref_count: int
+    freshness_state: str
+    completeness_status: str
+    reconciliation_status: str
+    data_quality_status: str
+    lineage_materialized: bool
+    source_batch_evidence_available: bool
+    consumer_exposure_status: str
+    certification_blockers: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -41,6 +83,7 @@ class RuntimeTrustTelemetryPreview:
     certification_status: str
     certification_ready: bool
     certification_blockers: tuple[str, ...]
+    product_postures: tuple[RuntimeTrustTelemetryProductPosture, ...]
     supported_feature_promoted: bool
 
 
@@ -76,6 +119,12 @@ def build_runtime_trust_telemetry_preview(
         candidate_snapshot_count=len(records),
         stale_or_unavailable_source_ref_count=stale_or_unavailable_source_ref_count,
     )
+    product_postures = _product_postures(
+        records=records,
+        source_refs=source_refs,
+        generated_at_utc=observed_at,
+        durable_storage_backed=durable_storage_backed,
+    )
 
     return RuntimeTrustTelemetryPreview(
         repository="lotus-idea",
@@ -106,6 +155,7 @@ def build_runtime_trust_telemetry_preview(
         certification_status="not_certified",
         certification_ready=False,
         certification_blockers=blockers,
+        product_postures=product_postures,
         supported_feature_promoted=False,
     )
 
@@ -163,6 +213,9 @@ def build_runtime_trust_telemetry_snapshot(
                     "blocked": True,
                     "blocked_reason": _blocked_reason(preview),
                 },
+                "product_coverage": [
+                    _product_posture_payload(posture) for posture in preview.product_postures
+                ],
                 "observed_trust_metadata": _observed_trust_metadata(
                     preview=preview,
                     records=records,
@@ -182,6 +235,246 @@ def build_runtime_trust_telemetry_snapshot(
             }
         )
     )
+
+
+def _product_postures(
+    *,
+    records: tuple[CandidatePersistenceRecord, ...],
+    source_refs: tuple[Any, ...],
+    generated_at_utc: datetime,
+    durable_storage_backed: bool,
+) -> tuple[RuntimeTrustTelemetryProductPosture, ...]:
+    declarations = _producer_product_declarations()
+    observed_counts = _product_observed_counts(records)
+    current_source_ref_count = sum(
+        1 for source_ref in source_refs if source_ref.freshness is EvidenceFreshness.CURRENT
+    )
+    stale_or_unavailable_source_ref_count = len(source_refs) - current_source_ref_count
+    return tuple(
+        _product_posture(
+            declaration=declaration,
+            observed_record_count=observed_counts.get(declaration["product_id"], 0),
+            current_source_ref_count=current_source_ref_count,
+            stale_or_unavailable_source_ref_count=stale_or_unavailable_source_ref_count,
+            source_refs=source_refs,
+            records=records,
+            generated_at_utc=generated_at_utc,
+            durable_storage_backed=durable_storage_backed,
+        )
+        for declaration in declarations
+    )
+
+
+def _producer_product_declarations() -> tuple[dict[str, str], ...]:
+    payload = json.loads((REPOSITORY_ROOT / PRODUCER_DECLARATION_PATH).read_text(encoding="utf-8"))
+    products = payload.get("products")
+    if not isinstance(products, list):
+        raise ValueError("producer product declaration must contain products")
+    declarations: list[dict[str, str]] = []
+    for product in products:
+        if not isinstance(product, dict):
+            continue
+        product_name = str(product.get("product_name", "unknown"))
+        product_version = str(product.get("product_version", "unknown"))
+        freshness_policy = product.get("freshness_policy")
+        declarations.append(
+            {
+                "product_id": f"lotus-idea:{product_name}:{product_version}",
+                "product_name": product_name,
+                "product_version": product_version,
+                "lifecycle_status": str(product.get("lifecycle_status", "unknown")),
+                "freshness_class": (
+                    str(freshness_policy.get("freshness_class", "unknown"))
+                    if isinstance(freshness_policy, dict)
+                    else "unknown"
+                ),
+            }
+        )
+    return tuple(declarations)
+
+
+def _product_posture(
+    *,
+    declaration: Mapping[str, str],
+    observed_record_count: int,
+    current_source_ref_count: int,
+    stale_or_unavailable_source_ref_count: int,
+    source_refs: tuple[Any, ...],
+    records: tuple[CandidatePersistenceRecord, ...],
+    generated_at_utc: datetime,
+    durable_storage_backed: bool,
+) -> RuntimeTrustTelemetryProductPosture:
+    product_id = declaration["product_id"]
+    runtime_backed = product_id in RUNTIME_BACKED_PRODUCT_IDS
+    freshness_state = _product_freshness_state(
+        runtime_backed=runtime_backed,
+        observed_record_count=observed_record_count,
+        stale_or_unavailable_source_ref_count=stale_or_unavailable_source_ref_count,
+    )
+    completeness_status = _product_completeness_status(
+        runtime_backed=runtime_backed,
+        observed_record_count=observed_record_count,
+        stale_or_unavailable_source_ref_count=stale_or_unavailable_source_ref_count,
+    )
+    return RuntimeTrustTelemetryProductPosture(
+        product_id=product_id,
+        product_name=declaration["product_name"],
+        product_version=declaration["product_version"],
+        lifecycle_status=declaration["lifecycle_status"],
+        freshness_class=declaration["freshness_class"],
+        coverage_status=_product_coverage_status(
+            runtime_backed=runtime_backed,
+            observed_record_count=observed_record_count,
+        ),
+        runtime_backed=runtime_backed,
+        observed_record_count=observed_record_count,
+        current_source_ref_count=current_source_ref_count if runtime_backed else 0,
+        stale_or_unavailable_source_ref_count=(
+            stale_or_unavailable_source_ref_count if runtime_backed else 0
+        ),
+        freshness_state=freshness_state,
+        completeness_status=completeness_status,
+        reconciliation_status=_product_reconciliation_status(
+            runtime_backed=runtime_backed,
+            observed_record_count=observed_record_count,
+            stale_or_unavailable_source_ref_count=stale_or_unavailable_source_ref_count,
+        ),
+        data_quality_status=(
+            _data_quality_status(source_refs) if runtime_backed else "quality_blocked"
+        ),
+        lineage_materialized=(
+            _trust_telemetry_lineage_materialized(product_id, generated_at_utc)
+            if product_id == "lotus-idea:IdeaTrustTelemetry:v1"
+            else bool(records) and all(_record_lineage_materialized(record) for record in records)
+        )
+        if runtime_backed
+        else False,
+        source_batch_evidence_available=bool(source_refs) if runtime_backed else False,
+        consumer_exposure_status="not_exposed_platform_not_certified",
+        certification_blockers=_product_certification_blockers(
+            runtime_backed=runtime_backed,
+            durable_storage_backed=durable_storage_backed,
+            observed_record_count=observed_record_count,
+            stale_or_unavailable_source_ref_count=stale_or_unavailable_source_ref_count,
+        ),
+    )
+
+
+def _product_observed_counts(
+    records: tuple[CandidatePersistenceRecord, ...],
+) -> dict[str, int]:
+    return {
+        "lotus-idea:IdeaCandidate:v1": len(records),
+        "lotus-idea:IdeaEvidencePacket:v1": len(records),
+        "lotus-idea:AdvisorOpportunityQueue:v1": len(records),
+        "lotus-idea:IdeaReviewDecision:v1": sum(len(record.review_decisions) for record in records),
+        "lotus-idea:IdeaFeedbackEvent:v1": sum(len(record.feedback_events) for record in records),
+        "lotus-idea:IdeaConversionIntent:v1": sum(
+            len(record.conversion_intents) for record in records
+        ),
+        "lotus-idea:IdeaConversionOutcome:v1": sum(
+            len(record.conversion_outcomes) for record in records
+        ),
+        "lotus-idea:IdeaTrustTelemetry:v1": 1,
+    }
+
+
+def _product_coverage_status(*, runtime_backed: bool, observed_record_count: int) -> str:
+    if not runtime_backed:
+        return "blocked_not_runtime_backed"
+    if observed_record_count == 0:
+        return "runtime_backed_no_records"
+    return "runtime_backed"
+
+
+def _product_freshness_state(
+    *,
+    runtime_backed: bool,
+    observed_record_count: int,
+    stale_or_unavailable_source_ref_count: int,
+) -> str:
+    if not runtime_backed or observed_record_count == 0:
+        return "unknown"
+    if stale_or_unavailable_source_ref_count > 0:
+        return "stale"
+    return "current"
+
+
+def _product_completeness_status(
+    *,
+    runtime_backed: bool,
+    observed_record_count: int,
+    stale_or_unavailable_source_ref_count: int,
+) -> str:
+    if not runtime_backed:
+        return "blocked"
+    if observed_record_count == 0:
+        return "unknown"
+    if stale_or_unavailable_source_ref_count > 0:
+        return "stale"
+    return "partial"
+
+
+def _product_reconciliation_status(
+    *,
+    runtime_backed: bool,
+    observed_record_count: int,
+    stale_or_unavailable_source_ref_count: int,
+) -> str:
+    if not runtime_backed:
+        return "blocked"
+    if observed_record_count == 0:
+        return "unknown"
+    if stale_or_unavailable_source_ref_count > 0:
+        return "partial"
+    return "not_applicable"
+
+
+def _product_certification_blockers(
+    *,
+    runtime_backed: bool,
+    durable_storage_backed: bool,
+    observed_record_count: int,
+    stale_or_unavailable_source_ref_count: int,
+) -> tuple[str, ...]:
+    blockers: list[str] = []
+    if not runtime_backed:
+        blockers.append("runtime_product_materialization_missing")
+    if not durable_storage_backed:
+        blockers.append("durable_repository_not_configured")
+    if runtime_backed and observed_record_count == 0:
+        blockers.append("runtime_product_records_missing")
+    if runtime_backed and stale_or_unavailable_source_ref_count > 0:
+        blockers.append("stale_or_unavailable_source_refs_present")
+    blockers.extend(COMMON_PRODUCT_CERTIFICATION_BLOCKERS)
+    return tuple(dict.fromkeys(blockers))
+
+
+def _trust_telemetry_lineage_materialized(product_id: str, generated_at_utc: datetime) -> bool:
+    return product_id == "lotus-idea:IdeaTrustTelemetry:v1" and generated_at_utc.tzinfo is not None
+
+
+def _product_posture_payload(posture: RuntimeTrustTelemetryProductPosture) -> dict[str, Any]:
+    return {
+        "product_id": posture.product_id,
+        "product_name": posture.product_name,
+        "product_version": posture.product_version,
+        "lifecycle_status": posture.lifecycle_status,
+        "freshness_class": posture.freshness_class,
+        "coverage_status": posture.coverage_status,
+        "runtime_backed": posture.runtime_backed,
+        "observed_record_count": posture.observed_record_count,
+        "current_source_ref_count": posture.current_source_ref_count,
+        "stale_or_unavailable_source_ref_count": posture.stale_or_unavailable_source_ref_count,
+        "freshness_state": posture.freshness_state,
+        "completeness_status": posture.completeness_status,
+        "reconciliation_status": posture.reconciliation_status,
+        "data_quality_status": posture.data_quality_status,
+        "lineage_materialized": posture.lineage_materialized,
+        "source_batch_evidence_available": posture.source_batch_evidence_available,
+        "consumer_exposure_status": posture.consumer_exposure_status,
+        "certification_blockers": list(posture.certification_blockers),
+    }
 
 
 def _certification_blockers(

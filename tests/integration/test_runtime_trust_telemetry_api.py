@@ -71,6 +71,27 @@ def test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state
     assert payload["repository"] == "lotus-idea"
     assert payload["productId"] == "lotus-idea:IdeaCandidate:v1"
     assert payload["generatedAtUtc"] == "2026-06-21T10:10:00Z"
+    assert {posture["productId"] for posture in payload["productCoverage"]} >= {
+        "lotus-idea:OpportunitySignalCandidate:v1",
+        "lotus-idea:IdeaCandidate:v1",
+        "lotus-idea:IdeaEvidencePacket:v1",
+        "lotus-idea:AdvisorOpportunityQueue:v1",
+        "lotus-idea:IdeaTrustTelemetry:v1",
+    }
+    assert (
+        _preview_product_posture(
+            payload,
+            "lotus-idea:OpportunitySignalCandidate:v1",
+        )["coverageStatus"]
+        == "blocked_not_runtime_backed"
+    )
+    assert (
+        _preview_product_posture(
+            payload,
+            "lotus-idea:IdeaCandidate:v1",
+        )["observedRecordCount"]
+        == 1
+    )
     assert payload["candidateSnapshotCount"] == 1
     assert payload["currentSourceRefCount"] == 4
     assert payload["sourceAuthorityCounts"] == {"lotus-core": 4}
@@ -178,6 +199,20 @@ def test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state
     assert payload["contract_id"] == "lotus-domain-product-trust-telemetry-snapshot"
     assert payload["product_id"] == "lotus-idea:IdeaCandidate:v1"
     assert payload["emitted_at_utc"] == "2026-06-21T10:10:00Z"
+    assert {posture["product_id"] for posture in payload["product_coverage"]} >= {
+        "lotus-idea:OpportunitySignalCandidate:v1",
+        "lotus-idea:IdeaCandidate:v1",
+        "lotus-idea:IdeaEvidencePacket:v1",
+        "lotus-idea:AdvisorOpportunityQueue:v1",
+        "lotus-idea:IdeaTrustTelemetry:v1",
+    }
+    assert (
+        _snapshot_product_posture(
+            payload,
+            "lotus-idea:OpportunitySignalCandidate:v1",
+        )["coverage_status"]
+        == "blocked_not_runtime_backed"
+    )
     assert payload["freshness"]["freshness_state"] == "current"
     assert payload["freshness"]["age_seconds"] == 600
     assert payload["completeness_status"] == "partial"
@@ -280,6 +315,18 @@ def high_cash_payload() -> dict[str, Any]:
         },
         "entitlementAllowed": True,
     }
+
+
+def _preview_product_posture(payload: dict[str, Any], product_id: str) -> dict[str, Any]:
+    return next(
+        posture for posture in payload["productCoverage"] if posture["productId"] == product_id
+    )
+
+
+def _snapshot_product_posture(payload: dict[str, Any], product_id: str) -> dict[str, Any]:
+    return next(
+        posture for posture in payload["product_coverage"] if posture["product_id"] == product_id
+    )
 
 
 def source_ref(product_id: str) -> dict[str, str]:

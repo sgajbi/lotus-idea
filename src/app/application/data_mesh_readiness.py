@@ -10,6 +10,9 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 PRODUCER_DECLARATION_PATH = Path("contracts/domain-data-products/lotus-idea-products.v1.json")
 MESH_READINESS_PATH = Path("contracts/domain-data-products/mesh-readiness.v1.json")
 TRUST_TELEMETRY_PATH = Path("contracts/trust-telemetry/idea-candidate.telemetry.v1.json")
+TRUST_TELEMETRY_COVERAGE_PATH = Path(
+    "contracts/trust-telemetry/lotus-idea-product-coverage.telemetry.v1.json"
+)
 
 PLATFORM_MESH_CERTIFICATION_BLOCKERS = (
     "platform_source_manifest_inclusion_missing",
@@ -51,6 +54,7 @@ def build_data_mesh_readiness_snapshot(
     producer = _read_json(repository_root / PRODUCER_DECLARATION_PATH)
     readiness = _read_json(repository_root / MESH_READINESS_PATH)
     telemetry = _read_json(repository_root / TRUST_TELEMETRY_PATH)
+    telemetry_coverage = _read_json(repository_root / TRUST_TELEMETRY_COVERAGE_PATH)
 
     products = tuple(_product_readiness(product) for product in _objects(producer, "products"))
     certification_status = str(readiness.get("certification_status", "unknown"))
@@ -59,6 +63,7 @@ def build_data_mesh_readiness_snapshot(
         certification_status=certification_status,
         product_statuses=tuple(product.lifecycle_status for product in products),
         telemetry_blocking=telemetry_blocking if isinstance(telemetry_blocking, dict) else {},
+        telemetry_coverage=telemetry_coverage,
     )
 
     source_of_truth = readiness.get("source_of_truth")
@@ -71,7 +76,10 @@ def build_data_mesh_readiness_snapshot(
         certification_status=certification_status,
         mesh_role=str(readiness.get("mesh_role", "unknown")),
         source_of_truth=MappingProxyType(
-            {str(key): str(value) for key, value in source_of_truth.items()}
+            {
+                **{str(key): str(value) for key, value in source_of_truth.items()},
+                "trust_telemetry_coverage": TRUST_TELEMETRY_COVERAGE_PATH.as_posix(),
+            }
         ),
         products=products,
         blockers=blockers,
@@ -114,6 +122,7 @@ def _readiness_blockers(
     certification_status: str,
     product_statuses: tuple[str, ...],
     telemetry_blocking: dict[str, Any],
+    telemetry_coverage: dict[str, Any],
 ) -> tuple[str, ...]:
     blockers: list[str] = []
     if certification_status != "certified":
@@ -122,6 +131,8 @@ def _readiness_blockers(
         blockers.append("producer_products_not_active")
     if telemetry_blocking.get("blocked") is True:
         blockers.append("certified_runtime_trust_telemetry_missing")
+    if telemetry_coverage.get("coverage_status") != "complete":
+        blockers.append("runtime_trust_telemetry_product_coverage_incomplete")
     if certification_status != "certified":
         blockers.extend(PLATFORM_MESH_CERTIFICATION_BLOCKERS)
     blockers.append(SUPPORTED_FEATURE_PROMOTION_BLOCKER)

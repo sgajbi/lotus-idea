@@ -37,6 +37,7 @@ def test_data_mesh_readiness_api_returns_not_certified_operator_posture() -> Non
         "data_mesh_not_certified",
         "producer_products_not_active",
         "certified_runtime_trust_telemetry_missing",
+        "runtime_trust_telemetry_product_coverage_incomplete",
         "platform_source_manifest_inclusion_missing",
         "platform_catalog_inclusion_missing",
         "mesh_slo_policy_certification_missing",

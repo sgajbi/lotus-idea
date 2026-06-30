@@ -1033,7 +1033,19 @@ builds a source-safe runtime preview from the active repository snapshot, and
 candidate, source-authority, freshness, supportability, lifecycle, review,
 feedback, conversion, and report evidence-pack counts for callers with
 `idea.mesh.trust-telemetry.preview.read` plus the `operator` role. The preview
-emits a bounded `mesh_trust_telemetry_preview_read` operation event, reports
+now also emits `productCoverage` for every producer product declared in
+`contracts/domain-data-products/lotus-idea-products.v1.json`, including
+source-safe product-specific freshness, completeness, reconciliation, lineage,
+source-batch evidence, consumer exposure, and blocker posture. Products that do
+not yet have independent runtime materialization, such as
+`OpportunitySignalCandidate:v1`, are explicitly reported as
+`blocked_not_runtime_backed` instead of being hidden by candidate telemetry.
+The static product-coverage contract lives at
+`contracts/trust-telemetry/lotus-idea-product-coverage.telemetry.v1.json`, and
+data-mesh readiness reports
+`runtime_trust_telemetry_product_coverage_incomplete` while coverage is not
+complete. The preview emits a bounded
+`mesh_trust_telemetry_preview_read` operation event, reports
 `certificationStatus=not_certified`, `platformCertified=false`, and
 `supportedFeaturePromoted=false`, and is also available through
 `make runtime-trust-telemetry-preview-check`. The same application service now

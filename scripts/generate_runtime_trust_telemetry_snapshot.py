@@ -33,8 +33,29 @@ REQUIRED_CONTRACT_FIELDS = {
     "data_quality_status",
     "lineage",
     "blocking",
+    "product_coverage",
     "observed_trust_metadata",
     "evidence",
+}
+REQUIRED_PRODUCT_COVERAGE_FIELDS = {
+    "product_id",
+    "product_name",
+    "product_version",
+    "lifecycle_status",
+    "freshness_class",
+    "coverage_status",
+    "runtime_backed",
+    "observed_record_count",
+    "current_source_ref_count",
+    "stale_or_unavailable_source_ref_count",
+    "freshness_state",
+    "completeness_status",
+    "reconciliation_status",
+    "data_quality_status",
+    "lineage_materialized",
+    "source_batch_evidence_available",
+    "consumer_exposure_status",
+    "certification_blockers",
 }
 ALLOWED_COMPLETENESS_STATUSES = {
     "complete",
@@ -128,6 +149,7 @@ def validate_runtime_trust_telemetry_snapshot_payload(payload: dict[str, Any]) -
         errors.append("runtime snapshot source_repository must be lotus-idea")
     _validate_status_vocabulary(payload, errors)
     _validate_nested_contracts(payload, errors)
+    _validate_product_coverage(payload, errors)
     _validate_source_safety(payload, errors)
     return errors
 
@@ -178,6 +200,40 @@ def _validate_nested_contracts(payload: dict[str, Any], errors: list[str]) -> No
         )
 
 
+def _validate_product_coverage(payload: dict[str, Any], errors: list[str]) -> None:
+    coverage = payload.get("product_coverage")
+    if not isinstance(coverage, list) or not coverage:
+        errors.append("runtime snapshot product_coverage must be a non-empty list")
+        return
+    product_ids: set[str] = set()
+    for index, item in enumerate(coverage):
+        if not isinstance(item, dict):
+            errors.append(f"runtime snapshot product_coverage[{index}] must be an object")
+            continue
+        missing = sorted(REQUIRED_PRODUCT_COVERAGE_FIELDS - set(item))
+        if missing:
+            errors.append(
+                f"runtime snapshot product_coverage[{index}] missing fields: " + ", ".join(missing)
+            )
+        product_id = item.get("product_id")
+        if not isinstance(product_id, str) or not product_id.startswith("lotus-idea:"):
+            errors.append(f"runtime snapshot product_coverage[{index}] product_id is invalid")
+        else:
+            product_ids.add(product_id)
+        if item.get("coverage_status") not in {
+            "runtime_backed",
+            "runtime_backed_no_records",
+            "blocked_not_runtime_backed",
+        }:
+            errors.append(f"runtime snapshot product_coverage[{index}] coverage_status is invalid")
+        if not isinstance(item.get("certification_blockers"), list):
+            errors.append(
+                f"runtime snapshot product_coverage[{index}] certification_blockers must be a list"
+            )
+    if "lotus-idea:IdeaTrustTelemetry:v1" not in product_ids:
+        errors.append("runtime snapshot product_coverage must include IdeaTrustTelemetry:v1")
+
+
 def _validate_source_safety(payload: dict[str, Any], errors: list[str]) -> None:
     rendered = json.dumps(payload, sort_keys=True)
     for fragment in sorted(PROHIBITED_SOURCE_SAFE_FRAGMENTS):
@@ -189,7 +245,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Generate a source-safe, contract-shaped runtime trust telemetry snapshot for "
-            "the proposed lotus-idea IdeaCandidate data product."
+            "the proposed lotus-idea producer product catalog."
         )
     )
     parser.add_argument(
