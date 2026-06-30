@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Mapping, Protocol, runtime_checkable
 
 from app.domain import (
     AIExplanationLineagePersistenceResult,
@@ -61,6 +61,27 @@ class DownstreamRealizationReadinessRepositorySummary:
     report_evidence_pack_request_count: int
 
 
+@dataclass(frozen=True)
+class RuntimeTrustTelemetryRepositorySummary:
+    candidate_snapshot_count: int
+    current_source_ref_count: int
+    stale_or_unavailable_source_ref_count: int
+    source_authority_counts: Mapping[str, int]
+    freshness_counts: Mapping[str, int]
+    supportability_counts: Mapping[str, int]
+    lifecycle_counts: Mapping[str, int]
+    review_decision_count: int
+    feedback_event_count: int
+    conversion_intent_count: int
+    conversion_outcome_count: int
+    report_evidence_pack_count: int
+    lineage_materialized: bool
+    source_batch_evidence_available: bool
+    data_quality_status: str
+    latest_source_generated_at_utc: datetime | None
+    source_as_of_dates: tuple[str, ...]
+
+
 class CandidateSnapshotRepository(Protocol):
     def snapshot(self) -> IdeaRepositorySnapshot: ...
 
@@ -96,6 +117,11 @@ class DownstreamRealizationReadinessProjectionRepository(Protocol):
     def downstream_realization_readiness_summary(
         self,
     ) -> DownstreamRealizationReadinessRepositorySummary: ...
+
+
+@runtime_checkable
+class RuntimeTrustTelemetryProjectionRepository(Protocol):
+    def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary: ...
 
 
 class CandidatePersistenceRepository(Protocol):

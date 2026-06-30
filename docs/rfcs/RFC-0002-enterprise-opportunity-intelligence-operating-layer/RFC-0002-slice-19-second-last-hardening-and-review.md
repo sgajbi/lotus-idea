@@ -507,3 +507,25 @@ workflow totals:
    not certify downstream execution, route existence, suitability/rebalance/
    report authority, client-ready publication, Gateway/Workbench support, or
    supported-feature promotion.
+
+This slice also applies the bounded durable-read pattern to runtime trust
+telemetry after the same issue-review pattern showed operator diagnostics
+should not hydrate whole repository snapshots for aggregate counts:
+
+1. `RuntimeTrustTelemetryProjectionRepository` and
+   `RuntimeTrustTelemetryRepositorySummary` define an internal projection for
+   candidate count, source-authority/freshness/supportability/lifecycle
+   buckets, workflow counts, lineage posture, data-quality posture, latest
+   source generation time, and source as-of-date coverage; this is design
+   modularity only, not a separate trust-telemetry runtime service.
+2. `PostgresIdeaRepository.runtime_trust_telemetry_summary(...)` queries
+   `idea_candidate_record`, `idea_review_decision`, `idea_feedback_event`,
+   `idea_conversion_intent`, `idea_conversion_outcome`, and
+   `idea_report_evidence_pack_request` for aggregate telemetry only.
+3. Application tests prove preview/snapshot builders use the projection without
+   calling `snapshot()`. PostgreSQL tests prove the projection avoids audit,
+   outbox, downstream-submission, lifecycle-history, idempotency, and
+   AI-lineage tables.
+4. This is production-scale internal trust-telemetry hardening only. It does
+   not certify data products, platform mesh, Gateway/Workbench discovery,
+   client-ready publication, or supported-feature promotion.

@@ -327,7 +327,6 @@ async def get_runtime_trust_telemetry_snapshot(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
-    candidate_snapshot_count = len(repository.snapshot().candidate_records)
     snapshot = build_runtime_trust_telemetry_snapshot(
         repository=repository,
         durable_storage_backed=durable_storage_backed,
@@ -338,7 +337,7 @@ async def get_runtime_trust_telemetry_snapshot(
         IdeaOperation.MESH_TRUST_TELEMETRY_SNAPSHOT_READ,
         OperationOutcome.BLOCKED,
         durable_storage_backed=durable_storage_backed,
-        candidate_snapshot_count=candidate_snapshot_count,
+        candidate_snapshot_count=_candidate_snapshot_count_from_payload(payload),
     )
     return RuntimeTrustTelemetrySnapshotResponse.from_payload(payload)
 
@@ -376,6 +375,19 @@ def _count_bucket(value: int) -> str:
     if value <= 100:
         return "11-100"
     return "101+"
+
+
+def _candidate_snapshot_count_from_payload(payload: Mapping[str, Any]) -> int:
+    product_coverage = payload.get("product_coverage")
+    if not isinstance(product_coverage, list):
+        return 0
+    for posture in product_coverage:
+        if not isinstance(posture, dict):
+            continue
+        if posture.get("product_id") == "lotus-idea:IdeaCandidate:v1":
+            value = posture.get("observed_record_count")
+            return value if isinstance(value, int) else 0
+    return 0
 
 
 RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {

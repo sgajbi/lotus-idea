@@ -14,11 +14,13 @@ from app.application.runtime_trust_telemetry import (
     build_runtime_trust_telemetry_preview,
     build_runtime_trust_telemetry_snapshot,
 )
+from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
 from app.domain import (
     EvidenceFreshness,
     HighCashSignalInput,
     HighCashSignalPolicy,
     InMemoryIdeaRepository,
+    IdeaRepositorySnapshot,
     SignalEvaluationOutcome,
     SourceRef,
     SourceSystem,
@@ -111,6 +113,40 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     )
     assert "durable_repository_not_configured" not in snapshot.certification_blockers
     assert "platform_mesh_certification_missing" in snapshot.certification_blockers
+
+
+def test_runtime_trust_telemetry_uses_repository_projection_without_snapshot() -> None:
+    repository = _ProjectionOnlyRuntimeTrustTelemetryRepository()
+
+    preview = build_runtime_trust_telemetry_preview(
+        repository=repository,
+        durable_storage_backed=True,
+        generated_at_utc=OBSERVED_AT,
+    )
+    snapshot = build_runtime_trust_telemetry_snapshot(
+        repository=repository,
+        durable_storage_backed=True,
+        generated_at_utc=OBSERVED_AT,
+    ).to_dict()
+
+    assert repository.summary_call_count == 3
+    assert preview.candidate_snapshot_count == 2
+    assert preview.current_source_ref_count == 7
+    assert preview.stale_or_unavailable_source_ref_count == 1
+    assert preview.source_authority_counts == {"lotus-core": 7, "lotus-risk": 1}
+    assert preview.freshness_counts == {"current": 7, "stale": 1}
+    assert preview.supportability_counts == {"ready": 2}
+    assert preview.lifecycle_counts == {"generated": 2}
+    assert preview.review_decision_count == 1
+    assert preview.feedback_event_count == 1
+    assert preview.conversion_intent_count == 2
+    assert preview.conversion_outcome_count == 1
+    assert preview.report_evidence_pack_count == 3
+    assert preview.lineage_materialized is True
+    assert snapshot["freshness"]["freshness_state"] == "stale"
+    assert snapshot["freshness"]["age_seconds"] == 600
+    assert snapshot["data_quality_status"] == "quality_warning"
+    assert snapshot["observed_trust_metadata"]["as_of_date"] == "2026-06-21"
 
 
 def test_runtime_trust_telemetry_preview_rejects_naive_generation_time() -> None:
@@ -373,3 +409,33 @@ def _source_ref(
         data_quality_status=data_quality_status,
         freshness=freshness,
     )
+
+
+class _ProjectionOnlyRuntimeTrustTelemetryRepository:
+    def __init__(self) -> None:
+        self.summary_call_count = 0
+
+    def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary:
+        self.summary_call_count += 1
+        return RuntimeTrustTelemetryRepositorySummary(
+            candidate_snapshot_count=2,
+            current_source_ref_count=7,
+            stale_or_unavailable_source_ref_count=1,
+            source_authority_counts={"lotus-core": 7, "lotus-risk": 1},
+            freshness_counts={"current": 7, "stale": 1},
+            supportability_counts={"ready": 2},
+            lifecycle_counts={"generated": 2},
+            review_decision_count=1,
+            feedback_event_count=1,
+            conversion_intent_count=2,
+            conversion_outcome_count=1,
+            report_evidence_pack_count=3,
+            lineage_materialized=True,
+            source_batch_evidence_available=True,
+            data_quality_status="quality_warning",
+            latest_source_generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+            source_as_of_dates=("2026-06-21",),
+        )
+
+    def snapshot(self) -> IdeaRepositorySnapshot:
+        raise AssertionError("runtime trust telemetry should use repository projection")

@@ -1079,7 +1079,7 @@ catalog inclusion, SLO certification, access-policy certification,
 evidence-policy certification, Gateway/Workbench discovery proof, and
 supported-feature promotion so aggregate proof-readiness cannot hide the real
 mesh certification path. `src/app/application/runtime_trust_telemetry.py`
-builds a source-safe runtime preview from the active repository snapshot, and
+builds a source-safe runtime preview from the active repository provider, and
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
 candidate, source-authority, freshness, supportability, lifecycle, review,
 feedback, conversion, and report evidence-pack counts for callers with
@@ -1105,6 +1105,13 @@ builds a contract-shaped runtime trust telemetry snapshot exposed through
 `idea.mesh.trust-telemetry.snapshot.read` plus the `operator` role. The
 snapshot diagnostic emits a bounded `mesh_trust_telemetry_snapshot_read`
 operation event and preserves the same not-certified/no-promotion posture.
+When PostgreSQL is the active durable repository provider, the preview and
+snapshot read aggregate counts through
+`RuntimeTrustTelemetryProjectionRepository` over `idea_candidate_record`,
+`idea_review_decision`, `idea_feedback_event`, `idea_conversion_intent`,
+`idea_conversion_outcome`, and `idea_report_evidence_pack_request` only; they
+do not hydrate audit, outbox, downstream-submission, lifecycle-history,
+idempotency, or AI-lineage state for ordinary telemetry reads.
 `scripts/generate_runtime_trust_telemetry_snapshot.py` and
 `make runtime-trust-telemetry-snapshot-check` write the same source-safe
 generated evidence to
@@ -1535,7 +1542,10 @@ logs; fix or document the owned warning source instead.
    aggregate decision counts only.
    Runtime-trust-telemetry orchestration emits both the internal preview and a
    contract-shaped, source-safe runtime snapshot while keeping platform
-   certification blockers explicit.
+   certification blockers explicit. Durable PostgreSQL providers answer its
+   aggregate repository counts through the runtime trust telemetry projection
+   over candidate and workflow tables; process-local or older repositories can
+   still fall back to snapshot semantics.
    Outbox-delivery-readiness orchestration prefers the repository-side
    readiness projection when the active durable repository exposes it, and
    falls back to the snapshot path only for process-local or older repository

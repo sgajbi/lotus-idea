@@ -95,7 +95,7 @@ discovery, or supported-feature promotion.
 
 The internal
 `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` endpoint reads the
-active repository snapshot and returns aggregate runtime telemetry preview
+active repository provider and returns aggregate runtime telemetry preview
 counts for the proposed `IdeaCandidate:v1` product. It omits candidate
 identifiers, source routes, evidence hashes, portfolio identifiers, and client
 identifiers. It is pre-certification runtime evidence only; platform mesh
@@ -107,6 +107,12 @@ corresponding contract-shaped runtime snapshot for operators with
 `idea.mesh.trust-telemetry.snapshot.read`. It uses aggregate active-repository
 state only and does not expose candidate identifiers, source routes, evidence
 hashes, portfolio identifiers, or client identifiers.
+
+When PostgreSQL is active, runtime trust telemetry preview and snapshot reads
+use a repository-side aggregate projection over candidate and workflow tables
+instead of hydrating audit, outbox, downstream-submission, lifecycle-history,
+idempotency, or AI-lineage state. Process-local providers can still use the
+snapshot fallback.
 
 `make runtime-trust-telemetry-snapshot-check` writes the same contract-shaped
 runtime snapshot to

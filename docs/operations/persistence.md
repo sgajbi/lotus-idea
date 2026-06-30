@@ -253,6 +253,10 @@ flowchart LR
     counts: PostgreSQL reads `idea_conversion_intent`,
     `idea_conversion_outcome`, and `idea_report_evidence_pack_request`
     directly instead of hydrating unrelated repository state.
+    Runtime trust telemetry preview and snapshot diagnostics also use a
+    repository-side PostgreSQL aggregate projection over candidate and workflow
+    tables, so ordinary operator reads avoid hydrating audit, outbox,
+    downstream-submission, lifecycle-history, idempotency, or AI-lineage state.
 17. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
     through the service boundary for operators. It does not mutate pending
     records when broker configuration is absent or invalid, and successful runs

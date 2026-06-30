@@ -993,6 +993,8 @@
         "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_preview_reports_empty_blocked_posture",
         "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_preview_counts_source_safe_repository_state",
         "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_preview_payload_is_source_safe",
+        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_uses_repository_projection_without_snapshot",
+        "tests/unit/test_postgres_runtime_trust_telemetry.py::test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_preview_api_returns_source_safe_aggregate_state",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_preview_api_requires_operator_permission",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_preview_api_emits_not_certified_operation_event"
@@ -1020,6 +1022,8 @@
       "test_evidence": [
         "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_snapshot_reports_empty_blocked_contract_posture",
         "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_snapshot_materializes_source_safe_runtime_evidence",
+        "tests/unit/test_runtime_trust_telemetry.py::test_runtime_trust_telemetry_uses_repository_projection_without_snapshot",
+        "tests/unit/test_postgres_runtime_trust_telemetry.py::test_postgres_repository_uses_bounded_runtime_trust_telemetry_projection",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_snapshot_api_returns_source_safe_contract_state",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_snapshot_api_requires_operator_permission",
         "tests/integration/test_runtime_trust_telemetry_api.py::test_runtime_trust_telemetry_snapshot_api_emits_not_certified_operation_event"

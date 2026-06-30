@@ -93,10 +93,14 @@ from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
     load_review_queue_candidate_page,
 )
+from app.infrastructure.postgres_runtime_trust_telemetry import (
+    load_runtime_trust_telemetry_summary,
+)
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
 from app.ports.idea_repository import ReviewQueueRepositoryPage
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
+from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
 
 
 _T = TypeVar("_T")
@@ -128,6 +132,9 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         self,
     ) -> DownstreamRealizationReadinessRepositorySummary:
         return load_downstream_realization_readiness_summary(self._connection)
+
+    def runtime_trust_telemetry_summary(self) -> RuntimeTrustTelemetryRepositorySummary:
+        return load_runtime_trust_telemetry_summary(self._connection)
 
     def persist_candidate(
         self,

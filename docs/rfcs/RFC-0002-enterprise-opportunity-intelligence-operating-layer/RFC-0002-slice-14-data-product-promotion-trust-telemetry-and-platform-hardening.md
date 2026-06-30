@@ -32,7 +32,7 @@ This slice now has internal operator diagnostic foundations only:
 7. `docs/operations/endpoint-certification-ledger.json` certifies the endpoint
    as an internal diagnostic operation, not as mesh certification.
 8. `src/app/application/runtime_trust_telemetry.py` builds a source-safe
-   runtime trust telemetry preview from the active repository snapshot.
+   runtime trust telemetry preview from the active repository provider.
 9. `GET /api/v1/data-mesh/trust-telemetry/runtime-preview` exposes aggregate
    candidate, source-authority, freshness, supportability, lifecycle, review,
    feedback, conversion, and report evidence-pack counts to callers with the
@@ -64,6 +64,14 @@ This slice now has internal operator diagnostic foundations only:
     `data_mesh_runtime_telemetry_not_certified`) and keeps platform
     source-manifest, mesh certification, active producer product,
     Gateway/Workbench discovery, and supported-feature blockers in place.
+
+Durable PostgreSQL providers compute runtime trust telemetry aggregate counts
+through `RuntimeTrustTelemetryProjectionRepository` over
+`idea_candidate_record`, `idea_review_decision`, `idea_feedback_event`,
+`idea_conversion_intent`, `idea_conversion_outcome`, and
+`idea_report_evidence_pack_request` only. Ordinary preview/snapshot reads do
+not hydrate audit, outbox, downstream-submission, lifecycle-history,
+idempotency, or AI-lineage state.
 16. `src/app/application/platform_mesh_onboarding_proof.py`,
     `scripts/generate_platform_mesh_onboarding_proof.py`, and
     `make platform-mesh-onboarding-proof-contract-gate` validate bounded
