@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Mapping
+from typing import Any, Mapping
 
 from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
@@ -14,7 +14,12 @@ from app.api.durable_write_guard import (
     durable_repository_not_configured_metadata,
     durable_write_problem,
 )
-from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
+from app.api.idempotency import IDEMPOTENCY_KEY_REQUIRED_MESSAGE, validate_idempotency_key
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    permission_denied_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     build_outbox_publisher_from_environment as _build_outbox_publisher_from_environment,
@@ -24,7 +29,13 @@ from app.api.runtime_dependencies import (
     idea_repository_durable_storage_backed,
 )
 from app.api.temporal_validation import is_utc_datetime
-from app.application.outbox_delivery import OutboxDeliveryRunSummary, run_outbox_delivery_once
+from app.application.outbox_delivery import (
+    OutboxDeliveryRunStatus,
+    OutboxDeliveryRunSummary,
+    operator_run_reference_for_idempotency_key,
+    outbox_delivery_run_request_payload,
+    run_outbox_delivery_once,
+)
 from app.application.outbox_delivery_readiness import (
     DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
     OutboxDeliveryReadinessSnapshot,
@@ -128,6 +139,7 @@ class OutboxDeliveryReadinessResponse(CamelModel):
 class OutboxDeliveryRunOnceResponse(CamelModel):
     repository: str
     run_status: str = Field(..., alias="runStatus")
+    operator_run_reference: str = Field(..., alias="operatorRunReference")
     supportability_status: str = Field(..., alias="supportabilityStatus")
     durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
     external_broker_configured: bool = Field(..., alias="externalBrokerConfigured")
@@ -147,10 +159,12 @@ class OutboxDeliveryRunOnceResponse(CamelModel):
         durable_storage_backed: bool,
         blocker: str,
         max_retry_count: int,
+        operator_run_reference: str = "unavailable",
     ) -> "OutboxDeliveryRunOnceResponse":
         return cls(
             repository="lotus-idea",
             runStatus="blocked",
+            operatorRunReference=operator_run_reference,
             supportabilityStatus="not_certified",
             durableStorageBacked=durable_storage_backed,
             externalBrokerConfigured=False,
@@ -176,7 +190,8 @@ class OutboxDeliveryRunOnceResponse(CamelModel):
     ) -> "OutboxDeliveryRunOnceResponse":
         return cls(
             repository="lotus-idea",
-            runStatus="completed",
+            runStatus=summary.run_status.value,
+            operatorRunReference=summary.operator_run_reference,
             supportabilityStatus="not_certified",
             durableStorageBacked=durable_storage_backed,
             externalBrokerConfigured=True,
@@ -240,6 +255,7 @@ async def post_outbox_delivery_run_once(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
 ) -> OutboxDeliveryRunOnceResponse | JSONResponse:
     caller = caller_context_from_headers(
         subject=x_caller_subject,
@@ -253,13 +269,21 @@ async def post_outbox_delivery_run_once(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
         )
+        return problem_response(**_outbox_delivery_run_permission_denied_response_args())
+
+    validated_idempotency_key = idempotency_key or ""
+    try:
+        validate_idempotency_key(validated_idempotency_key)
+    except ValueError:
+        _emit_outbox_delivery_run_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_request",
+        )
         return problem_response(
-            status_code=status.HTTP_403_FORBIDDEN,
-            code="permission_denied",
-            title="Permission denied",
-            detail="The caller is not permitted to run idea outbox delivery.",
+            **_outbox_delivery_run_invalid_request_response_args(IDEMPOTENCY_KEY_REQUIRED_MESSAGE)
         )
 
+    operator_run_reference = operator_run_reference_for_idempotency_key(validated_idempotency_key)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     configuration_problem = durable_write_problem(repository)
@@ -268,6 +292,7 @@ async def post_outbox_delivery_run_once(
             OperationOutcome.BLOCKED,
             DURABLE_REPOSITORY_NOT_CONFIGURED,
             durable_storage_backed=durable_storage_backed,
+            operator_run_reference=operator_run_reference,
         )
         return configuration_problem
 
@@ -276,13 +301,20 @@ async def post_outbox_delivery_run_once(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
             durable_storage_backed=durable_storage_backed,
+            operator_run_reference=operator_run_reference,
         )
         return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="deliveredAtUtc must be UTC when provided.",
+            **_outbox_delivery_run_invalid_request_response_args(
+                "deliveredAtUtc must be UTC when provided."
+            )
         )
+
+    run_request_payload = outbox_delivery_run_request_payload(
+        limit=limit,
+        max_retry_count=max_retry_count,
+        delivered_at_utc=delivered_at_utc,
+        caller_subject=caller.subject,
+    )
 
     publisher_result = _build_outbox_publisher_from_environment()
     if isinstance(publisher_result, str):
@@ -290,11 +322,13 @@ async def post_outbox_delivery_run_once(
             OperationOutcome.BLOCKED,
             publisher_result,
             durable_storage_backed=durable_storage_backed,
+            operator_run_reference=operator_run_reference,
         )
         return OutboxDeliveryRunOnceResponse.blocked(
             durable_storage_backed=durable_storage_backed,
             blocker=publisher_result,
             max_retry_count=max_retry_count,
+            operator_run_reference=operator_run_reference,
         )
 
     summary = run_outbox_delivery_once(
@@ -302,12 +336,27 @@ async def post_outbox_delivery_run_once(
         publisher_result,
         limit=limit,
         max_retry_count=max_retry_count,
+        idempotency_key=validated_idempotency_key,
+        request_payload=run_request_payload,
         delivered_at_utc=delivered_at_utc,
     )
+    if summary.run_status is OutboxDeliveryRunStatus.CONFLICT:
+        _emit_outbox_delivery_run_event(
+            OperationOutcome.CONFLICT,
+            "idempotency_conflict",
+            durable_storage_backed=durable_storage_backed,
+            operator_run_reference=summary.operator_run_reference,
+        )
+        return problem_response(**_outbox_delivery_run_idempotency_conflict_response_args())
     _emit_outbox_delivery_run_event(
-        OperationOutcome.ACCEPTED,
+        (
+            OperationOutcome.REPLAYED
+            if summary.run_status is OutboxDeliveryRunStatus.REPLAYED
+            else OperationOutcome.ACCEPTED
+        ),
         durable_storage_backed=durable_storage_backed,
         attempted_count=summary.attempted_count,
+        operator_run_reference=summary.operator_run_reference,
     )
     return OutboxDeliveryRunOnceResponse.from_domain(
         summary,
@@ -317,6 +366,33 @@ async def post_outbox_delivery_run_once(
 
 def _require_outbox_delivery_readiness_caller(caller: CallerContext) -> None:
     require_role_and_capability(caller, _READ_OUTBOX_DELIVERY_READINESS_POLICY)
+
+
+def _outbox_delivery_run_permission_denied_response_args() -> dict[str, Any]:
+    return {
+        "status_code": status.HTTP_403_FORBIDDEN,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to run idea outbox delivery.",
+    }
+
+
+def _outbox_delivery_run_invalid_request_response_args(detail: str) -> dict[str, Any]:
+    return {
+        "status_code": status.HTTP_400_BAD_REQUEST,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": detail,
+    }
+
+
+def _outbox_delivery_run_idempotency_conflict_response_args() -> dict[str, Any]:
+    return {
+        "status_code": status.HTTP_409_CONFLICT,
+        "code": "idempotency_conflict",
+        "title": "Idempotency conflict",
+        "detail": "The idempotency key was already used with a different request payload.",
+    }
 
 
 def _emit_outbox_delivery_readiness_event(
@@ -344,10 +420,13 @@ def _emit_outbox_delivery_run_event(
     *,
     durable_storage_backed: bool = False,
     attempted_count: int | None = None,
+    operator_run_reference: str | None = None,
 ) -> None:
     attributes: dict[str, str] = {}
     if attempted_count is not None:
         attributes["attempted_count_bucket"] = _count_bucket(attempted_count)
+    if operator_run_reference is not None:
+        attributes["operator_run_reference"] = operator_run_reference
     emit_operation_event(
         OperationEvent(
             operation=IdeaOperation.OUTBOX_DELIVERY_RUN_ONCE,
@@ -444,12 +523,15 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
     "operation_id": "runIdeaOutboxDeliveryOnce",
     "summary": "Run idea outbox delivery once",
     "description": (
-        "Runs one bounded internal outbox delivery pass for operators. The endpoint uses the "
-        "active repository provider and configured outbox publisher adapter, returns aggregate "
-        "counts only, and remains not certified until live broker runtime, downstream consumer "
-        "runtime proof, platform mesh event publication proof, Gateway/Workbench proof, and "
-        "supported-feature promotion exist. If the broker is not configured or invalid, the "
-        "endpoint fails closed without mutating pending outbox records."
+        "Runs one bounded internal outbox delivery pass for operators. The endpoint requires a "
+        "validated Idempotency-Key, binds that identity to safe request parameters and caller "
+        "subject, returns a source-safe operatorRunReference, and replays same-key/same-request "
+        "calls without mutation while rejecting same-key/different-request calls with 409. The "
+        "endpoint uses the active repository provider and configured outbox publisher adapter, "
+        "returns aggregate counts only, and remains not certified until live broker runtime, "
+        "downstream consumer runtime proof, platform mesh event publication proof, "
+        "Gateway/Workbench proof, and supported-feature promotion exist. If the broker is not "
+        "configured or invalid, the endpoint fails closed without mutating pending outbox records."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": OutboxDeliveryRunOnceResponse,
@@ -462,6 +544,7 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
                     "example": {
                         "repository": "lotus-idea",
                         "runStatus": "blocked",
+                        "operatorRunReference": "outbox-run-4e9f3c98d3a8f6c4d1a7e2b0",
                         "supportabilityStatus": "not_certified",
                         "durableStorageBacked": False,
                         "externalBrokerConfigured": False,
@@ -490,6 +573,12 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
         **permission_denied_metadata(
             detail="The caller is not permitted to run outbox delivery.",
             description="Caller lacks outbox delivery run permission.",
+        ),
+        **conflict_metadata(
+            code="idempotency_conflict",
+            title="Idempotency conflict",
+            detail="The idempotency key was already used with a different request payload.",
+            description="Idempotency key was already bound to a different safe request payload.",
         ),
         **durable_repository_not_configured_metadata(),
     },

@@ -918,18 +918,19 @@
       "path": "/api/v1/outbox-delivery/run-once",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider and configured publisher adapter while returning aggregate counts only.",
-      "when_to_use": "Use for internal operator validation when a caller has idea.outbox-delivery.run capability and needs to exercise outbox delivery orchestration without exposing event identifiers or claiming live broker certification.",
+      "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider, configured publisher adapter, and explicit operator run identity while returning aggregate counts only.",
+      "when_to_use": "Use for internal operator validation when a caller has idea.outbox-delivery.run capability and Idempotency-Key and needs to exercise outbox delivery orchestration without exposing raw idempotency keys, event identifiers, or claiming live broker certification.",
       "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform mesh event publication proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [
-        "POST /api/v1/outbox-delivery/run-once?deliveredAtUtc=2026-06-21T10:05:00Z&limit=10 with X-Caller-Roles: operator and X-Caller-Capabilities: idea.outbox-delivery.run"
+        "POST /api/v1/outbox-delivery/run-once?deliveredAtUtc=2026-06-21T10:05:00Z&limit=10 with X-Caller-Roles: operator, X-Caller-Capabilities: idea.outbox-delivery.run, and Idempotency-Key"
       ],
       "response_examples": [
-        "{\"repository\":\"lotus-idea\",\"runStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"durableStorageBacked\":false,\"externalBrokerConfigured\":false,\"attemptedCount\":0,\"publishedCount\":0,\"failedCount\":0,\"deadLetteredCount\":0,\"skippedCount\":0,\"maxRetryCount\":3,\"certificationBlockers\":[\"outbox_broker_not_configured\",\"external_broker_runtime_proof_missing\",\"downstream_consumer_runtime_proof_missing\",\"platform_mesh_event_publication_proof_missing\",\"gateway_workbench_proof_missing\",\"supported_feature_promotion_missing\"],\"supportedFeaturePromoted\":false}"
+        "{\"repository\":\"lotus-idea\",\"runStatus\":\"blocked\",\"operatorRunReference\":\"outbox-run-4e9f3c98d3a8f6c4d1a7e2b0\",\"supportabilityStatus\":\"not_certified\",\"durableStorageBacked\":false,\"externalBrokerConfigured\":false,\"attemptedCount\":0,\"publishedCount\":0,\"failedCount\":0,\"deadLetteredCount\":0,\"skippedCount\":0,\"maxRetryCount\":3,\"certificationBlockers\":[\"outbox_broker_not_configured\",\"external_broker_runtime_proof_missing\",\"downstream_consumer_runtime_proof_missing\",\"platform_mesh_event_publication_proof_missing\",\"gateway_workbench_proof_missing\",\"supported_feature_promotion_missing\"],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.outbox-delivery.run capability.",
-        "400 returns product-safe Problem Details when deliveredAtUtc is present but not UTC."
+        "400 returns product-safe Problem Details when Idempotency-Key is missing or deliveredAtUtc is present but not UTC.",
+        "409 returns product-safe Problem Details when Idempotency-Key is reused with a different safe request payload."
       ],
       "test_evidence": [
         "tests/unit/test_outbox_delivery.py::test_run_outbox_delivery_once_marks_published_events_source_safely",
@@ -938,6 +939,9 @@
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_blocks_without_broker_configuration",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_publishes_with_configured_publisher",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_idempotency_key",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different_parameters",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_operator_permission",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_emits_not_certified_operation_event"
       ],

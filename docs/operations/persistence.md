@@ -107,8 +107,12 @@ broker publication, downstream delivery, Gateway/Workbench behavior,
 client-ready publication, or supported features.
 `POST /api/v1/outbox-delivery/run-once` now exposes the bounded run-once
 delivery orchestration as a certified internal operator action. It requires
-`idea.outbox-delivery.run`, fails closed without valid broker configuration,
-returns aggregate counts only, and remains `not_certified` until live broker
+`idea.outbox-delivery.run` plus `Idempotency-Key`, binds the operator run
+identity to safe request parameters and caller subject, replays same-key /
+same-request retries without mutation, rejects same-key / different-request
+reuse with product-safe conflict, fails closed without valid broker
+configuration, returns aggregate counts plus a source-safe
+`operatorRunReference` only, and remains `not_certified` until live broker
 runtime, downstream delivery evidence, certified external broker publication,
 Gateway/Workbench proof, and supported-feature promotion exist.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
@@ -258,10 +262,12 @@ flowchart LR
     tables, so ordinary operator reads avoid hydrating audit, outbox,
     downstream-submission, lifecycle-history, idempotency, or AI-lineage state.
 17. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
-    through the service boundary for operators. It does not mutate pending
-    records when broker configuration is absent or invalid, and successful runs
-    return only aggregate attempted, published, failed, dead-lettered, and
-    skipped counts.
+    through the service boundary for operators. It requires `Idempotency-Key`,
+    records the operator run identity before claiming events, does not mutate
+    pending records when broker configuration is absent or invalid, and
+    successful runs return only aggregate attempted, published, failed,
+    dead-lettered, and skipped counts plus a source-safe
+    `operatorRunReference`.
 
 ## Validation
 

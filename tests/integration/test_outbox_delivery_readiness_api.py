@@ -50,12 +50,14 @@ def outbox_delivery_run_headers(
     *,
     roles: str = "operator",
     capabilities: str = "idea.outbox-delivery.run",
+    idempotency_key: str = "outbox-run:api:001",
 ) -> dict[str, str]:
     return {
         "X-Caller-Subject": "platform-operator",
         "X-Caller-Roles": roles,
         "X-Caller-Capabilities": capabilities,
         "X-Correlation-Id": "corr-outbox-delivery-run-api",
+        "Idempotency-Key": idempotency_key,
     }
 
 
@@ -188,6 +190,7 @@ def test_outbox_delivery_run_once_api_blocks_without_broker_configuration(
     assert response.status_code == 200
     payload = response.json()
     assert payload["runStatus"] == "blocked"
+    assert payload["operatorRunReference"].startswith("outbox-run-")
     assert payload["attemptedCount"] == 0
     assert payload["publishedCount"] == 0
     assert payload["externalBrokerConfigured"] is False
@@ -195,6 +198,7 @@ def test_outbox_delivery_run_once_api_blocks_without_broker_configuration(
     assert "eventId" not in response.text
     assert "idea_high_cash_001" not in response.text
     assert "idea.candidate.persisted.v1:idempotency" not in response.text
+    assert "outbox-run:api:001" not in response.text
     assert (
         resettable_repository_snapshot().outbox_events[event.event_id].status
         is OutboxEventStatus.PENDING
@@ -239,6 +243,7 @@ def test_outbox_delivery_run_once_api_blocks_invalid_broker_configuration(
     assert response.status_code == 200
     payload = response.json()
     assert payload["runStatus"] == "blocked"
+    assert payload["operatorRunReference"].startswith("outbox-run-")
     assert payload["attemptedCount"] == 0
     assert payload["publishedCount"] == 0
     assert payload["externalBrokerConfigured"] is False
@@ -271,6 +276,7 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
     assert response.status_code == 200
     payload = response.json()
     assert payload["runStatus"] == "completed"
+    assert payload["operatorRunReference"].startswith("outbox-run-")
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["attemptedCount"] == 1
     assert payload["publishedCount"] == 1
@@ -289,6 +295,7 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
     )
     assert "eventId" not in response.text
     assert "idea_high_cash_001" not in response.text
+    assert "outbox-run:api:001" not in response.text
 
 
 def test_outbox_delivery_run_once_api_requires_operator_permission() -> None:
@@ -314,6 +321,24 @@ def test_outbox_delivery_run_once_api_requires_operator_permission() -> None:
     assert capability_denied.json()["code"] == "permission_denied"
 
 
+def test_outbox_delivery_run_once_api_requires_idempotency_key() -> None:
+    client = TestClient(app)
+    headers = outbox_delivery_run_headers()
+    headers.pop("Idempotency-Key")
+
+    response = client.post("/api/v1/outbox-delivery/run-once", headers=headers)
+    blank = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        headers={**headers, "Idempotency-Key": " "},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "idempotency key is required" in response.text
+    assert blank.status_code == 400
+    assert blank.json()["code"] == "invalid_request"
+
+
 def test_outbox_delivery_run_once_api_rejects_non_utc_delivery_time() -> None:
     client = TestClient(app)
 
@@ -325,6 +350,75 @@ def test_outbox_delivery_run_once_api_rejects_non_utc_delivery_time() -> None:
 
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
+
+
+def test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    first_event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(first_event))
+    publisher = AcceptingPublisher()
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "_build_outbox_publisher_from_environment",
+        lambda: publisher,
+    )
+    client = TestClient(app)
+    headers = outbox_delivery_run_headers(idempotency_key="outbox-run:api-replay:001")
+
+    first = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 10},
+        headers=headers,
+    )
+    replay = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 10},
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert first.json()["runStatus"] == "completed"
+    assert first.json()["publishedCount"] == 1
+    assert replay.status_code == 200
+    assert replay.json()["runStatus"] == "replayed"
+    assert replay.json()["attemptedCount"] == 0
+    assert replay.json()["operatorRunReference"] == first.json()["operatorRunReference"]
+    assert len(publisher.events) == 1
+    assert "outbox-run:api-replay:001" not in replay.text
+
+
+def test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different_parameters(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    publisher = AcceptingPublisher()
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "_build_outbox_publisher_from_environment",
+        lambda: publisher,
+    )
+    client = TestClient(app)
+    headers = outbox_delivery_run_headers(idempotency_key="outbox-run:api-conflict:001")
+
+    first = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 10},
+        headers=headers,
+    )
+    conflict = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 20},
+        headers=headers,
+    )
+
+    assert first.status_code == 200
+    assert first.json()["publishedCount"] == 1
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+    assert len(publisher.events) == 1
+    assert "outbox-run:api-conflict:001" not in conflict.text
 
 
 def test_outbox_delivery_run_once_api_emits_not_certified_operation_event(
@@ -370,7 +464,10 @@ def test_outbox_delivery_run_once_api_emits_not_certified_operation_event(
             False,
             False,
             None,
-            {"attempted_count_bucket": "1-10"},
+            {
+                "attempted_count_bucket": "1-10",
+                "operator_run_reference": response.json()["operatorRunReference"],
+            },
         )
     ]
 

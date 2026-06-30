@@ -59,7 +59,8 @@ Current implementation includes these bounded foundations:
 7. downstream conversion/report submission foundations that record local
    submission posture and never grant downstream source authority,
 8. source-safe outbox event publication foundations with retry/dead-letter
-   state and bounded broker proof artifacts,
+   state, idempotent operator run-once identity, and bounded broker proof
+   artifacts,
 9. AI explanation foundations with deterministic evidence, lineage storage,
    model-risk operations evidence, and no provider-runtime certification,
 10. implementation-proof readiness diagnostics that aggregate blockers instead
@@ -519,28 +520,34 @@ Recent issue-derived patterns to preserve:
    full-snapshot mutation helpers must not silently overwrite stale state,
 11. persisted AI explanation lineage writes need API-level idempotency in
    addition to domain request-id replay protection,
-12. generated proof and quality evidence must be reproducible from current
+12. privileged operator run-once mutations need explicit operator run identity
+   and idempotency before event claims or external side effects,
+13. generated proof and quality evidence must be reproducible from current
    gate rules or be documented as on-demand evidence rather than current proof,
-13. documentation should record the durable rule, not only the one-off fix.
+14. documentation should record the durable rule, not only the one-off fix.
 
 Current open issue priorities that should shape the next implementation slices:
 
-1. GitHub issue `#267`: bind caller-context authorization headers to trusted
+1. GitHub issue `#272`: bind SBOM/container/release evidence to runtime
+   artifacts before claiming release proof.
+2. GitHub issue `#270`: add container startup/health smoke evidence before
+   release image confidence claims.
+3. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-2. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+4. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
    writes.
-3. GitHub issue `#268`: require API idempotency for AI explanation lineage
+5. GitHub issue `#268`: require API idempotency for AI explanation lineage
    writes.
-4. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
+6. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
    Docker release proof gates or document a governed light/full split.
-5. GitHub issue `#260`: require aggregate provenance for source-ingestion live
+7. GitHub issue `#260`: require aggregate provenance for source-ingestion live
    proof consumption.
-6. GitHub issue `#269`: keep architecture boundary report evidence
+8. GitHub issue `#269`: keep architecture boundary report evidence
    synchronized with current gate rules.
 
-Issues `#265`, `#264`, `#262`, `#261`, and `#259` have branch-local fixes and
-validation evidence, but they must not be claimed closed until merged to
-`main`, CI is green, and QA or issue-closure evidence exists.
+Issues `#271`, `#265`, `#264`, `#262`, `#261`, and `#259` have branch-local
+fixes and validation evidence, but they must not be claimed closed until merged
+to `main`, CI is green, and QA or issue-closure evidence exists.
 
 Close or claim issue progress only after implementation, tests, docs/context
 truth, and validation evidence exist. Keep issue count under control by fixing
@@ -640,7 +647,8 @@ Current gaps remain explicit:
 11. no trusted-ingress proof for caller-context authorization headers,
 12. no PostgreSQL same-candidate stale-write guard across all mutations,
 13. no API-level idempotency contract for AI explanation lineage writes,
-14. no deterministic freshness check for committed architecture boundary
+14. no release-artifact-bound SBOM/container proof,
+15. no deterministic freshness check for committed architecture boundary
     report evidence.
 
 These gaps are acceptable only while current-state surfaces keep them visible.

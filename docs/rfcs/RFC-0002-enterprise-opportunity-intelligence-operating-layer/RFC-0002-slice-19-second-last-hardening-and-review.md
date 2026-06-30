@@ -597,3 +597,25 @@ retry/backoff contract:
    ingestion, external broker publication, downstream route existence,
    downstream execution, report materialization, client-ready publication,
    Gateway/Workbench support, or supported-feature promotion.
+
+This slice also hardens outbox-delivery run-once operator identity after
+GitHub issue `#271` showed privileged run-once actions needed explicit
+API-level run identity before external side effects:
+
+1. `POST /api/v1/outbox-delivery/run-once` now requires the shared
+   `Idempotency-Key` validation path after caller authorization and before
+   durable repository, broker, or event-claim work.
+2. The application layer records the operator run request through the repository
+   idempotency ledger before claiming outbox events. Same-key/same-safe-request
+   calls return `runStatus=replayed` without mutation, while same-key/different
+   safe request reuse returns `409 idempotency_conflict` without mutation.
+3. The API returns and logs only a source-safe `operatorRunReference` derived
+   from the run identity. Raw idempotency keys, event ids, broker payloads, and
+   downstream payloads are not exposed and are not Prometheus labels.
+4. Unit and integration tests prove missing key rejection, replay without
+   mutation, conflict without mutation, source-safe response posture,
+   permission ordering, and operation-event attributes.
+5. This is internal operator-action hardening only. It does not certify
+   external broker publication, downstream delivery, platform mesh event
+   publication, Gateway/Workbench support, client-ready publication, or
+   supported-feature promotion.

@@ -473,6 +473,23 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             current_evidence_hash=current_hash,
         )
 
+    def record_outbox_delivery_run_request(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> IdempotencyDecision:
+        _require_text(idempotency_key, "idempotency_key")
+        existing_idempotency = self._idempotency_records.get(idempotency_key)
+        idempotency_decision, idempotency_record = evaluate_idempotency(
+            key=idempotency_key,
+            payload=dict(payload),
+            existing=existing_idempotency,
+        )
+        if idempotency_decision is IdempotencyDecision.ACCEPTED:
+            self._idempotency_records[idempotency_key] = idempotency_record
+        return idempotency_decision
+
     def record_review_action(
         self,
         result: ReviewActionResult,
