@@ -78,6 +78,16 @@ Implemented in this slice:
     of private PostgreSQL codec helpers, keeping the durable repository adapter
     on an explicit design-modularity boundary without changing the runtime
     deployment model or database schema.
+16. API timestamp-awareness and UTC checks now live in
+    `src/app/api/temporal_validation.py`. Caller-supplied signal routes,
+    lifecycle/review/feedback/conversion/report request DTOs, readiness query
+    parameters, runtime trust telemetry query parameters, and outbox delivery
+    UTC query validation use the shared helper instead of route-local `tzinfo`
+    or `utcoffset()` checks. `make api-temporal-validation-boundary-gate`
+    blocks future route-local timestamp validator clones. This is API
+    error-model/design modularity inside the existing service; it does not
+    change domain timestamp invariants, create a runtime sub-service, or
+    promote support.
 
 Validation evidence from the cleanup slice:
 
@@ -105,6 +115,9 @@ Validation evidence from the cleanup slice:
 22. `make api-signal-model-boundary-gate`
 23. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_signal_models.py tests\unit\test_ci_enforcement_contract.py -q`
 24. `.venv\Scripts\python.exe -m ruff check src\app\api\signal_models.py src\app\api\idea_signals.py src\app\api\allocation_drift_signals.py src\app\api\bond_maturity_signals.py src\app\api\candidate_evidence_replay.py src\app\api\concentration_risk_signals.py src\app\api\drawdown_review_signals.py src\app\api\high_volatility_signals.py src\app\api\low_income_signals.py src\app\api\missing_benchmark_signals.py src\app\api\missing_risk_profile_signals.py src\app\api\missing_suitability_signals.py src\app\api\underperformance_signals.py scripts\api_signal_model_boundary_gate.py tests\unit\test_api_signal_models.py tests\unit\test_ci_enforcement_contract.py`
+25. `make api-temporal-validation-boundary-gate`
+26. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_temporal_validation.py tests\unit\test_ci_enforcement_contract.py -q`
+27. `.venv\Scripts\python.exe -m ruff check src\app\api scripts\api_temporal_validation_boundary_gate.py tests\unit\test_api_temporal_validation.py tests\unit\test_ci_enforcement_contract.py`
 
 ## Remaining Work
 

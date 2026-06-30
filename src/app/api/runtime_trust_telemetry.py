@@ -15,6 +15,7 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.temporal_validation import is_timezone_aware
 from app.application.runtime_trust_telemetry import (
     RuntimeTrustTelemetryPreview,
     build_runtime_trust_telemetry_preview,
@@ -176,9 +177,7 @@ async def get_runtime_trust_telemetry_preview(
             title="Permission denied",
             detail="The caller is not permitted to read idea runtime trust telemetry preview.",
         )
-    if generated_at_utc is not None and (
-        generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None
-    ):
+    if generated_at_utc is not None and not is_timezone_aware(generated_at_utc):
         _emit_runtime_trust_telemetry_event(
             IdeaOperation.MESH_TRUST_TELEMETRY_PREVIEW_READ,
             OperationOutcome.INVALID_REQUEST,
@@ -232,9 +231,7 @@ async def get_runtime_trust_telemetry_snapshot(
             title="Permission denied",
             detail="The caller is not permitted to read idea runtime trust telemetry snapshot.",
         )
-    if generated_at_utc is not None and (
-        generated_at_utc.tzinfo is None or generated_at_utc.utcoffset() is None
-    ):
+    if generated_at_utc is not None and not is_timezone_aware(generated_at_utc):
         _emit_runtime_trust_telemetry_event(
             IdeaOperation.MESH_TRUST_TELEMETRY_SNAPSHOT_READ,
             OperationOutcome.INVALID_REQUEST,

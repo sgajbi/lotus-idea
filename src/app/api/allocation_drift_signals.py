@@ -13,6 +13,7 @@ from app.api.signal_models import (
     ReviewAccessScopeRequest,
     SourceRefRequest,
 )
+from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
     emit_signal_evaluation_event,
@@ -108,9 +109,7 @@ class EvaluateAllocationDriftSignalRequest(CamelModel):
     @field_validator("evaluated_at_utc")
     @classmethod
     def _evaluated_at_must_be_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("evaluatedAtUtc must be timezone-aware")
-        return value
+        return require_timezone_aware(value, field_name="evaluatedAtUtc")
 
     def to_command(self) -> EvaluateMandateHealthSignalCommand:
         return EvaluateMandateHealthSignalCommand(

@@ -17,6 +17,7 @@ from app.api.problem_details import (
     permission_denied_problem,
 )
 from app.api.route_metadata import RouteMetadata
+from app.api.temporal_validation import require_timezone_aware
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -125,9 +126,13 @@ class ReviewActionRequest(CamelModel):
     @field_validator("decided_at_utc", "snoozed_until_utc")
     @classmethod
     def _datetime_must_be_aware(cls, value: datetime | None) -> datetime | None:
-        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
-            raise ValueError("datetime fields must be timezone-aware")
-        return value
+        if value is None:
+            return None
+        return require_timezone_aware(
+            value,
+            field_name="datetime",
+            message="datetime fields must be timezone-aware",
+        )
 
     def to_command(
         self,
@@ -171,9 +176,7 @@ class FeedbackRequest(CamelModel):
     @field_validator("recorded_at_utc")
     @classmethod
     def _recorded_at_must_be_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("recordedAtUtc must be timezone-aware")
-        return value
+        return require_timezone_aware(value, field_name="recordedAtUtc")
 
     def to_command(
         self,

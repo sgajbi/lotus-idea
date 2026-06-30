@@ -14,6 +14,7 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.temporal_validation import is_timezone_aware
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,
@@ -228,7 +229,7 @@ async def get_advisor_review_queue(
             title="Permission denied",
             detail="The caller is not permitted to read advisor idea review queues.",
         )
-    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+    if not is_timezone_aware(evaluated_at_utc):
         _emit_review_queue_operation_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
@@ -318,7 +319,7 @@ async def get_advisor_review_queue_readiness(
             title="Permission denied",
             detail="The caller is not permitted to read idea review queue readiness.",
         )
-    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+    if not is_timezone_aware(evaluated_at_utc):
         _emit_review_queue_readiness_operation_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",

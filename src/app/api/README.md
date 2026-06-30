@@ -43,6 +43,14 @@ summary responses. Route modules should not import those DTOs from
 route-to-route coupling so caller-supplied signal APIs keep one reviewable model
 boundary without creating a separately deployable signal service.
 
+## Temporal Validation
+
+Use `app.api.temporal_validation` for API timestamp awareness and UTC checks.
+Route modules should not inspect `tzinfo` or call `utcoffset()` directly; `make
+api-temporal-validation-boundary-gate` blocks route-local clones so request DTOs
+and query parameters keep consistent timestamp semantics without moving domain
+time invariants into the API layer.
+
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response

@@ -47,6 +47,9 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "api-camel-model-boundary-gate:" in makefile
     assert "$(MAKE) api-camel-model-boundary-gate" in makefile
     assert "openapi-problem-details-example-gate:" in makefile
+    assert "api-temporal-validation-boundary-gate:" in makefile
+    assert "$(MAKE) api-temporal-validation-boundary-gate" in makefile
+    assert "scripts/api_temporal_validation_boundary_gate.py" in makefile
     assert "$(MAKE) openapi-problem-details-example-gate" in makefile
     assert "signal-api-contract-gate:" in makefile
     assert "$(MAKE) signal-api-contract-gate" in makefile
@@ -271,6 +274,20 @@ def test_ci_contract_gate_blocks_missing_api_signal_model_boundary_gate() -> Non
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) api-signal-model-boundary-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_api_temporal_validation_boundary_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace(
+        "$(MAKE) api-temporal-validation-boundary-gate",
+        "",
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call `$(MAKE) api-temporal-validation-boundary-gate`" in errors
+    )
 
 
 def test_ci_contract_gate_blocks_missing_openapi_problem_details_example_gate() -> None:
