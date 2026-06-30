@@ -58,10 +58,12 @@ This slice now has internal operator diagnostic foundations only:
     `scripts/generate_runtime_trust_telemetry_proof.py`, and
     `make runtime-trust-telemetry-proof-contract-gate` define and enforce a
     source-safe runtime trust telemetry proof contract for aggregate
-    implementation readiness. The proof clears only repo-owned runtime
-    telemetry blockers (`runtime_candidate_snapshot_missing`,
+    implementation readiness. The proof currently clears only the seeded
+    candidate-snapshot blocker (`runtime_candidate_snapshot_missing`) and
+    carries product-coverage posture so incomplete declared-product coverage
+    preserves `runtime_trust_telemetry_product_coverage_incomplete`,
     `certified_runtime_trust_telemetry_missing`, and
-    `data_mesh_runtime_telemetry_not_certified`) and keeps platform
+    `data_mesh_runtime_telemetry_not_certified`. It keeps platform
     source-manifest, mesh certification, active producer product,
     Gateway/Workbench discovery, and supported-feature blockers in place.
 

@@ -139,12 +139,13 @@ Prove the complete supported opportunity journey end to end.
     `make runtime-trust-telemetry-proof-contract-gate` now define and enforce a
     source-safe runtime trust telemetry proof artifact. The aggregate
     implementation-readiness generator consumes that artifact to clear only
-    repo-owned runtime telemetry blockers
-    (`runtime_candidate_snapshot_missing`,
+    the seeded candidate-snapshot blocker
+    (`runtime_candidate_snapshot_missing`), while preserving product-coverage
+    blockers (`runtime_trust_telemetry_product_coverage_incomplete`,
     `certified_runtime_trust_telemetry_missing`, and
-    `data_mesh_runtime_telemetry_not_certified`), while preserving platform
-    source-manifest, platform mesh, active producer product, Gateway/Workbench
-    discovery, and supported-feature blockers.
+    `data_mesh_runtime_telemetry_not_certified`) plus platform source-manifest,
+    platform mesh, active producer product, Gateway/Workbench discovery, and
+    supported-feature blockers.
 16. `lotus-workbench` PR #391 merged bounded read-only Workbench rendering for
     the Gateway-published advisor queue and source-safe candidate detail. The
     live-validation script now fails unless a populated candidate row, loaded
@@ -514,8 +515,9 @@ gap from "generated artifact only" to "API-certified diagnostic plus generated
 artifact"; it does not close platform mesh certification, Gateway/Workbench
 discovery, or supported-feature proof gaps.
 The runtime telemetry proof artifact narrows the aggregate readiness gap from
-"runtime telemetry certification missing" to "repo-owned source-safe runtime
-telemetry proof is validated"; it does not close platform mesh certification,
+"runtime candidate snapshot missing" to "repo-owned source-safe candidate
+snapshot telemetry proof is validated"; it does not close product-coverage,
+certified-runtime-telemetry, data-mesh-runtime, platform mesh certification,
 active producer product, Gateway/Workbench discovery, or supported-feature
 proof gaps.
 The Workbench read-path proof artifact narrows the aggregate readiness gap from

@@ -438,19 +438,22 @@ absent.
 Runtime trust telemetry proof is captured by
 `scripts/generate_runtime_trust_telemetry_proof.py`. A valid artifact
 referenced through `LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF` or passed with
-`--runtime-trust-telemetry-proof` clears only repo-owned runtime telemetry
-blockers inside generated implementation-proof readiness evidence and the
-operator API readiness snapshot:
+`--runtime-trust-telemetry-proof` currently clears only the seeded
+candidate-snapshot runtime blocker inside generated implementation-proof
+readiness evidence and the operator API readiness snapshot:
 
-1. `runtime_candidate_snapshot_missing`,
-2. `certified_runtime_trust_telemetry_missing`,
-3. `data_mesh_runtime_telemetry_not_certified`.
+1. `runtime_candidate_snapshot_missing`.
 
 It exercises a deterministic, source-safe candidate snapshot through the
 runtime trust telemetry builder and records the proof artifact as aggregate
-evidence. It does not certify the platform source manifest, platform mesh,
-active producer products, SLO/access/evidence policy, Gateway or Workbench
-discovery, client-ready publication, or supported-feature promotion.
+evidence. The artifact also records product-coverage posture from the runtime
+telemetry preview, and while any declared producer product remains incomplete
+it preserves `runtime_trust_telemetry_product_coverage_incomplete`,
+`certified_runtime_trust_telemetry_missing`, and
+`data_mesh_runtime_telemetry_not_certified`. It does not certify the platform
+source manifest, platform mesh, active producer products, SLO/access/evidence
+policy, Gateway or Workbench discovery, client-ready publication, or
+supported-feature promotion.
 
 Workbench read-path proof is captured by
 `scripts/generate_workbench_read_path_proof.py`. A valid artifact referenced

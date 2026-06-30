@@ -170,11 +170,14 @@ drift in present sibling evidence remains a failing contract condition.
 source-safe runtime trust telemetry proof contract used by aggregate
 implementation readiness. The generated proof under ignored
 `output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json` can clear
-only repo-owned runtime telemetry blockers in the aggregate proof-readiness
-artifact: `runtime_candidate_snapshot_missing`,
+only the seeded candidate-snapshot blocker
+`runtime_candidate_snapshot_missing` while declared product coverage remains
+incomplete. Its product-coverage summary preserves
+`runtime_trust_telemetry_product_coverage_incomplete`,
 `certified_runtime_trust_telemetry_missing`, and
-`data_mesh_runtime_telemetry_not_certified`. It is not platform mesh
-certification and does not promote `IdeaCandidate:v1` from proposed posture.
+`data_mesh_runtime_telemetry_not_certified` until every declared producer
+product has complete runtime coverage. It is not platform mesh certification
+and does not promote `IdeaCandidate:v1` from proposed posture.
 
 `scripts/generate_mesh_policy_proof.py` validates the repo-owned SLO, access,
 and evidence-pack policy contracts for `lotus-idea:IdeaCandidate:v1`. A valid

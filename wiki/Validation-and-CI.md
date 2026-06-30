@@ -267,10 +267,12 @@ Persistence adapter validation:
 10. `tests/unit/test_runtime_trust_telemetry_proof.py` and
     `make runtime-trust-telemetry-proof-contract-gate` prove the source-safe
     runtime trust telemetry proof contract that aggregate readiness consumes to
-    clear only repo-owned runtime telemetry blockers:
-    `runtime_candidate_snapshot_missing`,
+    clear only the seeded candidate-snapshot blocker
+    `runtime_candidate_snapshot_missing` while preserving
+    `runtime_trust_telemetry_product_coverage_incomplete`,
     `certified_runtime_trust_telemetry_missing`, and
-    `data_mesh_runtime_telemetry_not_certified`.
+    `data_mesh_runtime_telemetry_not_certified` until declared product coverage
+    is complete.
 11. `tests/unit/test_workbench_read_path_proof.py` and
     `make workbench-read-path-proof-contract-gate` prove the source-safe
     bounded Workbench queue/detail read-path proof contract that aggregate
