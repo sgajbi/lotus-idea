@@ -211,6 +211,49 @@ def test_lotus_manage_adapter_handles_source_product_alias_and_missing_freshness
     assert evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    ("freshness_key", "freshness_value", "expected"),
+    (
+        ("freshness", "ready", EvidenceFreshness.UNAVAILABLE),
+        ("freshnessBucket", "ready", EvidenceFreshness.UNAVAILABLE),
+        ("freshness_bucket", "ready", EvidenceFreshness.UNAVAILABLE),
+        ("freshness", "current", EvidenceFreshness.CURRENT),
+        ("freshnessBucket", "same_day", EvidenceFreshness.CURRENT),
+        ("freshness", "stale", EvidenceFreshness.STALE),
+        ("freshnessBucket", "expired", EvidenceFreshness.EXPIRED),
+        ("freshness", "missing", EvidenceFreshness.UNAVAILABLE),
+        ("freshnessBucket", "unavailable", EvidenceFreshness.UNAVAILABLE),
+        ("freshness", "freshness_ready_but_unrecognized", EvidenceFreshness.UNAVAILABLE),
+    ),
+)
+def test_lotus_manage_adapter_maps_source_ref_freshness_vocabulary(
+    freshness_key: str,
+    freshness_value: str,
+    expected: EvidenceFreshness,
+) -> None:
+    payload = _payload(
+        extra={
+            "sourceRefs": [
+                {
+                    "productId": "lotus-performance:MandatePerformanceHealthContext:v1",
+                    "productVersion": "v1",
+                    "route": "/performance/mandate-health-context",
+                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                    "contentHash": "sha256:mandate-performance-health",
+                    freshness_key: freshness_value,
+                },
+            ],
+        }
+    )
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.mandate_performance_health_ref is not None
+    assert evidence.mandate_performance_health_ref.freshness is expected
+
+
 def test_lotus_manage_adapter_accepts_nested_mandate_health_refs() -> None:
     payload = _payload()
     supportability = payload["supportability"]

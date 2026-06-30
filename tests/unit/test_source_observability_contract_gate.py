@@ -174,6 +174,28 @@ def test_source_observability_contract_gate_blocks_freshness_supportability_infe
     ]
 
 
+def test_source_observability_contract_gate_blocks_ready_freshness_alias(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_python(
+        tmp_path / "src" / "app" / "infrastructure" / "lotus_manage_sources.py",
+        "from app.domain import EvidenceFreshness\n\n\n"
+        "def _freshness(freshness_value: str) -> EvidenceFreshness:\n"
+        "    if freshness_value.lower() == 'ready':\n"
+        "        return EvidenceFreshness.CURRENT\n"
+        "    return EvidenceFreshness.UNAVAILABLE\n",
+    )
+
+    errors = module.validate_source_observability_contract(tmp_path)
+
+    assert errors == [
+        "src/app/infrastructure/lotus_manage_sources.py:5: source adapters must not infer "
+        "current freshness from readiness, supportability, coverage, health-state, or "
+        "data-quality posture"
+    ]
+
+
 def test_source_observability_contract_gate_allows_explicit_freshness_current_mapping(
     tmp_path: Path,
 ) -> None:
