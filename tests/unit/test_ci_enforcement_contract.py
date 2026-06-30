@@ -42,6 +42,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) api-route-metadata-gate" in makefile
     assert "api-problem-details-boundary-gate:" in makefile
     assert "$(MAKE) api-problem-details-boundary-gate" in makefile
+    assert "api-idempotency-boundary-gate:" in makefile
+    assert "$(MAKE) api-idempotency-boundary-gate" in makefile
     assert "openapi-problem-details-example-gate:" in makefile
     assert "$(MAKE) openapi-problem-details-example-gate" in makefile
     assert "signal-api-contract-gate:" in makefile
@@ -240,6 +242,15 @@ def test_ci_contract_gate_blocks_missing_api_problem_details_boundary_gate() -> 
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) api-problem-details-boundary-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_api_idempotency_boundary_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) api-idempotency-boundary-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) api-idempotency-boundary-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_missing_openapi_problem_details_example_gate() -> None:
