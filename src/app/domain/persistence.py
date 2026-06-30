@@ -661,6 +661,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         payload: Mapping[str, Any],
     ) -> ConversionPersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
+        _require_matching_conversion_intent_idempotency(result, idempotency_key)
         candidate_id = result.conversion_intent.intent.candidate_id
         _require_text(candidate_id, "candidate_id")
         existing_idempotency = self._idempotency_records.get(idempotency_key)
@@ -1153,6 +1154,14 @@ def _audit_event(
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_matching_conversion_intent_idempotency(
+    result: ConversionIntentResult,
+    idempotency_key: str,
+) -> None:
+    if result.conversion_intent.idempotency_key != idempotency_key:
+        raise ValueError("conversion intent idempotency key must match repository idempotency key")
 
 
 def _require_positive(value: int, field_name: str) -> None:

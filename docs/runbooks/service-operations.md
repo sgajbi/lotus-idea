@@ -250,6 +250,11 @@ Use the operation `outcome` before inspecting payload-level evidence:
    aggregate implementation-proof readiness remains blocked by explicit
    configuration or certification blockers.
 
+For conversion-intent recording, the application command idempotency key and
+the repository replay key must be identical. A mismatch is an invalid internal
+caller construction and must be fixed at the caller boundary rather than
+diagnosed as a replay, conflict, or downstream realization issue.
+
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,
 certified long-running scheduled source-worker readiness, live source-adapter readiness,

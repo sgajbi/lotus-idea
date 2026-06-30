@@ -50,7 +50,9 @@ Implemented in this slice:
     bounded candidate lookup helper, so projection-capable repositories avoid
     whole-repository snapshot hydration before the review-gated conversion
     decision. Intent persistence remains on the existing repository mutation
-    path.
+    path. The application command requires the conversion-intent command
+    idempotency key to match the repository replay key so internal workers
+    cannot persist contradictory conversion evidence.
 11. `src/app/api/conversion_governance.py` exposes certified internal API
     foundations:
     - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
@@ -64,12 +66,16 @@ Implemented in this slice:
     resources, wrong source authority, replay, and conflict behavior.
     `tests/unit/test_conversion_workflow_application.py` adds focused
     projection-only coverage proving conversion-intent requests and missing
-    candidate handling do not require `snapshot()` hydration.
+    candidate handling do not require `snapshot()` hydration, plus regression
+    coverage for mismatched application/domain idempotency rejection.
 14. `tests/integration/test_postgres_runtime_integration.py` now proves the
     first PostgreSQL-backed internal report conversion path by creating a
     review-approved candidate, recording the report conversion intent, replaying
     the intent from database idempotency state, recording a source-authorized
     conversion outcome, and validating the conversion intent/outcome tables.
+    `tests/unit/test_postgres_repository.py` also proves the PostgreSQL adapter
+    rejects mismatched conversion-intent idempotency before writing intent JSON
+    or repository idempotency rows.
 15. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`
     now holds the planned Advise, Manage, and Report handoff contract rows as
     machine-readable repository truth.

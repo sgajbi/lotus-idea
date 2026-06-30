@@ -523,6 +523,11 @@ Current outcomes:
     target adapter. Aggregate implementation-proof readiness reports `blocked`
     whenever any RFC-0002 proof family still lacks certification evidence.
 
+For conversion-intent recording, the application command idempotency key and
+the repository replay key must be identical. A mismatch is an invalid internal
+caller construction and must be fixed at the caller boundary rather than
+diagnosed as a replay, conflict, or downstream realization issue.
+
 The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supportability_status`, `source_authority`, `durable_storage_backed`, and
 `supported_feature_promoted`. They must not include portfolio, client, account,

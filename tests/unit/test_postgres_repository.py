@@ -496,6 +496,45 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
     assert len(replacement_connection.rows["idea_outbox_event"]) == 8
 
 
+def test_postgres_repository_rejects_mismatched_conversion_intent_idempotency() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    approved = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_idempotency_mismatch",
+        lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+    )
+    repository.persist_candidate(
+        approved,
+        idempotency_key="candidate:approved-idempotency-mismatch",
+        payload={"candidateId": approved.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    conversion_result = request_conversion_intent(approved, conversion_command())
+
+    with pytest.raises(
+        ValueError,
+        match="conversion intent idempotency key must match repository idempotency key",
+    ):
+        repository.record_conversion_intent(
+            conversion_result,
+            idempotency_key="conversion:mismatched-ledger-key",
+            payload={
+                "conversionIntentId": (
+                    conversion_result.conversion_intent.intent.conversion_intent_id
+                )
+            },
+        )
+
+    assert connection.rows["idea_conversion_intent"] == []
+    assert not any(
+        row["idempotency_key"] == "conversion:mismatched-ledger-key"
+        for row in connection.rows["idea_idempotency_record"]
+    )
+
+
 def test_postgres_repository_rolls_back_failed_snapshot_replacement() -> None:
     source_connection = FakePostgresConnection()
     source_repository = PostgresIdeaRepository(source_connection)

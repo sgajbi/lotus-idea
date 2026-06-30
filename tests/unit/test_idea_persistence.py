@@ -763,7 +763,37 @@ def test_conversion_intent_persistence_records_lifecycle_audit_and_idempotency()
     assert first.record.conversion_intents[-1].intent.conversion_intent_id == (
         "conversion-report_evidence-001"
     )
+    assert first.record.conversion_intents[-1].idempotency_key == command.idempotency_key
     assert first.record.audit_events[-1].event_type == "idea.conversion.intent_requested"
+
+
+def test_conversion_intent_persistence_rejects_mismatched_idempotency_key() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:approved-high-cash:mismatch",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    command = conversion_intent_command()
+    result = request_conversion_intent(candidate, command)
+
+    with pytest.raises(
+        ValueError,
+        match="conversion intent idempotency key must match repository idempotency key",
+    ):
+        repository.record_conversion_intent(
+            result,
+            idempotency_key="conversion:intent:mismatched-ledger-key",
+            payload={"candidate_id": candidate.candidate_id, "target": command.target.value},
+        )
+
+    snapshot = repository.snapshot()
+    assert "conversion:intent:mismatched-ledger-key" not in snapshot.idempotency_records
+    assert repository.conversion_intent_by_id(command.conversion_intent_id) is None
 
 
 def test_conversion_intent_persistence_returns_not_found_without_candidate_record() -> None:

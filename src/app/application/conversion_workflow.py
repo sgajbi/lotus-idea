@@ -26,6 +26,8 @@ class RequestConversionIntentToRepositoryCommand:
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
         _require_text(self.idempotency_key, "idempotency_key")
+        if self.conversion.idempotency_key != self.idempotency_key:
+            raise ValueError("conversion idempotency key must match repository idempotency key")
 
 
 @dataclass(frozen=True)

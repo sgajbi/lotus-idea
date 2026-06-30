@@ -4,6 +4,8 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
 
+import pytest
+
 from app.application.conversion_workflow import (
     RequestConversionIntentToRepositoryCommand,
     request_conversion_intent_to_repository,
@@ -40,7 +42,7 @@ def test_request_conversion_intent_uses_candidate_projection_without_snapshot() 
         RequestConversionIntentToRepositoryCommand(
             candidate_id="idea-conversion-workflow-001",
             conversion=conversion_command(),
-            idempotency_key="conversion-workflow:projection:001",
+            idempotency_key="conversion-workflow-request-001",
         ),
         repository=repository,
     )
@@ -59,7 +61,7 @@ def test_request_conversion_intent_returns_not_found_without_snapshot_for_missin
         RequestConversionIntentToRepositoryCommand(
             candidate_id="missing-candidate",
             conversion=conversion_command(),
-            idempotency_key="conversion-workflow:missing:001",
+            idempotency_key="conversion-workflow-request-001",
         ),
         repository=repository,
     )
@@ -68,6 +70,18 @@ def test_request_conversion_intent_returns_not_found_without_snapshot_for_missin
     assert result.persistence.decision is ConversionPersistenceDecision.NOT_FOUND
     assert result.persistence.record is None
     assert repository.looked_up_candidate_ids == ["missing-candidate"]
+
+
+def test_request_conversion_intent_rejects_mismatched_idempotency_boundary() -> None:
+    with pytest.raises(
+        ValueError,
+        match="conversion idempotency key must match repository idempotency key",
+    ):
+        RequestConversionIntentToRepositoryCommand(
+            candidate_id="idea-conversion-workflow-001",
+            conversion=conversion_command(),
+            idempotency_key="conversion-workflow:mismatched-repository-key",
+        )
 
 
 def repository_with_approved_candidate() -> InMemoryIdeaRepository:
