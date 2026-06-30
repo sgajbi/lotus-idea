@@ -548,3 +548,30 @@ should not hydrate whole repository snapshots for aggregate counts:
 4. This is production-scale internal trust-telemetry hardening only. It does
    not certify data products, platform mesh, Gateway/Workbench discovery,
    client-ready publication, or supported-feature promotion.
+
+This slice also hardens the shared downstream HTTP policy after issue review
+showed outbound calls had timeouts and safe failure mapping but no governed
+retry/backoff contract:
+
+1. `DownstreamClientConfig` now carries a bounded retry policy with disabled
+   default behavior (`retry_max_attempts=1`), conservative retryable statuses
+   (`429`, `502`, `503`, `504`), capped backoff, and optional `Retry-After`
+   handling.
+2. `DownstreamJsonClient` retries only timeouts, transport failures, and the
+   configured transient statuses. `POST` retries require an idempotency key
+   unless the runtime explicitly marks the boundary as read-only source-query
+   traffic.
+3. Downstream realization, Core source-ingestion, and outbox broker runtime
+   wiring expose fail-closed retry/backoff environment settings. Outbox
+   publication now propagates the event idempotency fingerprint as the
+   outbound `Idempotency-Key`; source-ingestion Core query/control-plane
+   clients are explicitly marked as read-only before permitting retryable
+   `POST` calls without an idempotency key.
+4. Unit tests cover timeout/status retry success, retry exhaustion,
+   `Retry-After` capping, non-retryable `4xx` behavior, POST idempotency
+   gating, header preservation, downstream timeout mapping, source-ingestion
+   runtime config, and outbox idempotency propagation.
+5. This is internal resilience hardening only. It does not certify live Core
+   ingestion, external broker publication, downstream route existence,
+   downstream execution, report materialization, client-ready publication,
+   Gateway/Workbench support, or supported-feature promotion.

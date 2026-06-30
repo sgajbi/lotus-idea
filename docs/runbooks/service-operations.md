@@ -174,6 +174,17 @@ flowchart TD
    posture, and blockers for Advise, Manage, Report, Render, and Archive
    without calling downstream services, proving downstream route existence, or
    creating downstream records.
+
+Outbound HTTP retry defaults remain disabled with one attempt. Operators can
+opt in with `LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_ATTEMPTS`,
+`LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`, or
+`LOTUS_IDEA_OUTBOX_BROKER_RETRY_MAX_ATTEMPTS`, plus the matching
+`*_RETRY_INITIAL_BACKOFF_SECONDS` and `*_RETRY_MAX_BACKOFF_SECONDS` settings.
+The shared client retries only transport timeouts/failures and `429`, `502`,
+`503`, or `504` responses. Realization and outbox `POST` retries require an
+idempotency key; source-ingestion Core query/control-plane `POST` calls are
+the only runtime path marked as read-only retryable without one.
+
 12. For runtime trust telemetry preview checks, call
    `GET /api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=<timestamp>`
    with the `operator` role and

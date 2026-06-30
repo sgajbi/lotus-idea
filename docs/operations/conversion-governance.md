@@ -62,10 +62,18 @@ Downstream HTTP runtime posture:
    - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
    - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
    - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
-   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`.
-4. Invalid or internally inconsistent resource settings fail closed before a
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`,
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`.
+4. Retry defaults are disabled (`max_attempts=1`). When enabled, retries are
+   bounded to timeouts, transport failures, `429`, `502`, `503`, and `504`.
+   Advise/Manage/Report `POST` retries require the request `Idempotency-Key`;
+   `400`, `401`, `403`, `404`, `409`, malformed upstream responses, and local
+   idempotency or business-state failures are not retried.
+5. Invalid or internally inconsistent resource settings fail closed before a
    downstream submission is attempted.
-5. This lifecycle and resource-control posture is not downstream route
+6. This lifecycle and resource-control posture is not downstream route
    existence proof, downstream execution certification, suitability authority,
    report materialization proof, client publication authority, or
    supported-feature promotion.

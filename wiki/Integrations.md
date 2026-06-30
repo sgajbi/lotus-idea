@@ -212,6 +212,12 @@ endpoint does not call downstream services or promote any integration claim.
 The submission routes may call configured adapters, but adapter calls are still
 not acceptance, materialization, or route-existence certification from the
 owning downstream repositories.
+Configured Advise/Manage/Report adapter calls use the shared outbound HTTP
+client. Retry defaults remain one attempt; when operators explicitly raise the
+attempt count, only timeouts, transport failures, `429`, `502`, `503`, and
+`504` are retried, and downstream realization `POST` retries require the
+submission `Idempotency-Key`. Client/business failures, malformed responses,
+and local idempotency conflicts are not retried.
 When the generated or overridden report-intake route proof is valid, the Report contract row
 uses `POST /reports/idea-evidence-packs` and reports
 `route_foundation_proven_not_certified`; it still remains blocked for

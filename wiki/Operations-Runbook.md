@@ -389,26 +389,40 @@ dependency cache directories.
 `lotus-idea` owns explicit outbound HTTP resource controls for Core source
 ingestion, Advise/Manage/Report realization submission, and outbox broker
 publication. The shared downstream client validates request timeout,
-connection-pool, keepalive, and pool-timeout settings and exposes close
-semantics for owned clients.
+connection-pool, keepalive, pool-timeout, and bounded retry/backoff settings
+and exposes close semantics for owned clients.
 
 Configured runtime families:
 
 1. source ingestion: `LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS`,
    `LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS`,
    `LOTUS_IDEA_SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS`, and
-   `LOTUS_IDEA_SOURCE_INGESTION_POOL_TIMEOUT_SECONDS`,
+   `LOTUS_IDEA_SOURCE_INGESTION_POOL_TIMEOUT_SECONDS`; optional retry controls
+   are `LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_ATTEMPTS`,
+   `LOTUS_IDEA_SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS`, and
+   `LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS`,
 2. downstream realization:
    `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
    `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
-   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`, and
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
    `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`,
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS`,
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS`, and
+   `LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS`,
 3. outbox broker: `LOTUS_IDEA_OUTBOX_BROKER_TIMEOUT_SECONDS`,
    `LOTUS_IDEA_OUTBOX_BROKER_MAX_CONNECTIONS`,
-   `LOTUS_IDEA_OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS`, and
-   `LOTUS_IDEA_OUTBOX_BROKER_POOL_TIMEOUT_SECONDS`.
+   `LOTUS_IDEA_OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS`,
+   `LOTUS_IDEA_OUTBOX_BROKER_POOL_TIMEOUT_SECONDS`,
+   `LOTUS_IDEA_OUTBOX_BROKER_RETRY_MAX_ATTEMPTS`,
+   `LOTUS_IDEA_OUTBOX_BROKER_RETRY_INITIAL_BACKOFF_SECONDS`, and
+   `LOTUS_IDEA_OUTBOX_BROKER_RETRY_MAX_BACKOFF_SECONDS`.
 
 Invalid or inconsistent settings fail closed before outbound work is attempted.
+Retry defaults are disabled with one attempt. When retry attempts are enabled,
+the shared client retries only transport timeouts/failures and `429`, `502`,
+`503`, or `504` responses. Realization and outbox `POST` retries require an
+idempotency key; source-ingestion Core query/control-plane `POST` calls are
+explicitly marked as read-only source queries before they can retry without one.
 Runtime-cached realization clients close on application shutdown and test reset;
 source-ingestion runtime objects expose `close()` for deterministic cleanup.
 These controls improve operability and capacity posture only. They do not
