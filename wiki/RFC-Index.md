@@ -29,7 +29,9 @@ Current RFC-0002 implementation-start baseline:
    `app.api.route_metadata.RouteMetadata` contract enforced by
    `make api-route-metadata-gate`. API DTOs use shared
    `app.api.base_model.CamelModel` alias handling enforced by
-   `make api-camel-model-boundary-gate`. Workflow and operator `ProblemDetails`
+   `make api-camel-model-boundary-gate`, and shared signal-family DTOs use
+   `app.api.signal_models` enforced by `make api-signal-model-boundary-gate`.
+   Workflow and operator `ProblemDetails`
    OpenAPI examples are now enforced by
    `make openapi-problem-details-example-gate`. Mutating workflow routes use
    shared `app.api.idempotency` validation enforced by `make

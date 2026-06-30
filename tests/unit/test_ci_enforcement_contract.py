@@ -264,6 +264,15 @@ def test_ci_contract_gate_blocks_missing_api_camel_model_boundary_gate() -> None
     assert "Makefile lint target must call `$(MAKE) api-camel-model-boundary-gate`" in errors
 
 
+def test_ci_contract_gate_blocks_missing_api_signal_model_boundary_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) api-signal-model-boundary-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) api-signal-model-boundary-gate`" in errors
+
+
 def test_ci_contract_gate_blocks_missing_openapi_problem_details_example_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace("$(MAKE) openapi-problem-details-example-gate", "")

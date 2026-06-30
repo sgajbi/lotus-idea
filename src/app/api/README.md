@@ -34,6 +34,15 @@ camel-case aliases. Route modules should not define local `CamelModel` or local
 api-camel-model-boundary-gate` blocks duplicates so alias handling remains
 consistent without creating a runtime service split.
 
+## Signal DTOs
+
+Use `app.api.signal_models` for signal-family DTOs that are shared across
+multiple route modules, such as source refs, review access scope, and candidate
+summary responses. Route modules should not import those DTOs from
+`app.api.idea_signals`; `make api-signal-model-boundary-gate` blocks that
+route-to-route coupling so caller-supplied signal APIs keep one reviewable model
+boundary without creating a separately deployable signal service.
+
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response
