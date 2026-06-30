@@ -56,6 +56,12 @@ This path proves local container startup and operator ergonomics only. It does
 not certify production recovery, live source ingestion, Workbench support,
 data-mesh readiness, client publication, or supported-feature status.
 
+The built runtime image installs only runtime dependencies, runs as the
+non-root `lotus` user, keeps only the service plus source-ingestion worker
+entrypoint scripts from `scripts/`, and records governed Docker base image plus
+Trivy scanner image identity in CI release evidence. Development tooling and
+bulk CI helper scripts must not be copied into the runtime image.
+
 ## Health and Readiness
 
 - Liveness: /health/live

@@ -17,10 +17,12 @@ from ci_contract_gate_expectations import (  # noqa: E402
 from ci_e2e_contract import validate_e2e_suite  # noqa: E402
 from ci_release_evidence_contract import (  # noqa: E402
     validate_dependency_governance,
+    validate_dockerfile_runtime,
     validate_release_evidence_targets,
 )
 
 MAKEFILE_PATH = ROOT / "Makefile"
+DOCKERFILE_PATH = ROOT / "Dockerfile"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 CI_TOOLING_LOCK_PATH = ROOT / "requirements" / "ci-tooling.lock.txt"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
@@ -125,6 +127,8 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "LOTUS_IDEA_POSTGRES_INTEGRATION_URL",
         "make postgres-integration-gate",
         "make docker-build",
+        'CONTAINER_BASE_IMAGE: "python:3.12-slim"',
+        'TRIVY_IMAGE: "aquasec/trivy:0.71.2"',
         "make container-image-scan",
         "NODE_OPTIONS: --no-deprecation",
     ),
@@ -153,6 +157,8 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "LOTUS_IDEA_POSTGRES_INTEGRATION_URL",
         "make postgres-integration-gate",
         "make docker-build",
+        'CONTAINER_BASE_IMAGE: "python:3.12-slim"',
+        'TRIVY_IMAGE: "aquasec/trivy:0.71.2"',
         "make container-image-scan",
         "make release-sbom",
         "sbom.cdx.json",
@@ -160,6 +166,8 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "cyclonedx-bom==7.3.0",
         "aquasec/trivy:0.71.2",
         "release-evidence.json",
+        '"docker_base_image": os.environ["CONTAINER_BASE_IMAGE"]',
+        '"container_scanner": os.environ["TRIVY_IMAGE"]',
         "main-releasability-release-evidence",
         "NODE_OPTIONS: --no-deprecation",
     ),
@@ -446,6 +454,12 @@ def _job_blocks(workflow: str) -> dict[str, str]:
 def validate_ci_contract() -> list[str]:
     if not MAKEFILE_PATH.exists():
         return [f"Missing {MAKEFILE_PATH.relative_to(ROOT).as_posix()}"]
+    dockerfile_errors: list[str] = []
+    if not DOCKERFILE_PATH.exists():
+        dockerfile_errors.append("Missing Dockerfile")
+        dockerfile = ""
+    else:
+        dockerfile = _read(DOCKERFILE_PATH)
     dependency_errors: list[str] = []
     if not PYPROJECT_PATH.exists():
         dependency_errors.append("Missing pyproject.toml")
@@ -459,6 +473,8 @@ def validate_ci_contract() -> list[str]:
         ci_tooling_lock = _read(CI_TOOLING_LOCK_PATH)
     return [
         *validate_makefile(_read(MAKEFILE_PATH)),
+        *dockerfile_errors,
+        *validate_dockerfile_runtime(dockerfile),
         *dependency_errors,
         *validate_dependency_governance(pyproject, ci_tooling_lock),
         *validate_workflows(WORKFLOWS_DIR),

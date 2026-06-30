@@ -16,6 +16,8 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PYTHONUNBUFFERED: "1"
   PYTHON_VERSION: "3.12"
+  CONTAINER_BASE_IMAGE: "python:3.12-slim"
+  TRIVY_IMAGE: "aquasec/trivy:0.71.2"
   GIT_CONFIG_COUNT: "1"
   GIT_CONFIG_KEY_0: "init.defaultBranch"
   GIT_CONFIG_VALUE_0: "main"
@@ -191,10 +193,11 @@ jobs:
                       "workflow": os.environ["GITHUB_WORKFLOW"],
                       "run_id": os.environ["GITHUB_RUN_ID"],
                       "dockerfile_path": "Dockerfile",
+                      "docker_base_image": os.environ["CONTAINER_BASE_IMAGE"],
                       "sbom_path": "sbom.cdx.json",
                       "sbom_generator": "cyclonedx-bom==7.3.0",
                       "container_scan_path": "output/security/container-image-scan.trivy.json",
-                      "container_scanner": "aquasec/trivy:0.71.2",
+                      "container_scanner": os.environ["TRIVY_IMAGE"],
                   },
                   indent=2,
               ),
