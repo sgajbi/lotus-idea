@@ -32,6 +32,7 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
         "workflow_action_counts": {"APPROVE": 2},
         "workflow_reason_code_counts": {"REVIEW_APPROVED": 2},
         "lineage_edge_count": 4,
+        "source_batch_fingerprint": "portfolio-action-register",
         "newest_run_created_at": "2026-06-21T10:00:00+00:00",
         "newest_operation_created_at": "2026-06-21T10:00:00+00:00",
         "supportability": {
@@ -88,7 +89,7 @@ def test_lotus_manage_adapter_fetches_declared_action_register_source_product() 
     assert evidence.action_register_ref.product_id == "lotus-manage:PortfolioActionRegister:v1"
     assert evidence.action_register_ref.route == "/api/v1/rebalance/supportability/summary"
     assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
-    assert evidence.action_register_ref.content_hash.startswith("sha256:")
+    assert evidence.action_register_ref.content_hash == "sha256:portfolio-action-register"
     assert evidence.manage_diagnostic == "manage_action_register_ready_store_wide_scope"
     assert seen == [
         (
@@ -266,6 +267,18 @@ def test_lotus_manage_adapter_maps_missing_counts_to_source_unavailable() -> Non
     assert exc_info.value.code == "manage_workflow_decision_count_malformed"
 
 
+def test_lotus_manage_adapter_maps_missing_source_lineage_to_source_unavailable() -> None:
+    payload = _payload()
+    payload.pop("source_batch_fingerprint")
+
+    with pytest.raises(ManageSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_mandate_health_evidence(_request())
+
+    assert exc_info.value.code == "manage_content_hash_missing"
+
+
 def test_lotus_manage_adapter_maps_bool_count_to_source_unavailable() -> None:
     payload = _payload(extra={"workflow_decision_count": True})
 
@@ -358,7 +371,12 @@ def test_lotus_manage_adapter_uses_request_time_when_source_timestamps_are_absen
 
 
 def test_lotus_manage_adapter_preserves_prefixed_source_fingerprint() -> None:
-    payload = _payload(extra={"lineageFingerprint": "sha256:manage-lineage"})
+    payload = _payload(
+        extra={
+            "source_batch_fingerprint": None,
+            "lineageFingerprint": "sha256:manage-lineage",
+        }
+    )
 
     evidence = _adapter(
         httpx.MockTransport(lambda request: httpx.Response(200, json=payload))

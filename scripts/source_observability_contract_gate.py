@@ -23,6 +23,12 @@ PROHIBITED_LOGGING_ATTRIBUTES = {
     "log",
     "warning",
 }
+SOURCE_AUTHORITY_HASH_OWNERS = {
+    Path("src/app/infrastructure/lotus_manage_sources.py"): {
+        "json",
+        "hashlib",
+    },
+}
 
 
 def _python_files(source_root: Path) -> list[Path]:
@@ -53,7 +59,9 @@ def _call_name(node: ast.AST) -> str | None:
 
 def _validate_file(path: Path, root: Path) -> list[str]:
     relative_path = _relative(path, root)
+    relative = Path(relative_path)
     allowed_logging_module = _is_allowed_logging_module(path, root)
+    prohibited_source_hash_modules = SOURCE_AUTHORITY_HASH_OWNERS.get(relative, set())
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     errors: list[str] = []
 
@@ -64,6 +72,11 @@ def _validate_file(path: Path, root: Path) -> list[str]:
                     errors.append(
                         f"{relative_path}:{node.lineno}: direct logging imports are only "
                         "allowed in src/app/observability/logging.py"
+                    )
+                if alias.name in prohibited_source_hash_modules:
+                    errors.append(
+                        f"{relative_path}:{node.lineno}: {alias.name} import is prohibited "
+                        "because upstream source-ref hashes must be source-authored"
                     )
 
         if isinstance(node, ast.ImportFrom):
@@ -82,6 +95,11 @@ def _validate_file(path: Path, root: Path) -> list[str]:
                 errors.append(
                     f"{relative_path}:{node.lineno}: import bounded operation-event helpers "
                     "instead of low-level log_event"
+                )
+            if module in prohibited_source_hash_modules:
+                errors.append(
+                    f"{relative_path}:{node.lineno}: {module} import is prohibited because "
+                    "upstream source-ref hashes must be source-authored"
                 )
 
         if isinstance(node, ast.Call):
@@ -105,6 +123,11 @@ def _validate_file(path: Path, root: Path) -> list[str]:
                 errors.append(
                     f"{relative_path}:{node.lineno}: direct logging calls are only allowed in "
                     "src/app/observability/logging.py"
+                )
+            if call_name in {"hashlib.sha256", "json.dumps"} and prohibited_source_hash_modules:
+                errors.append(
+                    f"{relative_path}:{node.lineno}: {call_name} fallback is prohibited "
+                    "because upstream source-ref hashes must be source-authored"
                 )
 
     return errors

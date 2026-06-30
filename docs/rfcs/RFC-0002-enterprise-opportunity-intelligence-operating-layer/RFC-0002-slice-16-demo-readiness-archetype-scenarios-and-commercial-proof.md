@@ -166,6 +166,11 @@ commercial proof from getting ahead of implementation-backed runtime evidence.
    portfolio-manager review candidates from source-owned Manage posture and
    cannot calculate drift, approve mandate compliance, create rebalance
    actions, create orders, publish client communication, or promote support.
+   The Manage source adapter requires source-authored content hash, request
+   fingerprint, source-batch fingerprint, or lineage fingerprint metadata for
+   `PortfolioActionRegister:v1` source refs; missing lineage fails closed as
+   `manage_content_hash_missing` and is not replaced with a consumer-generated
+   payload hash.
    Valid artifacts clear only
    `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`,
    `opportunity_archetype_mandate_performance_health_source_ref_missing`,

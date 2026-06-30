@@ -122,6 +122,13 @@ only the scheduled-worker blocker. Mesh certification, Gateway/Workbench proof,
 downstream realization proof, and supported-feature promotion remain required
 before source-ingestion support or product claims can be promoted.
 
+The Manage source adapter consumes source-authored
+`lotus-manage:PortfolioActionRegister:v1` lineage or fingerprint metadata for
+`SourceRef.content_hash`. It fails closed with `manage_content_hash_missing`
+when Manage omits content hash, request fingerprint, source-batch fingerprint,
+or lineage fingerprint metadata; `lotus-idea` does not fabricate source
+lineage from Manage response payloads.
+
 Route-foundation proof is consumed only from owning sibling repositories.
 `lotus-advise` owns source-safe proposal intake route proof for
 `POST /advisory/proposals/idea-intake`; `lotus-manage` owns source-safe action

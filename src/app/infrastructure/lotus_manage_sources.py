@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime
-import hashlib
-import json
 from typing import Any
 
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
@@ -299,8 +297,7 @@ def _content_hash(payload: dict[str, Any]) -> str:
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
             return value if value.startswith("sha256:") else f"sha256:{value}"
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
-    return "sha256:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    raise ManageSourceUnavailable(code="manage_content_hash_missing")
 
 
 def _freshness(posture: _ActionRegisterPosture) -> EvidenceFreshness:

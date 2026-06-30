@@ -515,6 +515,10 @@ mesh policy proof artifact, platform mesh
 onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact,
 AI workflow-pack runtime execution proof artifact,
 and the same source-safe readiness snapshot without running the HTTP service.
+Manage mandate proof consumption requires source-authored Manage lineage or
+fingerprint metadata for action-register source refs; missing Manage lineage
+remains source-unavailable and does not become a synthesized `SourceRef`
+content hash.
 The snapshot records validated proof artifact refs in capability
 evidence. Capability readiness and supportability are derived after proof
 artifact consumption, so a proof family can report `ready` and `supported` only
