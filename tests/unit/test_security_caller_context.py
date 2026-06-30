@@ -1,4 +1,5 @@
 import pytest
+from fastapi import HTTPException
 
 from app.api.caller_headers import (
     caller_access_scope_filter,
@@ -115,12 +116,35 @@ def test_caller_context_from_standard_headers_parses_common_api_headers() -> Non
         x_caller_subject="advisor-001",
         x_caller_roles="advisor",
         x_caller_capabilities="idea.signal.evaluate",
+        x_caller_tenant_ids="tenant-private-bank-sg",
+        x_caller_book_ids="book-advisor-001",
+        x_caller_portfolio_ids="PB_SG_GLOBAL_BAL_001,PB_SG_ALT_BAL_002",
+        x_caller_client_ids="client-001",
     )
 
     assert caller.subject == "advisor-001"
     assert caller.roles == frozenset({"advisor"})
     assert caller.capabilities == frozenset({"idea.signal.evaluate"})
-    assert caller.entitlement_scope.is_empty
+    assert caller.entitlement_scope.tenant_ids == ("tenant-private-bank-sg",)
+    assert caller.entitlement_scope.book_ids == ("book-advisor-001",)
+    assert caller.entitlement_scope.portfolio_ids == (
+        "PB_SG_GLOBAL_BAL_001",
+        "PB_SG_ALT_BAL_002",
+    )
+    assert caller.entitlement_scope.client_ids == ("client-001",)
+
+
+def test_caller_context_from_standard_headers_rejects_blank_entitlement_header() -> None:
+    with pytest.raises(HTTPException) as exc_info:
+        caller_context_from_standard_headers(
+            x_caller_subject="advisor-001",
+            x_caller_roles="advisor",
+            x_caller_capabilities="idea.signal.evaluate",
+            x_caller_portfolio_ids="PB_SG_GLOBAL_BAL_001, ",
+        )
+
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "caller entitlement scope headers cannot contain blank values"
 
 
 def test_caller_access_scope_filter_matches_entitlement_headers() -> None:

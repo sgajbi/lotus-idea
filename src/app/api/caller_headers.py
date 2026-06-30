@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import Depends, Header
+from fastapi import Depends, Header, HTTPException, status
 
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.security.caller_context import CallerContext, CallerEntitlementScope
@@ -44,12 +44,26 @@ def caller_context_from_standard_headers(
     x_caller_subject: Annotated[str | None, Header(alias="X-Caller-Subject")] = None,
     x_caller_roles: Annotated[str | None, Header(alias="X-Caller-Roles")] = None,
     x_caller_capabilities: Annotated[str | None, Header(alias="X-Caller-Capabilities")] = None,
+    x_caller_tenant_ids: Annotated[str | None, Header(alias="X-Caller-Tenant-Ids")] = None,
+    x_caller_book_ids: Annotated[str | None, Header(alias="X-Caller-Book-Ids")] = None,
+    x_caller_portfolio_ids: Annotated[str | None, Header(alias="X-Caller-Portfolio-Ids")] = None,
+    x_caller_client_ids: Annotated[str | None, Header(alias="X-Caller-Client-Ids")] = None,
 ) -> CallerContext:
-    return caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
+    try:
+        return caller_context_from_headers(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="caller entitlement scope headers cannot contain blank values",
+        ) from exc
 
 
 CallerContextHeaders = Annotated[CallerContext, Depends(caller_context_from_standard_headers)]

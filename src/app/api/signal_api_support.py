@@ -7,6 +7,7 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 
 from app.api.route_metadata import RouteMetadata as RouteMetadata
+from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.domain import SignalEvaluationResult
 from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome
@@ -93,6 +94,7 @@ def signal_permission_problem_or_none(
     caller: CallerContext,
     source_authority: str,
     emit_event: Callable[..., None],
+    requested_access_scope: ReviewAccessScope | None = None,
 ) -> JSONResponse | None:
     try:
         require_capability(caller, SIGNAL_EVALUATION_POLICY)
@@ -109,7 +111,44 @@ def signal_permission_problem_or_none(
             title="Permission denied",
             detail="The caller is not permitted to evaluate idea signals.",
         )
+    if not _caller_scope_allows_requested_scope(caller, requested_access_scope):
+        emit_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.PERMISSION_DENIED,
+            source_authority=source_authority,
+            error_code="permission_denied",
+        )
+        return problem_response(
+            status_code=status.HTTP_403_FORBIDDEN,
+            code="permission_denied",
+            title="Permission denied",
+            detail="The caller is not permitted to evaluate idea signals for the requested scope.",
+        )
     return None
+
+
+def _caller_scope_allows_requested_scope(
+    caller: CallerContext,
+    requested_access_scope: ReviewAccessScope | None,
+) -> bool:
+    if requested_access_scope is None:
+        return True
+    caller_scope = caller.entitlement_scope
+    if caller_scope.is_empty:
+        return False
+    requested_scope_filter = QueueAccessScopeFilter(
+        tenant_id=requested_access_scope.tenant_id,
+        book_id=requested_access_scope.book_id,
+        portfolio_id=requested_access_scope.portfolio_id,
+        client_id=requested_access_scope.client_id,
+    )
+    caller_scope_filter = QueueAccessScopeFilter(
+        tenant_id=caller_scope.tenant_ids,
+        book_id=caller_scope.book_ids,
+        portfolio_id=caller_scope.portfolio_ids,
+        client_id=caller_scope.client_ids,
+    )
+    return requested_scope_filter.is_subset_of(caller_scope_filter)
 
 
 def emit_signal_evaluation_event(

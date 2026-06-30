@@ -148,6 +148,9 @@ async def evaluate_underperformance_signal(
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
         source_authority=source_authority,
+        requested_access_scope=(
+            request.access_scope.to_domain() if request.access_scope is not None else None
+        ),
         emit_event=emit_foundation_operation_event,
     )
     if permission_problem is not None:

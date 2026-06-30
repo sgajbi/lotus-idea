@@ -46,11 +46,14 @@ boundary without creating a separately deployable signal service.
 ## Caller Context
 
 Use `app.api.caller_headers.CallerContextHeaders` when caller-supplied signal
-routes need standard `X-Caller-Subject`, `X-Caller-Roles`, and
-`X-Caller-Capabilities` binding. Signal route modules should not bind those
-headers locally; `make signal-api-contract-gate` blocks route-local caller
-header clones so permission behavior stays behind the shared caller-context
-facade without creating a separately deployable signal service.
+routes need standard `X-Caller-Subject`, `X-Caller-Roles`,
+`X-Caller-Capabilities`, `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`,
+`X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` binding. Signal route
+modules should not bind those headers locally; `make signal-api-contract-gate`
+blocks route-local caller header clones and scope-unaware permission checks.
+When a request includes `accessScope`, the signal permission helper rejects
+out-of-scope requests with product-safe 403 behavior before domain evaluation,
+without creating a separately deployable signal service.
 
 ## Temporal Validation
 

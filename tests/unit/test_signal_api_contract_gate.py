@@ -164,3 +164,31 @@ def test_signal_api_contract_gate_blocks_route_local_caller_context_headers(
         "src/app/api/underperformance_signals.py:6: signal API caller context headers "
         "must use `CallerContextHeaders` from caller_headers"
     ]
+
+
+def test_signal_api_contract_gate_requires_requested_access_scope_permission_check(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    module_path = Path("src/app/api/concentration_risk_signals.py")
+    _write_signal_module(
+        tmp_path,
+        module_path,
+        "from app.api.caller_headers import CallerContextHeaders\n"
+        "from app.api.signal_api_support import signal_permission_problem_or_none, "
+        "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n\n"
+        "def evaluate_concentration_risk_signal(request, caller: CallerContextHeaders):\n"
+        "    return signal_permission_problem_or_none(\n"
+        "        caller=caller,\n"
+        "        source_authority='lotus-risk',\n"
+        "        emit_event=lambda *args, **kwargs: None,\n"
+        "    )\n",
+    )
+    setattr(module, "SIGNAL_API_MODULES", (module_path,))
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/concentration_risk_signals.py:5: signal permission checks must pass "
+        "`requested_access_scope` for entitlement-scope intersection"
+    ]

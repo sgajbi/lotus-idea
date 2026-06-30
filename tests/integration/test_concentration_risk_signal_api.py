@@ -126,11 +126,59 @@ def test_concentration_risk_signal_api_requires_signal_permission() -> None:
     }
 
 
+def test_concentration_risk_signal_api_rejects_out_of_scope_access_scope() -> None:
+    client = TestClient(app)
+    headers = evaluate_headers()
+    headers["X-Caller-Portfolio-Ids"] = "PB_SG_OTHER_002"
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate",
+        json=concentration_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to evaluate idea signals for the requested scope.",
+    }
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+    assert "PB_SG_OTHER_002" not in response.text
+
+
+def test_concentration_risk_signal_api_rejects_blank_entitlement_scope_header() -> None:
+    client = TestClient(app)
+    headers = evaluate_headers()
+    headers["X-Caller-Portfolio-Ids"] = "PB_SG_GLOBAL_BAL_001, "
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate",
+        json=concentration_payload(),
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "request_rejected",
+        "title": "Request rejected",
+        "detail": "The service rejected the request. Correct the request or contact support with the correlation id.",
+    }
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
     }
 
 
@@ -151,6 +199,12 @@ def concentration_payload() -> dict[str, Any]:
             "contentHash": "sha256:concentration-risk-report",
             "dataQualityStatus": "quality_passed",
             "freshness": "current",
+        },
+        "accessScope": {
+            "tenantId": "tenant-private-bank-sg",
+            "bookId": "book-advisor-001",
+            "portfolioId": "PB_SG_GLOBAL_BAL_001",
+            "clientId": "client-001",
         },
         "entitlementAllowed": True,
     }
