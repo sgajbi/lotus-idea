@@ -40,6 +40,7 @@ def test_signal_api_contract_gate_blocks_local_signal_permission_policy(
     _write_signal_module(
         tmp_path,
         module_path,
+        "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
         "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n"
         "from app.security.caller_context import CapabilityPolicy\n\n"
@@ -52,7 +53,7 @@ def test_signal_api_contract_gate_blocks_local_signal_permission_policy(
     errors = module.validate_signal_api_contract(tmp_path)
 
     assert errors == [
-        "src/app/api/low_income_signals.py:4: signal evaluation permission policy "
+        "src/app/api/low_income_signals.py:5: signal evaluation permission policy "
         "must be centralized in signal_api_support"
     ]
 
@@ -65,6 +66,7 @@ def test_signal_api_contract_gate_blocks_local_signal_outcome_helper(
     _write_signal_module(
         tmp_path,
         module_path,
+        "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
         "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n\n"
         "def _operation_outcome_from_signal_evaluation(result):\n"
@@ -75,7 +77,7 @@ def test_signal_api_contract_gate_blocks_local_signal_outcome_helper(
     errors = module.validate_signal_api_contract(tmp_path)
 
     assert errors == [
-        "src/app/api/bond_maturity_signals.py:3: signal API modules must use "
+        "src/app/api/bond_maturity_signals.py:4: signal API modules must use "
         "`operation_outcome_from_signal_evaluation` from signal_api_support"
     ]
 
@@ -96,6 +98,8 @@ def test_signal_api_contract_gate_requires_shared_signal_helpers(
 
     assert errors == [
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
+        "`CallerContextHeaders` support",
+        "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`emit_signal_evaluation_event` support",
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`signal_permission_problem_or_none` support",
@@ -114,6 +118,7 @@ def test_signal_api_contract_gate_requires_shared_problem_response_metadata(
     _write_signal_module(
         tmp_path,
         module_path,
+        "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
         "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n\n"
         "CONCENTRATION_RISK_EVALUATE_ROUTE = {\n"
@@ -129,6 +134,33 @@ def test_signal_api_contract_gate_requires_shared_problem_response_metadata(
     errors = module.validate_signal_api_contract(tmp_path)
 
     assert errors == [
-        "src/app/api/concentration_risk_signals.py:3: signal evaluation routes must compose "
+        "src/app/api/concentration_risk_signals.py:4: signal evaluation routes must compose "
         "`signal_problem_responses()` for product-safe OpenAPI 400/403 examples"
+    ]
+
+
+def test_signal_api_contract_gate_blocks_route_local_caller_context_headers(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    module_path = Path("src/app/api/underperformance_signals.py")
+    _write_signal_module(
+        tmp_path,
+        module_path,
+        "from fastapi import Header\n"
+        "from app.api.caller_headers import CallerContextHeaders\n"
+        "from app.api.signal_api_support import signal_permission_problem_or_none, "
+        "emit_signal_evaluation_event, signal_problem_responses, source_authority_from_refs\n\n"
+        "def evaluate_underperformance_signal(\n"
+        "    x_caller_subject: str | None = Header(default=None, alias='X-Caller-Subject'),\n"
+        "):\n"
+        "    return None\n",
+    )
+    setattr(module, "SIGNAL_API_MODULES", (module_path,))
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/underperformance_signals.py:6: signal API caller context headers "
+        "must use `CallerContextHeaders` from caller_headers"
     ]

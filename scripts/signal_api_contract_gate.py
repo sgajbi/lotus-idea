@@ -22,10 +22,17 @@ SIGNAL_API_MODULES = (
 )
 
 REQUIRED_SHARED_HELPERS = (
+    "CallerContextHeaders",
     "signal_permission_problem_or_none",
     "emit_signal_evaluation_event",
     "signal_problem_responses",
     "source_authority_from_refs",
+)
+
+CALLER_HEADER_ALIASES = (
+    "X-Caller-Subject",
+    "X-Caller-Roles",
+    "X-Caller-Capabilities",
 )
 
 
@@ -100,6 +107,14 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
                 errors.append(
                     f"{relative_path}:{node.lineno}: signal evaluation permission policy "
                     "must be centralized in signal_api_support"
+                )
+
+        if isinstance(node, ast.Call) and _call_name(node.func) == "Header":
+            alias = _keyword_value(node, "alias")
+            if alias in CALLER_HEADER_ALIASES:
+                errors.append(
+                    f"{relative_path}:{node.lineno}: signal API caller context headers "
+                    "must use `CallerContextHeaders` from caller_headers"
                 )
 
         if (

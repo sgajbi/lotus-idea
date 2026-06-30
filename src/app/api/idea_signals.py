@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import CallerContextHeaders
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -352,15 +352,8 @@ class EvaluateAndPersistHighCashSignalResponse(CamelModel):
 
 async def evaluate_high_cash_signal(
     request: EvaluateHighCashSignalRequest,
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    caller: CallerContextHeaders,
 ) -> EvaluateHighCashSignalResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
     source_authority = _high_cash_source_authority(request)
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
@@ -381,15 +374,8 @@ async def evaluate_high_cash_signal(
 
 async def evaluate_mandate_restriction_signal(
     request: EvaluateMandateRestrictionSignalRequest,
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    caller: CallerContextHeaders,
 ) -> EvaluateMandateRestrictionSignalResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
     source_authority = source_authority_from_refs((request.restriction_ref,))
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
@@ -413,16 +399,9 @@ async def evaluate_mandate_restriction_signal(
 
 async def evaluate_and_persist_high_cash_signal(
     request: EvaluateHighCashSignalRequest,
+    caller: CallerContextHeaders,
     idempotency_key: str = Header(..., alias="Idempotency-Key"),
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
 ) -> EvaluateAndPersistHighCashSignalResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
     try:
         require_capability(caller, _PERSIST_HIGH_CASH_POLICY)
     except PermissionDeniedError:

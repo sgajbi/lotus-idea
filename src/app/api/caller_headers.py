@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from typing import Annotated
+
+from fastapi import Depends, Header
+
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.security.caller_context import CallerContext, CallerEntitlementScope
 
@@ -34,6 +38,21 @@ def caller_context_from_headers(
             client_ids=_split_header_values(client_ids),
         ),
     )
+
+
+def caller_context_from_standard_headers(
+    x_caller_subject: Annotated[str | None, Header(alias="X-Caller-Subject")] = None,
+    x_caller_roles: Annotated[str | None, Header(alias="X-Caller-Roles")] = None,
+    x_caller_capabilities: Annotated[str | None, Header(alias="X-Caller-Capabilities")] = None,
+) -> CallerContext:
+    return caller_context_from_headers(
+        subject=x_caller_subject,
+        roles=x_caller_roles,
+        capabilities=x_caller_capabilities,
+    )
+
+
+CallerContextHeaders = Annotated[CallerContext, Depends(caller_context_from_standard_headers)]
 
 
 def caller_access_scope_filter(caller: CallerContext) -> QueueAccessScopeFilter | None:

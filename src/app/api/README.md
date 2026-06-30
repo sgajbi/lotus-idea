@@ -43,6 +43,15 @@ summary responses. Route modules should not import those DTOs from
 route-to-route coupling so caller-supplied signal APIs keep one reviewable model
 boundary without creating a separately deployable signal service.
 
+## Caller Context
+
+Use `app.api.caller_headers.CallerContextHeaders` when caller-supplied signal
+routes need standard `X-Caller-Subject`, `X-Caller-Roles`, and
+`X-Caller-Capabilities` binding. Signal route modules should not bind those
+headers locally; `make signal-api-contract-gate` blocks route-local caller
+header clones so permission behavior stays behind the shared caller-context
+facade without creating a separately deployable signal service.
+
 ## Temporal Validation
 
 Use `app.api.temporal_validation` for API timestamp awareness and UTC checks.
