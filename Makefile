@@ -5,6 +5,7 @@ UNIT_TESTS ?= tests/unit
 INTEGRATION_TESTS ?= tests/integration
 E2E_TESTS ?= tests/e2e
 CONTAINER_IMAGE_NAME ?= backend-service:ci-test
+CONTAINER_BASE_IMAGE ?= python:3.12-slim
 CONTAINER_SCAN_OUTPUT ?= output/security/container-image-scan.trivy.json
 CONTAINER_SCAN_SEVERITY ?= HIGH,CRITICAL
 TRIVY_IMAGE ?= aquasec/trivy:0.71.2
@@ -437,7 +438,7 @@ check: lint typecheck architecture-boundary-gate openapi-gate migration-contract
 ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate migration-execution-gate supported-features-gate endpoint-certification-gate test-integration test-e2e test-coverage security-audit
 
 docker-build:
-	docker build -t $(CONTAINER_IMAGE_NAME) .
+	docker build --build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE) -t $(CONTAINER_IMAGE_NAME) .
 
 release-sbom:
 	$(VENV_PYTHON) -m cyclonedx_py environment --output-format JSON --output-file sbom.cdx.json

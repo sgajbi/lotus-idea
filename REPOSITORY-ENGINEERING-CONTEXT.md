@@ -1773,8 +1773,10 @@ implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, critical workflow e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
-Docker build validation, bounded GitHub job timeouts, and no soft-failed
-critical workflow jobs.
+Docker build validation, runtime-only Docker dependency posture, non-root
+container execution, governed Docker base/scanner image identity in release
+evidence, bounded GitHub job timeouts, and no soft-failed critical workflow
+jobs.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
@@ -1796,7 +1798,8 @@ drawdown live-proof contract validation, Advise mandate/restriction live-proof
 contract validation, implementation-proof readiness artifact generation,
 runtime trust telemetry preview generation, source-observability contract
 validation, PostgreSQL runtime proof, coverage,
-security, Docker, release-evidence, verified immutable action SHA pins with
+security, Docker runtime dependency and non-root user posture, release-evidence
+base/scanner image identity, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded
 workflow timeouts, no `continue-on-error: true` in critical lanes,
 implementation-truth enforcement, non-suppressed auto-merge token usage,
@@ -1806,6 +1809,15 @@ coverage proves current pass behavior and failure cases for floating action
 tags, wrong verified SHAs, missing action-version provenance, raw workflow
 `pytest` shortcuts, weakened coverage-target selectors, and removal of current
 blocking lint gates from the repo-native quality path.
+
+The runtime Dockerfile is governed by the CI contract gate: it must use the
+configured base image build argument, install the package without development
+extras, expose `/app/src` on `PYTHONPATH`, preserve only the source-ingestion
+worker entrypoints needed by Compose worker profiles, and run the process as
+the non-root `lotus` user. The Makefile and PR/main workflow contracts keep
+`CONTAINER_BASE_IMAGE` and pinned `TRIVY_IMAGE` visible in build and release
+evidence so scanner or base-image drift cannot be hidden in ad hoc workflow
+edits.
 
 `make repository-hygiene-gate` is blocking through `make lint`. It scans
 tracked Git files and fails if generated Python cache files, local coverage

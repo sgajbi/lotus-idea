@@ -6,6 +6,8 @@ from types import ModuleType
 
 import pytest
 
+from scripts.ci_release_evidence_contract import validate_dockerfile_runtime
+
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -84,3 +86,30 @@ def test_ci_contract_gate_blocks_inline_cyclonedx_install(
 
     assert "main-releasability.yml missing `make release-sbom`" in errors
     assert "main-releasability.yml must not contain `pip install cyclonedx-bom`" in errors
+
+
+def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "python -m pip install --no-cache-dir .",
+        'python -m pip install --no-cache-dir -e ".[dev]"',
+    )
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert "Dockerfile runtime image must not install development extras" in errors
+
+
+def test_ci_contract_gate_blocks_root_runtime_dockerfile() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace("USER lotus", "USER root")
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert "Dockerfile runtime image must not run as root" in errors
+
+
+def test_ci_contract_gate_accepts_hardened_runtime_dockerfile() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+
+    assert validate_dockerfile_runtime(dockerfile) == []

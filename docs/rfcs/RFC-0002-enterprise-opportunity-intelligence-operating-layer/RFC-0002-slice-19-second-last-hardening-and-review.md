@@ -243,3 +243,26 @@ This slice also hardens workflow/operator API error-model polish:
 5. This is API contract and design-modularity hardening only. It does not add a
    runtime microservice boundary, Gateway/Workbench mutation support, client
    publication, data-mesh certification, or supported-feature promotion.
+
+This slice also hardens runtime Docker and release image identity governance:
+
+1. The Dockerfile now builds from a governed `PYTHON_BASE_IMAGE` argument,
+   installs only runtime package dependencies, preserves `/app/src` on
+   `PYTHONPATH`, copies only the runtime source-ingestion worker entrypoints
+   from `scripts/`, and runs the service as the non-root `lotus` user.
+2. `Makefile` exposes `CONTAINER_BASE_IMAGE` and passes it into the Docker
+   build. PR merge and main releasability workflows expose both
+   `CONTAINER_BASE_IMAGE` and pinned `TRIVY_IMAGE` values so release evidence
+   records the base image and scanner identity instead of hiding those choices
+   inside ad hoc workflow strings.
+3. `scripts/ci_release_evidence_contract.py` and
+   `scripts/ci_contract_gate.py` now reject development extras in the runtime
+   image, bulk `COPY scripts ./scripts`, root runtime execution, missing worker
+   entrypoints, missing base-image build-arg wiring, and missing release
+   image-identity evidence.
+4. `tests/unit/test_ci_release_evidence_contract.py` and
+   `tests/unit/test_ci_contract_gate.py` cover current pass behavior and
+   failure cases for dev-tooling, root-user, and release-evidence drift.
+5. This is runtime and CI hardening only. It does not certify production
+   capacity, live source ingestion, Workbench support, data-product readiness,
+   client publication, or supported-feature promotion.

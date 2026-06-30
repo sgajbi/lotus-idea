@@ -140,7 +140,9 @@ aggregate implementation-proof readiness, source-ingestion live-proof artifact
 contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
-security audit, Docker build validation, bounded GitHub job timeouts, no soft-failed critical
+security audit, Docker build validation, runtime-only Docker dependency posture,
+non-root container execution, governed Docker base/scanner image identity in
+release evidence, bounded GitHub job timeouts, no soft-failed critical
 jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, including implementation-proof readiness and runtime trust telemetry preview

@@ -11,6 +11,13 @@ def _target_block(makefile: str, target: str) -> str:
 
 def validate_release_evidence_targets(makefile: str) -> list[str]:
     errors: list[str] = []
+    if "CONTAINER_BASE_IMAGE ?= python:3.12-slim" not in makefile:
+        errors.append("Makefile must pin `CONTAINER_BASE_IMAGE` to `python:3.12-slim`")
+
+    docker_build = _target_block(makefile, "docker-build")
+    if "--build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE)" not in docker_build:
+        errors.append("Makefile docker-build target must pass governed Docker base image")
+
     release_sbom = _target_block(makefile, "release-sbom")
     if "-m cyclonedx_py environment" not in release_sbom:
         errors.append("Makefile release-sbom target must run pinned venv `cyclonedx_py`")
@@ -59,6 +66,50 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     }
     for fragment, error in required_fragments.items():
         if fragment not in container_scan:
+            errors.append(error)
+    return errors
+
+
+def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
+    errors: list[str] = []
+    required_fragments = {
+        "ARG PYTHON_BASE_IMAGE=python:3.12-slim": (
+            "Dockerfile must declare the governed default Python base image"
+        ),
+        "FROM ${PYTHON_BASE_IMAGE}": "Dockerfile must build from the governed base-image arg",
+        'org.opencontainers.image.base.name="${PYTHON_BASE_IMAGE}"': (
+            "Dockerfile must label the runtime base image"
+        ),
+        "python -m pip install --no-cache-dir .": (
+            "Dockerfile must install only runtime project dependencies"
+        ),
+        "USER lotus": "Dockerfile must run the service as the non-root `lotus` user",
+        "PYTHONPATH=/app/src": (
+            "Dockerfile must keep repository-root runtime contracts resolvable from /app"
+        ),
+        "COPY scripts/run_source_ingestion_worker.py ./scripts/run_source_ingestion_worker.py": (
+            "Dockerfile must keep the runtime run-once worker entrypoint available"
+        ),
+        (
+            "COPY scripts/run_scheduled_source_ingestion_worker.py "
+            "./scripts/run_scheduled_source_ingestion_worker.py"
+        ): "Dockerfile must keep the runtime scheduled-worker entrypoint available",
+    }
+    for fragment, error in required_fragments.items():
+        if fragment not in dockerfile:
+            errors.append(error)
+    prohibited_fragments = {
+        'pip install --no-cache-dir -e ".[dev]"': (
+            "Dockerfile runtime image must not install development extras"
+        ),
+        'pip install --no-cache-dir ".[dev]"': (
+            "Dockerfile runtime image must not install development extras"
+        ),
+        "COPY scripts ./scripts": "Dockerfile runtime image must not copy CI/developer scripts",
+        "USER root": "Dockerfile runtime image must not run as root",
+    }
+    for fragment, error in prohibited_fragments.items():
+        if fragment in dockerfile:
             errors.append(error)
     return errors
 
