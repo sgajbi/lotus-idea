@@ -203,7 +203,7 @@ Compose uses `.env.example` defaults and optional ignored `.env` overrides; the 
 | `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
 | `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
 | `make report-materialization-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence materialization proof contract without certifying client publication or supported features. |
-| `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make api-camel-model-boundary-gate`, `make api-signal-model-boundary-gate`, `make api-temporal-validation-boundary-gate`, `make openapi-problem-details-example-gate`, `make signal-api-contract-gate` | Block direct API route or app-entrypoint imports from `app.errors`, route-local idempotency validator clones, route-local camel-case DTO base-model clones, signal route-to-route DTO coupling, route-local timestamp-awareness checks, missing public `ProblemDetails` OpenAPI examples, and duplicated caller-supplied signal API caller-context headers, scope-unaware permission checks, source-authority, 400/403 examples, and operation-event mechanics. |
+| `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make api-camel-model-boundary-gate`, `make api-signal-model-boundary-gate`, `make api-temporal-validation-boundary-gate`, `make openapi-problem-details-example-gate`, `make caller-context-contract-gate`, `make signal-api-contract-gate` | Block direct API route or app-entrypoint imports from `app.errors`, route-local idempotency validator clones, route-local camel-case DTO base-model clones, signal route-to-route DTO coupling, route-local timestamp-awareness checks, missing public `ProblemDetails` OpenAPI examples, untrusted production-like caller-context header use, and duplicated caller-supplied signal API caller-context headers, scope-unaware permission checks, source-authority, 400/403 examples, and operation-event mechanics. |
 | `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
 | `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
 | `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
@@ -233,7 +233,8 @@ Governance-focused changes should also run `make documentation-contract-gate`, `
 
 ## Runtime And Operations
 
-`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test` allow process-local writes; production-like profiles require `LOTUS_IDEA_DATABASE_URL`, while HTTP boundary env vars govern host, origin, and request-size limits with product-safe rejections.
+`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test` allow process-local writes and caller-header simulation; production-like profiles require `LOTUS_IDEA_DATABASE_URL` and accept privileged `X-Caller-*` headers only with `X-Lotus-Trusted-Caller-Context` matching `LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`.
+That marker is bounded trusted-ingress provenance only, not identity-provider, signed-assertion, Workbench entitlement, client-publication, or supported-feature proof. HTTP boundary env vars govern host, origin, and request-size limits with product-safe rejections.
 
 Operational entrypoints:
 

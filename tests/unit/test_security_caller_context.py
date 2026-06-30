@@ -2,6 +2,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.api.caller_headers import (
+    TRUSTED_CALLER_CONTEXT_TOKEN_ENV,
     caller_access_scope_filter,
     caller_context_from_headers,
     caller_context_from_standard_headers,
@@ -111,6 +112,41 @@ def test_caller_context_from_headers_parses_entitlement_scope_headers() -> None:
     assert caller.entitlement_scope.client_ids == ("client-001",)
 
 
+def test_caller_context_from_headers_rejects_untrusted_production_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.delenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, raising=False)
+
+    with pytest.raises(HTTPException) as exc_info:
+        caller_context_from_headers(
+            subject="advisor-001",
+            roles="advisor",
+            capabilities="idea.review.queue.read",
+        )
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail == "trusted caller context provenance is required"
+
+
+def test_caller_context_from_headers_accepts_trusted_production_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+
+    caller = caller_context_from_headers(
+        subject="advisor-001",
+        roles="advisor",
+        capabilities="idea.review.queue.read",
+        trusted_caller_context="gateway-secret",
+    )
+
+    assert caller.subject == "advisor-001"
+    assert caller.roles == frozenset({"advisor"})
+    assert caller.capabilities == frozenset({"idea.review.queue.read"})
+
+
 def test_caller_context_from_standard_headers_parses_common_api_headers() -> None:
     caller = caller_context_from_standard_headers(
         x_caller_subject="advisor-001",
@@ -145,6 +181,54 @@ def test_caller_context_from_standard_headers_rejects_blank_entitlement_header()
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "caller entitlement scope headers cannot contain blank values"
+
+
+def test_caller_context_from_standard_headers_rejects_untrusted_production_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.delenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, raising=False)
+
+    with pytest.raises(HTTPException) as exc_info:
+        caller_context_from_standard_headers(
+            x_caller_subject="advisor-001",
+            x_caller_roles="advisor",
+            x_caller_capabilities="idea.signal.evaluate",
+        )
+
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail == "trusted caller context provenance is required"
+
+
+def test_caller_context_from_standard_headers_accepts_trusted_production_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+
+    caller = caller_context_from_standard_headers(
+        x_caller_subject="advisor-001",
+        x_caller_roles="advisor",
+        x_caller_capabilities="idea.signal.evaluate",
+        x_lotus_trusted_caller_context="gateway-secret",
+    )
+
+    assert caller.subject == "advisor-001"
+    assert caller.roles == frozenset({"advisor"})
+    assert caller.capabilities == frozenset({"idea.signal.evaluate"})
+
+
+def test_caller_context_from_standard_headers_allows_anonymous_production_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.delenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, raising=False)
+
+    caller = caller_context_from_standard_headers()
+
+    assert caller.subject == "anonymous"
+    assert caller.roles == frozenset()
+    assert caller.capabilities == frozenset()
 
 
 def test_caller_access_scope_filter_matches_entitlement_headers() -> None:

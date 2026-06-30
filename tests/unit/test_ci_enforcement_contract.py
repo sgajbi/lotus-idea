@@ -398,6 +398,15 @@ def test_ci_contract_gate_blocks_missing_signal_api_contract_gate() -> None:
     assert "Makefile lint target must call `$(MAKE) signal-api-contract-gate`" in errors
 
 
+def test_ci_contract_gate_blocks_missing_caller_context_contract_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) caller-context-contract-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) caller-context-contract-gate`" in errors
+
+
 def test_ci_contract_gate_blocks_downgraded_source_ingestion_worker_check() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace(

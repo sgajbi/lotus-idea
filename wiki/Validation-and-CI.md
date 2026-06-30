@@ -226,10 +226,17 @@ Persistence adapter validation:
    `LOTUS_IDEA_DATABASE_URL` is configured, psycopg mapping-row configuration,
    provider caching, durable-storage status, and connection close/reset
    behavior.
-3. `tests/integration/test_high_cash_signal_api.py` pins route-level
+3. `tests/unit/test_security_caller_context.py` and
+   `tests/integration/test_review_queue_api.py` prove that production-like
+   profiles reject self-asserted `X-Caller-*` authorization headers without
+   trusted-ingress provenance, while valid
+   `X-Lotus-Trusted-Caller-Context` propagation still authorizes through the
+   existing role/capability policies. `make caller-context-contract-gate`
+   blocks future route-local parser drift.
+4. `tests/integration/test_high_cash_signal_api.py` pins route-level
    `durableStorageBacked` derivation with an injected durable repository so
    future changes cannot hardcode repository-backed API posture to `false`.
-4. `tests/integration/test_postgres_runtime_integration.py` is the first real
+5. `tests/integration/test_postgres_runtime_integration.py` is the first real
    PostgreSQL runtime proof. GitHub PR Merge Gate and Main Releasability run it
    against `postgres:18-alpine` with
    `LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1`; local runs skip unless

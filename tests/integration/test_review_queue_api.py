@@ -2,8 +2,10 @@ from __future__ import annotations
 
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
@@ -515,6 +517,50 @@ def test_advisor_review_queue_readiness_api_requires_operator_permission() -> No
     assert role_denied.json()["code"] == "permission_denied"
     assert capability_denied.status_code == 403
     assert capability_denied.json()["code"] == "permission_denied"
+
+
+def test_production_profile_rejects_self_asserted_caller_context_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.delenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, raising=False)
+    client = TestClient(app)
+
+    read_response = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers=readiness_headers(),
+    )
+    mutation_response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=high_cash_payload(cash_weight="0.18", suffix="-untrusted-prod"),
+        headers=persist_headers("untrusted-prod-persist"),
+    )
+
+    assert read_response.status_code == 403
+    assert read_response.json()["code"] == "request_rejected"
+    assert mutation_response.status_code == 403
+    assert mutation_response.json()["code"] == "request_rejected"
+
+
+def test_production_profile_accepts_trusted_caller_context_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers={
+            **readiness_headers(),
+            TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["readinessStatus"] == "blocked"
 
 
 def test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely() -> None:

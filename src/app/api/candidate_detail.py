@@ -7,7 +7,11 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
+from app.api.caller_headers import (
+    TRUSTED_CALLER_CONTEXT_HEADER,
+    caller_access_scope_filter,
+    caller_context_from_headers,
+)
 from app.api.problem_details import (
     invalid_request_metadata,
     not_found_metadata,
@@ -369,6 +373,10 @@ async def get_idea_candidate_detail(
     x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
     x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
     x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
+    x_lotus_trusted_caller_context: str | None = Header(
+        default=None,
+        alias=TRUSTED_CALLER_CONTEXT_HEADER,
+    ),
 ) -> CandidateDetailResponse | JSONResponse:
     try:
         caller = caller_context_from_headers(
@@ -379,6 +387,7 @@ async def get_idea_candidate_detail(
             book_ids=x_caller_book_ids,
             portfolio_ids=x_caller_portfolio_ids,
             client_ids=x_caller_client_ids,
+            trusted_caller_context=x_lotus_trusted_caller_context,
         )
     except ValueError:
         _emit_candidate_detail_operation_event(

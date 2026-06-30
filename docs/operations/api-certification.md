@@ -109,6 +109,15 @@ promotion. Those remain blocked until later RFC slices add runtime adapters,
 downstream contracts, trust telemetry, UI proof, and supported-feature
 registration.
 
+Caller-context authorization headers are local/test simulation inputs unless
+they arrive through trusted ingress. In `demo`, `staging`, and `production`,
+requests carrying privileged `X-Caller-*` role, capability, or entitlement
+headers must also carry `X-Lotus-Trusted-Caller-Context` matching
+`LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`; otherwise the shared caller-context
+boundary rejects the request with product-safe `403` behavior before route
+authorization. This is trusted-ingress provenance only, not identity-provider,
+signed assertion, Workbench entitlement, or client-publication proof.
+
 Every row above is backed by
 `docs/operations/endpoint-certification-ledger.json`; keep this narrative guide
 and the ledger synchronized when a certified endpoint is added, removed, or
