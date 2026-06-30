@@ -8,6 +8,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
@@ -239,6 +244,14 @@ async def record_report_evidence_pack(
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_report_evidence_operation_event(
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed,
+            )
+            return configuration_problem
         result = request_report_evidence_pack_to_repository(
             request.to_command(
                 conversion_intent_id=conversion_intent_id,
@@ -456,6 +469,7 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
             ),
             description="Idempotency conflict or invalid report evidence-pack state.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 

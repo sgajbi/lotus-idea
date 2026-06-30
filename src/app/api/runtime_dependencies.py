@@ -10,6 +10,12 @@ from app.runtime.proof_artifacts import configured_implementation_proof_artifact
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
+    idea_repository_runtime_posture,
+)
+from app.runtime.settings import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    RuntimeStoragePosture,
+    load_runtime_settings,
 )
 from app.runtime.source_ingestion_state import (
     SourceIngestionRuntime,
@@ -19,6 +25,8 @@ from app.runtime.source_ingestion_state import (
 
 __all__ = [
     "DownstreamRealizationClientsUnavailableError",
+    "DURABLE_REPOSITORY_NOT_CONFIGURED",
+    "RuntimeStoragePosture",
     "SourceIngestionRuntime",
     "SourceIngestionRuntimeBlocker",
     "build_outbox_publisher_from_environment",
@@ -28,4 +36,6 @@ __all__ = [
     "get_idea_repository",
     "get_report_evidence_pack_realization_client",
     "idea_repository_durable_storage_backed",
+    "idea_repository_runtime_posture",
+    "load_runtime_settings",
 ]

@@ -9,6 +9,11 @@ from pydantic import Field
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
@@ -257,6 +262,14 @@ async def post_outbox_delivery_run_once(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is not None:
+        _emit_outbox_delivery_run_event(
+            OperationOutcome.BLOCKED,
+            DURABLE_REPOSITORY_NOT_CONFIGURED,
+            durable_storage_backed=durable_storage_backed,
+        )
+        return configuration_problem
 
     if delivered_at_utc is not None and not is_utc_datetime(delivered_at_utc):
         _emit_outbox_delivery_run_event(
@@ -478,6 +491,7 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
             detail="The caller is not permitted to run outbox delivery.",
             description="Caller lacks outbox delivery run permission.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 

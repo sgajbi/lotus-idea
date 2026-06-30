@@ -8,6 +8,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
@@ -273,6 +278,15 @@ async def record_conversion_intent(
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_conversion_operation_event(
+                IdeaOperation.CONVERSION_INTENT,
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed,
+            )
+            return configuration_problem
         result = request_conversion_intent_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
@@ -357,6 +371,15 @@ async def record_conversion_outcome(
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_conversion_operation_event(
+                IdeaOperation.CONVERSION_OUTCOME,
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed,
+            )
+            return configuration_problem
         result = record_conversion_outcome_to_repository(
             request.to_command(
                 conversion_intent_id=conversion_intent_id,
@@ -556,6 +579,7 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
             detail="The conversion intent is not valid for the current idea candidate state.",
             description="Idempotency conflict or invalid conversion intent state.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 
@@ -568,8 +592,9 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
         "Records an internal downstream conversion outcome against a previously recorded "
         "idea conversion intent. The route verifies that the reporting source system "
         "matches the target source authority, writes audit evidence, and remains an "
-        "internal foundation. Storage is process-local by default and PostgreSQL-backed "
-        "only when LOTUS_IDEA_DATABASE_URL is configured; downstream contracts, Gateway, "
+        "internal foundation. Process-local writes are allowed only for local/test "
+        "profiles; production-like profiles require LOTUS_IDEA_DATABASE_URL. "
+        "Downstream contracts, Gateway, "
         "Workbench, and data-product certification remain separate promotion gates."
     ),
     "status_code": status.HTTP_200_OK,
@@ -624,6 +649,7 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
             detail="The conversion outcome is not valid for the recorded conversion intent.",
             description="Idempotency conflict or invalid conversion outcome source.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 
