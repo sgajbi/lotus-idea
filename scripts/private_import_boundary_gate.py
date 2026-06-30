@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCAN_ROOTS = ("src", "tests", "scripts")
 PROTECTED_IMPORT_PREFIXES = ("app.domain.",)
+PROTECTED_IMPORT_MODULES = ("app.application.implementation_proof_capability_updates",)
 
 
 def _python_files(root: Path) -> list[Path]:
@@ -33,7 +34,11 @@ def _module_name(path: Path, root: Path) -> str | None:
 
 
 def _is_protected_module(module_name: str) -> bool:
-    return module_name == "app.domain" or module_name.startswith(PROTECTED_IMPORT_PREFIXES)
+    return (
+        module_name == "app.domain"
+        or module_name in PROTECTED_IMPORT_MODULES
+        or module_name.startswith(PROTECTED_IMPORT_PREFIXES)
+    )
 
 
 def validate_private_import_boundaries(root: Path = ROOT) -> list[str]:
@@ -54,7 +59,7 @@ def validate_private_import_boundaries(root: Path = ROOT) -> list[str]:
                     violations.append(
                         f"{path.relative_to(root).as_posix()}:{node.lineno}: "
                         f"private import `{imported_name}` from `{node.module}` must use a "
-                        "public domain API"
+                        "public module API"
                     )
     return violations
 

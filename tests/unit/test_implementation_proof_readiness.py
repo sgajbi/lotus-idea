@@ -17,6 +17,9 @@ from app.application.ai_workflow_pack_runtime_execution_proof import (
     build_ai_workflow_pack_runtime_execution_proof_payload,
 )
 from app.application.durable_repository_proof import build_durable_repository_proof_payload
+from app.application.implementation_proof_capability_updates import (
+    build_capability_readiness,
+)
 from app.application.implementation_proof_readiness import (
     _apply_ai_lineage_store_proof,
     _apply_ai_workflow_pack_registration_proof,
@@ -26,7 +29,6 @@ from app.application.implementation_proof_readiness import (
     _apply_outbox_broker_proof,
     _apply_platform_mesh_onboarding_proof,
     _apply_report_materialization_proof,
-    _capability,
     _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
 )
@@ -94,7 +96,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_implementation_proof_capability_status_is_derived_from_remaining_blockers() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "source-ingestion",
         "Source-owned high-cash signal ingestion",
         readiness_status="blocked",
@@ -124,7 +126,7 @@ def test_implementation_proof_application_is_noop_when_target_blocker_is_absent(
     apply_proof: object,
     capability_id: str,
 ) -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         capability_id,
         "Already-cleared proof family",
         readiness_status="blocked",
@@ -139,7 +141,7 @@ def test_implementation_proof_application_is_noop_when_target_blocker_is_absent(
 
 
 def test_downstream_route_contract_proof_application_is_noop_for_other_capability() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "ai-explanation",
         "AI explanation",
         readiness_status="blocked",
@@ -159,7 +161,7 @@ def test_downstream_route_contract_proof_application_is_noop_for_other_capabilit
 
 
 def test_downstream_route_contract_proof_application_is_noop_without_matching_blocker() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "downstream-realization",
         "Downstream realization",
         readiness_status="blocked",
@@ -179,7 +181,7 @@ def test_downstream_route_contract_proof_application_is_noop_without_matching_bl
 
 
 def test_downstream_route_contract_proof_application_preserves_refs_without_proof_ref() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "downstream-realization",
         "Downstream realization",
         readiness_status="blocked",
@@ -201,7 +203,7 @@ def test_downstream_route_contract_proof_application_preserves_refs_without_proo
 
 
 def test_report_materialization_proof_application_is_noop_for_other_capability() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "ai-explanation",
         "AI explanation",
         readiness_status="blocked",
@@ -219,7 +221,7 @@ def test_report_materialization_proof_application_is_noop_for_other_capability()
 
 
 def test_report_materialization_proof_application_preserves_refs_without_proof_ref() -> None:
-    capability = _capability(
+    capability = build_capability_readiness(
         "downstream-realization",
         "Downstream realization",
         readiness_status="blocked",
