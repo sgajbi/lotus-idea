@@ -46,6 +46,14 @@ configured, repository-backed API responses and operation events report
 certification, data-product certification, live source integration proof,
 downstream realization proof, certified live broker runtime, or supported-feature
 promotion.
+The PostgreSQL adapter now applies normal mutating repository operations as
+row-delta inserts and candidate-row updates inside the repository transaction
+instead of deleting and reinserting unrelated repository tables. This preserves
+independent candidate, review, conversion, report evidence, AI lineage, outbox,
+and downstream-submission rows when separate mutations are applied from the same
+starting snapshot. It is still not production storage certification, and future
+adapter work should continue moving hot precheck/replay paths toward
+database-native conditional reads and writes where that reduces contention.
 `scripts/generate_durable_repository_proof.py` and
 `make durable-repository-proof-contract-gate` now provide a source-safe proof
 artifact for aggregate RFC implementation-readiness evidence. The artifact
@@ -116,7 +124,7 @@ supported feature.
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
 | AI explanation lineage | Source-safe request/result lineage through the repository port, PostgreSQL migration `002`, and PostgreSQL runtime API proof | No `lotus-ai` runtime execution, prompt/provider telemetry, Workbench proof, or supported product claim |
-| Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay and AI explanation lineage accepted/replayed/conflict behavior | Not supported-feature promotion |
+| Runtime proof | PostgreSQL 18 integration proof for internal workflow persistence/replay, row-delta repository mutation, and AI explanation lineage accepted/replayed/conflict behavior | Not production storage certification or supported-feature promotion |
 | Durable repository proof artifact | Source-safe aggregate readiness artifact citing migration, adapter, and CI runtime proof evidence | Not live runtime configuration or production storage certification |
 
 ```mermaid

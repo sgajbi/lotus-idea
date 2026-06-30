@@ -91,6 +91,10 @@ class FakePostgresCursor:
             assert params is not None
             self._rows = claim_outbox_event_rows(self.connection, params)
             return
+        if normalized.startswith("update idea_candidate_record"):
+            assert params is not None
+            self._rows = update_candidate_record_row(self.connection, params)
+            return
         if normalized.startswith("update idea_outbox_event"):
             assert params is not None
             if "set status = %s, published_at_utc = %s" in normalized:
@@ -113,6 +117,7 @@ class FakePostgresCursor:
             self._rows = list(self.connection.rows[_table_from_select(normalized)])
             return
         if normalized.startswith("delete from"):
+            self.connection.deletes += 1
             self.connection.rows[normalized.split()[2]].clear()
             return
         if normalized.startswith("insert into"):
@@ -153,6 +158,7 @@ class FakePostgresConnection:
         self.fail_on_insert = fail_on_insert
         self.commits = 0
         self.rollbacks = 0
+        self.deletes = 0
 
     def cursor(self) -> FakePostgresCursor:
         return FakePostgresCursor(self)
@@ -366,6 +372,77 @@ def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
         recovered.report_evidence_pack_candidates["report-evidence-pack-001"]
         == approved.candidate_id
     )
+
+
+def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    first_candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_row_scoped_first",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    second_candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_row_scoped_second",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        first_candidate,
+        idempotency_key="candidate:row-scoped-first",
+        payload={"candidateId": first_candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    repository.persist_candidate(
+        second_candidate,
+        idempotency_key="candidate:row-scoped-second",
+        payload={"candidateId": second_candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    base_snapshot = PostgresIdeaRepository(connection).snapshot()
+
+    class StaleSnapshotRepository(PostgresIdeaRepository):
+        def __init__(
+            self,
+            stale_connection: FakePostgresConnection,
+            stale_snapshot: IdeaRepositorySnapshot,
+        ) -> None:
+            super().__init__(stale_connection)
+            self._stale_snapshot = stale_snapshot
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            return self._stale_snapshot
+
+    first_review = apply_review_action(
+        first_candidate,
+        review_command(review_id="review-row-scoped-first"),
+    )
+    second_review = apply_review_action(
+        second_candidate,
+        review_command(review_id="review-row-scoped-second"),
+    )
+
+    StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        first_review,
+        idempotency_key="review:row-scoped-first",
+        payload={"reviewId": first_review.decision.review_id},
+    )
+    StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        second_review,
+        idempotency_key="review:row-scoped-second",
+        payload={"reviewId": second_review.decision.review_id},
+    )
+    recovered = PostgresIdeaRepository(connection).snapshot()
+
+    assert connection.deletes == 0
+    assert {
+        decision.review_id
+        for record in recovered.candidate_records.values()
+        for decision in record.review_decisions
+    } == {"review-row-scoped-first", "review-row-scoped-second"}
+    assert len(connection.rows["idea_review_decision"]) == 2
 
 
 def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
@@ -710,9 +787,9 @@ def access_scope() -> ReviewAccessScope:
     )
 
 
-def review_command() -> ReviewDecisionCommand:
+def review_command(review_id: str = "review-approve-001") -> ReviewDecisionCommand:
     return ReviewDecisionCommand(
-        review_id="review-approve-001",
+        review_id=review_id,
         action=ReviewAction.APPROVE_FOR_CONVERSION,
         actor=actor(),
         access_scope=access_scope(),
@@ -957,6 +1034,34 @@ def _row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
         ),
     }
     return dict(zip(columns_by_table[table_name], values, strict=True))
+
+
+def update_candidate_record_row(
+    connection: FakePostgresConnection,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    (
+        family,
+        lifecycle_status,
+        review_posture,
+        evidence_packet_id,
+        evidence_hash,
+        candidate_json,
+        updated_at_utc,
+        candidate_id,
+    ) = [_unwrap_jsonb(value) for value in params]
+    for row in connection.rows["idea_candidate_record"]:
+        if row["candidate_id"] != candidate_id:
+            continue
+        row["family"] = family
+        row["lifecycle_status"] = lifecycle_status
+        row["review_posture"] = review_posture
+        row["evidence_packet_id"] = evidence_packet_id
+        row["evidence_hash"] = evidence_hash
+        row["candidate_json"] = candidate_json
+        row["updated_at_utc"] = updated_at_utc
+        return [dict(row)]
+    return []
 
 
 def _unwrap_jsonb(value: Any) -> Any:

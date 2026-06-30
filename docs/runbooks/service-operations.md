@@ -90,7 +90,8 @@ flowchart TD
 4. For persistence or repository-provider changes, run
    `make postgres-integration-gate` with `LOTUS_IDEA_POSTGRES_INTEGRATION_URL`
    pointed at a disposable PostgreSQL database. The gate proves the current
-   API workflow persistence path and schema rollback/reapply recovery posture.
+   API workflow persistence path, row-delta repository mutation posture, and
+   schema rollback/reapply recovery posture.
 5. For source-ingestion worker contract changes, run
    `make source-ingestion-worker-check`. This validates the versioned worker
    manifest and the source-safe check-only output contract without calling Core
