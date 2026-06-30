@@ -1604,7 +1604,10 @@ owned by upstream services.
 5. integration tests: `make test-integration`
    Use `INTEGRATION_TESTS=<path>` for focused integration validation.
 6. end-to-end tests: `make test-e2e`
-   Use `E2E_TESTS=<path>` for focused e2e validation.
+   Use `E2E_TESTS=<path>` for focused e2e validation. The default suite must retain
+   the critical internal idea workflow proof in
+   `tests/e2e/test_critical_idea_workflow.py`; smoke-only health checks are not
+   sufficient e2e evidence for protected CI lanes.
 7. repo-native CI parity: `make check`
 8. full CI parity: `make ci`
 9. OpenAPI gate: `make openapi-gate`
@@ -1752,7 +1755,7 @@ AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
-unit tests, integration tests, e2e tests,
+unit tests, integration tests, critical workflow e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
 Docker build validation, bounded GitHub job timeouts, and no soft-failed
 critical workflow jobs.

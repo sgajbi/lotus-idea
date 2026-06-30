@@ -17,6 +17,7 @@ from ci_contract_gate_expectations import (  # noqa: E402
 
 MAKEFILE_PATH = ROOT / "Makefile"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
+E2E_TESTS_DIR = ROOT / "tests" / "e2e"
 ACTION_USE_RE = re.compile(r"uses:\s+(?P<action>[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)@(?P<ref>[^ \t#]+)")
 FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 PINNED_ACTIONS: dict[str, tuple[str, str]] = {
@@ -195,6 +196,21 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
     "merged-pr-main-releasability.yml": ("continue-on-error:",),
 }
 READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
+REQUIRED_E2E_WORKFLOW_FILES: dict[str, tuple[str, ...]] = {
+    "test_critical_idea_workflow.py": (
+        "test_critical_idea_workflow_preserves_authority_boundaries",
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        "/api/v1/review-queues/advisor",
+        "/api/v1/idea-candidates/{candidate_id}/review-actions",
+        "/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        "/api/v1/conversion-intents/critical-e2e-conversion-report-001/report-evidence-packs",
+        '"grantsDownstreamAuthority"',
+        '"grantsClientPublicationAuthority"',
+        '"createsRenderedOutput"',
+        '"clientReadyPublicationRequested"',
+        '"supportedFeaturePromoted"',
+    )
+}
 
 
 def _read(path: Path) -> str:
@@ -349,6 +365,25 @@ def validate_workflows(workflows_dir: Path) -> list[str]:
     return errors
 
 
+def validate_e2e_suite(tests_dir: Path) -> list[str]:
+    errors: list[str] = []
+    if not tests_dir.exists():
+        return [f"Missing {tests_dir.relative_to(ROOT).as_posix()}"]
+
+    for filename, required_fragments in REQUIRED_E2E_WORKFLOW_FILES.items():
+        test_path = tests_dir / filename
+        if not test_path.exists():
+            errors.append(f"tests/e2e missing required critical workflow proof `{filename}`")
+            continue
+        content = _read(test_path)
+        for fragment in required_fragments:
+            if fragment not in content:
+                errors.append(
+                    f"tests/e2e/{filename} missing critical workflow assertion `{fragment}`"
+                )
+    return errors
+
+
 def _validate_action_pins(workflow_name: str, workflow: str) -> list[str]:
     errors: list[str] = []
     for line_number, line in enumerate(workflow.splitlines(), start=1):
@@ -426,7 +461,11 @@ def _job_blocks(workflow: str) -> dict[str, str]:
 def validate_ci_contract() -> list[str]:
     if not MAKEFILE_PATH.exists():
         return [f"Missing {MAKEFILE_PATH.relative_to(ROOT).as_posix()}"]
-    return [*validate_makefile(_read(MAKEFILE_PATH)), *validate_workflows(WORKFLOWS_DIR)]
+    return [
+        *validate_makefile(_read(MAKEFILE_PATH)),
+        *validate_workflows(WORKFLOWS_DIR),
+        *validate_e2e_suite(E2E_TESTS_DIR),
+    ]
 
 
 def main() -> int:
