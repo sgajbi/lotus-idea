@@ -39,11 +39,15 @@ Implemented in this slice:
    rejection, evidence/lifecycle gates, blocked-evidence missing-evidence
    checks, deterministic fallback, supported-output verification, unsupported
    claim blocking, forbidden-action blocking, request/workflow identity
-   validation, and no candidate-state mutation.
+   validation, no candidate-state mutation, and projection-only candidate
+   lookup without `snapshot()` hydration before AI explanation evaluation.
 9. `src/app/application/ai_governance.py` orchestrates persisted candidate
-   snapshot lookup, governed request construction, deterministic fallback,
-   verifier evaluation, and source-safe lineage recording without provider
-   execution or supported-feature claims.
+   lookup through the shared bounded candidate lookup helper, governed request
+   construction, deterministic fallback, verifier evaluation, and source-safe
+   lineage recording without provider execution or supported-feature claims.
+   For projection-capable repositories this avoids whole-repository snapshot
+   hydration before evaluation; lineage persistence remains on the existing
+   repository mutation path.
 10. `src/app/api/ai_governance.py` exposes the certified internal endpoint
     `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`.
     It requires `idea.ai-explanation.evaluate`, returns redacted evidence only,
@@ -128,6 +132,8 @@ Validation evidence from the implementation slice:
 11. `python -m pytest tests/unit/test_ai_explanation_readiness.py tests/integration/test_ai_governance_api.py`
     is the focused readiness-posture proof for repository-aware durable lineage
     reporting.
+12. `.venv\Scripts\python.exe -m pytest tests/unit/test_ai_governance.py::test_ai_explanation_uses_candidate_projection_without_snapshot`
+    is the focused bounded candidate lookup proof for explanation evaluation.
 
 ## Current Governance References
 

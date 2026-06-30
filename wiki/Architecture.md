@@ -292,6 +292,12 @@ ordinary candidate-detail reads through a repository-side projection over the
 requested candidate and related detail rows instead of hydrating whole
 repository snapshots; this is an internal module boundary, not a separate
 runtime service.
+Review-action, feedback, conversion-intent request, and AI explanation
+evaluation workflows reuse the same bounded candidate lookup before domain
+evaluation when the repository exposes the projection. Older/process-local
+providers can still fall back to `snapshot()`, and workflow writes remain on
+the existing repository mutation path for idempotency, audit, lifecycle,
+conversion, and AI-lineage persistence.
 
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` is the certified
 internal candidate evidence replay API foundation. It compares caller-supplied
@@ -452,9 +458,9 @@ database-backed queue product, or certified data product.
 ## Review Workflow Persistence Foundation
 
 The internal application layer can apply governed advisor review actions and
-feedback to repository snapshots, then persist accepted decisions, feedback
-events, safe audit evidence, lifecycle history, and idempotency replay/conflict
-posture through the Slice 06 repository contract. This is still an internal
+feedback after bounded candidate lookup, then persist accepted decisions,
+feedback events, safe audit evidence, lifecycle history, and idempotency
+replay/conflict posture through the Slice 06 repository contract. This is still an internal
 foundation; PostgreSQL-backed review workflow proof exists only inside the
 opt-in runtime proof, while Gateway/Workbench functionality and supported
 review-product promotion remain planned.

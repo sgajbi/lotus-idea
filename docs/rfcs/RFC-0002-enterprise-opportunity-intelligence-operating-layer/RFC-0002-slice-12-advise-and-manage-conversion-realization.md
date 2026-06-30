@@ -46,7 +46,11 @@ Implemented in this slice:
 10. `src/app/application/conversion_workflow.py` adds the application use case
     layer for repository precheck, conversion intent creation, and conversion
     outcome recording without re-running domain transitions on idempotency
-    replay.
+    replay. Conversion-intent requests load the candidate through the shared
+    bounded candidate lookup helper, so projection-capable repositories avoid
+    whole-repository snapshot hydration before the review-gated conversion
+    decision. Intent persistence remains on the existing repository mutation
+    path.
 11. `src/app/api/conversion_governance.py` exposes certified internal API
     foundations:
     - `POST /api/v1/idea-candidates/{candidateId}/conversion-intents`,
@@ -58,6 +62,9 @@ Implemented in this slice:
     `tests/integration/test_review_workflow_api.py` cover repository
     idempotency, audit posture, API permission, invalid state, missing
     resources, wrong source authority, replay, and conflict behavior.
+    `tests/unit/test_conversion_workflow_application.py` adds focused
+    projection-only coverage proving conversion-intent requests and missing
+    candidate handling do not require `snapshot()` hydration.
 14. `tests/integration/test_postgres_runtime_integration.py` now proves the
     first PostgreSQL-backed internal report conversion path by creating a
     review-approved candidate, recording the report conversion intent, replaying

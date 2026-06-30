@@ -2,9 +2,14 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
+from app.application.ai_governance import (
+    EvaluateAIExplanationToRepositoryCommand,
+    evaluate_ai_explanation_to_repository,
+)
 from app.domain import (
     AIFallbackReason,
     AIExplanationPosture,
@@ -19,6 +24,7 @@ from app.domain import (
     AIWorkflowPurpose,
     EvidenceFreshness,
     EvidenceSupportability,
+    InMemoryIdeaRepository,
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
@@ -39,6 +45,7 @@ from app.domain import (
     evaluate_ai_workflow_output,
 )
 from app.domain.ai_governance import AIExplanationCommand
+from app.domain.persistence import CandidatePersistenceDecision
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -192,6 +199,32 @@ def test_ai_request_redacts_source_routes_and_raw_source_hashes() -> None:
     assert not hasattr(request.redacted_evidence.source_refs[0], "content_hash")
     assert source_candidate.lifecycle_status is IdeaLifecycleStatus.READY_FOR_REVIEW
     assert source_candidate.review_posture is ReviewPosture.ADVISOR_REVIEW_REQUIRED
+
+
+def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
+    source_repository = InMemoryIdeaRepository()
+    persisted = source_repository.persist_candidate(
+        candidate(),
+        idempotency_key="signal-ingestion:ai-projection:001",
+        payload={"candidate_id": "idea-ai-001"},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.decision is CandidatePersistenceDecision.ACCEPTED
+    repository = ProjectionOnlyAIExplanationRepository(source_repository)
+
+    result = evaluate_ai_explanation_to_repository(
+        EvaluateAIExplanationToRepositoryCommand(
+            candidate_id="idea-ai-001",
+            explanation=command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
+            fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+        ),
+        repository=repository,
+    )
+
+    assert result.explanation_result is not None
+    assert result.lineage_persistence_result is not None
+    assert repository.looked_up_candidate_ids == ["idea-ai-001"]
 
 
 def test_ai_request_rejects_sensitive_metadata() -> None:
@@ -568,3 +601,19 @@ def test_ai_result_and_output_identity_validation_fail_closed() -> None:
 
     with pytest.raises(InvalidAIWorkflowOutput, match="workflow_pack_id"):
         evaluate_ai_workflow_output(request, wrong_pack)
+
+
+class ProjectionOnlyAIExplanationRepository:
+    def __init__(self, repository: InMemoryIdeaRepository) -> None:
+        self._repository = repository
+        self.looked_up_candidate_ids: list[str] = []
+
+    def candidate_record_by_id(self, candidate_id: str) -> Any:
+        self.looked_up_candidate_ids.append(candidate_id)
+        return self._repository.candidate_record_by_id(candidate_id)
+
+    def record_ai_explanation_lineage(self, *args: Any, **kwargs: Any) -> Any:
+        return self._repository.record_ai_explanation_lineage(*args, **kwargs)
+
+    def snapshot(self) -> Any:
+        raise AssertionError("AI explanation candidate lookup must not hydrate a full snapshot")

@@ -928,7 +928,12 @@ candidate and related lifecycle, audit, review, feedback, conversion,
 report-evidence, and AI-lineage rows by candidate or conversion-intent key
 without hydrating unrelated outbox, downstream submission, idempotency, or
 whole-store snapshot state; this is design modularity inside the existing
-runtime, not a separate service boundary. `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
+runtime, not a separate service boundary. Review-action, feedback,
+conversion-intent request, and AI explanation evaluation workflows reuse the
+same bounded candidate lookup helper before domain evaluation when the active
+repository exposes the projection; legacy/process-local providers still fall
+back to `snapshot()`, and repository mutation methods still own idempotency,
+audit, lifecycle, conversion, and AI-lineage persistence. `POST /api/v1/idea-candidates/{candidateId}/evidence-replay`
 exposes internal operator replay posture over current source refs and persisted
 evidence hashes with matched, stale-source, hash-mismatch, expired, and
 not-found outcomes, without live Core calls, raw source export, downstream
@@ -1492,15 +1497,16 @@ logs; fix or document the owned warning source instead.
    requests into framework-free domain signal evaluation, fetch Core high-cash
    evidence through a source port, and internally persist created high-cash
    candidates through the Slice 06 idempotency/audit repository contract.
-   Review-queue orchestration reads candidate repository snapshots and delegates
+   Review-queue orchestration prefers the repository-side page projection when
+   the active durable provider exposes it and otherwise delegates snapshot
    ordering/exclusion behavior to the Slice 07 domain policy. Review/feedback
-   workflow orchestration applies Slice 08 domain governance to repository
-   snapshots and persists accepted decisions and feedback through the same
-   idempotency/audit posture. Candidate lifecycle orchestration maps API
+   workflow orchestration applies Slice 08 domain governance after bounded
+   candidate lookup and persists accepted decisions and feedback through the
+   same idempotency/audit posture. Candidate lifecycle orchestration maps API
    commands into the Slice 06 idempotent lifecycle transition repository
    contract. Conversion workflow orchestration applies Slice 12 conversion
-   governance to repository snapshots and persists accepted intents/outcomes
-   through the same idempotency/audit posture. Report evidence-pack
+   governance after bounded candidate lookup for intent requests and persists
+   accepted intents/outcomes through the same idempotency/audit posture. Report evidence-pack
    orchestration applies Slice 13 evidence-pack governance to report conversion
    intents and persists source-provenanced request packages without downstream
    Report/Render/Archive realization. Downstream realization orchestration
@@ -1538,6 +1544,10 @@ logs; fix or document the owned warning source instead.
    artifact consumption, so future proof additions cannot leave stale
    `blocked` or `not_certified` labels when a proof family has no remaining
    blockers.
+   AI explanation orchestration evaluates deterministic fallback or verifier
+   output after bounded candidate lookup, then records source-safe lineage
+   through the existing repository mutation path without executing `lotus-ai`
+   runtime workflows.
 4. `src/app/domain/`: framework-free idea models, lifecycle rules, scoring
    policies, review-queue projection, review governance, AI governance,
    conversion governance, report evidence-pack request governance, evidence

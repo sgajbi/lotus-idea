@@ -437,6 +437,28 @@ still depend on whole-store repository snapshots:
    certify Workbench support, data-product promotion, client-ready
    publication, downstream authority, or supported-feature promotion.
 
+This slice also applies the candidate-detail projection to adjacent workflow
+prechecks after issue review showed several API-facing workflows still loaded a
+whole repository snapshot just to find one candidate before domain evaluation:
+
+1. `src/app/application/candidate_lookup.py` centralizes candidate lookup for
+   application services and prefers `CandidateDetailProjectionRepository`
+   before falling back to legacy/process-local `snapshot()` providers.
+2. Review actions, feedback recording, conversion-intent requests, and AI
+   explanation evaluation now use that helper before applying domain
+   governance. This is internal design modularity only, not a new runtime
+   service boundary.
+3. Focused application tests prove each workflow can run against a
+   projection-capable repository whose `snapshot()` method raises. The tests
+   cover accepted review action lookup, feedback lookup, conversion-intent
+   lookup, missing conversion candidate handling, and AI explanation lookup.
+4. This is bounded pre-mutation lookup hardening only. Existing repository
+   mutation methods still own idempotency, audit, lifecycle, conversion, and
+   AI-lineage persistence until later write-path refactors add narrower write
+   projections. It does not certify downstream execution, AI runtime
+   execution, suitability/rebalance/report authority, client-ready
+   publication, or supported-feature promotion.
+
 This slice also applies the bounded durable-read pattern to downstream
 realization lookup after issue review showed submission paths could still scan
 repository snapshots before adapter calls:
