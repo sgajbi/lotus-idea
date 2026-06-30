@@ -481,11 +481,14 @@ large additions instead of normalizing hard-to-review modules.
 
 The private import boundary gate blocks direct imports from private helpers in
 protected module surfaces: `app.domain.*` and
-`app.application.implementation_proof_capability_updates`. Domain modules may
-use private local helpers internally, while shared proof-readiness composition
-uses public `apply_blocker_proof` and `build_capability_readiness` functions.
-The gate is intentionally scoped to measured boundaries and does not claim
-complete application-helper or persistence-codec cleanup.
+`app.application.implementation_proof_capability_updates`, and
+`app.infrastructure.postgres_codecs`. Domain modules may use private local
+helpers internally, shared proof-readiness composition uses public
+`apply_blocker_proof` and `build_capability_readiness` functions, and
+PostgreSQL repository code uses public row, JSON, datetime, and domain
+serialization codec APIs. The gate is intentionally scoped to measured
+boundaries and does not claim complete application-helper or adapter-internal
+codec cleanup.
 
 The monetary-float guard blocks money-like `float` annotations, literals, and
 conversions in application source. It is AST-backed and intentionally allows

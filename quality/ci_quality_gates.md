@@ -156,11 +156,12 @@ durable persistence and migration behavior cannot become an implicit or forgotte
 agent-generated bloat without forcing unrelated refactors into every feature slice.
 
 `make private-import-boundary-gate` blocks private imports from protected module surfaces:
-`app.domain.*` and `app.application.implementation_proof_capability_updates`. Domain helpers may
-remain private inside their owning file, and proof capability updates now expose public
-`apply_blocker_proof` and `build_capability_readiness` functions for cross-module proof-readiness
-composition. Broader application helper and persistence-codec cleanup remains future refactoring
-work until each boundary is measured and low-noise.
+`app.domain.*`, `app.application.implementation_proof_capability_updates`, and
+`app.infrastructure.postgres_codecs`. Domain helpers may remain private inside their owning file,
+proof capability updates expose public `apply_blocker_proof` and
+`build_capability_readiness` functions, and PostgreSQL repository code consumes public row, JSON,
+datetime, and domain JSON codec functions. Broader application helper cleanup and adapter-internal
+codec cleanup remain future refactoring work until each boundary is measured and low-noise.
 
 `make monetary-float-guard` blocks money-like `float` usage in application
 source. The guard is AST-backed and fails monetary `float` annotations,

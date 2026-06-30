@@ -34,8 +34,11 @@ Current RFC-0002 implementation-start baseline:
    `app.domain.*` helper imports. The same gate now protects the shared
    implementation-proof capability update module, so proof-readiness code uses
    public `apply_blocker_proof` and `build_capability_readiness` functions
-   instead of importing private proof helpers. It remains a cleanup slice only
-   and does not promote a business feature.
+   instead of importing private proof helpers. It also protects
+   `app.infrastructure.postgres_codecs`, so the PostgreSQL repository consumes
+   public row, JSON, datetime, and domain serialization APIs instead of private
+   codec helpers. It remains a cleanup slice only and does not promote a
+   business feature.
 4. Slice 03 implements the pure domain model and lifecycle foundation with
    public domain API boundary enforcement, without API, persistence, or
    supported-feature promotion.
