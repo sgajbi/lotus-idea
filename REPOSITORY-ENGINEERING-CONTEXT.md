@@ -246,11 +246,14 @@ The allocation-drift foundation uses
 `lotus-manage:PortfolioActionRegister:v1` action-register supportability
 posture through the source-owned `/api/v1/rebalance/supportability/summary`
 route. The adapter records workflow decision count, lineage edge count,
-supportability state, freshness, and source-response lineage, but the domain
-policy blocks the current store-wide Manage summary from creating a portfolio
-opportunity until portfolio-scoped Manage evidence is proven. This slice does
-not calculate drift, mandate compliance, rebalance actions, orders, execution,
-or settlement inside `lotus-idea`.
+supportability state, freshness, and source-response lineage. It requires
+Manage-provided content hash, request fingerprint, source-batch fingerprint, or
+lineage fingerprint metadata before populating `SourceRef.content_hash`; missing
+lineage is mapped to `manage_content_hash_missing` rather than synthesized from
+the response payload. The domain policy blocks the current store-wide Manage
+summary from creating a portfolio opportunity until portfolio-scoped Manage
+evidence is proven. This slice does not calculate drift, mandate compliance,
+rebalance actions, orders, execution, or settlement inside `lotus-idea`.
 `src/app/api/allocation_drift_signals.py` exposes
 `POST /api/v1/idea-signals/allocation-drift/evaluate` as a bounded
 caller-supplied API foundation over source-owned Manage action-register and
@@ -1459,7 +1462,10 @@ logs; fix or document the owned warning source instead.
    without moving maturity-schedule authority or reinvestment advice into
    `lotus-idea`, and consumes Core cashflow products for bounded low-income /
    liquidity-shortfall review without moving cashflow methodology into
-   `lotus-idea`. The layer also
+   `lotus-idea`. The Manage adapter consumes source-authored action-register
+   lineage/fingerprint metadata and fails closed when that metadata is absent;
+   it does not fabricate Manage `SourceRef.content_hash` values from response
+   payloads. The layer also
    contains source-safe downstream realization adapter foundations for
    Advise/Manage/Report handoff envelopes, migration execution helpers,
    public PostgreSQL codec APIs, and `PostgresIdeaRepository`, which is tested

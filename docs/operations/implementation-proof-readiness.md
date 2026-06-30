@@ -320,8 +320,9 @@ through `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` clears only
 `opportunity-archetype-scenarios` capability. The artifact proves a live
 `lotus-manage:PortfolioActionRegister:v1` source call, current source
 evidence, workflow decision count, lineage edge count, portfolio-scope
-confirmation, ready Manage action-register posture, and current source refs for
-`lotus-performance:MandatePerformanceHealthContext:v1` and
+confirmation, ready Manage action-register posture, Manage-provided
+lineage/fingerprint metadata for `SourceRef.content_hash`, and current source
+refs for `lotus-performance:MandatePerformanceHealthContext:v1` and
 `lotus-risk:MandateRiskHealthContext:v1` without storing
 portfolio identity, request or response payloads, correlation IDs, trace IDs,
 candidate IDs, source routes, action identifiers, rebalance payloads, or order

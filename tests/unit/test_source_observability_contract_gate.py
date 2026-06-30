@@ -97,3 +97,30 @@ def test_source_observability_contract_gate_blocks_low_level_log_event_bypass(
         "src/app/api/unsafe_event.py:5: call emit_operation_event or "
         "emit_foundation_operation_event instead of log_event",
     ]
+
+
+def test_source_observability_contract_gate_blocks_manage_payload_hash_fallback(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_python(
+        tmp_path / "src" / "app" / "infrastructure" / "lotus_manage_sources.py",
+        "import hashlib\n"
+        "import json\n\n\n"
+        "def _content_hash(payload: dict[str, object]) -> str:\n"
+        "    canonical = json.dumps(payload, sort_keys=True)\n"
+        "    return 'sha256:' + hashlib.sha256(canonical.encode('utf-8')).hexdigest()\n",
+    )
+
+    errors = module.validate_source_observability_contract(tmp_path)
+
+    assert errors == [
+        "src/app/infrastructure/lotus_manage_sources.py:1: hashlib import is prohibited "
+        "because upstream source-ref hashes must be source-authored",
+        "src/app/infrastructure/lotus_manage_sources.py:2: json import is prohibited because "
+        "upstream source-ref hashes must be source-authored",
+        "src/app/infrastructure/lotus_manage_sources.py:6: json.dumps fallback is prohibited "
+        "because upstream source-ref hashes must be source-authored",
+        "src/app/infrastructure/lotus_manage_sources.py:7: hashlib.sha256 fallback is "
+        "prohibited because upstream source-ref hashes must be source-authored",
+    ]
