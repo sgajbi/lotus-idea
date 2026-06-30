@@ -430,3 +430,24 @@ still depend on whole-store repository snapshots:
 4. This is production-scale internal read-path hardening only. It does not
    certify Workbench support, data-product promotion, client-ready
    publication, downstream authority, or supported-feature promotion.
+
+This slice also applies the bounded durable-read pattern to downstream
+realization lookup after issue review showed submission paths could still scan
+repository snapshots before adapter calls:
+
+1. `DownstreamSubmissionRepository` now exposes explicit conversion-intent and
+   report evidence-pack lookup methods used by the downstream realization
+   application service before idempotency and adapter execution.
+2. `PostgresIdeaRepository.conversion_intent_by_id(...)` and
+   `PostgresIdeaRepository.report_evidence_pack_by_id(...)` query
+   `idea_conversion_intent` and `idea_report_evidence_pack_request` directly,
+   while `candidate_record_for_conversion_intent(...)` resolves the candidate
+   through a bounded conversion-intent lookup plus the existing
+   candidate-detail projection.
+3. Application tests prove downstream submission uses lookup methods without
+   hydrating `snapshot()`. PostgreSQL tests prove lookup queries avoid
+   candidate snapshots, outbox, downstream submission, and unrelated state
+   tables.
+4. This is production-scale internal read-path hardening only. It does not
+   certify downstream execution, route existence, suitability/rebalance/report
+   authority, client-ready publication, or supported-feature promotion.

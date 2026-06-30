@@ -358,7 +358,10 @@ ledger precheck, propagate correlation/trace context, and return submission
 posture only. Same-key/same-fingerprint requests replay stored posture without
 another adapter call, changed-fingerprint reuse returns
 `409 idempotency_conflict`, and missing adapter configuration is persisted as a
-replayable `503 downstream_realization_not_configured` posture. They do not
+replayable `503 downstream_realization_not_configured` posture. Durable
+PostgreSQL providers use bounded conversion-intent and report evidence-pack
+lookup queries before adapter calls instead of hydrating whole repository
+snapshots. They do not
 record authoritative downstream outcomes, prove downstream route existence,
 grant suitability/execution/publication authority, or promote a supported
 feature.

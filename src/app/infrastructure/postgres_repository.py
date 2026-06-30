@@ -81,6 +81,11 @@ from app.infrastructure.postgres_outbox_delivery import (
 from app.infrastructure.postgres_outbox_repository import PostgresOutboxRepositoryMixin
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
+from app.infrastructure.postgres_downstream_lookup import (
+    load_candidate_record_for_conversion_intent,
+    load_conversion_intent_by_id,
+    load_report_evidence_pack_by_id,
+)
 from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
     load_review_queue_candidate_page,
@@ -246,8 +251,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         self,
         conversion_intent_id: str,
     ) -> GovernedConversionIntent | None:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.conversion_intent_by_id(conversion_intent_id)
+        return load_conversion_intent_by_id(self._connection, conversion_intent_id)
 
     def record_conversion_outcome(
         self,
@@ -280,8 +284,13 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         self,
         conversion_intent_id: str,
     ) -> CandidatePersistenceRecord | None:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.candidate_record_for_conversion_intent(conversion_intent_id)
+        return load_candidate_record_for_conversion_intent(self._connection, conversion_intent_id)
+
+    def report_evidence_pack_by_id(
+        self,
+        report_evidence_pack_id: str,
+    ) -> GovernedReportEvidencePack | None:
+        return load_report_evidence_pack_by_id(self._connection, report_evidence_pack_id)
 
     def record_report_evidence_pack(
         self,

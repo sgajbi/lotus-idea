@@ -107,6 +107,12 @@ Implemented in this slice:
     conversion-intent submission path, not-found behavior, local idempotency
     replay/conflict/not-configured persistence, no outcome recording, no
     downstream-authority grant, and no supported-feature promotion.
+    Downstream realization now obtains conversion intents and report
+    evidence-pack requests through explicit repository lookup methods before
+    any adapter call; durable PostgreSQL providers query
+    `idea_conversion_intent` or `idea_report_evidence_pack_request` directly
+    instead of hydrating whole repository snapshots. This is internal design
+    modularity only, not a separate downstream-realization runtime service.
 21. `src/app/api/downstream_realization.py` exposes the certified internal
     `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
     route for existing Advise and Manage conversion intents. The route requires
@@ -149,6 +155,11 @@ Implemented in this slice:
     `tests/unit/test_downstream_realization_readiness.py` prove source-safe
     payloads, fail-closed missing sibling evidence, anti-overclaim flags,
     route-only blocker clearance, and retained downstream authority blockers.
+27. `tests/unit/test_downstream_realization_lookup.py` and
+    `tests/unit/test_postgres_downstream_lookup.py` prove the bounded lookup
+    path bypasses `snapshot()` while preserving idempotency posture and direct
+    PostgreSQL query shape for conversion intents and report evidence-pack
+    requests.
 
 ## Remaining Work
 

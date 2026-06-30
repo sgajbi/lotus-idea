@@ -1012,11 +1012,17 @@ evidence-pack requests:
 and
 `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`.
 Both routes require `idea.downstream-realization.submit` and
-`Idempotency-Key`, precheck a local downstream submission idempotency ledger
-before any adapter call, replay prior posture for the same key and request
-fingerprint, reject changed-resource reuse with `409 idempotency_conflict`,
-and persist source authority, target, resource id, bounded outcome/failure
-reason, correlation id, trace id, and timestamp without sensitive payloads.
+`Idempotency-Key`, load conversion intents and report evidence-pack requests
+through explicit repository lookup methods, precheck a local downstream
+submission idempotency ledger before any adapter call, replay prior posture for
+the same key and request fingerprint, reject changed-resource reuse with
+`409 idempotency_conflict`, and persist source authority, target, resource id,
+bounded outcome/failure reason, correlation id, trace id, and timestamp
+without sensitive payloads. Durable PostgreSQL providers answer those lookups
+with bounded `idea_conversion_intent` and
+`idea_report_evidence_pack_request` queries rather than whole-store snapshot
+hydration; this is internal design modularity, not a separate
+downstream-realization runtime boundary.
 Missing adapter configuration is persisted as a replayable
 `downstream_realization_not_configured` posture and returns `503`; successful
 and rejected adapter submissions are also recorded locally as submission

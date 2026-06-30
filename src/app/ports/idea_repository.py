@@ -15,6 +15,7 @@ from app.domain import (
     EvidenceReplayResult,
     EvidencePackPersistenceResult,
     GovernedConversionIntent,
+    GovernedReportEvidencePack,
     DownstreamSubmissionRecord,
     IdeaCandidate,
     IdeaLifecycleStatus,
@@ -210,6 +211,16 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
 
 
 class DownstreamSubmissionRepository(CandidateSnapshotRepository, Protocol):
+    def conversion_intent_by_id(
+        self,
+        conversion_intent_id: str,
+    ) -> GovernedConversionIntent | None: ...
+
+    def report_evidence_pack_by_id(
+        self,
+        report_evidence_pack_id: str,
+    ) -> GovernedReportEvidencePack | None: ...
+
     def downstream_submission_by_idempotency_key(
         self,
         idempotency_key: str,
