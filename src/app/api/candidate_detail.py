@@ -7,6 +7,11 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
+from app.api.problem_details import (
+    invalid_request_metadata,
+    not_found_metadata,
+    permission_denied_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -23,7 +28,7 @@ from app.domain import (
     LifecycleHistoryEntry,
     SourceRef,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,
@@ -544,15 +549,25 @@ CANDIDATE_DETAIL_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": (
+        **invalid_request_metadata(
+            detail="Correct the candidate detail request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail=(
+                "The caller is not permitted to read this idea candidate detail or "
+                "requested a candidate outside their entitlements."
+            ),
+            description=(
                 "Caller lacks candidate detail permission or the candidate is outside "
                 "caller entitlements."
             ),
-        },
-        404: {"model": ProblemDetails, "description": "Candidate was not found."},
+        ),
+        **not_found_metadata(
+            code="candidate_not_found",
+            title="Candidate not found",
+            detail="No idea candidate exists for the requested candidateId.",
+            description="Candidate was not found.",
+        ),
     },
 }
 

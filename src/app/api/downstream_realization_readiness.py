@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -19,7 +20,7 @@ from app.application.downstream_realization_readiness import (
     build_downstream_realization_readiness_snapshot,
 )
 from app.application.report_intake_route_proof import load_report_intake_route_proof_from_env
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -316,10 +317,10 @@ DOWNSTREAM_REALIZATION_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks downstream realization readiness permission.",
-        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read downstream realization readiness.",
+            description="Caller lacks downstream realization readiness permission.",
+        ),
     },
 }
 

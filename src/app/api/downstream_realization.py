@@ -5,6 +5,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    not_found_metadata,
+    permission_denied_metadata,
+    service_unavailable_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     DownstreamRealizationClientsUnavailableError,
@@ -22,7 +29,7 @@ from app.application.downstream_realization import (
     submit_report_evidence_pack_to_downstream,
 )
 from app.domain import ConversionTarget, SourceSystem
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -360,17 +367,34 @@ CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks submission permission."},
-        404: {"model": ProblemDetails, "description": "Conversion intent was not found."},
-        409: {
-            "model": ProblemDetails,
-            "description": "Conversion intent target is not supported by this submission route.",
-        },
-        503: {
-            "model": ProblemDetails,
-            "description": "Downstream realization adapters are not configured.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the downstream submission request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to submit idea conversion intents downstream.",
+            description="Caller lacks submission permission.",
+        ),
+        **not_found_metadata(
+            code="conversion_intent_not_found",
+            title="Conversion intent not found",
+            detail="No conversion intent exists for the requested conversionIntentId.",
+            description="Conversion intent was not found.",
+        ),
+        **conflict_metadata(
+            code="unsupported_downstream_target",
+            title="Unsupported downstream target",
+            detail=(
+                "The conversion intent target is not supported by the requested "
+                "downstream submission route."
+            ),
+            description="Conversion intent target is not supported by this submission route.",
+        ),
+        **service_unavailable_metadata(
+            code="downstream_realization_unavailable",
+            title="Downstream realization unavailable",
+            detail="The downstream realization adapter foundation is not configured.",
+            description="Downstream realization adapters are not configured.",
+        ),
     },
 }
 
@@ -411,13 +435,25 @@ REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks submission permission."},
-        404: {"model": ProblemDetails, "description": "Report evidence-pack was not found."},
-        503: {
-            "model": ProblemDetails,
-            "description": "Downstream realization adapters are not configured.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the report evidence-pack downstream submission request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to submit report evidence packs downstream.",
+            description="Caller lacks submission permission.",
+        ),
+        **not_found_metadata(
+            code="report_evidence_pack_not_found",
+            title="Report evidence pack not found",
+            detail="No report evidence pack exists for the requested reportEvidencePackId.",
+            description="Report evidence-pack was not found.",
+        ),
+        **service_unavailable_metadata(
+            code="downstream_realization_unavailable",
+            title="Downstream realization unavailable",
+            detail="The downstream realization adapter foundation is not configured.",
+            description="Downstream realization adapters are not configured.",
+        ),
     },
 }
 

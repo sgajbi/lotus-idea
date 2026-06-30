@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -18,7 +19,7 @@ from app.application.runtime_trust_telemetry import (
     build_runtime_trust_telemetry_preview,
     build_runtime_trust_telemetry_snapshot,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -354,11 +355,13 @@ RUNTIME_TRUST_TELEMETRY_PREVIEW_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks runtime trust telemetry preview permission.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the runtime trust telemetry preview request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read runtime trust telemetry preview.",
+            description="Caller lacks runtime trust telemetry preview permission.",
+        ),
     },
 }
 
@@ -441,11 +444,13 @@ RUNTIME_TRUST_TELEMETRY_SNAPSHOT_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks runtime trust telemetry snapshot permission.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the runtime trust telemetry snapshot request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read runtime trust telemetry snapshot.",
+            description="Caller lacks runtime trust telemetry snapshot permission.",
+        ),
     },
 }
 

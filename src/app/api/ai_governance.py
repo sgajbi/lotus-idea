@@ -8,6 +8,12 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    not_found_metadata,
+    permission_denied_metadata,
+)
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -39,7 +45,7 @@ from app.domain import (
     RedactedSourceRef,
     SourceSystem,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -722,10 +728,10 @@ AI_EXPLANATION_READINESS_ROUTE: RouteMetadata = {
                 }
             },
         },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks AI explanation readiness permission.",
-        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to read AI explanation readiness.",
+            description="Caller lacks AI explanation readiness permission.",
+        ),
     },
 }
 
@@ -811,13 +817,28 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks AI explanation permission."},
-        404: {"model": ProblemDetails, "description": "Candidate was not found."},
-        409: {
-            "model": ProblemDetails,
-            "description": "Requested AI explanation purpose is invalid for candidate state.",
-        },
+        **invalid_request_metadata(
+            detail="Correct the AI explanation evaluation request and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to evaluate idea AI explanations.",
+            description="Caller lacks AI explanation permission.",
+        ),
+        **not_found_metadata(
+            code="candidate_not_found",
+            title="Candidate not found",
+            detail="No idea candidate exists for the requested candidateId.",
+            description="Candidate was not found.",
+        ),
+        **conflict_metadata(
+            code="invalid_ai_explanation_purpose",
+            title="Invalid AI explanation purpose",
+            detail=(
+                "The requested AI explanation purpose is not valid for the current "
+                "idea candidate state."
+            ),
+            description="Requested AI explanation purpose is invalid for candidate state.",
+        ),
     },
 }
 
