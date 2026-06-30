@@ -1,8 +1,9 @@
 name: Main Releasability Gate
 
 on:
-  push:
-    branches: [ "main" ]
+  # Merged PRs use merged-pr-main-releasability.yml as the authoritative
+  # post-merge trigger. Keep this workflow dispatch-only to avoid paired
+  # cancelled push runs for the same main commit.
   workflow_dispatch:
 
 concurrency:

@@ -5,8 +5,9 @@
 1. Feature Lane for branch feedback.
 2. PR Merge Gate for required merge readiness.
 3. Main Releasability Gate for post-merge truth.
-4. Merged PR Main Releasability Dispatch so rebase auto-merged PRs still
-   generate post-merge release evidence on `main`.
+4. Merged PR Main Releasability Dispatch as the authoritative post-merge
+   trigger, with manual reruns through `workflow_dispatch`; the gate does not
+   also run on `push` to `main`, avoiding expected cancelled duplicate runs.
 5. Non-suppressed auto-merge token enforcement through `LOTUS_AUTOMERGE_TOKEN`;
    without that secret, the helper warns, skips auto-merge, and requires a
    human/release actor to rebase merge.
@@ -147,6 +148,10 @@ jobs, immutable GitHub Action SHA pins with version provenance, and workflow lin
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, including implementation-proof readiness and runtime trust telemetry preview
 generation, so enforcement cannot silently degrade into optional local commands.
+It also fails if Main Releasability regains a `push` trigger while the merged-PR
+dispatch workflow remains active, because normal merges should produce one
+authoritative release-proof run rather than a paired cancelled run and
+successful dispatch run.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 

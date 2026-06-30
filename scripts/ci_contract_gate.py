@@ -134,6 +134,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
     ),
     "main-releasability.yml": (
         "workflow_dispatch:",
+        "merged-pr-main-releasability.yml as the authoritative",
         "permissions:\n  contents: read",
         "actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0",
         "actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0",
@@ -211,6 +212,7 @@ PROHIBITED_WORKFLOW_PATTERNS: dict[str, tuple[str, ...]] = {
         "pip install cyclonedx-bom",
     ),
     "main-releasability.yml": (
+        "  push:",
         "pull_request_target:",
         "contents: write",
         "pull-requests: write",

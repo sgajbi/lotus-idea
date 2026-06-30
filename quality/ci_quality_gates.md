@@ -120,6 +120,11 @@ scoped test-target variables for focused fix-forward validation, repo-native Git
 coverage target usage, and pass/fail unit coverage for the CI contract gate itself. The CI contract
 gate now explicitly fails if these current blocking lint gates are removed from `make lint`, so
 agent-driven quality controls cannot quietly become optional local commands.
+Main Releasability is intentionally `workflow_dispatch` only: merged PRs use
+`merged-pr-main-releasability.yml` to dispatch one authoritative post-merge
+release-proof run, and manual reruns use the same dispatchable workflow. The
+CI contract gate rejects reintroducing a `push` trigger that would create
+expected push-cancelled / dispatch-success duplicate run pairs.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
