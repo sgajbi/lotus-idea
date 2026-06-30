@@ -222,7 +222,10 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
     module = _load_ci_contract_gate()
     makefile = (
         _read("Makefile")
-        .replace("$(VENV_PYTHON) -m cyclonedx_py environment", "cyclonedx-py environment")
+        .replace("$(VENV_PYTHON) -m cyclonedx_py requirements", "cyclonedx-py requirements")
+        .replace("requirements/shared-runtime.lock.txt", "requirements/ci-tooling.lock.txt")
+        .replace(" --pyproject pyproject.toml", "")
+        .replace(" --output-reproducible", "")
         .replace(
             "mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))",
             "$(VENV_PYTHON) -c \"from pathlib import Path; Path('$(CONTAINER_SCAN_OUTPUT)').parent.mkdir(parents=True, exist_ok=True)\"",
@@ -239,7 +242,10 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
 
     errors = module.validate_makefile(makefile)
 
-    assert "Makefile release-sbom target must run pinned venv `cyclonedx_py`" in errors
+    assert "Makefile release-sbom target must run pinned venv `cyclonedx_py requirements`" in errors
+    assert "Makefile release-sbom target must use the shared runtime lockfile" in errors
+    assert "Makefile release-sbom target must attach project metadata" in errors
+    assert "Makefile release-sbom target must generate reproducible SBOM output" in errors
     assert (
         "Makefile container-image-scan target must not require the repository Python venv" in errors
     )
@@ -257,6 +263,19 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
     assert "Makefile container-image-scan target must use the governed container workdir" in errors
     assert "Makefile must govern `TRIVY_IMAGE` as `aquasec/trivy:0.71.2`" in errors
     assert "Makefile container-image-scan target must fail on governed findings" in errors
+
+
+def test_ci_contract_gate_blocks_ambiguous_environment_release_sbom() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace(
+        "$(VENV_PYTHON) -m cyclonedx_py requirements requirements/shared-runtime.lock.txt --pyproject pyproject.toml --output-reproducible",
+        "$(VENV_PYTHON) -m cyclonedx_py environment",
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile release-sbom target must run pinned venv `cyclonedx_py requirements`" in errors
+    assert "Makefile release-sbom target must not generate an ambiguous environment SBOM" in errors
 
 
 def test_ci_contract_gate_blocks_missing_repository_hygiene_gate() -> None:

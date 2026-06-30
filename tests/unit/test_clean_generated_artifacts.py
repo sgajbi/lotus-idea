@@ -30,11 +30,13 @@ def test_cleanup_plan_includes_generated_python_and_test_artifacts(
     generated_file.write_bytes(b"bytecode")
     coverage_file = tmp_path / ".coverage.unit"
     coverage_file.write_text("coverage", encoding="utf-8")
+    sbom_file = tmp_path / "sbom.cdx.json"
+    sbom_file.write_text("{}", encoding="utf-8")
 
     plan = module.build_cleanup_plan(tmp_path)
 
     assert plan.directories == (generated_directory,)
-    assert plan.files == (coverage_file,)
+    assert plan.files == (coverage_file, sbom_file)
 
 
 def test_cleanup_removes_generated_artifacts_without_pruned_directories(

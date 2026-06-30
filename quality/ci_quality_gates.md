@@ -155,6 +155,15 @@ values with Docker, and writes `docker_base_image_resolved_digest` plus
 gate rejects removal of the digest-resolution step or digest fields so future
 agents cannot preserve only mutable tag evidence.
 
+Main Releasability SBOM evidence is also explicit about scope. `make
+release-sbom` uses the pinned CycloneDX tool against
+`requirements/shared-runtime.lock.txt`, not the CI virtual environment, and
+writes `sbom.cdx.json` as runtime Python dependency evidence. The release
+manifest records that SBOM under `sboms[]` with scope, path, generator,
+dependency source, project metadata, target service image reference, and built
+image id. This is not a full container image SBOM; container OS and packaged
+image posture remain covered by the Trivy image scan.
+
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell

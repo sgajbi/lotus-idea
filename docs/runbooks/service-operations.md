@@ -29,7 +29,7 @@
 | `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, Gateway/Workbench operational, default Advise proposal route, default Manage action route, default Report intake route, default platform mesh onboarding, AI lineage store, AI model-risk operations, AI workflow-pack, optional Risk concentration, high-volatility, drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, Manage mandate, Advise mandate/restriction live proof, typed Advise mandate/restriction source-product proof, Advise missing-suitability, typed Advise missing risk-profile source-product proof, Advise missing risk-profile live proof, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
-| `make release-sbom` | Generate `sbom.cdx.json` with the pinned CI-tooling CycloneDX package used by main releasability. |
+| `make release-sbom` | Generate `sbom.cdx.json` from `requirements/shared-runtime.lock.txt` with the pinned CI-tooling CycloneDX package used by main releasability. |
 | `make container-image-scan` | Scan the built `backend-service:ci-test` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
 | `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |
 
@@ -59,8 +59,12 @@ data-mesh readiness, client publication, or supported-feature status.
 The built runtime image installs only runtime dependencies, runs as the
 non-root `lotus` user, keeps only the service plus source-ingestion worker
 entrypoint scripts from `scripts/`, and records governed Docker base image plus
-Trivy scanner image identity plus resolved digest provenance in CI release evidence. Development tooling and
-bulk CI helper scripts must not be copied into the runtime image.
+Trivy scanner image identity plus resolved digest provenance in CI release evidence. The Main
+Releasability SBOM is explicitly scoped to runtime Python dependencies from
+`requirements/shared-runtime.lock.txt` and is tied in `release-evidence.json` to the built
+`backend-service:ci-test` image reference and local image id. Container OS package posture remains
+covered by the Trivy image scan, not by the runtime dependency SBOM. Development tooling and bulk CI
+helper scripts must not be copied into the runtime image.
 
 ## Health and Readiness
 

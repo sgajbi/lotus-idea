@@ -29,6 +29,7 @@ LOCAL_FILE_NAMES = frozenset(
         ".coverage.integration",
         ".coverage.e2e",
         "coverage.xml",
+        "sbom.cdx.json",
     }
 )
 PRUNED_DIR_NAMES = frozenset(

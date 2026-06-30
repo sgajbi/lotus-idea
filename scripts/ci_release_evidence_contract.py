@@ -19,8 +19,20 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         errors.append("Makefile docker-build target must pass governed Docker base image")
 
     release_sbom = _target_block(makefile, "release-sbom")
-    if "-m cyclonedx_py environment" not in release_sbom:
-        errors.append("Makefile release-sbom target must run pinned venv `cyclonedx_py`")
+    if "-m cyclonedx_py requirements" not in release_sbom:
+        errors.append(
+            "Makefile release-sbom target must run pinned venv `cyclonedx_py requirements`"
+        )
+    if "-m cyclonedx_py environment" in release_sbom:
+        errors.append(
+            "Makefile release-sbom target must not generate an ambiguous environment SBOM"
+        )
+    if "requirements/shared-runtime.lock.txt" not in release_sbom:
+        errors.append("Makefile release-sbom target must use the shared runtime lockfile")
+    if "--pyproject pyproject.toml" not in release_sbom:
+        errors.append("Makefile release-sbom target must attach project metadata")
+    if "--output-reproducible" not in release_sbom:
+        errors.append("Makefile release-sbom target must generate reproducible SBOM output")
     if "--output-file sbom.cdx.json" not in release_sbom:
         errors.append("Makefile release-sbom target must write `sbom.cdx.json`")
 

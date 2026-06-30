@@ -41,6 +41,12 @@ GitHub Security posture:
 5. GitHub currently reports non-provider secret patterns and secret validity
    checks as disabled even after an admin API enable attempt, so they remain
    advisory future controls and are not release-evidence claims.
+6. Main Releasability SBOM evidence is explicitly runtime-dependency scoped.
+   `make release-sbom` inventories `requirements/shared-runtime.lock.txt`
+   with the pinned CycloneDX tool, and `release-evidence.json` ties that SBOM
+   to the built service image reference and image id. Container OS package
+   posture remains covered by the Trivy image scan, not by the runtime
+   dependency SBOM.
 
 Mesh certification rule:
 

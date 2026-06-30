@@ -18,6 +18,7 @@ env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PYTHONUNBUFFERED: "1"
   PYTHON_VERSION: "3.12"
+  CONTAINER_IMAGE_NAME: "backend-service:ci-test"
   CONTAINER_BASE_IMAGE: "python:3.12-slim"
   TRIVY_IMAGE: "aquasec/trivy:0.71.2"
   GIT_CONFIG_COUNT: "1"
@@ -191,6 +192,9 @@ jobs:
             docker image inspect "$TRIVY_IMAGE" \
               --format '{{range .RepoDigests}}{{println .}}{{end}}' | head -n 1
           )"
+          service_image_id="$(
+            docker image inspect "$CONTAINER_IMAGE_NAME" --format '{{.Id}}'
+          )"
 
           if [[ -z "$base_image_digest" ]]; then
             echo "Unable to resolve Docker base image digest for $CONTAINER_BASE_IMAGE" >&2
@@ -200,8 +204,13 @@ jobs:
             echo "Unable to resolve Trivy scanner image digest for $TRIVY_IMAGE" >&2
             exit 1
           fi
+          if [[ -z "$service_image_id" ]]; then
+            echo "Unable to resolve built service image id for $CONTAINER_IMAGE_NAME" >&2
+            exit 1
+          fi
 
           {
+            echo "CONTAINER_IMAGE_ID=$service_image_id"
             echo "CONTAINER_BASE_IMAGE_DIGEST=$base_image_digest"
             echo "TRIVY_IMAGE_DIGEST=$scanner_image_digest"
           } >> "$GITHUB_ENV"
@@ -223,12 +232,28 @@ jobs:
                       "workflow": os.environ["GITHUB_WORKFLOW"],
                       "run_id": os.environ["GITHUB_RUN_ID"],
                       "dockerfile_path": "Dockerfile",
+                      "container_image": os.environ["CONTAINER_IMAGE_NAME"],
+                      "container_image_id": os.environ["CONTAINER_IMAGE_ID"],
                       "docker_base_image": os.environ["CONTAINER_BASE_IMAGE"],
                       "docker_base_image_resolved_digest": os.environ[
                           "CONTAINER_BASE_IMAGE_DIGEST"
                       ],
-                      "sbom_path": "sbom.cdx.json",
-                      "sbom_generator": "cyclonedx-bom==7.3.0",
+                      "sboms": [
+                          {
+                              "path": "sbom.cdx.json",
+                              "scope": "runtime_python_dependencies",
+                              "target_artifact": os.environ["CONTAINER_IMAGE_NAME"],
+                              "target_artifact_id": os.environ["CONTAINER_IMAGE_ID"],
+                              "dependency_source": "requirements/shared-runtime.lock.txt",
+                              "project_metadata": "pyproject.toml",
+                              "generator": "cyclonedx-bom==7.3.0",
+                              "format": "CycloneDX JSON",
+                              "non_proof_boundary": (
+                                  "Runtime Python dependency SBOM only; container OS "
+                                  "package posture is covered by the Trivy image scan."
+                              ),
+                          }
+                      ],
                       "container_scan_path": "output/security/container-image-scan.trivy.json",
                       "container_scanner": os.environ["TRIVY_IMAGE"],
                       "container_scanner_resolved_digest": os.environ[

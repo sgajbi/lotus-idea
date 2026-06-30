@@ -143,8 +143,9 @@ implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
 non-root container execution, governed Docker base/scanner image identity and
-resolved digest provenance in release evidence, bounded GitHub job timeouts, no soft-failed critical
-jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
+resolved digest provenance in release evidence, runtime Python dependency SBOM
+evidence tied to the built service image reference/id, bounded GitHub job timeouts, no soft-failed
+critical jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, including implementation-proof readiness and runtime trust telemetry preview
 generation, so enforcement cannot silently degrade into optional local commands.
@@ -179,6 +180,13 @@ lane-specific artifact. Main Releasability release evidence references
 `make ci-signal-evidence-contract-gate` validates the artifact schema and keeps
 `thresholdEnforced` false; `make ci-contract-gate` blocks removal of the
 workflow wiring. No CI duration threshold is enforced yet.
+
+Main Releasability SBOM evidence is runtime-dependency scoped. `make release-sbom`
+generates `sbom.cdx.json` from `requirements/shared-runtime.lock.txt` with the pinned
+CycloneDX tool, and `release-evidence.json` records the SBOM scope, generator,
+dependency source, project metadata, target service image reference, and built image id.
+Container OS/package posture remains the Trivy image scan's responsibility; the SBOM is
+not represented as a full image SBOM or registry attestation.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
