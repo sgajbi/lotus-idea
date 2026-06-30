@@ -67,8 +67,9 @@ Current RFC-0002 implementation-start baseline:
    review/feedback/conversion/report workflow proof. A certified internal
    outbox-delivery-readiness diagnostic and run-once operator action now
    report aggregate backlog/status posture, durable repository posture, broker
-   configuration posture, and certification blockers while proving bounded
-   configured-publisher orchestration without exposing event identifiers,
+   configuration posture, certification blockers, and source-safe operator run
+   identity/idempotency posture while proving bounded configured-publisher
+   orchestration without exposing raw idempotency keys, event identifiers,
    calling downstream services, or promoting a supported feature.
 8. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,

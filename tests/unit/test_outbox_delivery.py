@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta, timezone
+from typing import Any, Mapping, TypedDict
 
 import pytest
 
-from app.application.outbox_delivery import OutboxDeliveryRunSummary, run_outbox_delivery_once
+from app.application.outbox_delivery import (
+    OutboxDeliveryRunStatus,
+    OutboxDeliveryRunSummary,
+    operator_run_reference_for_idempotency_key,
+    outbox_delivery_run_request_payload,
+    run_outbox_delivery_once,
+)
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
@@ -14,11 +21,18 @@ from app.domain import (
     OutboxEventStatus,
     build_candidate_outbox_event,
 )
+from app.domain.idempotency import IdempotencyDecision
 from app.ports.outbox_publisher import OutboxPublishOutcome
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 DELIVERED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+
+
+class OperatorRunKwargs(TypedDict):
+    idempotency_key: str
+    request_payload: Mapping[str, Any]
+    delivered_at_utc: datetime
 
 
 class AcceptingPublisher:
@@ -45,7 +59,7 @@ class ReentrantPublisher:
             second_worker,
             lease_owner="worker-2",
             lease_attempt_id="attempt-2",
-            delivered_at_utc=DELIVERED_AT,
+            **operator_run_kwargs("outbox-run:reentrant-second:001"),
         )
         self.second_worker_events = second_worker.events
         return OutboxPublishOutcome.accepted_by_publisher()
@@ -81,6 +95,7 @@ class DeliveryEdgeRepository:
         self.publish_decision = publish_decision
         self.fail_decision = fail_decision
         self.failure_reason: str | None = None
+        self.idempotency_decisions: dict[str, dict[str, object]] = {}
 
     def snapshot(self) -> IdeaRepositorySnapshot:
         return IdeaRepositorySnapshot(
@@ -89,6 +104,20 @@ class DeliveryEdgeRepository:
             idempotency_candidates={},
             outbox_events={self.event.event_id: self.event},
         )
+
+    def record_outbox_delivery_run_request(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, object],
+    ) -> IdempotencyDecision:
+        existing_payload = self.idempotency_decisions.get(idempotency_key)
+        if existing_payload is None:
+            self.idempotency_decisions[idempotency_key] = dict(payload)
+            return IdempotencyDecision.ACCEPTED
+        if existing_payload == payload:
+            return IdempotencyDecision.REPLAYED
+        return IdempotencyDecision.CONFLICT
 
     def outbox_events_for_delivery(
         self,
@@ -159,7 +188,7 @@ def test_run_outbox_delivery_once_marks_published_events_source_safely() -> None
         publisher,
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:publish:001"),
     )
     published = repository.snapshot().outbox_events[event.event_id]
 
@@ -168,6 +197,9 @@ def test_run_outbox_delivery_once_marks_published_events_source_safely() -> None
     assert summary.failed_count == 0
     assert summary.dead_lettered_count == 0
     assert summary.external_broker_publication_supported is False
+    assert summary.operator_run_reference == operator_run_reference_for_idempotency_key(
+        "outbox-run:publish:001"
+    )
     assert len(publisher.events) == 1
     assert publisher.events[0].status is OutboxEventStatus.LEASED
     assert published.status is OutboxEventStatus.PUBLISHED
@@ -184,7 +216,7 @@ def test_run_outbox_delivery_once_retries_then_dead_letters_failed_events() -> N
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
         max_retry_count=2,
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:dead-letter:001", max_retry_count=2),
     )
     second = run_outbox_delivery_once(
         repository,
@@ -192,7 +224,7 @@ def test_run_outbox_delivery_once_retries_then_dead_letters_failed_events() -> N
         lease_owner="worker-1",
         lease_attempt_id="attempt-2",
         max_retry_count=2,
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:dead-letter:002", max_retry_count=2),
     )
     dead_lettered = repository.snapshot().outbox_events[event.event_id]
 
@@ -216,7 +248,7 @@ def test_run_outbox_delivery_once_maps_exceptions_to_bounded_failure_reason() ->
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
         max_retry_count=3,
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:failure:001"),
     )
     failed = repository.snapshot().outbox_events[event.event_id]
 
@@ -244,7 +276,7 @@ def test_run_outbox_delivery_once_skips_non_deliverable_events() -> None:
         AcceptingPublisher(),
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:skip:001"),
     )
 
     assert summary.attempted_count == 0
@@ -264,7 +296,7 @@ def test_run_outbox_delivery_once_counts_repository_race_as_skipped() -> None:
         AcceptingPublisher(),
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:race:001"),
     )
 
     assert summary.attempted_count == 1
@@ -282,7 +314,7 @@ def test_run_outbox_delivery_once_claims_before_publishing_to_fence_second_worke
         publisher,
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:fence:001"),
     )
     published = repository.snapshot().outbox_events[event.event_id]
 
@@ -304,7 +336,7 @@ def test_run_outbox_delivery_once_uses_bounded_default_failure_reason() -> None:
         NoReasonRejectingPublisher(),
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
-        delivered_at_utc=DELIVERED_AT,
+        **operator_run_kwargs("outbox-run:bounded-failure:001"),
     )
 
     assert summary.failed_count == 1
@@ -319,6 +351,7 @@ def test_run_outbox_delivery_once_rejects_non_positive_limit() -> None:
             lease_owner="worker-1",
             lease_attempt_id="attempt-1",
             limit=0,
+            **operator_run_kwargs("outbox-run:bad-limit:001"),
         )
 
 
@@ -330,6 +363,7 @@ def test_run_outbox_delivery_once_rejects_non_positive_retry_limit() -> None:
             lease_owner="worker-1",
             lease_attempt_id="attempt-1",
             max_retry_count=0,
+            **operator_run_kwargs("outbox-run:bad-retry:001"),
         )
 
 
@@ -353,8 +387,66 @@ def test_run_outbox_delivery_once_requires_utc_delivery_time(
             AcceptingPublisher(),
             lease_owner="worker-1",
             lease_attempt_id="attempt-1",
+            idempotency_key="outbox-run:bad-time:001",
+            request_payload=outbox_delivery_run_request_payload(
+                limit=100,
+                max_retry_count=3,
+                delivered_at_utc=DELIVERED_AT,
+                caller_subject="operator",
+            ),
             delivered_at_utc=delivered_at_utc,
         )
+
+
+def test_run_outbox_delivery_once_replays_same_operator_run_without_mutation() -> None:
+    event = outbox_event("idea.candidate.persisted.v1")
+    repository = repository_with_events(event)
+    publisher = AcceptingPublisher()
+
+    first = run_outbox_delivery_once(
+        repository,
+        publisher,
+        lease_owner="worker-1",
+        **operator_run_kwargs("outbox-run:replay:001"),
+    )
+    replay = run_outbox_delivery_once(
+        repository,
+        publisher,
+        lease_owner="worker-1",
+        **operator_run_kwargs("outbox-run:replay:001"),
+    )
+
+    assert first.run_status is OutboxDeliveryRunStatus.COMPLETED
+    assert first.published_count == 1
+    assert replay.run_status is OutboxDeliveryRunStatus.REPLAYED
+    assert replay.attempted_count == 0
+    assert len(publisher.events) == 1
+    assert replay.operator_run_reference == first.operator_run_reference
+
+
+def test_run_outbox_delivery_once_conflicts_same_operator_run_with_different_parameters() -> None:
+    event = outbox_event("idea.candidate.persisted.v1")
+    repository = repository_with_events(event)
+    publisher = AcceptingPublisher()
+
+    first = run_outbox_delivery_once(
+        repository,
+        publisher,
+        lease_owner="worker-1",
+        **operator_run_kwargs("outbox-run:conflict:001", limit=10),
+    )
+    conflict = run_outbox_delivery_once(
+        repository,
+        publisher,
+        lease_owner="worker-1",
+        limit=20,
+        **operator_run_kwargs("outbox-run:conflict:001", limit=20),
+    )
+
+    assert first.published_count == 1
+    assert conflict.run_status is OutboxDeliveryRunStatus.CONFLICT
+    assert conflict.attempted_count == 0
+    assert len(publisher.events) == 1
 
 
 def test_outbox_event_record_rejects_invalid_status_state() -> None:
@@ -408,6 +500,25 @@ def outbox_event(event_type: str) -> OutboxEventRecord:
         payload={"candidate_family": "high_cash"},
         idempotency_key=f"{event_type}:idempotency",
     )
+
+
+def operator_run_kwargs(
+    idempotency_key: str,
+    *,
+    limit: int = 100,
+    max_retry_count: int = 3,
+    delivered_at_utc: datetime = DELIVERED_AT,
+) -> OperatorRunKwargs:
+    return {
+        "idempotency_key": idempotency_key,
+        "request_payload": outbox_delivery_run_request_payload(
+            limit=limit,
+            max_retry_count=max_retry_count,
+            delivered_at_utc=delivered_at_utc,
+            caller_subject="operator",
+        ),
+        "delivered_at_utc": delivered_at_utc,
+    }
 
 
 def repository_with_events(*events: OutboxEventRecord) -> InMemoryIdeaRepository:

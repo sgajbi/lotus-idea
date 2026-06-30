@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 
@@ -12,13 +13,14 @@ from app.application.outbox_delivery_readiness import (
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
+    OutboxDeliveryResult,
     OutboxEventRecord,
     build_candidate_outbox_event,
     lease_outbox_event,
     mark_outbox_event_failed,
     mark_outbox_event_published,
-    OutboxDeliveryResult,
 )
+from app.domain.idempotency import IdempotencyDecision
 from app.ports.idea_repository import OutboxDeliveryReadinessRepositorySummary
 
 
@@ -226,6 +228,11 @@ class ProjectionOnlyOutboxRepository:
 
     def snapshot(self) -> IdeaRepositorySnapshot:
         raise AssertionError("readiness projection must not require repository snapshot")
+
+    def record_outbox_delivery_run_request(
+        self, *, idempotency_key: str, payload: dict[str, Any]
+    ) -> IdempotencyDecision:
+        raise AssertionError("readiness projection must not record run requests")
 
     def outbox_events_for_delivery(
         self,

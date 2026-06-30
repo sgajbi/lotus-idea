@@ -30,6 +30,7 @@ from app.domain import (
     FeedbackResult,
     SourceRef,
 )
+from app.domain.idempotency import IdempotencyDecision
 
 
 @dataclass(frozen=True)
@@ -270,6 +271,13 @@ class DownstreamSubmissionRepository(CandidateSnapshotRepository, Protocol):
 
 
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
+    def record_outbox_delivery_run_request(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> IdempotencyDecision: ...
+
     def outbox_events_for_delivery(
         self,
         *,

@@ -178,6 +178,16 @@ flowchart TD
    posture, and blockers for Advise, Manage, Report, Render, and Archive
    without calling downstream services, proving downstream route existence, or
    creating downstream records.
+12. For bounded outbox delivery execution, call
+    `POST /api/v1/outbox-delivery/run-once` with the `operator` role,
+    `idea.outbox-delivery.run` capability, and `Idempotency-Key`. The endpoint
+    binds the operator run identity to safe request parameters and caller
+    subject before claiming events. Same-key/same-request retries return
+    `runStatus=replayed` without mutation; same-key/different-request reuse
+    returns product-safe `409 idempotency_conflict`. Responses include only
+    aggregate counts and a source-safe `operatorRunReference`, never raw
+    idempotency keys, event ids, broker payloads, source payloads, or downstream
+    payloads.
 
 Outbound HTTP retry defaults remain disabled with one attempt. Operators can
 opt in with `LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_ATTEMPTS`,
@@ -189,23 +199,23 @@ The shared client retries only transport timeouts/failures and `429`, `502`,
 idempotency key; source-ingestion Core query/control-plane `POST` calls are
 the only runtime path marked as read-only retryable without one.
 
-12. For runtime trust telemetry preview checks, call
+13. For runtime trust telemetry preview checks, call
    `GET /api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=<timestamp>`
    with the `operator` role and
    `idea.mesh.trust-telemetry.preview.read` capability. This reports aggregate
    active-repository counts plus product coverage for every declared producer
    product. It is not data-product certification.
-13. For CI or async evidence without running the service, run
+14. For CI or async evidence without running the service, run
     `make implementation-proof-readiness-check` or
     `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
     The Make target generates and consumes the scheduled-worker deploy-proof
     artifact before producing the aggregate snapshot. The generated JSON is an
     operator proof-readiness artifact, not live scheduler certification or a
     supported product claim.
-14. For source-safe runtime trust telemetry preview evidence without running
+15. For source-safe runtime trust telemetry preview evidence without running
     the service, run `make runtime-trust-telemetry-preview-check` or
     `scripts/generate_runtime_trust_telemetry_preview.py --generated-at-utc <timestamp>`.
-15. For contract-shaped runtime trust telemetry snapshot evidence without
+16. For contract-shaped runtime trust telemetry snapshot evidence without
     running the service, run `make runtime-trust-telemetry-snapshot-check` or
     `scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc <timestamp>`.
     The generated file is ignored under `output/trust-telemetry/runtime/` and

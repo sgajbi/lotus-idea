@@ -30,7 +30,7 @@ from app.domain.ideas import (
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
 from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
-from app.domain.idempotency import IdempotencyRecord
+from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
 from app.domain.outbox_delivery_state import OutboxDeliveryResult
 from app.domain.persistence import (
     CandidatePersistenceRecord,
@@ -153,6 +153,19 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
                 payload=payload,
                 actor_subject=actor_subject,
                 occurred_at_utc=occurred_at_utc,
+            )
+        )
+
+    def record_outbox_delivery_run_request(
+        self,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> IdempotencyDecision:
+        return self._mutate(
+            lambda repository: repository.record_outbox_delivery_run_request(
+                idempotency_key=idempotency_key,
+                payload=payload,
             )
         )
 

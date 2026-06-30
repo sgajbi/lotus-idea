@@ -237,10 +237,14 @@ posture through repository-side `idea_outbox_event` projections instead of a
 whole idea repository snapshot.
 `POST /api/v1/outbox-delivery/run-once` exposes the bounded internal operator
 action for one delivery pass through the active repository and configured
-publisher adapter. It fails closed when broker configuration is absent or
-invalid, and both endpoints avoid event ids, aggregate ids, raw idempotency
-keys, source payloads, broker payloads, downstream delivery contracts, or a
-supported-feature claim.
+publisher adapter. It requires `Idempotency-Key`, binds the operator run
+identity to safe request parameters and caller subject, fails closed when
+broker configuration is absent or invalid, and both endpoints avoid event ids,
+aggregate ids, raw idempotency keys, source payloads, broker payloads,
+downstream delivery contracts, or a supported-feature claim. Same-key /
+same-request retries replay without mutation, same-key / different-request
+reuse returns product-safe conflict, and responses expose only a source-safe
+`operatorRunReference`.
 The repo-owned downstream consumer contract at
 `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` declares Gateway,
 Advise, Manage, and Report as downstream consumers with source-authority

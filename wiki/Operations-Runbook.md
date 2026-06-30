@@ -196,12 +196,15 @@ presence, and remaining certification blockers. The internal
 `POST /api/v1/outbox-delivery/run-once` action is
 available for operators with `idea.outbox-delivery.run` to run one bounded
 delivery pass through the active repository and configured publisher adapter.
-It claims a bounded batch with lease owner, attempt id, and expiry before
-broker publication, completes or fails only when the same attempt still owns the
-lease, and fails closed leaving records untouched when broker configuration is
-missing or invalid. Neither endpoint exposes event identifiers, aggregate
-identifiers, raw idempotency keys, broker payloads, source payloads, or
-downstream claims. Both remain `not_certified` until platform mesh event
+It requires `Idempotency-Key`, binds the operator run identity to safe request
+parameters and caller subject, claims a bounded batch with lease owner, attempt
+id, and expiry before broker publication, completes or fails only when the same
+attempt still owns the lease, and fails closed leaving records untouched when
+broker configuration is missing or invalid. Same-key/same-request retries
+return replay posture without mutation, and same-key/different-request reuse
+returns product-safe conflict. Neither endpoint exposes event identifiers,
+aggregate identifiers, raw idempotency keys, broker payloads, source payloads,
+or downstream claims. Both remain `not_certified` until platform mesh event
 publication proof, Gateway/Workbench proof, downstream delivery evidence, and
 supported-feature evidence exist.
 The declared downstream consumer contract lives at

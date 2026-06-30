@@ -202,3 +202,11 @@ configuration is absent. Both remain
 Gateway/Workbench proof, downstream proof, and supported-feature evidence
 exist. A valid scheduled-worker deploy-proof artifact can clear only the
 scheduled-worker blocker; it is not live source or product support proof.
+
+The outbox delivery run-once operator action requires a validated
+`Idempotency-Key` before broker checks or event mutation. Operation events may
+include the source-safe `operator_run_reference` log attribute derived from the
+key and the aggregate `attempted_count_bucket`; neither value is a Prometheus
+label. Same-key/same-request retries emit replay posture without mutation, and
+same-key/different-request reuse emits conflict posture without exposing raw
+idempotency keys, event ids, broker payloads, or downstream payloads.
