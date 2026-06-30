@@ -92,7 +92,10 @@ clients now live under `src/app/runtime/` instead of the app root or API layer.
 API route metadata now lives in `src/app/api/route_metadata.py`; route modules
 and `src/app/api/signal_api_support.py` use the shared `RouteMetadata`
 contract, and `make api-route-metadata-gate` blocks future local metadata type
-clones.
+clones. Workflow and operator route error metadata now uses
+`src/app/api/problem_details.py` for product-safe 400/403/404/409/503 OpenAPI
+examples, and `make openapi-problem-details-example-gate` blocks public
+`ProblemDetails` responses that lack examples.
 This is structural cleanup only and does not promote a supported business
 feature.
 
@@ -1762,7 +1765,9 @@ for shared product-safe RFC-7807 OpenAPI response metadata and common
 permission/request-failure helpers. Keep route-specific error codes and
 descriptions in the route module, but do not hand-roll duplicate
 `ProblemDetails` shapes for lifecycle, review, feedback, conversion,
-report-evidence, or readiness/operator APIs. This is design modularity only; it
+report-evidence, or readiness/operator APIs. It covers 400/403/404/409/503
+OpenAPI examples and is backed by `make openapi-problem-details-example-gate`.
+This is design modularity only; it
 does not imply a separately scalable `lotus-idea` sub-service.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It

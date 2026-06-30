@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers and route metadata governance normalized behind shared API support modules with blocking enforcement retained
+Status: Partially implemented - runtime composition providers, route metadata governance, and OpenAPI ProblemDetails example governance normalized behind shared API support modules with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -37,6 +37,10 @@ Implemented in this slice:
    `app.api.signal_api_support` use the same metadata contract, and
    `make api-route-metadata-gate` blocks future local `RouteMetadata` or
    `SignalRouteMetadata` clones.
+9. Workflow and operator routes now use `app.api.problem_details` for
+   product-safe 400/403/404/409/503 OpenAPI response examples, and
+   `make openapi-problem-details-example-gate` blocks public `ProblemDetails`
+   responses without examples.
 
 Validation evidence from the cleanup slice:
 
@@ -48,6 +52,8 @@ Validation evidence from the cleanup slice:
 6. `.venv\Scripts\python.exe -m ruff check scripts\architecture_boundary_gate.py src\app\api tests\unit\test_ci_enforcement_contract.py`
 7. `.venv\Scripts\python.exe scripts\api_route_metadata_gate.py`
 8. `.venv\Scripts\python.exe -m pytest tests\unit\test_ci_enforcement_contract.py -q`
+9. `.venv\Scripts\python.exe scripts\openapi_problem_details_example_gate.py`
+10. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_problem_details.py tests\unit\test_ci_enforcement_contract.py -q`
 
 ## Remaining Work
 

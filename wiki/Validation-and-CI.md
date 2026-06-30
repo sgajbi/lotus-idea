@@ -57,6 +57,7 @@ make monetary-float-guard
 make no-sensitive-content-guard
 make source-observability-contract-gate
 make api-route-metadata-gate
+make openapi-problem-details-example-gate
 make signal-api-contract-gate
 make operation-metric-contract-gate
 make ai-model-risk-ops-contract-gate
@@ -110,7 +111,7 @@ make clean
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
-OpenAPI quality, source-observability contract enforcement, API route metadata governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+OpenAPI quality, source-observability contract enforcement, API route metadata governance, OpenAPI ProblemDetails example governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,
@@ -507,6 +508,15 @@ The source-observability contract gate blocks ad hoc application logging in
 request diagnostic helper rather than raw `print()`, direct Python logging, or
 low-level `log_event` calls. Request diagnostics log route templates rather
 than raw URL paths.
+
+The API route metadata gate blocks local `RouteMetadata` and
+`SignalRouteMetadata` clones in route modules so route registration metadata
+uses the shared `app.api.route_metadata.RouteMetadata` contract. The OpenAPI
+ProblemDetails example gate blocks public `ProblemDetails` responses that lack
+product-safe examples. Workflow and operator routes use
+`app.api.problem_details` for concrete 400/403/404/409/503 examples;
+caller-supplied signal routes keep their stricter route-family metadata in
+`app.api.signal_api_support`.
 
 The signal API contract gate blocks duplicated caller-supplied signal API
 authorization, source-authority, operation-event, and error-model mechanics.
