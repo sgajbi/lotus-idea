@@ -748,7 +748,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return the deterministic advisor review queue projection over persisted idea candidate snapshots, constrained by platform caller-context entitlement scope headers, optional tenant, book, portfolio, and client access-scope filters, and bounded limit/offset paging.",
       "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 10 API foundation when an internal caller or Gateway has advisor queue read authority and needs a deterministic bounded page of persisted candidates, including fail-closed scope-filtered queue reads before Workbench product proof.",
-      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor. The API page contract is bounded, but repository-side durable pagination is not yet certified. Do not use as a durable queue store, production-scale queue proof, Workbench product proof, data-product certification proof, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor, and durable PostgreSQL providers use repository-side bounded candidate projection for ordinary page reads. Do not use as Workbench product proof, data-product certification proof, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read",
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=25&offset=0 with X-Caller-Capabilities: idea.review.queue.read",
@@ -779,7 +779,9 @@
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_naive_evaluation_time_safely",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_blank_scope_filter_safely",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_blank_caller_scope_header_safely",
-        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
+        "tests/unit/test_review_queue_application.py::test_build_review_queue_from_repository_uses_repository_side_page_projection",
+        "tests/unit/test_postgres_review_queue.py::test_postgres_repository_review_queue_page_uses_bounded_candidate_projection"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -790,7 +792,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Return source-safe operator readiness for the deterministic advisor review queue projection, including aggregate queue counts, exclusion counts, durable-storage posture, repository-side pagination posture, and certification blockers.",
       "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 15 operator diagnostic when an internal platform operator has idea.review.queue.readiness.read capability and needs to validate queue projection supportability before Workbench, mesh, or supported-feature promotion.",
-      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, durable queue store proof, repository-side durable pagination proof, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion. Repository-side pagination is certified only for durable PostgreSQL providers that expose the bounded page projection.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: operator and X-Caller-Capabilities: idea.review.queue.readiness.read"
       ],

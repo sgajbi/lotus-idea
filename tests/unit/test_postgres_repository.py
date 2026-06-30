@@ -74,6 +74,10 @@ from tests.unit.postgres_outbox_fake_helpers import (
     fail_outbox_event_row,
     publish_outbox_event_row,
 )
+from tests.unit.postgres_review_queue_fake_helpers import (
+    review_queue_count_rows,
+    review_queue_page_rows,
+)
 
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
@@ -87,6 +91,15 @@ class FakePostgresCursor:
 
     def execute(self, query: str, params: Sequence[Any] | None = None) -> None:
         normalized = " ".join(query.lower().split())
+        self.connection.executed_sql.append(normalized)
+        if normalized.startswith("/* lotus-idea review-queue-count */"):
+            assert params is not None
+            self._rows = review_queue_count_rows(self.connection, normalized, params)
+            return
+        if normalized.startswith("/* lotus-idea review-queue-page */"):
+            assert params is not None
+            self._rows = review_queue_page_rows(self.connection, normalized, params)
+            return
         if normalized.startswith("with selected"):
             assert params is not None
             self._rows = claim_outbox_event_rows(self.connection, params)
@@ -159,6 +172,7 @@ class FakePostgresConnection:
         self.commits = 0
         self.rollbacks = 0
         self.deletes = 0
+        self.executed_sql: list[str] = []
 
     def cursor(self) -> FakePostgresCursor:
         return FakePostgresCursor(self)

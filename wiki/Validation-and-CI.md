@@ -692,9 +692,10 @@ supported-feature promotion.
 
 The internal advisor-queue-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
-the diagnostic route only; they do not certify a durable queue store,
-Gateway/Workbench support, data-product promotion, PM/compliance queue support,
-client-ready publication, or supported-feature promotion.
+the diagnostic route and durable PostgreSQL repository-side page projection
+only; they do not certify Gateway/Workbench support, data-product promotion,
+PM/compliance queue support, client-ready publication, or supported-feature
+promotion.
 
 The internal AI-explanation-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify

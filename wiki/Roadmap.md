@@ -28,7 +28,8 @@ Current state:
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
-   and repository-snapshot queue orchestration,
+   repository-snapshot proof orchestration, and durable PostgreSQL
+   repository-side queue page projection,
 11. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance plus workflow persistence with fail-closed scope checks, review
    actions, safe audit events, source provenance, idempotency replay/conflict,

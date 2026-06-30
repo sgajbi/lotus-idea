@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 
 from app.domain import (
     AIExplanationLineagePersistenceResult,
@@ -21,6 +22,7 @@ from app.domain import (
     LifecyclePersistenceResult,
     OutboxDeliveryResult,
     OutboxEventRecord,
+    QueueAccessScopeFilter,
     ReportEvidencePackResult,
     ReviewActionResult,
     ReviewPersistenceResult,
@@ -29,8 +31,30 @@ from app.domain import (
 )
 
 
+@dataclass(frozen=True)
+class ReviewQueueRepositoryPage:
+    candidate_records: tuple[CandidatePersistenceRecord, ...]
+    total_reviewable_item_count: int
+    total_excluded_candidate_count: int
+
+    @property
+    def has_review_queue_projection(self) -> bool:
+        return True
+
+
 class CandidateSnapshotRepository(Protocol):
     def snapshot(self) -> IdeaRepositorySnapshot: ...
+
+
+@runtime_checkable
+class ReviewQueueProjectionRepository(Protocol):
+    def review_queue_candidate_page(
+        self,
+        *,
+        access_scope_filter: QueueAccessScopeFilter | None,
+        limit: int,
+        offset: int,
+    ) -> ReviewQueueRepositoryPage: ...
 
 
 class CandidatePersistenceRepository(Protocol):

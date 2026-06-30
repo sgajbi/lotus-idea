@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import datetime
-from typing import Any, Callable, Mapping, Protocol, Sequence, TypeVar
+from typing import Any, Callable, Mapping, TypeVar
 
 from psycopg.types.json import Jsonb
 
@@ -27,6 +27,7 @@ from app.domain.ideas import (
     SourceSystem,
     SourceRef,
 )
+from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
 from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.idempotency import IdempotencyRecord
@@ -63,7 +64,6 @@ from app.infrastructure.postgres_codecs import (
     conversion_outcome_to_json,
     feedback_event_from_json,
     feedback_event_to_json,
-    idea_candidate_from_json,
     idea_candidate_to_json,
     read_json_object,
     read_row_value,
@@ -78,20 +78,14 @@ from app.infrastructure.postgres_outbox_delivery import (
     mark_outbox_event_published as mark_postgres_outbox_event_published,
     outbox_event_from_row,
 )
+from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
+from app.infrastructure.postgres_protocols import PostgresCursor
+from app.infrastructure.postgres_review_queue import (
+    candidate_record_from_row,
+    load_review_queue_candidate_page,
+)
 from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
-
-
-class PostgresCursor(Protocol):
-    def execute(self, query: str, params: Sequence[Any] | None = None) -> Any: ...
-    def fetchall(self) -> Sequence[Any]: ...
-    def __enter__(self) -> PostgresCursor: ...
-    def __exit__(self, exc_type: object, exc: object, traceback: object) -> None: ...
-
-
-class PostgresConnection(Protocol):
-    def cursor(self) -> PostgresCursor: ...
-    def commit(self) -> None: ...
-    def rollback(self) -> None: ...
+from app.ports.idea_repository import ReviewQueueRepositoryPage
 
 
 _T = TypeVar("_T")
@@ -104,6 +98,17 @@ class PostgresIdeaRepository:
 
     def __init__(self, connection: PostgresConnection) -> None:
         self._connection = connection
+
+    def review_queue_candidate_page(
+        self,
+        *,
+        access_scope_filter: QueueAccessScopeFilter | None,
+        limit: int,
+        offset: int,
+    ) -> ReviewQueueRepositoryPage:
+        return load_review_queue_candidate_page(
+            self._connection, access_scope_filter=access_scope_filter, limit=limit, offset=offset
+        )
 
     def persist_candidate(
         self,
@@ -476,11 +481,7 @@ class PostgresIdeaRepository:
         records: dict[str, CandidatePersistenceRecord] = {}
         for row in cursor.fetchall():
             candidate_id = read_row_value(row, "candidate_id")
-            records[candidate_id] = CandidatePersistenceRecord(
-                candidate=idea_candidate_from_json(read_json_object(row, "candidate_json")),
-                evidence_hash=read_row_value(row, "evidence_hash"),
-                persisted_at_utc=read_row_value(row, "persisted_at_utc"),
-            )
+            records[candidate_id] = candidate_record_from_row(row)
         return records
 
     def _load_idempotency(
