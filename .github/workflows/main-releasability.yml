@@ -171,10 +171,10 @@ jobs:
         run: make install
       - name: Build Docker image
         run: make docker-build
+      - name: Scan Docker image
+        run: make container-image-scan
       - name: Generate dependency SBOM
-        run: |
-          ./.venv/bin/python -m pip install cyclonedx-bom
-          ./.venv/bin/cyclonedx-py environment --output-format JSON --output-file sbom.cdx.json
+        run: make release-sbom
       - name: Generate release metadata manifest
         shell: python
         run: |
@@ -191,6 +191,10 @@ jobs:
                       "workflow": os.environ["GITHUB_WORKFLOW"],
                       "run_id": os.environ["GITHUB_RUN_ID"],
                       "dockerfile_path": "Dockerfile",
+                      "sbom_path": "sbom.cdx.json",
+                      "sbom_generator": "cyclonedx-bom==7.3.0",
+                      "container_scan_path": "output/security/container-image-scan.trivy.json",
+                      "container_scanner": "aquasec/trivy:0.71.2",
                   },
                   indent=2,
               ),
@@ -202,5 +206,6 @@ jobs:
           name: main-releasability-release-evidence
           path: |
             sbom.cdx.json
+            output/security/container-image-scan.trivy.json
             release-evidence.json
           if-no-files-found: error

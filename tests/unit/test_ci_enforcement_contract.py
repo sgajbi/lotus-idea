@@ -204,6 +204,36 @@ def test_ci_contract_gate_blocks_missing_merge_grade_checks() -> None:
     assert "Makefile ci target missing `security-audit`" in errors
 
 
+def test_ci_contract_gate_blocks_unpinned_release_sbom_tooling() -> None:
+    module = _load_ci_contract_gate()
+
+    errors = module.validate_dependency_governance(
+        pyproject=_read("pyproject.toml").replace('"cyclonedx-bom==7.3.0",', ""),
+        ci_tooling_lock=_read("requirements/ci-tooling.lock.txt").replace(
+            "cyclonedx-bom==7.3.0\n", ""
+        ),
+    )
+
+    assert "pyproject.toml dev dependencies must pin `cyclonedx-bom==7.3.0`" in errors
+    assert "requirements/ci-tooling.lock.txt must pin `cyclonedx-bom==7.3.0`" in errors
+
+
+def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        _read("Makefile")
+        .replace("$(VENV_PYTHON) -m cyclonedx_py environment", "cyclonedx-py environment")
+        .replace("aquasec/trivy:0.71.2", "aquasec/trivy:latest")
+        .replace("--exit-code 1", "--exit-code 0")
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile release-sbom target must run pinned venv `cyclonedx_py`" in errors
+    assert "Makefile must pin `TRIVY_IMAGE` to `aquasec/trivy:0.71.2`" in errors
+    assert "Makefile container-image-scan target must fail on governed findings" in errors
+
+
 def test_ci_contract_gate_blocks_missing_repository_hygiene_gate() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace("$(MAKE) repository-hygiene-gate", "")

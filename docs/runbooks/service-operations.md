@@ -29,7 +29,32 @@
 | `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, Gateway/Workbench operational, default Advise proposal route, default Manage action route, default Report intake route, default platform mesh onboarding, AI lineage store, AI model-risk operations, AI workflow-pack, optional Risk concentration, high-volatility, drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, Manage mandate, Advise mandate/restriction live proof, typed Advise mandate/restriction source-product proof, Advise missing-suitability, typed Advise missing risk-profile source-product proof, Advise missing risk-profile live proof, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
-| `docker compose up --build` | Local container entrypoint. |
+| `make release-sbom` | Generate `sbom.cdx.json` with the pinned CI-tooling CycloneDX package used by main releasability. |
+| `make container-image-scan` | Scan the built `backend-service:ci-test` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
+| `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |
+
+## Local Docker Compose
+
+`docker compose up --build` works from a clean checkout because
+`docker-compose.yml` loads committed safe defaults from `.env.example` and then
+overlays ignored `.env` values when that file exists. Create `.env` only when a
+local run needs overrides such as `LOTUS_IDEA_DATABASE_URL`, Core source URLs,
+or local logging changes:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build
+```
+
+The scheduled source-ingestion worker remains opt-in:
+
+```powershell
+docker compose --profile worker up --build
+```
+
+This path proves local container startup and operator ergonomics only. It does
+not certify production recovery, live source ingestion, Workbench support,
+data-mesh readiness, client publication, or supported-feature status.
 
 ## Health and Readiness
 

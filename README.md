@@ -152,11 +152,13 @@ make migrate
 uvicorn app.main:app --reload --port 8330
 ```
 
-Run the Docker entrypoint:
+Run the Docker entrypoint from a clean checkout:
 
 ```powershell
 docker compose up --build
 ```
+
+Compose uses `.env.example` defaults and optional ignored `.env` overrides; it is runtime-parity evidence only, not production, Workbench, data-mesh, client-publication, or supported-feature proof.
 
 ## Common Commands
 
@@ -169,7 +171,6 @@ docker compose up --build
 | `make test-integration` | Run integration tests; override `INTEGRATION_TESTS` for a focused path. |
 | `make test-e2e` | Run deterministic e2e tests, including the critical internal idea workflow; override `E2E_TESTS` for a focused path. |
 | `make openapi-gate` | Validate OpenAPI quality. |
-| `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
 | `make mesh-policy-proof-contract-gate` | Validate the repo-owned mesh SLO, access, and evidence policy proof without certifying platform mesh readiness or supported features. |
 | `make opportunity-archetype-contract-gate` | Validate the governed opportunity archetype and scenario contract while preserving not-certified demo, client-publication, data-mesh, and supported-feature boundaries. |

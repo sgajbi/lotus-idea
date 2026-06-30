@@ -59,7 +59,15 @@ Core payloads.
 `scripts/run_scheduled_source_ingestion_worker.py` adds a bounded scheduled
 worker entrypoint over the same run-once worker path, and `docker-compose.yml`
 declares the opt-in `lotus-idea-source-ingestion-worker` service under the
-`worker` profile. `make source-ingestion-scheduled-worker-check` validates the
+`worker` profile. The local Compose contract loads safe defaults from
+`.env.example` and overlays ignored `.env` values when present, so
+`docker compose up --build` is executable from a clean checkout and
+`docker compose --profile worker up --build` remains the opt-in worker path.
+Create `.env` from `.env.example` only for local overrides such as PostgreSQL or
+source-service URLs. Compose startup is local runtime-parity evidence only; it
+does not certify production recovery, live source ingestion, Workbench support,
+data-mesh readiness, client publication, or supported-feature status.
+`make source-ingestion-scheduled-worker-check` validates the
 deploy contract and source-safe proof shape without calling Core. A valid proof
 artifact referenced through
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears only the

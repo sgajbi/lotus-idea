@@ -4,7 +4,10 @@ services:
     ports:
       - "8330:8330"
     env_file:
-      - .env
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')"]
       interval: 15s
@@ -15,7 +18,10 @@ services:
     profiles:
       - worker
     env_file:
-      - .env
+      - path: .env.example
+        required: true
+      - path: .env
+        required: false
     command:
       - python
       - scripts/run_scheduled_source_ingestion_worker.py

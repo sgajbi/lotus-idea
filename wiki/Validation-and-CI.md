@@ -434,7 +434,8 @@ Persistence adapter validation:
 The CI contract gate is blocking from day one. It prevents accidental removal of bank-buyable
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 verified immutable action SHA pins with version provenance, 99% combined coverage in merge/releasability lanes, Docker build
-validation, SBOM/release evidence, endpoint certification, supported-feature promotion control,
+validation, pinned CycloneDX SBOM generation, pinned Trivy container image scanning,
+SBOM/release evidence, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, downstream realization contract validation,
 migration contract validation, migration execution dry-run
 validation, source-ingestion worker manifest and output-contract validation,
