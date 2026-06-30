@@ -207,20 +207,11 @@ def _freshness_from_ref_payload(payload: dict[str, Any]) -> EvidenceFreshness:
                 return EvidenceFreshness.CURRENT
             if normalized == "stale":
                 return EvidenceFreshness.STALE
+            if normalized == "expired":
+                return EvidenceFreshness.EXPIRED
             if normalized in {"unavailable", "missing"}:
                 return EvidenceFreshness.UNAVAILABLE
-    status = (
-        _text_field(payload, "data_quality_status")
-        or _text_field(payload, "dataQualityStatus")
-        or _text_field(payload, "health_state")
-        or _text_field(payload, "healthState")
-        or ""
-    ).lower()
-    return (
-        EvidenceFreshness.CURRENT
-        if status in {"ready", "attention"}
-        else EvidenceFreshness.UNAVAILABLE
-    )
+    return EvidenceFreshness.UNAVAILABLE
 
 
 def _optional_object_field(payload: dict[str, Any], key: str) -> dict[str, Any]:
@@ -306,8 +297,8 @@ def _freshness(posture: _ActionRegisterPosture) -> EvidenceFreshness:
         return EvidenceFreshness.CURRENT
     if freshness_bucket == "stale":
         return EvidenceFreshness.STALE
-    if (posture.supportability_state or "").lower() == "ready":
-        return EvidenceFreshness.CURRENT
+    if freshness_bucket == "expired":
+        return EvidenceFreshness.EXPIRED
     return EvidenceFreshness.UNAVAILABLE
 
 

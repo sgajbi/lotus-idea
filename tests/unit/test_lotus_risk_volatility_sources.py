@@ -189,6 +189,23 @@ def test_lotus_risk_adapter_maps_non_ready_supportability_to_unavailable_freshne
     assert evidence.risk_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
+def test_lotus_risk_adapter_requires_declared_freshness_for_ready_volatility_source() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    supportability = metadata["calculation_supportability"]
+    assert isinstance(supportability, dict)
+    supportability.pop("freshness_bucket")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_volatility_evidence(_request())
+
+    assert evidence.risk_supportability_state == "ready"
+    assert evidence.risk_ref is not None
+    assert evidence.risk_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
 def test_risk_volatility_evidence_request_validates_required_fields() -> None:
     with pytest.raises(ValueError, match="portfolio_id is required"):
         RiskVolatilityEvidenceRequest(

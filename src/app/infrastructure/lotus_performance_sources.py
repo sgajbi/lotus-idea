@@ -248,4 +248,22 @@ def _freshness(payload: dict[str, Any]) -> EvidenceFreshness:
     warnings = diagnostics.get("warnings")
     if isinstance(warnings, list) and any("stale" in str(warning).lower() for warning in warnings):
         return EvidenceFreshness.STALE
-    return EvidenceFreshness.CURRENT
+    for candidate in (payload, diagnostics):
+        freshness_value = (
+            candidate.get("freshness")
+            or candidate.get("freshness_status")
+            or candidate.get("freshnessStatus")
+            or candidate.get("freshness_bucket")
+            or candidate.get("freshnessBucket")
+        )
+        if isinstance(freshness_value, str):
+            normalized = freshness_value.lower()
+            if "stale" in normalized:
+                return EvidenceFreshness.STALE
+            if "expired" in normalized:
+                return EvidenceFreshness.EXPIRED
+            if "unavailable" in normalized or "missing" in normalized:
+                return EvidenceFreshness.UNAVAILABLE
+            if "current" in normalized or "same_day" in normalized:
+                return EvidenceFreshness.CURRENT
+    return EvidenceFreshness.UNAVAILABLE

@@ -252,6 +252,25 @@ Additional implemented underperformance foundation:
    by aggregate readiness. It does not assign benchmarks, calculate benchmark
    returns, certify benchmark methodology, or promote underperformance support.
 
+Additional implemented source-freshness hardening:
+
+1. Risk, Performance, and Manage source adapters now align with the Core source
+   adapter's fail-closed freshness posture. Explicit source freshness values
+   such as current, same-day, stale, expired, unavailable, or missing are
+   mapped into `EvidenceFreshness`; adjacent readiness, supportability,
+   coverage, health-state, and data-quality fields no longer imply current
+   freshness.
+2. Unit coverage in `tests/unit/test_lotus_risk_sources.py`,
+   `tests/unit/test_lotus_risk_volatility_sources.py`,
+   `tests/unit/test_lotus_risk_drawdown_sources.py`,
+   `tests/unit/test_lotus_performance_sources.py`, and
+   `tests/unit/test_lotus_manage_sources.py` locks the issue-ledger learning:
+   missing freshness remains unavailable/unproven even when the source reports
+   ready supportability or ready data-quality posture.
+3. This closes only the source-authority hardening gap. It does not certify
+   live source ingestion, data mesh, Workbench, client publication, downstream
+   action, or supported-feature promotion.
+
 Additional implemented missing-benchmark foundation:
 
 1. `src/app/domain/missing_benchmark_signal.py` defines

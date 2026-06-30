@@ -31,6 +31,11 @@ Each persisted or emitted idea must carry:
 7. evidence version,
 8. lifecycle version.
 
+Source freshness must be a distinct source-owned proof dimension. Adapters must
+not infer `current` freshness from adjacent readiness, supportability, coverage,
+health-state, or data-quality fields; missing or unrecognized freshness remains
+unavailable/unproven until the source product explicitly declares freshness.
+
 ## Consequences
 
 `lotus-idea` can be audited and demoed as an orchestration service with clear

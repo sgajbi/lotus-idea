@@ -55,6 +55,7 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
             "calculation_hash": "returns-series-calculation",
         },
         "diagnostics": {
+            "freshness": "current",
             "coverage": {
                 "requested_points": 120,
                 "returned_points": 120,
@@ -423,6 +424,7 @@ def test_lotus_performance_adapter_marks_quality_unknown_without_coverage() -> N
 
     assert evidence.performance_ref is not None
     assert evidence.performance_ref.data_quality_status == "unknown"
+    assert evidence.performance_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
 def test_lotus_performance_adapter_marks_quality_partial_when_points_are_missing() -> None:
@@ -438,6 +440,7 @@ def test_lotus_performance_adapter_marks_quality_partial_when_points_are_missing
     ).fetch_underperformance_evidence(_request())
 
     assert evidence.performance_ref is not None
+    assert evidence.performance_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.performance_ref.data_quality_status == "partial"
 
 
