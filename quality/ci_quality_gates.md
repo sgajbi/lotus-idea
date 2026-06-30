@@ -126,6 +126,14 @@ release-proof run, and manual reruns use the same dispatchable workflow. The
 CI contract gate rejects reintroducing a `push` trigger that would create
 expected push-cancelled / dispatch-success duplicate run pairs.
 
+GitHub Security posture is also under the CI contract gate. The repository has
+Dependabot alerts/security updates enabled, secret scanning with push
+protection enabled, and CodeQL default setup configured for GitHub-owned static
+analysis. Source-controlled `SECURITY.md` and `.github/dependabot.yml` define
+private vulnerability reporting, source-safe report content, and weekly grouped
+Python plus GitHub Actions dependency monitoring; `make ci-contract-gate`
+rejects removal or weakening of those files.
+
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell

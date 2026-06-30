@@ -20,6 +20,7 @@ from ci_release_evidence_contract import (  # noqa: E402
     validate_dockerfile_runtime,
     validate_release_evidence_targets,
 )
+from security_tab_governance_contract import validate_security_tab_governance_files  # noqa: E402
 
 MAKEFILE_PATH = ROOT / "Makefile"
 DOCKERFILE_PATH = ROOT / "Dockerfile"
@@ -479,6 +480,7 @@ def validate_ci_contract() -> list[str]:
         *validate_dockerfile_runtime(dockerfile),
         *dependency_errors,
         *validate_dependency_governance(pyproject, ci_tooling_lock),
+        *validate_security_tab_governance_files(ROOT),
         *validate_workflows(WORKFLOWS_DIR),
         *validate_e2e_suite(E2E_TESTS_DIR),
     ]

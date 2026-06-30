@@ -1825,6 +1825,15 @@ the non-root `lotus` user. The Makefile and PR/main workflow contracts keep
 evidence so scanner or base-image drift cannot be hidden in ad hoc workflow
 edits.
 
+GitHub Security posture is part of the repo contract, not only a mutable
+repository setting. `SECURITY.md` defines the supported security baseline,
+private-reporting expectations, and source-safe reporting boundary for
+lotus-idea's product ownership. `.github/dependabot.yml` enables weekly grouped
+Python and GitHub Actions dependency monitoring, while repository settings now
+enable Dependabot alerts/security updates, secret scanning with push
+protection, and CodeQL default setup. `make ci-contract-gate` fails if the
+source-controlled security policy or Dependabot coverage is removed or weakened.
+
 `make repository-hygiene-gate` is blocking through `make lint`. It scans
 tracked Git files and fails if generated Python cache files, local coverage
 artifacts, build outputs, dependency directories, local environment files, log
