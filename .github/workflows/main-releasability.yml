@@ -174,6 +174,8 @@ jobs:
         run: make install
       - name: Build Docker image
         run: make docker-build
+      - name: Smoke test Docker runtime
+        run: make container-runtime-smoke
       - name: Scan Docker image
         run: make container-image-scan
       - name: Resolve container image provenance

@@ -29,6 +29,7 @@
 | `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, Gateway/Workbench operational, default Advise proposal route, default Manage action route, default Report intake route, default platform mesh onboarding, AI lineage store, AI model-risk operations, AI workflow-pack, optional Risk concentration, high-volatility, drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, Manage mandate, Advise mandate/restriction live proof, typed Advise mandate/restriction source-product proof, Advise missing-suitability, typed Advise missing risk-profile source-product proof, Advise missing risk-profile live proof, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
+| `make container-runtime-smoke` | Start the built `backend-service:ci-test` image, probe `/health`, `/health/live`, and reachable default-profile `/health/ready`, print container logs on failure, and remove the smoke container. |
 | `make release-sbom` | Generate `sbom.cdx.json` from `requirements/shared-runtime.lock.txt` with the pinned CI-tooling CycloneDX package used by main releasability. |
 | `make container-image-scan` | Scan the built `backend-service:ci-test` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
 | `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |
@@ -65,6 +66,16 @@ Releasability SBOM is explicitly scoped to runtime Python dependencies from
 `backend-service:ci-test` image reference and local image id. Container OS package posture remains
 covered by the Trivy image scan, not by the runtime dependency SBOM. Development tooling and bulk CI
 helper scripts must not be copied into the runtime image.
+
+`make container-runtime-smoke` is the packaged runtime startup proof used by PR
+Merge Gate and Main Releasability after `make docker-build`. It starts the
+built image on a governed local host port, requires `/health` and
+`/health/live` to return `200`, requires `/health/ready` to return reachable
+JSON with either `200` or the default-profile fail-closed `503`, prints
+container logs on failure, and removes the smoke container in all cases. This
+proves packaged entrypoint and health-surface behavior only; it does not
+certify production deployment, upstream source connectivity, Workbench,
+data-mesh readiness, client publication, or supported-feature status.
 
 ## Health and Readiness
 

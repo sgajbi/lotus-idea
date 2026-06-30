@@ -9,6 +9,64 @@ def _target_block(makefile: str, target: str) -> str:
     return match.group(0) if match else ""
 
 
+def _validate_container_runtime_smoke_target(makefile: str) -> list[str]:
+    errors: list[str] = []
+    container_runtime_smoke = _target_block(makefile, "container-runtime-smoke")
+    governed_smoke_variables = {
+        "CONTAINER_SMOKE_NAME ?= lotus-idea-runtime-smoke": (
+            "Makefile must govern the container runtime smoke container name"
+        ),
+        "CONTAINER_SMOKE_HOST ?= 127.0.0.1": (
+            "Makefile must govern the container runtime smoke host binding"
+        ),
+        "CONTAINER_SMOKE_HOST_PORT ?= 18330": (
+            "Makefile must govern the container runtime smoke host port"
+        ),
+        "CONTAINER_SMOKE_CONTAINER_PORT ?= 8330": (
+            "Makefile must govern the container runtime smoke container port"
+        ),
+        "CONTAINER_SMOKE_TIMEOUT_SECONDS ?= 45": (
+            "Makefile must govern the container runtime smoke startup timeout"
+        ),
+        "CONTAINER_SMOKE_PROBE_INTERVAL_SECONDS ?= 1": (
+            "Makefile must govern the container runtime smoke probe interval"
+        ),
+    }
+    for fragment, error in governed_smoke_variables.items():
+        if fragment not in makefile:
+            errors.append(error)
+    required_smoke_fragments = {
+        "python scripts/container_runtime_smoke.py": (
+            "Makefile container-runtime-smoke target must use the governed smoke script"
+        ),
+        "--image-name $(CONTAINER_IMAGE_NAME)": (
+            "Makefile container-runtime-smoke target must test the governed service image"
+        ),
+        "--container-name $(CONTAINER_SMOKE_NAME)": (
+            "Makefile container-runtime-smoke target must use the governed container name"
+        ),
+        "--host $(CONTAINER_SMOKE_HOST)": (
+            "Makefile container-runtime-smoke target must use the governed host"
+        ),
+        "--host-port $(CONTAINER_SMOKE_HOST_PORT)": (
+            "Makefile container-runtime-smoke target must use the governed host port"
+        ),
+        "--container-port $(CONTAINER_SMOKE_CONTAINER_PORT)": (
+            "Makefile container-runtime-smoke target must use the governed container port"
+        ),
+        "--startup-timeout-seconds $(CONTAINER_SMOKE_TIMEOUT_SECONDS)": (
+            "Makefile container-runtime-smoke target must use the governed startup timeout"
+        ),
+        "--probe-interval-seconds $(CONTAINER_SMOKE_PROBE_INTERVAL_SECONDS)": (
+            "Makefile container-runtime-smoke target must use the governed probe interval"
+        ),
+    }
+    for fragment, error in required_smoke_fragments.items():
+        if fragment not in container_runtime_smoke:
+            errors.append(error)
+    return errors
+
+
 def validate_release_evidence_targets(makefile: str) -> list[str]:
     errors: list[str] = []
     if "CONTAINER_BASE_IMAGE ?= python:3.12-slim" not in makefile:
@@ -17,6 +75,8 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     docker_build = _target_block(makefile, "docker-build")
     if "--build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE)" not in docker_build:
         errors.append("Makefile docker-build target must pass governed Docker base image")
+
+    errors.extend(_validate_container_runtime_smoke_target(makefile))
 
     release_sbom = _target_block(makefile, "release-sbom")
     if "-m cyclonedx_py requirements" not in release_sbom:

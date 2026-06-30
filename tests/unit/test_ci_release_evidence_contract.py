@@ -48,6 +48,44 @@ def test_ci_contract_gate_blocks_removed_pr_container_image_scan(
     assert "pr-merge-gate.yml missing `make container-image-scan`" in module.validate_ci_contract()
 
 
+def test_ci_contract_gate_blocks_removed_pr_container_runtime_smoke(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "pr-merge-gate.yml",
+        "      - name: Smoke test Docker runtime\n        run: make container-runtime-smoke\n",
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert "pr-merge-gate.yml missing `make container-runtime-smoke`" in (
+        module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_removed_main_container_runtime_smoke(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        "      - name: Smoke test Docker runtime\n        run: make container-runtime-smoke\n",
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert "main-releasability.yml missing `make container-runtime-smoke`" in (
+        module.validate_ci_contract()
+    )
+
+
 def test_ci_contract_gate_blocks_removed_main_release_scan_evidence(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

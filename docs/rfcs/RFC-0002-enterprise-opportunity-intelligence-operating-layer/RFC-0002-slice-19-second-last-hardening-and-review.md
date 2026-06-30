@@ -270,6 +270,28 @@ This slice also hardens runtime Docker and release image identity governance:
    capacity, live source ingestion, Workbench support, data-product readiness,
    client publication, or supported-feature promotion.
 
+This slice also hardens packaged container startup proof after GitHub issue
+`#270` showed Docker release gates built and scanned the image without starting
+the packaged service:
+
+1. `make container-runtime-smoke` now starts the built
+   `backend-service:ci-test` image with governed host/container port, container
+   name, startup timeout, and probe interval values.
+2. `scripts/container_runtime_smoke.py` probes `/health` and `/health/live` for
+   `200`, requires `/health/ready` to return reachable JSON with either `200`
+   or the default-profile fail-closed `503`, prints container logs on startup
+   failure, and removes the smoke container in all cases.
+3. PR Merge Gate and Main Releasability run the smoke target after
+   `make docker-build` and before image scan/release evidence can pass.
+4. `scripts/ci_release_evidence_contract.py`,
+   `scripts/ci_workflow_contract_expectations.py`, and focused tests reject
+   missing smoke-target variables, missing Makefile target wiring, and missing
+   PR/Main workflow calls.
+5. This is packaged runtime entrypoint and health-surface proof only. It does
+   not certify production deployment, live upstream source connectivity,
+   Workbench support, data-product certification, client-ready publication, or
+   supported-feature promotion.
+
 This slice also hardens release SBOM scope after GitHub issue `#272` showed
 Main Releasability uploaded an ambiguous CI-environment SBOM beside image scan
 evidence:
@@ -290,9 +312,9 @@ evidence:
    `sbom.cdx.json` as local release evidence, not repository source truth.
 5. This is runtime Python dependency SBOM evidence only. It does not certify a
    full container-image SBOM, registry attestation, production signing,
-   container startup health, Workbench support, data-product certification,
-   client-ready publication, or supported-feature promotion. Container OS and
-   packaged-image vulnerability posture remains the Trivy image scan's scope.
+   Workbench support, data-product certification, client-ready publication, or
+   supported-feature promotion. Container OS and packaged-image vulnerability
+   posture remains the Trivy image scan's scope.
 
 This slice also hardens post-merge Main Releasability signal quality:
 

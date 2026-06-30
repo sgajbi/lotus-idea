@@ -525,28 +525,29 @@ Recent issue-derived patterns to preserve:
 13. release evidence artifacts must name their scope, target artifact or
    dependency source, generator, path, and non-proof boundary before being cited
    as release proof,
-14. generated proof and quality evidence must be reproducible from current
+14. Docker build and scan evidence must be paired with bounded packaged-runtime
+   startup and health-surface smoke proof before claiming release image
+   confidence,
+15. generated proof and quality evidence must be reproducible from current
    gate rules or be documented as on-demand evidence rather than current proof,
-15. documentation should record the durable rule, not only the one-off fix.
+16. documentation should record the durable rule, not only the one-off fix.
 
 Current open issue priorities that should shape the next implementation slices:
 
-1. GitHub issue `#270`: add container startup/health smoke evidence before
-   release image confidence claims.
-2. GitHub issue `#267`: bind caller-context authorization headers to trusted
+1. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-3. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+2. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
    writes.
-4. GitHub issue `#268`: require API idempotency for AI explanation lineage
+3. GitHub issue `#268`: require API idempotency for AI explanation lineage
    writes.
-5. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
+4. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
    Docker release proof gates or document a governed light/full split.
-6. GitHub issue `#260`: require aggregate provenance for source-ingestion live
+5. GitHub issue `#260`: require aggregate provenance for source-ingestion live
    proof consumption.
-7. GitHub issue `#269`: keep architecture boundary report evidence
+6. GitHub issue `#269`: keep architecture boundary report evidence
    synchronized with current gate rules.
 
-Issues `#272`, `#271`, `#265`, `#264`, `#262`, `#261`, and `#259` have
+Issues `#272`, `#271`, `#270`, `#265`, `#264`, `#262`, `#261`, and `#259` have
 branch-local fixes and validation evidence, but they must not be claimed closed
 until merged to `main`, CI is green, and QA or issue-closure evidence exists.
 
@@ -648,7 +649,7 @@ Current gaps remain explicit:
 11. no trusted-ingress proof for caller-context authorization headers,
 12. no PostgreSQL same-candidate stale-write guard across all mutations,
 13. no API-level idempotency contract for AI explanation lineage writes,
-14. no full container-image SBOM, registry attestation, or startup health proof,
+14. no full container-image SBOM or registry attestation,
 15. no deterministic freshness check for committed architecture boundary
     report evidence.
 
