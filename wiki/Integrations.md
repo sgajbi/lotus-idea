@@ -129,6 +129,14 @@ when Manage omits content hash, request fingerprint, source-batch fingerprint,
 or lineage fingerprint metadata; `lotus-idea` does not fabricate source
 lineage from Manage response payloads.
 
+All source adapters treat freshness as source-owned proof, not as a derivative
+of readiness. Risk, Performance, Core, Manage, and Advise integrations may map
+explicit source freshness values into `EvidenceFreshness`, but supportability,
+coverage, health state, and data-quality status must not be upgraded to
+`current` freshness when the source omits freshness metadata. Missing or
+unrecognized freshness remains unavailable/unproven and cannot clear live
+source, data-mesh, Workbench, or supported-feature blockers.
+
 Route-foundation proof is consumed only from owning sibling repositories.
 `lotus-advise` owns source-safe proposal intake route proof for
 `POST /advisory/proposals/idea-intake`; `lotus-manage` owns source-safe action

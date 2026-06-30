@@ -1528,6 +1528,11 @@ logs; fix or document the owned warning source instead.
    liquidity-shortfall review without moving cashflow methodology into
    `lotus-idea`. Core source refs treat missing or unrecognized freshness
    metadata as unavailable/unproven; they must not default to current evidence.
+   All source adapters follow that same source-authority rule: source
+   freshness must be explicitly declared through freshness metadata owned by
+   the source payload or source ref. Supportability, readiness, coverage,
+   health state, or data-quality posture can explain whether source processing
+   succeeded, but must not be inferred as current freshness.
    The Manage adapter consumes source-authored action-register
    lineage/fingerprint metadata and fails closed when that metadata is absent;
    it does not fabricate Manage `SourceRef.content_hash` values from response

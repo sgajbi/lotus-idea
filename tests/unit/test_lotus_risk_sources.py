@@ -288,6 +288,22 @@ def test_lotus_risk_adapter_marks_unknown_supportability_as_unavailable() -> Non
     assert evidence.concentration_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
+def test_lotus_risk_adapter_requires_declared_freshness_for_ready_supportability() -> None:
+    payload = _payload()
+    metadata = payload["metadata"]
+    assert isinstance(metadata, dict)
+    supportability = metadata["calculation_supportability"]
+    assert isinstance(supportability, dict)
+    supportability.pop("freshness_bucket")
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_concentration_evidence(_request())
+
+    assert evidence.concentration_ref is not None
+    assert evidence.concentration_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
 def test_risk_concentration_evidence_request_requires_portfolio_id() -> None:
     with pytest.raises(ValueError, match="portfolio_id is required"):
         RiskConcentrationEvidenceRequest(

@@ -412,7 +412,7 @@ def test_lotus_manage_adapter_preserves_prefixed_source_fingerprint() -> None:
     assert evidence.action_register_ref.content_hash == "sha256:manage-lineage"
 
 
-def test_lotus_manage_adapter_treats_ready_without_freshness_bucket_as_current() -> None:
+def test_lotus_manage_adapter_requires_declared_freshness_for_ready_supportability() -> None:
     payload = _payload()
     supportability = payload["supportability"]
     assert isinstance(supportability, dict)
@@ -423,7 +423,31 @@ def test_lotus_manage_adapter_treats_ready_without_freshness_bucket_as_current()
     ).fetch_mandate_health_evidence(_request())
 
     assert evidence.action_register_ref is not None
-    assert evidence.action_register_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.action_register_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
+def test_lotus_manage_adapter_does_not_treat_ref_health_state_as_freshness() -> None:
+    payload = _payload(
+        extra={
+            "sourceRefs": [
+                {
+                    "productId": "lotus-performance:MandatePerformanceHealthContext:v1",
+                    "productVersion": "v1",
+                    "route": "/performance/mandate-health-context",
+                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                    "contentHash": "sha256:mandate-performance-health",
+                    "dataQualityStatus": "ready",
+                },
+            ],
+        }
+    )
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.mandate_performance_health_ref is not None
+    assert evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
 
 
 def test_manage_mandate_health_evidence_request_requires_portfolio_id() -> None:

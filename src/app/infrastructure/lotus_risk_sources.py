@@ -279,7 +279,7 @@ def _source_ref(payload: dict[str, Any]) -> SourceRef:
         generated_at_utc=generated_at,
         content_hash=content_hash,
         data_quality_status=supportability_state,
-        freshness=_freshness(metadata, payload, supportability_state=supportability_state),
+        freshness=_freshness(metadata, payload),
     )
 
 
@@ -305,7 +305,7 @@ def _drawdown_source_ref(payload: dict[str, Any]) -> SourceRef:
         ),
         content_hash=_content_hash(metadata, payload),
         data_quality_status=supportability_state,
-        freshness=_freshness(metadata, payload, supportability_state=supportability_state),
+        freshness=_freshness(metadata, payload),
     )
 
 
@@ -331,7 +331,7 @@ def _risk_metrics_source_ref(payload: dict[str, Any]) -> SourceRef:
         ),
         content_hash=_content_hash(metadata, payload),
         data_quality_status=supportability_state,
-        freshness=_freshness(metadata, payload, supportability_state=supportability_state),
+        freshness=_freshness(metadata, payload),
     )
 
 
@@ -410,28 +410,30 @@ def _content_hash(*payloads: dict[str, Any]) -> str:
     raise RiskSourceUnavailable(code="risk_content_hash_missing")
 
 
-def _freshness(
-    *payloads: dict[str, Any],
-    supportability_state: str,
-) -> EvidenceFreshness:
+def _freshness(*payloads: dict[str, Any]) -> EvidenceFreshness:
     for payload in payloads:
-        freshness_value = (
-            payload.get("freshness")
-            or payload.get("freshness_status")
-            or payload.get("freshnessStatus")
-        )
-        if isinstance(freshness_value, str):
-            normalized = freshness_value.lower()
-            if "stale" in normalized:
-                return EvidenceFreshness.STALE
-            if "expired" in normalized:
-                return EvidenceFreshness.EXPIRED
-            if "unavailable" in normalized:
-                return EvidenceFreshness.UNAVAILABLE
-            if "current" in normalized:
-                return EvidenceFreshness.CURRENT
-    if supportability_state.lower() == "ready":
-        return EvidenceFreshness.CURRENT
+        nested_supportability = payload.get("calculation_supportability")
+        candidates = [payload]
+        if isinstance(nested_supportability, dict):
+            candidates.append(nested_supportability)
+        for candidate in candidates:
+            freshness_value = (
+                candidate.get("freshness")
+                or candidate.get("freshness_status")
+                or candidate.get("freshnessStatus")
+                or candidate.get("freshness_bucket")
+                or candidate.get("freshnessBucket")
+            )
+            if isinstance(freshness_value, str):
+                normalized = freshness_value.lower()
+                if "stale" in normalized:
+                    return EvidenceFreshness.STALE
+                if "expired" in normalized:
+                    return EvidenceFreshness.EXPIRED
+                if "unavailable" in normalized or "missing" in normalized:
+                    return EvidenceFreshness.UNAVAILABLE
+                if "current" in normalized or "same_day" in normalized:
+                    return EvidenceFreshness.CURRENT
     return EvidenceFreshness.UNAVAILABLE
 
 
