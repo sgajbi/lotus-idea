@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import time
-import uuid
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
+
+from app.observability.correlation_context import (
+    generated_correlation_id,
+    generated_trace_id,
+    sanitize_or_generate_context_id,
+)
 
 
 class CorrelationIdMiddleware(BaseHTTPMiddleware):
@@ -19,8 +24,14 @@ class CorrelationIdMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
-        correlation_id = request.headers.get("X-Correlation-Id") or str(uuid.uuid4())
-        trace_id = request.headers.get("X-Trace-Id") or str(uuid.uuid4())
+        correlation_id = sanitize_or_generate_context_id(
+            request.headers.get("X-Correlation-Id"),
+            generated_correlation_id,
+        )
+        trace_id = sanitize_or_generate_context_id(
+            request.headers.get("X-Trace-Id"),
+            generated_trace_id,
+        )
         request.state.correlation_id = correlation_id
         request.state.trace_id = trace_id
         start = time.perf_counter()

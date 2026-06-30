@@ -53,6 +53,27 @@ def test_correlation_and_trace_headers_are_generated() -> None:
     assert response.status_code == 200
     assert response.headers["X-Correlation-Id"]
     assert response.headers["X-Trace-Id"]
+    assert response.headers["X-Correlation-Id"].startswith("corr-")
+    assert response.headers["X-Trace-Id"].startswith("trace-")
+
+
+def test_unsafe_correlation_and_trace_headers_are_replaced() -> None:
+    client = TestClient(app)
+    response = client.get(
+        "/health",
+        headers={
+            "X-Correlation-Id": "PB_SG_GLOBAL_BAL_001",
+            "X-Trace-Id": "Bearer-token-abc123",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["X-Correlation-Id"].startswith("corr-")
+    assert response.headers["X-Trace-Id"].startswith("trace-")
+    assert response.headers["X-Correlation-Id"] != "PB_SG_GLOBAL_BAL_001"
+    assert response.headers["X-Trace-Id"] != "Bearer-token-abc123"
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+    assert "Bearer-token-abc123" not in response.text
 
 
 def test_not_found_error_is_product_safe() -> None:
@@ -106,6 +127,41 @@ def test_validation_error_log_includes_response_correlation_id(
     assert payload["correlation_id"] == "corr-validation-log"
     assert payload["trace_id"] == "trace-validation-log"
     assert "not-an-int" not in str(payload)
+
+
+def test_validation_error_log_uses_sanitized_correlation_id(
+    caplog: LogCaptureFixture,
+) -> None:
+    isolated = create_app()
+
+    @isolated.get("/__test_validation/{item_id}", include_in_schema=False)
+    async def _test_validation_route(item_id: int) -> dict[str, int]:
+        return {"item_id": item_id}
+
+    raw_correlation_id = "PB_SG_GLOBAL_BAL_001"
+    raw_trace_id = "client_secret:abc123"
+    client = TestClient(isolated)
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        response = client.get(
+            "/__test_validation/not-an-int",
+            headers={
+                "X-Correlation-Id": raw_correlation_id,
+                "X-Trace-Id": raw_trace_id,
+            },
+        )
+
+    assert response.status_code == 400
+    assert response.headers["X-Correlation-Id"].startswith("corr-")
+    assert response.headers["X-Trace-Id"].startswith("trace-")
+    assert raw_correlation_id not in response.text
+    assert raw_trace_id not in response.text
+    payload = json.loads(caplog.records[-1].message)
+    assert payload["event"] == "request.validation_failed"
+    assert payload["correlation_id"] == response.headers["X-Correlation-Id"]
+    assert payload["trace_id"] == response.headers["X-Trace-Id"]
+    serialized_payload = json.dumps(payload)
+    assert raw_correlation_id not in serialized_payload
+    assert raw_trace_id not in serialized_payload
 
 
 def test_unhandled_error_is_product_safe() -> None:

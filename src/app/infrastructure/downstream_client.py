@@ -8,6 +8,12 @@ from urllib.parse import urlparse
 
 import httpx
 
+from app.observability.correlation_context import (
+    generated_correlation_id,
+    generated_trace_id,
+    sanitize_or_generate_context_id,
+)
+
 
 class DownstreamClientConfigurationError(ValueError):
     pass
@@ -117,9 +123,12 @@ def build_trace_headers(
 ) -> dict[str, str]:
     headers: dict[str, str] = {}
     if correlation_id:
-        headers["X-Correlation-Id"] = correlation_id
+        headers["X-Correlation-Id"] = sanitize_or_generate_context_id(
+            correlation_id,
+            generated_correlation_id,
+        )
     if trace_id:
-        headers["X-Trace-Id"] = trace_id
+        headers["X-Trace-Id"] = sanitize_or_generate_context_id(trace_id, generated_trace_id)
     if idempotency_key:
         headers["Idempotency-Key"] = idempotency_key
     return headers
