@@ -101,6 +101,11 @@ direct API route or app-entrypoint imports from low-level `app.errors`.
 Mutating workflow route modules now use `src/app/api/idempotency.py` for
 shared `Idempotency-Key` blank-key validation, and `make
 api-idempotency-boundary-gate` blocks route-local validator clones.
+Shared signal-family DTOs now live in `src/app/api/signal_models.py` instead
+of the concrete `src/app/api/idea_signals.py` route module. Caller-supplied
+signal routes and evidence replay import source-ref, review access scope, and
+candidate summary DTOs from that shared module, and `make
+api-signal-model-boundary-gate` blocks route-to-route DTO ownership drift.
 The PostgreSQL repository adapter now consumes public
 `src/app/infrastructure/postgres_codecs.py` functions for row access, JSON
 object decoding, datetime decoding, and domain JSON serialization; the
@@ -1806,6 +1811,12 @@ route-local `CamelModel` or `ConfigDict(populate_by_name=True)` clones. `make
 api-camel-model-boundary-gate` blocks clone reintroduction. This is design
 modularity inside the existing service, not runtime microservice decomposition
 or a supported-feature claim.
+Shared signal-family request and response DTOs should use
+`src/app/api/signal_models.py`, not a concrete signal route module. The
+`api-signal-model-boundary-gate` blocks imports of source refs, review access
+scope, source-ref responses, and candidate summaries from
+`app.api.idea_signals`, keeping signal route modules thin and reviewable
+without introducing a runtime signal microservice or supported-feature claim.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`

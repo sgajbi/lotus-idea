@@ -34,6 +34,7 @@ pass.
 | Route metadata | API routes use the shared `app.api.route_metadata.RouteMetadata` contract for route-registration metadata. Local route metadata clones are blocked by `make api-route-metadata-gate`. |
 | Idempotency | Mutating workflow routes require `Idempotency-Key`, validate blank keys through shared `app.api.idempotency`, and return replay or conflict posture instead of duplicating state. `make api-idempotency-boundary-gate` blocks route-local validator clones. |
 | DTO alias handling | API DTOs that need camel-case aliases use `app.api.base_model.CamelModel`. `make api-camel-model-boundary-gate` blocks route-local `CamelModel` or `ConfigDict(populate_by_name=True)` clones. |
+| Signal DTO ownership | Shared signal-family DTOs for source refs, review access scope, source-ref responses, and candidate summaries live in `app.api.signal_models`. `make api-signal-model-boundary-gate` blocks route-to-route imports from `app.api.idea_signals`. |
 | Source authority | Signal routes consume source-owned evidence and carry source refs; `lotus-idea` does not recompute official performance, risk, accounting, suitability, or report facts. |
 | Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples. Workflow/operator routes and app-entrypoint exception handlers use shared `app.api.problem_details` metadata and runtime response helpers for concrete 400/403/404/409/503 ProblemDetails responses; `make api-problem-details-boundary-gate` blocks direct API route or app-entrypoint imports from `app.errors`, and `make openapi-problem-details-example-gate` blocks missing OpenAPI examples. Caller-supplied signal routes use `app.api.signal_api_support` for their stricter route-family contract. |
 | Sensitive data | Responses and diagnostics must not expose raw source payloads, raw idempotency keys, portfolio identifiers in aggregate diagnostics, prompt/provider payloads, or broker payloads. |
@@ -49,6 +50,7 @@ pass.
 | [ProblemDetails boundary gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/api_problem_details_boundary_gate.py) | API boundary check that route modules and the app entrypoint import ProblemDetails runtime helpers through `app.api.problem_details`, not directly from `app.errors`. |
 | [Idempotency boundary gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/api_idempotency_boundary_gate.py) | API boundary check that mutating workflow routes use shared `app.api.idempotency` validation instead of route-local `Idempotency-Key` validator clones. |
 | [CamelModel boundary gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/api_camel_model_boundary_gate.py) | API boundary check that route modules use shared `app.api.base_model.CamelModel` instead of local camel-case DTO base-model clones. |
+| [Signal model boundary gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/api_signal_model_boundary_gate.py) | API boundary check that shared signal-family DTOs are imported from `app.api.signal_models`, not from concrete route modules. |
 | [Endpoint certification gate](https://github.com/sgajbi/lotus-idea/blob/main/scripts/endpoint_certification_gate.py) | Synchronizes OpenAPI operations with certification evidence and supported-boundary language. |
 | [Operations Runbook](Operations-Runbook) | Operator diagnostics, readiness semantics, proof-artifact interpretation, and first checks. |
 | [Validation and CI](Validation-and-CI) | Repo-native gates that block weak API, OpenAPI, documentation, and supported-feature claims. |
@@ -62,6 +64,7 @@ make api-route-metadata-gate
 make api-problem-details-boundary-gate
 make api-idempotency-boundary-gate
 make api-camel-model-boundary-gate
+make api-signal-model-boundary-gate
 make openapi-problem-details-example-gate
 make signal-api-contract-gate
 make documentation-contract-gate

@@ -9,7 +9,7 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
-from app.api.idea_signals import (
+from app.api.signal_models import (
     IdeaCandidateSummaryResponse,
     ReviewAccessScopeRequest,
     SourceRefRequest,

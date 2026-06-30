@@ -8,7 +8,7 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
-from app.api.idea_signals import SourceRefRequest
+from app.api.signal_models import SourceRefRequest
 from app.api.problem_details import (
     invalid_request_metadata,
     not_found_metadata,
