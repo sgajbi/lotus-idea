@@ -69,7 +69,11 @@ blockers. It does not expose event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims.
 `contracts/outbox-events/lotus-idea-outbox-events.v1.json` and
 `make outbox-event-contract-gate` now define and enforce the repo-owned internal
-outbox event contract. `scripts/generate_outbox_broker_proof.py` and
+outbox event contract. Runtime construction, repository replay, contract-gate
+alignment, the PostgreSQL foundation schema, and
+`003_outbox_event_contract_constraints.sql` all fail closed unless the event
+family, aggregate type, and schema version match the v1 contract.
+`scripts/generate_outbox_broker_proof.py` and
 `make outbox-broker-proof-contract-gate` provide a source-safe outbox broker
 proof artifact for aggregate RFC implementation-readiness evidence. The artifact
 cites the implemented outbox delivery orchestration, publisher port, HTTP
@@ -157,12 +161,17 @@ flowchart LR
 5. `scripts/run_migrations.py` executes the migration plan against PostgreSQL
    when `LOTUS_IDEA_DATABASE_URL` is set, and dry-runs the apply/rollback plan
    for CI without requiring a database.
+   `003_outbox_event_contract_constraints.sql` retrofits named outbox event
+   family, aggregate-type, and schema-version constraints onto existing
+   `idea_outbox_event` tables.
 6. `src/app/domain/events.py` defines the outbox event envelope,
    deterministic event identity, status vocabulary, hashed idempotency
-   fingerprint, forbidden payload-key guard, published transition, failed retry
-   transition, and dead-letter transition. Accepted internal mutations append
-   pending events; replay, conflict, not-found, blocked, suppressed, and
-   not-eligible paths do not create duplicate outbox work.
+   fingerprint, forbidden payload-key guard, governed event-family allowlist,
+   v1 schema-version guard, fixed candidate aggregate-type guard, published
+   transition, failed retry transition, and dead-letter transition. Accepted
+   internal mutations append pending events; replay, conflict, not-found,
+   blocked, suppressed, and not-eligible paths do not create duplicate outbox
+   work.
 7. `src/app/infrastructure/postgres_repository.py` implements the governed
    repository port surface over the schema. It materializes candidate,
    idempotency, lifecycle, audit, review, feedback, conversion, and report

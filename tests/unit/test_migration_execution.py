@@ -63,9 +63,10 @@ class FailingConnection(RecordingConnection):
 def test_discover_migrations_requires_rollbacks() -> None:
     migrations = discover_migrations(ROOT / "migrations")
 
-    assert [migration.version for migration in migrations] == ["001", "002"]
+    assert [migration.version for migration in migrations] == ["001", "002", "003"]
     assert migrations[0].rollback_path.name == "001_idea_repository_foundation.rollback.sql"
     assert migrations[1].rollback_path.name == "002_ai_explanation_lineage.rollback.sql"
+    assert migrations[2].rollback_path.name == "003_outbox_event_contract_constraints.rollback.sql"
 
 
 def test_dry_run_reports_apply_and_rollback_statement_counts() -> None:
@@ -87,7 +88,7 @@ def test_execute_migration_plan_commits_after_all_statements() -> None:
 
     records = execute_migration_plan(connection, plan)
 
-    assert [record.version for record in records] == ["001", "002"]
+    assert [record.version for record in records] == ["001", "002", "003"]
     assert sum(record.statement_count for record in records) == len(
         connection.cursor_instance.statements
     )
@@ -127,4 +128,5 @@ def test_run_migrations_dry_run_cli_does_not_require_database_url() -> None:
     assert result.returncode == 0
     assert "apply 001_idea_repository_foundation" in result.stdout
     assert "apply 002_ai_explanation_lineage" in result.stdout
+    assert "apply 003_outbox_event_contract_constraints" in result.stdout
     assert "Migration dry run passed" in result.stdout

@@ -44,6 +44,9 @@ REQUIRED_FORWARD_FRAGMENTS = (
     "PRIMARY KEY",
     "REFERENCES idea_candidate_record(candidate_id)",
     "REFERENCES idea_conversion_intent(conversion_intent_id)",
+    "ck_idea_outbox_event_event_type",
+    "ck_idea_outbox_event_aggregate_type",
+    "ck_idea_outbox_event_schema_version",
 )
 
 AI_LINEAGE_REQUIRED_TABLES = ("idea_ai_explanation_lineage",)
@@ -77,6 +80,7 @@ class MigrationContract(NamedTuple):
     required_tables: tuple[str, ...]
     required_indexes: tuple[str, ...]
     required_forward_fragments: tuple[str, ...]
+    required_rollback_fragments: tuple[str, ...] = ()
 
 
 REQUIRED_MIGRATIONS = (
@@ -95,6 +99,27 @@ REQUIRED_MIGRATIONS = (
         required_tables=AI_LINEAGE_REQUIRED_TABLES,
         required_indexes=AI_LINEAGE_REQUIRED_INDEXES,
         required_forward_fragments=AI_LINEAGE_REQUIRED_FORWARD_FRAGMENTS,
+    ),
+    MigrationContract(
+        version="003",
+        forward_path=MIGRATIONS_DIR / "003_outbox_event_contract_constraints.sql",
+        rollback_path=MIGRATIONS_DIR / "003_outbox_event_contract_constraints.rollback.sql",
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "ALTER TABLE idea_outbox_event",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_event_type",
+            "ADD CONSTRAINT ck_idea_outbox_event_event_type",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_aggregate_type",
+            "ADD CONSTRAINT ck_idea_outbox_event_aggregate_type",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_schema_version",
+            "ADD CONSTRAINT ck_idea_outbox_event_schema_version",
+        ),
+        required_rollback_fragments=(
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_event_type",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_aggregate_type",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_schema_version",
+        ),
     ),
 )
 
@@ -169,6 +194,10 @@ def _validate_rollback_sql(migration: MigrationContract, rollback_sql: str) -> l
     for table in reversed(migration.required_tables):
         if not _contains_sql_statement(rollback_sql, f"DROP TABLE IF EXISTS {table};"):
             errors.append(f"Migration {migration.version} rollback missing table `{table}`")
+    upper_rollback = rollback_sql.upper()
+    for fragment in migration.required_rollback_fragments:
+        if fragment.upper() not in upper_rollback:
+            errors.append(f"Migration {migration.version} rollback SQL missing `{fragment}`")
     return errors
 
 

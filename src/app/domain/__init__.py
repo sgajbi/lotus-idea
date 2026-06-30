@@ -42,6 +42,9 @@ from app.domain.conversion_governance import (
     request_conversion_intent,
 )
 from app.domain.events import (
+    OUTBOX_EVENT_AGGREGATE_TYPE,
+    OUTBOX_EVENT_SCHEMA_VERSION,
+    SUPPORTED_OUTBOX_EVENT_TYPES,
     OutboxEventRecord,
     OutboxEventStatus,
     build_candidate_outbox_event,
@@ -245,6 +248,9 @@ __all__ = [
     "request_conversion_intent",
     "OutboxEventRecord",
     "OutboxEventStatus",
+    "OUTBOX_EVENT_AGGREGATE_TYPE",
+    "OUTBOX_EVENT_SCHEMA_VERSION",
+    "SUPPORTED_OUTBOX_EVENT_TYPES",
     "DownstreamSubmissionPosture",
     "DownstreamSubmissionRecord",
     "DownstreamSubmissionResourceType",

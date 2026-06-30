@@ -554,7 +554,12 @@ Gateway/Workbench support, or supported-feature promotion.
 aggregate implementation-proof readiness consumes to clear only broker
 configuration/runtime-proof blockers. `contracts/outbox-events/lotus-idea-outbox-events.v1.json`
 and `make outbox-event-contract-gate` define the repo-owned event envelope,
-implemented event families, and source-safe payload policy.
+implemented event families, and source-safe payload policy. The runtime domain
+model, PostgreSQL foundation schema, `003_outbox_event_contract_constraints.sql`,
+migration contract gate, and event-contract gate now all enforce the same v1
+event-family allowlist, fixed candidate aggregate type, and schema version so
+uncontracted outbox rows cannot be constructed, persisted, loaded, or promoted
+as valid internal publication work.
 `contracts/outbox-events/lotus-idea-outbox-consumers.v1.json` and
 `make outbox-consumer-contract-gate` now declare governed downstream consumers
 for Gateway, Advise, Manage, and Report while keeping them

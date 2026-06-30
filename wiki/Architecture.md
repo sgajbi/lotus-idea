@@ -404,6 +404,11 @@ returns aggregate source-safe counts.
 `src/app/infrastructure/outbox_publisher.py` provides the source-safe HTTP
 publisher adapter foundation with bounded envelopes, trace headers, and
 product-safe failure reasons.
+`src/app/domain/events.py`, the PostgreSQL foundation schema,
+`003_outbox_event_contract_constraints.sql`, and
+`make outbox-event-contract-gate` now enforce the same v1 event-family,
+candidate aggregate-type, schema-version, and source-safe payload contract at
+construction, replay, database-upgrade, and governance time.
 `src/app/application/outbox_delivery_readiness.py` and
 `GET /api/v1/outbox-delivery/readiness` add aggregate operator visibility over
 that foundation, including leased and expired-lease posture, without mutating

@@ -26,6 +26,17 @@ FORBIDDEN_OUTBOX_PAYLOAD_KEYS = frozenset(
         "source_route",
     }
 )
+OUTBOX_EVENT_SCHEMA_VERSION = "v1"
+OUTBOX_EVENT_AGGREGATE_TYPE = "idea_candidate"
+SUPPORTED_OUTBOX_EVENT_TYPES = (
+    "idea.candidate.persisted.v1",
+    "idea.lifecycle.transitioned.v1",
+    "idea.review.decision_recorded.v1",
+    "idea.feedback.recorded.v1",
+    "idea.conversion.intent_requested.v1",
+    "idea.conversion.outcome_recorded.v1",
+    "idea.report_evidence_pack.requested.v1",
+)
 
 
 class OutboxEventStatus(StrEnum):
@@ -62,6 +73,12 @@ class OutboxEventRecord:
         _require_text(self.aggregate_type, "aggregate_type")
         _require_text(self.aggregate_id, "aggregate_id")
         _require_text(self.schema_version, "schema_version")
+        if self.event_type not in SUPPORTED_OUTBOX_EVENT_TYPES:
+            raise ValueError(f"unsupported outbox event_type: {self.event_type}")
+        if self.aggregate_type != OUTBOX_EVENT_AGGREGATE_TYPE:
+            raise ValueError(f"unsupported outbox aggregate_type: {self.aggregate_type}")
+        if self.schema_version != OUTBOX_EVENT_SCHEMA_VERSION:
+            raise ValueError(f"unsupported outbox schema_version: {self.schema_version}")
         _require_aware_utc(self.occurred_at_utc, "occurred_at_utc")
         if self.published_at_utc is not None:
             _require_aware_utc(self.published_at_utc, "published_at_utc")
@@ -112,9 +129,9 @@ def build_candidate_outbox_event(
     return OutboxEventRecord(
         event_id=event_id,
         event_type=event_type,
-        aggregate_type="idea_candidate",
+        aggregate_type=OUTBOX_EVENT_AGGREGATE_TYPE,
         aggregate_id=aggregate_id,
-        schema_version="v1",
+        schema_version=OUTBOX_EVENT_SCHEMA_VERSION,
         payload=payload,
         occurred_at_utc=occurred_at_utc,
         idempotency_fingerprint=idempotency_fingerprint,

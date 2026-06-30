@@ -10,6 +10,7 @@ from app.domain import (
     OutboxDeliveryDecision,
     OutboxEventRecord,
     OutboxEventStatus,
+    SUPPORTED_OUTBOX_EVENT_TYPES,
     build_candidate_outbox_event,
 )
 
@@ -65,6 +66,49 @@ def test_outbox_event_payload_rejects_sensitive_source_and_client_keys() -> None
             occurred_at_utc=EVALUATED_AT,
             payload={"portfolio_id": "PB_SG_GLOBAL_BAL_001"},
             idempotency_key="signal-ingestion:high-cash:001",
+        )
+
+
+@pytest.mark.parametrize("event_type", SUPPORTED_OUTBOX_EVENT_TYPES)
+def test_outbox_event_accepts_governed_event_families(event_type: str) -> None:
+    event = build_candidate_outbox_event(
+        event_type=event_type,
+        aggregate_id="idea-high-cash-001",
+        occurred_at_utc=EVALUATED_AT,
+        payload={"candidate_family": "high_cash"},
+    )
+
+    assert event.event_type == event_type
+    assert event.schema_version == "v1"
+
+
+def test_outbox_event_rejects_unknown_event_type_and_schema_version() -> None:
+    with pytest.raises(ValueError, match="unsupported outbox event_type"):
+        build_candidate_outbox_event(
+            event_type="idea.uncontracted.event.v1",
+            aggregate_id="idea-high-cash-001",
+            occurred_at_utc=EVALUATED_AT,
+            payload={"candidate_family": "high_cash"},
+        )
+    with pytest.raises(ValueError, match="unsupported outbox schema_version"):
+        OutboxEventRecord(
+            event_id="evt_wrong_schema",
+            event_type="idea.candidate.persisted.v1",
+            aggregate_type="idea_candidate",
+            aggregate_id="idea-high-cash-001",
+            schema_version="v2",
+            payload={"candidate_family": "high_cash"},
+            occurred_at_utc=EVALUATED_AT,
+        )
+    with pytest.raises(ValueError, match="unsupported outbox aggregate_type"):
+        OutboxEventRecord(
+            event_id="evt_wrong_aggregate",
+            event_type="idea.candidate.persisted.v1",
+            aggregate_type="portfolio",
+            aggregate_id="idea-high-cash-001",
+            schema_version="v1",
+            payload={"candidate_family": "high_cash"},
+            occurred_at_utc=EVALUATED_AT,
         )
 
 

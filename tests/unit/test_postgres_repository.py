@@ -212,6 +212,29 @@ def test_postgres_repository_persists_replays_and_hydrates_candidate_state() -> 
     assert connection.commits == 2
 
 
+def test_postgres_repository_rejects_uncontracted_outbox_rows_on_load() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate(candidate_scope=access_scope())
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:high-cash:bad-outbox-row",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    connection.rows["idea_outbox_event"][0]["event_type"] = "idea.uncontracted.event.v1"
+
+    with pytest.raises(ValueError, match="unsupported outbox event_type"):
+        PostgresIdeaRepository(connection).snapshot()
+
+    connection.rows["idea_outbox_event"][0]["event_type"] = "idea.candidate.persisted.v1"
+    connection.rows["idea_outbox_event"][0]["schema_version"] = "v2"
+
+    with pytest.raises(ValueError, match="unsupported outbox schema_version"):
+        PostgresIdeaRepository(connection).snapshot()
+
+
 def test_postgres_repository_round_trips_mutating_workflow_details() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
