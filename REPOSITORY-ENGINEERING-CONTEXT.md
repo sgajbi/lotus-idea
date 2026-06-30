@@ -759,6 +759,15 @@ instead of failing the aggregate proof snapshot. The
 source-ingestion capability evidence includes validated source-ingestion
 live-proof and scheduled-worker deploy-proof artifact refs when the
 corresponding blockers are cleared.
+Optional JSON proof artifacts consumed by aggregate implementation readiness are
+now bound at the reader boundary through
+`src/app/application/proof_provenance.py`. Raw family-valid proof JSON cannot
+clear blockers unless the CLI or runtime loader attaches
+`aggregateProofProvenance` with a matching source-safe proof ref, artifact
+SHA-256, generated timestamp inside the 24-hour freshness window, and the
+current Lotus Idea source revision. Deployed runtimes without `.git` metadata
+must provide `LOTUS_IDEA_SOURCE_REVISION` when optional proof artifacts are
+expected to clear aggregate blockers.
 The aggregate snapshot now also includes an
 `opportunity-archetype-scenarios` capability built from
 `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`.

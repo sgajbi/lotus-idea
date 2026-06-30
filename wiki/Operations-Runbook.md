@@ -631,6 +631,16 @@ live AI provider execution, model-risk operations certification,
 client-ready report publication, full Workbench proof, or supported-feature
 promotion.
 
+Optional JSON proof artifacts now also require aggregate provenance before they
+can clear blockers. The CLI and runtime artifact loader attach
+`aggregateProofProvenance` with the source-safe proof ref, artifact SHA-256,
+source revision, source-tree dirty flag, and proof generation timestamp.
+Aggregate readiness keeps blockers when the envelope is missing, stale,
+future-dated, proof-ref mismatched, or bound to a different Lotus Idea source
+revision. Deployed runtimes without `.git` metadata should set
+`LOTUS_IDEA_SOURCE_REVISION` to the deployed commit or deterministic source
+identifier when optional proof artifacts are expected to clear blockers.
+
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,
 capability-level blockers, planned downstream contract-readiness records,

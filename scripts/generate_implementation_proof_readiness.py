@@ -19,6 +19,7 @@ from app.application.implementation_proof_models import (
 from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
+from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -37,6 +38,7 @@ from app.runtime.repository_state import (
 class ProofArtifactInput:
     payload: dict[str, Any] | None
     path: Path | None
+    proof_ref: str | None
     ref_name: str
 
 
@@ -127,15 +129,25 @@ def _proof_artifact_input(
     ref_name: str,
 ) -> ProofArtifactInput:
     path = _resolve_optional_path(path_value)
+    proof_ref = _source_safe_artifact_ref(path, artifact_name=ref_name)
+    payload = _read_optional_json_object(path, artifact_name=artifact_name)
+    if payload is not None and path is not None and proof_ref is not None:
+        payload = bind_aggregate_proof_provenance(
+            payload,
+            artifact_path=path,
+            proof_ref=proof_ref,
+            repository_root=Path.cwd(),
+        )
     return ProofArtifactInput(
-        payload=_read_optional_json_object(path, artifact_name=artifact_name),
+        payload=payload,
         path=path,
+        proof_ref=proof_ref,
         ref_name=ref_name,
     )
 
 
 def _proof_ref(input_: ProofArtifactInput) -> str | None:
-    return _source_safe_artifact_ref(input_.path, artifact_name=input_.ref_name)
+    return input_.proof_ref
 
 
 def _opportunity_archetype_proof_artifact_inputs(

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+import json
 from pathlib import Path
+import tempfile
+from typing import Any
 
 from app.application.gateway_workbench_discovery_proof import (
     build_gateway_workbench_discovery_proof_payload,
@@ -12,13 +15,16 @@ from app.application.gateway_workbench_operational_proof import (
 from app.application.implementation_proof_capability_updates import (
     build_capability_readiness,
 )
-from app.application.implementation_proof_readiness import (
+from app.application.implementation_proof_consumption import (
     _apply_gateway_workbench_discovery_proof,
+)
+from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.application.platform_mesh_onboarding_proof import (
     build_platform_mesh_onboarding_proof_payload,
 )
+from app.application.proof_provenance import bind_aggregate_proof_provenance
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 from tests.unit.test_gateway_workbench_discovery_proof import _write_platform_fixture
@@ -26,6 +32,18 @@ from tests.unit.test_gateway_workbench_discovery_proof import _write_platform_fi
 
 ROOT = Path(__file__).resolve().parents[2]
 GENERATED_AT_UTC = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
+
+
+def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[str, Any]:
+    with tempfile.TemporaryDirectory() as directory:
+        artifact_path = Path(directory) / "proof.json"
+        artifact_path.write_text(json.dumps(payload), encoding="utf-8")
+        return bind_aggregate_proof_provenance(
+            payload,
+            artifact_path=artifact_path,
+            proof_ref=proof_ref,
+            repository_root=ROOT,
+        )
 
 
 def test_gateway_workbench_discovery_proof_application_is_noop_for_other_capability() -> None:
@@ -49,16 +67,18 @@ def test_gateway_workbench_discovery_proof_application_is_noop_for_other_capabil
 def test_readiness_uses_gateway_workbench_discovery_proof_without_support_promotion(
     tmp_path: Path,
 ) -> None:
-    proof = _valid_gateway_workbench_discovery_proof(tmp_path)
+    proof_ref = "output/workbench/gateway-workbench-discovery-proof.json"
+    proof = _bound_aggregate_proof(
+        _valid_gateway_workbench_discovery_proof(tmp_path),
+        proof_ref,
+    )
 
     snapshot = build_implementation_proof_readiness_snapshot(
         evaluated_at_utc=GENERATED_AT_UTC,
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         gateway_workbench_discovery_proof=proof,
-        gateway_workbench_discovery_proof_ref=(
-            "output/workbench/gateway-workbench-discovery-proof.json"
-        ),
+        gateway_workbench_discovery_proof_ref=proof_ref,
     )
 
     assert "gateway_workbench_discovery_proof_missing" not in snapshot.overall_blockers
