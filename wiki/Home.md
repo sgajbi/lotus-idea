@@ -14,8 +14,8 @@ supported yet.
 | --- | --- | --- |
 | Business and product | [Overview](Overview) and [Supported Features](Supported-Features) | Current capability truth, ownership boundaries, and promotion requirements. |
 | Sales and demo | [Demo Readiness](Demo-Readiness) and [Roadmap](Roadmap) | Implementation-backed talk tracks, do-not-claim rules, and planned capability framing. |
-| Operations and support | [Operations Runbook](Operations-Runbook), [Validation and CI](Validation-and-CI), and [Security and Governance](Security-and-Governance) | Supportability posture, diagnostics, gates, and incident first checks. |
-| Engineering and agents | [Architecture](Architecture), [Integrations](Integrations), [Development Workflow](Development-Workflow), and [RFC Index](RFC-Index) | Source authority, API foundations, repo-native commands, and RFC slice truth. |
+| Operations and support | [Operations Runbook](Operations-Runbook), [Troubleshooting](Troubleshooting), [Validation and CI](Validation-and-CI), and [Security and Governance](Security-and-Governance) | Supportability posture, diagnostics, gates, and incident first checks. |
+| Engineering and agents | [Architecture](Architecture), [API Surface](API-Surface), [Integrations](Integrations), [Development Workflow](Development-Workflow), and [RFC Index](RFC-Index) | Source authority, API foundations, repo-native commands, and RFC slice truth. |
 
 ## Start Here
 
@@ -23,14 +23,16 @@ supported yet.
 2. [Architecture](Architecture)
 3. [Getting Started](Getting-Started)
 4. [Development Workflow](Development-Workflow)
-5. [Validation and CI](Validation-and-CI)
-6. [RFC Index](RFC-Index)
-7. [Integrations](Integrations)
-8. [Supported Features](Supported-Features)
-9. [Operations Runbook](Operations-Runbook)
-10. [Security and Governance](Security-and-Governance)
-11. [Demo Readiness](Demo-Readiness)
-12. [Roadmap](Roadmap)
+5. [API Surface](API-Surface)
+6. [Validation and CI](Validation-and-CI)
+7. [RFC Index](RFC-Index)
+8. [Integrations](Integrations)
+9. [Supported Features](Supported-Features)
+10. [Operations Runbook](Operations-Runbook)
+11. [Troubleshooting](Troubleshooting)
+12. [Security and Governance](Security-and-Governance)
+13. [Demo Readiness](Demo-Readiness)
+14. [Roadmap](Roadmap)
 
 ## Evidence Standard
 
