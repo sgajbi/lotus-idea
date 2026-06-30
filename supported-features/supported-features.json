@@ -1,5 +1,6 @@
 {
   "repository": "lotus-idea",
+  "schema": "supported-features/supported-features.schema.json",
   "policy": "Only implementation-backed behavior may be promoted to supported.",
   "current_posture": "foundation_only",
   "features": [],

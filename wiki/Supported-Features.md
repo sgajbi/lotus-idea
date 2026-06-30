@@ -109,3 +109,13 @@ Planned capabilities:
 Promotion rule: a capability is supported only after implementation, tests,
 endpoint certification, supported-feature registration, docs/wiki updates, and
 validation evidence exist.
+
+The registration step is now structured and machine-checked. Any future
+`implemented` entry in `supported-features/supported-features.json` must carry
+owner, scope, unsupported scope, API surfaces tied to the endpoint certification
+ledger, UI/consumer publication state, source dependencies, Gateway/Workbench
+state, data-product state, tests, runtime evidence, CI evidence, docs/runbooks,
+proof artifacts, known gaps, last-reviewed UTC timestamp, and the promotion
+decision reference. `make supported-features-gate` rejects placeholder,
+string-only, stale-path, or uncertified-endpoint evidence. This does not promote
+any current feature.

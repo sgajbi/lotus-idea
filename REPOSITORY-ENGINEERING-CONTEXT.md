@@ -1938,6 +1938,18 @@ the exact `lotus-gateway` route and to keep Workbench proof, data-product
 certification, client-ready publication, and supported-feature promotion
 explicitly out of scope.
 
+`make supported-features-gate` is blocking through `make lint` and `make check`.
+The registry source is `supported-features/supported-features.json`, backed by
+`supported-features/supported-features.schema.json` and
+`docs/operations/supported-feature-promotion.md`. The current empty
+`features` posture remains valid. A future `implemented` feature must carry
+structured owner, scope, unsupported-scope, API/UI surface, source-dependency,
+consumer-publication, Gateway/Workbench, data-product, test, runtime-proof, CI,
+docs/runbook, proof-artifact, known-gap, last-reviewed, and promotion-decision
+evidence. The gate rejects string-only placeholders, missing proof families,
+nonexistent code/docs/test references, and API surfaces that are not present in
+the endpoint certification ledger.
+
 Every RFC slice that exposes behavior must update endpoint certification,
 supported-feature registration, docs/wiki truth, observability, and regression
 tests in the same change.
