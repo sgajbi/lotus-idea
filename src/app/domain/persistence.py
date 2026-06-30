@@ -18,12 +18,16 @@ from app.domain.ai_lineage_persistence import (
 )
 from app.domain.events import (
     OutboxEventRecord,
-    OutboxEventStatus,
     build_candidate_outbox_event,
-    mark_outbox_event_failed,
-    mark_outbox_event_published,
 )
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
+from app.domain.outbox_delivery_state import (
+    OutboxDeliveryResult,
+    claim_outbox_events_for_delivery,
+    mark_owned_outbox_event_failed,
+    mark_owned_outbox_event_published,
+    outbox_events_for_delivery,
+)
 from app.domain.ideas import (
     EvidenceFreshness,
     IdeaCandidate,
@@ -90,19 +94,6 @@ class EvidencePackPersistenceDecision(StrEnum):
     REPLAYED = "replayed"
     CONFLICT = "conflict"
     NOT_FOUND = "not_found"
-
-
-class OutboxDeliveryDecision(StrEnum):
-    ACCEPTED = "accepted"
-    NOT_FOUND = "not_found"
-    ALREADY_PUBLISHED = "already_published"
-    DEAD_LETTERED = "dead_lettered"
-
-
-@dataclass(frozen=True)
-class OutboxDeliveryResult:
-    decision: OutboxDeliveryDecision
-    event: OutboxEventRecord | None
 
 
 @dataclass(frozen=True)
@@ -969,88 +960,68 @@ class InMemoryIdeaRepository:
         *,
         limit: int = 100,
         max_retry_count: int = 3,
+        evaluated_at_utc: datetime | None = None,
     ) -> tuple[OutboxEventRecord, ...]:
-        _require_positive(limit, "limit")
-        _require_positive(max_retry_count, "max_retry_count")
-        delivery_ready = [
-            event
-            for event in self._outbox_events.values()
-            if event.status is OutboxEventStatus.PENDING
-            or (event.status is OutboxEventStatus.FAILED and event.retry_count < max_retry_count)
-        ]
-        return tuple(
-            sorted(delivery_ready, key=lambda event: (event.occurred_at_utc, event.event_id))[
-                :limit
-            ]
+        return outbox_events_for_delivery(
+            self._outbox_events,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+
+    def claim_outbox_events_for_delivery(
+        self,
+        *,
+        limit: int = 100,
+        max_retry_count: int = 3,
+        lease_owner: str,
+        lease_attempt_id: str,
+        claimed_at_utc: datetime,
+        lease_expires_at_utc: datetime,
+    ) -> tuple[OutboxEventRecord, ...]:
+        return claim_outbox_events_for_delivery(
+            self._outbox_events,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            claimed_at_utc=claimed_at_utc,
+            lease_expires_at_utc=lease_expires_at_utc,
         )
 
     def mark_outbox_event_published(
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         published_at_utc: datetime,
     ) -> OutboxDeliveryResult:
-        _require_text(event_id, "event_id")
-        _require_aware_utc(published_at_utc, "published_at_utc")
-        event = self._outbox_events.get(event_id)
-        if event is None:
-            return OutboxDeliveryResult(
-                decision=OutboxDeliveryDecision.NOT_FOUND,
-                event=None,
-            )
-        if event.status is OutboxEventStatus.PUBLISHED:
-            return OutboxDeliveryResult(
-                decision=OutboxDeliveryDecision.ALREADY_PUBLISHED,
-                event=event,
-            )
-        if event.status is OutboxEventStatus.DEAD_LETTER:
-            return OutboxDeliveryResult(
-                decision=OutboxDeliveryDecision.DEAD_LETTERED,
-                event=event,
-            )
-        updated = mark_outbox_event_published(event, published_at_utc=published_at_utc)
-        self._outbox_events[event_id] = updated
-        return OutboxDeliveryResult(
-            decision=OutboxDeliveryDecision.ACCEPTED,
-            event=updated,
+        return mark_owned_outbox_event_published(
+            self._outbox_events,
+            event_id,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            published_at_utc=published_at_utc,
         )
 
     def mark_outbox_event_failed(
         self,
         event_id: str,
         *,
+        lease_owner: str,
+        lease_attempt_id: str,
         failure_reason: str,
         max_retry_count: int = 3,
     ) -> OutboxDeliveryResult:
-        _require_text(event_id, "event_id")
-        event = self._outbox_events.get(event_id)
-        if event is None:
-            return OutboxDeliveryResult(
-                decision=OutboxDeliveryDecision.NOT_FOUND,
-                event=None,
-            )
-        if event.status is OutboxEventStatus.PUBLISHED:
-            return OutboxDeliveryResult(
-                decision=OutboxDeliveryDecision.ALREADY_PUBLISHED,
-                event=event,
-            )
-        if event.status is OutboxEventStatus.DEAD_LETTER:
-            return OutboxDeliveryResult(
-                decision=OutboxDeliveryDecision.DEAD_LETTERED,
-                event=event,
-            )
-        updated = mark_outbox_event_failed(
-            event,
+        return mark_owned_outbox_event_failed(
+            self._outbox_events,
+            event_id,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
             failure_reason=failure_reason,
             max_retry_count=max_retry_count,
         )
-        self._outbox_events[event_id] = updated
-        decision = (
-            OutboxDeliveryDecision.DEAD_LETTERED
-            if updated.status is OutboxEventStatus.DEAD_LETTER
-            else OutboxDeliveryDecision.ACCEPTED
-        )
-        return OutboxDeliveryResult(decision=decision, event=updated)
 
     def snapshot(self) -> IdeaRepositorySnapshot:
         return IdeaRepositorySnapshot(
@@ -1195,3 +1166,5 @@ def _require_positive(value: int, field_name: str) -> None:
 def _require_aware_utc(value: datetime, field_name: str) -> None:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field_name} must be timezone-aware")
+    if value.utcoffset() != UTC.utcoffset(value):
+        raise ValueError(f"{field_name} must be UTC")

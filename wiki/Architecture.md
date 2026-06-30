@@ -381,16 +381,19 @@ configured execution path, permission policy, source-safe response, and
 bounded `source_ingestion_run_once` operation event.
 Accepted internal mutations now also append source-safe outbox records through
 the same repository snapshot contract. The repository port and PostgreSQL
-adapter support delivery-ready reads, published status, failed retry status,
-and dead-letter status, while `src/app/application/outbox_delivery.py`
-orchestrates a run-once publisher-port pass with aggregate source-safe counts.
+adapter support delivery-ready reads, lease claims, owner-aware published
+status, failed retry status, and dead-letter status, while
+`src/app/application/outbox_delivery.py` orchestrates a run-once
+publisher-port pass that claims a bounded batch before broker publication and
+returns aggregate source-safe counts.
 `src/app/ports/outbox_publisher.py` owns the publisher port, and
 `src/app/infrastructure/outbox_publisher.py` provides the source-safe HTTP
 publisher adapter foundation with bounded envelopes, trace headers, and
 product-safe failure reasons.
 `src/app/application/outbox_delivery_readiness.py` and
 `GET /api/v1/outbox-delivery/readiness` add aggregate operator visibility over
-that foundation without mutating records or publishing events.
+that foundation, including leased and expired-lease posture, without mutating
+records or publishing events.
 `POST /api/v1/outbox-delivery/run-once` adds the protected internal operator
 surface for a single bounded delivery pass and returns aggregate counts only.
 This is not certified external publication, a Gateway event, platform mesh

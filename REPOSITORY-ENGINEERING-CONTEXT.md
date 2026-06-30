@@ -508,19 +508,25 @@ protocols; `tests/unit/test_repository_port_boundary.py` enforces the boundary
 so the future durable adapter has one governed contract surface.
 `src/app/domain/events.py` defines the internal outbox envelope, status
 vocabulary, deterministic event identity, hashed idempotency fingerprint,
-source/client-sensitive payload-key guard, published transition, failed retry
-transition, and dead-letter transition. Accepted candidate persistence,
+source/client-sensitive payload-key guard, delivery lease metadata, published
+transition, failed retry transition, and dead-letter transition. Accepted candidate persistence,
 lifecycle, review, feedback, conversion, and report evidence-pack mutations
 append pending outbox records; replay, conflict, not-found, blocked,
 suppressed, and not-eligible paths do not create duplicate outbox work.
 `src/app/application/outbox_delivery.py` adds a framework-free run-once
-delivery orchestration over a publisher port and repository port. It can mark
+delivery orchestration over a publisher port and repository port. It claims a
+bounded batch with lease owner, attempt id, and expiry before broker
+publication, publishes only claimed events, and completes or fails delivery
+only when the same lease owner and attempt still own the row. It can mark
 events published, failed for retry, or dead-lettered after the configured retry
 limit, maps publisher exceptions to bounded source-safe failure reasons, and
 returns aggregate counts only. `InMemoryIdeaRepository` and
-`PostgresIdeaRepository` expose the same delivery-ready query and status update
-contract through `src/app/ports/idea_repository.py`, with unit coverage for
-PostgreSQL persistence of delivery status. `src/app/ports/outbox_publisher.py`
+`PostgresIdeaRepository` expose the same delivery-ready query, claim/lease, and
+owner-aware status update contract through `src/app/ports/idea_repository.py`,
+with unit coverage for PostgreSQL row-scoped claim and conditional delivery
+status updates. Durable adapters must reuse public domain validators for
+source-safe payloads and failure reasons rather than duplicating or bypassing
+domain guardrails. `src/app/ports/outbox_publisher.py`
 now owns the outbox publisher port and `src/app/infrastructure/outbox_publisher.py`
 adds a source-safe HTTP broker-publisher adapter foundation that emits bounded
 Lotus event envelopes with trace headers and product-safe failure reasons. It
@@ -531,7 +537,7 @@ delivery evidence exist beyond the bounded outbox proof artifacts.
 `src/app/application/outbox_delivery_readiness.py`
 and `GET /api/v1/outbox-delivery/readiness` now expose a certified internal
 operator diagnostic over aggregate outbox status counts, delivery-ready backlog,
-durable repository posture, broker configuration posture, and certification
+leased and expired-lease posture, durable repository posture, broker configuration posture, and certification
 blockers without exposing event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims. This is not external
 event-publication certification, downstream delivery, or mesh certification.

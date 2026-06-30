@@ -54,6 +54,7 @@ _RUN_OUTBOX_DELIVERY_POLICY = CapabilityPolicy.for_roles(
 
 class OutboxDeliveryStatusCountsResponse(CamelModel):
     pending_count: int = Field(..., alias="pendingCount")
+    leased_count: int = Field(..., alias="leasedCount")
     failed_count: int = Field(..., alias="failedCount")
     published_count: int = Field(..., alias="publishedCount")
     dead_letter_count: int = Field(..., alias="deadLetterCount")
@@ -66,6 +67,7 @@ class OutboxDeliveryStatusCountsResponse(CamelModel):
     ) -> "OutboxDeliveryStatusCountsResponse":
         return cls(
             pendingCount=counts.pending_count,
+            leasedCount=counts.leased_count,
             failedCount=counts.failed_count,
             publishedCount=counts.published_count,
             deadLetterCount=counts.dead_letter_count,
@@ -84,6 +86,7 @@ class OutboxDeliveryReadinessResponse(CamelModel):
         ..., alias="externalBrokerPublisherAdapterPresent"
     )
     delivery_ready_count: int = Field(..., alias="deliveryReadyCount")
+    expired_lease_count: int = Field(..., alias="expiredLeaseCount")
     max_retry_count: int = Field(..., alias="maxRetryCount")
     status_counts: OutboxDeliveryStatusCountsResponse = Field(..., alias="statusCounts")
     source_of_truth: Mapping[str, str] = Field(..., alias="sourceOfTruth")
@@ -107,6 +110,7 @@ class OutboxDeliveryReadinessResponse(CamelModel):
                 snapshot.external_broker_publisher_adapter_present
             ),
             deliveryReadyCount=snapshot.delivery_ready_count,
+            expiredLeaseCount=snapshot.expired_lease_count,
             maxRetryCount=snapshot.max_retry_count,
             statusCounts=OutboxDeliveryStatusCountsResponse.from_domain(snapshot.status_counts),
             sourceOfTruth=dict(snapshot.source_of_truth),
@@ -384,9 +388,11 @@ OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {
                         "externalBrokerConfigured": False,
                         "externalBrokerPublisherAdapterPresent": True,
                         "deliveryReadyCount": 0,
+                        "expiredLeaseCount": 0,
                         "maxRetryCount": 3,
                         "statusCounts": {
                             "pendingCount": 0,
+                            "leasedCount": 0,
                             "failedCount": 0,
                             "publishedCount": 0,
                             "deadLetterCount": 0,

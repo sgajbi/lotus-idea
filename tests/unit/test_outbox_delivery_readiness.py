@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -14,6 +14,7 @@ from app.domain import (
     InMemoryIdeaRepository,
     OutboxEventRecord,
     build_candidate_outbox_event,
+    lease_outbox_event,
     mark_outbox_event_failed,
     mark_outbox_event_published,
 )
@@ -29,6 +30,8 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     monkeypatch.delenv(OUTBOX_BROKER_URL_ENV, raising=False)
     repository = repository_with_events(
         pending_event("idea.candidate.persisted.v1"),
+        leased_event("idea.review.lease_active.v1"),
+        expired_lease_event("idea.review.lease_expired.v1"),
         failed_event("idea.lifecycle.transitioned.v1"),
         published_event("idea.review.decision_recorded.v1"),
         dead_letter_event("idea.feedback.recorded.v1"),
@@ -37,6 +40,7 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     snapshot = build_outbox_delivery_readiness_snapshot(
         repository=repository,
         durable_storage_backed=False,
+        evaluated_at_utc=PUBLISHED_AT,
     )
 
     assert snapshot.repository == "lotus-idea"
@@ -46,13 +50,15 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     assert snapshot.durable_storage_backed is False
     assert snapshot.external_broker_configured is False
     assert snapshot.external_broker_publisher_adapter_present is True
-    assert snapshot.delivery_ready_count == 2
+    assert snapshot.delivery_ready_count == 3
+    assert snapshot.expired_lease_count == 1
     assert snapshot.max_retry_count == DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT
     assert snapshot.status_counts.pending_count == 1
+    assert snapshot.status_counts.leased_count == 2
     assert snapshot.status_counts.failed_count == 1
     assert snapshot.status_counts.published_count == 1
     assert snapshot.status_counts.dead_letter_count == 1
-    assert snapshot.status_counts.total_count == 4
+    assert snapshot.status_counts.total_count == 6
     assert snapshot.configuration_blockers == ("outbox_broker_not_configured",)
     assert "external_broker_runtime_proof_missing" in snapshot.certification_blockers
     assert (
@@ -128,6 +134,24 @@ def published_event(event_type: str) -> OutboxEventRecord:
     return mark_outbox_event_published(
         pending_event(event_type),
         published_at_utc=PUBLISHED_AT,
+    )
+
+
+def leased_event(event_type: str) -> OutboxEventRecord:
+    return lease_outbox_event(
+        pending_event(event_type),
+        lease_owner="worker-1",
+        lease_attempt_id=f"{event_type}:lease",
+        lease_expires_at_utc=PUBLISHED_AT + timedelta(minutes=5),
+    )
+
+
+def expired_lease_event(event_type: str) -> OutboxEventRecord:
+    return lease_outbox_event(
+        pending_event(event_type),
+        lease_owner="worker-2",
+        lease_attempt_id=f"{event_type}:lease",
+        lease_expires_at_utc=PUBLISHED_AT - timedelta(minutes=1),
     )
 
 

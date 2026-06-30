@@ -66,6 +66,11 @@ from app.infrastructure.postgres_codecs import (
     read_json_object,
     read_row_value,
 )
+from tests.unit.postgres_outbox_fake_helpers import (
+    claim_outbox_event_rows,
+    fail_outbox_event_row,
+    publish_outbox_event_row,
+)
 
 
 AS_OF_DATE = datetime(2026, 6, 21, 10, 0, tzinfo=UTC).date()
@@ -79,7 +84,29 @@ class FakePostgresCursor:
 
     def execute(self, query: str, params: Sequence[Any] | None = None) -> None:
         normalized = " ".join(query.lower().split())
+        if normalized.startswith("with selected"):
+            assert params is not None
+            self._rows = claim_outbox_event_rows(self.connection, params)
+            return
+        if normalized.startswith("update idea_outbox_event"):
+            assert params is not None
+            if "set status = %s, published_at_utc = %s" in normalized:
+                self._rows = publish_outbox_event_row(self.connection, params)
+            else:
+                self._rows = fail_outbox_event_row(self.connection, params)
+            return
         if normalized.startswith("select"):
+            if (
+                "from idea_outbox_event" in normalized
+                and "where outbox_event_id = %s" in normalized
+            ):
+                assert params is not None
+                self._rows = [
+                    row
+                    for row in self.connection.rows["idea_outbox_event"]
+                    if row["outbox_event_id"] == params[0]
+                ]
+                return
             self._rows = list(self.connection.rows[_table_from_select(normalized)])
             return
         if normalized.startswith("delete from"):
@@ -350,8 +377,32 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     )
     event = next(iter(PostgresIdeaRepository(connection).snapshot().outbox_events.values()))
 
+    first_claim = repository.claim_outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
+        claimed_at_utc=EVALUATED_AT,
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+    )
+    second_claim = repository.claim_outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        lease_owner="worker-2",
+        lease_attempt_id="attempt-2",
+        claimed_at_utc=EVALUATED_AT,
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+    )
+    wrong_owner = repository.mark_outbox_event_published(
+        event.event_id,
+        lease_owner="worker-2",
+        lease_attempt_id="attempt-2",
+        published_at_utc=EVALUATED_AT + timedelta(minutes=1),
+    )
     failed = repository.mark_outbox_event_failed(
         event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
         failure_reason="publisher_unavailable",
         max_retry_count=2,
     )
@@ -359,19 +410,69 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         limit=10,
         max_retry_count=2,
     )
+    retry_claim = PostgresIdeaRepository(connection).claim_outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-3",
+        claimed_at_utc=EVALUATED_AT + timedelta(minutes=1),
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=6),
+    )
     published = PostgresIdeaRepository(connection).mark_outbox_event_published(
         event.event_id,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-3",
         published_at_utc=EVALUATED_AT + timedelta(minutes=1),
     )
     reloaded = PostgresIdeaRepository(connection).snapshot().outbox_events[event.event_id]
 
+    assert first_claim[0].status is OutboxEventStatus.LEASED
+    assert first_claim[0].lease_owner == "worker-1"
+    assert second_claim == ()
+    assert wrong_owner.decision is OutboxDeliveryDecision.LEASE_LOST
     assert failed.decision is OutboxDeliveryDecision.ACCEPTED
     assert failed.event is not None
     assert failed.event.status is OutboxEventStatus.FAILED
     assert retryable == (failed.event,)
+    assert retry_claim[0].status is OutboxEventStatus.LEASED
     assert published.decision is OutboxDeliveryDecision.ACCEPTED
     assert reloaded.status is OutboxEventStatus.PUBLISHED
     assert reloaded.published_at_utc == EVALUATED_AT + timedelta(minutes=1)
+    assert reloaded.failure_reason is None
+
+
+def test_postgres_repository_rejects_sensitive_outbox_failure_reason() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:outbox-sensitive-failure",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+    repository.claim_outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-sensitive",
+        claimed_at_utc=EVALUATED_AT,
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+    )
+
+    with pytest.raises(ValueError, match="sensitive keys"):
+        repository.mark_outbox_event_failed(
+            event.event_id,
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-sensitive",
+            failure_reason="portfolio_id leaked in downstream error",
+            max_retry_count=2,
+        )
+
+    reloaded = repository.snapshot().outbox_events[event.event_id]
+    assert reloaded.status is OutboxEventStatus.LEASED
     assert reloaded.failure_reason is None
 
 
@@ -746,6 +847,9 @@ def _row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "published_at_utc",
             "failure_reason",
             "retry_count",
+            "lease_owner",
+            "lease_attempt_id",
+            "lease_expires_at_utc",
         ),
         "idea_review_decision": (
             "review_decision_id",
