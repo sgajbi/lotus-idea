@@ -267,7 +267,11 @@ Additional implemented source-freshness hardening:
    `tests/unit/test_lotus_manage_sources.py` locks the issue-ledger learning:
    missing freshness remains unavailable/unproven even when the source reports
    ready supportability or ready data-quality posture.
-3. This closes only the source-authority hardening gap. It does not certify
+3. `make source-observability-contract-gate` now also blocks future
+   `lotus_*_sources.py` adapters from returning `EvidenceFreshness.CURRENT`
+   from readiness, supportability, coverage, health-state, or data-quality
+   predicates.
+4. This closes only the source-authority hardening gap. It does not certify
    live source ingestion, data mesh, Workbench, client publication, downstream
    action, or supported-feature promotion.
 

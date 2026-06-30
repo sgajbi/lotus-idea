@@ -45,6 +45,14 @@ FORBIDDEN_SOURCE_AUTHORITY_TEXT = {
         ),
     },
 }
+FRESHNESS_INFERENCE_TEST_TERMS = (
+    "supportability",
+    "readiness",
+    "data_quality",
+    "health_state",
+    "healthstate",
+    "coverage",
+)
 
 
 def _python_files(source_root: Path) -> list[Path]:
@@ -147,6 +155,18 @@ def _validate_file(path: Path, root: Path) -> list[str]:
                     "because upstream source-ref hashes must be source-authored"
                 )
 
+        if isinstance(node, ast.If) and _is_source_adapter(relative):
+            test_source = ast.get_source_segment(source_text, node.test) or ""
+            normalized_test = test_source.replace(" ", "").lower()
+            if _contains_current_freshness_return(node.body) and any(
+                term in normalized_test for term in FRESHNESS_INFERENCE_TEST_TERMS
+            ):
+                errors.append(
+                    f"{relative_path}:{node.lineno}: source adapters must not infer current "
+                    "freshness from readiness, supportability, coverage, health-state, or "
+                    "data-quality posture"
+                )
+
     for forbidden_text, reason in FORBIDDEN_SOURCE_AUTHORITY_TEXT.get(relative, {}).items():
         line_number = _line_number(source_text, forbidden_text)
         if line_number is not None:
@@ -168,6 +188,34 @@ def _line_number(source_text: str, needle: str) -> int | None:
         if needle in line:
             return line_number
     return None
+
+
+def _is_source_adapter(relative: Path) -> bool:
+    return (
+        len(relative.parts) == 4
+        and relative.parts[:3] == ("src", "app", "infrastructure")
+        and relative.name.startswith("lotus_")
+        and relative.name.endswith("_sources.py")
+    )
+
+
+def _contains_current_freshness_return(nodes: list[ast.stmt]) -> bool:
+    for node in nodes:
+        if isinstance(node, ast.Return) and _is_current_freshness(node.value):
+            return True
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.stmt) and _contains_current_freshness_return([child]):
+                return True
+    return False
+
+
+def _is_current_freshness(node: ast.AST | None) -> bool:
+    return (
+        isinstance(node, ast.Attribute)
+        and node.attr == "CURRENT"
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "EvidenceFreshness"
+    )
 
 
 def main() -> int:

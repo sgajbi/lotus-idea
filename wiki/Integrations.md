@@ -135,7 +135,9 @@ explicit source freshness values into `EvidenceFreshness`, but supportability,
 coverage, health state, and data-quality status must not be upgraded to
 `current` freshness when the source omits freshness metadata. Missing or
 unrecognized freshness remains unavailable/unproven and cannot clear live
-source, data-mesh, Workbench, or supported-feature blockers.
+source, data-mesh, Workbench, or supported-feature blockers. `make
+source-observability-contract-gate` enforces this rule for future source
+adapter changes.
 
 Route-foundation proof is consumed only from owning sibling repositories.
 `lotus-advise` owns source-safe proposal intake route proof for
