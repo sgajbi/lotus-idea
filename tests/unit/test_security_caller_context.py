@@ -1,6 +1,10 @@
 import pytest
 
-from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
+from app.api.caller_headers import (
+    caller_access_scope_filter,
+    caller_context_from_headers,
+    caller_context_from_standard_headers,
+)
 from app.security.caller_context import (
     CallerContext,
     CallerEntitlementScope,
@@ -104,6 +108,19 @@ def test_caller_context_from_headers_parses_entitlement_scope_headers() -> None:
         "PB_SG_ALT_BAL_002",
     )
     assert caller.entitlement_scope.client_ids == ("client-001",)
+
+
+def test_caller_context_from_standard_headers_parses_common_api_headers() -> None:
+    caller = caller_context_from_standard_headers(
+        x_caller_subject="advisor-001",
+        x_caller_roles="advisor",
+        x_caller_capabilities="idea.signal.evaluate",
+    )
+
+    assert caller.subject == "advisor-001"
+    assert caller.roles == frozenset({"advisor"})
+    assert caller.capabilities == frozenset({"idea.signal.evaluate"})
+    assert caller.entitlement_scope.is_empty
 
 
 def test_caller_access_scope_filter_matches_entitlement_headers() -> None:

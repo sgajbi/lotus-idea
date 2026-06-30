@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 
-from fastapi import FastAPI, Header, status
+from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import CallerContextHeaders
 from app.api.signal_models import (
     IdeaCandidateSummaryResponse,
     ReviewAccessScopeRequest,
@@ -151,15 +151,8 @@ class EvaluateLowIncomeSignalResponse(CamelModel):
 
 async def evaluate_low_income_signal(
     request: EvaluateLowIncomeSignalRequest,
-    x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
-    x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
-    x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    caller: CallerContextHeaders,
 ) -> EvaluateLowIncomeSignalResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-    )
     source_authority = source_authority_from_refs(
         (request.cash_movement_ref, request.cashflow_projection_ref)
     )
