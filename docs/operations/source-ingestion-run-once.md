@@ -213,6 +213,9 @@ Core response requirement:
 - The high-cash adapter consumes Core `HoldingsAsOf:v1`
   `totals.source_reported_cash_weight` when
   `totals.source_reported_cash_weight_supportability` is `SUPPORTED`.
+- Core source refs require explicit freshness metadata. Missing or unrecognized
+  freshness is mapped to unavailable/unproven evidence, so source ingestion
+  blocks before persistence instead of treating the source as current.
 - If Core omits the field or reports `BLOCKED_MISSING_DENOMINATOR`,
   `BLOCKED_ZERO_DENOMINATOR`, or `BLOCKED_STALE_DENOMINATOR`, the source
   evaluation remains blocked. `lotus-idea` must not reconstruct cash weight

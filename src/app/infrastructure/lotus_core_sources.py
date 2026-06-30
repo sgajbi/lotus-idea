@@ -591,4 +591,4 @@ def _freshness(payload: dict[str, Any], *, generated_at: datetime) -> EvidenceFr
             return EvidenceFreshness.UNAVAILABLE
         if "current" in normalized:
             return EvidenceFreshness.CURRENT
-    return EvidenceFreshness.CURRENT
+    return EvidenceFreshness.UNAVAILABLE

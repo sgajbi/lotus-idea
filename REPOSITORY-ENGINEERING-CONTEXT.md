@@ -1521,7 +1521,9 @@ logs; fix or document the owned warning source instead.
    without moving maturity-schedule authority or reinvestment advice into
    `lotus-idea`, and consumes Core cashflow products for bounded low-income /
    liquidity-shortfall review without moving cashflow methodology into
-   `lotus-idea`. The Manage adapter consumes source-authored action-register
+   `lotus-idea`. Core source refs treat missing or unrecognized freshness
+   metadata as unavailable/unproven; they must not default to current evidence.
+   The Manage adapter consumes source-authored action-register
    lineage/fingerprint metadata and fails closed when that metadata is absent;
    it does not fabricate Manage `SourceRef.content_hash` values from response
    payloads. The layer also
