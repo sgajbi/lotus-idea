@@ -47,6 +47,12 @@ It returns:
 13. `not_certified` supportability until downstream live contracts and product
    proof exist.
 
+When PostgreSQL is the active durable provider, the three workflow counts use a
+repository-side readiness projection over `idea_conversion_intent`,
+`idea_conversion_outcome`, and `idea_report_evidence_pack_request`. The
+ordinary readiness read does not hydrate candidate snapshots, audit history,
+outbox events, downstream-submission records, or AI explanation lineage.
+
 The submission routes are:
 
 | Route | Purpose | Required capability |

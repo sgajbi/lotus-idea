@@ -54,6 +54,13 @@ class OutboxDeliveryReadinessRepositorySummary:
     delivery_ready_count: int
 
 
+@dataclass(frozen=True)
+class DownstreamRealizationReadinessRepositorySummary:
+    conversion_intent_count: int
+    conversion_outcome_count: int
+    report_evidence_pack_request_count: int
+
+
 class CandidateSnapshotRepository(Protocol):
     def snapshot(self) -> IdeaRepositorySnapshot: ...
 
@@ -82,6 +89,13 @@ class OutboxDeliveryReadinessProjectionRepository(Protocol):
         max_retry_count: int,
         evaluated_at_utc: datetime,
     ) -> OutboxDeliveryReadinessRepositorySummary: ...
+
+
+@runtime_checkable
+class DownstreamRealizationReadinessProjectionRepository(Protocol):
+    def downstream_realization_readiness_summary(
+        self,
+    ) -> DownstreamRealizationReadinessRepositorySummary: ...
 
 
 class CandidatePersistenceRepository(Protocol):

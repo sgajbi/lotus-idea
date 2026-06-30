@@ -114,6 +114,19 @@ class FakePostgresCursor:
             assert params is not None
             self._rows = outbox_readiness_summary_row(self.connection, params)
             return
+        if normalized.startswith("/* lotus-idea downstream-realization-readiness-summary */"):
+            self._rows = [
+                {
+                    "conversion_intent_count": len(self.connection.rows["idea_conversion_intent"]),
+                    "conversion_outcome_count": len(
+                        self.connection.rows["idea_conversion_outcome"]
+                    ),
+                    "report_evidence_pack_request_count": len(
+                        self.connection.rows["idea_report_evidence_pack_request"]
+                    ),
+                }
+            ]
+            return
         if normalized.startswith("/* lotus-idea candidate-detail"):
             assert params is not None
             self._rows = candidate_detail_rows(self.connection, normalized, params)

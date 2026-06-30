@@ -742,6 +742,11 @@ plus Advise, Manage, Report, Render, and Archive blockers, source-safe
 downstream application-orchestration and adapter-foundation presence, and planned downstream
 contract-readiness records for Advise, Manage, and Report handoff seams from
 `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`.
+When the durable provider is PostgreSQL, those workflow counts come from the
+`DownstreamRealizationReadinessProjectionRepository` path over
+`idea_conversion_intent`, `idea_conversion_outcome`, and
+`idea_report_evidence_pack_request`, so ordinary readiness reads do not hydrate
+candidate, audit, outbox, downstream-submission, or AI-lineage state.
 The Report handoff seam now cites the report-owned planned intake contract at
 `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
 which clears only the prior missing-contract blocker. When the generated default
@@ -1040,7 +1045,10 @@ evidence-pack materialization request handoff envelopes. The adapters preserve
 target source authority, omit source routes and raw downstream responses, and
 map failures to bounded product-safe reasons. The operator readiness diagnostic
 reports adapter-foundation presence, current conversion intent/outcome/report
-evidence request counts, and explicit downstream blockers. This is not yet a
+evidence request counts, and explicit downstream blockers. Durable PostgreSQL
+providers answer those counts with a downstream-readiness projection over only
+the conversion intent, conversion outcome, and report evidence-pack request
+tables. This is not yet a
 supported conversion product: PostgreSQL-backed internal conversion
 intent/outcome recording proof exists only inside the opt-in runtime proof;
 there is no certified live Advise/Manage/Report route contract, downstream
