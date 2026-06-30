@@ -17,6 +17,7 @@ from app.domain.downstream_submission import (
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
+    GovernedConversionOutcome,
     GovernedConversionIntent,
 )
 from app.domain.ideas import (
@@ -27,6 +28,7 @@ from app.domain.ideas import (
     SourceRef,
 )
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
+from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.idempotency import IdempotencyRecord
 from app.domain.outbox_delivery_state import OutboxDeliveryResult
 from app.domain.persistence import (
@@ -42,12 +44,16 @@ from app.domain.persistence import (
     ReviewPersistenceResult,
 )
 from app.domain.report_evidence import (
+    GovernedReportEvidencePack,
     ReportEvidencePackResult,
 )
 from app.domain.review_governance import (
     FeedbackResult,
+    GovernedFeedbackEvent,
+    GovernedReviewDecision,
     ReviewActionResult,
 )
+from app.infrastructure.postgres_candidate_writes import update_postgres_candidate_record
 from app.infrastructure.postgres_codecs import (
     ai_explanation_lineage_from_json,
     ai_explanation_lineage_to_json,
@@ -72,6 +78,7 @@ from app.infrastructure.postgres_outbox_delivery import (
     mark_outbox_event_published as mark_postgres_outbox_event_published,
     outbox_event_from_row,
 )
+from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
 
 
 class PostgresCursor(Protocol):
@@ -439,9 +446,16 @@ class PostgresIdeaRepository:
 
     def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
         try:
-            repository = InMemoryIdeaRepository(self.snapshot())
+            before = self.snapshot()
+            repository = InMemoryIdeaRepository(before)
             result = operation(repository)
-            self.replace_snapshot(repository.snapshot())
+            with self._connection.cursor() as cursor:
+                apply_postgres_snapshot_delta(
+                    self,
+                    cursor,
+                    before=before,
+                    after=repository.snapshot(),
+                )
             self._connection.commit()
             return result
         except Exception:
@@ -790,6 +804,13 @@ class PostgresIdeaRepository:
             ),
         )
 
+    def _update_candidate_record(
+        self,
+        cursor: PostgresCursor,
+        record: CandidatePersistenceRecord,
+    ) -> None:
+        update_postgres_candidate_record(cursor, record)
+
     def _insert_idempotency_record(
         self,
         cursor: PostgresCursor,
@@ -863,22 +884,31 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for index, entry in enumerate(record.lifecycle_history, start=1):
-            cursor.execute(
-                """
-                INSERT INTO idea_lifecycle_history (
-                    lifecycle_history_id, candidate_id, source_status, target_status,
-                    actor_subject, changed_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    f"{candidate_id}:lifecycle:{index}",
-                    candidate_id,
-                    entry.source_status.value,
-                    entry.target_status.value,
-                    entry.actor_subject,
-                    entry.changed_at_utc,
-                ),
-            )
+            self._insert_lifecycle_history_entry(cursor, candidate_id, entry, index)
+
+    def _insert_lifecycle_history_entry(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        entry: LifecycleHistoryEntry,
+        index: int,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_lifecycle_history (
+                lifecycle_history_id, candidate_id, source_status, target_status,
+                actor_subject, changed_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                f"{candidate_id}:lifecycle:{index}",
+                candidate_id,
+                entry.source_status.value,
+                entry.target_status.value,
+                entry.actor_subject,
+                entry.changed_at_utc,
+            ),
+        )
 
     def _insert_audit_events(
         self,
@@ -887,23 +917,32 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for index, event in enumerate(record.audit_events, start=1):
-            cursor.execute(
-                """
-                INSERT INTO idea_audit_event (
-                    audit_event_id, candidate_id, event_type, actor_subject, outcome,
-                    attributes_json, occurred_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    f"{candidate_id}:audit:{index}",
-                    candidate_id,
-                    event.event_type,
-                    event.actor_subject,
-                    event.outcome,
-                    Jsonb(dict(event.attributes)),
-                    event.occurred_at_utc,
-                ),
-            )
+            self._insert_audit_event(cursor, candidate_id, event, index)
+
+    def _insert_audit_event(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        event: AuditEvent,
+        index: int,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_audit_event (
+                audit_event_id, candidate_id, event_type, actor_subject, outcome,
+                attributes_json, occurred_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                f"{candidate_id}:audit:{index}",
+                candidate_id,
+                event.event_type,
+                event.actor_subject,
+                event.outcome,
+                Jsonb(dict(event.attributes)),
+                event.occurred_at_utc,
+            ),
+        )
 
     def _insert_review_decisions(
         self,
@@ -912,22 +951,30 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for decision in record.review_decisions:
-            cursor.execute(
-                """
-                INSERT INTO idea_review_decision (
-                    review_decision_id, candidate_id, action, actor_subject,
-                    decision_json, decided_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    decision.review_id,
-                    candidate_id,
-                    decision.action.value,
-                    decision.actor_subject,
-                    Jsonb(review_decision_to_json(decision)),
-                    decision.decided_at_utc,
-                ),
-            )
+            self._insert_review_decision(cursor, candidate_id, decision)
+
+    def _insert_review_decision(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        decision: GovernedReviewDecision,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_review_decision (
+                review_decision_id, candidate_id, action, actor_subject,
+                decision_json, decided_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                decision.review_id,
+                candidate_id,
+                decision.action.value,
+                decision.actor_subject,
+                Jsonb(review_decision_to_json(decision)),
+                decision.decided_at_utc,
+            ),
+        )
 
     def _insert_feedback_events(
         self,
@@ -936,21 +983,29 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for feedback in record.feedback_events:
-            cursor.execute(
-                """
-                INSERT INTO idea_feedback_event (
-                    feedback_event_id, candidate_id, actor_subject, feedback_json,
-                    recorded_at_utc
-                ) VALUES (%s, %s, %s, %s, %s)
-                """,
-                (
-                    feedback.feedback.feedback_id,
-                    candidate_id,
-                    feedback.actor_subject,
-                    Jsonb(feedback_event_to_json(feedback)),
-                    feedback.feedback.recorded_at_utc,
-                ),
-            )
+            self._insert_feedback_event(cursor, candidate_id, feedback)
+
+    def _insert_feedback_event(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        feedback: GovernedFeedbackEvent,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_feedback_event (
+                feedback_event_id, candidate_id, actor_subject, feedback_json,
+                recorded_at_utc
+            ) VALUES (%s, %s, %s, %s, %s)
+            """,
+            (
+                feedback.feedback.feedback_id,
+                candidate_id,
+                feedback.actor_subject,
+                Jsonb(feedback_event_to_json(feedback)),
+                feedback.feedback.recorded_at_utc,
+            ),
+        )
 
     def _insert_conversion_intents(
         self,
@@ -959,22 +1014,30 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for intent in record.conversion_intents:
-            cursor.execute(
-                """
-                INSERT INTO idea_conversion_intent (
-                    conversion_intent_id, candidate_id, target, actor_subject,
-                    intent_json, requested_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    intent.intent.conversion_intent_id,
-                    candidate_id,
-                    intent.intent.target.value,
-                    intent.actor_subject,
-                    Jsonb(conversion_intent_to_json(intent)),
-                    intent.intent.requested_at_utc,
-                ),
-            )
+            self._insert_conversion_intent(cursor, candidate_id, intent)
+
+    def _insert_conversion_intent(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        intent: GovernedConversionIntent,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_conversion_intent (
+                conversion_intent_id, candidate_id, target, actor_subject,
+                intent_json, requested_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                intent.intent.conversion_intent_id,
+                candidate_id,
+                intent.intent.target.value,
+                intent.actor_subject,
+                Jsonb(conversion_intent_to_json(intent)),
+                intent.intent.requested_at_utc,
+            ),
+        )
 
     def _insert_conversion_outcomes(
         self,
@@ -982,22 +1045,29 @@ class PostgresIdeaRepository:
         record: CandidatePersistenceRecord,
     ) -> None:
         for outcome in record.conversion_outcomes:
-            cursor.execute(
-                """
-                INSERT INTO idea_conversion_outcome (
-                    conversion_outcome_id, conversion_intent_id, source_system,
-                    status, outcome_json, recorded_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    outcome.outcome.conversion_outcome_id,
-                    outcome.conversion_intent_id,
-                    outcome.source_system.value,
-                    outcome.outcome.status.value,
-                    Jsonb(conversion_outcome_to_json(outcome)),
-                    outcome.outcome.recorded_at_utc,
-                ),
-            )
+            self._insert_conversion_outcome(cursor, outcome)
+
+    def _insert_conversion_outcome(
+        self,
+        cursor: PostgresCursor,
+        outcome: GovernedConversionOutcome,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_conversion_outcome (
+                conversion_outcome_id, conversion_intent_id, source_system,
+                status, outcome_json, recorded_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (
+                outcome.outcome.conversion_outcome_id,
+                outcome.conversion_intent_id,
+                outcome.source_system.value,
+                outcome.outcome.status.value,
+                Jsonb(conversion_outcome_to_json(outcome)),
+                outcome.outcome.recorded_at_utc,
+            ),
+        )
 
     def _insert_report_evidence_packs(
         self,
@@ -1006,23 +1076,31 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for evidence_pack in record.report_evidence_packs:
-            cursor.execute(
-                """
-                INSERT INTO idea_report_evidence_pack_request (
-                    report_evidence_pack_id, candidate_id, conversion_intent_id,
-                    purpose, evidence_hash, evidence_pack_json, requested_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    evidence_pack.report_evidence_pack_id,
-                    candidate_id,
-                    evidence_pack.conversion_intent_id,
-                    evidence_pack.purpose.value,
-                    evidence_pack.evidence_content_hash,
-                    Jsonb(report_evidence_pack_to_json(evidence_pack)),
-                    evidence_pack.requested_at_utc,
-                ),
-            )
+            self._insert_report_evidence_pack(cursor, candidate_id, evidence_pack)
+
+    def _insert_report_evidence_pack(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        evidence_pack: GovernedReportEvidencePack,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_report_evidence_pack_request (
+                report_evidence_pack_id, candidate_id, conversion_intent_id,
+                purpose, evidence_hash, evidence_pack_json, requested_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                evidence_pack.report_evidence_pack_id,
+                candidate_id,
+                evidence_pack.conversion_intent_id,
+                evidence_pack.purpose.value,
+                evidence_pack.evidence_content_hash,
+                Jsonb(report_evidence_pack_to_json(evidence_pack)),
+                evidence_pack.requested_at_utc,
+            ),
+        )
 
     def _insert_ai_explanation_lineage_records(
         self,
@@ -1031,33 +1109,41 @@ class PostgresIdeaRepository:
     ) -> None:
         candidate_id = record.candidate.candidate_id
         for lineage_record in record.ai_explanation_lineage_records:
-            cursor.execute(
-                """
-                INSERT INTO idea_ai_explanation_lineage (
-                    ai_explanation_request_id, candidate_id, evidence_packet_id,
-                    evidence_content_hash, workflow_pack_id, workflow_pack_version,
-                    purpose, posture, verifier_outcome, fallback_used, fallback_reason,
-                    lineage_hash, lineage_json, requested_at_utc, evaluated_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                (
-                    lineage_record.request_id,
-                    candidate_id,
-                    lineage_record.evidence_packet_id,
-                    lineage_record.evidence_content_hash,
-                    lineage_record.workflow_pack_id,
-                    lineage_record.workflow_pack_version,
-                    lineage_record.purpose,
-                    lineage_record.posture,
-                    lineage_record.verifier_outcome,
-                    lineage_record.fallback_used,
-                    lineage_record.fallback_reason,
-                    lineage_record.lineage_hash,
-                    Jsonb(ai_explanation_lineage_to_json(lineage_record)),
-                    lineage_record.requested_at_utc,
-                    lineage_record.evaluated_at_utc,
-                ),
-            )
+            self._insert_ai_explanation_lineage_record(cursor, candidate_id, lineage_record)
+
+    def _insert_ai_explanation_lineage_record(
+        self,
+        cursor: PostgresCursor,
+        candidate_id: str,
+        lineage_record: AIExplanationLineageRecord,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_ai_explanation_lineage (
+                ai_explanation_request_id, candidate_id, evidence_packet_id,
+                evidence_content_hash, workflow_pack_id, workflow_pack_version,
+                purpose, posture, verifier_outcome, fallback_used, fallback_reason,
+                lineage_hash, lineage_json, requested_at_utc, evaluated_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                lineage_record.request_id,
+                candidate_id,
+                lineage_record.evidence_packet_id,
+                lineage_record.evidence_content_hash,
+                lineage_record.workflow_pack_id,
+                lineage_record.workflow_pack_version,
+                lineage_record.purpose,
+                lineage_record.posture,
+                lineage_record.verifier_outcome,
+                lineage_record.fallback_used,
+                lineage_record.fallback_reason,
+                lineage_record.lineage_hash,
+                Jsonb(ai_explanation_lineage_to_json(lineage_record)),
+                lineage_record.requested_at_utc,
+                lineage_record.evaluated_at_utc,
+            ),
+        )
 
     def _insert_outbox_event(
         self,

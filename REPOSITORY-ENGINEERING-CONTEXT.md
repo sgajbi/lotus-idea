@@ -575,7 +575,12 @@ dry-running apply and rollback plans in CI, and `make migrate` /
 PostgreSQL repository adapter over the governed repository port surface. It
 round-trips candidate, idempotency, lifecycle, audit, outbox, review, feedback,
 conversion, and report evidence-pack state through typed tables and JSONB
-snapshots, and rolls back on database flush failure.
+snapshots, applies mutating workflow changes through row-delta inserts/updates
+instead of whole-snapshot table replacement, and rolls back on database flush
+failure. `replace_snapshot(...)` remains a repository-state utility, not the
+normal mutation path; new PostgreSQL write paths must preserve row-scoped
+transaction boundaries and prove independent mutations cannot erase unrelated
+rows.
 `src/app/infrastructure/postgres_codecs.py` isolates PostgreSQL JSON
 serialization/deserialization helpers so adapter growth preserves the
 maintainability gate instead of normalizing an oversized infrastructure module.
