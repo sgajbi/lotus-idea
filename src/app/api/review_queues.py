@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, TypedDict
 
 from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
+from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -36,18 +35,6 @@ from app.security.caller_context import (
     require_capability,
     require_role_and_capability,
 )
-
-
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
 
 _READ_ADVISOR_QUEUE_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.review.queue.read",

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from enum import Enum
-from typing import Any, Protocol, TypedDict
+from typing import Any, Protocol
 
 from fastapi import status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 
+from app.api.route_metadata import RouteMetadata as RouteMetadata
 from app.domain import SignalEvaluationResult
 from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome
@@ -23,18 +22,7 @@ class _SourceRefLike(Protocol):
     source_system: Any
 
 
-class SignalRouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
-
-RouteMetadata = SignalRouteMetadata
+SignalRouteMetadata = RouteMetadata
 
 
 SIGNAL_EVALUATION_POLICY = CapabilityPolicy.for_roles(
