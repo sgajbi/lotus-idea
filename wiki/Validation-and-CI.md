@@ -547,7 +547,10 @@ The source-observability contract gate blocks ad hoc application logging in
 `src/app`. Feature code must use bounded operation events or the central
 request diagnostic helper rather than raw `print()`, direct Python logging, or
 low-level `log_event` calls. Request diagnostics log route templates rather
-than raw URL paths.
+than raw URL paths. It also blocks source adapters from inferring current
+freshness from readiness, supportability, coverage, health-state,
+data-quality, or `ready` predicates; current freshness must be explicitly
+source-authored as freshness metadata.
 
 The API route metadata gate blocks local `RouteMetadata` and
 `SignalRouteMetadata` clones in route modules so route registration metadata

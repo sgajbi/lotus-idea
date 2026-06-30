@@ -305,3 +305,20 @@ signal without widening lotus-idea's product boundary:
    certify service-to-service authentication, platform entitlement proof, live
    threat monitoring, production incident response, or supported-feature
    promotion.
+
+This slice also hardens Manage source-ref freshness vocabulary after issue
+review showed a repeatable source-authority drift pattern:
+
+1. `lotus_manage_sources.py` no longer maps `ready` freshness values to
+   `EvidenceFreshness.CURRENT`; only explicit `current` and `same_day`
+   freshness metadata certify current source refs.
+2. Manage source-ref tests now cover `freshness`, `freshnessBucket`, and
+   `freshness_bucket` values for `ready`, plus explicit current/same-day,
+   stale, expired, missing, unavailable, and unrecognized vocabulary.
+3. `source_observability_contract_gate.py` rejects future source adapters that
+   infer current freshness from `ready` or other readiness/supportability,
+   coverage, health-state, or data-quality predicates.
+4. This is source-authority and data-mesh contract hardening only. It does not
+   move Manage supportability ownership into `lotus-idea`, certify live source
+   ingestion, promote Workbench support, or widen downstream execution
+   authority.

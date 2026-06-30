@@ -48,6 +48,7 @@ FORBIDDEN_SOURCE_AUTHORITY_TEXT = {
 FRESHNESS_INFERENCE_TEST_TERMS = (
     "supportability",
     "readiness",
+    "ready",
     "data_quality",
     "health_state",
     "healthstate",

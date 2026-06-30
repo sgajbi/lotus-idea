@@ -221,7 +221,10 @@ instead of becoming another unreviewed shell one-liner.
 `make source-observability-contract-gate` blocks ad hoc application logging in `src/app`. Feature
 code must use bounded operation-event emitters or the central request diagnostic helper instead of
 raw `print()`, direct Python logging, or low-level `log_event` calls. Request diagnostics log route
-templates rather than raw URL paths, keeping operator evidence product-safe.
+templates rather than raw URL paths, keeping operator evidence product-safe. The same gate blocks
+source adapters from mapping readiness, supportability, coverage, health-state, data-quality, or
+`ready` predicates to `EvidenceFreshness.CURRENT`; freshness must come from explicit
+source-authored freshness metadata such as `current` or `same_day`.
 
 `make api-route-metadata-gate` blocks local `RouteMetadata` and `SignalRouteMetadata`
 `TypedDict` clones in `src/app/api`. Route modules must use

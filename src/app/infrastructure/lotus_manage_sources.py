@@ -203,7 +203,7 @@ def _freshness_from_ref_payload(payload: dict[str, Any]) -> EvidenceFreshness:
         value = payload.get(key)
         if isinstance(value, str):
             normalized = value.strip().lower()
-            if normalized in {"current", "same_day", "ready"}:
+            if normalized in {"current", "same_day"}:
                 return EvidenceFreshness.CURRENT
             if normalized == "stale":
                 return EvidenceFreshness.STALE
