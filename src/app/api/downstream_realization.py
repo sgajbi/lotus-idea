@@ -45,6 +45,8 @@ _DOWNSTREAM_REALIZATION_SUBMIT_CAPABILITY = "idea.downstream-realization.submit"
 _SUBMISSION_ERROR_CODES_BY_STATUS = {
     DownstreamRealizationStatus.NOT_FOUND: "downstream_realization_resource_not_found",
     DownstreamRealizationStatus.UNSUPPORTED_TARGET: "unsupported_downstream_realization_target",
+    DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT: "idempotency_conflict",
+    DownstreamRealizationStatus.NOT_CONFIGURED: "downstream_realization_not_configured",
 }
 
 
@@ -53,6 +55,7 @@ class DownstreamSubmissionResultResponse(CamelModel):
     source_authority: SourceSystem | None = Field(default=None, alias="sourceAuthority")
     target: ConversionTarget | None = None
     downstream_failure_reason: str | None = Field(default=None, alias="downstreamFailureReason")
+    idempotency_replayed: bool = Field(False, alias="idempotencyReplayed")
     records_downstream_outcome: bool = Field(False, alias="recordsDownstreamOutcome")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
@@ -67,6 +70,7 @@ class DownstreamSubmissionResultResponse(CamelModel):
             sourceAuthority=result.source_authority,
             target=result.target,
             downstreamFailureReason=result.downstream_failure_reason,
+            idempotencyReplayed=result.idempotency_replayed,
             recordsDownstreamOutcome=result.records_downstream_outcome,
             grantsDownstreamAuthority=result.grants_downstream_authority,
             supportedFeaturePromoted=result.supported_feature_promoted,
@@ -98,7 +102,6 @@ async def submit_conversion_intent_downstream(
     try:
         _require_submission_caller(caller)
         validate_idempotency_key(idempotency_key)
-        clients = get_conversion_realization_clients()
     except PermissionDeniedError:
         _emit_downstream_submission_event(
             OperationOutcome.PERMISSION_DENIED,
@@ -111,15 +114,16 @@ async def submit_conversion_intent_downstream(
             "invalid_request",
         )
         return _invalid_request()
-    except DownstreamRealizationClientsUnavailableError:
-        _emit_downstream_submission_event(
-            OperationOutcome.BLOCKED,
-            "downstream_realization_not_configured",
-        )
-        return _downstream_not_configured()
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    try:
+        clients = get_conversion_realization_clients()
+        advise_client = clients.advise_client
+        manage_client = clients.manage_client
+    except DownstreamRealizationClientsUnavailableError:
+        advise_client = None
+        manage_client = None
     result = submit_conversion_intent_to_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id=conversion_intent_id,
@@ -128,8 +132,8 @@ async def submit_conversion_intent_downstream(
             trace_id=_request_trace_id(request),
         ),
         repository=repository,
-        advise_client=clients.advise_client,
-        manage_client=clients.manage_client,
+        advise_client=advise_client,
+        manage_client=manage_client,
     )
     problem = _problem_for_submission_result(result)
     if problem is not None:
@@ -167,7 +171,6 @@ async def submit_report_evidence_pack_downstream(
     try:
         _require_submission_caller(caller)
         validate_idempotency_key(idempotency_key)
-        report_client = get_report_evidence_pack_realization_client()
     except PermissionDeniedError:
         _emit_downstream_submission_event(
             OperationOutcome.PERMISSION_DENIED,
@@ -180,15 +183,13 @@ async def submit_report_evidence_pack_downstream(
             "invalid_request",
         )
         return _invalid_request()
-    except DownstreamRealizationClientsUnavailableError:
-        _emit_downstream_submission_event(
-            OperationOutcome.BLOCKED,
-            "downstream_realization_not_configured",
-        )
-        return _downstream_not_configured()
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    try:
+        report_client = get_report_evidence_pack_realization_client()
+    except DownstreamRealizationClientsUnavailableError:
+        report_client = None
     result = submit_report_evidence_pack_to_downstream(
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id=report_evidence_pack_id,
@@ -254,6 +255,18 @@ def _problem_for_submission_result(
                 "downstream realization route."
             ),
         )
+    if result.status is DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT:
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="idempotency_conflict",
+            title="Idempotency conflict",
+            detail=(
+                "The supplied Idempotency-Key was already used for a different "
+                "downstream realization submission target."
+            ),
+        )
+    if result.status is DownstreamRealizationStatus.NOT_CONFIGURED:
+        return _downstream_not_configured()
     return None
 
 
@@ -296,6 +309,10 @@ def _operation_outcome_from_submission_status(
         return OperationOutcome.BLOCKED
     if submission_status is DownstreamRealizationStatus.NOT_FOUND:
         return OperationOutcome.NOT_FOUND
+    if submission_status is DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT:
+        return OperationOutcome.CONFLICT
+    if submission_status is DownstreamRealizationStatus.NOT_CONFIGURED:
+        return OperationOutcome.BLOCKED
     return OperationOutcome.INVALID_STATE
 
 
@@ -350,6 +367,7 @@ CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
                             "sourceAuthority": "lotus-advise",
                             "target": "advise_proposal",
                             "downstreamFailureReason": None,
+                            "idempotencyReplayed": False,
                             "recordsDownstreamOutcome": False,
                             "grantsDownstreamAuthority": False,
                             "supportedFeaturePromoted": False,
@@ -418,6 +436,7 @@ REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
                             "sourceAuthority": "lotus-report",
                             "target": "report_evidence",
                             "downstreamFailureReason": None,
+                            "idempotencyReplayed": False,
                             "recordsDownstreamOutcome": False,
                             "grantsDownstreamAuthority": False,
                             "supportedFeaturePromoted": False,

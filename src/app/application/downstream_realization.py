@@ -1,25 +1,32 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from enum import StrEnum
 
 from app.domain import (
     ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionRecord,
+    DownstreamSubmissionResourceType,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     SourceSystem,
 )
+from app.domain.idempotency import payload_fingerprint
 from app.ports.downstream_realization import (
     AdviseProposalRealizationClient,
     ManageActionRealizationClient,
     ReportEvidencePackMaterializationClient,
 )
-from app.ports.idea_repository import CandidateSnapshotRepository
+from app.ports.idea_repository import DownstreamSubmissionRepository
 
 
 class DownstreamRealizationStatus(StrEnum):
     ACCEPTED_BY_DOWNSTREAM = "accepted_by_downstream"
     REJECTED_BY_DOWNSTREAM = "rejected_by_downstream"
+    NOT_CONFIGURED = "not_configured"
+    IDEMPOTENCY_CONFLICT = "idempotency_conflict"
     NOT_FOUND = "not_found"
     UNSUPPORTED_TARGET = "unsupported_target"
 
@@ -30,10 +37,13 @@ class RealizeConversionIntentCommand:
     idempotency_key: str
     correlation_id: str | None = None
     trace_id: str | None = None
+    submitted_at_utc: datetime | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
         _require_text(self.idempotency_key, "idempotency_key")
+        if self.submitted_at_utc is not None:
+            _require_aware_utc(self.submitted_at_utc, "submitted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -42,10 +52,13 @@ class RealizeReportEvidencePackCommand:
     idempotency_key: str
     correlation_id: str | None = None
     trace_id: str | None = None
+    submitted_at_utc: datetime | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.report_evidence_pack_id, "report_evidence_pack_id")
         _require_text(self.idempotency_key, "idempotency_key")
+        if self.submitted_at_utc is not None:
+            _require_aware_utc(self.submitted_at_utc, "submitted_at_utc")
 
 
 @dataclass(frozen=True)
@@ -54,6 +67,7 @@ class DownstreamRealizationSubmissionResult:
     source_authority: SourceSystem | None
     target: ConversionTarget | None
     downstream_failure_reason: str | None = None
+    idempotency_replayed: bool = False
     records_downstream_outcome: bool = False
     grants_downstream_authority: bool = False
     supported_feature_promoted: bool = False
@@ -62,9 +76,9 @@ class DownstreamRealizationSubmissionResult:
 def submit_conversion_intent_to_downstream(
     command: RealizeConversionIntentCommand,
     *,
-    repository: CandidateSnapshotRepository,
-    advise_client: AdviseProposalRealizationClient,
-    manage_client: ManageActionRealizationClient,
+    repository: DownstreamSubmissionRepository,
+    advise_client: AdviseProposalRealizationClient | None,
+    manage_client: ManageActionRealizationClient | None,
 ) -> DownstreamRealizationSubmissionResult:
     conversion_intent = _find_conversion_intent(
         command.conversion_intent_id,
@@ -77,7 +91,33 @@ def submit_conversion_intent_to_downstream(
             target=None,
         )
 
+    request_fingerprint = _submission_fingerprint(
+        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        resource_id=command.conversion_intent_id,
+        target=conversion_intent.intent.target,
+        source_authority=conversion_intent.target_source_authority,
+    )
+    idempotent = _idempotent_submission_result(
+        repository,
+        idempotency_key=command.idempotency_key,
+        request_fingerprint=request_fingerprint,
+    )
+    if idempotent is not None:
+        return idempotent
+
     if conversion_intent.intent.target is ConversionTarget.ADVISE_PROPOSAL:
+        if advise_client is None:
+            return _record_submission_result(
+                command,
+                repository=repository,
+                resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+                resource_id=command.conversion_intent_id,
+                source_authority=conversion_intent.target_source_authority,
+                target=conversion_intent.intent.target,
+                status=DownstreamRealizationStatus.NOT_CONFIGURED,
+                request_fingerprint=request_fingerprint,
+                failure_reason="downstream_realization_not_configured",
+            )
         outcome = advise_client.submit_proposal_intent(
             conversion_intent,
             correlation_id=command.correlation_id,
@@ -85,6 +125,18 @@ def submit_conversion_intent_to_downstream(
             idempotency_key=command.idempotency_key,
         )
     elif conversion_intent.intent.target is ConversionTarget.MANAGE_REVIEW:
+        if manage_client is None:
+            return _record_submission_result(
+                command,
+                repository=repository,
+                resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+                resource_id=command.conversion_intent_id,
+                source_authority=conversion_intent.target_source_authority,
+                target=conversion_intent.intent.target,
+                status=DownstreamRealizationStatus.NOT_CONFIGURED,
+                request_fingerprint=request_fingerprint,
+                failure_reason="downstream_realization_not_configured",
+            )
         outcome = manage_client.submit_action_intent(
             conversion_intent,
             correlation_id=command.correlation_id,
@@ -104,14 +156,22 @@ def submit_conversion_intent_to_downstream(
         source_authority=conversion_intent.target_source_authority,
         target=conversion_intent.intent.target,
         failure_reason=outcome.failure_reason,
+        idempotency_replayed=False,
+        record_with=(
+            command,
+            repository,
+            DownstreamSubmissionResourceType.CONVERSION_INTENT,
+            command.conversion_intent_id,
+            request_fingerprint,
+        ),
     )
 
 
 def submit_report_evidence_pack_to_downstream(
     command: RealizeReportEvidencePackCommand,
     *,
-    repository: CandidateSnapshotRepository,
-    report_client: ReportEvidencePackMaterializationClient,
+    repository: DownstreamSubmissionRepository,
+    report_client: ReportEvidencePackMaterializationClient | None,
 ) -> DownstreamRealizationSubmissionResult:
     evidence_pack = _find_report_evidence_pack(
         command.report_evidence_pack_id,
@@ -122,6 +182,33 @@ def submit_report_evidence_pack_to_downstream(
             status=DownstreamRealizationStatus.NOT_FOUND,
             source_authority=None,
             target=None,
+        )
+
+    request_fingerprint = _submission_fingerprint(
+        resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+        resource_id=command.report_evidence_pack_id,
+        target=ConversionTarget.REPORT_EVIDENCE,
+        source_authority=evidence_pack.report_source_authority,
+    )
+    idempotent = _idempotent_submission_result(
+        repository,
+        idempotency_key=command.idempotency_key,
+        request_fingerprint=request_fingerprint,
+    )
+    if idempotent is not None:
+        return idempotent
+
+    if report_client is None:
+        return _record_submission_result(
+            command,
+            repository=repository,
+            resource_type=DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+            resource_id=command.report_evidence_pack_id,
+            source_authority=evidence_pack.report_source_authority,
+            target=ConversionTarget.REPORT_EVIDENCE,
+            status=DownstreamRealizationStatus.NOT_CONFIGURED,
+            request_fingerprint=request_fingerprint,
+            failure_reason="downstream_realization_not_configured",
         )
 
     outcome = report_client.submit_report_evidence_pack_request(
@@ -135,6 +222,14 @@ def submit_report_evidence_pack_to_downstream(
         source_authority=evidence_pack.report_source_authority,
         target=ConversionTarget.REPORT_EVIDENCE,
         failure_reason=outcome.failure_reason,
+        idempotency_replayed=False,
+        record_with=(
+            command,
+            repository,
+            DownstreamSubmissionResourceType.REPORT_EVIDENCE_PACK,
+            command.report_evidence_pack_id,
+            request_fingerprint,
+        ),
     )
 
 
@@ -144,8 +239,17 @@ def _submission_result(
     source_authority: SourceSystem,
     target: ConversionTarget,
     failure_reason: str | None,
+    idempotency_replayed: bool,
+    record_with: tuple[
+        RealizeConversionIntentCommand | RealizeReportEvidencePackCommand,
+        DownstreamSubmissionRepository,
+        DownstreamSubmissionResourceType,
+        str,
+        str,
+    ]
+    | None = None,
 ) -> DownstreamRealizationSubmissionResult:
-    return DownstreamRealizationSubmissionResult(
+    result = DownstreamRealizationSubmissionResult(
         status=(
             DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
             if accepted
@@ -154,13 +258,130 @@ def _submission_result(
         source_authority=source_authority,
         target=target,
         downstream_failure_reason=failure_reason,
+        idempotency_replayed=idempotency_replayed,
+    )
+    if record_with is not None:
+        command, repository, resource_type, resource_id, request_fingerprint = record_with
+        _record_submission(
+            command,
+            repository=repository,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            source_authority=source_authority,
+            target=target,
+            status=result.status,
+            request_fingerprint=request_fingerprint,
+            failure_reason=failure_reason,
+        )
+    return result
+
+
+def _record_submission_result(
+    command: RealizeConversionIntentCommand | RealizeReportEvidencePackCommand,
+    *,
+    repository: DownstreamSubmissionRepository,
+    resource_type: DownstreamSubmissionResourceType,
+    resource_id: str,
+    source_authority: SourceSystem,
+    target: ConversionTarget,
+    status: DownstreamRealizationStatus,
+    request_fingerprint: str,
+    failure_reason: str | None,
+) -> DownstreamRealizationSubmissionResult:
+    _record_submission(
+        command,
+        repository=repository,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        source_authority=source_authority,
+        target=target,
+        status=status,
+        request_fingerprint=request_fingerprint,
+        failure_reason=failure_reason,
+    )
+    return DownstreamRealizationSubmissionResult(
+        status=status,
+        source_authority=source_authority,
+        target=target,
+        downstream_failure_reason=failure_reason,
+    )
+
+
+def _record_submission(
+    command: RealizeConversionIntentCommand | RealizeReportEvidencePackCommand,
+    *,
+    repository: DownstreamSubmissionRepository,
+    resource_type: DownstreamSubmissionResourceType,
+    resource_id: str,
+    source_authority: SourceSystem,
+    target: ConversionTarget,
+    status: DownstreamRealizationStatus,
+    request_fingerprint: str,
+    failure_reason: str | None,
+) -> None:
+    repository.record_downstream_submission(
+        DownstreamSubmissionRecord(
+            idempotency_key=command.idempotency_key,
+            request_fingerprint=request_fingerprint,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            target=target,
+            source_authority=source_authority,
+            status=DownstreamSubmissionPosture(status.value),
+            downstream_failure_reason=failure_reason,
+            correlation_id=command.correlation_id,
+            trace_id=command.trace_id,
+            submitted_at_utc=command.submitted_at_utc or datetime.now(UTC),
+        )
+    )
+
+
+def _idempotent_submission_result(
+    repository: DownstreamSubmissionRepository,
+    *,
+    idempotency_key: str,
+    request_fingerprint: str,
+) -> DownstreamRealizationSubmissionResult | None:
+    existing = repository.downstream_submission_by_idempotency_key(idempotency_key)
+    if existing is None:
+        return None
+    if existing.request_fingerprint != request_fingerprint:
+        return DownstreamRealizationSubmissionResult(
+            status=DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT,
+            source_authority=None,
+            target=None,
+            downstream_failure_reason="idempotency_conflict",
+        )
+    return DownstreamRealizationSubmissionResult(
+        status=DownstreamRealizationStatus(existing.status.value),
+        source_authority=existing.source_authority,
+        target=existing.target,
+        downstream_failure_reason=existing.downstream_failure_reason,
+        idempotency_replayed=True,
+    )
+
+
+def _submission_fingerprint(
+    *,
+    resource_type: DownstreamSubmissionResourceType,
+    resource_id: str,
+    target: ConversionTarget,
+    source_authority: SourceSystem,
+) -> str:
+    return payload_fingerprint(
+        {
+            "resource_type": resource_type.value,
+            "resource_id": resource_id,
+            "target": target.value,
+            "source_authority": source_authority.value,
+        }
     )
 
 
 def _find_conversion_intent(
     conversion_intent_id: str,
     *,
-    repository: CandidateSnapshotRepository,
+    repository: DownstreamSubmissionRepository,
 ) -> GovernedConversionIntent | None:
     for record in repository.snapshot().candidate_records.values():
         for conversion_intent in record.conversion_intents:
@@ -172,7 +393,7 @@ def _find_conversion_intent(
 def _find_report_evidence_pack(
     report_evidence_pack_id: str,
     *,
-    repository: CandidateSnapshotRepository,
+    repository: DownstreamSubmissionRepository,
 ) -> GovernedReportEvidencePack | None:
     for record in repository.snapshot().candidate_records.values():
         for evidence_pack in record.report_evidence_packs:
@@ -184,3 +405,10 @@ def _find_report_evidence_pack(
 def _require_text(value: str, field_name: str) -> None:
     if not value.strip():
         raise ValueError(f"{field_name} is required")
+
+
+def _require_aware_utc(value: datetime, field_name: str) -> None:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field_name} must be timezone-aware")
+    if value.utcoffset() != UTC.utcoffset(value):
+        raise ValueError(f"{field_name} must be UTC")

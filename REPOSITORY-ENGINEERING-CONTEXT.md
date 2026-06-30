@@ -967,11 +967,17 @@ evidence-pack requests:
 and
 `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`.
 Both routes require `idea.downstream-realization.submit` and
-`Idempotency-Key`, propagate correlation/trace/idempotency headers through the
-adapter port, fail closed with `503 downstream_realization_not_configured` when
-adapter configuration is absent, and return submission posture only. They do
-not record downstream outcomes, grant downstream authority, prove route
-existence, or promote a supported feature. `src/app/ports/downstream_realization.py` and
+`Idempotency-Key`, precheck a local downstream submission idempotency ledger
+before any adapter call, replay prior posture for the same key and request
+fingerprint, reject changed-resource reuse with `409 idempotency_conflict`,
+and persist source authority, target, resource id, bounded outcome/failure
+reason, correlation id, trace id, and timestamp without sensitive payloads.
+Missing adapter configuration is persisted as a replayable
+`downstream_realization_not_configured` posture and returns `503`; successful
+and rejected adapter submissions are also recorded locally as submission
+posture only. They do not record downstream outcomes, grant downstream
+authority, prove route existence, or promote a supported feature.
+`src/app/ports/downstream_realization.py` and
 `src/app/infrastructure/downstream_realization.py` add source-safe HTTP adapter
 foundations for Advise proposal intent, Manage action intent, and Report
 evidence-pack materialization request handoff envelopes. The adapters preserve

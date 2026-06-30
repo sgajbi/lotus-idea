@@ -106,6 +106,20 @@ CREATE TABLE IF NOT EXISTS idea_report_evidence_pack_request (
     requested_at_utc TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS idea_downstream_submission (
+    idempotency_key TEXT PRIMARY KEY,
+    request_fingerprint TEXT NOT NULL,
+    resource_type TEXT NOT NULL,
+    resource_id TEXT NOT NULL,
+    target TEXT NOT NULL,
+    source_authority TEXT NOT NULL,
+    status TEXT NOT NULL,
+    downstream_failure_reason TEXT,
+    correlation_id TEXT,
+    trace_id TEXT,
+    submitted_at_utc TIMESTAMPTZ NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_family_status
     ON idea_candidate_record (family, lifecycle_status, review_posture);
 
@@ -147,3 +161,6 @@ CREATE INDEX IF NOT EXISTS idx_idea_conversion_outcome_intent_time
 
 CREATE INDEX IF NOT EXISTS idx_idea_report_evidence_pack_candidate_time
     ON idea_report_evidence_pack_request (candidate_id, requested_at_utc);
+
+CREATE INDEX IF NOT EXISTS idx_idea_downstream_submission_resource
+    ON idea_downstream_submission (resource_type, resource_id, target);

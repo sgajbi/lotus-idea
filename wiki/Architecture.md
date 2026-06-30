@@ -339,9 +339,12 @@ and
 `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
 are certified internal submission foundations. They require
 `idea.downstream-realization.submit` and `Idempotency-Key`, use configured
-source-safe Advise, Manage, and Report adapters, propagate correlation/trace
-context, and return submission posture only. Missing adapter configuration
-fails closed with `503 downstream_realization_not_configured`. They do not
+source-safe Advise, Manage, and Report adapters after a local idempotency
+ledger precheck, propagate correlation/trace context, and return submission
+posture only. Same-key/same-fingerprint requests replay stored posture without
+another adapter call, changed-fingerprint reuse returns
+`409 idempotency_conflict`, and missing adapter configuration is persisted as a
+replayable `503 downstream_realization_not_configured` posture. They do not
 record authoritative downstream outcomes, prove downstream route existence,
 grant suitability/execution/publication authority, or promote a supported
 feature.

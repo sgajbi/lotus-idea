@@ -624,24 +624,26 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Submit an internal Advise or Manage conversion intent through the source-safe downstream realization adapter foundation while returning only bounded submission posture.",
-      "when_to_use": "Use as the RFC-0002 Slice 12 API foundation when an internal caller has idea.downstream-realization.submit capability, an Idempotency-Key, configured Advise and Manage realization adapters, and needs to submit an already recorded Advise or Manage conversion intent without recording authoritative downstream outcome.",
+      "when_to_use": "Use as the RFC-0002 Slice 12 API foundation when an internal caller has idea.downstream-realization.submit capability, an Idempotency-Key, configured Advise and Manage realization adapters, and needs to submit an already recorded Advise or Manage conversion intent with local replay/conflict protection and without recording authoritative downstream outcome.",
       "when_not_to_use": "Do not use as downstream proposal creation proof, manage-review action creation proof, suitability approval, execution authority, downstream outcome recording, Gateway contract, Workbench product proof, data-product certification proof, client-communication authority, or supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/conversion-intents/conversion-advise-api-001/downstream-submissions with X-Caller-Capabilities: idea.downstream-realization.submit and Idempotency-Key: downstream-submit-advise-api-001"
       ],
       "response_examples": [
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":null,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-manage\",\"target\":\"manage_review\",\"downstreamFailureReason\":\"downstream_timeout\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-advise\",\"target\":\"advise_proposal\",\"downstreamFailureReason\":null,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-manage\",\"target\":\"manage_review\",\"downstreamFailureReason\":\"downstream_timeout\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
         "404 returns product-safe Problem Details when the conversion intent is not found.",
-        "409 returns product-safe Problem Details when the conversion intent target requires the report evidence-pack submission route.",
+        "409 returns product-safe Problem Details when the conversion intent target requires the report evidence-pack submission route or when the Idempotency-Key is reused for a different request fingerprint.",
         "503 returns product-safe Problem Details when downstream realization adapters are not configured.",
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_accepts_advise_intent_without_support_claim",
+        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_replays_same_idempotency_key",
+        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_idempotency_conflict",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_report_target_on_conversion_route",
@@ -713,23 +715,26 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Submit an internal report evidence-pack request through the source-safe Report realization adapter foundation while preserving Report, Render, and Archive source authority.",
-      "when_to_use": "Use as the RFC-0002 Slice 13 API foundation when an internal caller has idea.downstream-realization.submit capability, an Idempotency-Key, configured Report realization adapter, and needs to submit an already recorded report evidence-pack request without creating client-ready publication authority.",
+      "when_to_use": "Use as the RFC-0002 Slice 13 API foundation when an internal caller has idea.downstream-realization.submit capability, an Idempotency-Key, configured Report realization adapter, and needs to submit an already recorded report evidence-pack request with local replay/conflict protection and without creating client-ready publication authority.",
       "when_not_to_use": "Do not use as lotus-report package intake proof, lotus-render output proof, lotus-archive record proof, downstream outcome recording, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication authorization, or supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/report-evidence-packs/report-pack-api-001/downstream-submissions with X-Caller-Capabilities: idea.downstream-realization.submit and Idempotency-Key: downstream-submit-report-api-001"
       ],
       "response_examples": [
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":null,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_timeout\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"accepted_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":null,\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"downstreamSubmission\":{\"submissionStatus\":\"rejected_by_downstream\",\"sourceAuthority\":\"lotus-report\",\"target\":\"report_evidence\",\"downstreamFailureReason\":\"downstream_timeout\",\"recordsDownstreamOutcome\":false,\"grantsDownstreamAuthority\":false,\"supportedFeaturePromoted\":false,\"idempotencyReplayed\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
         "404 returns product-safe Problem Details when the report evidence-pack request is not found.",
+        "409 returns product-safe Problem Details when the Idempotency-Key is reused for a different request fingerprint.",
         "503 returns product-safe Problem Details when the Report downstream realization adapter is not configured.",
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_accepts_pack_without_publication_claim",
+        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_replays_same_idempotency_key",
+        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_rejects_idempotency_conflict",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event"

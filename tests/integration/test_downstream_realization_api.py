@@ -120,6 +120,7 @@ def test_conversion_downstream_submission_api_accepts_advise_intent_without_supp
             "sourceAuthority": "lotus-advise",
             "target": "advise_proposal",
             "downstreamFailureReason": None,
+            "idempotencyReplayed": False,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
             "supportedFeaturePromoted": False,
@@ -133,6 +134,101 @@ def test_conversion_downstream_submission_api_accepts_advise_intent_without_supp
     assert advise_client.correlation_id == "corr-downstream-submission-api"
     assert advise_client.trace_id == "trace-downstream-submission-api"
     assert advise_client.idempotency_key == "downstream-submit-advise-api-001"
+    assert manage_client.submitted == ()
+
+
+def test_conversion_downstream_submission_api_replays_same_idempotency_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: ConversionRealizationClients(advise_client, manage_client),
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-downstream-replay",
+        idempotency_prefix="advise-downstream-replay",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-advise-replay-api-001",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-replay-api-001",
+    )
+
+    first = client.post(
+        "/api/v1/conversion-intents/conversion-advise-replay-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-advise-replay-api-001"),
+    )
+    second = client.post(
+        "/api/v1/conversion-intents/conversion-advise-replay-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-advise-replay-api-001"),
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["downstreamSubmission"]["idempotencyReplayed"] is False
+    assert second.json()["downstreamSubmission"]["idempotencyReplayed"] is True
+    assert len(advise_client.submitted) == 1
+    assert manage_client.submitted == ()
+
+
+def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: ConversionRealizationClients(advise_client, manage_client),
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-downstream-conflict",
+        idempotency_prefix="advise-downstream-conflict",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-advise-conflict-api-001",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-conflict-api-001",
+    )
+    second_candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-downstream-conflict-second",
+        idempotency_prefix="advise-downstream-conflict-second",
+    )
+    record_conversion_intent(
+        client,
+        second_candidate_id,
+        conversion_intent_id="conversion-advise-conflict-api-002",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-conflict-api-002",
+    )
+
+    first = client.post(
+        "/api/v1/conversion-intents/conversion-advise-conflict-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-advise-conflict-api-001"),
+    )
+    conflict = client.post(
+        "/api/v1/conversion-intents/conversion-advise-conflict-api-002/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-advise-conflict-api-001"),
+    )
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+    assert len(advise_client.submitted) == 1
     assert manage_client.submitted == ()
 
 
@@ -178,6 +274,7 @@ def test_report_downstream_submission_api_accepts_pack_without_publication_claim
             "sourceAuthority": "lotus-report",
             "target": "report_evidence",
             "downstreamFailureReason": None,
+            "idempotencyReplayed": False,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
             "supportedFeaturePromoted": False,
@@ -189,6 +286,103 @@ def test_report_downstream_submission_api_accepts_pack_without_publication_claim
     assert report_client.correlation_id == "corr-downstream-submission-api"
     assert report_client.trace_id == "trace-downstream-submission-api"
     assert report_client.idempotency_key == "downstream-submit-report-api-001"
+
+
+def test_report_downstream_submission_api_replays_same_idempotency_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-report-downstream-replay",
+        idempotency_prefix="report-downstream-replay",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-report-replay-api-001",
+        target="report_evidence",
+        idempotency_key="conversion-report-replay-api-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-replay-api-001",
+        report_evidence_pack_id="report-pack-replay-api-001",
+        idempotency_key="report-pack-replay-api-001",
+    )
+
+    first = client.post(
+        "/api/v1/report-evidence-packs/report-pack-replay-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-report-replay-api-001"),
+    )
+    second = client.post(
+        "/api/v1/report-evidence-packs/report-pack-replay-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-report-replay-api-001"),
+    )
+
+    assert first.status_code == 200
+    assert second.status_code == 200
+    assert first.json()["downstreamSubmission"]["idempotencyReplayed"] is False
+    assert second.json()["downstreamSubmission"]["idempotencyReplayed"] is True
+    assert len(report_client.submitted) == 1
+
+
+def test_report_downstream_submission_api_rejects_idempotency_conflict(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_report_evidence_pack_realization_client",
+        lambda: report_client,
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-report-downstream-conflict",
+        idempotency_prefix="report-downstream-conflict",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-report-conflict-api-001",
+        target="report_evidence",
+        idempotency_key="conversion-report-conflict-api-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-conflict-api-001",
+        report_evidence_pack_id="report-pack-conflict-api-001",
+        idempotency_key="report-pack-conflict-api-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-conflict-api-001",
+        report_evidence_pack_id="report-pack-conflict-api-002",
+        idempotency_key="report-pack-conflict-api-002",
+    )
+
+    first = client.post(
+        "/api/v1/report-evidence-packs/report-pack-conflict-api-001/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-report-conflict-api-001"),
+    )
+    conflict = client.post(
+        "/api/v1/report-evidence-packs/report-pack-conflict-api-002/downstream-submissions",
+        headers=downstream_submission_headers("downstream-submit-report-conflict-api-001"),
+    )
+
+    assert first.status_code == 200
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+    assert len(report_client.submitted) == 1
 
 
 def test_downstream_submission_api_fails_closed_without_adapter_configuration(
@@ -205,9 +399,21 @@ def test_downstream_submission_api_fails_closed_without_adapter_configuration(
     ):
         monkeypatch.delenv(env_name, raising=False)
     client = TestClient(app)
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-downstream-unconfigured",
+        idempotency_prefix="advise-downstream-unconfigured",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-advise-unconfigured-api-001",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-unconfigured-api-001",
+    )
 
     response = client.post(
-        "/api/v1/conversion-intents/missing-conversion/downstream-submissions",
+        "/api/v1/conversion-intents/conversion-advise-unconfigured-api-001/downstream-submissions",
         headers=downstream_submission_headers("downstream-submit-unconfigured-api-001"),
     )
 
@@ -356,6 +562,7 @@ def test_conversion_downstream_submission_api_returns_bounded_rejection(
         "sourceAuthority": "lotus-manage",
         "target": "manage_review",
         "downstreamFailureReason": "downstream_timeout",
+        "idempotencyReplayed": False,
         "recordsDownstreamOutcome": False,
         "grantsDownstreamAuthority": False,
         "supportedFeaturePromoted": False,
@@ -467,6 +674,7 @@ def test_report_downstream_submission_api_returns_bounded_rejection(
         "sourceAuthority": "lotus-report",
         "target": "report_evidence",
         "downstreamFailureReason": "downstream_unavailable",
+        "idempotencyReplayed": False,
         "recordsDownstreamOutcome": False,
         "grantsDownstreamAuthority": False,
         "supportedFeaturePromoted": False,
@@ -481,9 +689,27 @@ def test_report_downstream_submission_api_fails_closed_without_adapter_configura
     monkeypatch.delenv(REPORT_BASE_URL_ENV, raising=False)
     monkeypatch.setenv(REPORT_SUBMIT_PATH_ENV, "/reports/idea-evidence-intake")
     client = TestClient(app)
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-report-downstream-unconfigured",
+        idempotency_prefix="report-downstream-unconfigured",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-report-unconfigured-api-001",
+        target="report_evidence",
+        idempotency_key="conversion-report-unconfigured-api-001",
+    )
+    record_report_evidence_pack(
+        client,
+        conversion_intent_id="conversion-report-unconfigured-api-001",
+        report_evidence_pack_id="report-pack-unconfigured-api-001",
+        idempotency_key="report-pack-unconfigured-api-001",
+    )
 
     response = client.post(
-        "/api/v1/report-evidence-packs/missing-pack/downstream-submissions",
+        "/api/v1/report-evidence-packs/report-pack-unconfigured-api-001/downstream-submissions",
         headers=downstream_submission_headers("downstream-submit-report-unconfigured-api-001"),
     )
 

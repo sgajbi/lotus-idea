@@ -295,7 +295,12 @@ The internal downstream submission routes are available for callers with
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter. | Submission posture only; no package intake proof, render output, archive record, client-ready publication, or supported-feature promotion. |
 
 Missing adapter configuration returns `503 downstream_realization_not_configured`
-instead of producing a false support claim.
+instead of producing a false support claim. The submission routes persist
+bounded local posture by `Idempotency-Key`: same-key/same-fingerprint requests
+replay without another adapter call, changed-fingerprint reuse returns
+`409 idempotency_conflict`, and stored records include source authority,
+target, resource id, bounded failure reason, correlation id, trace id, and
+timestamp without source payloads or raw downstream responses.
 
 ## Operator Map
 

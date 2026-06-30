@@ -20,6 +20,7 @@ from app.domain.events import (
     OutboxEventRecord,
     build_candidate_outbox_event,
 )
+from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
 from app.domain.outbox_delivery_state import (
     OutboxDeliveryResult,
@@ -196,6 +197,9 @@ class IdeaRepositorySnapshot:
     report_evidence_pack_candidates: Mapping[str, str] = field(default_factory=dict)
     ai_explanation_lineage_candidates: Mapping[str, str] = field(default_factory=dict)
     outbox_events: Mapping[str, OutboxEventRecord] = field(default_factory=dict)
+    downstream_submission_records: Mapping[str, DownstreamSubmissionRecord] = field(
+        default_factory=dict
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(
@@ -231,6 +235,11 @@ class IdeaRepositorySnapshot:
             "outbox_events",
             MappingProxyType(dict(self.outbox_events)),
         )
+        object.__setattr__(
+            self,
+            "downstream_submission_records",
+            MappingProxyType(dict(self.downstream_submission_records)),
+        )
 
 
 class InMemoryIdeaRepository:
@@ -244,6 +253,7 @@ class InMemoryIdeaRepository:
         self._report_evidence_pack_candidates: dict[str, str] = {}
         self._ai_explanation_lineage_candidates: dict[str, str] = {}
         self._outbox_events: dict[str, OutboxEventRecord] = {}
+        self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
             self._idempotency_records.update(snapshot.idempotency_records)
@@ -254,6 +264,7 @@ class InMemoryIdeaRepository:
                 snapshot.ai_explanation_lineage_candidates
             )
             self._outbox_events.update(snapshot.outbox_events)
+            self._downstream_submission_records.update(snapshot.downstream_submission_records)
 
     def persist_candidate(
         self,
@@ -955,6 +966,16 @@ class InMemoryIdeaRepository:
             audit_event=result.audit_event,
         )
 
+    def downstream_submission_by_idempotency_key(
+        self,
+        idempotency_key: str,
+    ) -> DownstreamSubmissionRecord | None:
+        _require_text(idempotency_key, "idempotency_key")
+        return self._downstream_submission_records.get(idempotency_key)
+
+    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None:
+        self._downstream_submission_records[record.idempotency_key] = record
+
     def outbox_events_for_delivery(
         self,
         *,
@@ -1032,6 +1053,7 @@ class InMemoryIdeaRepository:
             report_evidence_pack_candidates=self._report_evidence_pack_candidates,
             ai_explanation_lineage_candidates=self._ai_explanation_lineage_candidates,
             outbox_events=self._outbox_events,
+            downstream_submission_records=self._downstream_submission_records,
         )
 
     def _record_for_idempotency_key(
