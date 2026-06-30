@@ -627,7 +627,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Submit an internal Advise or Manage conversion intent through the source-safe downstream realization adapter foundation while returning only bounded submission posture.",
       "when_to_use": "Use as the RFC-0002 Slice 12 API foundation when an internal caller has idea.downstream-realization.submit capability, an Idempotency-Key, configured Advise and Manage realization adapters, and needs to submit an already recorded Advise or Manage conversion intent with local replay/conflict protection and without recording authoritative downstream outcome.",
-      "when_not_to_use": "Do not use as downstream proposal creation proof, manage-review action creation proof, suitability approval, execution authority, downstream outcome recording, Gateway contract, Workbench product proof, data-product certification proof, client-communication authority, or supported-feature promotion.",
+      "when_not_to_use": "Durable PostgreSQL providers use bounded conversion-intent lookup before adapter calls instead of whole-store snapshot hydration. Do not use as downstream proposal creation proof, manage-review action creation proof, suitability approval, execution authority, downstream outcome recording, Gateway contract, Workbench product proof, data-product certification proof, client-communication authority, or supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/conversion-intents/conversion-advise-api-001/downstream-submissions with X-Caller-Capabilities: idea.downstream-realization.submit and Idempotency-Key: downstream-submit-advise-api-001"
       ],
@@ -649,7 +649,9 @@
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_report_target_on_conversion_route",
-        "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event"
+        "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event",
+        "tests/unit/test_downstream_realization_lookup.py::test_downstream_conversion_submission_uses_lookup_without_snapshot",
+        "tests/unit/test_postgres_downstream_lookup.py::test_postgres_conversion_intent_lookup_uses_direct_table_query"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -718,7 +720,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Submit an internal report evidence-pack request through the source-safe Report realization adapter foundation while preserving Report, Render, and Archive source authority.",
       "when_to_use": "Use as the RFC-0002 Slice 13 API foundation when an internal caller has idea.downstream-realization.submit capability, an Idempotency-Key, configured Report realization adapter, and needs to submit an already recorded report evidence-pack request with local replay/conflict protection and without creating client-ready publication authority.",
-      "when_not_to_use": "Do not use as lotus-report package intake proof, lotus-render output proof, lotus-archive record proof, downstream outcome recording, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication authorization, or supported-feature promotion.",
+      "when_not_to_use": "Durable PostgreSQL providers use bounded report evidence-pack lookup before adapter calls instead of whole-store snapshot hydration. Do not use as lotus-report package intake proof, lotus-render output proof, lotus-archive record proof, downstream outcome recording, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication authorization, or supported-feature promotion.",
       "request_examples": [
         "POST /api/v1/report-evidence-packs/report-pack-api-001/downstream-submissions with X-Caller-Capabilities: idea.downstream-realization.submit and Idempotency-Key: downstream-submit-report-api-001"
       ],
@@ -739,7 +741,9 @@
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_rejects_idempotency_conflict",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
-        "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event"
+        "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event",
+        "tests/unit/test_downstream_realization_lookup.py::test_downstream_report_pack_submission_uses_lookup_without_snapshot",
+        "tests/unit/test_postgres_downstream_lookup.py::test_postgres_report_pack_lookup_uses_direct_table_query"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

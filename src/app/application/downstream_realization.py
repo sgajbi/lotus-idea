@@ -383,11 +383,7 @@ def _find_conversion_intent(
     *,
     repository: DownstreamSubmissionRepository,
 ) -> GovernedConversionIntent | None:
-    for record in repository.snapshot().candidate_records.values():
-        for conversion_intent in record.conversion_intents:
-            if conversion_intent.intent.conversion_intent_id == conversion_intent_id:
-                return conversion_intent
-    return None
+    return repository.conversion_intent_by_id(conversion_intent_id)
 
 
 def _find_report_evidence_pack(
@@ -395,11 +391,7 @@ def _find_report_evidence_pack(
     *,
     repository: DownstreamSubmissionRepository,
 ) -> GovernedReportEvidencePack | None:
-    for record in repository.snapshot().candidate_records.values():
-        for evidence_pack in record.report_evidence_packs:
-            if evidence_pack.report_evidence_pack_id == report_evidence_pack_id:
-                return evidence_pack
-    return None
+    return repository.report_evidence_pack_by_id(report_evidence_pack_id)
 
 
 def _require_text(value: str, field_name: str) -> None:

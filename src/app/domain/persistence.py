@@ -29,6 +29,7 @@ from app.domain.outbox_delivery_state import (
     mark_owned_outbox_event_published,
     outbox_events_for_delivery,
 )
+from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
 from app.domain.ideas import (
     EvidenceFreshness,
     IdeaCandidate,
@@ -242,7 +243,7 @@ class IdeaRepositorySnapshot:
         )
 
 
-class InMemoryIdeaRepository:
+class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
     """Internal persistence contract for RFC-0002 Slice 06 before a database adapter exists."""
 
     def __init__(self, snapshot: IdeaRepositorySnapshot | None = None) -> None:
@@ -727,22 +728,6 @@ class InMemoryIdeaRepository:
             audit_event=result.audit_event,
         )
 
-    def conversion_intent_by_id(
-        self,
-        conversion_intent_id: str,
-    ) -> GovernedConversionIntent | None:
-        _require_text(conversion_intent_id, "conversion_intent_id")
-        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
-        if candidate_id is None:
-            return None
-        record = self._candidate_records.get(candidate_id)
-        if record is None:
-            return None
-        for conversion_intent in record.conversion_intents:
-            if conversion_intent.intent.conversion_intent_id == conversion_intent_id:
-                return conversion_intent
-        return None
-
     def record_conversion_outcome(
         self,
         result: ConversionOutcomeResult,
@@ -832,16 +817,6 @@ class InMemoryIdeaRepository:
             decision=EvidencePackPersistenceDecision.REPLAYED,
             record=self._record_for_idempotency_key(idempotency_key),
         )
-
-    def candidate_record_for_conversion_intent(
-        self,
-        conversion_intent_id: str,
-    ) -> CandidatePersistenceRecord | None:
-        _require_text(conversion_intent_id, "conversion_intent_id")
-        candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)
-        if candidate_id is None:
-            return None
-        return self._candidate_records.get(candidate_id)
 
     def record_report_evidence_pack(
         self,
