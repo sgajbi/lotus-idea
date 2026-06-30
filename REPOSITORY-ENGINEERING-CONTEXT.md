@@ -331,7 +331,7 @@ promote supported features.
 
 Security controls currently include:
 
-1. caller context and capability policy,
+1. route-level caller context and capability policy,
 2. scope-aware entitlement checks,
 3. product-safe permission failures,
 4. no-sensitive-content artifact guard,
@@ -341,6 +341,12 @@ Security controls currently include:
 8. Dependabot/security-update governance,
 9. CodeQL default setup governance,
 10. secret scanning and push protection where GitHub reports them enabled.
+
+These are foundation controls, not production identity-provider proof.
+Route-level capability checks currently consume caller-context headers inside
+the service boundary; production-like use still requires trusted ingress or
+authenticated caller-context provenance before those headers can be treated as
+authority.
 
 `make github-security-posture-check` is the operator-run live posture check for
 GitHub Security settings. Treat GitHub Security state as mutable external
@@ -377,6 +383,11 @@ Workbench behavior, data-mesh certification, or supported-feature promotion.
 Implementation-proof readiness is an aggregate blocker view. It should help
 operators find missing proof; it must not be presented as full live journey
 proof while blockers remain.
+
+Treat inbound correlation and trace headers as untrusted input. Until the
+sanitization gap is closed, do not extend exact header echo behavior or use raw
+caller-supplied correlation/trace values as evidence-pack, log, metric, or
+downstream-safe identifiers.
 
 ## Repo-Native Commands
 
@@ -497,14 +508,35 @@ Recent issue-derived patterns to preserve:
 7. repo-native aggregate CI commands must either include heavyweight
    PostgreSQL/Docker/release proof families or clearly name a separate full-lane
    command; do not let remote-only YAML proof become an invisible local gap,
-8. documentation should record the durable rule, not only the one-off fix.
+8. inbound correlation and trace identifiers are untrusted input until
+   sanitized; never reflect or log raw caller-supplied diagnostic identifiers,
+9. caller-supplied capability, role, and entitlement headers are simulation
+   inputs until bound to trusted ingress, signed assertion, service identity, or
+   another authenticated provenance control,
+10. PostgreSQL mutation paths need explicit same-candidate concurrency guards;
+   full-snapshot mutation helpers must not silently overwrite stale state,
+11. persisted AI explanation lineage writes need API-level idempotency in
+   addition to domain request-id replay protection,
+12. generated proof and quality evidence must be reproducible from current
+   gate rules or be documented as on-demand evidence rather than current proof,
+13. documentation should record the durable rule, not only the one-off fix.
 
 Current open issue priorities that should shape the next implementation slices:
 
-1. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
+1. GitHub issue `#267`: bind caller-context authorization headers to trusted
+   ingress before production-like use.
+2. GitHub issue `#265`: validate correlation and trace headers before logging,
+   reflecting, or propagating them.
+3. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+   writes.
+4. GitHub issue `#268`: require API idempotency for AI explanation lineage
+   writes.
+5. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
    Docker release proof gates or document a governed light/full split.
-2. GitHub issue `#260`: require aggregate provenance for source-ingestion live
+6. GitHub issue `#260`: require aggregate provenance for source-ingestion live
    proof consumption.
+7. GitHub issue `#269`: keep architecture boundary report evidence
+   synchronized with current gate rules.
 
 Issues `#264`, `#262`, `#261`, and `#259` have branch-local fixes and
 validation evidence, but they must not be claimed closed until merged to
@@ -587,9 +619,9 @@ Never imply:
 6. rebalance authority,
 7. order execution,
 8. report rendering or archive authority,
-9. no client-ready publication,
-10. no data-mesh certification,
-11. no supported-feature promotion.
+9. externally publishable client material,
+10. data-mesh certification,
+11. supported-feature promotion.
 
 ## Known Constraints And Open Gaps
 
@@ -604,7 +636,13 @@ Current gaps remain explicit:
 7. no platform mesh certification,
 8. no client-ready publication,
 9. no production capacity or back-pressure certification,
-10. no AI provider-runtime certification.
+10. no AI provider-runtime certification,
+11. no trusted-ingress proof for caller-context authorization headers,
+12. no correlation or trace header sanitization guarantee,
+13. no PostgreSQL same-candidate stale-write guard across all mutations,
+14. no API-level idempotency contract for AI explanation lineage writes,
+15. no deterministic freshness check for committed architecture boundary
+    report evidence.
 
 These gaps are acceptable only while current-state surfaces keep them visible.
 
