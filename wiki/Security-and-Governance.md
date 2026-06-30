@@ -22,7 +22,22 @@ Required posture:
    promotion,
 9. AST-backed monetary-float guard enforcement for money-like application
    fields and conversions,
-10. branch protection and CI lane governance.
+10. branch protection and CI lane governance,
+11. live GitHub Security posture verification through
+    `make github-security-posture-check`.
+
+GitHub Security posture:
+
+1. Dependabot alerts/security updates, secret scanning with push protection,
+   private vulnerability reporting, and CodeQL default setup for Python and
+   GitHub Actions are required mutable repository settings,
+2. CodeQL default setup uses the governed `default` query suite and `remote`
+   threat model,
+3. `make github-security-posture-check` verifies those settings and requires
+   zero open code-scanning, secret-scanning, and Dependabot alerts,
+4. GitHub currently reports non-provider secret patterns and secret validity
+   checks as disabled even after an admin API enable attempt, so they remain
+   advisory future controls and are not release-evidence claims.
 
 Mesh certification rule:
 

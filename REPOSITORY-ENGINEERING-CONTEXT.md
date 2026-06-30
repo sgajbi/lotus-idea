@@ -1862,9 +1862,14 @@ lotus-idea's product ownership. `.github/dependabot.yml` enables weekly grouped
 Python and GitHub Actions dependency monitoring, while repository settings now
 enable Dependabot alerts/security updates, secret scanning with push
 protection, private vulnerability reporting, and CodeQL default setup for
-Python and GitHub Actions. GitHub currently reports non-provider secret patterns
-and secret validity checks as disabled for this repository, so they are not
-claimed as active release controls. `make ci-contract-gate` fails if the
+Python and GitHub Actions. `make github-security-posture-check` is the
+operator-run live posture check for these mutable GitHub settings: it verifies
+the enabled required controls, CodeQL `default` query suite with `remote` threat
+model, private vulnerability reporting, and zero open code-scanning,
+secret-scanning, and Dependabot alerts. GitHub currently reports non-provider
+secret patterns and secret validity checks as disabled for this repository even
+after an admin API enable attempt, so they are advisory future controls and are
+not claimed as active release evidence. `make ci-contract-gate` fails if the
 source-controlled security policy or Dependabot coverage is removed or weakened.
 
 Coverage enforcement is also repository-owned. The Makefile exposes

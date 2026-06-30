@@ -73,9 +73,10 @@ Blocking scaffold commands:
 53. `make security-audit`
 54. `make docker-build`
 
-Cleanup support command:
+Support commands:
 
 1. `make clean`
+2. `make github-security-posture-check`
 
 Report-only scaffold commands:
 
@@ -136,7 +137,14 @@ the supported security baseline, source-safe report content, and weekly grouped
 Python plus GitHub Actions dependency monitoring; `make ci-contract-gate`
 rejects removal or weakening of those files. GitHub currently reports
 non-provider secret patterns and secret validity checks as disabled for this
-repository, so those controls are not claimed as active release evidence.
+repository even after an admin API enable attempt, so those controls are
+advisory future options and are not claimed as active release evidence.
+`make github-security-posture-check` is the live operator check for mutable
+GitHub Security state. It verifies required enabled settings, CodeQL's governed
+`default` query suite and `remote` threat model, private vulnerability
+reporting, and zero open code-scanning, secret-scanning, and Dependabot alerts.
+The target is intentionally not part of offline lint because it depends on live
+GitHub API access through `gh auth`.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 

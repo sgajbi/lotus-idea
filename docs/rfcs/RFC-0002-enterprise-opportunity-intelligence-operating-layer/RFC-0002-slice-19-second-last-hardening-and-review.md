@@ -292,19 +292,25 @@ signal without widening lotus-idea's product boundary:
    scanning with push protection, private vulnerability reporting, and CodeQL
    default setup for GitHub-owned static analysis over Python and GitHub
    Actions. GitHub currently reports non-provider secret patterns and secret
-   validity checks as disabled for this repository, so they are not claimed as
-   active release controls.
+   validity checks as disabled for this repository even after an admin API
+   enable attempt, so they are advisory future controls and are not claimed as
+   active release evidence.
 2. `SECURITY.md` defines the supported security baseline, private
    vulnerability reporting path, source-safe report-content boundary, and
    lotus-idea product-ownership limits.
 3. `.github/dependabot.yml` adds weekly grouped Python and GitHub Actions
    dependency monitoring with an open-PR cap to keep dependency work
    actionable.
-4. `scripts/ci_contract_gate.py` requires the security policy and Dependabot
+4. `scripts/github_security_posture_check.py` and
+   `make github-security-posture-check` provide an operator-run live check for
+   mutable GitHub Security settings, CodeQL `default` / `remote` posture,
+   private vulnerability reporting, and zero open code-scanning,
+   secret-scanning, and Dependabot alerts.
+5. `scripts/ci_contract_gate.py` requires the security policy and Dependabot
    coverage, while `tests/unit/test_security_tab_governance_contract.py`
    covers policy, client-data, dependency-ecosystem, and PR-noise regression
    cases.
-5. This is GitHub Security and CI-governance hardening only. It does not
+6. This is GitHub Security and CI-governance hardening only. It does not
    certify service-to-service authentication, platform entitlement proof, live
    threat monitoring, production incident response, or supported-feature
    promotion.

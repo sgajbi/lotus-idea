@@ -378,6 +378,10 @@ runtime-trust-telemetry-preview-check:
 runtime-trust-telemetry-snapshot-check:
 	$(VENV_PYTHON) scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc 2026-06-21T10:10:00Z
 
+.PHONY: github-security-posture-check
+github-security-posture-check:
+	$(VENV_PYTHON) scripts/github_security_posture_check.py
+
 migrate:
 	$(VENV_PYTHON) scripts/run_migrations.py --direction apply
 
