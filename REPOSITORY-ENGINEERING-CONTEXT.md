@@ -1816,9 +1816,9 @@ runtime trust telemetry preview and snapshot artifact generation,
 unit tests, integration tests, critical workflow e2e tests,
 PostgreSQL runtime proof in PR/main GitHub lanes, coverage gate, security audit,
 Docker build validation, runtime-only Docker dependency posture, non-root
-container execution, governed Docker base/scanner image identity in release
-evidence, bounded GitHub job timeouts, and no soft-failed critical workflow
-jobs.
+container execution, governed Docker base/scanner image identity plus resolved
+digest provenance in release evidence, bounded GitHub job timeouts, and no
+soft-failed critical workflow jobs.
 
 `make ci-contract-gate` is blocking through `make lint`. It protects the
 bank-buyable lane contract itself so future agentic changes cannot silently
@@ -1841,7 +1841,7 @@ contract validation, implementation-proof readiness artifact generation,
 runtime trust telemetry preview generation, source-observability contract
 validation, PostgreSQL runtime proof, coverage,
 security, Docker runtime dependency and non-root user posture, release-evidence
-base/scanner image identity, verified immutable action SHA pins with
+base/scanner image identity and resolved digest fields, verified immutable action SHA pins with
 version provenance comments, least-privilege workflow controls, bounded
 workflow timeouts, no `continue-on-error: true` in critical lanes,
 implementation-truth enforcement, non-suppressed auto-merge token usage,
@@ -1862,8 +1862,10 @@ extras, expose `/app/src` on `PYTHONPATH`, preserve only the source-ingestion
 worker entrypoints needed by Compose worker profiles, and run the process as
 the non-root `lotus` user. The Makefile and PR/main workflow contracts keep
 `CONTAINER_BASE_IMAGE` and pinned `TRIVY_IMAGE` visible in build and release
-evidence so scanner or base-image drift cannot be hidden in ad hoc workflow
-edits.
+evidence. Main Releasability also resolves both images with `docker image
+inspect` and records `docker_base_image_resolved_digest` and
+`container_scanner_resolved_digest` in `release-evidence.json`, so scanner or
+base-image drift cannot be hidden in ad hoc workflow edits.
 
 GitHub Security posture is part of the repo contract, not only a mutable
 repository setting. `SECURITY.md` defines the supported security baseline,

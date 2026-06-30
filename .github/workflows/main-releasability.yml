@@ -175,6 +175,36 @@ jobs:
         run: make docker-build
       - name: Scan Docker image
         run: make container-image-scan
+      - name: Resolve container image provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker pull "$CONTAINER_BASE_IMAGE" >/dev/null
+          docker pull "$TRIVY_IMAGE" >/dev/null
+
+          base_image_digest="$(
+            docker image inspect "$CONTAINER_BASE_IMAGE" \
+              --format '{{range .RepoDigests}}{{println .}}{{end}}' | head -n 1
+          )"
+          scanner_image_digest="$(
+            docker image inspect "$TRIVY_IMAGE" \
+              --format '{{range .RepoDigests}}{{println .}}{{end}}' | head -n 1
+          )"
+
+          if [[ -z "$base_image_digest" ]]; then
+            echo "Unable to resolve Docker base image digest for $CONTAINER_BASE_IMAGE" >&2
+            exit 1
+          fi
+          if [[ -z "$scanner_image_digest" ]]; then
+            echo "Unable to resolve Trivy scanner image digest for $TRIVY_IMAGE" >&2
+            exit 1
+          fi
+
+          {
+            echo "CONTAINER_BASE_IMAGE_DIGEST=$base_image_digest"
+            echo "TRIVY_IMAGE_DIGEST=$scanner_image_digest"
+          } >> "$GITHUB_ENV"
       - name: Generate dependency SBOM
         run: make release-sbom
       - name: Generate release metadata manifest
@@ -194,10 +224,16 @@ jobs:
                       "run_id": os.environ["GITHUB_RUN_ID"],
                       "dockerfile_path": "Dockerfile",
                       "docker_base_image": os.environ["CONTAINER_BASE_IMAGE"],
+                      "docker_base_image_resolved_digest": os.environ[
+                          "CONTAINER_BASE_IMAGE_DIGEST"
+                      ],
                       "sbom_path": "sbom.cdx.json",
                       "sbom_generator": "cyclonedx-bom==7.3.0",
                       "container_scan_path": "output/security/container-image-scan.trivy.json",
                       "container_scanner": os.environ["TRIVY_IMAGE"],
+                      "container_scanner_resolved_digest": os.environ[
+                          "TRIVY_IMAGE_DIGEST"
+                      ],
                       "ci_signal_evidence_path": "ci-signal-evidence.json",
                       "ci_signal_evidence_artifact": "main-releasability-ci-signal-evidence",
                   },

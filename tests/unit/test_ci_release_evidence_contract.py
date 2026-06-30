@@ -88,6 +88,46 @@ def test_ci_contract_gate_blocks_inline_cyclonedx_install(
     assert "main-releasability.yml must not contain `pip install cyclonedx-bom`" in errors
 
 
+def test_ci_contract_gate_blocks_removed_container_provenance_resolution(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '          docker pull "$CONTAINER_BASE_IMAGE" >/dev/null\n',
+        "",
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        'main-releasability.yml missing `docker pull "$CONTAINER_BASE_IMAGE"`'
+        in module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_removed_release_digest_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '"container_scanner_resolved_digest": os.environ[',
+        '"container_scanner_reference_only": os.environ[',
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        'main-releasability.yml missing `"container_scanner_resolved_digest": os.environ[`'
+        in module.validate_ci_contract()
+    )
+
+
 def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(

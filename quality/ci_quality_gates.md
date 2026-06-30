@@ -146,6 +146,15 @@ reporting, and zero open code-scanning, secret-scanning, and Dependabot alerts.
 The target is intentionally not part of offline lint because it depends on live
 GitHub API access through `gh auth`.
 
+Main Releasability release evidence now keeps container provenance
+reproducible without requiring developers to pin local defaults by digest. The
+workflow uses the governed `CONTAINER_BASE_IMAGE` and `TRIVY_IMAGE` references,
+pulls both images in the release lane, resolves their immutable `RepoDigest`
+values with Docker, and writes `docker_base_image_resolved_digest` plus
+`container_scanner_resolved_digest` to `release-evidence.json`. The CI contract
+gate rejects removal of the digest-resolution step or digest fields so future
+agents cannot preserve only mutable tag evidence.
+
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell

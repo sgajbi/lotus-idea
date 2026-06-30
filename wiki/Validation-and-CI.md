@@ -142,8 +142,8 @@ contract validation,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
-non-root container execution, governed Docker base/scanner image identity in
-release evidence, bounded GitHub job timeouts, no soft-failed critical
+non-root container execution, governed Docker base/scanner image identity and
+resolved digest provenance in release evidence, bounded GitHub job timeouts, no soft-failed critical
 jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
 `make lint`, including implementation-proof readiness and runtime trust telemetry preview
@@ -471,7 +471,7 @@ The CI contract gate is blocking from day one. It prevents accidental removal of
 controls from the Makefile or GitHub lanes, including least-privilege workflow permissions,
 verified immutable action SHA pins with version provenance, 99% combined coverage in merge/releasability lanes, Docker build
 validation, pinned CycloneDX SBOM generation, pinned Trivy container image scanning,
-SBOM/release evidence, endpoint certification, supported-feature promotion control,
+SBOM/release evidence with resolved base/scanner image digests, endpoint certification, supported-feature promotion control,
 data-mesh contract validation, downstream realization contract validation,
 migration contract validation, migration execution dry-run
 validation, source-ingestion worker manifest and output-contract validation,

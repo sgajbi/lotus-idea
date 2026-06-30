@@ -12,7 +12,7 @@ def _target_block(makefile: str, target: str) -> str:
 def validate_release_evidence_targets(makefile: str) -> list[str]:
     errors: list[str] = []
     if "CONTAINER_BASE_IMAGE ?= python:3.12-slim" not in makefile:
-        errors.append("Makefile must pin `CONTAINER_BASE_IMAGE` to `python:3.12-slim`")
+        errors.append("Makefile must govern `CONTAINER_BASE_IMAGE` as `python:3.12-slim`")
 
     docker_build = _target_block(makefile, "docker-build")
     if "--build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE)" not in docker_build:
@@ -38,7 +38,7 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     if "DOCKER_WORKDIR := //work" not in makefile:
         errors.append("Makefile must define the Windows-safe container scan workdir")
     if "TRIVY_IMAGE ?= aquasec/trivy:0.71.2" not in makefile:
-        errors.append("Makefile must pin `TRIVY_IMAGE` to `aquasec/trivy:0.71.2`")
+        errors.append("Makefile must govern `TRIVY_IMAGE` as `aquasec/trivy:0.71.2`")
     required_fragments = {
         "mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))": (
             "Makefile container-image-scan target must create the scan evidence directory "

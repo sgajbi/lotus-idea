@@ -254,7 +254,9 @@ This slice also hardens runtime Docker and release image identity governance:
    build. PR merge and main releasability workflows expose both
    `CONTAINER_BASE_IMAGE` and pinned `TRIVY_IMAGE` values so release evidence
    records the base image and scanner identity instead of hiding those choices
-   inside ad hoc workflow strings.
+   inside ad hoc workflow strings. Main Releasability now also pulls and
+   inspects both images, then writes resolved immutable base/scanner digests to
+   `release-evidence.json`.
 3. `scripts/ci_release_evidence_contract.py` and
    `scripts/ci_contract_gate.py` now reject development extras in the runtime
    image, bulk `COPY scripts ./scripts`, root runtime execution, missing worker
@@ -262,7 +264,8 @@ This slice also hardens runtime Docker and release image identity governance:
    image-identity evidence.
 4. `tests/unit/test_ci_release_evidence_contract.py` and
    `tests/unit/test_ci_contract_gate.py` cover current pass behavior and
-   failure cases for dev-tooling, root-user, and release-evidence drift.
+   failure cases for dev-tooling, root-user, release-evidence drift, missing
+   image-provenance resolution, and missing digest fields.
 5. This is runtime and CI hardening only. It does not certify production
    capacity, live source ingestion, Workbench support, data-product readiness,
    client publication, or supported-feature promotion.
