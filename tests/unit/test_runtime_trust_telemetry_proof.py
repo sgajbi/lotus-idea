@@ -30,10 +30,22 @@ def test_builds_source_safe_runtime_trust_telemetry_proof() -> None:
     assert proof["proofScope"] == "source_safe_seeded_runtime_snapshot_certification"
     assert proof["runtimeTrustTelemetryProofValid"] is True
     assert tuple(proof["aggregateBlockersCleared"]) == RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED
+    assert proof["aggregateBlockersCleared"] == ("runtime_candidate_snapshot_missing",)
     assert proof["candidateSnapshotCount"] == 1
     assert proof["currentSourceRefCount"] == 4
     assert proof["staleOrUnavailableSourceRefCount"] == 0
     assert proof["lineageMaterialized"] is True
+    assert proof["productCoverage"] == {
+        "coverageStatus": "incomplete",
+        "productCoverageComplete": False,
+        "declaredProductCount": 9,
+        "runtimeBackedProductCount": 8,
+        "blockedProductCount": 5,
+        "coverageBlockers": (
+            "runtime_product_materialization_missing",
+            "runtime_product_records_missing",
+        ),
+    }
     assert tuple(proof["evidenceRefs"]) == REQUIRED_RUNTIME_TRUST_TELEMETRY_EVIDENCE_REFS
     assert tuple(proof["remainingCertificationBlockers"]) == (
         REMAINING_RUNTIME_TRUST_TELEMETRY_CERTIFICATION_BLOCKERS
@@ -105,6 +117,7 @@ def test_rejects_runtime_trust_telemetry_proof_with_invalid_top_level_fields(
     ("field_name", "bad_value"),
     [
         ("aggregateBlockersCleared", []),
+        ("productCoverage", {}),
         ("evidenceRefs", []),
         ("remainingCertificationBlockers", []),
         ("proofChecks", []),

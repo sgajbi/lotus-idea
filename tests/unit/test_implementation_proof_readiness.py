@@ -545,8 +545,9 @@ def test_implementation_proof_readiness_uses_runtime_trust_telemetry_proof_witho
     )
 
     assert "runtime_candidate_snapshot_missing" not in snapshot.overall_blockers
-    assert "certified_runtime_trust_telemetry_missing" not in snapshot.overall_blockers
-    assert "data_mesh_runtime_telemetry_not_certified" not in snapshot.overall_blockers
+    assert "certified_runtime_trust_telemetry_missing" in snapshot.overall_blockers
+    assert "data_mesh_runtime_telemetry_not_certified" in snapshot.overall_blockers
+    assert "runtime_trust_telemetry_product_coverage_incomplete" in (snapshot.overall_blockers)
     assert "durable_repository_not_configured" in snapshot.overall_blockers
     assert "platform_mesh_certification_missing" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers

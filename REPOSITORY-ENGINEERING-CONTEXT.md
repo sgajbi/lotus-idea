@@ -501,18 +501,14 @@ Recent issue-derived patterns to preserve:
 
 Current open issue priorities that should shape the next implementation slices:
 
-1. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
-   application and domain commands.
-2. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
+1. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
    Docker release proof gates or document a governed light/full split.
-3. GitHub issue `#262`: prevent runtime trust telemetry proof from clearing
-   aggregate blockers while product coverage remains incomplete.
-4. GitHub issue `#260`: require aggregate provenance for source-ingestion live
+2. GitHub issue `#260`: require aggregate provenance for source-ingestion live
    proof consumption.
 
-Issues `#261` and `#259` have branch-local fixes and validation evidence, but
-they must not be claimed closed until merged to `main`, CI is green, and QA or
-issue-closure evidence exists.
+Issues `#264`, `#262`, `#261`, and `#259` have branch-local fixes and
+validation evidence, but they must not be claimed closed until merged to
+`main`, CI is green, and QA or issue-closure evidence exists.
 
 Close or claim issue progress only after implementation, tests, docs/context
 truth, and validation evidence exist. Keep issue count under control by fixing

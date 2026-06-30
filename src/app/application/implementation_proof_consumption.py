@@ -61,7 +61,6 @@ from app.application.report_materialization_proof import (
     report_materialization_proof_is_valid,
 )
 from app.application.runtime_trust_telemetry_proof import (
-    RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
     runtime_trust_telemetry_proof_is_valid,
 )
 from app.application.source_ingestion_readiness import SourceIngestionReadinessSnapshot
@@ -249,8 +248,13 @@ def _apply_storage_and_runtime_proofs(
         evaluated_at_utc=evaluated_at_utc,
         proof_is_valid=runtime_trust_telemetry_proof_is_valid,
     ):
+        assert runtime_trust_telemetry_proof is not None
         capabilities = tuple(
-            _apply_runtime_trust_telemetry_proof(capability, runtime_trust_telemetry_proof_ref)
+            _apply_runtime_trust_telemetry_proof(
+                capability,
+                runtime_trust_telemetry_proof,
+                runtime_trust_telemetry_proof_ref,
+            )
             for capability in capabilities
         )
     return capabilities
@@ -570,11 +574,16 @@ def _apply_durable_repository_proof(
 
 def _apply_runtime_trust_telemetry_proof(
     capability: ImplementationProofCapabilityReadiness,
+    runtime_trust_telemetry_proof: Mapping[str, object],
     runtime_trust_telemetry_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
+    blockers_cleared_value = runtime_trust_telemetry_proof.get("aggregateBlockersCleared", ())
+    blockers_cleared = (
+        blockers_cleared_value if isinstance(blockers_cleared_value, (list, tuple)) else ()
+    )
     return apply_blocker_proof(
         capability,
-        blockers_cleared=RUNTIME_TRUST_TELEMETRY_BLOCKERS_CLEARED,
+        blockers_cleared=tuple(str(blocker) for blocker in blockers_cleared),
         proof_ref=runtime_trust_telemetry_proof_ref,
     )
 

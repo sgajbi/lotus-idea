@@ -293,8 +293,9 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "scheduled_worker_deploy_proof_missing" not in payload["overallBlockers"]
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
     assert "runtime_candidate_snapshot_missing" not in payload["overallBlockers"]
-    assert "certified_runtime_trust_telemetry_missing" not in payload["overallBlockers"]
-    assert "data_mesh_runtime_telemetry_not_certified" not in payload["overallBlockers"]
+    assert "certified_runtime_trust_telemetry_missing" in payload["overallBlockers"]
+    assert "data_mesh_runtime_telemetry_not_certified" in payload["overallBlockers"]
+    assert "runtime_trust_telemetry_product_coverage_incomplete" in payload["overallBlockers"]
     assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
@@ -320,6 +321,18 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert (
         "runtime trust telemetry proof artifact"
         in capabilities["runtime-trust-telemetry-preview"]["evidenceRefs"]
+    )
+    assert (
+        "runtime_candidate_snapshot_missing"
+        not in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
+    )
+    assert (
+        "certified_runtime_trust_telemetry_missing"
+        in (capabilities["runtime-trust-telemetry-preview"]["blockers"])
+    )
+    assert (
+        "runtime_trust_telemetry_product_coverage_incomplete"
+        in (capabilities["data-mesh-certification"]["blockers"])
     )
     assert "AI lineage store proof artifact" in capabilities["ai-explanation"]["evidenceRefs"]
     assert (

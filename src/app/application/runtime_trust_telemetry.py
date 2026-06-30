@@ -30,6 +30,12 @@ COMMON_PRODUCT_CERTIFICATION_BLOCKERS = (
     "gateway_workbench_discovery_proof_missing",
     "supported_feature_promotion_missing",
 )
+PRODUCT_COVERAGE_CERTIFICATION_BLOCKERS = (
+    "runtime_product_materialization_missing",
+    "runtime_product_records_missing",
+    "stale_or_unavailable_source_refs_present",
+    "durable_repository_not_configured",
+)
 RUNTIME_BACKED_PRODUCT_IDS = {
     "lotus-idea:IdeaCandidate:v1",
     "lotus-idea:IdeaEvidencePacket:v1",
@@ -108,15 +114,16 @@ def build_runtime_trust_telemetry_preview(
     observed_at = generated_at_utc or datetime.now(UTC)
     _require_aware_utc(observed_at, "generated_at_utc")
     summary = _runtime_trust_telemetry_summary(repository)
-    blockers = _certification_blockers(
-        durable_storage_backed=durable_storage_backed,
-        candidate_snapshot_count=summary.candidate_snapshot_count,
-        stale_or_unavailable_source_ref_count=summary.stale_or_unavailable_source_ref_count,
-    )
     product_postures = _product_postures(
         summary=summary,
         generated_at_utc=observed_at,
         durable_storage_backed=durable_storage_backed,
+    )
+    blockers = _certification_blockers(
+        durable_storage_backed=durable_storage_backed,
+        candidate_snapshot_count=summary.candidate_snapshot_count,
+        stale_or_unavailable_source_ref_count=summary.stale_or_unavailable_source_ref_count,
+        product_postures=product_postures,
     )
 
     return RuntimeTrustTelemetryPreview(
@@ -448,6 +455,7 @@ def _certification_blockers(
     durable_storage_backed: bool,
     candidate_snapshot_count: int,
     stale_or_unavailable_source_ref_count: int,
+    product_postures: tuple[RuntimeTrustTelemetryProductPosture, ...],
 ) -> tuple[str, ...]:
     blockers = [
         "platform_source_manifest_inclusion_missing",
@@ -455,13 +463,31 @@ def _certification_blockers(
         "gateway_workbench_discovery_proof_missing",
         "supported_feature_promotion_missing",
     ]
+    if _product_coverage_incomplete(product_postures):
+        blockers.insert(0, "runtime_trust_telemetry_product_coverage_incomplete")
+        blockers.insert(1, "certified_runtime_trust_telemetry_missing")
     if not durable_storage_backed:
         blockers.insert(0, "durable_repository_not_configured")
     if candidate_snapshot_count == 0:
         blockers.insert(0, "runtime_candidate_snapshot_missing")
     if stale_or_unavailable_source_ref_count > 0:
         blockers.insert(0, "stale_or_unavailable_source_refs_present")
-    return tuple(blockers)
+    return tuple(dict.fromkeys(blockers))
+
+
+def _product_coverage_incomplete(
+    product_postures: tuple[RuntimeTrustTelemetryProductPosture, ...],
+) -> bool:
+    if not product_postures:
+        return True
+    for posture in product_postures:
+        if posture.coverage_status != "runtime_backed":
+            return True
+        if set(posture.certification_blockers).intersection(
+            PRODUCT_COVERAGE_CERTIFICATION_BLOCKERS
+        ):
+            return True
+    return False
 
 
 def _snapshot_freshness(

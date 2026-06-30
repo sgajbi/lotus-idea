@@ -659,6 +659,12 @@ platform mesh certification, product activation, Gateway/Workbench discovery,
 live AI provider execution, model-risk operations certification,
 client-ready report publication, full Workbench proof, or supported-feature
 promotion.
+For runtime trust telemetry specifically, the current proof artifact clears
+only `runtime_candidate_snapshot_missing`; it preserves
+`runtime_trust_telemetry_product_coverage_incomplete`,
+`certified_runtime_trust_telemetry_missing`, and
+`data_mesh_runtime_telemetry_not_certified` while declared producer product
+coverage is incomplete.
 
 Optional JSON proof artifacts now also require aggregate provenance before they
 can clear blockers. The CLI and runtime artifact loader attach
