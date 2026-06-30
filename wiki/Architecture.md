@@ -142,11 +142,13 @@ Core evidence and source-reported cash weight, then return deterministic
 high-cash signal posture. The persist variant requires `Idempotency-Key` and
 `idea.candidate.persist`, writes through the active idea repository provider,
 and reports `durableStorageBacked` from that provider. Default local runtime is
-process-local and reports `false`; runtime configured with
-`LOTUS_IDEA_DATABASE_URL` uses the PostgreSQL adapter and reports `true` for
-repository-backed routes. These endpoints do not retrieve live source data,
-certify a data product, expose a Gateway route, or promote a supported business
-feature.
+process-local and reports `false`; `demo`, `staging`, and `production` require
+`LOTUS_IDEA_DATABASE_URL`, degrade `/health/ready`, and return
+`durable_repository_not_configured` before mutating in-memory state when durable
+storage is absent. Runtime configured with `LOTUS_IDEA_DATABASE_URL` uses the
+PostgreSQL adapter and reports `true` for repository-backed routes. These
+endpoints do not retrieve live source data, certify a data product, expose a
+Gateway route, or promote a supported business feature.
 
 `POST /api/v1/idea-signals/underperformance/evaluate`,
 `POST /api/v1/idea-signals/high-volatility/evaluate`,
@@ -169,9 +171,11 @@ API modules share the active repository provider through
 lifecycle routes must use that provider so API modules do not create duplicate
 candidate stores. The provider defaults to an in-memory repository and selects
 `PostgresIdeaRepository` when `LOTUS_IDEA_DATABASE_URL` is configured. Runtime
-composition for repositories, source-ingestion adapters, outbox publishers, and
-downstream realization clients belongs in `src/app/runtime/`, outside the API
-layer and app root.
+profile and durable-write posture belong in `src/app/runtime/settings.py` so
+API modules consume typed posture helpers instead of reading environment values
+directly. Runtime composition for repositories, source-ingestion adapters,
+outbox publishers, and downstream realization clients belongs in
+`src/app/runtime/`, outside the API layer and app root.
 
 Application use cases depend on repository workflow protocols from
 `src/app/ports/idea_repository.py`. Candidate snapshots, candidate persistence,
@@ -371,10 +375,11 @@ domain transition graph or review approval rules.
 
 The repository now has a versioned schema and rollback contract for the durable
 repository, a PostgreSQL migration execution CLI, and a tested
-`PostgresIdeaRepository` adapter behind the central repository ports. API state
-is process-local by default and PostgreSQL-backed only when
-`LOTUS_IDEA_DATABASE_URL` is configured. The real PostgreSQL runtime proof now
-covers high-cash evaluate-and-persist replay plus the first internal advisor
+`PostgresIdeaRepository` adapter behind the central repository ports. API write
+state is process-local only for `local`/`test` profiles and PostgreSQL-backed
+when `LOTUS_IDEA_DATABASE_URL` is configured; production-like profiles fail
+closed before in-memory mutation when durable storage is absent. The real
+PostgreSQL runtime proof now covers high-cash evaluate-and-persist replay plus the first internal advisor
 queue, review, feedback, conversion, report evidence-pack workflow path, and
 internal source-ingestion replay/conflict recovery. Unit tests also prove the
 bounded run-once source-ingestion batch worker foundation and the

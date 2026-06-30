@@ -589,10 +589,14 @@ evidence. This proof references the migration, adapter, and CI runtime-proof
 surface only; runtime endpoints still report durable storage from the active
 repository provider and `LOTUS_IDEA_DATABASE_URL`.
 `src/app/runtime/repository_state.py` now wires the adapter into API runtime
-selection when `LOTUS_IDEA_DATABASE_URL` is configured, while keeping
-process-local state as the default. Repository-backed routes derive
-`durableStorageBacked` responses and operation-event labels from the active
-repository. `make postgres-integration-gate` now exercises the real FastAPI
+selection when `LOTUS_IDEA_DATABASE_URL` is configured. `src/app/runtime/settings.py`
+owns the typed runtime profile boundary: `local` and `test` allow
+process-local writes, while `demo`, `staging`, and `production` require durable
+write storage. Production-like profiles without a database URL degrade
+`/health/ready` and make write-capable routes return
+`durable_repository_not_configured` before any in-memory mutation. Repository-backed
+routes derive `durableStorageBacked` responses and operation-event labels from
+the active repository. `make postgres-integration-gate` now exercises the real FastAPI
 runtime provider against a PostgreSQL 18 service by applying migrations,
 persisting a high-cash candidate through the API, reloading the provider,
 proving idempotency replay from database state, projecting the advisor queue,
@@ -1410,12 +1414,13 @@ logs; fix or document the owned warning source instead.
    modules must use `app.api.runtime_dependencies` for runtime composition
    helpers and must not import `app.runtime` directly.
 3. `src/app/runtime/`: process-local dependency composition for repositories,
-   source adapters, outbox publishers, and downstream realization clients. The
-   repository provider is process-local in-memory by default and
-   PostgreSQL-backed when `LOTUS_IDEA_DATABASE_URL` is configured. Workers and
-   proof generators depend on this package for runtime wiring directly; API
-   routes reach it only through the API runtime dependency facade so route
-   modules stay thin and reviewable.
+   source adapters, outbox publishers, downstream realization clients, and
+   typed runtime settings. `local`/`test` profiles may use process-local
+   repository writes; `demo`/`staging`/`production` require
+   `LOTUS_IDEA_DATABASE_URL` and fail closed before write-capable routes mutate
+   memory. Workers and proof generators depend on this package for runtime
+   wiring directly; API routes reach it only through the API runtime dependency
+   facade so route modules stay thin and reviewable.
 4. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows. Current use cases map the certified high-cash API
    requests into framework-free domain signal evaluation, fetch Core high-cash

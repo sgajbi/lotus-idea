@@ -232,9 +232,9 @@ The same controls are explained in [wiki/Validation-and-CI.md](wiki/Validation-a
 
 ## Runtime And Operations
 
-Process-local repository state is the default. Repository-durable API behavior
-is enabled only when `LOTUS_IDEA_DATABASE_URL` is configured and migrations have
-been applied.
+`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test` allow process-local writes.
+`demo`, `staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`, degrade `/health/ready`,
+and fail mutating routes closed with `durable_repository_not_configured` before in-memory writes.
 
 Operational entrypoints:
 

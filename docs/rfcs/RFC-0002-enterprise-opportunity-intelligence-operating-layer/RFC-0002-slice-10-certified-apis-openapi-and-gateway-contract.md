@@ -60,8 +60,10 @@ data-mesh certification, or supported-feature promotion.
 repository foundation. It requires `Idempotency-Key` and
 `idea.candidate.persist`, returns replay/conflict posture for idempotency
 behavior, and reports `durableStorageBacked` from the active repository
-provider. Default runtime remains process-local; configured
-`LOTUS_IDEA_DATABASE_URL` runtime uses the PostgreSQL repository adapter.
+provider. `local` and `test` profiles may use process-local writes; `demo`,
+`staging`, and `production` require `LOTUS_IDEA_DATABASE_URL` and return
+`durable_repository_not_configured` before in-memory mutation when durable
+storage is absent.
 
 The lifecycle transition endpoint exposes the Slice 06 internal lifecycle
 history, idempotency, and audit foundation over persisted candidates. It
@@ -361,8 +363,9 @@ configuration is absent or invalid.
 
 `supportedFeaturePromoted` is always `false` in these foundation endpoints.
 `durableStorageBacked` follows the active repository provider for
-repository-backed foundation endpoints: process-local runtime reports `false`,
-and `LOTUS_IDEA_DATABASE_URL` runtime reports `true`. The endpoints are
+repository-backed foundation endpoints: allowed `local`/`test` process-local
+runtime reports `false`, and `LOTUS_IDEA_DATABASE_URL` runtime reports `true`.
+Production-like profiles without durable storage fail closed before mutation. The endpoints are
 certified as API foundations but are not supported business features because
 source-worker certification beyond bounded live proof, Workbench proof,
 data-product certification, runtime trust telemetry, downstream realization

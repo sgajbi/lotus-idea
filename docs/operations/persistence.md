@@ -36,8 +36,11 @@ source-ingestion orchestration as a protected internal operator action. It
 requires `idea.source-ingestion.run`, requires durable repository posture,
 fails closed before mutation when manifest or Core configuration is absent or
 invalid, and returns aggregate decision counts only.
-Runtime API state remains process-local by default and reports
-`durableStorageBacked=false` unless the database URL is configured. When
+Runtime API state is profile-aware. `LOTUS_IDEA_RUNTIME_PROFILE` defaults to
+`local`; only `local` and `test` allow process-local repository writes. `demo`,
+`staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`; otherwise
+`/health/ready` returns degraded posture and mutating API routes fail closed
+with `durable_repository_not_configured` before in-memory mutation. When
 configured, repository-backed API responses and operation events report
 `durableStorageBacked=true`, but this is still not production storage
 certification, data-product certification, live source integration proof,
@@ -108,7 +111,7 @@ supported feature.
 
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
-| Repository provider | Process-local by default; PostgreSQL when `LOTUS_IDEA_DATABASE_URL` is configured | Not production recovery certification |
+| Repository provider | `local`/`test` may use process-local writes; `demo`/`staging`/`production` require PostgreSQL through `LOTUS_IDEA_DATABASE_URL` and fail closed when it is absent | Not production recovery certification |
 | Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded outbox platform mesh event publication proof artifact | No certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
@@ -158,10 +161,11 @@ flowchart LR
    evidence-pack state, AI explanation lineage records, plus pending outbox
    records through typed table columns plus JSONB snapshots, and rolls back the
    database transaction on flush failure.
-8. `src/app/runtime/repository_state.py` selects the process-local in-memory
-   repository by default, or a `PostgresIdeaRepository` backed by a psycopg
-   connection with mapping rows when `LOTUS_IDEA_DATABASE_URL` is set. Runtime
-   composition stays outside the API layer and app root.
+8. `src/app/runtime/settings.py` owns runtime profile semantics. `local` and
+   `test` may use the process-local in-memory repository; `demo`, `staging`,
+   and `production` require `LOTUS_IDEA_DATABASE_URL` and fail closed before
+   write-capable routes mutate memory. Runtime composition stays outside the
+   API layer and app root.
 9. Repository-backed endpoints derive `durableStorageBacked` and
    `durable_storage_backed` operation-event labels from the active repository
    instead of hardcoding storage posture.
@@ -283,7 +287,9 @@ $env:LOTUS_IDEA_DATABASE_URL = "postgresql://lotus_idea:lotus_idea@localhost:543
 uvicorn app.main:app --reload --port 8330
 ```
 
-If the variable is unset or blank, the API uses the process-local repository.
+If the variable is unset or blank, only `local` and `test` profiles may use the
+process-local repository for writes. Production-like profiles degrade readiness
+and return `durable_repository_not_configured` for write-capable routes.
 That default is intentional for local foundation tests and must not be described
 as durable storage.
 

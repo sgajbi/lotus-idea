@@ -169,8 +169,9 @@ Persistence adapter validation:
    idempotency replay, lifecycle history, audit events, review decisions,
    feedback, conversion intent/outcome, report evidence-pack requests, snapshot
    hydration, commit behavior, and rollback on flush failure.
-2. `tests/unit/test_repository_state.py` proves repository provider selection:
-   process-local by default, `PostgresIdeaRepository` when
+2. `tests/unit/test_repository_state.py` proves repository provider selection,
+   runtime profile semantics, local/test process-local write allowance,
+   production-like durable-write blockers, `PostgresIdeaRepository` when
    `LOTUS_IDEA_DATABASE_URL` is configured, psycopg mapping-row configuration,
    provider caching, durable-storage status, and connection close/reset
    behavior.

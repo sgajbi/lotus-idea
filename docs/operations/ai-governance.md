@@ -48,8 +48,8 @@ Successful API responses always return:
 
 1. `aiLineageRecorded=true` when source-safe lineage was accepted or replayed,
 2. `aiLineagePersistenceDecision=accepted|replayed`,
-3. `durableStorageBacked=false` in the default process-local runtime and
-   `true` only when the active repository provider is PostgreSQL,
+3. `durableStorageBacked=false` only for allowed `local`/`test` process-local
+   writes and `true` when the active repository provider is PostgreSQL,
 4. `lotusAiRuntimeExecuted=false`,
 5. `supportedFeaturePromoted=false`,
 6. `grantsDownstreamAuthority=false`.
@@ -59,8 +59,9 @@ The readiness diagnostic always returns:
 1. `readinessStatus=blocked`,
 2. `supportabilityStatus=not_certified`,
 3. `certificationReady=false`,
-4. `durableAiLineageStoreBacked=false` in the default process-local runtime and
-   `true` only when the active repository provider reports durable storage,
+4. `durableAiLineageStoreBacked=false` only for allowed `local`/`test`
+   diagnostics and `true` when the active repository provider reports durable
+   storage,
 5. `lotusAiRuntimeExecuted=false`,
 6. `supportedFeaturePromoted=false`.
 
