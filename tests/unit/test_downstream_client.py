@@ -45,6 +45,31 @@ def test_invalid_resource_limits_are_rejected(kwargs: dict[str, Any], message: s
         DownstreamClientConfig(base_url="https://upstream.example", **kwargs)
 
 
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    [
+        ({"retry_max_attempts": 0}, "retry_max_attempts must be positive"),
+        (
+            {"retry_initial_backoff_seconds": -0.01},
+            "retry_initial_backoff_seconds must not be negative",
+        ),
+        (
+            {"retry_max_backoff_seconds": -0.01},
+            "retry_max_backoff_seconds must not be negative",
+        ),
+        (
+            {"retry_initial_backoff_seconds": 0.2, "retry_max_backoff_seconds": 0.1},
+            "retry_max_backoff_seconds must be greater than or equal",
+        ),
+        ({"retry_backoff_multiplier": 0.5}, "retry_backoff_multiplier must be greater"),
+        ({"retry_status_codes": frozenset({99})}, "retry_status_codes must be valid"),
+    ],
+)
+def test_invalid_retry_policy_is_rejected(kwargs: dict[str, Any], message: str) -> None:
+    with pytest.raises(DownstreamClientConfigurationError, match=message):
+        DownstreamClientConfig(base_url="https://upstream.example", **kwargs)
+
+
 def test_default_client_can_be_constructed_for_valid_config() -> None:
     client = DownstreamJsonClient(DownstreamClientConfig(base_url="https://upstream.example"))
     assert client is not None
@@ -132,6 +157,7 @@ def test_timeout_maps_to_safe_upstream_error() -> None:
     with pytest.raises(DownstreamServiceError) as exc_info:
         _client_for(httpx.MockTransport(handler)).get_json("/status")
     assert exc_info.value.code == "upstream_timeout"
+    assert exc_info.value.attempt_count == 1
 
 
 def test_generic_http_error_maps_to_safe_upstream_error() -> None:
@@ -141,6 +167,257 @@ def test_generic_http_error_maps_to_safe_upstream_error() -> None:
     with pytest.raises(DownstreamServiceError) as exc_info:
         _client_for(httpx.MockTransport(handler)).get_json("/status")
     assert exc_info.value.code == "upstream_unavailable"
+    assert exc_info.value.attempt_count == 1
+
+
+def test_retryable_timeout_is_retried_before_success() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise httpx.ReadTimeout("timed out", request=request)
+        return httpx.Response(200, json={"status": "ok"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    assert client.get_json("/status") == {"status": "ok"}
+    assert attempts == 2
+
+
+def test_retryable_status_is_retried_before_success() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(503, json={"status": "temporarily_unavailable"})
+        return httpx.Response(200, json={"status": "ok"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    assert client.get_json("/status") == {"status": "ok"}
+    assert attempts == 2
+
+
+def test_retry_after_is_capped_by_max_backoff() -> None:
+    sleeps: list[float] = []
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(429, headers={"Retry-After": "10"}, json={})
+        return httpx.Response(200, json={"status": "ok"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0.1,
+            retry_max_backoff_seconds=0.25,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+        sleep=sleeps.append,
+    )
+
+    assert client.get_json("/status") == {"status": "ok"}
+    assert sleeps == [0.25]
+
+
+def test_retry_exhaustion_reports_bounded_attempt_count() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("timed out", request=request)
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    with pytest.raises(DownstreamServiceError) as exc_info:
+        client.get_json("/status")
+    assert exc_info.value.code == "upstream_timeout"
+    assert exc_info.value.attempt_count == 2
+
+
+def test_post_without_idempotency_key_is_not_retried_by_default() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        return httpx.Response(503, json={})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=3,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    with pytest.raises(DownstreamServiceError) as exc_info:
+        client.post_json("/submit", json_payload={"action": "write"})
+    assert exc_info.value.code == "upstream_unavailable"
+    assert exc_info.value.status_code == 503
+    assert exc_info.value.attempt_count == 1
+    assert attempts == 1
+
+
+def test_post_with_idempotency_key_preserves_headers_across_retries() -> None:
+    captured_headers: list[dict[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_headers.append(
+            {
+                "correlation_id": request.headers["X-Correlation-Id"],
+                "trace_id": request.headers["X-Trace-Id"],
+                "idempotency_key": request.headers["Idempotency-Key"],
+            }
+        )
+        if len(captured_headers) == 1:
+            return httpx.Response(503, json={})
+        return httpx.Response(200, json={"status": "accepted"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    payload = client.post_json(
+        "/submit",
+        json_payload={"action": "write"},
+        correlation_id="corr-retry",
+        trace_id="trace-retry",
+        idempotency_key="idem-retry",
+    )
+
+    assert payload == {"status": "accepted"}
+    assert captured_headers == [
+        {
+            "correlation_id": "corr-retry",
+            "trace_id": "trace-retry",
+            "idempotency_key": "idem-retry",
+        },
+        {
+            "correlation_id": "corr-retry",
+            "trace_id": "trace-retry",
+            "idempotency_key": "idem-retry",
+        },
+    ]
+
+
+def test_read_only_post_can_be_marked_retryable_without_idempotency_key() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(503, json={})
+        return httpx.Response(200, json={"status": "read"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+            retry_post_without_idempotency=True,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    assert client.post_json("/query", json_payload={"query": "source-read"}) == {"status": "read"}
+    assert attempts == 2
+
+
+def test_non_retryable_client_error_is_not_retried() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        return httpx.Response(400, json={"error": "invalid_request"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=3,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    with pytest.raises(DownstreamServiceError) as exc_info:
+        client.get_json("/status")
+    assert exc_info.value.code == "upstream_rejected_request"
+    assert exc_info.value.attempt_count == 1
+    assert attempts == 1
 
 
 @pytest.mark.parametrize(

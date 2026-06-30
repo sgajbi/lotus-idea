@@ -79,6 +79,7 @@ from app.infrastructure.postgres_outbox_delivery import (
     outbox_event_from_row,
 )
 from app.infrastructure.postgres_outbox_repository import PostgresOutboxRepositoryMixin
+from app.infrastructure.postgres_outbox_writes import insert_outbox_event
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_downstream_lookup import (
@@ -457,7 +458,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
                 for candidate_record in snapshot.candidate_records.values():
                     self._insert_record_details(cursor, candidate_record)
                 for outbox_event in snapshot.outbox_events.values():
-                    self._insert_outbox_event(cursor, outbox_event)
+                    insert_outbox_event(cursor, outbox_event)
                 for record in snapshot.downstream_submission_records.values():
                     self._insert_downstream_submission_record(cursor, record)
             self._connection.commit()
@@ -1162,43 +1163,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
             ),
         )
 
-    def _insert_outbox_event(
-        self,
-        cursor: PostgresCursor,
-        event: OutboxEventRecord,
-    ) -> None:
-        cursor.execute(
-            """
-            INSERT INTO idea_outbox_event (
-                outbox_event_id, event_type, aggregate_type, aggregate_id,
-                schema_version, payload_json, status, occurred_at_utc,
-                idempotency_fingerprint, correlation_id, causation_id,
-                published_at_utc, failure_reason, retry_count, lease_owner,
-                lease_attempt_id, lease_expires_at_utc
-            ) VALUES (
-                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
-            )
-            """,
-            (
-                event.event_id,
-                event.event_type,
-                event.aggregate_type,
-                event.aggregate_id,
-                event.schema_version,
-                Jsonb(dict(event.payload)),
-                event.status.value,
-                event.occurred_at_utc,
-                event.idempotency_fingerprint,
-                event.correlation_id,
-                event.causation_id,
-                event.published_at_utc,
-                event.failure_reason,
-                event.retry_count,
-                event.lease_owner,
-                event.lease_attempt_id,
-                event.lease_expires_at_utc,
-            ),
-        )
+    def _insert_outbox_event(self, cursor: PostgresCursor, event: OutboxEventRecord) -> None:
+        insert_outbox_event(cursor, event)
 
 
 def _operation_name(idempotency_key: str) -> str:

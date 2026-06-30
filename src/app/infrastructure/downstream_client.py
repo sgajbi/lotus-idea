@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
+import time
 from typing import Any
 from urllib.parse import urlparse
 
@@ -12,9 +14,16 @@ class DownstreamClientConfigurationError(ValueError):
 
 
 class DownstreamServiceError(Exception):
-    def __init__(self, *, code: str, status_code: int | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        code: str,
+        status_code: int | None = None,
+        attempt_count: int = 1,
+    ) -> None:
         self.code = code
         self.status_code = status_code
+        self.attempt_count = attempt_count
         super().__init__(code)
 
 
@@ -25,6 +34,14 @@ class DownstreamClientConfig:
     max_connections: int = 20
     max_keepalive_connections: int = 10
     pool_timeout_seconds: float = 2.0
+    retry_max_attempts: int = 1
+    retry_initial_backoff_seconds: float = 0.05
+    retry_max_backoff_seconds: float = 0.5
+    retry_backoff_multiplier: float = 2.0
+    retry_status_codes: frozenset[int] = field(
+        default_factory=lambda: frozenset({429, 502, 503, 504})
+    )
+    retry_post_without_idempotency: bool = False
 
     def __post_init__(self) -> None:
         parsed = urlparse(self.base_url)
@@ -47,6 +64,36 @@ class DownstreamClientConfig:
         if self.pool_timeout_seconds <= 0:
             raise DownstreamClientConfigurationError(
                 "Downstream pool_timeout_seconds must be positive."
+            )
+        if self.retry_max_attempts <= 0:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_max_attempts must be positive."
+            )
+        if self.retry_initial_backoff_seconds < 0:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_initial_backoff_seconds must not be negative."
+            )
+        if self.retry_max_backoff_seconds < 0:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_max_backoff_seconds must not be negative."
+            )
+        if self.retry_max_backoff_seconds < self.retry_initial_backoff_seconds:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_max_backoff_seconds must be greater than or equal to "
+                "retry_initial_backoff_seconds."
+            )
+        if self.retry_backoff_multiplier < 1:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_backoff_multiplier must be greater than or equal to 1."
+            )
+        invalid_statuses = [
+            status_code
+            for status_code in self.retry_status_codes
+            if status_code < 100 or status_code > 599
+        ]
+        if invalid_statuses:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_status_codes must be valid HTTP status codes."
             )
 
     def limits(self) -> httpx.Limits:
@@ -79,9 +126,15 @@ def build_trace_headers(
 
 
 class DownstreamJsonClient:
-    def __init__(self, config: DownstreamClientConfig, client: httpx.Client | None = None) -> None:
+    def __init__(
+        self,
+        config: DownstreamClientConfig,
+        client: httpx.Client | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
         self._config = config
         self._owns_client = client is None
+        self._sleep = sleep
         self._client = client or httpx.Client(
             base_url=config.base_url,
             timeout=config.timeout(),
@@ -144,40 +197,119 @@ class DownstreamJsonClient:
         trace_id: str | None = None,
         idempotency_key: str | None = None,
     ) -> dict[str, Any]:
-        try:
-            response = self._client.request(
-                method,
-                path,
-                json=json_payload,
-                headers=build_trace_headers(
-                    correlation_id=correlation_id,
-                    trace_id=trace_id,
-                    idempotency_key=idempotency_key,
-                ),
-            )
-        except httpx.TimeoutException as exc:
-            raise DownstreamServiceError(code="upstream_timeout") from exc
-        except httpx.HTTPError as exc:
-            raise DownstreamServiceError(code="upstream_unavailable") from exc
+        retry_attempt_limit = self._retry_attempt_limit(
+            method=method,
+            idempotency_key=idempotency_key,
+        )
+        headers = build_trace_headers(
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+            idempotency_key=idempotency_key,
+        )
+        attempt_count = 0
+        while True:
+            attempt_count += 1
+            try:
+                response = self._client.request(
+                    method,
+                    path,
+                    json=json_payload,
+                    headers=headers,
+                )
+            except httpx.TimeoutException as exc:
+                if attempt_count < retry_attempt_limit:
+                    self._sleep_before_retry(attempt_count, response=None)
+                    continue
+                raise DownstreamServiceError(
+                    code="upstream_timeout",
+                    attempt_count=attempt_count,
+                ) from exc
+            except httpx.HTTPError as exc:
+                if attempt_count < retry_attempt_limit:
+                    self._sleep_before_retry(attempt_count, response=None)
+                    continue
+                raise DownstreamServiceError(
+                    code="upstream_unavailable",
+                    attempt_count=attempt_count,
+                ) from exc
+
+            if (
+                response.status_code in self._config.retry_status_codes
+                and attempt_count < retry_attempt_limit
+            ):
+                self._sleep_before_retry(attempt_count, response=response)
+                continue
+            break
 
         if 400 <= response.status_code < 500:
             raise DownstreamServiceError(
-                code="upstream_rejected_request", status_code=response.status_code
+                code="upstream_rejected_request",
+                status_code=response.status_code,
+                attempt_count=attempt_count,
             )
         if response.status_code >= 500:
             raise DownstreamServiceError(
-                code="upstream_unavailable", status_code=response.status_code
+                code="upstream_unavailable",
+                status_code=response.status_code,
+                attempt_count=attempt_count,
             )
 
         try:
             payload = response.json()
         except ValueError as exc:
             raise DownstreamServiceError(
-                code="upstream_malformed_response", status_code=response.status_code
+                code="upstream_malformed_response",
+                status_code=response.status_code,
+                attempt_count=attempt_count,
             ) from exc
 
         if not isinstance(payload, dict):
             raise DownstreamServiceError(
-                code="upstream_malformed_response", status_code=response.status_code
+                code="upstream_malformed_response",
+                status_code=response.status_code,
+                attempt_count=attempt_count,
             )
         return payload
+
+    def _retry_attempt_limit(self, *, method: str, idempotency_key: str | None) -> int:
+        if self._config.retry_max_attempts <= 1:
+            return 1
+        if method.upper() != "POST":
+            return self._config.retry_max_attempts
+        if idempotency_key or self._config.retry_post_without_idempotency:
+            return self._config.retry_max_attempts
+        return 1
+
+    def _sleep_before_retry(self, attempt_count: int, *, response: httpx.Response | None) -> None:
+        delay_seconds = self._retry_delay_seconds(attempt_count, response=response)
+        if delay_seconds > 0:
+            self._sleep(delay_seconds)
+
+    def _retry_delay_seconds(
+        self,
+        attempt_count: int,
+        *,
+        response: httpx.Response | None,
+    ) -> float:
+        retry_after = _retry_after_seconds(response)
+        if retry_after is not None:
+            return min(retry_after, self._config.retry_max_backoff_seconds)
+        backoff = self._config.retry_initial_backoff_seconds * (
+            self._config.retry_backoff_multiplier ** max(attempt_count - 1, 0)
+        )
+        return min(backoff, self._config.retry_max_backoff_seconds)
+
+
+def _retry_after_seconds(response: httpx.Response | None) -> float | None:
+    if response is None:
+        return None
+    raw_retry_after = response.headers.get("Retry-After")
+    if raw_retry_after is None:
+        return None
+    try:
+        retry_after = float(raw_retry_after)
+    except ValueError:
+        return None
+    if retry_after < 0:
+        return None
+    return retry_after

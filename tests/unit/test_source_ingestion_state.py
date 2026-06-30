@@ -13,11 +13,15 @@ from app.application.source_ingestion_readiness import (
     TIMEOUT_SECONDS_ENV,
 )
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
+from app.infrastructure.downstream_client import DownstreamClientConfig
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.runtime.source_ingestion_state import (
     SOURCE_INGESTION_MAX_CONNECTIONS_ENV,
     SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV,
     SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV,
+    SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV,
+    SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV,
+    SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV,
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
     build_source_ingestion_runtime_from_environment,
@@ -227,6 +231,36 @@ def test_source_ingestion_runtime_blocks_invalid_pool_timeout(
     )
 
 
+@pytest.mark.parametrize(
+    ("env_name", "env_value"),
+    [
+        (SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV, "0"),
+        (SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV, "-0.01"),
+        (SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV, "slow"),
+    ],
+)
+def test_source_ingestion_runtime_blocks_invalid_retry_policy(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    env_name: str,
+    env_value: str,
+) -> None:
+    manifest = write_manifest(tmp_path)
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8100")
+    monkeypatch.setenv(env_name, env_value)
+
+    result = build_source_ingestion_runtime_from_environment()
+
+    assert result == SourceIngestionRuntimeBlocker(
+        "lotus_core_base_url_invalid",
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+
+
 def test_source_ingestion_runtime_builds_manifest_plan_and_core_adapter(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -275,6 +309,43 @@ def test_source_ingestion_runtime_close_releases_owned_core_clients(
     assert len(created_clients) == 2
     result.close()
     assert [client.closed for client in created_clients] == [True, True]
+
+
+def test_source_ingestion_runtime_applies_retry_policy_to_read_only_core_clients(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    class CapturingDownstreamClient:
+        def __init__(self, config: object) -> None:
+            self.config = config
+            created_clients.append(self)
+
+        def close(self) -> None:
+            return None
+
+    created_clients: list[CapturingDownstreamClient] = []
+    monkeypatch.setattr(
+        "app.runtime.source_ingestion_state.DownstreamJsonClient",
+        CapturingDownstreamClient,
+    )
+    manifest = write_manifest(tmp_path)
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8100")
+    monkeypatch.setenv(SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV, "3")
+    monkeypatch.setenv(SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV, "0.1")
+    monkeypatch.setenv(SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV, "0.4")
+
+    result = build_source_ingestion_runtime_from_environment()
+
+    assert isinstance(result, SourceIngestionRuntime)
+    assert len(created_clients) == 2
+    for created_client in created_clients:
+        config = created_client.config
+        assert isinstance(config, DownstreamClientConfig)
+        assert config.retry_max_attempts == 3
+        assert config.retry_initial_backoff_seconds == 0.1
+        assert config.retry_max_backoff_seconds == 0.4
+        assert config.retry_post_without_idempotency is True
 
 
 def test_source_ingestion_runtime_builds_with_split_core_runtime_urls(
