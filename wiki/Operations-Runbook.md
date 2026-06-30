@@ -425,7 +425,7 @@ startup:
 | --- | --- | --- |
 | Trusted hosts | `LOTUS_IDEA_TRUSTED_HOSTS`, comma-separated, default `*` | Rejects untrusted `Host` headers with `400 invalid_host` without echoing the rejected host. |
 | CORS allowlist | `LOTUS_IDEA_CORS_ALLOWED_ORIGINS`, comma-separated, default empty | Browser origins are denied unless explicitly allowlisted. |
-| Request size | `LOTUS_IDEA_MAX_REQUEST_BODY_BYTES`, default `1048576` | Rejects oversized requests with `413 request_too_large` before route processing. |
+| Request size | `LOTUS_IDEA_MAX_REQUEST_BODY_BYTES`, default `1048576` | Rejects oversized JSON write requests with `413 request_too_large` before route processing, based on the actual ASGI body stream as well as `Content-Length`. |
 | Write media type | Always on for `POST`, `PUT`, and `PATCH` bodies | Rejects non-JSON write requests with `415 unsupported_media_type`. |
 | Security headers | Always on | Adds HSTS, no-sniff, frame-deny, no-referrer, locked-down permissions, and default-deny CSP headers. |
 
