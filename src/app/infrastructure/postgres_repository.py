@@ -85,6 +85,7 @@ from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
     load_review_queue_candidate_page,
 )
+from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
 from app.ports.idea_repository import ReviewQueueRepositoryPage
 
@@ -110,6 +111,9 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         return load_review_queue_candidate_page(
             self._connection, access_scope_filter=access_scope_filter, limit=limit, offset=offset
         )
+
+    def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:
+        return load_candidate_record_by_id(self._connection, candidate_id)
 
     def persist_candidate(
         self,

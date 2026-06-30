@@ -84,6 +84,12 @@ supported-feature promotion. The bounded read-only Gateway candidate detail
 publication preserves this source-safe projection and forwards caller
 entitlement-scope headers; `lotus-idea` applies those headers fail-closed before
 returning detail. `durableStorageBacked` follows the active repository provider.
+When the active durable provider is PostgreSQL, ordinary candidate-detail reads
+use an internal repository-side projection for the requested candidate and its
+related lifecycle, audit, review, feedback, conversion, report-evidence, and
+AI-lineage rows rather than hydrating a whole repository snapshot. This is
+bounded design modularity inside `lotus-idea`; it is not a separate runtime
+service boundary or a supported-feature promotion.
 
 The candidate evidence replay endpoint exposes internal operator replay posture
 over persisted evidence hashes. It requires `idea.candidate.evidence.replay`

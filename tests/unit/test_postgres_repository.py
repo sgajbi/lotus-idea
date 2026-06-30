@@ -110,6 +110,10 @@ class FakePostgresCursor:
             assert params is not None
             self._rows = outbox_readiness_summary_row(self.connection, params)
             return
+        if normalized.startswith("/* lotus-idea candidate-detail"):
+            assert params is not None
+            self._rows = candidate_detail_rows(self.connection, normalized, params)
+            return
         if normalized.startswith("with selected"):
             assert params is not None
             self._rows = claim_outbox_event_rows(self.connection, params)
@@ -981,6 +985,29 @@ def _table_from_select(query: str) -> str:
         if f" from {table_name}" in query:
             return table_name
     raise AssertionError(f"unknown select table: {query}")
+
+
+def candidate_detail_rows(
+    connection: FakePostgresConnection,
+    query: str,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    table_name = _table_from_select(query)
+    if "where conversion_intent_id = any(%s)" in query:
+        intent_ids = set(params[0])
+        return [
+            dict(row)
+            for row in connection.rows[table_name]
+            if row["conversion_intent_id"] in intent_ids
+        ]
+    if "where candidate_id = %s" in query:
+        candidate_id = params[0]
+        return [
+            dict(row)
+            for row in connection.rows[table_name]
+            if row.get("candidate_id") == candidate_id
+        ]
+    raise AssertionError(f"unexpected candidate detail query: {query}")
 
 
 def _append_orphan_detail_rows(connection: FakePostgresConnection) -> None:

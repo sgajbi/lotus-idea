@@ -4,7 +4,10 @@ from dataclasses import dataclass
 
 from app.domain import CandidatePersistenceRecord
 from app.domain.access_scope import QueueAccessScopeFilter
-from app.ports.idea_repository import CandidateSnapshotRepository
+from app.ports.idea_repository import (
+    CandidateDetailProjectionRepository,
+    CandidateSnapshotRepository,
+)
 
 
 @dataclass(frozen=True)
@@ -28,8 +31,11 @@ def get_candidate_detail(
     *,
     repository: CandidateSnapshotRepository,
 ) -> CandidateDetailResult:
-    snapshot = repository.snapshot()
-    record = snapshot.candidate_records.get(command.candidate_id)
+    if isinstance(repository, CandidateDetailProjectionRepository):
+        record = repository.candidate_record_by_id(command.candidate_id)
+    else:
+        snapshot = repository.snapshot()
+        record = snapshot.candidate_records.get(command.candidate_id)
     if record is None:
         return CandidateDetailResult(record=None)
     if command.access_scope_filter is not None and not command.access_scope_filter.matches(
