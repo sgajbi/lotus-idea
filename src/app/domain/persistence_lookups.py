@@ -8,6 +8,10 @@ class InMemoryIdeaLookupMixin:
     _conversion_intent_candidates: Mapping[str, str]
     _report_evidence_pack_candidates: Mapping[str, str]
 
+    def candidate_record_by_id(self, candidate_id: str) -> Any | None:
+        _require_text(candidate_id, "candidate_id")
+        return self._candidate_records.get(candidate_id)
+
     def conversion_intent_by_id(self, conversion_intent_id: str) -> Any | None:
         _require_text(conversion_intent_id, "conversion_intent_id")
         candidate_id = self._conversion_intent_candidates.get(conversion_intent_id)

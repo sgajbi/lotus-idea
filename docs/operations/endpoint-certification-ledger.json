@@ -503,7 +503,8 @@
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_requires_permission_and_existing_candidate",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metadata",
-        "tests/integration/test_api_operation_events.py::test_ai_explanation_api_emits_bounded_operation_event"
+        "tests/integration/test_api_operation_events.py::test_ai_explanation_api_emits_bounded_operation_event",
+        "tests/unit/test_ai_governance.py::test_ai_explanation_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -559,7 +560,8 @@
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_conflict_for_changed_idempotency_payload",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_state_conflict_for_generated_candidate_approval",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
-        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
+        "tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -587,7 +589,8 @@
         "tests/integration/test_review_workflow_api.py::test_feedback_api_persists_source_provenanced_feedback",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_not_found_for_missing_candidate",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
-        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
+        "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
+        "tests/unit/test_review_workflow_application.py::test_record_feedback_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -616,7 +619,9 @@
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_records_review_approved_candidate_without_downstream_authority",
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_replays_and_conflicts_idempotently",
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_requires_approved_state_permission_and_valid_request",
-        "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
+        "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events",
+        "tests/unit/test_conversion_workflow_application.py::test_request_conversion_intent_uses_candidate_projection_without_snapshot",
+        "tests/unit/test_conversion_workflow_application.py::test_request_conversion_intent_returns_not_found_without_snapshot_for_missing_candidate"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

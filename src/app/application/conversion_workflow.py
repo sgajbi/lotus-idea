@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from app.application.candidate_lookup import candidate_record_by_id
 from app.domain import (
     ConversionIntentCommand,
     ConversionIntentResult,
@@ -55,8 +56,7 @@ def request_conversion_intent_to_repository(
     *,
     repository: ConversionWorkflowRepository,
 ) -> ConversionIntentWorkflowResult:
-    snapshot = repository.snapshot()
-    record = snapshot.candidate_records.get(command.candidate_id)
+    record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return ConversionIntentWorkflowResult(
             conversion_result=None,

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from app.application.candidate_lookup import candidate_record_by_id
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
@@ -103,8 +104,7 @@ def evaluate_ai_explanation_to_repository(
     *,
     repository: AIExplanationRepository,
 ) -> AIExplanationWorkflowResult:
-    snapshot = repository.snapshot()
-    record = snapshot.candidate_records.get(command.candidate_id)
+    record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return AIExplanationWorkflowResult(
             decision=AIExplanationEvaluationDecision.NOT_FOUND,

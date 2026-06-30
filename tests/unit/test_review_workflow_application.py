@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from typing import Any
 
 import pytest
 
@@ -180,6 +181,23 @@ def test_apply_review_action_to_repository_persists_candidate_decision_and_audit
     )
 
 
+def test_apply_review_action_uses_candidate_projection_without_snapshot() -> None:
+    repository = ProjectionOnlyReviewWorkflowRepository(repository_with_candidate())
+
+    result = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+            idempotency_key="review-action:projection:001",
+        ),
+        repository=repository,
+    )
+
+    assert result.review_result is not None
+    assert result.persistence.decision is ReviewPersistenceDecision.ACCEPTED
+    assert repository.looked_up_candidate_ids == ["idea-review-001"]
+
+
 def test_apply_review_action_to_repository_replays_before_reapplying_domain_transition() -> None:
     repository = repository_with_candidate()
     command = ApplyReviewActionToRepositoryCommand(
@@ -251,6 +269,23 @@ def test_record_feedback_to_repository_persists_source_provenanced_feedback() ->
         "signal-review-workflow-001",
     )
     assert result.persistence.record.audit_events[-1].event_type == "idea.feedback.recorded"
+
+
+def test_record_feedback_uses_candidate_projection_without_snapshot() -> None:
+    repository = ProjectionOnlyReviewWorkflowRepository(repository_with_candidate())
+
+    result = record_feedback_to_repository(
+        RecordFeedbackToRepositoryCommand(
+            candidate_id="idea-review-001",
+            feedback=feedback_command(),
+            idempotency_key="review-feedback:projection:001",
+        ),
+        repository=repository,
+    )
+
+    assert result.feedback_result is not None
+    assert result.persistence.decision is ReviewPersistenceDecision.ACCEPTED
+    assert repository.looked_up_candidate_ids == ["idea-review-001"]
 
 
 def test_record_feedback_to_repository_replays_before_reapplying_domain_feedback() -> None:
@@ -336,3 +371,25 @@ def test_review_workflow_returns_not_found_for_missing_candidate() -> None:
     assert result.review_result is None
     assert result.persistence.decision is ReviewPersistenceDecision.NOT_FOUND
     assert result.persistence.record is None
+
+
+class ProjectionOnlyReviewWorkflowRepository:
+    def __init__(self, repository: InMemoryIdeaRepository) -> None:
+        self._repository = repository
+        self.looked_up_candidate_ids: list[str] = []
+
+    def candidate_record_by_id(self, candidate_id: str) -> Any:
+        self.looked_up_candidate_ids.append(candidate_id)
+        return self._repository.candidate_record_by_id(candidate_id)
+
+    def precheck_review_mutation(self, **kwargs: Any) -> Any:
+        return self._repository.precheck_review_mutation(**kwargs)
+
+    def record_review_action(self, *args: Any, **kwargs: Any) -> Any:
+        return self._repository.record_review_action(*args, **kwargs)
+
+    def record_feedback_event(self, *args: Any, **kwargs: Any) -> Any:
+        return self._repository.record_feedback_event(*args, **kwargs)
+
+    def snapshot(self) -> Any:
+        raise AssertionError("review workflow candidate lookup must not hydrate a full snapshot")

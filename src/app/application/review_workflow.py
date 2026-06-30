@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from app.application.candidate_lookup import candidate_record_by_id
 from app.domain import (
     DEFAULT_REVIEW_ACTION_POLICY,
     FeedbackCommand,
@@ -58,8 +59,7 @@ def apply_review_action_to_repository(
     repository: ReviewWorkflowRepository,
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> ReviewWorkflowResult:
-    snapshot = repository.snapshot()
-    record = snapshot.candidate_records.get(command.candidate_id)
+    record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return ReviewWorkflowResult(
             review_result=None,
@@ -92,8 +92,7 @@ def record_feedback_to_repository(
     repository: ReviewWorkflowRepository,
     policy: ReviewActionPolicy = DEFAULT_REVIEW_ACTION_POLICY,
 ) -> FeedbackWorkflowResult:
-    snapshot = repository.snapshot()
-    record = snapshot.candidate_records.get(command.candidate_id)
+    record = candidate_record_by_id(repository, command.candidate_id)
     if record is None:
         return FeedbackWorkflowResult(
             feedback_result=None,

@@ -32,16 +32,20 @@ Implemented in this slice:
    no-action, suppression, snooze, escalation, feedback provenance, safe audit
    attributes, and command validation.
 9. `src/app/application/review_workflow.py` applies review actions and feedback
-   to repository snapshots, prechecks idempotency before reapplying domain
-   transitions, and persists accepted governance results through the repository
-   contract.
+   after loading the candidate through the shared bounded candidate lookup
+   helper, prechecks idempotency before reapplying domain transitions, and
+   persists accepted governance results through the repository contract. For
+   projection-capable repositories this avoids whole-repository snapshot
+   hydration during the pre-mutation candidate lookup; the write itself remains
+   on the existing repository mutation path.
 10. `src/app/domain/persistence.py` records review decisions, feedback events,
     safe audit events, lifecycle history, idempotency replay, conflict, and
     not-found posture for internal review workflow mutations.
 11. `tests/unit/test_review_workflow_application.py` covers approval
     persistence, replay before domain reapplication, idempotency conflict,
-    feedback source provenance, safe audit persistence, and missing-candidate
-    behavior.
+    feedback source provenance, safe audit persistence, missing-candidate
+    behavior, and projection-only candidate lookup without `snapshot()`
+    hydration for review actions and feedback.
 12. `src/app/api/review_workflow.py` exposes certified internal API
     foundations for review actions and feedback:
     `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
@@ -79,6 +83,7 @@ Validation evidence from the implementation slice:
 8. `.venv\Scripts\python.exe -m ruff check src\app\api\caller_headers.py src\app\api\review_workflow.py src\app\api\idea_signals.py src\app\main.py tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py`
 9. `.venv\Scripts\python.exe -m pytest tests\integration\test_review_workflow_api.py tests\unit\test_service_contract.py -q`
 10. `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py`
+11. `.venv\Scripts\python.exe -m pytest tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_candidate_projection_without_snapshot tests/unit/test_review_workflow_application.py::test_record_feedback_uses_candidate_projection_without_snapshot`
 
 ## Remaining Work
 
