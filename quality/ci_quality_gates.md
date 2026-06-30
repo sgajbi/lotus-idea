@@ -128,11 +128,14 @@ expected push-cancelled / dispatch-success duplicate run pairs.
 
 GitHub Security posture is also under the CI contract gate. The repository has
 Dependabot alerts/security updates enabled, secret scanning with push
-protection enabled, and CodeQL default setup configured for GitHub-owned static
-analysis. Source-controlled `SECURITY.md` and `.github/dependabot.yml` define
-private vulnerability reporting, source-safe report content, and weekly grouped
+protection enabled, private vulnerability reporting enabled, and CodeQL default
+setup configured for GitHub-owned static analysis over Python and GitHub
+Actions. Source-controlled `SECURITY.md` and `.github/dependabot.yml` define
+the supported security baseline, source-safe report content, and weekly grouped
 Python plus GitHub Actions dependency monitoring; `make ci-contract-gate`
-rejects removal or weakening of those files.
+rejects removal or weakening of those files. GitHub currently reports
+non-provider secret patterns and secret validity checks as disabled for this
+repository, so those controls are not claimed as active release evidence.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
@@ -156,8 +159,12 @@ make test-coverage
 
 `test-coverage` runs the three suite-level coverage targets before `make coverage-gate`. GitHub
 Feature, PR Merge, and Main Releasability lanes must call the repo-native test and coverage targets
-instead of raw workflow `pytest` commands; `make ci-contract-gate` rejects workflow shortcuts so
-future agents cannot make GitHub appear green while bypassing local governance.
+instead of raw workflow `pytest` commands; PR Merge and Main Releasability combined coverage jobs
+call `make coverage-gate COVERAGE_DATA_DIR=coverage-data` after downloading suite artifacts.
+`scripts/coverage_gate.py --coverage-dir <directory>` owns the artifact layout and threshold
+logic, and `make ci-contract-gate` rejects raw workflow-level `coverage combine coverage-data` or
+`coverage report --fail-under=99` shortcuts so future agents cannot make GitHub appear green while
+bypassing local governance.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also

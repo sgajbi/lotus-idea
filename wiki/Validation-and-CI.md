@@ -155,11 +155,14 @@ successful dispatch run.
 
 The GitHub Security tab posture is governed in both repository settings and
 source-controlled files. Dependabot alerts/security updates are enabled, secret
-scanning with push protection is enabled, and CodeQL default setup is
-configured for GitHub-owned static analysis. `SECURITY.md` defines supported
-security review scope, private vulnerability reporting, and source-safe report
+scanning with push protection is enabled, private vulnerability reporting is
+enabled, and CodeQL default setup is configured for GitHub-owned static
+analysis over Python and GitHub Actions. `SECURITY.md` defines supported
+security review scope, private reporting expectations, and source-safe report
 content, while `.github/dependabot.yml` defines weekly grouped Python and
-GitHub Actions dependency monitoring. `make ci-contract-gate` fails if those
+GitHub Actions dependency monitoring. GitHub currently reports non-provider
+secret patterns and secret validity checks as disabled for this repository, so
+they are not release-evidence claims. `make ci-contract-gate` fails if the
 source-controlled controls are removed or weakened.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:

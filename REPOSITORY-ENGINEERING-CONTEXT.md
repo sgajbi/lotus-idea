@@ -1848,8 +1848,19 @@ private-reporting expectations, and source-safe reporting boundary for
 lotus-idea's product ownership. `.github/dependabot.yml` enables weekly grouped
 Python and GitHub Actions dependency monitoring, while repository settings now
 enable Dependabot alerts/security updates, secret scanning with push
-protection, and CodeQL default setup. `make ci-contract-gate` fails if the
+protection, private vulnerability reporting, and CodeQL default setup for
+Python and GitHub Actions. GitHub currently reports non-provider secret patterns
+and secret validity checks as disabled for this repository, so they are not
+claimed as active release controls. `make ci-contract-gate` fails if the
 source-controlled security policy or Dependabot coverage is removed or weakened.
+
+Coverage enforcement is also repository-owned. The Makefile exposes
+`COVERAGE_DATA_DIR ?= .`, `make coverage-gate` runs
+`scripts/coverage_gate.py --coverage-dir $(COVERAGE_DATA_DIR)`, and PR/main
+combined coverage jobs call `make coverage-gate COVERAGE_DATA_DIR=coverage-data`
+after downloading suite artifacts. The CI contract gate rejects raw workflow
+`coverage combine coverage-data` and `coverage report --fail-under=99`
+shortcuts, preserving one local/GitHub coverage implementation.
 
 `make repository-hygiene-gate` is blocking through `make lint`. It scans
 tracked Git files and fails if generated Python cache files, local coverage

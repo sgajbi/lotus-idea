@@ -88,6 +88,15 @@ TEST_TARGET_EXPECTATIONS = {
     ),
 }
 
+REQUIRED_TEST_SELECTORS = {
+    "UNIT_TESTS ?= tests/unit": "Makefile must define UNIT_TESTS for scoped unit validation",
+    "INTEGRATION_TESTS ?= tests/integration": (
+        "Makefile must define INTEGRATION_TESTS for scoped integration validation"
+    ),
+    "E2E_TESTS ?= tests/e2e": "Makefile must define E2E_TESTS for scoped e2e validation",
+    "COVERAGE_DATA_DIR ?= .": "Makefile must define COVERAGE_DATA_DIR for coverage artifacts",
+}
+
 SCRIPT_TARGET_EXPECTATIONS = {
     "source-ingestion-worker-check": "scripts/source_ingestion_worker_contract_gate.py",
     "source-ingestion-scheduled-worker-check": (
