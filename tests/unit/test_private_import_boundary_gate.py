@@ -54,6 +54,25 @@ def test_private_import_boundary_gate_blocks_private_proof_capability_import(
     ]
 
 
+def test_private_import_boundary_gate_blocks_private_postgres_codec_import(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    consumer_module = tmp_path / "src" / "app" / "infrastructure" / "consumer.py"
+    consumer_module.parent.mkdir(parents=True)
+    consumer_module.write_text(
+        "from app.infrastructure.postgres_codecs import _candidate_to_json\n",
+        encoding="utf-8",
+    )
+
+    errors = module.validate_private_import_boundaries(tmp_path)
+
+    assert errors == [
+        "src/app/infrastructure/consumer.py:1: private import `_candidate_to_json` "
+        "from `app.infrastructure.postgres_codecs` must use a public module API"
+    ]
+
+
 def test_private_import_boundary_gate_allows_public_imports(tmp_path: Path) -> None:
     module = _load_gate()
     route_module = tmp_path / "src" / "app" / "api" / "consumer.py"
@@ -74,6 +93,20 @@ def test_private_import_boundary_gate_allows_public_proof_capability_import(
     consumer_module.parent.mkdir(parents=True)
     consumer_module.write_text(
         "from app.application.implementation_proof_capability_updates import apply_blocker_proof\n",
+        encoding="utf-8",
+    )
+
+    assert module.validate_private_import_boundaries(tmp_path) == []
+
+
+def test_private_import_boundary_gate_allows_public_postgres_codec_import(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    consumer_module = tmp_path / "src" / "app" / "infrastructure" / "consumer.py"
+    consumer_module.parent.mkdir(parents=True)
+    consumer_module.write_text(
+        "from app.infrastructure.postgres_codecs import idea_candidate_to_json\n",
         encoding="utf-8",
     )
 

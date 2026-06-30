@@ -7,7 +7,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SCAN_ROOTS = ("src", "tests", "scripts")
 PROTECTED_IMPORT_PREFIXES = ("app.domain.",)
-PROTECTED_IMPORT_MODULES = ("app.application.implementation_proof_capability_updates",)
+PROTECTED_IMPORT_MODULES = (
+    "app.application.implementation_proof_capability_updates",
+    "app.infrastructure.postgres_codecs",
+)
 
 
 def _python_files(root: Path) -> list[Path]:

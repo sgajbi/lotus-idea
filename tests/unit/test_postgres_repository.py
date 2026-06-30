@@ -62,9 +62,9 @@ from app.infrastructure.postgres_repository import (
     _idempotency_created_at,
 )
 from app.infrastructure.postgres_codecs import (
-    _datetime,
-    _json,
-    _row,
+    decode_datetime,
+    read_json_object,
+    read_row_value,
 )
 
 
@@ -477,13 +477,13 @@ def test_postgres_repository_ignores_orphan_detail_rows_during_hydration() -> No
 
 
 def test_postgres_repository_row_and_json_guards() -> None:
-    assert _json({"payload": Jsonb({"ok": True})}, "payload") == {"ok": True}
-    assert _datetime(EVALUATED_AT) is EVALUATED_AT
+    assert read_json_object({"payload": Jsonb({"ok": True})}, "payload") == {"ok": True}
+    assert decode_datetime(EVALUATED_AT) is EVALUATED_AT
     assert isinstance(_idempotency_created_at(None, IdeaRepositorySnapshot({}, {}, {})), datetime)
     with pytest.raises(TypeError, match="mapping rows"):
-        _row(("not", "mapping"), "payload")
+        read_row_value(("not", "mapping"), "payload")
     with pytest.raises(TypeError, match="must be a JSON object"):
-        _json({"payload": "not-json"}, "payload")
+        read_json_object({"payload": "not-json"}, "payload")
 
 
 def test_postgres_repository_rolls_back_when_flush_fails() -> None:
