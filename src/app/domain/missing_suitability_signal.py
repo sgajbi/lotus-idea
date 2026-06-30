@@ -64,7 +64,7 @@ def evaluate_missing_suitability_context_signal(
     blocked = _blocking_result(source_input)
     if blocked is not None:
         return blocked
-    _validate_counts(source_input)
+    validate_missing_suitability_counts(source_input)
     if source_input.duplicate_of_candidate_id is not None:
         return SignalEvaluationResult(
             outcome=SignalEvaluationOutcome.SUPPRESSED,
@@ -139,7 +139,9 @@ def _blocking_result(
     return None
 
 
-def _validate_counts(source_input: MissingSuitabilityContextSignalInput) -> None:
+def validate_missing_suitability_counts(
+    source_input: MissingSuitabilityContextSignalInput,
+) -> None:
     for field_name, value in (
         ("open_requirement_count", source_input.open_requirement_count),
         ("blocked_requirement_count", source_input.blocked_requirement_count),

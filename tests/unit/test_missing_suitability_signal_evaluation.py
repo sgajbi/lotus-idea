@@ -18,8 +18,8 @@ from app.domain import (
     SourceSystem,
     UnsupportedEvidenceReason,
     evaluate_missing_suitability_context_signal,
+    validate_missing_suitability_counts,
 )
-from app.domain.missing_suitability_signal import _validate_counts
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -242,4 +242,4 @@ def test_missing_suitability_count_validation_defends_post_blocking_invariant() 
         ValueError,
         match="open_requirement_count must be available after blocking validation",
     ):
-        _validate_counts(suitability_input(open_requirement_count=None))
+        validate_missing_suitability_counts(suitability_input(open_requirement_count=None))
