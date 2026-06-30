@@ -7,6 +7,9 @@ from app.application.implementation_proof_readiness import (
 )
 from app.application.manage_mandate_live_proof import build_manage_mandate_live_proof_payload
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+PROOF_REF = "output/opportunity/manage-mandate-live-proof.json"
 
 
 def test_implementation_proof_readiness_retains_manage_mandate_blocker_without_proof() -> None:
@@ -35,7 +38,7 @@ def test_implementation_proof_readiness_uses_manage_mandate_live_proof_without_p
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         manage_mandate_live_proof=_valid_manage_mandate_live_proof(),
-        manage_mandate_live_proof_ref="output/opportunity/manage-mandate-live-proof.json",
+        manage_mandate_live_proof_ref=PROOF_REF,
     )
 
     assert "opportunity_archetype_portfolio_scoped_manage_source_proof_missing" not in (
@@ -82,23 +85,26 @@ def test_implementation_proof_readiness_uses_manage_mandate_live_proof_without_p
 
 
 def _valid_manage_mandate_live_proof() -> dict[str, object]:
-    return build_manage_mandate_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_manage_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-manage",
-            "sourceProductId": "lotus-manage:PortfolioActionRegister:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "portfolioScopeConfirmed": True,
-            "manageActionRegisterReady": True,
-            "mandatePerformanceHealthSourceRefCurrent": True,
-            "mandateRiskHealthSourceRefCurrent": True,
-            "workflowDecisionCount": 2,
-            "lineageEdgeCount": 1,
-            "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
-            "reasonCodes": ["review_required"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_manage_mandate_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_manage_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-manage",
+                "sourceProductId": "lotus-manage:PortfolioActionRegister:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "portfolioScopeConfirmed": True,
+                "manageActionRegisterReady": True,
+                "mandatePerformanceHealthSourceRefCurrent": True,
+                "mandateRiskHealthSourceRefCurrent": True,
+                "workflowDecisionCount": 2,
+                "lineageEdgeCount": 1,
+                "sourceDiagnosticCodes": ["manage_action_register_ready_portfolio_scope"],
+                "reasonCodes": ["review_required"],
+                "unsupportedReasons": [],
+            },
+        ),
+        PROOF_REF,
     )

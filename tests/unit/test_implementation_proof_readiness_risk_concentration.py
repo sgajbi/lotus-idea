@@ -9,6 +9,9 @@ from app.application.risk_concentration_live_proof import (
     build_risk_concentration_live_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+PROOF_REF = "output/opportunity/risk-concentration-live-proof.json"
 
 
 def test_implementation_proof_readiness_uses_risk_concentration_live_proof_without_promotion() -> (
@@ -19,7 +22,7 @@ def test_implementation_proof_readiness_uses_risk_concentration_live_proof_witho
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         risk_concentration_live_proof=_valid_risk_concentration_live_proof(),
-        risk_concentration_live_proof_ref="output/opportunity/risk-concentration-live-proof.json",
+        risk_concentration_live_proof_ref=PROOF_REF,
     )
 
     assert "opportunity_archetype_live_risk_source_proof_missing" not in (snapshot.overall_blockers)
@@ -43,17 +46,20 @@ def test_implementation_proof_readiness_uses_risk_concentration_live_proof_witho
 
 
 def _valid_risk_concentration_live_proof() -> dict[str, object]:
-    return build_risk_concentration_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_risk_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-risk",
-            "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "sourceDiagnosticCodes": ["risk_issuer_coverage_complete"],
-            "reasonCodes": ["concentration_attention"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_risk_concentration_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_risk_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-risk",
+                "sourceProductId": "lotus-risk:ConcentrationRiskReport:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "sourceDiagnosticCodes": ["risk_issuer_coverage_complete"],
+                "reasonCodes": ["concentration_attention"],
+                "unsupportedReasons": [],
+            },
+        ),
+        PROOF_REF,
     )

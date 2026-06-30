@@ -7,6 +7,7 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
 
 
 BOND_MATURITY_PROOF_REF = "output/opportunity-archetypes/bond-maturity-live-proof.json"
@@ -48,18 +49,21 @@ def test_readiness_uses_bond_maturity_live_proof_without_promotion() -> None:
 
 
 def _valid_bond_maturity_live_proof() -> dict[str, object]:
-    return build_bond_maturity_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_core_source_attempted=True,
-        evidence_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-core",
-            "holdingsRefPresent": True,
-            "maturityFactRefPresent": True,
-            "nextMaturityDatePresent": True,
-            "maturingPositionCountPresent": True,
-            "sourceEvidenceCurrent": True,
-            "maturityDiagnostic": "core_maturity_evidence_ready",
-            "sourceDiagnosticCodes": ["core_maturity_evidence_ready"],
-        },
+    return bound_aggregate_proof(
+        build_bond_maturity_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_core_source_attempted=True,
+            evidence_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-core",
+                "holdingsRefPresent": True,
+                "maturityFactRefPresent": True,
+                "nextMaturityDatePresent": True,
+                "maturingPositionCountPresent": True,
+                "sourceEvidenceCurrent": True,
+                "maturityDiagnostic": "core_maturity_evidence_ready",
+                "sourceDiagnosticCodes": ["core_maturity_evidence_ready"],
+            },
+        ),
+        BOND_MATURITY_PROOF_REF,
     )

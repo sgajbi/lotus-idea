@@ -30,11 +30,11 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     monkeypatch.delenv(OUTBOX_BROKER_URL_ENV, raising=False)
     repository = repository_with_events(
         pending_event("idea.candidate.persisted.v1"),
-        leased_event("idea.review.lease_active.v1"),
-        expired_lease_event("idea.review.lease_expired.v1"),
-        failed_event("idea.lifecycle.transitioned.v1"),
+        leased_event("idea.lifecycle.transitioned.v1"),
+        expired_lease_event("idea.conversion.intent_requested.v1"),
+        failed_event("idea.conversion.outcome_recorded.v1"),
         published_event("idea.review.decision_recorded.v1"),
-        dead_letter_event("idea.feedback.recorded.v1"),
+        dead_letter_event("idea.report_evidence_pack.requested.v1"),
     )
 
     snapshot = build_outbox_delivery_readiness_snapshot(

@@ -9,6 +9,9 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+PROOF_REF = "output/opportunity/core-benchmark-assignment-live-proof.json"
 
 
 def test_implementation_proof_readiness_uses_core_benchmark_assignment_live_proof_without_promotion() -> (
@@ -19,9 +22,7 @@ def test_implementation_proof_readiness_uses_core_benchmark_assignment_live_proo
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         core_benchmark_assignment_live_proof=_valid_core_benchmark_assignment_live_proof(),
-        core_benchmark_assignment_live_proof_ref=(
-            "output/opportunity/core-benchmark-assignment-live-proof.json"
-        ),
+        core_benchmark_assignment_live_proof_ref=PROOF_REF,
     )
 
     assert "opportunity_archetype_benchmark_assignment_source_ref_missing" not in (
@@ -57,19 +58,22 @@ def test_implementation_proof_readiness_uses_core_benchmark_assignment_live_proo
 
 
 def _valid_core_benchmark_assignment_live_proof() -> dict[str, object]:
-    return build_core_benchmark_assignment_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_core_source_attempted=True,
-        evidence_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-core",
-            "sourceProductId": "lotus-core:BenchmarkAssignment:v1",
-            "benchmarkAssignmentRefPresent": True,
-            "benchmarkIdentityResolved": True,
-            "assignmentEffectiveForAsOfDate": True,
-            "assignmentStatus": "active",
-            "assignmentVersionPresent": True,
-            "sourceEvidenceCurrent": True,
-            "sourceDiagnosticCodes": ["core_benchmark_assignment_ready"],
-        },
+    return bound_aggregate_proof(
+        build_core_benchmark_assignment_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_core_source_attempted=True,
+            evidence_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-core",
+                "sourceProductId": "lotus-core:BenchmarkAssignment:v1",
+                "benchmarkAssignmentRefPresent": True,
+                "benchmarkIdentityResolved": True,
+                "assignmentEffectiveForAsOfDate": True,
+                "assignmentStatus": "active",
+                "assignmentVersionPresent": True,
+                "sourceEvidenceCurrent": True,
+                "sourceDiagnosticCodes": ["core_benchmark_assignment_ready"],
+            },
+        ),
+        PROOF_REF,
     )

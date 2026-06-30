@@ -9,6 +9,9 @@ from app.application.performance_underperformance_live_proof import (
     build_performance_underperformance_live_proof_payload,
 )
 from app.domain import InMemoryIdeaRepository
+from tests.support.proof_provenance import bound_aggregate_proof
+
+PROOF_REF = "output/opportunity/performance-underperformance-live-proof.json"
 
 
 def test_implementation_proof_readiness_uses_performance_underperformance_live_proof_without_promotion() -> (
@@ -19,9 +22,7 @@ def test_implementation_proof_readiness_uses_performance_underperformance_live_p
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
         performance_underperformance_live_proof=_valid_performance_underperformance_live_proof(),
-        performance_underperformance_live_proof_ref=(
-            "output/opportunity/performance-underperformance-live-proof.json"
-        ),
+        performance_underperformance_live_proof_ref=PROOF_REF,
     )
 
     assert "opportunity_archetype_live_performance_source_proof_missing" not in (
@@ -57,18 +58,21 @@ def test_implementation_proof_readiness_uses_performance_underperformance_live_p
 
 
 def _valid_performance_underperformance_live_proof() -> dict[str, object]:
-    return build_performance_underperformance_live_proof_payload(
-        generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
-        live_performance_source_attempted=True,
-        evaluation_summary={
-            "runStatus": "completed",
-            "sourceAuthority": "lotus-performance",
-            "sourceProductId": "lotus-performance:ReturnsSeriesBundle:v1",
-            "evaluationOutcome": "candidate_created",
-            "sourceEvidenceCurrent": True,
-            "benchmarkContextAvailable": True,
-            "sourceDiagnosticCodes": ["performance_benchmark_context_ready"],
-            "reasonCodes": ["underperformance_attention"],
-            "unsupportedReasons": [],
-        },
+    return bound_aggregate_proof(
+        build_performance_underperformance_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 27, 0, 0, tzinfo=UTC),
+            live_performance_source_attempted=True,
+            evaluation_summary={
+                "runStatus": "completed",
+                "sourceAuthority": "lotus-performance",
+                "sourceProductId": "lotus-performance:ReturnsSeriesBundle:v1",
+                "evaluationOutcome": "candidate_created",
+                "sourceEvidenceCurrent": True,
+                "benchmarkContextAvailable": True,
+                "sourceDiagnosticCodes": ["performance_benchmark_context_ready"],
+                "reasonCodes": ["underperformance_attention"],
+                "unsupportedReasons": [],
+            },
+        ),
+        PROOF_REF,
     )
