@@ -348,8 +348,10 @@ truth; verify before claiming it.
 
 At the last reviewed posture, GitHub reported zero open code-scanning,
 secret-scanning, and Dependabot alerts. Non-provider secret patterns and secret
-validity checks still reported disabled after an admin API enable attempt, so
-they remain future advisory controls rather than active release evidence.
+validity checks still reported disabled after an admin API enable attempt.
+`SECURITY.md` and `.github/dependabot.yml` were also not present on default
+branch `main`, so those controls remain branch-local or future advisory
+controls until merged and visible through GitHub Security.
 
 No raw source payloads, portfolio identifiers, client identifiers, request
 bodies, response bodies, raw entitlement failures, prompt text, provider output,
@@ -416,6 +418,18 @@ make repository-hygiene-gate
 make github-security-posture-check
 ```
 
+Current repo-native aggregate command posture:
+
+1. `make ci` is useful local aggregate evidence, but it must not be cited as
+   PostgreSQL runtime, Docker build, image scan, SBOM, or release-evidence
+   proof unless those families are explicitly included in the command model at
+   the time of validation.
+2. Until the governed full-lane command is aligned, cite and run the explicit
+   heavy proof targets when the slice depends on PostgreSQL runtime behavior or
+   container/release evidence.
+3. GitHub workflow YAML should keep calling repo-native targets rather than
+   reimplementing opaque inline proof.
+
 PostgreSQL evidence:
 
 ```powershell
@@ -474,7 +488,31 @@ Recent issue-derived patterns to preserve:
    not only `Content-Length`,
 3. outbound HTTP retry/backoff must be centralized and idempotency-gated,
 4. GitHub Security posture must be checked live before claiming current state,
-5. documentation should record the durable rule, not only the one-off fix.
+5. runtime trust telemetry proof must not clear aggregate certification blockers
+   while declared product coverage remains incomplete; product-level blockers
+   and aggregate readiness must stay semantically aligned,
+6. conversion intent idempotency must have one owning key at the
+   application/domain boundary; never allow repository replay evidence and the
+   persisted governed intent to diverge,
+7. repo-native aggregate CI commands must either include heavyweight
+   PostgreSQL/Docker/release proof families or clearly name a separate full-lane
+   command; do not let remote-only YAML proof become an invisible local gap,
+8. documentation should record the durable rule, not only the one-off fix.
+
+Current open issue priorities that should shape the next implementation slices:
+
+1. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+   application and domain commands.
+2. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
+   Docker release proof gates or document a governed light/full split.
+3. GitHub issue `#262`: prevent runtime trust telemetry proof from clearing
+   aggregate blockers while product coverage remains incomplete.
+4. GitHub issue `#260`: require aggregate provenance for source-ingestion live
+   proof consumption.
+
+Issues `#261` and `#259` have branch-local fixes and validation evidence, but
+they must not be claimed closed until merged to `main`, CI is green, and QA or
+issue-closure evidence exists.
 
 Close or claim issue progress only after implementation, tests, docs/context
 truth, and validation evidence exist. Keep issue count under control by fixing
