@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-from enum import Enum
-from typing import Any, TypedDict
-
 from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
-    build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
     get_idea_repository,
     idea_repository_durable_storage_backed,
+)
+from app.api.runtime_dependencies import (
+    build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
 )
 from app.application.source_ingestion import (
     HighCashSourceIngestionBatchResult,
@@ -37,18 +37,6 @@ from app.security.caller_context import (
     PermissionDeniedError,
     require_role_and_capability,
 )
-
-
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
 
 _READ_SOURCE_INGESTION_READINESS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.source-ingestion.readiness.read",

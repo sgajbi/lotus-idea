@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, TypedDict
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
@@ -16,6 +14,7 @@ from app.api.problem_details import (
     permission_denied_metadata,
     permission_denied_problem,
 )
+from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -38,18 +37,6 @@ from app.domain import (
 from app.errors import problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
-
-
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
 
 _REPORT_EVIDENCE_PACK_CAPABILITY = "idea.report-evidence-pack.request"
 

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, TypedDict
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
@@ -12,10 +10,11 @@ from app.api.caller_headers import caller_context_from_headers
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
+    not_found_metadata,
     permission_denied_metadata,
     permission_denied_problem,
-    not_found_metadata,
 )
+from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -34,18 +33,6 @@ from app.domain import (
 from app.errors import problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
-
-
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
 
 _LIFECYCLE_TRANSITION_CAPABILITY = "idea.candidate.lifecycle.transition"
 

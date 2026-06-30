@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, TypedDict
+from typing import Any
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -21,11 +21,11 @@ from app.application.ai_governance import (
     evaluate_ai_explanation_to_repository,
 )
 from app.domain import (
-    AIFallbackReason,
     AIExplanationCommand,
     AIExplanationLineagePersistenceDecision,
     AIExplanationPosture,
     AIExplanationResult,
+    AIFallbackReason,
     AIOutputClaim,
     AIProposedAction,
     AIProposedActionType,
@@ -49,18 +49,6 @@ from app.observability import (
     emit_operation_event,
 )
 from app.security.caller_context import CallerContext, PermissionDeniedError
-
-
-class RouteMetadata(TypedDict):
-    path: str
-    operation_id: str
-    summary: str
-    description: str
-    status_code: int
-    response_model: type[BaseModel]
-    tags: list[str | Enum]
-    responses: dict[int | str, dict[str, Any]]
-
 
 _AI_EXPLANATION_CAPABILITY = "idea.ai-explanation.evaluate"
 _AI_EXPLANATION_READINESS_CAPABILITY = "idea.ai-explanation.readiness.read"

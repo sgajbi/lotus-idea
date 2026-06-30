@@ -8,6 +8,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from app.api.signal_api_support import (
     RouteMetadata,
     emit_signal_evaluation_event,
@@ -19,8 +23,10 @@ from app.api.signal_api_support import (
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
     EvaluateHighCashSignalCommand,
-    evaluate_and_persist_high_cash_signal as evaluate_and_persist_high_cash_signal_command,
     evaluate_high_cash_signal_command,
+)
+from app.application.high_cash_signal import (
+    evaluate_and_persist_high_cash_signal as evaluate_and_persist_high_cash_signal_command,
 )
 from app.application.mandate_restriction_signal import (
     EvaluateMandateRestrictionSignalCommand,
@@ -38,16 +44,11 @@ from app.domain import (
 from app.domain.access_scope import ReviewAccessScope
 from app.errors import ProblemDetails, problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
-from app.api.runtime_dependencies import (
-    get_idea_repository,
-    idea_repository_durable_storage_backed,
-)
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
     require_capability,
 )
-
 
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
