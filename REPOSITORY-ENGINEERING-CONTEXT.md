@@ -1532,7 +1532,11 @@ logs; fix or document the owned warning source instead.
    freshness must be explicitly declared through freshness metadata owned by
    the source payload or source ref. Supportability, readiness, coverage,
    health state, or data-quality posture can explain whether source processing
-   succeeded, but must not be inferred as current freshness.
+   succeeded, but must not be inferred as current freshness. `make
+   source-observability-contract-gate` enforces that future
+   `lotus_*_sources.py` adapters cannot return `EvidenceFreshness.CURRENT`
+   directly from readiness, supportability, coverage, health-state, or
+   data-quality predicates.
    The Manage adapter consumes source-authored action-register
    lineage/fingerprint metadata and fails closed when that metadata is absent;
    it does not fabricate Manage `SourceRef.content_hash` values from response

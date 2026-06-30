@@ -150,3 +150,41 @@ def test_source_observability_contract_gate_blocks_core_maturity_position_scan(
         f"src/app/infrastructure/lotus_core_sources.py:2: {reason}",
         f"src/app/infrastructure/lotus_core_sources.py:3: {reason}",
     ]
+
+
+def test_source_observability_contract_gate_blocks_freshness_supportability_inference(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_python(
+        tmp_path / "src" / "app" / "infrastructure" / "lotus_risk_sources.py",
+        "from app.domain import EvidenceFreshness\n\n\n"
+        "def _freshness(supportability_state: str) -> EvidenceFreshness:\n"
+        "    if supportability_state.lower() == 'ready':\n"
+        "        return EvidenceFreshness.CURRENT\n"
+        "    return EvidenceFreshness.UNAVAILABLE\n",
+    )
+
+    errors = module.validate_source_observability_contract(tmp_path)
+
+    assert errors == [
+        "src/app/infrastructure/lotus_risk_sources.py:5: source adapters must not infer "
+        "current freshness from readiness, supportability, coverage, health-state, or "
+        "data-quality posture"
+    ]
+
+
+def test_source_observability_contract_gate_allows_explicit_freshness_current_mapping(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_python(
+        tmp_path / "src" / "app" / "infrastructure" / "lotus_risk_sources.py",
+        "from app.domain import EvidenceFreshness\n\n\n"
+        "def _freshness(freshness_value: str) -> EvidenceFreshness:\n"
+        "    if 'current' in freshness_value.lower():\n"
+        "        return EvidenceFreshness.CURRENT\n"
+        "    return EvidenceFreshness.UNAVAILABLE\n",
+    )
+
+    assert module.validate_source_observability_contract(tmp_path) == []
