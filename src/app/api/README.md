@@ -10,6 +10,13 @@ Route modules must not import `app.runtime` directly. This keeps repository prov
 workers, outbox publishers, proof-artifact paths, and downstream realization clients behind one
 reviewable API dependency boundary while preserving in-process design modularity.
 
+## Route Metadata
+
+Use `app.api.route_metadata.RouteMetadata` for route-registration metadata dictionaries. Route
+modules should not define local `RouteMetadata` or `SignalRouteMetadata` clones; `make
+api-route-metadata-gate` blocks duplicate metadata types so OpenAPI route declarations stay on one
+reviewable API contract.
+
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response

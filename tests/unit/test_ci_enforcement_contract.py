@@ -6,7 +6,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
-
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -37,6 +36,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) no-sensitive-content-guard" in makefile
     assert "source-observability-contract-gate:" in makefile
     assert "$(MAKE) source-observability-contract-gate" in makefile
+    assert "api-route-metadata-gate:" in makefile
+    assert "$(MAKE) api-route-metadata-gate" in makefile
     assert "signal-api-contract-gate:" in makefile
     assert "$(MAKE) signal-api-contract-gate" in makefile
     assert "implementation-truth-gate:" in makefile
@@ -206,6 +207,15 @@ def test_ci_contract_gate_blocks_missing_source_observability_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) source-observability-contract-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_missing_api_route_metadata_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace("$(MAKE) api-route-metadata-gate", "")
+
+    errors = module.validate_makefile(makefile)
+
+    assert "Makefile lint target must call `$(MAKE) api-route-metadata-gate`" in errors
 
 
 def test_ci_contract_gate_blocks_missing_signal_api_contract_gate() -> None:
@@ -410,6 +420,44 @@ def test_generated_quality_reports_do_not_dirty_worktree() -> None:
     assert "quality/architecture_boundary_report.json" in gitignore
     assert "quality/baseline_report.json" in gitignore
     assert "quality/baseline_report.md" in gitignore
+
+
+def _load_api_route_metadata_gate() -> ModuleType:
+    script_path = ROOT / "scripts" / "api_route_metadata_gate.py"
+    spec = importlib.util.spec_from_file_location("api_route_metadata_gate", script_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_api_route_metadata_gate_passes_current_repository() -> None:
+    module = _load_api_route_metadata_gate()
+
+    assert module.validate_api_route_metadata(ROOT) == []
+
+
+def test_api_route_metadata_gate_blocks_local_route_metadata_clone(tmp_path: Path) -> None:
+    module = _load_api_route_metadata_gate()
+    shared_module = tmp_path / "src" / "app" / "api" / "route_metadata.py"
+    shared_module.parent.mkdir(parents=True)
+    shared_module.write_text(
+        "from typing import TypedDict\n\nclass RouteMetadata(TypedDict):\n    path: str\n",
+        encoding="utf-8",
+    )
+    cloned_module = tmp_path / "src" / "app" / "api" / "review_workflow.py"
+    cloned_module.write_text(
+        "from typing import TypedDict\n\nclass RouteMetadata(TypedDict):\n    path: str\n",
+        encoding="utf-8",
+    )
+
+    errors = module.validate_api_route_metadata(tmp_path)
+
+    assert errors == [
+        "src/app/api/review_workflow.py:3: route metadata TypedDict must be defined once "
+        "in `app.api.route_metadata`"
+    ]
 
 
 def _load_architecture_boundary_gate() -> ModuleType:

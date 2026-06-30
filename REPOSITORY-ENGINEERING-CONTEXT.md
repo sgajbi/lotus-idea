@@ -89,6 +89,10 @@ route module; the current composition provider now lives in
 `src/app/runtime/repository_state.py`. Runtime composition providers for the
 repository, source ingestion, outbox publisher, and downstream realization
 clients now live under `src/app/runtime/` instead of the app root or API layer.
+API route metadata now lives in `src/app/api/route_metadata.py`; route modules
+and `src/app/api/signal_api_support.py` use the shared `RouteMetadata`
+contract, and `make api-route-metadata-gate` blocks future local metadata type
+clones.
 This is structural cleanup only and does not promote a supported business
 feature.
 

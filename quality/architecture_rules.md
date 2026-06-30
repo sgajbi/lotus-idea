@@ -21,6 +21,10 @@ The only API-layer module permitted to import `app.runtime` is
 source-ingestion runtime, outbox publisher wiring, downstream realization clients, and proof-artifact
 configuration used by route handlers.
 
+Route-registration metadata must use `src/app/api/route_metadata.py`. Do not define local
+`RouteMetadata` or `SignalRouteMetadata` `TypedDict` clones in route modules or route-family support
+modules; `make api-route-metadata-gate` enforces this as API design-modularity hygiene.
+
 Run `make architecture-boundary-gate` for blocking CI enforcement. Run
 `make architecture-boundary-report` when a report artifact is needed for scorecard or review
 evidence.

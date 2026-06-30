@@ -9,6 +9,7 @@ REQUIRED_LINT_TARGETS = (
     "monetary-float-guard",
     "no-sensitive-content-guard",
     "source-observability-contract-gate",
+    "api-route-metadata-gate",
     "signal-api-contract-gate",
     "operation-metric-contract-gate",
     "ai-model-risk-ops-contract-gate",
@@ -160,6 +161,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/outbox_platform_mesh_event_publication_proof_contract_gate.py"
     ),
     "outbox-consumer-contract-gate": "scripts/outbox_consumer_contract_gate.py",
+    "api-route-metadata-gate": "scripts/api_route_metadata_gate.py",
     "signal-api-contract-gate": "scripts/signal_api_contract_gate.py",
     "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
     "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
