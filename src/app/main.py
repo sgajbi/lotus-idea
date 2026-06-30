@@ -34,6 +34,7 @@ from app.api.problem_details import problem_details_response as problem_response
 from app.api.runtime_dependencies import idea_repository_runtime_posture
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
 from app.middleware.correlation import CorrelationIdMiddleware
+from app.middleware.http_boundary import configure_http_boundary
 from app.observability import configure_logging, emit_request_diagnostic_event
 
 SERVICE_NAME = "lotus-idea"
@@ -43,6 +44,7 @@ ROUNDING_POLICY_VERSION = "v1"
 
 def create_app() -> FastAPI:
     application = FastAPI(title=SERVICE_NAME, version=SERVICE_VERSION)
+    configure_http_boundary(application)
     application.add_middleware(CorrelationIdMiddleware, service_name=SERVICE_NAME)
     _register_exception_handlers(application)
     _register_product_routes(application)

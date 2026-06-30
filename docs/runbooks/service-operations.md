@@ -44,6 +44,27 @@ process-local repository writes for development and automated tests. `demo`,
 `/health/ready` returns degraded runtime posture and write-capable routes fail
 closed with `durable_repository_not_configured` before mutating in-memory state.
 
+## HTTP Boundary Controls
+
+`lotus-idea` applies inbound HTTP boundary controls before route handling:
+
+| Control | Configuration | Operator interpretation |
+| --- | --- | --- |
+| Trusted hosts | `LOTUS_IDEA_TRUSTED_HOSTS`, comma-separated, default `*` | Non-matching `Host` headers fail closed with `400 invalid_host` and do not echo the rejected host. |
+| Browser origins | `LOTUS_IDEA_CORS_ALLOWED_ORIGINS`, comma-separated, default empty | CORS is denied by default. Set explicit Workbench/Gateway origins only when a governed browser path exists. |
+| Request body size | `LOTUS_IDEA_MAX_REQUEST_BODY_BYTES`, default `1048576` | Larger requests fail closed with `413 request_too_large` before route handlers process payloads. |
+| JSON write requests | Always on for `POST`, `PUT`, and `PATCH` with a body | Non-JSON write bodies fail with `415 unsupported_media_type`. |
+| Security headers | Always on | Responses include HSTS, no-sniff, frame-deny, no-referrer, locked-down permissions, and default-deny CSP headers. |
+
+Boundary rejections return product-safe `ProblemDetails`. They must not include
+raw request bodies, authorization headers, cookies, rejected host values,
+portfolio ids, client ids, or source payloads. Use the `X-Correlation-Id`
+response header for log lookup when diagnosing caller failures.
+
+These controls improve service boundary posture only. They do not certify
+Gateway/Workbench browser support, external API support, client publication,
+production recovery, data-mesh certification, or supported-feature promotion.
+
 ## Incident First Checks
 
 ```mermaid

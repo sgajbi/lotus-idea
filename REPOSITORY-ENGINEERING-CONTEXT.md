@@ -1505,23 +1505,30 @@ logs; fix or document the owned warning source instead.
    hooks, and per-run runtime objects that own HTTP clients must expose a close
    hook. Do not introduce a new downstream/source/broker HTTP adapter that
    relies on library default pool limits or process-exit cleanup.
-7. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
+7. `src/app/middleware/`: inbound HTTP boundary middleware. `app.main`
+   configures trusted-host checks, explicit CORS allowlisting, request body
+   size limits, JSON write-request enforcement, baseline security headers, and
+   correlation headers before product routes handle requests. Boundary
+   rejections must return product-safe `ProblemDetails` and must not echo
+   rejected host values, raw bodies, tokens, cookies, portfolio ids, client ids,
+   or source payloads.
+8. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
    diagnostics, bounded idea operation events, safe metric-label policy, and audit event helpers.
-8. `src/app/security/`: caller context, advisor/PM role handling, entitlement
+9. `src/app/security/`: caller context, advisor/PM role handling, entitlement
    policy, and sensitive-output controls.
-9. `src/app/resilience/`: timeout, retry, backoff, and circuit-breaker policies.
-10. `src/app/contracts/`: contract models shared by route and application
+10. `src/app/resilience/`: timeout, retry, backoff, and circuit-breaker policies.
+11. `src/app/contracts/`: contract models shared by route and application
     boundaries.
-11. `contracts/domain-data-products/`: proposed producer products, consumer
+12. `contracts/domain-data-products/`: proposed producer products, consumer
     dependencies, and mesh readiness posture.
-12. `contracts/trust-telemetry/`, `contracts/mesh-slo/`,
+13. `contracts/trust-telemetry/`, `contracts/mesh-slo/`,
     `contracts/mesh-access/`, and `contracts/mesh-evidence/`: planned trust,
     SLO, access, and evidence policies that stay blocked until runtime
     certification.
-13. `docs/architecture/adr/`: architecture decisions that shape implementation.
-14. `docs/rfcs/`: governed implementation slices and evidence requirements.
-15. `tests/unit`, `tests/integration`, `tests/e2e`: test pyramid baseline.
-16. `wiki/`: repo-authored GitHub wiki source with the standard Lotus operator
+14. `docs/architecture/adr/`: architecture decisions that shape implementation.
+15. `docs/rfcs/`: governed implementation slices and evidence requirements.
+16. `tests/unit`, `tests/integration`, `tests/e2e`: test pyramid baseline.
+17. `wiki/`: repo-authored GitHub wiki source with the standard Lotus operator
     pages for getting started, development workflow, validation/CI, roadmap,
     supported features, operations, security, integrations, architecture, and
     RFC navigation.

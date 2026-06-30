@@ -119,6 +119,8 @@ flowchart LR
   migration helpers,
   outbox publisher adapter, public PostgreSQL codec APIs, and PostgreSQL
   repository adapter.
+- `src/app/middleware/`: HTTP boundary controls for correlation, trusted
+  hosts, CORS allowlisting, request-size limits, JSON writes, and security headers.
 - `src/app/observability/`: structured logging, correlation, metrics, tracing,
   and bounded operation events.
 - `src/app/security/`: caller context and fail-closed authorization policy.
@@ -232,9 +234,7 @@ The same controls are explained in [wiki/Validation-and-CI.md](wiki/Validation-a
 
 ## Runtime And Operations
 
-`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test` allow process-local writes.
-`demo`, `staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`, degrade `/health/ready`,
-and fail mutating routes closed with `durable_repository_not_configured` before in-memory writes.
+`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test` allow process-local writes; production-like profiles require `LOTUS_IDEA_DATABASE_URL`, while HTTP boundary env vars govern host, origin, and request-size limits with product-safe rejections.
 
 Operational entrypoints:
 

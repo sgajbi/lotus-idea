@@ -11,6 +11,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Correlation and trace response headers | Request tracing across services | Not used as metric labels |
 | Structured JSON application events | Operator diagnostics | Product-safe fields only |
 | Product-safe error responses | Client and operator failure posture | No raw entitlement or source payload leakage |
+| HTTP boundary rejections | Trusted-host, body-size, and media-type rejection posture | Product-safe `ProblemDetails`; no host, payload, token, cookie, portfolio, or client echo |
 | Idea operation events | Certified internal foundation telemetry | Foundation supportability only |
 | Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
 | Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
