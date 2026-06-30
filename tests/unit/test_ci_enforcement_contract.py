@@ -155,15 +155,13 @@ def test_architecture_boundary_gate_blocks_api_runtime_import_outside_facade(
 
     violations = module.validate_architecture_boundaries()
 
-    assert violations == [
-        {
-            "path": "src\\app\\api\\unsafe_route.py",
-            "module": "app.api.unsafe_route",
-            "layer": "api",
-            "import": "app.runtime.repository_state",
-            "rule": module.LAYER_RULES["api"]["description"],
-        }
-    ]
+    assert len(violations) == 1
+    violation = violations[0]
+    assert violation["path"].replace("\\", "/") == "src/app/api/unsafe_route.py"
+    assert violation["module"] == "app.api.unsafe_route"
+    assert violation["layer"] == "api"
+    assert violation["import"] == "app.runtime.repository_state"
+    assert violation["rule"] == module.LAYER_RULES["api"]["description"]
 
 
 def _load_ci_contract_gate() -> ModuleType:
