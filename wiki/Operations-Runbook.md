@@ -673,6 +673,10 @@ durable-storage posture, publisher-adapter presence, source-of-truth paths, and
 certification blockers for operators without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, or broker
 payloads.
+When the active repository is PostgreSQL, the diagnostic uses bounded
+repository-side `idea_outbox_event` projections for status counts, expired
+leases, and delivery-ready counts rather than materializing unrelated idea
+state.
 
 `POST /api/v1/outbox-delivery/run-once` is the certified internal outbox
 delivery operator action. It runs one bounded delivery pass through the active

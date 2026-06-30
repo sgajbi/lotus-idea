@@ -347,3 +347,27 @@ whole-store snapshot:
 5. This is production-scale internal read-path hardening only. It does not
    certify Workbench support, data-product promotion, PM/compliance queue
    support, client-ready publication, or supported-feature promotion.
+
+This slice also applies the same bounded durable-read pattern to the outbox
+delivery readiness path after issue review showed operator readiness was still
+counting outbox state through whole-store repository snapshots:
+
+1. `OutboxDeliveryReadinessProjectionRepository` and
+   `OutboxDeliveryReadinessRepositorySummary` define an internal readiness
+   projection contract for aggregate outbox status, expired-lease, and
+   delivery-ready counts; this is design modularity only, not a separate
+   runtime outbox service.
+2. `PostgresIdeaRepository.outbox_delivery_readiness_summary(...)` reads
+   aggregate counts directly from `idea_outbox_event`, while
+   `PostgresIdeaRepository.outbox_events_for_delivery(...)` now uses a bounded
+   outbox-table query for worker-ready events instead of hydrating an
+   `IdeaRepositorySnapshot`.
+3. Readiness application tests prove the projection bypasses `snapshot()` and
+   delivery-ready event hydration. PostgreSQL repository tests prove the
+   ordinary readiness summary reads only `idea_outbox_event` and does not touch
+   candidate, audit, review, downstream submission, conversion, report
+   evidence-pack, or AI lineage tables.
+4. This is production-scale internal operator-readiness hardening only. It does
+   not certify external broker publication, downstream delivery, platform mesh
+   event publication, Gateway/Workbench support, client-ready publication, or
+   supported-feature promotion.

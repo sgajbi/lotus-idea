@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action with PostgreSQL repository-side readiness projection, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -199,6 +199,11 @@ Implemented first-wave internal scope:
     `outbox_delivery_readiness_read` operation events. It does not expose event identifiers, aggregate
     identifiers, raw idempotency keys, broker payloads, downstream contracts,
     Gateway/Workbench support, or supported-feature promotion.
+    PostgreSQL-backed readiness now uses a repository-side aggregate projection
+    over `idea_outbox_event` for status counts, expired leases, and
+    delivery-ready counts instead of hydrating unrelated repository snapshot
+    tables. The adapter also reads delivery-ready events through a bounded
+    `idea_outbox_event` query for worker polling semantics.
 21. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,
@@ -219,11 +224,14 @@ Implemented first-wave internal scope:
     hydrates repository snapshots from the schema, delegates domain decisions to
     the same in-memory repository contract, flushes typed table rows and JSONB
     snapshots transactionally, persists pending outbox records across reload,
+    exposes repository-side outbox readiness and delivery-ready projections,
     and rolls back when a database flush fails.
     `tests/unit/test_postgres_repository.py` proves candidate persistence,
     idempotency replay, lifecycle history, audit events, review decisions,
     feedback, conversion intent/outcome, report evidence-pack requests, pending
     outbox hydration, and rollback behavior with a fake Postgres cursor.
+    `tests/unit/test_postgres_outbox_readiness.py` proves the outbox readiness
+    projection avoids whole-repository snapshot hydration.
 24. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
     serialization/deserialization helpers from the repository adapter so future
     persistence growth does not erode source-file maintainability gates.

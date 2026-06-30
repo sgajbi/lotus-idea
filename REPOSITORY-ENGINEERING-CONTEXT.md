@@ -541,6 +541,13 @@ leased and expired-lease posture, durable repository posture, broker configurati
 blockers without exposing event identifiers, aggregate identifiers, raw
 idempotency keys, broker payloads, or downstream claims. This is not external
 event-publication certification, downstream delivery, or mesh certification.
+When the active durable provider is PostgreSQL, the diagnostic uses a
+repository-side outbox readiness projection over `idea_outbox_event` for status
+counts, expired leases, and delivery-ready count instead of hydrating the full
+idea repository snapshot. The same adapter exposes a bounded delivery-ready
+event query for worker reads, preserving the existing retry and expired-lease
+semantics while avoiding unrelated candidate, audit, review, downstream,
+report, or AI lineage table scans for ordinary outbox readiness.
 `POST /api/v1/outbox-delivery/run-once` now exposes the same run-once
 orchestration as a certified internal operator action requiring
 `idea.outbox-delivery.run`. It fails closed without valid broker configuration,
@@ -1503,6 +1510,10 @@ logs; fix or document the owned warning source instead.
    Runtime-trust-telemetry orchestration emits both the internal preview and a
    contract-shaped, source-safe runtime snapshot while keeping platform
    certification blockers explicit.
+   Outbox-delivery-readiness orchestration prefers the repository-side
+   readiness projection when the active durable repository exposes it, and
+   falls back to the snapshot path only for process-local or older repository
+   implementations.
    Implementation-proof-readiness orchestration aggregates current RFC-0002
    capability proof blockers across source ingestion, queue, AI, data mesh,
    runtime trust telemetry preview/snapshot evidence, outbox delivery and its

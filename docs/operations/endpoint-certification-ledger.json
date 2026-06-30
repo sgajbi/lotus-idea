@@ -878,7 +878,7 @@
       "path": "/api/v1/outbox-delivery/readiness",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Return source-safe operator readiness for the internal outbox delivery foundation, including aggregate outbox status counts, leased and expired-lease posture, publisher-adapter presence, and broker/downstream certification blockers.",
+      "purpose": "Return source-safe operator readiness for the internal outbox delivery foundation, including aggregate outbox status counts, leased and expired-lease posture, repository-side PostgreSQL readiness projection when durable storage is active, publisher-adapter presence, and broker/downstream certification blockers.",
       "when_to_use": "Use for internal platform/operator validation when a caller has idea.outbox-delivery.readiness.read capability and needs aggregate outbox backlog posture before live broker runtime or downstream consumer proof exists.",
       "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform mesh event publication proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [
@@ -893,7 +893,9 @@
       "test_evidence": [
         "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_reports_blocked_foundation_posture",
         "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_keeps_certification_blocked_with_broker_config",
+        "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_uses_repository_projection_without_snapshot",
         "tests/unit/test_outbox_delivery_readiness.py::test_outbox_delivery_readiness_rejects_invalid_retry_limit",
+        "tests/unit/test_postgres_outbox_readiness.py::test_postgres_repository_uses_outbox_only_readiness_projection",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_requires_operator_permission",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_readiness_api_emits_not_certified_operation_event"

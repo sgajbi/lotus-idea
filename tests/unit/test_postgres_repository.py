@@ -72,6 +72,8 @@ from app.infrastructure.postgres_codecs import (
 from tests.unit.postgres_outbox_fake_helpers import (
     claim_outbox_event_rows,
     fail_outbox_event_row,
+    outbox_delivery_ready_rows,
+    outbox_readiness_summary_row,
     publish_outbox_event_row,
 )
 from tests.unit.postgres_review_queue_fake_helpers import (
@@ -99,6 +101,14 @@ class FakePostgresCursor:
         if normalized.startswith("/* lotus-idea review-queue-page */"):
             assert params is not None
             self._rows = review_queue_page_rows(self.connection, normalized, params)
+            return
+        if normalized.startswith("/* lotus-idea outbox-delivery-ready-events */"):
+            assert params is not None
+            self._rows = outbox_delivery_ready_rows(self.connection, params)
+            return
+        if normalized.startswith("/* lotus-idea outbox-readiness-summary */"):
+            assert params is not None
+            self._rows = outbox_readiness_summary_row(self.connection, params)
             return
         if normalized.startswith("with selected"):
             assert params is not None

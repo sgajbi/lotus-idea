@@ -246,6 +246,9 @@ flowchart LR
     counts, adapter presence, and blockers only, so operators can see backlog
     posture without accessing event ids, aggregate ids, raw idempotency keys,
     source payloads, broker payloads, or downstream event contracts.
+    PostgreSQL-backed readiness uses repository-side aggregate queries against
+    `idea_outbox_event` for status counts, expired leases, and delivery-ready
+    count instead of materializing the whole idea repository snapshot.
 17. `POST /api/v1/outbox-delivery/run-once` exposes the same orchestration
     through the service boundary for operators. It does not mutate pending
     records when broker configuration is absent or invalid, and successful runs

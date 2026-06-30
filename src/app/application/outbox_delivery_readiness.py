@@ -8,7 +8,12 @@ from types import MappingProxyType
 from typing import Mapping
 
 from app.domain import OutboxEventStatus
-from app.ports.idea_repository import CandidateSnapshotRepository, OutboxDeliveryRepository
+from app.ports.idea_repository import (
+    CandidateSnapshotRepository,
+    OutboxDeliveryReadinessProjectionRepository,
+    OutboxDeliveryReadinessRepositorySummary,
+    OutboxDeliveryRepository,
+)
 
 
 OUTBOX_BROKER_URL_ENV = "LOTUS_IDEA_OUTBOX_BROKER_URL"
@@ -81,15 +86,10 @@ def build_outbox_delivery_readiness_snapshot(
     evaluated_at = evaluated_at_utc or datetime.now(UTC)
     _require_aware_utc(evaluated_at, "evaluated_at_utc")
 
-    status_counts, expired_lease_count = _status_counts(
+    readiness_summary = _readiness_summary(
         repository,
+        max_retry_count=max_retry_count,
         evaluated_at_utc=evaluated_at,
-    )
-    delivery_ready_count = len(
-        repository.outbox_events_for_delivery(
-            max_retry_count=max_retry_count,
-            evaluated_at_utc=evaluated_at,
-        )
     )
     configuration_blockers = _configuration_blockers()
     certification_blockers = outbox_delivery_certification_blockers()
@@ -103,10 +103,10 @@ def build_outbox_delivery_readiness_snapshot(
         durable_storage_backed=durable_storage_backed,
         external_broker_configured=bool(os.getenv(OUTBOX_BROKER_URL_ENV, "").strip()),
         external_broker_publisher_adapter_present=True,
-        delivery_ready_count=delivery_ready_count,
-        expired_lease_count=expired_lease_count,
+        delivery_ready_count=readiness_summary.delivery_ready_count,
+        expired_lease_count=readiness_summary.expired_lease_count,
         max_retry_count=max_retry_count,
-        status_counts=status_counts,
+        status_counts=_status_counts_from_summary(readiness_summary),
         source_of_truth={
             "outbox_delivery": "src/app/application/outbox_delivery.py",
             "outbox_readiness": "src/app/application/outbox_delivery_readiness.py",
@@ -130,7 +130,39 @@ def build_outbox_delivery_readiness_snapshot(
     )
 
 
-def _status_counts(
+def _readiness_summary(
+    repository: OutboxDeliveryRepository,
+    *,
+    max_retry_count: int,
+    evaluated_at_utc: datetime,
+) -> OutboxDeliveryReadinessRepositorySummary:
+    if isinstance(repository, OutboxDeliveryReadinessProjectionRepository):
+        return repository.outbox_delivery_readiness_summary(
+            max_retry_count=max_retry_count,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+    status_counts, expired_lease_count = _snapshot_status_counts(
+        repository,
+        evaluated_at_utc=evaluated_at_utc,
+    )
+    delivery_ready_count = len(
+        repository.outbox_events_for_delivery(
+            max_retry_count=max_retry_count,
+            evaluated_at_utc=evaluated_at_utc,
+        )
+    )
+    return OutboxDeliveryReadinessRepositorySummary(
+        pending_count=status_counts.pending_count,
+        leased_count=status_counts.leased_count,
+        failed_count=status_counts.failed_count,
+        published_count=status_counts.published_count,
+        dead_letter_count=status_counts.dead_letter_count,
+        expired_lease_count=expired_lease_count,
+        delivery_ready_count=delivery_ready_count,
+    )
+
+
+def _snapshot_status_counts(
     repository: CandidateSnapshotRepository,
     *,
     evaluated_at_utc: datetime,
@@ -160,6 +192,18 @@ def _status_counts(
             dead_letter_count=counts[OutboxEventStatus.DEAD_LETTER],
         ),
         expired_lease_count,
+    )
+
+
+def _status_counts_from_summary(
+    summary: OutboxDeliveryReadinessRepositorySummary,
+) -> OutboxDeliveryStatusCounts:
+    return OutboxDeliveryStatusCounts(
+        pending_count=summary.pending_count,
+        leased_count=summary.leased_count,
+        failed_count=summary.failed_count,
+        published_count=summary.published_count,
+        dead_letter_count=summary.dead_letter_count,
     )
 
 
