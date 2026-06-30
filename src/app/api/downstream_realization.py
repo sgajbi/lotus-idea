@@ -6,6 +6,11 @@ from pydantic import Field
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
@@ -117,6 +122,14 @@ async def submit_conversion_intent_downstream(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is not None:
+        _emit_downstream_submission_event(
+            OperationOutcome.BLOCKED,
+            DURABLE_REPOSITORY_NOT_CONFIGURED,
+            durable_storage_backed=durable_storage_backed,
+        )
+        return configuration_problem
     try:
         clients = get_conversion_realization_clients()
         advise_client = clients.advise_client
@@ -186,6 +199,14 @@ async def submit_report_evidence_pack_downstream(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is not None:
+        _emit_downstream_submission_event(
+            OperationOutcome.BLOCKED,
+            DURABLE_REPOSITORY_NOT_CONFIGURED,
+            durable_storage_backed=durable_storage_backed,
+        )
+        return configuration_problem
     try:
         report_client = get_report_evidence_pack_realization_client()
     except DownstreamRealizationClientsUnavailableError:
@@ -406,6 +427,7 @@ CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
             detail="The downstream realization adapter foundation is not configured.",
             description="Downstream realization adapters are not configured.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 
@@ -466,6 +488,7 @@ REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
             detail="The downstream realization adapter foundation is not configured.",
             description="Downstream realization adapters are not configured.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 

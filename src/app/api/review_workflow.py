@@ -8,6 +8,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
@@ -312,6 +317,15 @@ async def record_review_action(
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_review_operation_event(
+                IdeaOperation.REVIEW_ACTION,
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed,
+            )
+            return configuration_problem
         result = apply_review_action_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
@@ -407,6 +421,15 @@ async def record_feedback(
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_review_operation_event(
+                IdeaOperation.FEEDBACK_RECORD,
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed,
+            )
+            return configuration_problem
         result = record_feedback_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
@@ -608,6 +631,7 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
             detail="The review action is not valid for the current idea candidate state.",
             description="Idempotency conflict or invalid review state transition.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 
@@ -621,8 +645,8 @@ FEEDBACK_ROUTE: RouteMetadata = {
         "RFC-0002 Slice 08 feedback foundation. The route requires a mutating feedback "
         "capability, caller role, upstream-authorized scope, and Idempotency-Key. "
         "Feedback is source-provenanced and audited, but remains an internal foundation. "
-        "Storage is process-local by default and PostgreSQL-backed only when "
-        "LOTUS_IDEA_DATABASE_URL is configured; data-product certification, Gateway, "
+        "Process-local writes are allowed only for local/test profiles; "
+        "production-like profiles require LOTUS_IDEA_DATABASE_URL. Data-product certification, Gateway, "
         "and Workbench proof remain separate future promotion gates."
     ),
     "status_code": status.HTTP_200_OK,
@@ -673,6 +697,7 @@ FEEDBACK_ROUTE: RouteMetadata = {
             detail="The idempotency key was already used with a different request payload.",
             description="Idempotency conflict.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 

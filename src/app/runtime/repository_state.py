@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import cast
 
 import psycopg
@@ -9,8 +8,15 @@ from psycopg.rows import dict_row
 from app.domain import InMemoryIdeaRepository
 from app.infrastructure.postgres_repository import PostgresConnection, PostgresIdeaRepository
 from app.ports.idea_repository import IdeaRepository
+from app.runtime import settings as runtime_settings
+from app.runtime.settings import (
+    LotusIdeaRuntimeSettings,
+    RuntimeStoragePosture,
+    load_runtime_settings,
+    runtime_storage_posture,
+)
 
-DATABASE_URL_ENV = "LOTUS_IDEA_DATABASE_URL"
+DATABASE_URL_ENV = runtime_settings.DATABASE_URL_ENV
 
 _IDEA_REPOSITORY: IdeaRepository | None = None
 
@@ -27,6 +33,18 @@ def idea_repository_durable_storage_backed(repository: object | None = None) -> 
     return bool(getattr(active_repository, "durable_storage_backed", False))
 
 
+def idea_repository_runtime_posture(
+    repository: object | None = None,
+    *,
+    settings: LotusIdeaRuntimeSettings | None = None,
+) -> RuntimeStoragePosture:
+    active_repository = repository if repository is not None else get_idea_repository()
+    return runtime_storage_posture(
+        settings=settings,
+        durable_storage_backed=idea_repository_durable_storage_backed(active_repository),
+    )
+
+
 def reset_idea_repository_for_tests(
     repository: IdeaRepository | None = None,
     *,
@@ -41,10 +59,10 @@ def reset_idea_repository_for_tests(
 
 
 def _build_idea_repository() -> IdeaRepository:
-    database_url = os.getenv(DATABASE_URL_ENV, "").strip()
-    if not database_url:
+    settings = load_runtime_settings()
+    if settings.database_url is None:
         return InMemoryIdeaRepository()
-    connection = psycopg.connect(database_url, row_factory=dict_row)
+    connection = psycopg.connect(settings.database_url, row_factory=dict_row)
     return PostgresIdeaRepository(cast(PostgresConnection, connection))
 
 

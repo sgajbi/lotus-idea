@@ -9,6 +9,10 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
+from app.api.durable_write_guard import (
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -440,6 +444,16 @@ async def evaluate_and_persist_high_cash_signal(
     source_authority = _high_cash_source_authority(request)
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
+    configuration_problem = durable_write_problem(repository)
+    if configuration_problem is not None:
+        emit_foundation_operation_event(
+            IdeaOperation.CANDIDATE_PERSISTENCE,
+            OperationOutcome.BLOCKED,
+            source_authority=source_authority,
+            durable_storage_backed=durable_storage_backed,
+            error_code="durable_repository_not_configured",
+        )
+        return configuration_problem
     result = evaluate_and_persist_high_cash_signal_command(
         EvaluateAndPersistHighCashSignalCommand(
             evaluation=request.to_command(),
@@ -651,9 +665,9 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
         "Evaluates caller-supplied, source-owned Core evidence for the first high-cash "
         "opportunity family, then persists created candidates through the internal "
         "idempotency/audit repository foundation. The endpoint is an internal certified "
-        "API foundation; persistence is process-local by default and PostgreSQL-backed "
-        "only when LOTUS_IDEA_DATABASE_URL is configured. No supported business feature "
-        "is promoted."
+        "API foundation; local/test profiles may use process-local writes, while "
+        "production-like profiles require LOTUS_IDEA_DATABASE_URL and fail closed before "
+        "in-memory mutation. No supported business feature is promoted."
     ),
     "status_code": status.HTTP_200_OK,
     "response_model": EvaluateAndPersistHighCashSignalResponse,
@@ -756,6 +770,7 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
                 }
             },
         },
+        **durable_repository_not_configured_metadata(),
     },
 }
 

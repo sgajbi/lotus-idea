@@ -29,7 +29,9 @@ from app.api.review_workflow import register_review_workflow_routes
 from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_routes
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.api.underperformance_signals import register_underperformance_signal_routes
+from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.problem_details import problem_details_response as problem_response
+from app.api.runtime_dependencies import idea_repository_runtime_posture
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.observability import configure_logging, emit_request_diagnostic_event
 
@@ -115,15 +117,44 @@ def _register_platform_routes(application: FastAPI) -> None:
         "/health/ready",
         tags=["Health"],
         summary="Get readiness",
-        description="Returns readiness status and reports draining state with a 503 response.",
+        description=(
+            "Returns readiness status, draining state, and durable write repository posture."
+        ),
         responses={
             200: {
                 "description": "Service is ready to receive traffic.",
-                "content": {"application/json": {"example": {"status": "ready"}}},
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status": "ready",
+                            "runtimeProfile": "local",
+                            "durableRepositoryConfigured": False,
+                            "durableStorageBacked": False,
+                            "processLocalRepositoryAllowed": True,
+                            "durableWriteRepositoryRequired": False,
+                            "configurationBlockers": [],
+                        }
+                    }
+                },
             },
             503: {
-                "description": "Service is intentionally draining and should not receive new traffic.",
-                "content": {"application/json": {"example": {"status": "draining"}}},
+                "description": (
+                    "Service is intentionally draining or missing required durable write "
+                    "configuration."
+                ),
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "status": "degraded",
+                            "runtimeProfile": "production",
+                            "durableRepositoryConfigured": False,
+                            "durableStorageBacked": False,
+                            "processLocalRepositoryAllowed": False,
+                            "durableWriteRepositoryRequired": True,
+                            "configurationBlockers": ["durable_repository_not_configured"],
+                        }
+                    }
+                },
             },
         },
     )(health_ready)
@@ -221,11 +252,14 @@ async def health_live() -> dict[str, str]:
     return {"status": "live"}
 
 
-async def health_ready(request: Request, response: Response) -> dict[str, str]:
+async def health_ready(request: Request, response: Response) -> dict[str, object]:
     if bool(getattr(request.app.state, "is_draining", False)):
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
         return {"status": "draining"}
-    return {"status": "ready"}
+    posture = idea_repository_runtime_posture()
+    if not posture.write_ready:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return durable_write_readiness_payload(posture)
 
 
 async def metadata() -> dict[str, str]:

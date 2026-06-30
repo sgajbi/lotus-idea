@@ -4,9 +4,13 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import InMemoryIdeaRepository
 from app.main import app
+from app.runtime.repository_state import (
+    DATABASE_URL_ENV,
+    get_idea_repository,
+    reset_idea_repository_for_tests,
+)
 
 
 class DurableInMemoryIdeaRepository(InMemoryIdeaRepository):
@@ -202,6 +206,38 @@ def test_high_cash_persist_api_reports_durable_storage_when_repository_is_durabl
 
     assert response.status_code == 200
     assert response.json()["durableStorageBacked"] is True
+
+
+def test_high_cash_persist_api_fails_closed_when_durable_repository_is_required(
+    monkeypatch: Any,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    client = TestClient(app)
+
+    try:
+        response = client.post(
+            "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+            json=high_cash_payload(),
+            headers=persistence_headers("persist-high-cash-api-prod-missing-db-001"),
+        )
+        repository = get_idea_repository()
+    finally:
+        reset_idea_repository_for_tests()
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 503,
+        "code": "durable_repository_not_configured",
+        "title": "Durable repository not configured",
+        "detail": (
+            "This runtime profile requires LOTUS_IDEA_DATABASE_URL before "
+            "write-capable idea operations can run."
+        ),
+    }
+    assert len(repository.snapshot().candidate_records) == 0
 
 
 def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:

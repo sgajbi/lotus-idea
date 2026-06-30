@@ -1,6 +1,8 @@
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 from app.main import app, create_app
+from app.runtime.repository_state import DATABASE_URL_ENV, reset_idea_repository_for_tests
 
 
 def test_create_app_returns_isolated_application_instance() -> None:
@@ -110,3 +112,28 @@ def test_readiness_reports_draining_state() -> None:
         assert response.json()["status"] == "draining"
     finally:
         app.state.is_draining = False
+
+
+def test_readiness_degrades_when_production_profile_lacks_durable_repository(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    client = TestClient(create_app())
+
+    try:
+        response = client.get("/health/ready")
+    finally:
+        reset_idea_repository_for_tests()
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "degraded",
+        "runtimeProfile": "production",
+        "durableRepositoryConfigured": False,
+        "durableStorageBacked": False,
+        "processLocalRepositoryAllowed": False,
+        "durableWriteRepositoryRequired": True,
+        "configurationBlockers": ["durable_repository_not_configured"],
+    }

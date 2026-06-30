@@ -9,6 +9,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -505,6 +510,15 @@ async def evaluate_ai_explanation(
     try:
         _require_ai_explanation_caller(caller)
         repository = get_idea_repository()
+        durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_ai_explanation_operation_event(
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed=durable_storage_backed,
+            )
+            return configuration_problem
         result = evaluate_ai_explanation_to_repository(
             request.to_command(candidate_id=candidate_id, caller=caller),
             repository=repository,
@@ -645,12 +659,15 @@ def _operation_outcome_from_ai_result(result: AIExplanationResult) -> OperationO
 def _emit_ai_explanation_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
+    *,
+    durable_storage_backed: bool = False,
 ) -> None:
     emit_foundation_operation_event(
         IdeaOperation.AI_EXPLANATION,
         outcome,
         source_authority="lotus-idea",
         error_code=error_code,
+        durable_storage_backed=durable_storage_backed,
     )
 
 
@@ -833,6 +850,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
             ),
             description="Requested AI explanation purpose is invalid for candidate state.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 

@@ -8,6 +8,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
+from app.api.durable_write_guard import (
+    DURABLE_REPOSITORY_NOT_CONFIGURED,
+    durable_repository_not_configured_metadata,
+    durable_write_problem,
+)
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
@@ -142,6 +147,14 @@ async def record_candidate_lifecycle_transition(
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
+        configuration_problem = durable_write_problem(repository)
+        if configuration_problem is not None:
+            _emit_lifecycle_operation_event(
+                OperationOutcome.BLOCKED,
+                DURABLE_REPOSITORY_NOT_CONFIGURED,
+                durable_storage_backed,
+            )
+            return configuration_problem
         result = apply_candidate_lifecycle_transition_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
@@ -333,6 +346,7 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
             detail="The lifecycle transition is not valid for the current idea candidate state.",
             description="Idempotency conflict or invalid lifecycle transition.",
         ),
+        **durable_repository_not_configured_metadata(),
     },
 }
 
