@@ -161,9 +161,14 @@ analysis over Python and GitHub Actions. `SECURITY.md` defines supported
 security review scope, private reporting expectations, and source-safe report
 content, while `.github/dependabot.yml` defines weekly grouped Python and
 GitHub Actions dependency monitoring. GitHub currently reports non-provider
-secret patterns and secret validity checks as disabled for this repository, so
-they are not release-evidence claims. `make ci-contract-gate` fails if the
-source-controlled controls are removed or weakened.
+secret patterns and secret validity checks as disabled for this repository even
+after an admin API enable attempt, so they are advisory future controls and are
+not release-evidence claims. `make github-security-posture-check` verifies the
+live mutable GitHub posture, including required enabled settings, CodeQL
+`default` query suite with `remote` threat model, private vulnerability
+reporting, and zero open code-scanning, secret-scanning, and Dependabot alerts.
+`make ci-contract-gate` fails if the source-controlled controls are removed or
+weakened.
 
 CI timing and signal-quality evidence is retained as report-only release
 support evidence. Feature Lane, PR Merge Gate, and Main Releasability run an
