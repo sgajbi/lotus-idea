@@ -167,7 +167,7 @@ docker compose up --build
 | `make typecheck` | Run `mypy` over the service. |
 | `make test-unit` | Run unit tests; override `UNIT_TESTS` for a focused path. |
 | `make test-integration` | Run integration tests; override `INTEGRATION_TESTS` for a focused path. |
-| `make test-e2e` | Run e2e tests; override `E2E_TESTS` for a focused path. |
+| `make test-e2e` | Run deterministic e2e tests, including the critical internal idea workflow; override `E2E_TESTS` for a focused path. |
 | `make openapi-gate` | Validate OpenAPI quality. |
 | `make endpoint-certification-gate` | Validate certified endpoint ledger evidence. |
 | `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |

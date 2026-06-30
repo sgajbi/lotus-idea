@@ -446,14 +446,18 @@ repository-hygiene enforcement, no-sensitive-content evidence guarding,
 implementation-truth enforcement, and source-safe local quality gates.
 It also has unit coverage for current-repository pass behavior and failure cases for floating
 action tags, wrong verified SHAs, missing version provenance comments, weakened focused test target
-wiring, and raw workflow `pytest` shortcuts. `make test-unit`, `make test-integration`, and
+wiring, missing critical e2e workflow proof, and raw workflow `pytest` shortcuts.
+The e2e lane is not only a health probe: it must retain a deterministic internal
+idea workflow proof covering candidate persistence, advisor queue projection,
+review approval, conversion intent, report evidence-pack request, and authority
+boundaries. `make test-unit`, `make test-integration`, and
 `make test-e2e` default to their full suite paths while allowing scoped fix-forward runs through
 `UNIT_TESTS`, `INTEGRATION_TESTS`, and `E2E_TESTS` overrides:
 
 ```powershell
 make test-unit UNIT_TESTS=tests/unit/test_runtime_trust_telemetry.py
 make test-integration INTEGRATION_TESTS=tests/integration/test_runtime_trust_telemetry_api.py
-make test-e2e E2E_TESTS=tests/e2e/test_service_contract.py
+make test-e2e E2E_TESTS=tests/e2e/test_critical_idea_workflow.py
 ```
 
 Use these overrides for fast local diagnosis. PR evidence should still state whether the full
