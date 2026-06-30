@@ -322,6 +322,25 @@ signal without widening lotus-idea's product boundary:
    threat monitoring, production incident response, or supported-feature
    promotion.
 
+This slice also closes the HTTP request-size enforcement gap found through the
+GitHub issue review loop:
+
+1. `src/app/middleware/http_boundary.py` now measures the actual ASGI body
+   stream for JSON write methods after header-level rejection checks and before
+   route handlers process payloads.
+2. Oversized bodies return the existing source-safe `413 request_too_large`
+   `ProblemDetails` whether `Content-Length` is missing, accurate, or
+   understated.
+3. Accepted bounded JSON write bodies are replayed to downstream handlers so
+   normal route behavior is preserved after middleware inspection.
+4. `tests/integration/test_http_boundary.py` covers missing-`Content-Length`,
+   understated-`Content-Length`, replay of accepted body streams, existing
+   header-based oversized rejection, unsupported content type, trusted-host,
+   CORS, configuration, and secure-header behavior.
+5. This remains service-boundary hardening only. It is not a gateway/WAF
+   replacement, rate limiter, production ingress proof, or supported-feature
+   promotion.
+
 This slice also hardens workflow coverage enforcement after issue review showed
 raw workflow coverage commands duplicating the repository gate:
 

@@ -7,7 +7,7 @@ import os
 from fastapi import Request, Response, status
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
-from starlette.types import ASGIApp
+from starlette.types import ASGIApp, Message
 
 from app.api.problem_details import problem_details_response
 
@@ -67,6 +67,10 @@ class HttpBoundaryMiddleware(BaseHTTPMiddleware):
         if rejection is not None:
             _apply_security_headers(rejection)
             return rejection
+        body_rejection = await self._body_size_rejection(request)
+        if body_rejection is not None:
+            _apply_security_headers(body_rejection)
+            return body_rejection
         response = await call_next(request)
         _apply_security_headers(response)
         return response
@@ -84,12 +88,7 @@ class HttpBoundaryMiddleware(BaseHTTPMiddleware):
             )
         content_length = _content_length(request)
         if content_length is not None and content_length > self._config.max_request_body_bytes:
-            return _boundary_problem(
-                status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-                code="request_too_large",
-                title="Request too large",
-                detail="The request body exceeds the configured service limit.",
-            )
+            return _request_too_large_problem()
         if (
             request.method.upper() in JSON_WRITE_METHODS
             and content_length is not None
@@ -102,6 +101,32 @@ class HttpBoundaryMiddleware(BaseHTTPMiddleware):
                 title="Unsupported media type",
                 detail="JSON write requests must use an application/json content type.",
             )
+        return None
+
+    async def _body_size_rejection(self, request: Request) -> Response | None:
+        if request.method.upper() not in JSON_WRITE_METHODS:
+            return None
+
+        body_parts: list[bytes] = []
+        observed_body_bytes = 0
+        async for chunk in request.stream():
+            observed_body_bytes += len(chunk)
+            if observed_body_bytes > self._config.max_request_body_bytes:
+                return _request_too_large_problem()
+            body_parts.append(chunk)
+
+        body = b"".join(body_parts)
+        body_sent = False
+
+        async def replay_body() -> Message:
+            nonlocal body_sent
+            if body_sent:
+                return {"type": "http.request", "body": b"", "more_body": False}
+            body_sent = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        request._body = body
+        request._receive = replay_body
         return None
 
 
@@ -183,6 +208,15 @@ def _boundary_problem(*, status_code: int, code: str, title: str, detail: str) -
         code=code,
         title=title,
         detail=detail,
+    )
+
+
+def _request_too_large_problem() -> Response:
+    return _boundary_problem(
+        status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+        code="request_too_large",
+        title="Request too large",
+        detail="The request body exceeds the configured service limit.",
     )
 
 

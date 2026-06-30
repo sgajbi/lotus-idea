@@ -1615,7 +1615,10 @@ logs; fix or document the owned warning source instead.
 7. `src/app/middleware/`: inbound HTTP boundary middleware. `app.main`
    configures trusted-host checks, explicit CORS allowlisting, request body
    size limits, JSON write-request enforcement, baseline security headers, and
-   correlation headers before product routes handle requests. Boundary
+   correlation headers before product routes handle requests. Request-size
+   enforcement measures the ASGI body stream for JSON write methods so missing
+   or understated `Content-Length` headers cannot bypass the service-local
+   limit. Boundary
    rejections must return product-safe `ProblemDetails` and must not echo
    rejected host values, raw bodies, tokens, cookies, portfolio ids, client ids,
    or source payloads.
