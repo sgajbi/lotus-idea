@@ -481,6 +481,11 @@ The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supported_feature_promoted`. They must not include portfolio, client, account,
 holding, transaction, request body, response body, raw entitlement failure,
 trace id, or correlation id values.
+Correlation and trace ids are allowed only as log context on request
+diagnostics and business operation events. Operators should use the
+`X-Correlation-Id` response header to find structured service logs with the
+same `correlation_id`; do not add that value to metrics, evidence artifact
+identifiers, or generic operation attributes.
 The machine-readable metric catalog lives at
 `contracts/observability/lotus-idea-operation-metrics.v1.json`, and
 `make operation-metric-contract-gate` keeps it aligned with the code-owned

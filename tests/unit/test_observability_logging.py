@@ -7,6 +7,7 @@ from _pytest.logging import LogCaptureFixture
 from app.observability import (
     FORBIDDEN_OPERATION_FIELD_KEYS,
     OPERATION_METRIC_LABELS,
+    SENSITIVE_OPERATION_LOG_FIELD_KEYS,
     IdeaOperation,
     OperationEvent,
     OperationOutcome,
@@ -43,15 +44,19 @@ def test_request_diagnostic_event_logs_route_template_only(caplog: LogCaptureFix
             route="/api/v1/idea-candidates/{candidateId}",
             method="GET",
             status_code=404,
+            correlation_id="corr-support-123",
+            trace_id="trace-support-123",
         )
 
     payload = json.loads(caplog.records[-1].message)
     assert payload == {
+        "correlation_id": "corr-support-123",
         "event": "request.http_error",
         "method": "GET",
         "route": "/api/v1/idea-candidates/{candidateId}",
         "service": "lotus-idea",
         "status_code": 404,
+        "trace_id": "trace-support-123",
     }
 
 
@@ -63,6 +68,13 @@ def test_request_diagnostic_event_rejects_raw_or_unknown_diagnostics() -> None:
             "request.http_error",
             route="/api/v1/idea-candidates/abc?debug=true",
             method="GET",
+        )
+    with pytest.raises(ValueError, match="correlation_id cannot be blank"):
+        emit_request_diagnostic_event(
+            "request.http_error",
+            route="/health",
+            method="GET",
+            correlation_id=" ",
         )
 
 
@@ -95,6 +107,18 @@ def test_operation_event_rejects_sensitive_attributes() -> None:
             outcome=OperationOutcome.PERMISSION_DENIED,
             attributes={"portfolio_id": "PB_SG_GLOBAL_BAL_001"},
         )
+    with pytest.raises(ValueError, match="sensitive keys"):
+        OperationEvent(
+            operation=IdeaOperation.CONVERSION_INTENT,
+            outcome=OperationOutcome.PERMISSION_DENIED,
+            attributes={"correlation_id": "corr-as-attribute"},
+        )
+    with pytest.raises(ValueError, match="trace_id cannot be blank"):
+        OperationEvent(
+            operation=IdeaOperation.CONVERSION_INTENT,
+            outcome=OperationOutcome.PERMISSION_DENIED,
+            trace_id=" ",
+        )
 
 
 def test_emit_operation_event_logs_without_sensitive_labels(
@@ -105,6 +129,8 @@ def test_emit_operation_event_logs_without_sensitive_labels(
         outcome=OperationOutcome.NOT_FOUND,
         source_authority="lotus-idea",
         error_code="conversion_resource_not_found",
+        correlation_id="corr-operation-123",
+        trace_id="trace-operation-123",
     )
 
     with caplog.at_level(logging.INFO, logger="lotus-idea"):
@@ -112,6 +138,7 @@ def test_emit_operation_event_logs_without_sensitive_labels(
 
     payload = json.loads(caplog.records[-1].message)
     assert payload == {
+        "correlation_id": "corr-operation-123",
         "durable_storage_backed": False,
         "error_code": "conversion_resource_not_found",
         "event": "idea.operation.conversion_outcome",
@@ -121,8 +148,10 @@ def test_emit_operation_event_logs_without_sensitive_labels(
         "source_authority": "lotus-idea",
         "supportability_status": "foundation_only",
         "supported_feature_promoted": False,
+        "trace_id": "trace-operation-123",
     }
-    assert FORBIDDEN_OPERATION_FIELD_KEYS.isdisjoint(payload)
+    assert SENSITIVE_OPERATION_LOG_FIELD_KEYS.isdisjoint(payload)
+    assert FORBIDDEN_OPERATION_FIELD_KEYS.isdisjoint(event.metric_labels())
 
 
 def test_emit_foundation_operation_event_defaults_to_unpromoted_foundation(

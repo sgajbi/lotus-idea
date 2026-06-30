@@ -99,6 +99,8 @@ async def submit_conversion_intent_downstream(
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
+    correlation_id = _request_correlation_id(request)
+    trace_id = _request_trace_id(request)
     caller = caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
@@ -111,12 +113,16 @@ async def submit_conversion_intent_downstream(
         _emit_downstream_submission_event(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return _permission_denied()
     except ValueError:
         _emit_downstream_submission_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return _invalid_request()
 
@@ -128,6 +134,8 @@ async def submit_conversion_intent_downstream(
             OperationOutcome.BLOCKED,
             DURABLE_REPOSITORY_NOT_CONFIGURED,
             durable_storage_backed=durable_storage_backed,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return configuration_problem
     try:
@@ -141,8 +149,8 @@ async def submit_conversion_intent_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id=conversion_intent_id,
             idempotency_key=idempotency_key,
-            correlation_id=_request_correlation_id(request),
-            trace_id=_request_trace_id(request),
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         ),
         repository=repository,
         advise_client=advise_client,
@@ -154,12 +162,16 @@ async def submit_conversion_intent_downstream(
             _operation_outcome_from_submission_status(result.status),
             _error_code_from_submission_status(result.status),
             durable_storage_backed=durable_storage_backed,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return problem
     _emit_downstream_submission_event(
         _operation_outcome_from_submission_status(result.status),
         result.downstream_failure_reason,
         durable_storage_backed=durable_storage_backed,
+        correlation_id=correlation_id,
+        trace_id=trace_id,
     )
     return DownstreamSubmissionApiResponse(
         downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
@@ -176,6 +188,8 @@ async def submit_report_evidence_pack_downstream(
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
+    correlation_id = _request_correlation_id(request)
+    trace_id = _request_trace_id(request)
     caller = caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
@@ -188,12 +202,16 @@ async def submit_report_evidence_pack_downstream(
         _emit_downstream_submission_event(
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return _permission_denied()
     except ValueError:
         _emit_downstream_submission_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return _invalid_request()
 
@@ -205,6 +223,8 @@ async def submit_report_evidence_pack_downstream(
             OperationOutcome.BLOCKED,
             DURABLE_REPOSITORY_NOT_CONFIGURED,
             durable_storage_backed=durable_storage_backed,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return configuration_problem
     try:
@@ -215,8 +235,8 @@ async def submit_report_evidence_pack_downstream(
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id=report_evidence_pack_id,
             idempotency_key=idempotency_key,
-            correlation_id=_request_correlation_id(request),
-            trace_id=_request_trace_id(request),
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         ),
         repository=repository,
         report_client=report_client,
@@ -227,12 +247,16 @@ async def submit_report_evidence_pack_downstream(
             _operation_outcome_from_submission_status(result.status),
             _error_code_from_submission_status(result.status),
             durable_storage_backed=durable_storage_backed,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
         return problem
     _emit_downstream_submission_event(
         _operation_outcome_from_submission_status(result.status),
         result.downstream_failure_reason,
         durable_storage_backed=durable_storage_backed,
+        correlation_id=correlation_id,
+        trace_id=trace_id,
     )
     return DownstreamSubmissionApiResponse(
         downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
@@ -348,6 +372,8 @@ def _emit_downstream_submission_event(
     error_code: str | None = None,
     *,
     durable_storage_backed: bool = False,
+    correlation_id: str | None = None,
+    trace_id: str | None = None,
 ) -> None:
     emit_operation_event(
         OperationEvent(
@@ -358,6 +384,8 @@ def _emit_downstream_submission_event(
             durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
             error_code=error_code,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
     )
 

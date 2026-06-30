@@ -1072,7 +1072,8 @@ foundation. `src/app/observability/logging.py` now defines the
 `lotus_idea_operation_events_total` metric, bounded operation/outcome/
 supportability vocabulary, product-safe structured operation logs, and
 sensitive operation-attribute rejection. Request exception diagnostics now use
-a central helper that logs route templates rather than raw URL paths, and
+a central helper that logs route templates rather than raw URL paths plus
+explicit log-only correlation and trace ids from middleware, and
 `make source-observability-contract-gate` blocks raw `print()`, direct Python
 logging, or low-level `log_event` bypasses in application source. High-cash evaluation, candidate
 persistence, candidate detail read, lifecycle transition, advisor review queue,
@@ -1083,7 +1084,8 @@ downstream submission API emits `downstream_realization_submission` events with
 `not_certified` supportability, source authority `lotus-idea`, accepted,
 blocked, not-found, permission-denied, invalid-request, or invalid-state
 outcomes, and no candidate, portfolio, client, request-body, or response-body
-identifiers.
+identifiers. It includes request correlation and trace ids as log-only context
+so operators can join a response `X-Correlation-Id` to the service log.
 The
 source-ingestion-readiness diagnostic emits
 `source_ingestion_readiness_read` events with `not_certified` supportability,
@@ -1107,7 +1109,9 @@ owning downstream systems, and no candidate, portfolio, client, request-body, or
 response-body identifiers.
 All operation events are emitted without
 portfolio/client/account/holding/transaction identifiers, request/response
-bodies, trace ids, or correlation ids as metric labels. This is not yet full
+bodies, trace ids, or correlation ids as metric labels. Correlation and trace
+ids are allowed only through explicit log-context fields, not generic
+operation attributes. This is not yet full
 production observability: live AI runtime telemetry, live source certification,
 dashboard/alert, Gateway entitlement, durable persistence, data-product
 certification, and supported-feature promotion remain planned.

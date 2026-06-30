@@ -1,5 +1,9 @@
+import json
+import logging
+
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from _pytest.logging import LogCaptureFixture
 from pytest import MonkeyPatch
 from app.main import app, create_app
 from app.runtime.repository_state import DATABASE_URL_ENV, reset_idea_repository_for_tests
@@ -73,6 +77,35 @@ def test_validation_error_is_product_safe() -> None:
     assert "invalid_request" in body
     assert "not-an-int" not in body
     assert "portfolio" not in body
+
+
+def test_validation_error_log_includes_response_correlation_id(
+    caplog: LogCaptureFixture,
+) -> None:
+    isolated = create_app()
+
+    @isolated.get("/__test_validation/{item_id}", include_in_schema=False)
+    async def _test_validation_route(item_id: int) -> dict[str, int]:
+        return {"item_id": item_id}
+
+    client = TestClient(isolated)
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        response = client.get(
+            "/__test_validation/not-an-int",
+            headers={
+                "X-Correlation-Id": "corr-validation-log",
+                "X-Trace-Id": "trace-validation-log",
+            },
+        )
+
+    assert response.status_code == 400
+    assert response.headers["X-Correlation-Id"] == "corr-validation-log"
+    payload = json.loads(caplog.records[-1].message)
+    assert payload["event"] == "request.validation_failed"
+    assert payload["route"] == "/__test_validation/{item_id}"
+    assert payload["correlation_id"] == "corr-validation-log"
+    assert payload["trace_id"] == "trace-validation-log"
+    assert "not-an-int" not in str(payload)
 
 
 def test_unhandled_error_is_product_safe() -> None:

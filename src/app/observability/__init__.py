@@ -1,6 +1,7 @@
 from app.observability.logging import (
     FORBIDDEN_OPERATION_FIELD_KEYS,
     OPERATION_METRIC_LABELS,
+    SENSITIVE_OPERATION_LOG_FIELD_KEYS,
     IdeaOperation,
     OperationEvent,
     OperationOutcome,
@@ -14,6 +15,7 @@ from app.observability.logging import (
 __all__ = [
     "FORBIDDEN_OPERATION_FIELD_KEYS",
     "OPERATION_METRIC_LABELS",
+    "SENSITIVE_OPERATION_LOG_FIELD_KEYS",
     "IdeaOperation",
     "OperationEvent",
     "OperationOutcome",

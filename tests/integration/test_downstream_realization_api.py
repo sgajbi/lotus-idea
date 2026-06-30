@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+import logging
 from typing import Any
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 from fastapi.testclient import TestClient
 
 import app.api.downstream_realization as downstream_realization_api
@@ -20,6 +23,32 @@ from app.runtime.downstream_realization_state import (
 )
 from app.main import app
 from app.ports.downstream_realization import DownstreamRealizationOutcome
+
+
+def test_downstream_submission_operation_log_includes_request_correlation_id(
+    caplog: LogCaptureFixture,
+) -> None:
+    client = TestClient(app)
+
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        response = client.post(
+            "/api/v1/conversion-intents/conversion-denied/downstream-submissions",
+            headers={
+                "Idempotency-Key": "downstream-denied-correlation",
+                "X-Correlation-Id": "corr-downstream-log",
+                "X-Trace-Id": "trace-downstream-log",
+            },
+        )
+
+    assert response.status_code == 403
+    assert response.headers["X-Correlation-Id"] == "corr-downstream-log"
+    payload = json.loads(caplog.records[-1].message)
+    assert payload["event"] == "idea.operation.downstream_realization_submission"
+    assert payload["operation"] == "downstream_realization_submission"
+    assert payload["outcome"] == "permission_denied"
+    assert payload["correlation_id"] == "corr-downstream-log"
+    assert payload["trace_id"] == "trace-downstream-log"
+    assert "conversion-denied" not in str(payload)
 
 
 @dataclass
