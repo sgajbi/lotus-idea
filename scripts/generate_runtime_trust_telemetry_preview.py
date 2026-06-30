@@ -66,6 +66,29 @@ def runtime_trust_telemetry_preview_payload(
         "certificationStatus": snapshot.certification_status,
         "certificationReady": snapshot.certification_ready,
         "certificationBlockers": list(snapshot.certification_blockers),
+        "productCoverage": [
+            {
+                "productId": posture.product_id,
+                "productName": posture.product_name,
+                "productVersion": posture.product_version,
+                "lifecycleStatus": posture.lifecycle_status,
+                "freshnessClass": posture.freshness_class,
+                "coverageStatus": posture.coverage_status,
+                "runtimeBacked": posture.runtime_backed,
+                "observedRecordCount": posture.observed_record_count,
+                "currentSourceRefCount": posture.current_source_ref_count,
+                "staleOrUnavailableSourceRefCount": (posture.stale_or_unavailable_source_ref_count),
+                "freshnessState": posture.freshness_state,
+                "completenessStatus": posture.completeness_status,
+                "reconciliationStatus": posture.reconciliation_status,
+                "dataQualityStatus": posture.data_quality_status,
+                "lineageMaterialized": posture.lineage_materialized,
+                "sourceBatchEvidenceAvailable": posture.source_batch_evidence_available,
+                "consumerExposureStatus": posture.consumer_exposure_status,
+                "certificationBlockers": list(posture.certification_blockers),
+            }
+            for posture in snapshot.product_postures
+        ],
         "supportedFeaturePromoted": snapshot.supported_feature_promoted,
     }
 
@@ -74,7 +97,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
             "Generate a source-safe runtime trust telemetry preview for the proposed "
-            "lotus-idea IdeaCandidate data product."
+            "lotus-idea producer product catalog."
         )
     )
     parser.add_argument(

@@ -97,10 +97,25 @@ The response includes:
 2. aggregate candidate and source-reference counts,
 3. source-authority, freshness, supportability, and lifecycle count maps,
 4. aggregate review, feedback, conversion, and report evidence-pack counts,
-5. `runtimeTelemetryBacked: true` for the preview artifact,
-6. `platformCertified: false`,
-7. `certificationStatus: not_certified`,
-8. explicit certification blockers.
+5. `productCoverage` entries for every producer product declared in
+   `contracts/domain-data-products/lotus-idea-products.v1.json`,
+6. explicit `coverageStatus`, source-safe counts, lineage/materialization
+   posture, consumer exposure posture, and certification blockers per product,
+7. `runtimeTelemetryBacked: true` for the preview artifact,
+8. `platformCertified: false`,
+9. `certificationStatus: not_certified`,
+10. explicit certification blockers.
+
+Product coverage is intentionally explicit. `IdeaCandidate`,
+`IdeaEvidencePacket`, `AdvisorOpportunityQueue`, workflow event products, and
+`IdeaTrustTelemetry` have source-safe runtime posture derived from the active
+repository snapshot. `OpportunitySignalCandidate` remains
+`blocked_not_runtime_backed` until Lotus Idea independently materializes that
+declared product. This coverage model is also recorded in
+`contracts/trust-telemetry/lotus-idea-product-coverage.telemetry.v1.json`; data
+mesh readiness reports
+`runtime_trust_telemetry_product_coverage_incomplete` while coverage is not
+complete.
 
 The preview deliberately omits candidate identifiers, portfolio identifiers,
 client identifiers, raw source routes, evidence hashes, request payloads, and
@@ -129,7 +144,8 @@ output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json
 
 The endpoint and generated artifact use the same active repository provider as
 the preview and emit platform-compatible trust telemetry fields for
-`lotus-idea:IdeaCandidate:v1`. They are source-safe and remain blocked with
+`lotus-idea:IdeaCandidate:v1` plus a `product_coverage` section for every
+declared producer product. They are source-safe and remain blocked with
 explicit certification blockers. The generated file is ignored by Git. Neither
 surface replaces the checked-in static fallback contract, promotes producer
 products, or certifies the platform mesh.

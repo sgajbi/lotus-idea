@@ -1,0 +1,43 @@
+{
+  "contract_id": "lotus-idea-runtime-trust-telemetry-product-coverage",
+  "contract_version": "1.0.0",
+  "governed_by_rfcs": [
+    "RFC-0084",
+    "RFC-0087",
+    "RFC-0091",
+    "RFC-0002"
+  ],
+  "repository": "lotus-idea",
+  "declared_product_source": "contracts/domain-data-products/lotus-idea-products.v1.json",
+  "coverage_model": "declared_product_runtime_posture",
+  "coverage_status": "incomplete",
+  "coverage_status_reason": "Runtime telemetry emits source-safe posture for every declared product, but OpportunitySignalCandidate:v1 remains an explicit blocked product until independent signal-candidate materialization exists.",
+  "required_runtime_fields": [
+    "product_id",
+    "product_name",
+    "product_version",
+    "lifecycle_status",
+    "freshness_class",
+    "coverage_status",
+    "runtime_backed",
+    "observed_record_count",
+    "current_source_ref_count",
+    "stale_or_unavailable_source_ref_count",
+    "freshness_state",
+    "completeness_status",
+    "reconciliation_status",
+    "data_quality_status",
+    "lineage_materialized",
+    "source_batch_evidence_available",
+    "consumer_exposure_status",
+    "certification_blockers"
+  ],
+  "blocking": {
+    "blocked": true,
+    "blockers": [
+      "runtime_trust_telemetry_product_coverage_incomplete",
+      "certified_runtime_trust_telemetry_missing"
+    ],
+    "blocked_reason": "Every declared producer product has an explicit runtime posture, but product coverage is not yet certified because one declared product is not independently runtime-backed and platform mesh certification is absent."
+  }
+}

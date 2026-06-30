@@ -146,7 +146,8 @@ flowchart TD
    `GET /api/v1/data-mesh/trust-telemetry/runtime-preview?generatedAtUtc=<timestamp>`
    with the `operator` role and
    `idea.mesh.trust-telemetry.preview.read` capability. This reports aggregate
-   active-repository counts only and is not data-product certification.
+   active-repository counts plus product coverage for every declared producer
+   product. It is not data-product certification.
 13. For CI or async evidence without running the service, run
     `make implementation-proof-readiness-check` or
     `scripts/generate_implementation_proof_readiness.py --evaluated-at-utc <timestamp>`.
@@ -161,7 +162,8 @@ flowchart TD
     running the service, run `make runtime-trust-telemetry-snapshot-check` or
     `scripts/generate_runtime_trust_telemetry_snapshot.py --generated-at-utc <timestamp>`.
     The generated file is ignored under `output/trust-telemetry/runtime/` and
-    remains blocked until platform mesh certification is complete.
+    includes product coverage posture. It remains blocked until product coverage
+    is complete and platform mesh certification is complete.
 
 ## Current Operation Event Diagnostics
 

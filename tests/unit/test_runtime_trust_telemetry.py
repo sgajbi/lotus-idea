@@ -3,10 +3,14 @@ from __future__ import annotations
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
+import json
+from pathlib import Path
 
 import pytest
 
 from app.application.runtime_trust_telemetry import (
+    RuntimeTrustTelemetryPreview,
+    RuntimeTrustTelemetryProductPosture,
     build_runtime_trust_telemetry_preview,
     build_runtime_trust_telemetry_snapshot,
 )
@@ -39,6 +43,23 @@ def test_runtime_trust_telemetry_preview_reports_empty_blocked_posture() -> None
     assert snapshot.repository == "lotus-idea"
     assert snapshot.product_id == "lotus-idea:IdeaCandidate:v1"
     assert snapshot.generated_at_utc == OBSERVED_AT
+    assert {posture.product_id for posture in snapshot.product_postures} == (
+        _declared_product_ids()
+    )
+    assert (
+        _product_posture(
+            snapshot,
+            "lotus-idea:OpportunitySignalCandidate:v1",
+        ).coverage_status
+        == "blocked_not_runtime_backed"
+    )
+    assert (
+        _product_posture(
+            snapshot,
+            "lotus-idea:IdeaTrustTelemetry:v1",
+        ).coverage_status
+        == "runtime_backed"
+    )
     assert snapshot.candidate_snapshot_count == 0
     assert snapshot.current_source_ref_count == 0
     assert snapshot.stale_or_unavailable_source_ref_count == 0
@@ -74,6 +95,20 @@ def test_runtime_trust_telemetry_preview_counts_source_safe_repository_state() -
     assert snapshot.supportability_counts == {"ready": 2}
     assert snapshot.lifecycle_counts == {"generated": 2}
     assert snapshot.lineage_materialized is True
+    assert (
+        _product_posture(
+            snapshot,
+            "lotus-idea:IdeaCandidate:v1",
+        ).observed_record_count
+        == 2
+    )
+    assert (
+        _product_posture(
+            snapshot,
+            "lotus-idea:IdeaEvidencePacket:v1",
+        ).source_batch_evidence_available
+        is True
+    )
     assert "durable_repository_not_configured" not in snapshot.certification_blockers
     assert "platform_mesh_certification_missing" in snapshot.certification_blockers
 
@@ -121,6 +156,16 @@ def test_runtime_trust_telemetry_snapshot_reports_empty_blocked_contract_posture
     assert snapshot["reconciliation_status"] == "unknown"
     assert snapshot["data_quality_status"] == "quality_unknown"
     assert snapshot["lineage"]["lineage_materialized"] is False
+    assert {posture["product_id"] for posture in snapshot["product_coverage"]} == (
+        _declared_product_ids()
+    )
+    assert (
+        _snapshot_product_posture(
+            snapshot,
+            "lotus-idea:OpportunitySignalCandidate:v1",
+        )["coverage_status"]
+        == "blocked_not_runtime_backed"
+    )
     assert snapshot["blocking"]["blocked"] is True
     assert "runtime_candidate_snapshot_missing" in snapshot["blocking"]["blocked_reason"]
     assert snapshot["observed_trust_metadata"] == {}
@@ -144,6 +189,13 @@ def test_runtime_trust_telemetry_snapshot_materializes_source_safe_runtime_evide
     assert snapshot["reconciliation_status"] == "not_applicable"
     assert snapshot["data_quality_status"] == "quality_passed"
     assert snapshot["lineage"]["lineage_materialized"] is True
+    assert (
+        _snapshot_product_posture(
+            snapshot,
+            "lotus-idea:IdeaCandidate:v1",
+        )["coverage_status"]
+        == "runtime_backed"
+    )
     assert observed_metadata["product_name"] == "IdeaCandidate"
     assert observed_metadata["as_of_date"] == "2026-06-21"
     assert observed_metadata["source_batch_fingerprint"] == "source-safe-runtime-aggregate"
@@ -221,6 +273,41 @@ def _persist_high_cash_candidate(
         occurred_at_utc=OBSERVED_AT,
     )
     return result.candidate.candidate_id
+
+
+def _product_posture(
+    snapshot: RuntimeTrustTelemetryPreview,
+    product_id: str,
+) -> RuntimeTrustTelemetryProductPosture:
+    return next(
+        posture for posture in snapshot.product_postures if posture.product_id == product_id
+    )
+
+
+def _snapshot_product_posture(snapshot: dict[str, object], product_id: str) -> dict[str, object]:
+    coverage = snapshot["product_coverage"]
+    assert isinstance(coverage, list)
+    return next(
+        posture
+        for posture in coverage
+        if isinstance(posture, dict) and posture["product_id"] == product_id
+    )
+
+
+def _declared_product_ids() -> set[str]:
+    contract = json.loads(
+        (
+            Path(__file__).resolve().parents[2]
+            / "contracts/domain-data-products/lotus-idea-products.v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    products = contract["products"]
+    assert isinstance(products, list)
+    return {
+        f"lotus-idea:{product['product_name']}:{product['product_version']}"
+        for product in products
+        if isinstance(product, dict)
+    }
 
 
 def _policy() -> HighCashSignalPolicy:
