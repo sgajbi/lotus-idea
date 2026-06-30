@@ -22,6 +22,8 @@ from app.domain import (
     EvidencePackPersistenceDecision,
     EvidenceFreshness,
     EvidenceReplayStatus,
+    FeedbackCommand,
+    FeedbackOutcome,
     HighCashSignalInput,
     HighCashSignalPolicy,
     IdeaCandidate,
@@ -35,13 +37,21 @@ from app.domain import (
     ReasonCode,
     ReportEvidencePackCommand,
     ReportEvidencePackPurpose,
+    ReviewAccessScope,
+    ReviewAction,
+    ReviewActorContext,
+    ReviewActorRole,
+    ReviewDecisionCommand,
+    ReviewPersistenceDecision,
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    apply_review_action,
     build_ai_explanation_request,
     evaluate_high_cash_signal,
     build_candidate_outbox_event,
     deterministic_ai_fallback,
+    record_feedback,
     record_conversion_outcome,
     request_conversion_intent,
     request_report_evidence_pack,
@@ -125,6 +135,68 @@ def approved_high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, ...]
             review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
         ),
         refs,
+    )
+
+
+def review_ready_high_cash_candidate() -> tuple[IdeaCandidate, tuple[SourceRef, ...]]:
+    candidate, refs = high_cash_candidate()
+    return (
+        replace(
+            candidate,
+            lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+            review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+        ),
+        refs,
+    )
+
+
+def review_access_scope() -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id="tenant-sg-001",
+        book_id="book-private-bank-sg",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-001",
+    )
+
+
+def advisor_actor_context() -> ReviewActorContext:
+    return ReviewActorContext(
+        actor_subject="advisor-001",
+        role=ReviewActorRole.ADVISOR,
+        tenant_ids=frozenset({"tenant-sg-001"}),
+        book_ids=frozenset({"book-private-bank-sg"}),
+        portfolio_ids=frozenset({"PB_SG_GLOBAL_BAL_001"}),
+        client_ids=frozenset({"client-001"}),
+    )
+
+
+def review_decision_command(
+    *,
+    review_id: str = "review-decision-001",
+    decided_at_utc: datetime = datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+) -> ReviewDecisionCommand:
+    return ReviewDecisionCommand(
+        review_id=review_id,
+        action=ReviewAction.APPROVE_FOR_CONVERSION,
+        actor=advisor_actor_context(),
+        access_scope=review_access_scope(),
+        reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
+        decided_at_utc=decided_at_utc,
+    )
+
+
+def feedback_command(
+    *,
+    feedback_id: str = "feedback-001",
+    recorded_at_utc: datetime = datetime(2026, 6, 21, 10, 8, tzinfo=UTC),
+) -> FeedbackCommand:
+    return FeedbackCommand(
+        feedback_id=feedback_id,
+        actor=advisor_actor_context(),
+        access_scope=review_access_scope(),
+        outcome=FeedbackOutcome.USEFUL,
+        reason_codes=(ReasonCode.FEEDBACK_RECORDED,),
+        recorded_at_utc=recorded_at_utc,
     )
 
 
@@ -545,6 +617,112 @@ def test_ai_explanation_lineage_snapshot_recovers_request_index() -> None:
     }
 
 
+def test_review_action_persistence_replays_conflicts_and_returns_not_found() -> None:
+    candidate, refs = review_ready_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:review-ready:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    result = apply_review_action(persisted.record.candidate, review_decision_command())
+    payload = {"review_id": result.decision.review_id, "action": result.decision.action.value}
+
+    first = repository.record_review_action(
+        result,
+        idempotency_key="review-action-key-001",
+        payload=payload,
+    )
+    replayed = repository.record_review_action(
+        result,
+        idempotency_key="review-action-key-001",
+        payload=payload,
+    )
+    conflict = repository.record_review_action(
+        result,
+        idempotency_key="review-action-key-001",
+        payload={"review_id": result.decision.review_id, "action": "reject"},
+    )
+    missing_candidate, _ = review_ready_high_cash_candidate()
+    missing_result = apply_review_action(missing_candidate, review_decision_command())
+    not_found = InMemoryIdeaRepository().record_review_action(
+        missing_result,
+        idempotency_key="review-action-key-missing",
+        payload=payload,
+    )
+
+    assert first.decision is ReviewPersistenceDecision.ACCEPTED
+    assert replayed.decision is ReviewPersistenceDecision.REPLAYED
+    assert replayed.record == first.record
+    assert conflict.decision is ReviewPersistenceDecision.CONFLICT
+    assert conflict.record == first.record
+    assert not_found.decision is ReviewPersistenceDecision.NOT_FOUND
+    assert not_found.record is None
+
+
+def test_feedback_persistence_replays_conflicts_and_returns_not_found() -> None:
+    candidate, refs = review_ready_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:feedback-ready:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+    result = record_feedback(persisted.record.candidate, feedback_command())
+    payload = {
+        "feedback_id": result.feedback_event.feedback.feedback_id,
+        "outcome": result.feedback_event.feedback.outcome.value,
+    }
+
+    first = repository.record_feedback_event(
+        result,
+        idempotency_key="feedback-key-001",
+        payload=payload,
+    )
+    replayed = repository.record_feedback_event(
+        result,
+        idempotency_key="feedback-key-001",
+        payload=payload,
+    )
+    conflict = repository.record_feedback_event(
+        result,
+        idempotency_key="feedback-key-001",
+        payload={"feedback_id": result.feedback_event.feedback.feedback_id, "outcome": "ignored"},
+    )
+    missing_candidate, _ = review_ready_high_cash_candidate()
+    missing_result = record_feedback(missing_candidate, feedback_command())
+    not_found = InMemoryIdeaRepository().record_feedback_event(
+        missing_result,
+        idempotency_key="feedback-key-missing",
+        payload=payload,
+    )
+
+    assert first.decision is ReviewPersistenceDecision.ACCEPTED
+    assert replayed.decision is ReviewPersistenceDecision.REPLAYED
+    assert replayed.record == first.record
+    assert conflict.decision is ReviewPersistenceDecision.CONFLICT
+    assert conflict.record == first.record
+    assert not_found.decision is ReviewPersistenceDecision.NOT_FOUND
+    assert not_found.record is None
+
+
+def test_ai_explanation_lineage_returns_not_found_without_candidate_record() -> None:
+    candidate, _ = high_cash_candidate()
+    result = ai_explanation_result_for_candidate(candidate)
+
+    missing = InMemoryIdeaRepository().record_ai_explanation_lineage(result)
+
+    assert missing.decision is AIExplanationLineagePersistenceDecision.NOT_FOUND
+    assert missing.record is None
+    assert missing.lineage_record is None
+
+
 def test_outbox_event_payload_rejects_sensitive_source_and_client_keys() -> None:
     with pytest.raises(ValueError, match="sensitive keys"):
         build_candidate_outbox_event(
@@ -584,6 +762,11 @@ def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> No
         event.event_id,
         published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
     )
+    failed_after_dead_letter = repository.mark_outbox_event_failed(
+        event.event_id,
+        failure_reason="publisher_unavailable",
+        max_retry_count=2,
+    )
 
     assert failed.decision is OutboxDeliveryDecision.ACCEPTED
     assert failed.event is not None
@@ -596,6 +779,7 @@ def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> No
     assert dead_lettered.event.retry_count == 2
     assert delivered == ()
     assert published_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED
+    assert failed_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED
 
 
 def test_outbox_delivery_marks_event_published_once() -> None:
@@ -626,6 +810,60 @@ def test_outbox_delivery_marks_event_published_once() -> None:
     assert published.event.failure_reason is None
     assert second.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
     assert repository.outbox_events_for_delivery() == ()
+
+
+def test_outbox_delivery_returns_not_found_and_terminal_statuses() -> None:
+    candidate, refs = high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:outbox-terminal:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+
+    missing_publish = repository.mark_outbox_event_published(
+        "missing-event",
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    missing_failure = repository.mark_outbox_event_failed(
+        "missing-event",
+        failure_reason="publisher_unavailable",
+    )
+    published = repository.mark_outbox_event_published(
+        event.event_id,
+        published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+    )
+    failed_after_published = repository.mark_outbox_event_failed(
+        event.event_id,
+        failure_reason="publisher_unavailable",
+    )
+
+    assert missing_publish.decision is OutboxDeliveryDecision.NOT_FOUND
+    assert missing_publish.event is None
+    assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
+    assert missing_failure.event is None
+    assert published.decision is OutboxDeliveryDecision.ACCEPTED
+    assert failed_after_published.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
+
+
+def test_outbox_delivery_rejects_invalid_delivery_arguments() -> None:
+    repository = InMemoryIdeaRepository()
+
+    with pytest.raises(ValueError, match="limit must be positive"):
+        repository.outbox_events_for_delivery(limit=0)
+    with pytest.raises(ValueError, match="event_id is required"):
+        repository.mark_outbox_event_published(
+            " ",
+            published_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+        )
+    with pytest.raises(ValueError, match="published_at_utc must be timezone-aware"):
+        repository.mark_outbox_event_published(
+            "missing-event",
+            published_at_utc=datetime(2026, 6, 21, 10, 1),
+        )
 
 
 def test_outbox_failure_reason_rejects_sensitive_identifiers() -> None:

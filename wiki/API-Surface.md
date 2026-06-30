@@ -32,7 +32,7 @@ pass.
 | Authorization | API routes fail closed through platform caller-context roles and `idea.*` capabilities. |
 | Idempotency | Mutating workflow routes require `Idempotency-Key` and return replay or conflict posture instead of duplicating state. |
 | Source authority | Signal routes consume source-owned evidence and carry source refs; `lotus-idea` does not recompute official performance, risk, accounting, suitability, or report facts. |
-| Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples for request validation and permission failures. |
+| Error responses | Certified business and operator endpoints must expose product-safe `ProblemDetails` examples. Workflow/operator routes use shared `app.api.problem_details` metadata for concrete 400/403/404/409 examples; caller-supplied signal routes use `app.api.signal_api_support` for their stricter route-family contract. |
 | Sensitive data | Responses and diagnostics must not expose raw source payloads, raw idempotency keys, portfolio identifiers in aggregate diagnostics, prompt/provider payloads, or broker payloads. |
 
 ## Evidence Paths

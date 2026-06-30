@@ -208,6 +208,22 @@ def test_lotus_performance_adapter_maps_server_error_to_source_unavailable() -> 
     assert exc_info.value.code == "upstream_unavailable"
 
 
+def test_lotus_performance_adapter_maps_benchmark_readiness_forbidden_response() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(PerformanceSourceEntitlementDenied):
+        adapter.fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+
+def test_lotus_performance_adapter_maps_benchmark_readiness_server_error() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(503, json={})))
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        adapter.fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+    assert exc_info.value.code == "upstream_unavailable"
+
+
 def test_lotus_performance_adapter_rejects_source_service_mismatch() -> None:
     payload = _payload(extra={"source_service": "lotus-risk"})
 
@@ -232,6 +248,34 @@ def test_lotus_performance_adapter_maps_pending_async_response_to_source_unavail
         _adapter(
             httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
         ).fetch_underperformance_evidence(_request())
+
+    assert exc_info.value.code == "performance_returns_series_pending"
+
+
+def test_lotus_performance_adapter_rejects_benchmark_readiness_source_service_mismatch() -> None:
+    payload = _payload(extra={"source_service": "lotus-risk"})
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
+
+    assert exc_info.value.code == "performance_source_service_mismatch"
+
+
+def test_lotus_performance_adapter_maps_benchmark_readiness_pending_async_response() -> None:
+    payload = {
+        "source_service": "lotus-performance",
+        "contract_version": "v1",
+        "execution_mode": "async",
+        "status": "pending",
+        "result_path": "/integration/returns/series/results/example",
+    }
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
 
     assert exc_info.value.code == "performance_returns_series_pending"
 

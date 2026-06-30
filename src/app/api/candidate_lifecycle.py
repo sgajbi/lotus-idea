@@ -9,6 +9,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    permission_denied_metadata,
+    permission_denied_problem,
+    not_found_metadata,
+)
 from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.candidate_lifecycle import (
     ApplyCandidateLifecycleTransitionCommand,
@@ -21,7 +28,7 @@ from app.domain import (
     LifecyclePersistenceResult,
     ReasonCode,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
@@ -247,12 +254,7 @@ def _problem_for_lifecycle_persistence(
 
 
 def _permission_denied(detail: str) -> JSONResponse:
-    return problem_response(
-        status_code=status.HTTP_403_FORBIDDEN,
-        code="permission_denied",
-        title="Permission denied",
-        detail=detail,
-    )
+    return permission_denied_problem(detail)
 
 
 def _emit_lifecycle_operation_event(
@@ -332,13 +334,23 @@ CANDIDATE_LIFECYCLE_TRANSITION_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks lifecycle permission."},
-        404: {"model": ProblemDetails, "description": "Candidate was not found."},
-        409: {
-            "model": ProblemDetails,
-            "description": "Idempotency conflict or invalid lifecycle transition.",
-        },
+        **invalid_request_metadata(detail="Correct the lifecycle transition request and retry."),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to transition idea candidates.",
+            description="Caller lacks lifecycle permission.",
+        ),
+        **not_found_metadata(
+            code="candidate_not_found",
+            title="Candidate not found",
+            detail="The idea candidate was not found.",
+            description="Candidate was not found.",
+        ),
+        **conflict_metadata(
+            code="lifecycle_transition_conflict",
+            title="Lifecycle transition conflict",
+            detail="The lifecycle transition is not valid for the current idea candidate state.",
+            description="Idempotency conflict or invalid lifecycle transition.",
+        ),
     },
 }
 

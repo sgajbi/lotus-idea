@@ -89,6 +89,28 @@ def test_missing_risk_profile_source_product_proof_requires_advise_owned_boundar
     assert missing_risk_profile_source_product_proof_is_valid(payload) is False
 
 
+def test_missing_risk_profile_source_product_proof_requires_contracts_and_diagnostics() -> None:
+    payload = build_missing_risk_profile_source_product_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        source_product_summary={
+            "sourceAuthority": "lotus-idea",
+            "sourceProductContractRef": "missing",
+            "sourceTelemetryContractRef": "missing",
+            "typedRiskProfileDiagnosticContractReady": False,
+            "requiredRiskProfileDiagnostics": "not-a-list",
+        },
+    )
+
+    assert payload["proofBlockers"] == [
+        "advise_risk_profile_source_authority_mismatch",
+        "advise_risk_profile_source_product_contract_missing",
+        "advise_risk_profile_trust_telemetry_contract_missing",
+        "advise_risk_profile_diagnostic_contract_not_ready",
+        "advise_risk_profile_required_diagnostics_missing",
+    ]
+    assert missing_risk_profile_source_product_proof_is_valid(payload) is False
+
+
 def test_missing_risk_profile_source_product_proof_requires_timezone_aware_time() -> None:
     with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
         build_missing_risk_profile_source_product_proof_payload(

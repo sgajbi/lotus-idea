@@ -1750,6 +1750,14 @@ compose the shared product-safe 400/403 `ProblemDetails` OpenAPI examples from
 `signal_problem_responses()`. This keeps design modularity inside `lotus-idea`
 without creating a new runtime microservice boundary.
 
+Workflow and operator route modules should use `src/app/api/problem_details.py`
+for shared product-safe RFC-7807 OpenAPI response metadata and common
+permission/request-failure helpers. Keep route-specific error codes and
+descriptions in the route module, but do not hand-roll duplicate
+`ProblemDetails` shapes for lifecycle, review, feedback, conversion,
+report-evidence, or readiness/operator APIs. This is design modularity only; it
+does not imply a separately scalable `lotus-idea` sub-service.
+
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`
 against code-owned operation, outcome, supportability, and metric-label

@@ -10,6 +10,14 @@ Every endpoint added after scaffold creation must include:
 6. focused unit or integration tests for success and failure behavior,
 7. OpenAPI gate coverage before merge.
 
+API route modules should use the shared `app.api.problem_details` helpers for
+workflow/operator `ProblemDetails` response metadata unless a route-family
+support module owns a stricter contract. This keeps 400/403/404/409 examples
+concrete, product-safe, and consistent without duplicating RFC-7807 shapes in
+each route. Caller-supplied signal routes remain governed by
+`app.api.signal_api_support`, which owns their permission, source-authority,
+operation-event, and 400/403 OpenAPI metadata as one contract.
+
 The machine-readable source for endpoint certification tracking is:
 
 - docs/operations/endpoint-certification-ledger.json

@@ -92,6 +92,28 @@ def test_mandate_restriction_source_product_proof_requires_advise_owned_boundary
     assert mandate_restriction_source_product_proof_is_valid(payload) is False
 
 
+def test_mandate_restriction_source_product_proof_requires_contracts_and_diagnostics() -> None:
+    payload = build_mandate_restriction_source_product_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        source_product_summary={
+            "sourceAuthority": "lotus-idea",
+            "sourceProductContractRef": "missing",
+            "sourceTelemetryContractRef": "missing",
+            "typedRestrictionDiagnosticContractReady": False,
+            "requiredRestrictionDiagnostics": "not-a-list",
+        },
+    )
+
+    assert payload["proofBlockers"] == [
+        "advise_restriction_source_authority_mismatch",
+        "advise_restriction_source_product_contract_missing",
+        "advise_restriction_trust_telemetry_contract_missing",
+        "advise_restriction_diagnostic_contract_not_ready",
+        "advise_restriction_required_diagnostics_missing",
+    ]
+    assert mandate_restriction_source_product_proof_is_valid(payload) is False
+
+
 def test_mandate_restriction_source_product_proof_requires_timezone_aware_time() -> None:
     with pytest.raises(ValueError, match="generated_at_utc must be timezone-aware"):
         build_mandate_restriction_source_product_proof_payload(
