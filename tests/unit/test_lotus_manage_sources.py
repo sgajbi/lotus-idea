@@ -185,6 +185,32 @@ def test_lotus_manage_adapter_preserves_mandate_health_source_refs() -> None:
     assert evidence.mandate_risk_health_ref.data_quality_status == "attention"
 
 
+def test_lotus_manage_adapter_handles_source_product_alias_and_missing_freshness() -> None:
+    payload = _payload(
+        extra={
+            "sourceRefs": [
+                {"contentHash": "sha256:ignored-missing-product"},
+                {
+                    "sourceProductId": "lotus-risk:MandateRiskHealthContext:v1",
+                    "productVersion": "v1",
+                    "route": "/analytics/risk/mandate-health-context",
+                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                    "contentHash": "sha256:mandate-risk-health-missing",
+                    "freshnessBucket": "missing",
+                },
+            ],
+        }
+    )
+
+    evidence = _adapter(
+        httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    ).fetch_mandate_health_evidence(_request())
+
+    assert evidence.mandate_risk_health_ref is not None
+    assert evidence.mandate_risk_health_ref.content_hash == "sha256:mandate-risk-health-missing"
+    assert evidence.mandate_risk_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
+
+
 def test_lotus_manage_adapter_accepts_nested_mandate_health_refs() -> None:
     payload = _payload()
     supportability = payload["supportability"]

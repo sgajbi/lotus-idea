@@ -83,19 +83,14 @@ from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot
 
 class PostgresCursor(Protocol):
     def execute(self, query: str, params: Sequence[Any] | None = None) -> Any: ...
-
     def fetchall(self) -> Sequence[Any]: ...
-
     def __enter__(self) -> PostgresCursor: ...
-
     def __exit__(self, exc_type: object, exc: object, traceback: object) -> None: ...
 
 
 class PostgresConnection(Protocol):
     def cursor(self) -> PostgresCursor: ...
-
     def commit(self) -> None: ...
-
     def rollback(self) -> None: ...
 
 
@@ -412,37 +407,42 @@ class PostgresIdeaRepository:
         )
 
     def replace_snapshot(self, snapshot: IdeaRepositorySnapshot) -> None:
-        with self._connection.cursor() as cursor:
-            for table_name in (
-                "idea_ai_explanation_lineage",
-                "idea_report_evidence_pack_request",
-                "idea_conversion_outcome",
-                "idea_conversion_intent",
-                "idea_feedback_event",
-                "idea_review_decision",
-                "idea_downstream_submission",
-                "idea_outbox_event",
-                "idea_audit_event",
-                "idea_lifecycle_history",
-                "idea_idempotency_record",
-                "idea_candidate_record",
-            ):
-                cursor.execute(f"DELETE FROM {table_name}")
-            for candidate_record in snapshot.candidate_records.values():
-                self._insert_candidate_record(cursor, candidate_record)
-            for key, idempotency_record in snapshot.idempotency_records.items():
-                self._insert_idempotency_record(
-                    cursor,
-                    idempotency_record,
-                    candidate_id=snapshot.idempotency_candidates.get(key),
-                    snapshot=snapshot,
-                )
-            for candidate_record in snapshot.candidate_records.values():
-                self._insert_record_details(cursor, candidate_record)
-            for outbox_event in snapshot.outbox_events.values():
-                self._insert_outbox_event(cursor, outbox_event)
-            for record in snapshot.downstream_submission_records.values():
-                self._insert_downstream_submission_record(cursor, record)
+        try:
+            with self._connection.cursor() as cursor:
+                for table_name in (
+                    "idea_ai_explanation_lineage",
+                    "idea_report_evidence_pack_request",
+                    "idea_conversion_outcome",
+                    "idea_conversion_intent",
+                    "idea_feedback_event",
+                    "idea_review_decision",
+                    "idea_downstream_submission",
+                    "idea_outbox_event",
+                    "idea_audit_event",
+                    "idea_lifecycle_history",
+                    "idea_idempotency_record",
+                    "idea_candidate_record",
+                ):
+                    cursor.execute(f"DELETE FROM {table_name}")
+                for candidate_record in snapshot.candidate_records.values():
+                    self._insert_candidate_record(cursor, candidate_record)
+                for key, idempotency_record in snapshot.idempotency_records.items():
+                    self._insert_idempotency_record(
+                        cursor,
+                        idempotency_record,
+                        candidate_id=snapshot.idempotency_candidates.get(key),
+                        snapshot=snapshot,
+                    )
+                for candidate_record in snapshot.candidate_records.values():
+                    self._insert_record_details(cursor, candidate_record)
+                for outbox_event in snapshot.outbox_events.values():
+                    self._insert_outbox_event(cursor, outbox_event)
+                for record in snapshot.downstream_submission_records.values():
+                    self._insert_downstream_submission_record(cursor, record)
+            self._connection.commit()
+        except Exception:
+            self._connection.rollback()
+            raise
 
     def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
         try:
