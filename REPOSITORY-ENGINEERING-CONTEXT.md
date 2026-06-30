@@ -338,16 +338,21 @@ Security controls currently include:
 4. no-sensitive-content artifact guard,
 5. source-safe operation events and low-cardinality metric labels,
 6. stream-enforced HTTP request-size limits for JSON write methods,
-7. GitHub Security posture checks,
-8. Dependabot/security-update governance,
-9. CodeQL default setup governance,
-10. secret scanning and push protection where GitHub reports them enabled.
+7. trusted caller-context provenance enforcement for production-like profiles,
+8. GitHub Security posture checks,
+9. Dependabot/security-update governance,
+10. CodeQL default setup governance,
+11. secret scanning and push protection where GitHub reports them enabled.
 
 These are foundation controls, not production identity-provider proof.
-Route-level capability checks currently consume caller-context headers inside
-the service boundary; production-like use still requires trusted ingress or
-authenticated caller-context provenance before those headers can be treated as
-authority.
+Route-level capability checks consume caller-context headers inside the service
+boundary. In `demo`, `staging`, and `production` profiles, privileged
+`X-Caller-*` role, capability, and entitlement headers are rejected unless the
+request also carries `X-Lotus-Trusted-Caller-Context` matching
+`LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`. This is a bounded trusted-ingress
+provenance marker for service-to-service propagation; it is not an
+identity-provider integration, signed assertion, Workbench entitlement proof,
+client-publication proof, or supported-feature promotion.
 
 `make github-security-posture-check` is the operator-run live posture check for
 GitHub Security settings. Treat GitHub Security state as mutable external
@@ -514,8 +519,8 @@ Recent issue-derived patterns to preserve:
    through the shared observability sanitizer before response, log, or
    downstream propagation,
 9. caller-supplied capability, role, and entitlement headers are simulation
-   inputs until bound to trusted ingress, signed assertion, service identity, or
-   another authenticated provenance control,
+   inputs in local/test; production-like profiles require the shared trusted
+   caller-context provenance guard before those headers can authorize a route,
 10. PostgreSQL mutation paths need explicit same-candidate concurrency guards;
    full-snapshot mutation helpers must not silently overwrite stale state,
 11. persisted AI explanation lineage writes need API-level idempotency in
@@ -532,24 +537,51 @@ Recent issue-derived patterns to preserve:
    gate rules or be documented as on-demand evidence rather than current proof,
 16. documentation should record the durable rule, not only the one-off fix.
 
-Current open issue priorities that should shape the next implementation slices:
+Current open issue priorities should be worked category-wise so repeated defect
+patterns are fixed once and pinned with tests or gates:
+
+1. Correctness, idempotency, and persistence: GitHub issue `#266` guard
+   PostgreSQL idea mutations against stale snapshot writes.
+2. Correctness, idempotency, and persistence: GitHub issue `#268` require API
+   idempotency for AI explanation lineage writes.
+3. Operability and release evidence: GitHub issue `#263` align repo-native
+   command coverage with PostgreSQL and Docker release proof gates or document
+   a governed light/full split.
+4. Evidence and proof contracts: GitHub issue `#260` require aggregate
+   provenance for source-ingestion live proof consumption.
+5. Evidence and proof contracts: GitHub issue `#269` keep architecture
+   boundary report evidence synchronized with current gate rules.
+
+Branch-local fixed issues awaiting merge/CI/QA closure:
 
 1. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-2. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
-   writes.
-3. GitHub issue `#268`: require API idempotency for AI explanation lineage
-   writes.
-4. GitHub issue `#263`: align repo-native command coverage with PostgreSQL and
-   Docker release proof gates or document a governed light/full split.
-5. GitHub issue `#260`: require aggregate provenance for source-ingestion live
-   proof consumption.
-6. GitHub issue `#269`: keep architecture boundary report evidence
-   synchronized with current gate rules.
+2. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
+   describes.
+3. GitHub issue `#271`: require operator run identity for outbox delivery
+   run-once actions.
+4. GitHub issue `#270`: add container startup health smoke proof to Docker
+   release gates.
+5. GitHub issue `#265`: validate correlation and trace headers before logging
+   or reflecting them.
+6. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+   application and domain commands.
+7. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+8. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+   stream.
+9. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+   HTTP calls.
 
-Issues `#272`, `#271`, `#270`, `#265`, `#264`, `#262`, `#261`, and `#259` have
-branch-local fixes and validation evidence, but they must not be claimed closed
-until merged to `main`, CI is green, and QA or issue-closure evidence exists.
+Still-open issue categories after the current security batch:
+
+1. security/authorization and HTTP boundary controls,
+2. correctness/idempotency/persistence,
+3. operability/release evidence,
+4. evidence/proof contract synchronization,
+5. performance/projection efficiency.
+
+Issues with branch-local fixes must not be claimed closed until merged to
+`main`, CI is green, and QA or issue-closure evidence exists.
 
 Close or claim issue progress only after implementation, tests, docs/context
 truth, and validation evidence exist. Keep issue count under control by fixing
@@ -646,7 +678,8 @@ Current gaps remain explicit:
 8. no client-ready publication,
 9. no production capacity or back-pressure certification,
 10. no AI provider-runtime certification,
-11. no trusted-ingress proof for caller-context authorization headers,
+11. no full production identity-provider integration, signed caller assertion,
+    or Workbench entitlement-denied proof for caller-context authorization,
 12. no PostgreSQL same-candidate stale-write guard across all mutations,
 13. no API-level idempotency contract for AI explanation lineage writes,
 14. no full container-image SBOM or registry attestation,

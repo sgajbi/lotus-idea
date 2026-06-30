@@ -370,6 +370,7 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.candidate.persist capability.",
+        "403 returns product-safe Problem Details in production-like profiles when privileged X-Caller-* headers lack trusted caller-context provenance.",
         "409 returns product-safe Problem Details when the idempotency key was already used with a different request payload.",
         "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
       ],
@@ -379,6 +380,7 @@
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_rejects_blank_idempotency_key_safely",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_requires_candidate_persistence_capability",
+        "tests/integration/test_review_queue_api.py::test_production_profile_rejects_self_asserted_caller_context_headers",
         "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
@@ -772,6 +774,7 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.review.queue.read capability or advisor role.",
+        "403 returns product-safe Problem Details in production-like profiles when privileged X-Caller-* headers lack trusted caller-context provenance.",
         "403 returns product-safe Problem Details when query scope is outside caller entitlement scope.",
         "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware.",
         "400 returns product-safe Problem Details when scope query fields are blank.",
@@ -787,6 +790,7 @@
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_query_scope_outside_caller_entitlements",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_returns_empty_queue_without_candidates",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_requires_read_permission",
+        "tests/integration/test_review_queue_api.py::test_production_profile_rejects_self_asserted_caller_context_headers",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_naive_evaluation_time_safely",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_blank_scope_filter_safely",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_blank_caller_scope_header_safely",
@@ -812,6 +816,7 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.review.queue.readiness.read capability.",
+        "403 returns product-safe Problem Details in production-like profiles when privileged X-Caller-* headers lack trusted caller-context provenance.",
         "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware."
       ],
       "test_evidence": [
@@ -820,6 +825,8 @@
         "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_reads_repository_once",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_requires_operator_permission",
+        "tests/integration/test_review_queue_api.py::test_production_profile_rejects_self_asserted_caller_context_headers",
+        "tests/integration/test_review_queue_api.py::test_production_profile_accepts_trusted_caller_context_headers",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely",
         "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events"
       ],

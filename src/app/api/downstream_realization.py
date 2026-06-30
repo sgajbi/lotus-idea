@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
     durable_repository_not_configured_metadata,
@@ -98,6 +98,10 @@ async def submit_conversion_intent_downstream(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_lotus_trusted_caller_context: str | None = Header(
+        default=None,
+        alias=TRUSTED_CALLER_CONTEXT_HEADER,
+    ),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
     correlation_id = _request_correlation_id(request)
     trace_id = _request_trace_id(request)
@@ -105,6 +109,7 @@ async def submit_conversion_intent_downstream(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
+        trusted_caller_context=x_lotus_trusted_caller_context,
     )
     try:
         _require_submission_caller(caller)
@@ -187,6 +192,10 @@ async def submit_report_evidence_pack_downstream(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_lotus_trusted_caller_context: str | None = Header(
+        default=None,
+        alias=TRUSTED_CALLER_CONTEXT_HEADER,
+    ),
 ) -> DownstreamSubmissionApiResponse | JSONResponse:
     correlation_id = _request_correlation_id(request)
     trace_id = _request_trace_id(request)
@@ -194,6 +203,7 @@ async def submit_report_evidence_pack_downstream(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
+        trusted_caller_context=x_lotus_trusted_caller_context,
     )
     try:
         _require_submission_caller(caller)

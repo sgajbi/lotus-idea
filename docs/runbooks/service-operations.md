@@ -32,6 +32,7 @@
 | `make container-runtime-smoke` | Start the built `backend-service:ci-test` image, probe `/health`, `/health/live`, and reachable default-profile `/health/ready`, print container logs on failure, and remove the smoke container. |
 | `make release-sbom` | Generate `sbom.cdx.json` from `requirements/shared-runtime.lock.txt` with the pinned CI-tooling CycloneDX package used by main releasability. |
 | `make container-image-scan` | Scan the built `backend-service:ci-test` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
+| `make caller-context-contract-gate` | Validate that caller authorization headers are bound through the shared trusted caller-context provenance guard before production-like use. |
 | `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |
 
 ## Local Docker Compose
@@ -89,6 +90,17 @@ process-local repository writes for development and automated tests. `demo`,
 `staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`; without it,
 `/health/ready` returns degraded runtime posture and write-capable routes fail
 closed with `durable_repository_not_configured` before mutating in-memory state.
+
+`local` and `test` also allow test clients and local tools to simulate caller
+identity, roles, capabilities, and entitlement scope through `X-Caller-*`
+headers. In `demo`, `staging`, and `production`, those privileged headers are
+rejected with product-safe `403` behavior unless the request also includes
+`X-Lotus-Trusted-Caller-Context` matching
+`LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`. Configure that token only in the
+trusted ingress or gateway hop that has already authenticated and authorized
+the caller. This marker is not a replacement for an identity provider, signed
+assertions, mutual TLS service identity, Workbench entitlement proof, or
+client-ready authorization certification.
 
 ## HTTP Boundary Controls
 

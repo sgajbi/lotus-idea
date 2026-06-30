@@ -22,8 +22,9 @@ Required posture:
    promotion,
 9. AST-backed monetary-float guard enforcement for money-like application
    fields and conversions,
-10. branch protection and CI lane governance,
-11. live GitHub Security posture verification through
+10. production-like caller-context headers accepted only from trusted ingress,
+11. branch protection and CI lane governance,
+12. live GitHub Security posture verification through
     `make github-security-posture-check`.
 
 GitHub Security posture:
@@ -57,6 +58,22 @@ Mesh certification rule:
 4. generated runtime telemetry snapshots are pre-certification evidence only,
 5. platform source-manifest inclusion and certification gates are required
    before Gateway or Workbench expose the product as supported.
+
+Caller-context governance:
+
+1. `local` and `test` profiles may simulate caller subject, roles,
+   capabilities, and entitlement scope through `X-Caller-*` headers for
+   developer and automated-test ergonomics,
+2. `demo`, `staging`, and `production` profiles reject those privileged
+   headers unless the request also carries
+   `X-Lotus-Trusted-Caller-Context` matching
+   `LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`,
+3. the marker represents bounded trusted-ingress provenance only; it is not an
+   identity-provider integration, signed assertion, mutual TLS service identity,
+   Workbench entitlement proof, client-ready authorization certification, or
+   supported-feature promotion,
+4. `make caller-context-contract-gate` blocks route-local caller-header clones
+   that fail to bind and forward the trusted marker.
 
 `GET /api/v1/data-mesh/readiness` is the current internal operator diagnostic
 for this posture. It requires the `operator` role and

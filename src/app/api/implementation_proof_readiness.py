@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from pydantic import Field
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import caller_context_from_headers
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.problem_details import (
     invalid_request_metadata,
     permission_denied_metadata,
@@ -126,11 +126,16 @@ async def get_implementation_proof_readiness(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_lotus_trusted_caller_context: str | None = Header(
+        default=None,
+        alias=TRUSTED_CALLER_CONTEXT_HEADER,
+    ),
 ) -> ImplementationProofReadinessResponse | JSONResponse:
     caller = caller_context_from_headers(
         subject=x_caller_subject,
         roles=x_caller_roles,
         capabilities=x_caller_capabilities,
+        trusted_caller_context=x_lotus_trusted_caller_context,
     )
     try:
         require_role_and_capability(caller, _READ_IMPLEMENTATION_PROOF_READINESS_POLICY)
