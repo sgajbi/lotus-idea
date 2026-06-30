@@ -284,3 +284,24 @@ This slice also hardens post-merge Main Releasability signal quality:
 5. This is CI signal-quality hardening only. It does not reduce required
    post-merge release proof, weaken `LOTUS_AUTOMERGE_TOKEN` posture, or hide
    real Main Releasability failures.
+
+This slice also adopts GitHub Security-tab controls where they add durable
+signal without widening lotus-idea's product boundary:
+
+1. Repository settings now enable Dependabot alerts/security updates, secret
+   scanning with push protection, and CodeQL default setup for GitHub-owned
+   static analysis.
+2. `SECURITY.md` defines the supported security baseline, private
+   vulnerability reporting path, source-safe report-content boundary, and
+   lotus-idea product-ownership limits.
+3. `.github/dependabot.yml` adds weekly grouped Python and GitHub Actions
+   dependency monitoring with an open-PR cap to keep dependency work
+   actionable.
+4. `scripts/ci_contract_gate.py` requires the security policy and Dependabot
+   coverage, while `tests/unit/test_security_tab_governance_contract.py`
+   covers policy, client-data, dependency-ecosystem, and PR-noise regression
+   cases.
+5. This is GitHub Security and CI-governance hardening only. It does not
+   certify service-to-service authentication, platform entitlement proof, live
+   threat monitoring, production incident response, or supported-feature
+   promotion.

@@ -153,6 +153,15 @@ dispatch workflow remains active, because normal merges should produce one
 authoritative release-proof run rather than a paired cancelled run and
 successful dispatch run.
 
+The GitHub Security tab posture is governed in both repository settings and
+source-controlled files. Dependabot alerts/security updates are enabled, secret
+scanning with push protection is enabled, and CodeQL default setup is
+configured for GitHub-owned static analysis. `SECURITY.md` defines supported
+security review scope, private vulnerability reporting, and source-safe report
+content, while `.github/dependabot.yml` defines weekly grouped Python and
+GitHub Actions dependency monitoring. `make ci-contract-gate` fails if those
+source-controlled controls are removed or weakened.
+
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
 1. `PR Merge Gate / Workflow Lint`
