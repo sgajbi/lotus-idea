@@ -23,7 +23,7 @@ from app.application.candidate_evidence_replay import (
     replay_candidate_evidence,
 )
 from app.domain import CandidatePersistenceRecord, EvidenceReplayResult, EvidenceReplayStatus
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,

@@ -21,7 +21,7 @@ from app.application.review_queue import (
 )
 from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
 from app.domain.access_scope import QueueAccessScopeFilter
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

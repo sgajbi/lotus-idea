@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.route_metadata import RouteMetadata as RouteMetadata
 from app.domain import SignalEvaluationResult
-from app.errors import ProblemDetails, problem_response
+from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import (
     CallerContext,

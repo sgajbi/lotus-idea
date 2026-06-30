@@ -15,7 +15,7 @@ from app.application.data_mesh_readiness import (
     DataMeshReadinessSnapshot,
     build_data_mesh_readiness_snapshot,
 )
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

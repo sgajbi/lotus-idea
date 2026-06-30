@@ -19,7 +19,7 @@ from app.application.runtime_trust_telemetry import (
     build_runtime_trust_telemetry_preview,
     build_runtime_trust_telemetry_snapshot,
 )
-from app.errors import problem_response
+from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
     OperationEvent,

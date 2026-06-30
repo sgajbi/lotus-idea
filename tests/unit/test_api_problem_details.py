@@ -1,12 +1,20 @@
 from __future__ import annotations
 
+import importlib.util
+from pathlib import Path
+from types import ModuleType
+from typing import Any
+
 from app.api.problem_details import (
     invalid_request_metadata,
     invalid_request_problem,
     permission_denied_problem,
+    problem_details_response,
     service_unavailable_metadata,
 )
 from app.main import app
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 WORKFLOW_OPERATIONS = (
@@ -74,6 +82,19 @@ def test_invalid_request_problem_response_is_product_safe() -> None:
     assert b"Correct the review workflow request and retry." in response.body
 
 
+def test_problem_details_response_is_product_safe() -> None:
+    response = problem_details_response(
+        status_code=409,
+        code="idempotency_conflict",
+        title="Idempotency conflict",
+        detail="The idempotency key was already used with a different request payload.",
+    )
+
+    assert response.status_code == 409
+    assert b"idempotency_conflict" in response.body
+    assert b"different request payload" in response.body
+
+
 def test_workflow_openapi_error_responses_have_problem_details_examples() -> None:
     openapi = app.openapi()
 
@@ -102,3 +123,45 @@ def test_all_openapi_problem_details_responses_have_examples() -> None:
                     missing.append(f"{method.upper()} {path} {status_code}")
 
     assert missing == []
+
+
+def test_api_problem_details_boundary_gate_passes_current_repository() -> None:
+    module = _load_api_problem_details_boundary_gate()
+
+    assert module.validate_api_problem_details_boundary() == []
+
+
+def test_api_problem_details_boundary_gate_blocks_direct_app_errors_import(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    module = _load_api_problem_details_boundary_gate()
+    api_dir = tmp_path / "src" / "app" / "api"
+    api_dir.mkdir(parents=True)
+    route_path = api_dir / "unsafe_route.py"
+    route_path.write_text(
+        "from app.errors import problem_response\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "API_DIR", api_dir)
+    monkeypatch.setattr(module, "ALLOWED_DIRECT_ERROR_IMPORTS", {api_dir / "problem_details.py"})
+
+    assert module.validate_api_problem_details_boundary() == [
+        "src/app/api/unsafe_route.py:1: import problem_response through "
+        "app.api.problem_details, not app.errors"
+    ]
+
+
+def _load_api_problem_details_boundary_gate() -> ModuleType:
+    script_path = ROOT / "scripts" / "api_problem_details_boundary_gate.py"
+    spec = importlib.util.spec_from_file_location(
+        "api_problem_details_boundary_gate",
+        script_path,
+    )
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
