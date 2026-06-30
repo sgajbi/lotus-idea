@@ -1,6 +1,6 @@
 # RFC-0002 Slice 03: Opportunity Domain Model, Vocabulary, And Lifecycle
 
-Status: Implemented - pure domain foundation only
+Status: Implemented - pure domain foundation with public domain API boundary enforcement
 
 ## Outcome
 
@@ -46,6 +46,10 @@ Implemented scope:
 5. Evidence supportability is typed: blocked evidence requires explicit
    unsupported reasons, and ready evidence cannot carry unsupported reasons.
 6. Conversion intent requires an approved candidate source status.
+7. Cross-module callers use public `app.domain` exports for domain invariants;
+   `make private-import-boundary-gate` blocks imports from private
+   `app.domain.*` helpers so implementation slices do not create hidden domain
+   coupling.
 
 Out of scope for this slice:
 
@@ -66,6 +70,7 @@ Targeted validation:
 2. `.venv\Scripts\python.exe -m ruff check src\app\domain\ideas.py src\app\domain\__init__.py tests\unit\test_idea_domain_model.py`
    passed.
 3. `.venv\Scripts\python.exe -m mypy --config-file mypy.ini` passed.
+4. `.venv\Scripts\python.exe scripts\private_import_boundary_gate.py` passed.
 
 Full repository validation for the current branch must still run before PR
 closure.

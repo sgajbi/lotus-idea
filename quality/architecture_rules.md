@@ -28,3 +28,9 @@ modules; `make api-route-metadata-gate` enforces this as API design-modularity h
 Run `make architecture-boundary-gate` for blocking CI enforcement. Run
 `make architecture-boundary-report` when a report artifact is needed for scorecard or review
 evidence.
+
+Domain modules may keep private helpers for local readability, but cross-module callers must use
+public domain APIs exported through `app.domain`. `make private-import-boundary-gate` blocks
+`from app.domain.some_module import _private_helper` style imports across `src`, `tests`, and
+`scripts`; it is intentionally scoped to the domain boundary and does not claim the broader
+application/proof-helper cleanup is complete.

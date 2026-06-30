@@ -111,8 +111,8 @@ flowchart LR
   realization submission foundations, and readiness views.
 - `src/app/domain/`: framework-free domain models, policies, scoring,
   lifecycle, review, AI governance, conversion, report evidence, persistence
-  records, idempotency, replay, audit primitives, outbox records, and
-  retry/dead-letter state semantics.
+  records, idempotency, replay, audit primitives, outbox records, retry/dead-letter
+  semantics, and public domain API exports guarded by `make private-import-boundary-gate`.
 - `src/app/ports/`: source-owned service, outbox publisher, and repository
   protocols.
 - `src/app/infrastructure/`: Core, Performance, Risk, and Manage source adapters,

@@ -1712,6 +1712,15 @@ lines, script files at or below 500 lines, and script functions at or below
 baseline and prevent future agentic changes from normalizing large, hard-to-review
 modules.
 
+`make private-import-boundary-gate` is blocking through `make lint`. It scans
+`src`, `tests`, and `scripts` for cross-module imports from private
+`app.domain.*` helpers. Domain modules may keep local private helpers, but
+callers must use public, named domain APIs exported through `app.domain` so
+opportunity lifecycle, evidence, and source-authority invariants do not become
+hidden test or application coupling. The gate is intentionally scoped to the
+domain boundary; broader application proof-helper and persistence-codec cleanup
+remains future refactoring work.
+
 `make documentation-contract-gate` is blocking through `make lint`. It protects
 the durable agent and operator context surface: `AGENTS.md`, `README.md`,
 `REPOSITORY-ENGINEERING-CONTEXT.md`, RFC index, enterprise standard, operations

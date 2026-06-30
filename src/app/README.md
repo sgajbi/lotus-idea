@@ -16,4 +16,6 @@ Expected dependency flow:
 8. `observability` provides structured logging, correlation, tracing, and metrics helpers.
 
 Run `make architecture-boundary-gate` for the blocking architecture boundary check and
-`make architecture-boundary-report` when a report artifact is needed.
+`make architecture-boundary-report` when a report artifact is needed. Run
+`make private-import-boundary-gate` to verify cross-module callers use public `app.domain`
+exports instead of private domain helpers.
