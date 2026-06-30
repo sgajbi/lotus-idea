@@ -35,7 +35,10 @@ GitHub Security posture:
    threat model,
 3. `make github-security-posture-check` verifies those settings and requires
    zero open code-scanning, secret-scanning, and Dependabot alerts,
-4. GitHub currently reports non-provider secret patterns and secret validity
+4. the live check warns when `SECURITY.md` or `.github/dependabot.yml` are
+   absent from the default branch that GitHub renders publicly, so unmerged
+   branch truth is not mistaken for active Security-tab posture,
+5. GitHub currently reports non-provider secret patterns and secret validity
    checks as disabled even after an admin API enable attempt, so they remain
    advisory future controls and are not release-evidence claims.
 

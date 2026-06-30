@@ -22,6 +22,7 @@ def _load_security_posture_check() -> ModuleType:
 def _snapshot(module: ModuleType, **overrides: object) -> object:
     payload: dict[str, object] = {
         "repository": "sgajbi/lotus-idea",
+        "default_branch": "main",
         "security_and_analysis": {
             "dependabot_security_updates": {"status": "enabled"},
             "secret_scanning": {"status": "enabled"},
@@ -40,6 +41,8 @@ def _snapshot(module: ModuleType, **overrides: object) -> object:
         "open_code_scanning_alerts": 0,
         "open_secret_scanning_alerts": 0,
         "open_dependabot_alerts": 0,
+        "default_branch_security_policy_present": True,
+        "default_branch_dependabot_config_present": True,
     }
     payload.update(overrides)
     return module.GitHubSecurityPostureSnapshot(**payload)
@@ -92,6 +95,46 @@ def test_security_posture_can_require_advanced_secret_scanning() -> None:
     assert warnings == []
     assert "Secret scanning non-provider patterns is not enabled" in errors[0]
     assert "Secret scanning validity checks is not enabled" in errors[1]
+
+
+def test_security_posture_warns_when_default_branch_security_files_are_not_merged() -> None:
+    module = _load_security_posture_check()
+
+    errors, warnings = module.validate_snapshot(
+        _snapshot(
+            module,
+            default_branch_security_policy_present=False,
+            default_branch_dependabot_config_present=False,
+        )
+    )
+
+    assert errors == []
+    assert (
+        "SECURITY.md is not present on default branch `main`; GitHub Security tab will not "
+        "expose that repo-authored control until it is merged"
+    ) in warnings
+    assert (
+        ".github/dependabot.yml is not present on default branch `main`; GitHub Security tab will "
+        "not expose that repo-authored control until it is merged"
+    ) in warnings
+
+
+def test_security_posture_can_require_default_branch_security_files() -> None:
+    module = _load_security_posture_check()
+
+    errors, warnings = module.validate_snapshot(
+        _snapshot(module, default_branch_security_policy_present=False),
+        require_default_branch_security_files=True,
+    )
+
+    assert warnings == [
+        "Secret scanning non-provider patterns is not enabled; GitHub reports `disabled`",
+        "Secret scanning validity checks is not enabled; GitHub reports `disabled`",
+    ]
+    assert (
+        "SECURITY.md is not present on default branch `main`; GitHub Security tab will not "
+        "expose that repo-authored control until it is merged"
+    ) in errors
 
 
 def test_security_posture_blocks_codeql_drift() -> None:

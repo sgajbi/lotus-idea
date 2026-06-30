@@ -308,7 +308,11 @@ signal without widening lotus-idea's product boundary:
    `make github-security-posture-check` provide an operator-run live check for
    mutable GitHub Security settings, CodeQL `default` / `remote` posture,
    private vulnerability reporting, and zero open code-scanning,
-   secret-scanning, and Dependabot alerts.
+   secret-scanning, and Dependabot alerts. The live check also warns when
+   repo-authored Security-tab controls such as `SECURITY.md` or
+   `.github/dependabot.yml` are not present on the default branch that GitHub
+   renders publicly, preventing unmerged branch truth from being mistaken for
+   active Security-tab posture.
 5. `scripts/ci_contract_gate.py` requires the security policy and Dependabot
    coverage, while `tests/unit/test_security_tab_governance_contract.py`
    covers policy, client-data, dependency-ecosystem, and PR-noise regression

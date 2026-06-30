@@ -1886,11 +1886,14 @@ Python and GitHub Actions. `make github-security-posture-check` is the
 operator-run live posture check for these mutable GitHub settings: it verifies
 the enabled required controls, CodeQL `default` query suite with `remote` threat
 model, private vulnerability reporting, and zero open code-scanning,
-secret-scanning, and Dependabot alerts. GitHub currently reports non-provider
-secret patterns and secret validity checks as disabled for this repository even
-after an admin API enable attempt, so they are advisory future controls and are
-not claimed as active release evidence. `make ci-contract-gate` fails if the
-source-controlled security policy or Dependabot coverage is removed or weakened.
+secret-scanning, and Dependabot alerts, and it warns when repo-authored
+Security-tab controls such as `SECURITY.md` or `.github/dependabot.yml` are not
+present on the default branch that GitHub renders publicly. GitHub currently
+reports non-provider secret patterns and secret validity checks as disabled for
+this repository even after an admin API enable attempt, so they are advisory
+future controls and are not claimed as active release evidence. `make
+ci-contract-gate` fails if the source-controlled security policy or Dependabot
+coverage is removed or weakened.
 
 Coverage enforcement is also repository-owned. The Makefile exposes
 `COVERAGE_DATA_DIR ?= .`, `make coverage-gate` runs
