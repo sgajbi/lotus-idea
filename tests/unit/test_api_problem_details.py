@@ -154,6 +154,30 @@ def test_api_problem_details_boundary_gate_blocks_direct_app_errors_import(
     ]
 
 
+def test_api_problem_details_boundary_gate_blocks_entrypoint_app_errors_import(
+    tmp_path: Path,
+    monkeypatch: Any,
+) -> None:
+    module = _load_api_problem_details_boundary_gate()
+    api_dir = tmp_path / "src" / "app" / "api"
+    api_dir.mkdir(parents=True)
+    main_path = tmp_path / "src" / "app" / "main.py"
+    main_path.parent.mkdir(parents=True, exist_ok=True)
+    main_path.write_text(
+        "from app.errors import problem_response\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(module, "ROOT", tmp_path)
+    monkeypatch.setattr(module, "API_DIR", api_dir)
+    monkeypatch.setattr(module, "API_ENTRYPOINTS", (main_path,))
+    monkeypatch.setattr(module, "ALLOWED_DIRECT_ERROR_IMPORTS", {api_dir / "problem_details.py"})
+
+    assert module.validate_api_problem_details_boundary() == [
+        "src/app/main.py:1: import problem_response through app.api.problem_details, not app.errors"
+    ]
+
+
 def _load_api_problem_details_boundary_gate() -> ModuleType:
     script_path = ROOT / "scripts" / "api_problem_details_boundary_gate.py"
     spec = importlib.util.spec_from_file_location(

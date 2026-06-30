@@ -6,12 +6,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 API_DIR = ROOT / "src" / "app" / "api"
+API_ENTRYPOINTS = (ROOT / "src" / "app" / "main.py",)
 ALLOWED_DIRECT_ERROR_IMPORTS = {API_DIR / "problem_details.py"}
 
 
 def validate_api_problem_details_boundary() -> list[str]:
     errors: list[str] = []
-    for path in sorted(API_DIR.glob("*.py")):
+    for path in sorted((*API_DIR.glob("*.py"), *API_ENTRYPOINTS)):
         if path in ALLOWED_DIRECT_ERROR_IMPORTS:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
