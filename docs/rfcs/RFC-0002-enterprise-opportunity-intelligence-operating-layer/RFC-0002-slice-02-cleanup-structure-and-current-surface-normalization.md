@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers, route metadata governance, API ProblemDetails boundary governance, API idempotency boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, public proof capability update APIs, and public PostgreSQL codec APIs normalized behind shared public surfaces with blocking enforcement retained
+Status: Partially implemented - runtime composition providers, route metadata governance, API DTO base-model governance, API ProblemDetails boundary governance, API idempotency boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, public proof capability update APIs, and public PostgreSQL codec APIs normalized behind shared public surfaces with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -48,17 +48,22 @@ Implemented in this slice:
     `Idempotency-Key` blank-key validation. `make
     api-idempotency-boundary-gate` blocks future route-local validator clones
     while preserving the existing request-failure semantics.
-11. Cross-module callers now use public `app.domain` exports for domain
+11. API DTOs that need camel-case aliases now use shared
+    `app.api.base_model.CamelModel`; `make api-camel-model-boundary-gate`
+    blocks future route-local `CamelModel` or `ConfigDict(populate_by_name=True)`
+    clones. This is API design modularity only and does not introduce a runtime
+    service split.
+12. Cross-module callers now use public `app.domain` exports for domain
     invariants. `make private-import-boundary-gate` blocks direct imports of
     private `app.domain.*` helpers across `src`, `tests`, and `scripts`.
-12. Implementation-proof readiness now uses public
+13. Implementation-proof readiness now uses public
     `app.application.implementation_proof_capability_updates` functions for
     blocker clearance and capability readiness construction. The same
     `make private-import-boundary-gate` target blocks reintroducing private
     imports from that shared proof helper module. This is design modularity
     inside the existing `lotus-idea` service; it does not create a separately
     scalable runtime microservice or promote proof-readiness support.
-13. `src/app/infrastructure/postgres_repository.py` now consumes public
+14. `src/app/infrastructure/postgres_repository.py` now consumes public
     `app.infrastructure.postgres_codecs` APIs for row access, JSON object
     decoding, datetime decoding, and domain JSON serialization. The same
     `make private-import-boundary-gate` target blocks new cross-module imports
@@ -86,6 +91,9 @@ Validation evidence from the cleanup slice:
 16. `.venv\Scripts\python.exe -m pytest tests\unit\test_private_import_boundary_gate.py tests\unit\test_postgres_repository.py -q`
 17. `.venv\Scripts\python.exe scripts\api_idempotency_boundary_gate.py`
 18. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_idempotency.py tests\unit\test_ci_enforcement_contract.py -q`
+19. `make api-camel-model-boundary-gate`
+20. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_base_model.py tests\unit\test_ci_enforcement_contract.py -q`
+21. `.venv\Scripts\python.exe -m ruff check src\app\api scripts\api_camel_model_boundary_gate.py tests\unit\test_api_base_model.py tests\unit\test_ci_enforcement_contract.py`
 
 ## Remaining Work
 

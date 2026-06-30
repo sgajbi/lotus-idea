@@ -60,6 +60,7 @@ make source-observability-contract-gate
 make api-route-metadata-gate
 make api-problem-details-boundary-gate
 make api-idempotency-boundary-gate
+make api-camel-model-boundary-gate
 make openapi-problem-details-example-gate
 make signal-api-contract-gate
 make operation-metric-contract-gate
@@ -114,7 +115,7 @@ make clean
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, protected private import boundary enforcement, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
-OpenAPI quality, source-observability contract enforcement, API route metadata governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+OpenAPI quality, source-observability contract enforcement, API route metadata governance, API DTO base-model governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,
@@ -526,7 +527,9 @@ than raw URL paths.
 The API route metadata gate blocks local `RouteMetadata` and
 `SignalRouteMetadata` clones in route modules so route registration metadata
 uses the shared `app.api.route_metadata.RouteMetadata` contract. The
-ProblemDetails boundary gate blocks API route modules and the app entrypoint
+API CamelModel boundary gate blocks route-local `CamelModel` and
+`ConfigDict(populate_by_name=True)` clones so camel-case DTO alias handling uses
+`app.api.base_model.CamelModel`. The ProblemDetails boundary gate blocks API route modules and the app entrypoint
 from importing low-level `app.errors` directly, keeping runtime ProblemDetails
 helpers behind `app.api.problem_details`. The OpenAPI ProblemDetails example
 gate blocks public `ProblemDetails` responses that lack product-safe examples.

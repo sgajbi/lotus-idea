@@ -4,8 +4,9 @@ from datetime import datetime
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
@@ -46,10 +47,6 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _CONVERSION_INTENT_CAPABILITY = "idea.conversion.intent.record"
 _CONVERSION_OUTCOME_CAPABILITY = "idea.conversion.outcome.record"
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class ConversionIntentRequest(CamelModel):

@@ -1800,6 +1800,12 @@ Mutating workflow routes should use `src/app/api/idempotency.py` for shared
 api-idempotency-boundary-gate` blocks clone reintroduction. This is design
 modularity only; it does not imply a separately scalable `lotus-idea`
 sub-service.
+API request and response DTOs that need camel-case aliases should use
+`src/app/api/base_model.py` and `app.api.base_model.CamelModel` instead of
+route-local `CamelModel` or `ConfigDict(populate_by_name=True)` clones. `make
+api-camel-model-boundary-gate` blocks clone reintroduction. This is design
+modularity inside the existing service, not runtime microservice decomposition
+or a supported-feature claim.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`

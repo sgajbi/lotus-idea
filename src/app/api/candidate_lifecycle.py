@@ -4,8 +4,9 @@ from datetime import datetime
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
@@ -36,10 +37,6 @@ from app.observability import IdeaOperation, OperationOutcome, emit_foundation_o
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _LIFECYCLE_TRANSITION_CAPABILITY = "idea.candidate.lifecycle.transition"
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class CandidateLifecycleTransitionRequest(CamelModel):

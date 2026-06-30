@@ -4,8 +4,9 @@ from datetime import date, datetime
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
 from app.api.problem_details import (
     invalid_request_metadata,
@@ -40,10 +41,6 @@ _READ_CANDIDATE_DETAIL_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.detail.read",
     allowed_roles=("advisor", "operator"),
 )
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class CandidateDetailCandidateResponse(CamelModel):

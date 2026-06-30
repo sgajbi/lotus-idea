@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
@@ -45,10 +46,6 @@ _SUBMISSION_ERROR_CODES_BY_STATUS = {
     DownstreamRealizationStatus.NOT_FOUND: "downstream_realization_resource_not_found",
     DownstreamRealizationStatus.UNSUPPORTED_TARGET: "unsupported_downstream_realization_target",
 }
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class DownstreamSubmissionResultResponse(CamelModel):

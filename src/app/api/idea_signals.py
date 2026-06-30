@@ -5,8 +5,9 @@ from decimal import Decimal
 
 from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.runtime_dependencies import (
     get_idea_repository,
@@ -53,10 +54,6 @@ from app.security.caller_context import (
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class ReviewAccessScopeRequest(CamelModel):
