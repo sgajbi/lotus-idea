@@ -36,6 +36,10 @@ FORBIDDEN_OPERATION_FIELD_KEYS = frozenset(
         "transaction_id",
     }
 )
+REQUEST_CORRELATION_LOG_FIELD_KEYS = frozenset({"correlation_id", "trace_id"})
+SENSITIVE_OPERATION_LOG_FIELD_KEYS = (
+    FORBIDDEN_OPERATION_FIELD_KEYS - REQUEST_CORRELATION_LOG_FIELD_KEYS
+)
 
 OPERATION_METRIC_LABELS = (
     "operation",
@@ -126,6 +130,8 @@ def emit_request_diagnostic_event(
     level: LogLevel = "INFO",
     status_code: int | None = None,
     error_category: str | None = None,
+    correlation_id: str | None = None,
+    trace_id: str | None = None,
 ) -> None:
     if event_name not in REQUEST_DIAGNOSTIC_EVENTS:
         raise ValueError(f"unsupported request diagnostic event: {event_name}")
@@ -141,6 +147,10 @@ def emit_request_diagnostic_event(
         fields["status_code"] = status_code
     if error_category is not None:
         fields["error_category"] = error_category
+    if correlation_id is not None:
+        fields["correlation_id"] = _safe_log_context_value(correlation_id, "correlation_id")
+    if trace_id is not None:
+        fields["trace_id"] = _safe_log_context_value(trace_id, "trace_id")
     log_event(event_name, SERVICE_NAME, level, **fields)
 
 
@@ -153,6 +163,8 @@ class OperationEvent:
     durable_storage_backed: bool = False
     supported_feature_promoted: bool = False
     error_code: str | None = None
+    correlation_id: str | None = None
+    trace_id: str | None = None
     attributes: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -160,6 +172,10 @@ class OperationEvent:
             raise ValueError("source_authority is required")
         if self.error_code is not None and not self.error_code.strip():
             raise ValueError("error_code cannot be blank")
+        if self.correlation_id is not None:
+            _safe_log_context_value(self.correlation_id, "correlation_id")
+        if self.trace_id is not None:
+            _safe_log_context_value(self.trace_id, "trace_id")
         leaked = FORBIDDEN_OPERATION_FIELD_KEYS.intersection(self.attributes)
         if leaked:
             raise ValueError(
@@ -178,6 +194,10 @@ class OperationEvent:
         }
         if self.error_code is not None:
             fields["error_code"] = self.error_code
+        if self.correlation_id is not None:
+            fields["correlation_id"] = self.correlation_id
+        if self.trace_id is not None:
+            fields["trace_id"] = self.trace_id
         fields.update(self.attributes)
         return fields
 
@@ -209,6 +229,8 @@ def emit_foundation_operation_event(
     source_authority: str = SERVICE_NAME,
     durable_storage_backed: bool = False,
     error_code: str | None = None,
+    correlation_id: str | None = None,
+    trace_id: str | None = None,
 ) -> None:
     emit_operation_event(
         OperationEvent(
@@ -216,7 +238,15 @@ def emit_foundation_operation_event(
             outcome=outcome,
             source_authority=source_authority,
             error_code=error_code,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
             durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
         )
     )
+
+
+def _safe_log_context_value(value: str, field_name: str) -> str:
+    if not value.strip():
+        raise ValueError(f"{field_name} cannot be blank")
+    return value

@@ -19,8 +19,10 @@ This repository starts from the Lotus platform observability scaffold.
 ## Sensitive-Content Rule
 
 Logs, metrics, traces, dashboards, and evidence artifacts must not include client names, portfolio
-ids, holdings, raw entitlement failures, request bodies, response bodies, trace ids, or correlation
-ids as metric labels.
+ids, holdings, raw entitlement failures, request bodies, or response bodies. Correlation and trace
+ids are allowed only as product-safe log context on request diagnostics and operation events; they
+must not be used as Prometheus labels, evidence artifact identifiers, or generic operation
+attributes.
 
 Application source must not bypass the central observability module. `make
 source-observability-contract-gate` blocks raw `print()`, direct Python logging, and low-level
@@ -96,7 +98,9 @@ Metric labels are limited to:
 
 The operation helper rejects sensitive attributes such as client, portfolio, account, holding,
 transaction, request body, response body, raw entitlement failure, trace id, or correlation id
-fields. Do not add identifiers or payload fragments to operation labels.
+fields. Use the explicit log-only `correlation_id` and `trace_id` fields when request supportability
+needs to join API responses to service logs. Do not add identifiers or payload fragments to
+operation labels.
 
 The operation metric catalog is intentionally a guardrail, not a promotion record. It proves the
 metric vocabulary is implemented, bounded, and synchronized with code. It does not certify a Grafana
@@ -166,6 +170,14 @@ These signals are operational support evidence only. `durable_storage_backed=tru
 that the active repository provider is durable; it does not certify a data product, production
 recovery readiness, Gateway/Workbench route, downstream Report/Render/Archive realization, or any
 supported business feature.
+
+When an API caller reports a failure, operators should start from the response
+`X-Correlation-Id` header and search structured `lotus-idea` logs for the same
+`correlation_id`. Validation, HTTP, and unhandled-error diagnostics log route
+templates rather than raw paths. Business operation events may include the same
+log-only `correlation_id` and `trace_id`, while the
+`lotus_idea_operation_events_total` metric remains bounded to the governed
+label set above.
 
 The source-ingestion readiness diagnostic reports `accepted` only when the
 configured manifest, Core query URL, Core query-control-plane URL, and durable

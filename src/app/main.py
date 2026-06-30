@@ -188,12 +188,24 @@ def _route_template(request: Request) -> str:
     return path if isinstance(path, str) and path.startswith("/") else "/unknown"
 
 
+def _request_correlation_id(request: Request) -> str | None:
+    correlation_id = getattr(request.state, "correlation_id", None)
+    return str(correlation_id) if correlation_id else None
+
+
+def _request_trace_id(request: Request) -> str | None:
+    trace_id = getattr(request.state, "trace_id", None)
+    return str(trace_id) if trace_id else None
+
+
 async def validation_exception_handler(request: Request, exc: RequestValidationError) -> Response:
     emit_request_diagnostic_event(
         "request.validation_failed",
         route=_route_template(request),
         method=request.method,
         error_category="validation",
+        correlation_id=_request_correlation_id(request),
+        trace_id=_request_trace_id(request),
     )
     return problem_response(
         status_code=status.HTTP_400_BAD_REQUEST,
@@ -215,6 +227,8 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> Respon
         route=_route_template(request),
         method=request.method,
         status_code=exc.status_code,
+        correlation_id=_request_correlation_id(request),
+        trace_id=_request_trace_id(request),
     )
     return problem_response(
         status_code=exc.status_code,
@@ -237,6 +251,8 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> Respo
         route=_route_template(request),
         method=request.method,
         error_category=exc.__class__.__name__,
+        correlation_id=_request_correlation_id(request),
+        trace_id=_request_trace_id(request),
     )
     return problem_response(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
