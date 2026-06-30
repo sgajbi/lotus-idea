@@ -15,6 +15,7 @@ from app.api.problem_details import (
     permission_denied_metadata,
 )
 from app.api.route_metadata import RouteMetadata
+from app.api.temporal_validation import require_timezone_aware
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -55,9 +56,9 @@ class ReplayCandidateEvidenceRequest(CamelModel):
     @field_validator("evaluated_at_utc")
     @classmethod
     def _evaluated_at_must_be_timezone_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("evaluatedAtUtc must include timezone")
-        return value
+        return require_timezone_aware(
+            value, field_name="evaluatedAtUtc", message="evaluatedAtUtc must include timezone"
+        )
 
 
 class CandidateEvidenceReplayResponse(CamelModel):

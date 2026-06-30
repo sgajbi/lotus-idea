@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Mapping
 
 from fastapi import FastAPI, Header, Query, status
@@ -18,6 +18,7 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.temporal_validation import is_utc_datetime
 from app.application.outbox_delivery import OutboxDeliveryRunSummary, run_outbox_delivery_once
 from app.application.outbox_delivery_readiness import (
     DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
@@ -253,10 +254,7 @@ async def post_outbox_delivery_run_once(
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
 
-    if delivered_at_utc is not None and (
-        delivered_at_utc.tzinfo is None
-        or delivered_at_utc.utcoffset() != UTC.utcoffset(delivered_at_utc)
-    ):
+    if delivered_at_utc is not None and not is_utc_datetime(delivered_at_utc):
         _emit_outbox_delivery_run_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",

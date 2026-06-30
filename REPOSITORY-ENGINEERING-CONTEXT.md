@@ -106,6 +106,11 @@ of the concrete `src/app/api/idea_signals.py` route module. Caller-supplied
 signal routes and evidence replay import source-ref, review access scope, and
 candidate summary DTOs from that shared module, and `make
 api-signal-model-boundary-gate` blocks route-to-route DTO ownership drift.
+API timestamp-awareness and UTC query validation now live in
+`src/app/api/temporal_validation.py`; route modules use that shared helper for
+request DTO and query-parameter timestamp checks, and `make
+api-temporal-validation-boundary-gate` blocks route-local `tzinfo` /
+`utcoffset()` clones while preserving the existing error semantics.
 The PostgreSQL repository adapter now consumes public
 `src/app/infrastructure/postgres_codecs.py` functions for row access, JSON
 object decoding, datetime decoding, and domain JSON serialization; the
@@ -1817,6 +1822,11 @@ Shared signal-family request and response DTOs should use
 scope, source-ref responses, and candidate summaries from
 `app.api.idea_signals`, keeping signal route modules thin and reviewable
 without introducing a runtime signal microservice or supported-feature claim.
+API timestamp-awareness and UTC validation should use
+`src/app/api/temporal_validation.py`. The
+`api-temporal-validation-boundary-gate` blocks direct route-module `tzinfo` and
+`utcoffset()` checks so API error semantics stay centralized without moving
+domain timestamp rules out of domain/application code.
 
 `make operation-metric-contract-gate` is blocking through `make lint`. It
 validates `contracts/observability/lotus-idea-operation-metrics.v1.json`

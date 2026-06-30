@@ -17,6 +17,7 @@ from app.api.problem_details import (
     permission_denied_problem,
 )
 from app.api.route_metadata import RouteMetadata
+from app.api.temporal_validation import require_timezone_aware
 from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -64,9 +65,7 @@ class CandidateLifecycleTransitionRequest(CamelModel):
     @field_validator("changed_at_utc")
     @classmethod
     def _changed_at_must_be_aware(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("changedAtUtc must be timezone-aware")
-        return value
+        return require_timezone_aware(value, field_name="changedAtUtc")
 
     def to_command(
         self,

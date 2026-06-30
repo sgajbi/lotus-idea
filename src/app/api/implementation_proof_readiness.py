@@ -21,6 +21,7 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.temporal_validation import is_timezone_aware
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,
@@ -144,7 +145,7 @@ async def get_implementation_proof_readiness(
             title="Permission denied",
             detail="The caller is not permitted to read idea implementation proof readiness.",
         )
-    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+    if not is_timezone_aware(evaluated_at_utc):
         _emit_implementation_proof_readiness_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
