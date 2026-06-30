@@ -18,9 +18,31 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         errors.append("Makefile release-sbom target must write `sbom.cdx.json`")
 
     container_scan = _target_block(makefile, "container-image-scan")
+    if "$(VENV_PYTHON)" in container_scan:
+        errors.append(
+            "Makefile container-image-scan target must not require the repository Python venv"
+        )
+    if "DOCKER_SOCKET_MOUNT := /var/run/docker.sock:/var/run/docker.sock" not in makefile:
+        errors.append("Makefile must define the Linux Docker socket mount for image scanning")
+    if "DOCKER_SOCKET_MOUNT := //var/run/docker.sock:/var/run/docker.sock" not in makefile:
+        errors.append("Makefile must define the Windows Docker Desktop socket mount for scanning")
+    if "DOCKER_WORKDIR := /work" not in makefile:
+        errors.append("Makefile must define the Linux container scan workdir")
+    if "DOCKER_WORKDIR := //work" not in makefile:
+        errors.append("Makefile must define the Windows-safe container scan workdir")
     if "TRIVY_IMAGE ?= aquasec/trivy:0.71.2" not in makefile:
         errors.append("Makefile must pin `TRIVY_IMAGE` to `aquasec/trivy:0.71.2`")
     required_fragments = {
+        "mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))": (
+            "Makefile container-image-scan target must create the scan evidence directory "
+            "without requiring a Python venv"
+        ),
+        "$(DOCKER_SOCKET_MOUNT)": (
+            "Makefile container-image-scan target must use the governed Docker socket mount"
+        ),
+        "$(DOCKER_WORKDIR)": (
+            "Makefile container-image-scan target must use the governed container workdir"
+        ),
         "$(TRIVY_IMAGE)": "Makefile container-image-scan target must use pinned Trivy variable",
         "--severity $(CONTAINER_SCAN_SEVERITY)": (
             "Makefile container-image-scan target must use governed severity policy"

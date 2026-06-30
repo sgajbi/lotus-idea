@@ -223,6 +223,16 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
     makefile = (
         _read("Makefile")
         .replace("$(VENV_PYTHON) -m cyclonedx_py environment", "cyclonedx-py environment")
+        .replace(
+            "mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))",
+            "$(VENV_PYTHON) -c \"from pathlib import Path; Path('$(CONTAINER_SCAN_OUTPUT)').parent.mkdir(parents=True, exist_ok=True)\"",
+        )
+        .replace("DOCKER_SOCKET_MOUNT := /var/run/docker.sock:/var/run/docker.sock", "")
+        .replace("DOCKER_SOCKET_MOUNT := //var/run/docker.sock:/var/run/docker.sock", "")
+        .replace("DOCKER_WORKDIR := /work", "")
+        .replace("DOCKER_WORKDIR := //work", "")
+        .replace("$(DOCKER_SOCKET_MOUNT)", "/var/run/docker.sock:/var/run/docker.sock")
+        .replace("$(DOCKER_WORKDIR)", "/work")
         .replace("aquasec/trivy:0.71.2", "aquasec/trivy:latest")
         .replace("--exit-code 1", "--exit-code 0")
     )
@@ -230,6 +240,21 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile release-sbom target must run pinned venv `cyclonedx_py`" in errors
+    assert (
+        "Makefile container-image-scan target must not require the repository Python venv" in errors
+    )
+    assert (
+        "Makefile container-image-scan target must create the scan evidence directory without requiring a Python venv"
+        in errors
+    )
+    assert "Makefile must define the Linux Docker socket mount for image scanning" in errors
+    assert "Makefile must define the Windows Docker Desktop socket mount for scanning" in errors
+    assert "Makefile must define the Linux container scan workdir" in errors
+    assert "Makefile must define the Windows-safe container scan workdir" in errors
+    assert (
+        "Makefile container-image-scan target must use the governed Docker socket mount" in errors
+    )
+    assert "Makefile container-image-scan target must use the governed container workdir" in errors
     assert "Makefile must pin `TRIVY_IMAGE` to `aquasec/trivy:0.71.2`" in errors
     assert "Makefile container-image-scan target must fail on governed findings" in errors
 
