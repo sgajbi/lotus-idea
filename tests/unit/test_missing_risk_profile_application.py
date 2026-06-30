@@ -2,11 +2,15 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
+import pytest
+
 from app.application.missing_risk_profile_signal import (
     EvaluateMissingRiskProfileFromAdviseCommand,
     EvaluateMissingRiskProfileSignalCommand,
+    RiskProfilePosture,
     evaluate_missing_risk_profile_signal_command,
     evaluate_missing_risk_profile_signal_from_advise,
+    _risk_profile_posture_from_advise_diagnostic,
 )
 from app.domain import (
     EvidenceFreshness,
@@ -114,6 +118,23 @@ def test_missing_risk_profile_application_ignores_generic_suitability_gap() -> N
     assert result.outcome is SignalEvaluationOutcome.NOT_ELIGIBLE
     assert result.candidate is None
     assert result.reason_codes == (ReasonCode.BELOW_MATERIALITY,)
+
+
+@pytest.mark.parametrize(
+    ("diagnostic", "expected"),
+    (
+        ("client_risk_profile_stale", RiskProfilePosture.STALE),
+        ("risk_profile_expired", RiskProfilePosture.EXPIRED),
+        ("risk_profile_review_due", RiskProfilePosture.REVIEW_DUE),
+        ("client_risk_profile_current", RiskProfilePosture.CURRENT),
+        ("advise_policy_requirements_open", None),
+    ),
+)
+def test_missing_risk_profile_application_maps_advise_risk_profile_diagnostics(
+    diagnostic: str,
+    expected: RiskProfilePosture | None,
+) -> None:
+    assert _risk_profile_posture_from_advise_diagnostic(diagnostic) is expected
 
 
 def test_missing_risk_profile_application_blocks_when_advise_source_unavailable() -> None:

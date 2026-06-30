@@ -9,6 +9,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    not_found_metadata,
+    permission_denied_metadata,
+    permission_denied_problem,
+)
 from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.report_evidence import (
     RequestReportEvidencePackToRepositoryCommand,
@@ -25,7 +32,7 @@ from app.domain import (
     ReportEvidenceSourceSummary,
     SourceSystem,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
@@ -339,12 +346,7 @@ def _problem_for_evidence_pack_persistence(
 
 
 def _permission_denied(detail: str) -> JSONResponse:
-    return problem_response(
-        status_code=status.HTTP_403_FORBIDDEN,
-        code="permission_denied",
-        title="Permission denied",
-        detail=detail,
-    )
+    return permission_denied_problem(detail)
 
 
 def _emit_report_evidence_operation_event(
@@ -453,16 +455,25 @@ REPORT_EVIDENCE_PACK_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks evidence-pack permission."},
-        404: {
-            "model": ProblemDetails,
-            "description": "Conversion intent or related candidate was not found.",
-        },
-        409: {
-            "model": ProblemDetails,
-            "description": "Idempotency conflict or invalid report evidence-pack state.",
-        },
+        **invalid_request_metadata(detail="Correct the report evidence pack request and retry."),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to request idea report evidence packs.",
+            description="Caller lacks evidence-pack permission.",
+        ),
+        **not_found_metadata(
+            code="report_evidence_pack_resource_not_found",
+            title="Report evidence pack resource not found",
+            detail="The requested report evidence pack resource was not found.",
+            description="Conversion intent or related candidate was not found.",
+        ),
+        **conflict_metadata(
+            code="report_evidence_pack_conflict",
+            title="Report evidence pack conflict",
+            detail=(
+                "The report evidence pack request is not valid for the current conversion state."
+            ),
+            description="Idempotency conflict or invalid report evidence-pack state.",
+        ),
     },
 }
 

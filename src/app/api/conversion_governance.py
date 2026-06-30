@@ -9,6 +9,13 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.api.caller_headers import caller_context_from_headers
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    not_found_metadata,
+    permission_denied_metadata,
+    permission_denied_problem,
+)
 from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
 from app.application.conversion_workflow import (
     RecordConversionOutcomeToRepositoryCommand,
@@ -30,7 +37,7 @@ from app.domain import (
     ReasonCode,
     SourceSystem,
 )
-from app.errors import ProblemDetails, problem_response
+from app.errors import problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
@@ -462,12 +469,7 @@ def _problem_for_conversion_persistence(
 
 
 def _permission_denied(detail: str) -> JSONResponse:
-    return problem_response(
-        status_code=status.HTTP_403_FORBIDDEN,
-        code="permission_denied",
-        title="Permission denied",
-        detail=detail,
-    )
+    return permission_denied_problem(detail)
 
 
 def _emit_conversion_operation_event(
@@ -557,13 +559,23 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks conversion permission."},
-        404: {"model": ProblemDetails, "description": "Candidate was not found."},
-        409: {
-            "model": ProblemDetails,
-            "description": "Idempotency conflict or invalid conversion intent state.",
-        },
+        **invalid_request_metadata(detail="Correct the conversion intent request and retry."),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to record idea conversion intents.",
+            description="Caller lacks conversion permission.",
+        ),
+        **not_found_metadata(
+            code="conversion_resource_not_found",
+            title="Conversion resource not found",
+            detail="The requested idea conversion resource was not found.",
+            description="Candidate was not found.",
+        ),
+        **conflict_metadata(
+            code="conversion_intent_conflict",
+            title="Conversion intent conflict",
+            detail="The conversion intent is not valid for the current idea candidate state.",
+            description="Idempotency conflict or invalid conversion intent state.",
+        ),
     },
 }
 
@@ -615,13 +627,23 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {"model": ProblemDetails, "description": "Request validation failed."},
-        403: {"model": ProblemDetails, "description": "Caller lacks conversion permission."},
-        404: {"model": ProblemDetails, "description": "Conversion intent was not found."},
-        409: {
-            "model": ProblemDetails,
-            "description": "Idempotency conflict or invalid conversion outcome source.",
-        },
+        **invalid_request_metadata(detail="Correct the conversion outcome request and retry."),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to record idea conversion outcomes.",
+            description="Caller lacks conversion permission.",
+        ),
+        **not_found_metadata(
+            code="conversion_resource_not_found",
+            title="Conversion resource not found",
+            detail="The requested idea conversion resource was not found.",
+            description="Conversion intent was not found.",
+        ),
+        **conflict_metadata(
+            code="conversion_outcome_conflict",
+            title="Conversion outcome conflict",
+            detail="The conversion outcome is not valid for the recorded conversion intent.",
+            description="Idempotency conflict or invalid conversion outcome source.",
+        ),
     },
 }
 

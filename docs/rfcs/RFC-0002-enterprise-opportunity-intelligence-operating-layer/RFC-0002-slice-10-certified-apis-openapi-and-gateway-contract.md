@@ -184,89 +184,93 @@ Implementation files:
 12. `src/app/domain/persistence.py`: internal idempotency/audit repository used
    by the evaluate-and-persist and lifecycle transition API foundations.
 13. `src/app/errors.py`: RFC-7807-shaped problem detail body with stable
-   `type`, `status`, `code`, `title`, and `detail` fields.
-14. `docs/operations/endpoint-certification-ledger.json`: machine-readable
-   endpoint certification evidence for the new route.
-15. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
-   authorization/scope mapping, product-safe errors, idempotency-conflict
-   handling, OpenAPI examples, and route registration.
-16. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
-   optional tenant/book/portfolio/client scope filters, product-safe errors,
-   OpenAPI examples, and route registration.
-17. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
-   signal and review routes.
-18. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
+    `type`, `status`, `code`, `title`, and `detail` fields.
+14. `src/app/api/problem_details.py`: shared workflow/operator API
+    `ProblemDetails` OpenAPI metadata and common product-safe permission and
+    request-failure response helpers, used for design modularity without adding
+    a runtime service boundary.
+15. `docs/operations/endpoint-certification-ledger.json`: machine-readable
+    endpoint certification evidence for the new route.
+16. `src/app/api/review_workflow.py`: review-action and feedback DTOs,
+    authorization/scope mapping, product-safe errors, idempotency-conflict
+    handling, OpenAPI examples, and route registration.
+17. `src/app/api/review_queues.py`: advisor queue DTOs, authorization mapping,
+    optional tenant/book/portfolio/client scope filters, product-safe errors,
+    OpenAPI examples, and route registration.
+18. `src/app/api/caller_headers.py`: shared API caller-header parsing used by
+    signal and review routes.
+19. `src/app/api/candidate_lifecycle.py`: lifecycle transition DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-19. `src/app/application/candidate_lifecycle.py`: application command and
+20. `src/app/application/candidate_lifecycle.py`: application command and
     idempotency payload construction for lifecycle transitions.
-20. `src/app/api/candidate_detail.py`: source-safe candidate detail DTOs,
+21. `src/app/api/candidate_detail.py`: source-safe candidate detail DTOs,
     authorization and caller-scope mapping, redacted source projection,
     product-safe errors, OpenAPI examples, and route registration.
-21. `src/app/application/candidate_detail.py`: persisted candidate snapshot
+22. `src/app/application/candidate_detail.py`: persisted candidate snapshot
     lookup and access-scope matching through the governed repository port.
-22. `src/app/api/candidate_evidence_replay.py`: evidence replay DTOs,
+23. `src/app/api/candidate_evidence_replay.py`: evidence replay DTOs,
     authorization mapping, product-safe errors, OpenAPI examples, operation
     events, and route registration.
-23. `src/app/application/candidate_evidence_replay.py`: command validation and
+24. `src/app/application/candidate_evidence_replay.py`: command validation and
     replay orchestration through the governed repository port.
-24. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
+25. `src/app/api/ai_governance.py`: AI explanation DTOs, authorization
     mapping, redacted response projection, product-safe errors, OpenAPI
     examples, and route registration.
-25. `src/app/application/ai_governance.py`: persisted candidate snapshot
+26. `src/app/application/ai_governance.py`: persisted candidate snapshot
     lookup plus deterministic fallback/verifier orchestration without provider
     execution or durable persistence claims.
-26. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
+27. `src/app/api/conversion_governance.py`: conversion intent/outcome DTOs,
     authorization mapping, product-safe errors, idempotency-conflict handling,
     OpenAPI examples, and route registration.
-27. `src/app/application/conversion_workflow.py`: application commands,
+28. `src/app/application/conversion_workflow.py`: application commands,
     idempotency payload construction, repository precheck, and domain
     invocation for conversion intent/outcome workflow.
-28. `tests/integration/test_review_workflow_api.py`: certified API behavior
+29. `tests/integration/test_review_workflow_api.py`: certified API behavior
    evidence for lifecycle transition, review action, feedback, and conversion
    foundations.
-29. `tests/integration/test_review_queue_api.py`: certified API behavior
+30. `tests/integration/test_review_queue_api.py`: certified API behavior
     evidence for advisor queue projection.
-30. `tests/integration/test_candidate_detail_api.py`: certified API behavior
+31. `tests/integration/test_candidate_detail_api.py`: certified API behavior
     evidence for source-safe detail projection, workflow summaries, permission,
     missing candidate, and no-authority promotion.
-31. `tests/integration/test_candidate_evidence_replay_api.py`: certified API
+32. `tests/integration/test_candidate_evidence_replay_api.py`: certified API
     behavior evidence for matched, stale-source, hash-mismatch, permission,
     missing candidate, invalid request, and no-authority replay posture.
-32. `tests/integration/test_ai_governance_api.py`: certified API behavior
+33. `tests/integration/test_ai_governance_api.py`: certified API behavior
     evidence for AI fallback, verifier acceptance, blocked output, permission,
     missing candidate, invalid state, and forbidden metadata.
-33. `tests/integration/test_missing_suitability_signal_api.py`: certified API
+34. `tests/integration/test_missing_suitability_signal_api.py`: certified API
     behavior evidence for candidate creation, blocked publication posture,
     permission denial, source-redacted response projection, and no-authority
     promotion.
-34. `tests/integration/test_missing_benchmark_signal_api.py`: certified API
+35. `tests/integration/test_missing_benchmark_signal_api.py`: certified API
     behavior evidence for missing-benchmark candidate creation, ready-assignment
     not-eligible posture, stale-source blocking, permission denial,
     source-redacted response projection, and no-authority promotion.
-35. `tests/integration/test_low_income_signal_api.py`: certified API behavior
+36. `tests/integration/test_low_income_signal_api.py`: certified API behavior
     evidence for low-income / liquidity-shortfall candidate creation,
     above-threshold not-eligible posture, stale-source blocking, permission
     denial, source-redacted response projection, and no-authority promotion.
-36. `tests/integration/test_bond_maturity_signal_api.py`: certified API
+37. `tests/integration/test_bond_maturity_signal_api.py`: certified API
     behavior evidence for bond-maturity / reinvestment review candidate
     creation, outside-window not-eligible posture, stale-source blocking,
     permission denial, source-redacted response projection, and no-authority
     promotion.
-37. `tests/integration/test_concentration_risk_signal_api.py`: certified API
+38. `tests/integration/test_concentration_risk_signal_api.py`: certified API
     behavior evidence for concentration-risk review candidate creation,
     below-threshold not-eligible posture, partial issuer-coverage blocking,
     stale-source blocking, permission denial, and no-authority promotion.
-38. `tests/integration/test_drawdown_review_signal_api.py`: certified API
+39. `tests/integration/test_drawdown_review_signal_api.py`: certified API
     behavior evidence for drawdown-review candidate creation, below-threshold
     not-eligible posture, non-ready source blocking, stale-source blocking,
     permission denial, and no-authority promotion.
-39. `tests/integration/test_allocation_drift_signal_api.py`: certified API
+40. `tests/integration/test_allocation_drift_signal_api.py`: certified API
     behavior evidence for allocation-drift / mandate-review candidate creation,
     below-threshold not-eligible posture, store-wide Manage supportability
     blocking, non-ready and stale source blocking, permission denial,
     source-redacted response projection, and no-authority promotion.
-40. `tests/integration/test_api_operation_events.py`: bounded operation-event
+41. `tests/integration/test_api_operation_events.py`: bounded operation-event
     evidence for certified signal endpoint posture.
 
 ## Current Contract
@@ -481,6 +485,23 @@ Focused validation passed for the current foundation:
     included `1774` unit tests; `make test-integration` passed with `163`
     integration tests and `5` PostgreSQL-runtime tests skipped; `make test-e2e`
     passed with `2` smoke tests.
+29. `.venv\Scripts\python.exe -m pytest tests\unit\test_api_problem_details.py tests\integration\test_review_workflow_api.py -q`
+    passed with `27 passed` after adding shared workflow/operator
+    `ProblemDetails` OpenAPI metadata for lifecycle, review, feedback,
+    conversion, and report evidence-pack routes.
+30. `.venv\Scripts\python.exe -m ruff check src\app\api\problem_details.py src\app\api\candidate_lifecycle.py src\app\api\review_workflow.py src\app\api\conversion_governance.py src\app\api\report_evidence.py tests\unit\test_api_problem_details.py`,
+    `.venv\Scripts\python.exe -m mypy --config-file mypy.ini`,
+    `.venv\Scripts\python.exe scripts\openapi_quality_gate.py`,
+    `.venv\Scripts\python.exe scripts\endpoint_certification_gate.py`, and
+    `.venv\Scripts\python.exe scripts\architecture_boundary_gate.py --mode blocking`
+    passed for the shared API error-model polish.
+31. `make test-coverage` passed with `1832` unit tests, `199` integration
+    tests and `5` PostgreSQL-runtime tests skipped, `2` e2e tests, and
+    coverage gate `99.00`.
+32. `make ci` passed after the coverage fix, including repository contract
+    gates, OpenAPI, endpoint certification, architecture boundary, migrations,
+    integration/e2e/unit coverage, coverage gate `99.00`, and dependency audit
+    with no known vulnerabilities.
 
 PR merge-gate evidence remains required before merge.
 

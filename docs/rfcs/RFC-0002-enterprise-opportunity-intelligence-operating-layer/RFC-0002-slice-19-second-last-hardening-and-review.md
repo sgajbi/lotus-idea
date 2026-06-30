@@ -209,3 +209,22 @@ This slice also hardens scheduled source-ingestion worker proof governance:
    describe the scheduled worker deploy-contract proof without promoting live
    Core ingestion, certified long-running scheduling, Gateway/Workbench,
    data-product certification, or supported-feature support.
+
+This slice also hardens workflow/operator API error-model polish:
+
+1. `src/app/api/problem_details.py` centralizes product-safe RFC-7807
+   OpenAPI response metadata and common permission/request failure helpers for
+   workflow and operator route modules.
+2. `src/app/api/candidate_lifecycle.py`, `src/app/api/review_workflow.py`,
+   `src/app/api/conversion_governance.py`, and
+   `src/app/api/report_evidence.py` now compose concrete 400/403/404/409
+   `ProblemDetails` examples from the shared helper while preserving their
+   route-specific error codes, descriptions, and idempotency/state semantics.
+3. `tests/unit/test_api_problem_details.py` proves the shared helper shape and
+   verifies OpenAPI examples for lifecycle, review, feedback, conversion, and
+   report evidence-pack workflow routes.
+4. `src/app/api/README.md`, `docs/operations/api-certification.md`, RFC-0002
+   Slice 10 evidence, and `wiki/API-Surface.md` now describe the pattern.
+5. This is API contract and design-modularity hardening only. It does not add a
+   runtime microservice boundary, Gateway/Workbench mutation support, client
+   publication, data-mesh certification, or supported-feature promotion.
