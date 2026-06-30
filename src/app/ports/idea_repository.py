@@ -14,6 +14,7 @@ from app.domain import (
     EvidenceReplayResult,
     EvidencePackPersistenceResult,
     GovernedConversionIntent,
+    DownstreamSubmissionRecord,
     IdeaCandidate,
     IdeaLifecycleStatus,
     IdeaRepositorySnapshot,
@@ -158,6 +159,15 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
     ) -> AIExplanationLineagePersistenceResult: ...
 
 
+class DownstreamSubmissionRepository(CandidateSnapshotRepository, Protocol):
+    def downstream_submission_by_idempotency_key(
+        self,
+        idempotency_key: str,
+    ) -> DownstreamSubmissionRecord | None: ...
+
+    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None: ...
+
+
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
     def outbox_events_for_delivery(
         self,
@@ -206,6 +216,7 @@ class IdeaRepository(
     ConversionWorkflowRepository,
     ReportEvidenceWorkflowRepository,
     AIExplanationRepository,
+    DownstreamSubmissionRepository,
     OutboxDeliveryRepository,
     Protocol,
 ):

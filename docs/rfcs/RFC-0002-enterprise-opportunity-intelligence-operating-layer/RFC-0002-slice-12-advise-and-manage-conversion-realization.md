@@ -93,16 +93,20 @@ Implemented in this slice:
     application orchestration for submitting existing Advise proposal and
     Manage action conversion intents through the downstream realization ports.
     The orchestration selects the correct downstream client from the conversion
-    target, propagates correlation and trace identifiers, returns accepted,
-    rejected, unsupported-target, and not-found posture, and deliberately does
-    not record authoritative downstream outcomes. Downstream acceptance,
-    rejection, completion, suitability, action-register, materialization, and
-    failure truth remains owned by the downstream service and by the existing
+    target, prechecks the local downstream submission idempotency ledger before
+    adapter calls, propagates correlation and trace identifiers, records
+    accepted, rejected, and not-configured submission posture without sensitive
+    payloads, replays same-key/same-fingerprint requests, rejects changed
+    fingerprints with `idempotency_conflict`, and deliberately does not record
+    authoritative downstream outcomes. Downstream acceptance, rejection,
+    completion, suitability, action-register, materialization, and failure
+    truth remains owned by the downstream service and by the existing
     conversion-outcome recording API.
 20. `tests/unit/test_downstream_realization_application.py` proves Advise
     routing, Manage failure mapping, report-target rejection through the
-    conversion-intent submission path, not-found behavior, no outcome recording,
-    no downstream-authority grant, and no supported-feature promotion.
+    conversion-intent submission path, not-found behavior, local idempotency
+    replay/conflict/not-configured persistence, no outcome recording, no
+    downstream-authority grant, and no supported-feature promotion.
 21. `src/app/api/downstream_realization.py` exposes the certified internal
     `POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions`
     route for existing Advise and Manage conversion intents. The route requires
@@ -110,7 +114,9 @@ Implemented in this slice:
     configured Advise/Manage clients from
     `src/app/runtime/downstream_realization_state.py`,
     propagates correlation, trace, and idempotency headers through the
-    application layer, and fails closed with
+    application layer, returns `idempotencyReplayed=true` when local posture is
+    replayed without an adapter call, returns `409 idempotency_conflict` when a
+    key is reused for a different request fingerprint, and fails closed with
     `503 downstream_realization_not_configured` when adapter configuration is
     absent.
 22. `docs/operations/endpoint-certification-ledger.json` and
@@ -119,9 +125,9 @@ Implemented in this slice:
     the downstream submission route.
 23. `tests/integration/test_downstream_realization_api.py` proves the
     Advise submission success path, missing-adapter fail-closed posture,
-    permission denial, report-target rejection on the conversion route,
-    not-certified operation-event emission, and absence of downstream outcome
-    recording or supported-feature promotion.
+    idempotency replay, idempotency conflict, permission denial, report-target
+    rejection on the conversion route, not-certified operation-event emission,
+    and absence of downstream outcome recording or supported-feature promotion.
 24. `src/app/application/downstream_route_contract_proof.py`,
     `scripts/generate_advise_proposal_route_proof.py`,
     `scripts/generate_manage_action_route_proof.py`, and

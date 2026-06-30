@@ -19,6 +19,9 @@ from app.domain import (
     ConversionOutcomeCommand,
     ConversionOutcomeStatus,
     ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionRecord,
+    DownstreamSubmissionResourceType,
     EvidenceFreshness,
     EvidenceReplayStatus,
     FeedbackCommand,
@@ -144,6 +147,7 @@ class FakePostgresConnection:
             "idea_conversion_intent": [],
             "idea_conversion_outcome": [],
             "idea_report_evidence_pack_request": [],
+            "idea_downstream_submission": [],
             "idea_ai_explanation_lineage": [],
         }
         self.fail_on_insert = fail_on_insert
@@ -476,6 +480,35 @@ def test_postgres_repository_rejects_sensitive_outbox_failure_reason() -> None:
     assert reloaded.failure_reason is None
 
 
+def test_postgres_repository_round_trips_downstream_submission_records() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    record = DownstreamSubmissionRecord(
+        idempotency_key="downstream-submit-postgres-001",
+        request_fingerprint="sha256:downstream-submit-postgres",
+        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        resource_id="conversion-postgres-001",
+        target=ConversionTarget.ADVISE_PROPOSAL,
+        source_authority=SourceSystem.LOTUS_ADVISE,
+        status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        downstream_failure_reason=None,
+        correlation_id="corr-postgres",
+        trace_id="trace-postgres",
+        submitted_at_utc=EVALUATED_AT,
+    )
+
+    repository.record_downstream_submission(record)
+    reloaded = PostgresIdeaRepository(connection).downstream_submission_by_idempotency_key(
+        "downstream-submit-postgres-001"
+    )
+    missing = PostgresIdeaRepository(connection).downstream_submission_by_idempotency_key(
+        "missing-submission"
+    )
+
+    assert reloaded == record
+    assert missing is None
+
+
 def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
@@ -768,6 +801,7 @@ def _table_from_select(query: str) -> str:
         "idea_conversion_intent",
         "idea_conversion_outcome",
         "idea_report_evidence_pack_request",
+        "idea_downstream_submission",
         "idea_ai_explanation_lineage",
     ):
         if f" from {table_name}" in query:
@@ -890,6 +924,19 @@ def _row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
             "evidence_hash",
             "evidence_pack_json",
             "requested_at_utc",
+        ),
+        "idea_downstream_submission": (
+            "idempotency_key",
+            "request_fingerprint",
+            "resource_type",
+            "resource_id",
+            "target",
+            "source_authority",
+            "status",
+            "downstream_failure_reason",
+            "correlation_id",
+            "trace_id",
+            "submitted_at_utc",
         ),
         "idea_ai_explanation_lineage": (
             "ai_explanation_request_id",

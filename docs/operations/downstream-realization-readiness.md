@@ -55,8 +55,15 @@ The submission routes are:
 | `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions` | Submit an existing Report evidence-pack request through the configured Report adapter and return bounded submission posture. | `idea.downstream-realization.submit` plus `Idempotency-Key` |
 
 These routes are API-certified internal foundations. They propagate
-correlation, trace, and idempotency headers to configured adapters, fail closed
-when adapter configuration is missing, and emit
+correlation, trace, and idempotency headers to configured adapters after a
+local idempotency precheck. The repository stores source authority, target,
+resource id, bounded posture, bounded failure reason, correlation id, trace id,
+and timestamp by idempotency key without storing sensitive request payloads.
+The same key and request fingerprint replays the stored posture without another
+adapter call; the same key with a different resource/target/source-authority
+fingerprint returns `409 idempotency_conflict`. Missing adapter configuration
+is recorded as a replayable `downstream_realization_not_configured` posture and
+returns `503`. The routes emit
 `downstream_realization_submission` operation events with
 `supportability_status=not_certified`. They do not record authoritative
 downstream outcomes or promote support.

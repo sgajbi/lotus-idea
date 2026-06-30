@@ -50,6 +50,11 @@ from app.domain.events import (
     mark_outbox_event_published,
     validate_outbox_failure_reason,
 )
+from app.domain.downstream_submission import (
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionRecord,
+    DownstreamSubmissionResourceType,
+)
 from app.domain.ideas import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
     ConversionOutcomeStatus,
@@ -240,6 +245,9 @@ __all__ = [
     "request_conversion_intent",
     "OutboxEventRecord",
     "OutboxEventStatus",
+    "DownstreamSubmissionPosture",
+    "DownstreamSubmissionRecord",
+    "DownstreamSubmissionResourceType",
     "build_candidate_outbox_event",
     "lease_outbox_event",
     "mark_outbox_event_failed",

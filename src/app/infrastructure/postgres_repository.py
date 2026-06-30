@@ -9,14 +9,21 @@ from psycopg.types.json import Jsonb
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
 from app.domain.events import OutboxEventRecord
+from app.domain.downstream_submission import (
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionRecord,
+    DownstreamSubmissionResourceType,
+)
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
     GovernedConversionIntent,
 )
 from app.domain.ideas import (
+    ConversionTarget,
     IdeaCandidate,
     IdeaLifecycleStatus,
+    SourceSystem,
     SourceRef,
 )
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
@@ -353,6 +360,16 @@ class PostgresIdeaRepository:
     ) -> AIExplanationLineagePersistenceResult:
         return self._mutate(lambda repository: repository.record_ai_explanation_lineage(result))
 
+    def downstream_submission_by_idempotency_key(
+        self,
+        idempotency_key: str,
+    ) -> DownstreamSubmissionRecord | None:
+        repository = InMemoryIdeaRepository(self.snapshot())
+        return repository.downstream_submission_by_idempotency_key(idempotency_key)
+
+    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None:
+        self._mutate(lambda repository: repository.record_downstream_submission(record))
+
     def snapshot(self) -> IdeaRepositorySnapshot:
         with self._connection.cursor() as cursor:
             candidate_records = self._load_candidate_records(cursor)
@@ -360,6 +377,7 @@ class PostgresIdeaRepository:
             self._attach_lifecycle_history(cursor, candidate_records)
             self._attach_audit_events(cursor, candidate_records)
             outbox_events = self._load_outbox_events(cursor)
+            downstream_submission_records = self._load_downstream_submission_records(cursor)
             self._attach_review_decisions(cursor, candidate_records)
             self._attach_feedback_events(cursor, candidate_records)
             conversion_intent_candidates = self._attach_conversion_intents(
@@ -383,6 +401,7 @@ class PostgresIdeaRepository:
             report_evidence_pack_candidates=report_evidence_pack_candidates,
             ai_explanation_lineage_candidates=ai_explanation_lineage_candidates,
             outbox_events=outbox_events,
+            downstream_submission_records=downstream_submission_records,
         )
 
     def replace_snapshot(self, snapshot: IdeaRepositorySnapshot) -> None:
@@ -394,6 +413,7 @@ class PostgresIdeaRepository:
                 "idea_conversion_intent",
                 "idea_feedback_event",
                 "idea_review_decision",
+                "idea_downstream_submission",
                 "idea_outbox_event",
                 "idea_audit_event",
                 "idea_lifecycle_history",
@@ -414,6 +434,8 @@ class PostgresIdeaRepository:
                 self._insert_record_details(cursor, candidate_record)
             for outbox_event in snapshot.outbox_events.values():
                 self._insert_outbox_event(cursor, outbox_event)
+            for record in snapshot.downstream_submission_records.values():
+                self._insert_downstream_submission_record(cursor, record)
 
     def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
         try:
@@ -547,6 +569,39 @@ class PostgresIdeaRepository:
             event = outbox_event_from_row(row)
             events[event.event_id] = event
         return events
+
+    def _load_downstream_submission_records(
+        self,
+        cursor: PostgresCursor,
+    ) -> dict[str, DownstreamSubmissionRecord]:
+        cursor.execute(
+            """
+            SELECT idempotency_key, request_fingerprint, resource_type, resource_id,
+                   target, source_authority, status, downstream_failure_reason,
+                   correlation_id, trace_id, submitted_at_utc
+            FROM idea_downstream_submission
+            ORDER BY submitted_at_utc, idempotency_key
+            """
+        )
+        records: dict[str, DownstreamSubmissionRecord] = {}
+        for row in cursor.fetchall():
+            record = DownstreamSubmissionRecord(
+                idempotency_key=read_row_value(row, "idempotency_key"),
+                request_fingerprint=read_row_value(row, "request_fingerprint"),
+                resource_type=DownstreamSubmissionResourceType(
+                    read_row_value(row, "resource_type")
+                ),
+                resource_id=read_row_value(row, "resource_id"),
+                target=ConversionTarget(read_row_value(row, "target")),
+                source_authority=SourceSystem(read_row_value(row, "source_authority")),
+                status=DownstreamSubmissionPosture(read_row_value(row, "status")),
+                downstream_failure_reason=read_row_value(row, "downstream_failure_reason"),
+                correlation_id=read_row_value(row, "correlation_id"),
+                trace_id=read_row_value(row, "trace_id"),
+                submitted_at_utc=read_row_value(row, "submitted_at_utc"),
+            )
+            records[record.idempotency_key] = record
+        return records
 
     def _attach_review_decisions(
         self,
@@ -772,6 +827,34 @@ class PostgresIdeaRepository:
         self._insert_conversion_outcomes(cursor, record)
         self._insert_report_evidence_packs(cursor, record)
         self._insert_ai_explanation_lineage_records(cursor, record)
+
+    def _insert_downstream_submission_record(
+        self,
+        cursor: PostgresCursor,
+        record: DownstreamSubmissionRecord,
+    ) -> None:
+        cursor.execute(
+            """
+            INSERT INTO idea_downstream_submission (
+                idempotency_key, request_fingerprint, resource_type, resource_id,
+                target, source_authority, status, downstream_failure_reason,
+                correlation_id, trace_id, submitted_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+            (
+                record.idempotency_key,
+                record.request_fingerprint,
+                record.resource_type.value,
+                record.resource_id,
+                record.target.value,
+                record.source_authority.value,
+                record.status.value,
+                record.downstream_failure_reason,
+                record.correlation_id,
+                record.trace_id,
+                record.submitted_at_utc,
+            ),
+        )
 
     def _insert_lifecycle_history(
         self,

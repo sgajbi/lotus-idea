@@ -166,10 +166,13 @@ adapter foundations when the corresponding adapter configuration is present:
    for Report evidence-pack requests.
 
 Those submission routes require `idea.downstream-realization.submit` and
-`Idempotency-Key`, propagate correlation/trace/idempotency context, and return
-bounded submission posture. They fail closed when adapter configuration is
-missing and do not record authoritative downstream outcomes or prove downstream
-route existence.
+`Idempotency-Key`, precheck a local idempotency ledger, propagate
+correlation/trace/idempotency context, and return bounded submission posture.
+Same-key/same-fingerprint requests replay stored posture without another
+adapter call, changed-fingerprint reuse returns `409 idempotency_conflict`, and
+missing adapter configuration is persisted as a replayable
+`downstream_realization_not_configured` posture. They do not record
+authoritative downstream outcomes or prove downstream route existence.
 
 The opt-in PostgreSQL runtime proof now covers the first internal report
 conversion intent/outcome path. It proves `lotus-idea` workflow-state

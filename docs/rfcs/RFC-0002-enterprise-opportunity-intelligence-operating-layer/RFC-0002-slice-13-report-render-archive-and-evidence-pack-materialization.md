@@ -77,13 +77,18 @@ Implemented in the first Slice 13 foundation:
 10. `src/app/application/downstream_realization.py` now adds source-safe
     application orchestration for submitting existing report evidence-pack
     requests through the Report downstream realization port. It finds the
-    request from repository snapshot truth, propagates correlation and trace
-    identifiers, returns accepted, rejected, and not-found posture, and
-    deliberately does not claim or record Report package creation, Render
-    output creation, Archive record creation, or client-ready publication.
+    request from repository snapshot truth, prechecks the local downstream
+    submission idempotency ledger before adapter calls, propagates correlation
+    and trace identifiers, records accepted, rejected, and not-configured
+    submission posture without sensitive payloads, replays
+    same-key/same-fingerprint requests, rejects changed fingerprints with
+    `idempotency_conflict`, and deliberately does not claim or record Report
+    package creation, Render output creation, Archive record creation, or
+    client-ready publication.
 11. `tests/unit/test_downstream_realization_application.py` proves report
     evidence-pack submission behavior, not-found behavior, no downstream
-    outcome recording, no downstream-authority grant, and no supported-feature
+    outcome recording, local idempotency replay/conflict/not-configured
+    persistence, no downstream-authority grant, and no supported-feature
     promotion.
 12. `src/app/api/downstream_realization.py` exposes the certified internal
     `POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions`
@@ -91,7 +96,9 @@ Implemented in the first Slice 13 foundation:
     `idea.downstream-realization.submit` and `Idempotency-Key`, obtains the
     configured Report client from `src/app/runtime/downstream_realization_state.py`,
     propagates correlation, trace, and idempotency headers through the
-    application layer, and fails closed with
+    application layer, returns `idempotencyReplayed=true` when local posture is
+    replayed without an adapter call, returns `409 idempotency_conflict` when a
+    key is reused for a different request fingerprint, and fails closed with
     `503 downstream_realization_not_configured` when adapter configuration is
     absent.
 13. `docs/operations/endpoint-certification-ledger.json` and
@@ -100,9 +107,9 @@ Implemented in the first Slice 13 foundation:
     the report evidence-pack downstream submission route.
 14. `tests/integration/test_downstream_realization_api.py` proves the Report
     submission success path, missing-adapter fail-closed posture, permission
-    denial, not-certified operation-event emission, and absence of Report
-    package intake, Render output, Archive record, client-publication, or
-    supported-feature claims.
+    denial, idempotency replay, idempotency conflict, not-certified
+    operation-event emission, and absence of Report package intake, Render
+    output, Archive record, client-publication, or supported-feature claims.
 
 Current endpoint behavior:
 

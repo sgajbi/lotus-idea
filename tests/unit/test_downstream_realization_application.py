@@ -149,6 +149,116 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
     assert "client_id" not in str(result)
 
 
+def test_submit_conversion_intent_replays_local_downstream_submission_without_client_call() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    manage_client = CapturingManageClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    command = RealizeConversionIntentCommand(
+        conversion_intent_id="conversion-advise_proposal-001",
+        idempotency_key="submission-advise-replay-001",
+        correlation_id="corr-realization",
+        trace_id="trace-realization",
+        submitted_at_utc=EVALUATED_AT,
+    )
+
+    first = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=manage_client,
+    )
+    second = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=manage_client,
+    )
+
+    assert first.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert first.idempotency_replayed is False
+    assert second.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert second.idempotency_replayed is True
+    assert len(advise_client.submitted) == 1
+    assert manage_client.submitted == ()
+
+
+def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    second = request_conversion_intent(
+        candidate(),
+        ConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-002",
+            target=ConversionTarget.ADVISE_PROPOSAL,
+            actor_subject="advisor-redacted",
+            idempotency_key="conversion-advise_proposal-request-002",
+            reason_codes=(ReasonCode.REVIEW_APPROVED_FOR_CONVERSION,),
+            requested_at_utc=REQUESTED_AT,
+        ),
+    )
+    repository.record_conversion_intent(
+        second,
+        idempotency_key="conversion-advise_proposal-request-002",
+        payload={"target": ConversionTarget.ADVISE_PROPOSAL.value, "sequence": "2"},
+    )
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    manage_client = CapturingManageClient(DownstreamRealizationOutcome.accepted_by_downstream())
+
+    accepted = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="submission-advise-conflict-001",
+            submitted_at_utc=EVALUATED_AT,
+        ),
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=manage_client,
+    )
+    conflict = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-002",
+            idempotency_key="submission-advise-conflict-001",
+            submitted_at_utc=EVALUATED_AT,
+        ),
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=manage_client,
+    )
+
+    assert accepted.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert conflict.status is DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT
+    assert conflict.downstream_failure_reason == "idempotency_conflict"
+    assert len(advise_client.submitted) == 1
+
+
+def test_submit_conversion_intent_persists_not_configured_posture_for_replay() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    command = RealizeConversionIntentCommand(
+        conversion_intent_id="conversion-advise_proposal-001",
+        idempotency_key="submission-advise-not-configured-001",
+        submitted_at_utc=EVALUATED_AT,
+    )
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+
+    first = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=None,
+        manage_client=None,
+    )
+    replayed = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=CapturingManageClient(DownstreamRealizationOutcome.accepted_by_downstream()),
+    )
+
+    assert first.status is DownstreamRealizationStatus.NOT_CONFIGURED
+    assert first.downstream_failure_reason == "downstream_realization_not_configured"
+    assert replayed.status is DownstreamRealizationStatus.NOT_CONFIGURED
+    assert replayed.idempotency_replayed is True
+    assert advise_client.submitted == ()
+
+
 def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() -> None:
     repository = repository_with_conversion(ConversionTarget.MANAGE_REVIEW)
     advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
@@ -221,6 +331,33 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
     assert report_client.correlation_id == "corr-report-realization"
     assert report_client.trace_id == "trace-report-realization"
     assert report_client.idempotency_key == "submission-report-pack-001"
+
+
+def test_submit_report_evidence_pack_replays_local_submission_without_client_call() -> None:
+    repository = repository_with_report_pack()
+    report_client = CapturingReportClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    command = RealizeReportEvidencePackCommand(
+        report_evidence_pack_id="report-evidence-pack-001",
+        idempotency_key="submission-report-pack-replay-001",
+        submitted_at_utc=EVALUATED_AT,
+    )
+
+    first = submit_report_evidence_pack_to_downstream(
+        command,
+        repository=repository,
+        report_client=report_client,
+    )
+    second = submit_report_evidence_pack_to_downstream(
+        command,
+        repository=repository,
+        report_client=report_client,
+    )
+
+    assert first.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert first.idempotency_replayed is False
+    assert second.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
+    assert second.idempotency_replayed is True
+    assert len(report_client.submitted) == 1
 
 
 def test_downstream_realization_returns_not_found_without_calling_clients() -> None:
