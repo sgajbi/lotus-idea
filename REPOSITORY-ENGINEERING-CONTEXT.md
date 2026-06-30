@@ -1495,6 +1495,12 @@ logs; fix or document the owned warning source instead.
    public PostgreSQL codec APIs, and `PostgresIdeaRepository`, which is tested
    as a durable repository adapter and selected by API runtime wiring when
    `LOTUS_IDEA_DATABASE_URL` is configured.
+   HTTP-backed adapters use `DownstreamJsonClient` with explicit timeout,
+   connection-pool, keepalive, pool-timeout, ownership, and close semantics.
+   Runtime-cached outbound clients must have deterministic shutdown/reset
+   hooks, and per-run runtime objects that own HTTP clients must expose a close
+   hook. Do not introduce a new downstream/source/broker HTTP adapter that
+   relies on library default pool limits or process-exit cleanup.
 7. `src/app/observability/`: correlation, logging, tracing, metrics, route-template request
    diagnostics, bounded idea operation events, safe metric-label policy, and audit event helpers.
 8. `src/app/security/`: caller context, advisor/PM role handling, entitlement

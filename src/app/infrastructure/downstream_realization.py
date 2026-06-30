@@ -27,6 +27,9 @@ class DownstreamRealizationAdapterConfig:
     submit_path: str
     source_authority: SourceSystem
     timeout_seconds: float = 2.0
+    max_connections: int = 20
+    max_keepalive_connections: int = 10
+    pool_timeout_seconds: float = 2.0
 
     def __post_init__(self) -> None:
         if not self.submit_path.startswith("/"):
@@ -39,6 +42,9 @@ class DownstreamRealizationAdapterConfig:
             DownstreamClientConfig(
                 base_url=self.base_url,
                 timeout_seconds=self.timeout_seconds,
+                max_connections=self.max_connections,
+                max_keepalive_connections=self.max_keepalive_connections,
+                pool_timeout_seconds=self.pool_timeout_seconds,
             )
         except ValueError as exc:
             raise DownstreamRealizationConfigurationError(str(exc)) from exc
@@ -72,6 +78,9 @@ class HttpAdviseProposalRealizationClient:
             idempotency_key=idempotency_key,
         )
 
+    def close(self) -> None:
+        self._client.close()
+
 
 class HttpManageActionRealizationClient:
     def __init__(
@@ -101,6 +110,9 @@ class HttpManageActionRealizationClient:
             idempotency_key=idempotency_key,
         )
 
+    def close(self) -> None:
+        self._client.close()
+
 
 class HttpReportEvidencePackMaterializationClient:
     def __init__(
@@ -129,6 +141,9 @@ class HttpReportEvidencePackMaterializationClient:
             idempotency_key=idempotency_key,
         )
 
+    def close(self) -> None:
+        self._client.close()
+
 
 def _client_from_config(
     config: DownstreamRealizationAdapterConfig,
@@ -138,6 +153,9 @@ def _client_from_config(
         DownstreamClientConfig(
             base_url=config.base_url,
             timeout_seconds=config.timeout_seconds,
+            max_connections=config.max_connections,
+            max_keepalive_connections=config.max_keepalive_connections,
+            pool_timeout_seconds=config.pool_timeout_seconds,
         )
     )
 

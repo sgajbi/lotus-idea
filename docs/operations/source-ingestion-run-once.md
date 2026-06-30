@@ -221,6 +221,22 @@ Core response requirement:
   `blockReasonCounts`, never through raw Core fields, portfolio identifiers, or
   source payload excerpts.
 
+Outbound Core HTTP runtime posture:
+
+- The Core query and query-control-plane clients use explicit timeout,
+  connection-pool, keepalive, and pool-timeout limits.
+- Configure resource limits with
+  `LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS`,
+  `LOTUS_IDEA_SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS`, and
+  `LOTUS_IDEA_SOURCE_INGESTION_POOL_TIMEOUT_SECONDS`; request timeout remains
+  controlled by `LOTUS_IDEA_SOURCE_INGESTION_TIMEOUT_SECONDS`.
+- Invalid or inconsistent resource settings block runtime construction before
+  Core is called.
+- `SourceIngestionRuntime.close()` releases owned Core HTTP clients for
+  deterministic worker/test cleanup. This is a resource lifecycle control only;
+  it does not certify live Core source ingestion, data-mesh status,
+  Gateway/Workbench support, or a supported feature.
+
 ## Evidence
 
 Implementation-backed evidence:

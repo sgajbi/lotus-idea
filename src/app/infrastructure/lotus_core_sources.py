@@ -47,6 +47,11 @@ class LotusCoreHighCashSourceAdapter:
         self._query_client = query_client
         self._query_control_plane_client = query_control_plane_client or query_client
 
+    def close(self) -> None:
+        self._query_client.close()
+        if self._query_control_plane_client is not self._query_client:
+            self._query_control_plane_client.close()
+
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
     ) -> CoreHighCashEvidence:

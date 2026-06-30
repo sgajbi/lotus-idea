@@ -50,6 +50,26 @@ Current non-supported scope:
    intent/outcome path against a real PostgreSQL runtime, but this remains
    internal workflow-state proof only.
 
+Downstream HTTP runtime posture:
+
+1. Advise, Manage, and Report realization adapters use the shared
+   `DownstreamJsonClient` with explicit timeout, connection-pool, keepalive,
+   and pool-timeout limits.
+2. Runtime-cached realization clients are closed on FastAPI shutdown and by
+   the deterministic test reset hook; injected test clients remain owned by the
+   caller.
+3. Configure defaults with:
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS`,
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS`,
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS`,
+   - `LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS`.
+4. Invalid or internally inconsistent resource settings fail closed before a
+   downstream submission is attempted.
+5. This lifecycle and resource-control posture is not downstream route
+   existence proof, downstream execution certification, suitability authority,
+   report materialization proof, client publication authority, or
+   supported-feature promotion.
+
 Implementation source:
 
 - `src/app/domain/conversion_governance.py`
