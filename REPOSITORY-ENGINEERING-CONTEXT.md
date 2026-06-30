@@ -92,13 +92,12 @@ clients now live under `src/app/runtime/` instead of the app root or API layer.
 API route metadata now lives in `src/app/api/route_metadata.py`; route modules
 and `src/app/api/signal_api_support.py` use the shared `RouteMetadata`
 contract, and `make api-route-metadata-gate` blocks future local metadata type
-clones. Workflow and operator route error metadata now uses
-`src/app/api/problem_details.py` for product-safe 400/403/404/409/503 OpenAPI
-examples, and `make openapi-problem-details-example-gate` blocks public
-`ProblemDetails` responses that lack examples.
-API route modules also import runtime ProblemDetails response helpers through
-`src/app/api/problem_details.py`; `make api-problem-details-boundary-gate`
-blocks direct route imports from low-level `app.errors`.
+clones. Workflow and operator route error metadata and `app.main` exception
+handlers now use `src/app/api/problem_details.py` for product-safe
+400/403/404/409/503 OpenAPI examples and runtime response helpers, and
+`make openapi-problem-details-example-gate` blocks public `ProblemDetails`
+responses that lack examples. `make api-problem-details-boundary-gate` blocks
+direct API route or app-entrypoint imports from low-level `app.errors`.
 The PostgreSQL repository adapter now consumes public
 `src/app/infrastructure/postgres_codecs.py` functions for row access, JSON
 object decoding, datetime decoding, and domain JSON serialization; the
@@ -1784,14 +1783,15 @@ compose the shared product-safe 400/403 `ProblemDetails` OpenAPI examples from
 `signal_problem_responses()`. This keeps design modularity inside `lotus-idea`
 without creating a new runtime microservice boundary.
 
-Workflow and operator route modules should use `src/app/api/problem_details.py`
-for shared product-safe RFC-7807 OpenAPI response metadata and runtime
-permission/request-failure helpers. Keep route-specific error codes and
-descriptions in the route module, but do not hand-roll duplicate
-`ProblemDetails` shapes for lifecycle, review, feedback, conversion,
-report-evidence, or readiness/operator APIs. It covers 400/403/404/409/503
-OpenAPI examples and is backed by `make api-problem-details-boundary-gate` and
-`make openapi-problem-details-example-gate`.
+Workflow and operator route modules plus `app.main` exception handlers should
+use `src/app/api/problem_details.py` for shared product-safe RFC-7807 OpenAPI
+response metadata and runtime permission/request-failure helpers. Keep route-
+or handler-specific error codes and descriptions close to the caller, but do
+not hand-roll duplicate `ProblemDetails` shapes for lifecycle, review,
+feedback, conversion, report-evidence, readiness/operator APIs, or entrypoint
+exception handling. It covers 400/403/404/409/503 OpenAPI examples and is
+backed by `make api-problem-details-boundary-gate` and `make
+openapi-problem-details-example-gate`.
 This is design modularity only; it
 does not imply a separately scalable `lotus-idea` sub-service.
 

@@ -37,10 +37,11 @@ Implemented in this slice:
    `app.api.signal_api_support` use the same metadata contract, and
    `make api-route-metadata-gate` blocks future local `RouteMetadata` or
    `SignalRouteMetadata` clones.
-9. Workflow and operator routes now use `app.api.problem_details` for
-   product-safe 400/403/404/409/503 OpenAPI response examples and runtime
-   response helpers. `make api-problem-details-boundary-gate` blocks API route
-   modules from importing low-level `app.errors` directly, and
+9. Workflow and operator routes plus `app.main` exception handlers now use
+   `app.api.problem_details` for product-safe 400/403/404/409/503 OpenAPI
+   response examples and runtime response helpers. `make
+   api-problem-details-boundary-gate` blocks API route modules and the app
+   entrypoint from importing low-level `app.errors` directly, and
    `make openapi-problem-details-example-gate` blocks public `ProblemDetails`
    responses without examples.
 10. Cross-module callers now use public `app.domain` exports for domain

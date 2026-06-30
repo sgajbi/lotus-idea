@@ -20,10 +20,11 @@ reviewable API contract.
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response
-metadata and runtime response helpers. Route modules should keep route-specific
-error codes and descriptions, but the OpenAPI and runtime response shape must
-remain consistent: `type`, `status`, `code`, `title`, and product-safe
-`detail`. `make api-problem-details-boundary-gate` blocks direct API route
+metadata and runtime response helpers. Route modules and `app.main` exception
+handlers should keep route- or handler-specific error codes and descriptions,
+but the OpenAPI and runtime response shape must remain consistent: `type`,
+`status`, `code`, `title`, and product-safe `detail`. `make
+api-problem-details-boundary-gate` blocks direct API route or app-entrypoint
 imports from `app.errors`, and `make openapi-problem-details-example-gate`
 blocks public ProblemDetails response metadata that lacks an OpenAPI example.
 

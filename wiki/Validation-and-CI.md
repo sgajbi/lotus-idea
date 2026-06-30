@@ -525,13 +525,14 @@ than raw URL paths.
 The API route metadata gate blocks local `RouteMetadata` and
 `SignalRouteMetadata` clones in route modules so route registration metadata
 uses the shared `app.api.route_metadata.RouteMetadata` contract. The
-ProblemDetails boundary gate blocks API route modules from importing low-level
-`app.errors` directly, keeping runtime ProblemDetails helpers behind
-`app.api.problem_details`. The OpenAPI ProblemDetails example gate blocks
-public `ProblemDetails` responses that lack product-safe examples. Workflow
-and operator routes use `app.api.problem_details` for concrete
-400/403/404/409/503 examples; caller-supplied signal routes keep their stricter
-route-family metadata in `app.api.signal_api_support`.
+ProblemDetails boundary gate blocks API route modules and the app entrypoint
+from importing low-level `app.errors` directly, keeping runtime ProblemDetails
+helpers behind `app.api.problem_details`. The OpenAPI ProblemDetails example
+gate blocks public `ProblemDetails` responses that lack product-safe examples.
+Workflow and operator routes plus app-entrypoint exception handlers use
+`app.api.problem_details` for concrete 400/403/404/409/503 examples;
+caller-supplied signal routes keep their stricter route-family metadata in
+`app.api.signal_api_support`.
 
 The signal API contract gate blocks duplicated caller-supplied signal API
 authorization, source-authority, operation-event, and error-model mechanics.
