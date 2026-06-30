@@ -448,6 +448,10 @@ include rejected host values, raw bodies, authorization headers, cookies,
 portfolio identifiers, client identifiers, or source payloads. The
 `X-Correlation-Id` response header is the support handle for structured-log
 lookup.
+Inbound correlation and trace headers are untrusted input. The service preserves
+only bounded product-safe diagnostic identifiers; blank, overlong,
+portfolio-like, token-like, or malformed values are replaced with generated
+`corr-*` or `trace-*` values before response, log, or downstream propagation.
 
 These controls are service-boundary hardening only. They do not certify
 Gateway/Workbench browser support, public external API support, data-mesh
@@ -538,6 +542,9 @@ diagnostics and business operation events. Operators should use the
 `X-Correlation-Id` response header to find structured service logs with the
 same `correlation_id`; do not add that value to metrics, evidence artifact
 identifiers, or generic operation attributes.
+When a caller supplied an unsafe diagnostic header, the response header contains
+the generated replacement and the raw caller value is intentionally absent from
+logs and response bodies.
 The machine-readable metric catalog lives at
 `contracts/observability/lotus-idea-operation-metrics.v1.json`, and
 `make operation-metric-contract-gate` keeps it aligned with the code-owned

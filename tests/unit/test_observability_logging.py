@@ -17,6 +17,13 @@ from app.observability import (
     emit_operation_event,
     emit_request_diagnostic_event,
 )
+from app.observability.correlation_context import (
+    generated_correlation_id,
+    generated_trace_id,
+    is_product_safe_context_id,
+    require_product_safe_context_id,
+    sanitize_or_generate_context_id,
+)
 from app.observability.logging import log_event
 
 
@@ -69,12 +76,19 @@ def test_request_diagnostic_event_rejects_raw_or_unknown_diagnostics() -> None:
             route="/api/v1/idea-candidates/abc?debug=true",
             method="GET",
         )
-    with pytest.raises(ValueError, match="correlation_id cannot be blank"):
+    with pytest.raises(ValueError, match="correlation_id must be a product-safe"):
         emit_request_diagnostic_event(
             "request.http_error",
             route="/health",
             method="GET",
             correlation_id=" ",
+        )
+    with pytest.raises(ValueError, match="trace_id must be a product-safe"):
+        emit_request_diagnostic_event(
+            "request.http_error",
+            route="/health",
+            method="GET",
+            trace_id="PB_SG_GLOBAL_BAL_001",
         )
 
 
@@ -113,7 +127,7 @@ def test_operation_event_rejects_sensitive_attributes() -> None:
             outcome=OperationOutcome.PERMISSION_DENIED,
             attributes={"correlation_id": "corr-as-attribute"},
         )
-    with pytest.raises(ValueError, match="trace_id cannot be blank"):
+    with pytest.raises(ValueError, match="trace_id must be a product-safe"):
         OperationEvent(
             operation=IdeaOperation.CONVERSION_INTENT,
             outcome=OperationOutcome.PERMISSION_DENIED,
@@ -175,3 +189,51 @@ def test_emit_foundation_operation_event_defaults_to_unpromoted_foundation(
         "supported_feature_promoted": False,
     }
     assert FORBIDDEN_OPERATION_FIELD_KEYS.isdisjoint(payload)
+
+
+@pytest.mark.parametrize(
+    "context_id",
+    [
+        "corr-support-123",
+        "trace.support:abc-123",
+        "4bf92f3577b34da6a3ce929d0e0e4736",
+    ],
+)
+def test_context_id_policy_allows_bounded_support_identifiers(context_id: str) -> None:
+    assert is_product_safe_context_id(context_id) is True
+    assert sanitize_or_generate_context_id(context_id, generated_correlation_id) == context_id
+
+
+@pytest.mark.parametrize(
+    "context_id",
+    [
+        "",
+        " ",
+        "x" * 97,
+        "PB_SG_GLOBAL_BAL_001",
+        "client_secret:abc123",
+        "Bearer-token-abc123",
+        "corr with spaces",
+        "corr/support/path",
+        "corr_under_score",
+    ],
+)
+def test_context_id_policy_replaces_unsafe_identifiers(context_id: str) -> None:
+    sanitized = sanitize_or_generate_context_id(context_id, generated_correlation_id)
+
+    assert is_product_safe_context_id(context_id) is False
+    assert sanitized != context_id
+    assert sanitized.startswith("corr-")
+    assert is_product_safe_context_id(sanitized) is True
+
+
+def test_trace_id_generation_uses_product_safe_prefix() -> None:
+    generated = sanitize_or_generate_context_id(None, generated_trace_id)
+
+    assert generated.startswith("trace-")
+    assert is_product_safe_context_id(generated) is True
+
+
+def test_strict_context_id_validation_rejects_missing_values() -> None:
+    with pytest.raises(ValueError, match="trace_id must be a product-safe"):
+        require_product_safe_context_id(None, "trace_id")

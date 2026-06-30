@@ -341,6 +341,28 @@ GitHub issue review loop:
    replacement, rate limiter, production ingress proof, or supported-feature
    promotion.
 
+This slice also closes the unsafe diagnostic-header propagation gap found
+through the GitHub issue review loop:
+
+1. `src/app/observability/correlation_context.py` defines the shared product-safe
+   diagnostic identifier policy for correlation and trace ids: bounded length,
+   strict characters, no blank values, no portfolio-like values, and no
+   secret/token-like fragments.
+2. `CorrelationIdMiddleware` preserves valid `X-Correlation-Id` and
+   `X-Trace-Id` values, but replaces missing, blank, overlong, malformed,
+   portfolio-like, or token-like values with generated `corr-*` and `trace-*`
+   identifiers before writing request state or response headers.
+3. Request diagnostic and operation-event logging reject unsafe diagnostic ids
+   supplied outside the middleware path, and the shared downstream HTTP client
+   sanitizes non-HTTP caller-provided ids before propagating headers.
+4. Unit and integration tests cover valid preservation, generated missing ids,
+   blank/overlong/portfolio-like/token-like/malformed replacement, log safety,
+   and downstream header replacement.
+5. This is observability and service-boundary hardening only. It does not
+   certify service-to-service authentication, trusted ingress, Gateway/Workbench
+   support, production monitoring, client publication, or supported-feature
+   promotion.
+
 This slice also hardens workflow coverage enforcement after issue review showed
 raw workflow coverage commands duplicating the repository gate:
 

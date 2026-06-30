@@ -10,6 +10,8 @@ from typing import Literal
 
 from prometheus_client import Counter
 
+from app.observability.correlation_context import require_product_safe_context_id
+
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 SERVICE_NAME = "lotus-idea"
@@ -247,6 +249,4 @@ def emit_foundation_operation_event(
 
 
 def _safe_log_context_value(value: str, field_name: str) -> str:
-    if not value.strip():
-        raise ValueError(f"{field_name} cannot be blank")
-    return value
+    return require_product_safe_context_id(value, field_name)

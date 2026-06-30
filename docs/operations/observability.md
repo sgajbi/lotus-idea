@@ -8,7 +8,7 @@ This repository starts from the Lotus platform observability scaffold.
 | --- | --- | --- |
 | `/health`, `/health/live`, `/health/ready` | Service liveness and readiness checks | No business readiness claim |
 | `/metrics` | Prometheus scrape target outside OpenAPI | No sensitive labels |
-| Correlation and trace response headers | Request tracing across services | Not used as metric labels |
+| Correlation and trace response headers | Request tracing across services | Sanitized or generated before response, logs, or downstream propagation; not used as metric labels |
 | Structured JSON application events | Operator diagnostics | Product-safe fields only |
 | Product-safe error responses | Client and operator failure posture | No raw entitlement or source payload leakage |
 | HTTP boundary rejections | Trusted-host, body-size, and media-type rejection posture | Product-safe `ProblemDetails`; no host, payload, token, cookie, portfolio, or client echo |
@@ -24,6 +24,14 @@ ids, holdings, raw entitlement failures, request bodies, or response bodies. Cor
 ids are allowed only as product-safe log context on request diagnostics and operation events; they
 must not be used as Prometheus labels, evidence artifact identifiers, or generic operation
 attributes.
+
+Inbound `X-Correlation-Id` and `X-Trace-Id` values are untrusted request input. The HTTP
+correlation middleware preserves only bounded product-safe identifiers using the governed
+character/length/sensitive-fragment policy; missing, blank, overlong, portfolio-like,
+secret/token-like, or malformed values are replaced with generated `corr-*` or `trace-*`
+identifiers before they reach request state, response headers, request diagnostics, operation
+events, or downstream HTTP clients. Logging helpers reject unsafe diagnostic identifiers supplied
+outside the HTTP middleware path.
 
 Application source must not bypass the central observability module. `make
 source-observability-contract-gate` blocks raw `print()`, direct Python logging, and low-level
@@ -179,6 +187,10 @@ templates rather than raw paths. Business operation events may include the same
 log-only `correlation_id` and `trace_id`, while the
 `lotus_idea_operation_events_total` metric remains bounded to the governed
 label set above.
+
+If a caller supplies an unsafe correlation or trace header, the value in the response and logs will
+be a generated replacement. Operators should use the response header value, not the caller-supplied
+raw value, for support lookup.
 
 The source-ingestion readiness diagnostic reports `accepted` only when the
 configured manifest, Core query URL, Core query-control-plane URL, and durable

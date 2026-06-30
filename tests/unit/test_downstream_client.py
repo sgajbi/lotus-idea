@@ -150,6 +150,22 @@ def test_trace_headers_are_forwarded() -> None:
     assert payload == {"status": "ok"}
 
 
+def test_unsafe_trace_headers_are_replaced_before_forwarding() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["X-Correlation-Id"].startswith("corr-")
+        assert request.headers["X-Trace-Id"].startswith("trace-")
+        assert request.headers["X-Correlation-Id"] != "PB_SG_GLOBAL_BAL_001"
+        assert request.headers["X-Trace-Id"] != "Bearer-token-abc123"
+        return httpx.Response(200, json={"status": "ok"})
+
+    payload = _client_for(httpx.MockTransport(handler)).get_json(
+        "/status",
+        correlation_id="PB_SG_GLOBAL_BAL_001",
+        trace_id="Bearer-token-abc123",
+    )
+    assert payload == {"status": "ok"}
+
+
 def test_timeout_maps_to_safe_upstream_error() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("timed out", request=request)

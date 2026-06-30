@@ -91,6 +91,10 @@ Boundary rejections return product-safe `ProblemDetails`. They must not include
 raw request bodies, authorization headers, cookies, rejected host values,
 portfolio ids, client ids, or source payloads. Use the `X-Correlation-Id`
 response header for log lookup when diagnosing caller failures.
+Inbound correlation and trace headers are sanitized before response, log, or
+downstream propagation; if a caller sends a blank, overlong, portfolio-like,
+token-like, or malformed diagnostic header, use the generated response header
+value for support lookup.
 
 These controls improve service boundary posture only. They do not certify
 Gateway/Workbench browser support, external API support, client publication,
