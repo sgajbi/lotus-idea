@@ -266,3 +266,21 @@ This slice also hardens runtime Docker and release image identity governance:
 5. This is runtime and CI hardening only. It does not certify production
    capacity, live source ingestion, Workbench support, data-product readiness,
    client publication, or supported-feature promotion.
+
+This slice also hardens post-merge Main Releasability signal quality:
+
+1. `main-releasability.yml` is now `workflow_dispatch` only. Normal merged PRs
+   use `merged-pr-main-releasability.yml` as the authoritative post-merge
+   dispatch path, and manual reruns still use the same dispatchable workflow.
+2. `scripts/ci_contract_gate.py` requires the dispatch policy text and rejects
+   reintroducing a `push` trigger on Main Releasability while the merged-PR
+   dispatch helper remains active.
+3. `tests/unit/test_ci_contract_gate.py` covers the duplicate-trigger
+   regression by injecting a `push` trigger and proving the CI contract gate
+   fails.
+4. CI docs, repository context, quality scorecard, and wiki source now describe
+   one authoritative post-merge release-proof run per normal merged PR instead
+   of an expected push-cancelled / dispatch-success run pair.
+5. This is CI signal-quality hardening only. It does not reduce required
+   post-merge release proof, weaken `LOTUS_AUTOMERGE_TOKEN` posture, or hide
+   real Main Releasability failures.

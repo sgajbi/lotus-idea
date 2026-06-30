@@ -1425,8 +1425,11 @@ Rebase auto-merge is allowed only when `LOTUS_AUTOMERGE_TOKEN` is configured so
 the merge actor is not the suppressed workflow `GITHUB_TOKEN`. When that token
 is absent, the auto-merge helper warns and exits cleanly so an authorized human
 or release actor can perform the required rebase merge. Merged PRs must
-explicitly dispatch the Main Releasability Gate so post-merge truth does not
-depend only on a push-triggered workflow. After every merge, delete the remote
+explicitly dispatch the Main Releasability Gate as the authoritative
+post-merge release-proof run; the main releasability workflow intentionally
+does not run on `push` to `main`, so normal merges do not produce paired
+push-cancelled and dispatch-success CI history. Manual reruns remain available
+through `workflow_dispatch`. After every merge, delete the remote
 feature branch and the matching local feature branch, then re-run branch hygiene
 before final closure. Durable
 RFC/docs/wiki/context/contract truth is complete only when it is present on
@@ -1745,8 +1748,8 @@ owned by upstream services.
 1. feature lane for fast branch feedback,
 2. PR merge gate for required merge readiness,
 3. main releasability for post-merge truth,
-4. merged-PR dispatch so auto-merged PRs still generate release evidence on
-   `main`.
+4. merged-PR dispatch as the authoritative post-merge trigger for release
+   evidence on `main`, with manual reruns through `workflow_dispatch`.
 
 Required baseline checks include lint, format check, typecheck, architecture
 boundary enforcement, repository hygiene, maintainability thresholds,
@@ -1809,6 +1812,9 @@ coverage proves current pass behavior and failure cases for floating action
 tags, wrong verified SHAs, missing action-version provenance, raw workflow
 `pytest` shortcuts, weakened coverage-target selectors, and removal of current
 blocking lint gates from the repo-native quality path.
+The gate also rejects reintroducing a `push` trigger on the Main Releasability
+workflow, preserving one authoritative post-merge release-proof run per normal
+merged PR instead of expected cancelled duplicates.
 
 The runtime Dockerfile is governed by the CI contract gate: it must use the
 configured base image build argument, install the package without development
