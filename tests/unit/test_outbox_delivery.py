@@ -253,7 +253,7 @@ def test_run_outbox_delivery_once_skips_non_deliverable_events() -> None:
 
 
 def test_run_outbox_delivery_once_counts_repository_race_as_skipped() -> None:
-    event = outbox_event("idea.review.recorded.v1")
+    event = outbox_event("idea.review.decision_recorded.v1")
     repository = DeliveryEdgeRepository(
         event,
         publish_decision=OutboxDeliveryDecision.ALREADY_PUBLISHED,
@@ -273,7 +273,7 @@ def test_run_outbox_delivery_once_counts_repository_race_as_skipped() -> None:
 
 
 def test_run_outbox_delivery_once_claims_before_publishing_to_fence_second_worker() -> None:
-    event = outbox_event("idea.review.recorded.v1")
+    event = outbox_event("idea.review.decision_recorded.v1")
     repository = repository_with_events(event)
     publisher = ReentrantPublisher(repository)
 
@@ -296,7 +296,7 @@ def test_run_outbox_delivery_once_claims_before_publishing_to_fence_second_worke
 
 
 def test_run_outbox_delivery_once_uses_bounded_default_failure_reason() -> None:
-    event = outbox_event("idea.report.requested.v1")
+    event = outbox_event("idea.report_evidence_pack.requested.v1")
     repository = DeliveryEdgeRepository(event)
 
     summary = run_outbox_delivery_once(
@@ -314,7 +314,7 @@ def test_run_outbox_delivery_once_uses_bounded_default_failure_reason() -> None:
 def test_run_outbox_delivery_once_rejects_non_positive_limit() -> None:
     with pytest.raises(ValueError, match="limit must be positive"):
         run_outbox_delivery_once(
-            repository_with_events(outbox_event("idea.invalid.arguments.v1")),
+            repository_with_events(outbox_event("idea.candidate.persisted.v1")),
             AcceptingPublisher(),
             lease_owner="worker-1",
             lease_attempt_id="attempt-1",
@@ -325,7 +325,7 @@ def test_run_outbox_delivery_once_rejects_non_positive_limit() -> None:
 def test_run_outbox_delivery_once_rejects_non_positive_retry_limit() -> None:
     with pytest.raises(ValueError, match="max_retry_count must be positive"):
         run_outbox_delivery_once(
-            repository_with_events(outbox_event("idea.invalid.arguments.v1")),
+            repository_with_events(outbox_event("idea.candidate.persisted.v1")),
             AcceptingPublisher(),
             lease_owner="worker-1",
             lease_attempt_id="attempt-1",
@@ -349,7 +349,7 @@ def test_run_outbox_delivery_once_requires_utc_delivery_time(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         run_outbox_delivery_once(
-            repository_with_events(outbox_event("idea.invalid-time.v1")),
+            repository_with_events(outbox_event("idea.candidate.persisted.v1")),
             AcceptingPublisher(),
             lease_owner="worker-1",
             lease_attempt_id="attempt-1",

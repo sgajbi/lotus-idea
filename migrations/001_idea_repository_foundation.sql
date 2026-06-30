@@ -43,10 +43,20 @@ CREATE TABLE IF NOT EXISTS idea_audit_event (
 
 CREATE TABLE IF NOT EXISTS idea_outbox_event (
     outbox_event_id TEXT PRIMARY KEY,
-    event_type TEXT NOT NULL,
-    aggregate_type TEXT NOT NULL,
+    event_type TEXT NOT NULL CONSTRAINT ck_idea_outbox_event_event_type CHECK (
+        event_type IN (
+            'idea.candidate.persisted.v1',
+            'idea.lifecycle.transitioned.v1',
+            'idea.review.decision_recorded.v1',
+            'idea.feedback.recorded.v1',
+            'idea.conversion.intent_requested.v1',
+            'idea.conversion.outcome_recorded.v1',
+            'idea.report_evidence_pack.requested.v1'
+        )
+    ),
+    aggregate_type TEXT NOT NULL CONSTRAINT ck_idea_outbox_event_aggregate_type CHECK (aggregate_type = 'idea_candidate'),
     aggregate_id TEXT NOT NULL,
-    schema_version TEXT NOT NULL,
+    schema_version TEXT NOT NULL CONSTRAINT ck_idea_outbox_event_schema_version CHECK (schema_version = 'v1'),
     payload_json JSONB NOT NULL,
     status TEXT NOT NULL,
     occurred_at_utc TIMESTAMPTZ NOT NULL,

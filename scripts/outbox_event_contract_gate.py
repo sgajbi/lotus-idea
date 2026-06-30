@@ -7,17 +7,24 @@ import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTRACT_PATH = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"
+SRC_DIR = ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
-REQUIRED_EVENT_TYPES = (
-    "idea.candidate.persisted.v1",
-    "idea.lifecycle.transitioned.v1",
-    "idea.review.decision_recorded.v1",
-    "idea.feedback.recorded.v1",
-    "idea.conversion.intent_requested.v1",
-    "idea.conversion.outcome_recorded.v1",
-    "idea.report_evidence_pack.requested.v1",
+from app.domain.events import (  # noqa: E402
+    FORBIDDEN_OUTBOX_PAYLOAD_KEYS,
+    OUTBOX_EVENT_AGGREGATE_TYPE,
+    OUTBOX_EVENT_SCHEMA_VERSION,
+    SUPPORTED_OUTBOX_EVENT_TYPES,
 )
+
+CONTRACT_PATH = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"
+OUTBOX_MIGRATION_PATHS = (
+    ROOT / "migrations" / "001_idea_repository_foundation.sql",
+    ROOT / "migrations" / "003_outbox_event_contract_constraints.sql",
+)
+
+REQUIRED_EVENT_TYPES = SUPPORTED_OUTBOX_EVENT_TYPES
 
 REQUIRED_ENVELOPE_FIELDS = (
     "eventId",
@@ -38,21 +45,7 @@ OPTIONAL_ENVELOPE_FIELDS = (
     "causationId",
 )
 
-FORBIDDEN_PAYLOAD_KEYS = (
-    "account_id",
-    "client_id",
-    "client_name",
-    "content_hash",
-    "evidence_hash",
-    "holding_id",
-    "idempotency_key",
-    "portfolio_id",
-    "raw_source_payload",
-    "request_body",
-    "response_body",
-    "route",
-    "source_route",
-)
+FORBIDDEN_PAYLOAD_KEYS = tuple(FORBIDDEN_OUTBOX_PAYLOAD_KEYS)
 
 REQUIRED_SOURCE_OF_TRUTH_KEYS = {
     "event_domain_model",
@@ -110,6 +103,7 @@ def validate_outbox_event_contract(*, contract_path: Path = CONTRACT_PATH) -> li
     _validate_payload_safety(payload, errors)
     _validate_source_of_truth(payload, errors)
     _validate_source_code_alignment(errors)
+    _validate_migration_alignment(errors)
     _validate_forbidden_contract_text(payload, errors)
     return errors
 
@@ -171,8 +165,10 @@ def _validate_event_families(payload: Mapping[str, Any], errors: list[str]) -> N
         event_type = event_family.get("eventType")
         if isinstance(event_type, str):
             event_types.append(event_type)
-        if event_family.get("aggregateType") != "idea_candidate":
-            errors.append(f"eventFamilies[{index}].aggregateType must be idea_candidate")
+        if event_family.get("aggregateType") != OUTBOX_EVENT_AGGREGATE_TYPE:
+            errors.append(
+                f"eventFamilies[{index}].aggregateType must be {OUTBOX_EVENT_AGGREGATE_TYPE}"
+            )
         description = event_family.get("description")
         if not isinstance(description, str) or len(description.strip()) < 24:
             errors.append(f"eventFamilies[{index}].description must be meaningful")
@@ -187,7 +183,12 @@ def _validate_payload_safety(payload: Mapping[str, Any], errors: list[str]) -> N
         return
     if policy.get("payloadValueType") != "string":
         errors.append("payloadSafetyPolicy.payloadValueType must be string")
-    if tuple(policy.get("forbiddenPayloadKeys") or ()) != FORBIDDEN_PAYLOAD_KEYS:
+    forbidden_payload_keys = policy.get("forbiddenPayloadKeys") or ()
+    if (
+        not isinstance(forbidden_payload_keys, Sequence)
+        or isinstance(forbidden_payload_keys, (str, bytes))
+        or set(forbidden_payload_keys) != FORBIDDEN_OUTBOX_PAYLOAD_KEYS
+    ):
         errors.append("payloadSafetyPolicy.forbiddenPayloadKeys must match domain guardrails")
     if "must not echo sensitive" not in str(policy.get("failureReasonPolicy", "")):
         errors.append("payloadSafetyPolicy.failureReasonPolicy must reject sensitive echoing")
@@ -239,6 +240,31 @@ def _validate_source_code_alignment(errors: list[str]) -> None:
     for envelope_field in REQUIRED_ENVELOPE_FIELDS + OPTIONAL_ENVELOPE_FIELDS:
         if f'"{envelope_field}"' not in publisher_text:
             errors.append(f"publisher envelope field missing: {envelope_field}")
+    for constant in (
+        "SUPPORTED_OUTBOX_EVENT_TYPES",
+        "OUTBOX_EVENT_SCHEMA_VERSION",
+        "OUTBOX_EVENT_AGGREGATE_TYPE",
+    ):
+        if constant not in event_text:
+            errors.append(f"domain outbox contract constant missing: {constant}")
+
+
+def _validate_migration_alignment(errors: list[str]) -> None:
+    migration_text_parts: list[str] = []
+    for migration_path in OUTBOX_MIGRATION_PATHS:
+        try:
+            migration_text_parts.append(migration_path.read_text(encoding="utf-8"))
+        except OSError as exc:
+            errors.append(f"migration alignment read failed: {exc}")
+            return
+    migration_text = "\n".join(migration_text_parts)
+    for event_type in REQUIRED_EVENT_TYPES:
+        if f"'{event_type}'" not in migration_text:
+            errors.append(f"migration outbox event_type check missing: {event_type}")
+    if f"aggregate_type = '{OUTBOX_EVENT_AGGREGATE_TYPE}'" not in migration_text:
+        errors.append("migration outbox aggregate_type check missing")
+    if f"schema_version = '{OUTBOX_EVENT_SCHEMA_VERSION}'" not in migration_text:
+        errors.append("migration outbox schema_version check missing")
 
 
 def _validate_forbidden_contract_text(value: object, errors: list[str], path: str = "$") -> None:
