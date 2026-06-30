@@ -10,8 +10,11 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_context_from_headers
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
-from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
+from app.api.runtime_dependencies import configured_implementation_proof_artifacts
 from app.application.implementation_proof_models import (
     ImplementationProofCapabilityReadiness,
     ImplementationProofReadinessSnapshot,

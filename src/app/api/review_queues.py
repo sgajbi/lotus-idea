@@ -9,7 +9,10 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.api.caller_headers import caller_access_scope_filter, caller_context_from_headers
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
     ReviewQueueReadinessSnapshot,

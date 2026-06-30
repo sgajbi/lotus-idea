@@ -29,14 +29,19 @@ LAYER_RULES = {
         "description": "Application services may orchestrate domain and ports but must not depend on HTTP/framework or concrete infrastructure.",
     },
     "api": {
-        "forbidden_prefixes": ("app.infrastructure",),
-        "description": "API routes should call application services rather than concrete infrastructure.",
+        "forbidden_prefixes": ("app.infrastructure", "app.runtime"),
+        "description": (
+            "API routes should call application services and the API runtime dependency facade "
+            "rather than concrete infrastructure or runtime composition modules."
+        ),
     },
     "runtime": {
         "forbidden_prefixes": ("fastapi", "starlette", "app.api"),
         "description": "Runtime composition may wire concrete adapters but must not depend on HTTP routes, DTOs, or framework modules.",
     },
 }
+
+API_RUNTIME_DEPENDENCY_FACADE = SRC_ROOT / "api" / "runtime_dependencies.py"
 
 
 def _module_name(path: Path) -> str:
@@ -59,6 +64,12 @@ def _layer_for(path: Path) -> str | None:
     return relative.parts[0] if relative.parts else None
 
 
+def _is_allowed_layer_import(path: Path, layer: str, imported: str) -> bool:
+    if layer == "api" and path == API_RUNTIME_DEPENDENCY_FACADE:
+        return imported == "app.runtime" or imported.startswith("app.runtime.")
+    return False
+
+
 def validate_architecture_boundaries() -> list[dict[str, str]]:
     violations: list[dict[str, str]] = []
     for path in SRC_ROOT.rglob("*.py"):
@@ -68,6 +79,8 @@ def validate_architecture_boundaries() -> list[dict[str, str]]:
         imports = _imports(path)
         for imported in sorted(imports):
             for prefix in LAYER_RULES[layer]["forbidden_prefixes"]:
+                if _is_allowed_layer_import(path, layer, imported):
+                    continue
                 if imported == prefix or imported.startswith(f"{prefix}."):
                     violations.append(
                         {

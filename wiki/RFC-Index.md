@@ -23,9 +23,10 @@ Current RFC-0002 implementation-start baseline:
 3. Slice 02 is partially implemented for cleanup and structure normalization:
    runtime composition providers for repository state, source ingestion, outbox
    publication, and downstream realization now live under `src/app/runtime/`,
-   and the blocking architecture-boundary gate protects that runtime wiring
-   from API/FastAPI leakage. It remains a cleanup slice only and does not
-   promote a business feature.
+   API routes access those helpers only through `app.api.runtime_dependencies`,
+   and the blocking architecture-boundary gate protects both directions of the
+   API/runtime boundary. It remains a cleanup slice only and does not promote a
+   business feature.
 4. Slice 03 implements the pure domain model and lifecycle foundation without
    API, persistence, or supported-feature promotion.
 5. Slice 04 partially implements the source-authority and data-mesh baseline,

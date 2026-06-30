@@ -1355,13 +1355,16 @@ logs; fix or document the owned warning source instead.
 2. `src/app/api/`: route modules and DTO mapping. Routes must expose explicit
    idea contracts and must not embed domain logic. Current business routes are
    registered directly on the FastAPI app before Prometheus instrumentation so
-   endpoint certification and metrics instrumentation remain compatible.
+   endpoint certification and metrics instrumentation remain compatible. Route
+   modules must use `app.api.runtime_dependencies` for runtime composition
+   helpers and must not import `app.runtime` directly.
 3. `src/app/runtime/`: process-local dependency composition for repositories,
    source adapters, outbox publishers, and downstream realization clients. The
    repository provider is process-local in-memory by default and
-   PostgreSQL-backed when `LOTUS_IDEA_DATABASE_URL` is configured. API routes,
-   workers, and proof generators depend on this package for runtime wiring
-   instead of placing state providers in the API layer or app root.
+   PostgreSQL-backed when `LOTUS_IDEA_DATABASE_URL` is configured. Workers and
+   proof generators depend on this package for runtime wiring directly; API
+   routes reach it only through the API runtime dependency facade so route
+   modules stay thin and reviewable.
 4. `src/app/application/`: use-case orchestration, source aggregation, and
    conversion workflows. Current use cases map the certified high-cash API
    requests into framework-free domain signal evaluation, fetch Core high-cash

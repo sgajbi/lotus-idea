@@ -16,7 +16,10 @@ from app.api.problem_details import (
     permission_denied_metadata,
     permission_denied_problem,
 )
-from app.runtime.repository_state import get_idea_repository, idea_repository_durable_storage_backed
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+)
 from app.application.conversion_workflow import (
     RecordConversionOutcomeToRepositoryCommand,
     RequestConversionIntentToRepositoryCommand,
