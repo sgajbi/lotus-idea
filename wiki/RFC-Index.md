@@ -27,7 +27,9 @@ Current RFC-0002 implementation-start baseline:
    the blocking architecture-boundary gate protects both directions of the
    API/runtime boundary, and route metadata dictionaries use the shared
    `app.api.route_metadata.RouteMetadata` contract enforced by
-   `make api-route-metadata-gate`. Workflow and operator `ProblemDetails`
+   `make api-route-metadata-gate`. API DTOs use shared
+   `app.api.base_model.CamelModel` alias handling enforced by
+   `make api-camel-model-boundary-gate`. Workflow and operator `ProblemDetails`
    OpenAPI examples are now enforced by
    `make openapi-problem-details-example-gate`. Mutating workflow routes use
    shared `app.api.idempotency` validation enforced by `make

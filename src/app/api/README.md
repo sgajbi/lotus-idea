@@ -26,6 +26,14 @@ duplicates so blank-key request handling stays consistent across lifecycle,
 review, feedback, conversion, report-evidence, and downstream realization
 routes.
 
+## DTO Base Models
+
+Use `app.api.base_model.CamelModel` for API request and response DTOs that need
+camel-case aliases. Route modules should not define local `CamelModel` or local
+`ConfigDict(populate_by_name=True)` clones; `make
+api-camel-model-boundary-gate` blocks duplicates so alias handling remains
+consistent without creating a runtime service split.
+
 ## Problem Details
 
 Use `app.api.problem_details` for shared product-safe RFC-7807 response

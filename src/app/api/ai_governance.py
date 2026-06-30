@@ -5,8 +5,9 @@ from typing import Any
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.problem_details import (
     conflict_metadata,
@@ -58,10 +59,6 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _AI_EXPLANATION_CAPABILITY = "idea.ai-explanation.evaluate"
 _AI_EXPLANATION_READINESS_CAPABILITY = "idea.ai-explanation.readiness.read"
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class AIWorkflowPackRequest(CamelModel):

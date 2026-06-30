@@ -4,8 +4,9 @@ from datetime import datetime
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
@@ -49,10 +50,6 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _REVIEW_ACTION_CAPABILITY = "idea.review.record"
 _FEEDBACK_CAPABILITY = "idea.feedback.record"
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class ReviewAccessScopeRequest(CamelModel):

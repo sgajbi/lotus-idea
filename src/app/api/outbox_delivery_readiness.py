@@ -5,8 +5,9 @@ from typing import Mapping
 
 from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
@@ -48,10 +49,6 @@ _RUN_OUTBOX_DELIVERY_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.outbox-delivery.run",
     allowed_roles=("operator",),
 )
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class OutboxDeliveryStatusCountsResponse(CamelModel):

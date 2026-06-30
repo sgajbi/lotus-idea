@@ -4,8 +4,9 @@ from datetime import datetime
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import Field, field_validator
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
@@ -40,10 +41,6 @@ from app.observability import IdeaOperation, OperationEvent, OperationOutcome, e
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _REPORT_EVIDENCE_PACK_CAPABILITY = "idea.report-evidence-pack.request"
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class ReportEvidencePackRequest(CamelModel):

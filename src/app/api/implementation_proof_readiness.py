@@ -6,8 +6,9 @@ from typing import Mapping
 
 from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
+from app.api.base_model import CamelModel
 from app.api.caller_headers import caller_context_from_headers
 from app.api.problem_details import (
     invalid_request_metadata,
@@ -45,10 +46,6 @@ _READ_IMPLEMENTATION_PROOF_READINESS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.implementation-proof.readiness.read",
     allowed_roles=("operator",),
 )
-
-
-class CamelModel(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
 
 
 class ImplementationProofCapabilityReadinessResponse(CamelModel):
