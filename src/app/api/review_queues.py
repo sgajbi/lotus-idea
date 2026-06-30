@@ -17,11 +17,14 @@ from app.api.runtime_dependencies import (
 from app.api.temporal_validation import is_timezone_aware
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
+    DEFAULT_REVIEW_QUEUE_PAGE_LIMIT,
+    MAX_REVIEW_QUEUE_PAGE_LIMIT,
+    ReviewQueuePage,
     ReviewQueueReadinessSnapshot,
     build_review_queue_from_repository,
     build_review_queue_readiness_snapshot,
 )
-from app.domain import QueueExclusion, ReviewQueueItem, ReviewQueueProjection
+from app.domain import QueueExclusion, ReviewQueueItem
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
@@ -110,29 +113,58 @@ class ReviewQueueExclusionResponse(CamelModel):
         )
 
 
+class ReviewQueuePageResponse(CamelModel):
+    limit: int
+    offset: int
+    returned_item_count: int = Field(..., alias="returnedItemCount")
+    total_reviewable_item_count: int = Field(..., alias="totalReviewableItemCount")
+    returned_exclusion_count: int = Field(..., alias="returnedExclusionCount")
+    total_excluded_candidate_count: int = Field(..., alias="totalExcludedCandidateCount")
+    next_offset: int | None = Field(None, alias="nextOffset")
+    has_next_page: bool = Field(..., alias="hasNextPage")
+
+    @classmethod
+    def from_domain(cls, queue_page: ReviewQueuePage) -> "ReviewQueuePageResponse":
+        page = queue_page.page
+        return cls(
+            limit=page.limit,
+            offset=page.offset,
+            returnedItemCount=page.returned_item_count,
+            totalReviewableItemCount=page.total_reviewable_item_count,
+            returnedExclusionCount=page.returned_exclusion_count,
+            totalExcludedCandidateCount=page.total_excluded_candidate_count,
+            nextOffset=page.next_offset,
+            hasNextPage=page.has_next_page,
+        )
+
+
 class AdvisorReviewQueueResponse(CamelModel):
     policy_version: str = Field(..., alias="policyVersion")
     evaluated_at_utc: datetime = Field(..., alias="evaluatedAtUtc")
     items: tuple[ReviewQueueItemResponse, ...]
     exclusions: tuple[ReviewQueueExclusionResponse, ...]
+    page: ReviewQueuePageResponse
     durable_storage_backed: bool = Field(False, alias="durableStorageBacked")
     supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
 
     @classmethod
     def from_domain(
         cls,
-        queue: ReviewQueueProjection,
+        queue: ReviewQueuePage,
         *,
         durable_storage_backed: bool = False,
     ) -> "AdvisorReviewQueueResponse":
         return cls(
-            policyVersion=queue.policy_version,
-            evaluatedAtUtc=queue.evaluated_at_utc,
-            items=tuple(ReviewQueueItemResponse.from_domain(item) for item in queue.items),
+            policyVersion=queue.projection.policy_version,
+            evaluatedAtUtc=queue.projection.evaluated_at_utc,
+            items=tuple(
+                ReviewQueueItemResponse.from_domain(item) for item in queue.projection.items
+            ),
             exclusions=tuple(
                 ReviewQueueExclusionResponse.from_domain(exclusion)
-                for exclusion in queue.exclusions
+                for exclusion in queue.projection.exclusions
             ),
+            page=ReviewQueuePageResponse.from_domain(queue),
             durableStorageBacked=durable_storage_backed,
             supportedFeaturePromoted=False,
         )
@@ -150,6 +182,10 @@ class ReviewQueueReadinessResponse(CamelModel):
     scored_candidate_count: int = Field(..., alias="scoredCandidateCount")
     unscored_candidate_count: int = Field(..., alias="unscoredCandidateCount")
     durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
+    repository_side_pagination_certified: bool = Field(
+        ...,
+        alias="repositorySidePaginationCertified",
+    )
     readiness_status: str = Field(..., alias="readinessStatus")
     supportability_status: str = Field(..., alias="supportabilityStatus")
     certification_ready: bool = Field(..., alias="certificationReady")
@@ -173,6 +209,7 @@ class ReviewQueueReadinessResponse(CamelModel):
             scoredCandidateCount=snapshot.scored_candidate_count,
             unscoredCandidateCount=snapshot.unscored_candidate_count,
             durableStorageBacked=snapshot.durable_storage_backed,
+            repositorySidePaginationCertified=snapshot.repository_side_pagination_certified,
             readinessStatus=snapshot.readiness_status,
             supportabilityStatus=snapshot.supportability_status,
             certificationReady=snapshot.certification_ready,
@@ -187,6 +224,12 @@ async def get_advisor_review_queue(
     book_id: str | None = Query(default=None, alias="bookId"),
     portfolio_id: str | None = Query(default=None, alias="portfolioId"),
     client_id: str | None = Query(default=None, alias="clientId"),
+    limit: int = Query(
+        default=DEFAULT_REVIEW_QUEUE_PAGE_LIMIT,
+        ge=1,
+        le=MAX_REVIEW_QUEUE_PAGE_LIMIT,
+    ),
+    offset: int = Query(default=0, ge=0),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
@@ -279,6 +322,8 @@ async def get_advisor_review_queue(
     queue = build_review_queue_from_repository(
         BuildReviewQueueFromRepositoryCommand(
             evaluated_at_utc=evaluated_at_utc,
+            limit=limit,
+            offset=offset,
             access_scope_filter=(
                 None if effective_scope_filter.is_empty else effective_scope_filter
             ),
@@ -402,6 +447,9 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         "Returns the deterministic advisor review queue projection over persisted idea "
         "candidate snapshots. Optional tenantId, bookId, portfolioId, and clientId "
         "query filters constrain results to the requested advisor access scope. "
+        f"limit and offset page the ranked items and exclusions with a default "
+        f"limit of {DEFAULT_REVIEW_QUEUE_PAGE_LIMIT} and maximum limit of "
+        f"{MAX_REVIEW_QUEUE_PAGE_LIMIT}. "
         "When platform caller-context scope headers are present, the route applies "
         "those entitlements automatically and rejects broader query scopes fail-closed. "
         "This is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
@@ -440,6 +488,16 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
                             }
                         ],
                         "exclusions": [],
+                        "page": {
+                            "limit": 25,
+                            "offset": 0,
+                            "returnedItemCount": 1,
+                            "totalReviewableItemCount": 1,
+                            "returnedExclusionCount": 0,
+                            "totalExcludedCandidateCount": 0,
+                            "nextOffset": None,
+                            "hasNextPage": False,
+                        },
                         "durableStorageBacked": False,
                         "supportedFeaturePromoted": False,
                     }
@@ -504,11 +562,13 @@ ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
                         "scoredCandidateCount": 2,
                         "unscoredCandidateCount": 0,
                         "durableStorageBacked": False,
+                        "repositorySidePaginationCertified": False,
                         "readinessStatus": "blocked",
                         "supportabilityStatus": "not_certified",
                         "certificationReady": False,
                         "certificationBlockers": [
                             "durable_repository_not_configured",
+                            "repository_side_queue_pagination_not_certified",
                             "workbench_product_proof_missing",
                             "data_product_certification_missing",
                             "certified_runtime_trust_telemetry_missing",

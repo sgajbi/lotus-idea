@@ -154,6 +154,71 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     )
     assert [item["rank"] for item in payload["items"]] == [1, 2]
     assert payload["exclusions"] == []
+    assert payload["page"] == {
+        "limit": 25,
+        "offset": 0,
+        "returnedItemCount": 2,
+        "totalReviewableItemCount": 2,
+        "returnedExclusionCount": 0,
+        "totalExcludedCandidateCount": 0,
+        "nextOffset": None,
+        "hasNextPage": False,
+    }
+
+
+def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_ids = [
+        persist_candidate(
+            client,
+            cash_weight=f"0.2{index}",
+            suffix=f"-page-{index}",
+            idempotency_key=f"seed-review-queue-page-{index}",
+        )
+        for index in range(3)
+    ]
+
+    response = client.get(
+        ("/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1&offset=1"),
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert [item["candidate"]["candidateId"] for item in payload["items"]] == [
+        sorted(candidate_ids)[1]
+    ]
+    assert payload["items"][0]["rank"] == 2
+    assert payload["page"] == {
+        "limit": 1,
+        "offset": 1,
+        "returnedItemCount": 1,
+        "totalReviewableItemCount": 3,
+        "returnedExclusionCount": 0,
+        "totalExcludedCandidateCount": 0,
+        "nextOffset": 2,
+        "hasNextPage": True,
+    }
+
+
+def test_advisor_review_queue_api_rejects_page_size_above_maximum() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=101",
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 400,
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "Request validation failed. Correct the request fields and retry.",
+    }
 
 
 def test_advisor_review_queue_api_filters_candidates_by_access_scope() -> None:
@@ -403,11 +468,13 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
         "scoredCandidateCount": 2,
         "unscoredCandidateCount": 0,
         "durableStorageBacked": False,
+        "repositorySidePaginationCertified": False,
         "readinessStatus": "blocked",
         "supportabilityStatus": "not_certified",
         "certificationReady": False,
         "certificationBlockers": [
             "durable_repository_not_configured",
+            "repository_side_queue_pagination_not_certified",
             "workbench_product_proof_missing",
             "data_product_certification_missing",
             "certified_runtime_trust_telemetry_missing",

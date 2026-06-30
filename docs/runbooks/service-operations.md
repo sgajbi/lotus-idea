@@ -205,6 +205,6 @@ Use the operation `outcome` before inspecting payload-level evidence:
 
 Operation metrics are diagnostic support evidence only. `durable_storage_backed=true` confirms only
 that the active repository provider is durable; it does not prove production recovery readiness,
-certified long-running scheduled source-worker readiness, live source-adapter readiness, data-product
-certification, downstream Report/Render/Archive realization, Gateway/Workbench proof, or
-supported-feature promotion.
+certified repository-side advisor queue pagination, certified long-running scheduled source-worker
+readiness, live source-adapter readiness, data-product certification, downstream
+Report/Render/Archive realization, Gateway/Workbench proof, or supported-feature promotion.

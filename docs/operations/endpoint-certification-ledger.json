@@ -746,27 +746,31 @@
       "path": "/api/v1/review-queues/advisor",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Return the deterministic advisor review queue projection over persisted idea candidate snapshots, constrained by platform caller-context entitlement scope headers and optional tenant, book, portfolio, and client access-scope filters.",
-      "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 10 API foundation when an internal caller or Gateway has advisor queue read authority and needs a deterministic queue projection for persisted candidates, including fail-closed scope-filtered queue reads before Workbench product proof.",
-      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor. Do not use as a durable queue store, Workbench product proof, data-product certification proof, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion.",
+      "purpose": "Return the deterministic advisor review queue projection over persisted idea candidate snapshots, constrained by platform caller-context entitlement scope headers, optional tenant, book, portfolio, and client access-scope filters, and bounded limit/offset paging.",
+      "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 10 API foundation when an internal caller or Gateway has advisor queue read authority and needs a deterministic bounded page of persisted candidates, including fail-closed scope-filtered queue reads before Workbench product proof.",
+      "when_not_to_use": "Read-only Gateway publication exists through lotus-gateway GET /api/v1/ideas/review-queues/advisor. The API page contract is bounded, but repository-side durable pagination is not yet certified. Do not use as a durable queue store, production-scale queue proof, Workbench product proof, data-product certification proof, PM/compliance/operator queue surface, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read",
+        "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=25&offset=0 with X-Caller-Capabilities: idea.review.queue.read",
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&tenantId=tenant-private-bank-sg&bookId=book-advisor-001&portfolioId=PB_SG_GLOBAL_BAL_001&clientId=client-001 with X-Caller-Capabilities: idea.review.queue.read",
         "GET /api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Capabilities: idea.review.queue.read and X-Caller-Portfolio-Ids: PB_SG_GLOBAL_BAL_001"
       ],
       "response_examples": [
-        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idle-liquidity-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
-        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
+        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[{\"rank\":1,\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"]},\"score\":\"82\",\"priorityBucket\":\"high\",\"policyVersion\":\"idle-liquidity-v1\",\"reasonCodes\":[\"high_cash_ratio\",\"review_required\"]}],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":1,\"totalReviewableItemCount\":1,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"items\":[],\"exclusions\":[],\"page\":{\"limit\":25,\"offset\":0,\"returnedItemCount\":0,\"totalReviewableItemCount\":0,\"returnedExclusionCount\":0,\"totalExcludedCandidateCount\":0,\"nextOffset\":null,\"hasNextPage\":false},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.review.queue.read capability or advisor role.",
         "403 returns product-safe Problem Details when query scope is outside caller entitlement scope.",
         "400 returns product-safe Problem Details when evaluatedAtUtc is absent, invalid, or not timezone-aware.",
         "400 returns product-safe Problem Details when scope query fields are blank.",
-        "400 returns product-safe Problem Details when caller entitlement scope headers contain blank values."
+        "400 returns product-safe Problem Details when caller entitlement scope headers contain blank values.",
+        "400 returns product-safe Problem Details when limit is below 1, above 100, or offset is below 0."
       ],
       "test_evidence": [
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_projects_persisted_candidates",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_returns_bounded_page_metadata",
+        "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_page_size_above_maximum",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_filters_candidates_by_access_scope",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_applies_caller_entitlement_scope_without_query_filters",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_api_rejects_query_scope_outside_caller_entitlements",
@@ -784,14 +788,14 @@
       "path": "/api/v1/review-queues/advisor/readiness",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Return source-safe operator readiness for the deterministic advisor review queue projection, including aggregate queue counts, exclusion counts, durable-storage posture, and certification blockers.",
+      "purpose": "Return source-safe operator readiness for the deterministic advisor review queue projection, including aggregate queue counts, exclusion counts, durable-storage posture, repository-side pagination posture, and certification blockers.",
       "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 15 operator diagnostic when an internal platform operator has idea.review.queue.readiness.read capability and needs to validate queue projection supportability before Workbench, mesh, or supported-feature promotion.",
-      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, durable queue store proof, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion.",
+      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, durable queue store proof, repository-side durable pagination proof, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: operator and X-Caller-Capabilities: idea.review.queue.readiness.read"
       ],
       "response_examples": [
-        "{\"repository\":\"lotus-idea\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"queueProjectionAvailable\":true,\"candidateSnapshotCount\":2,\"reviewableItemCount\":2,\"excludedCandidateCount\":0,\"exclusionCounts\":{\"suppressed\":0,\"duplicate\":0,\"expired\":0,\"closed\":0,\"rejected\":0,\"unsupported_evidence\":0,\"snoozed\":0,\"unscored\":0,\"non_reviewable_status\":0,\"access_scope_mismatch\":0},\"scoredCandidateCount\":2,\"unscoredCandidateCount\":0,\"durableStorageBacked\":false,\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"certificationBlockers\":[\"durable_repository_not_configured\",\"workbench_product_proof_missing\",\"data_product_certification_missing\",\"certified_runtime_trust_telemetry_missing\"],\"supportedFeaturePromoted\":false}"
+        "{\"repository\":\"lotus-idea\",\"policyVersion\":\"idea-deterministic-ranking-v1\",\"evaluatedAtUtc\":\"2026-06-21T10:10:00Z\",\"queueProjectionAvailable\":true,\"candidateSnapshotCount\":2,\"reviewableItemCount\":2,\"excludedCandidateCount\":0,\"exclusionCounts\":{\"suppressed\":0,\"duplicate\":0,\"expired\":0,\"closed\":0,\"rejected\":0,\"unsupported_evidence\":0,\"snoozed\":0,\"unscored\":0,\"non_reviewable_status\":0,\"access_scope_mismatch\":0},\"scoredCandidateCount\":2,\"unscoredCandidateCount\":0,\"durableStorageBacked\":false,\"repositorySidePaginationCertified\":false,\"readinessStatus\":\"blocked\",\"supportabilityStatus\":\"not_certified\",\"certificationReady\":false,\"certificationBlockers\":[\"durable_repository_not_configured\",\"repository_side_queue_pagination_not_certified\",\"workbench_product_proof_missing\",\"data_product_certification_missing\",\"certified_runtime_trust_telemetry_missing\"],\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks the operator role or idea.review.queue.readiness.read capability.",
@@ -800,6 +804,7 @@
       "test_evidence": [
         "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture",
         "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers",
+        "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_reads_repository_once",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_requires_operator_permission",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_rejects_naive_evaluation_time_safely",
