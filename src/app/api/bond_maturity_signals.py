@@ -46,7 +46,7 @@ class EvaluateBondMaturitySignalRequest(CamelModel):
         default=None,
         alias="sourceReportedNextMaturityDate",
         description=(
-            "Next maturity date reported by the Core holdings source. lotus-idea "
+            "Next maturity date reported by the caller-supplied Core maturity evidence. lotus-idea "
             "does not calculate maturity schedules or replacement recommendations."
         ),
         examples=["2026-07-10"],

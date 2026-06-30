@@ -193,7 +193,7 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
     (
         "--bond-maturity-live-proof",
         BOND_MATURITY_LIVE_PROOF_ENV,
-        "Optional lotus-core HoldingsAsOf maturity live source proof artifact path.",
+        "Optional lotus-core maturity-summary live source proof artifact path.",
     ),
     (
         "--low-income-core-cashflow-live-proof",

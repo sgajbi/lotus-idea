@@ -29,6 +29,22 @@ SOURCE_AUTHORITY_HASH_OWNERS = {
         "hashlib",
     },
 }
+FORBIDDEN_SOURCE_AUTHORITY_TEXT = {
+    Path("src/app/infrastructure/lotus_core_sources.py"): {
+        "_source_reported_maturity_dates": (
+            "Core bond-maturity evidence must consume explicit Core-owned maturity summary "
+            "facts, not local raw-position maturity scans"
+        ),
+        'payload.get("positions")': (
+            "Core bond-maturity evidence must consume explicit Core-owned maturity summary "
+            "facts, not local raw-position maturity scans"
+        ),
+        "for position in positions": (
+            "Core bond-maturity evidence must consume explicit Core-owned maturity summary "
+            "facts, not local raw-position maturity scans"
+        ),
+    },
+}
 
 
 def _python_files(source_root: Path) -> list[Path]:
@@ -62,7 +78,8 @@ def _validate_file(path: Path, root: Path) -> list[str]:
     relative = Path(relative_path)
     allowed_logging_module = _is_allowed_logging_module(path, root)
     prohibited_source_hash_modules = SOURCE_AUTHORITY_HASH_OWNERS.get(relative, set())
-    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    source_text = path.read_text(encoding="utf-8")
+    tree = ast.parse(source_text, filename=str(path))
     errors: list[str] = []
 
     for node in ast.walk(tree):
@@ -130,6 +147,11 @@ def _validate_file(path: Path, root: Path) -> list[str]:
                     "because upstream source-ref hashes must be source-authored"
                 )
 
+    for forbidden_text, reason in FORBIDDEN_SOURCE_AUTHORITY_TEXT.get(relative, {}).items():
+        line_number = _line_number(source_text, forbidden_text)
+        if line_number is not None:
+            errors.append(f"{relative_path}:{line_number}: {reason}")
+
     return errors
 
 
@@ -139,6 +161,13 @@ def validate_source_observability_contract(root: Path = ROOT) -> list[str]:
     for path in _python_files(source_root):
         errors.extend(_validate_file(path, root))
     return sorted(errors)
+
+
+def _line_number(source_text: str, needle: str) -> int | None:
+    for line_number, line in enumerate(source_text.splitlines(), start=1):
+        if needle in line:
+            return line_number
+    return None
 
 
 def main() -> int:
