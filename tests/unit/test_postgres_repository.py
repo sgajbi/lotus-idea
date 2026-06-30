@@ -80,9 +80,19 @@ from tests.unit.postgres_repository_lookup_fake_helpers import (
     candidate_detail_rows,
     downstream_lookup_rows,
 )
+from tests.unit.postgres_repository_mutation_fake_helpers import (
+    row_for_insert,
+    update_candidate_record_row,
+)
 from tests.unit.postgres_review_queue_fake_helpers import (
     review_queue_count_rows,
     review_queue_page_rows,
+)
+from tests.unit.postgres_repository_runtime_trust_helpers import (
+    candidate_json_count_rows,
+    runtime_trust_telemetry_count_rows,
+    runtime_trust_telemetry_summary_rows,
+    table_count_rows,
 )
 
 
@@ -128,28 +138,28 @@ class FakePostgresCursor:
             ]
             return
         if normalized.startswith("/* lotus-idea runtime-trust-telemetry-summary */"):
-            self._rows = runtime_trust_telemetry_summary_rows(self.connection)
+            self._rows = runtime_trust_telemetry_summary_rows(self.connection.rows)
             return
         if normalized.startswith(
             "/* lotus-idea runtime-trust-telemetry-source-authority-counts */"
         ):
             self._rows = runtime_trust_telemetry_count_rows(
-                self.connection,
+                self.connection.rows,
                 "source_system",
             )
             return
         if normalized.startswith("/* lotus-idea runtime-trust-telemetry-freshness-counts */"):
-            self._rows = runtime_trust_telemetry_count_rows(self.connection, "freshness")
+            self._rows = runtime_trust_telemetry_count_rows(self.connection.rows, "freshness")
             return
         if normalized.startswith("/* lotus-idea runtime-trust-telemetry-supportability-counts */"):
             self._rows = candidate_json_count_rows(
-                self.connection,
+                self.connection.rows,
                 ("evidence_packet", "supportability"),
             )
             return
         if normalized.startswith("/* lotus-idea runtime-trust-telemetry-lifecycle-counts */"):
             self._rows = table_count_rows(
-                self.connection, "idea_candidate_record", "lifecycle_status"
+                self.connection.rows, "idea_candidate_record", "lifecycle_status"
             )
             return
         if normalized.startswith("/* lotus-idea candidate-detail"):
@@ -166,7 +176,7 @@ class FakePostgresCursor:
             return
         if normalized.startswith("update idea_candidate_record"):
             assert params is not None
-            self._rows = update_candidate_record_row(self.connection, params)
+            self._rows = update_candidate_record_row(self.connection.rows, params)
             return
         if normalized.startswith("update idea_outbox_event"):
             assert params is not None
@@ -198,7 +208,7 @@ class FakePostgresCursor:
             if table_name == self.connection.fail_on_insert:
                 raise RuntimeError(f"insert failed for {table_name}")
             assert params is not None
-            self.connection.rows[table_name].append(_row_for_insert(table_name, params))
+            self.connection.rows[table_name].append(row_for_insert(table_name, params))
             return
         raise AssertionError(f"unexpected SQL: {query}")
 
@@ -1013,105 +1023,6 @@ def ai_explanation_result_for_candidate(candidate: IdeaCandidate) -> AIExplanati
     )
 
 
-def runtime_trust_telemetry_summary_rows(
-    connection: FakePostgresConnection,
-) -> list[dict[str, Any]]:
-    candidate_rows = connection.rows["idea_candidate_record"]
-    source_refs = _runtime_trust_source_refs(connection)
-    current_source_refs = [
-        source_ref for source_ref in source_refs if source_ref.get("freshness") == "current"
-    ]
-    generated_at_values = [
-        str(source_ref["generated_at_utc"])
-        for source_ref in source_refs
-        if source_ref.get("generated_at_utc") is not None
-    ]
-    latest_generated_at = max(generated_at_values, default=None)
-    return [
-        {
-            "candidate_snapshot_count": len(candidate_rows),
-            "current_source_ref_count": len(current_source_refs),
-            "stale_or_unavailable_source_ref_count": len(source_refs) - len(current_source_refs),
-            "source_batch_evidence_available": bool(source_refs),
-            "lineage_materialized": bool(candidate_rows)
-            and all(_candidate_lineage_materialized(row) for row in candidate_rows),
-            "data_quality_status": _runtime_trust_data_quality_status(source_refs),
-            "latest_source_generated_at_utc": latest_generated_at,
-            "source_as_of_dates": sorted(
-                {
-                    str(source_ref["as_of_date"])
-                    for source_ref in source_refs
-                    if source_ref.get("as_of_date")
-                }
-            ),
-            "review_decision_count": len(connection.rows["idea_review_decision"]),
-            "feedback_event_count": len(connection.rows["idea_feedback_event"]),
-            "conversion_intent_count": len(connection.rows["idea_conversion_intent"]),
-            "conversion_outcome_count": len(connection.rows["idea_conversion_outcome"]),
-            "report_evidence_pack_count": len(connection.rows["idea_report_evidence_pack_request"]),
-        }
-    ]
-
-
-def runtime_trust_telemetry_count_rows(
-    connection: FakePostgresConnection,
-    source_ref_key: str,
-) -> list[dict[str, Any]]:
-    counts: dict[str, int] = {}
-    for source_ref in _runtime_trust_source_refs(connection):
-        value = source_ref.get(source_ref_key)
-        if value is not None:
-            counts[str(value)] = counts.get(str(value), 0) + 1
-    return [{"label": label, "count": count} for label, count in sorted(counts.items())]
-
-
-def candidate_json_count_rows(
-    connection: FakePostgresConnection,
-    path: tuple[str, ...],
-) -> list[dict[str, Any]]:
-    counts: dict[str, int] = {}
-    for row in connection.rows["idea_candidate_record"]:
-        value: Any = row["candidate_json"]
-        for key in path:
-            value = value[key]
-        counts[str(value)] = counts.get(str(value), 0) + 1
-    return [{"label": label, "count": count} for label, count in sorted(counts.items())]
-
-
-def table_count_rows(
-    connection: FakePostgresConnection,
-    table_name: str,
-    column_name: str,
-) -> list[dict[str, Any]]:
-    counts: dict[str, int] = {}
-    for row in connection.rows[table_name]:
-        value = row.get(column_name)
-        if value is not None:
-            counts[str(value)] = counts.get(str(value), 0) + 1
-    return [{"label": label, "count": count} for label, count in sorted(counts.items())]
-
-
-def _runtime_trust_source_refs(connection: FakePostgresConnection) -> list[dict[str, Any]]:
-    source_refs: list[dict[str, Any]] = []
-    for row in connection.rows["idea_candidate_record"]:
-        candidate_json = row["candidate_json"]
-        source_refs.extend(candidate_json["evidence_packet"]["source_refs"])
-    return source_refs
-
-
-def _candidate_lineage_materialized(row: dict[str, Any]) -> bool:
-    lineage_ref = row["candidate_json"]["evidence_packet"]["lineage_ref"]
-    return bool(lineage_ref.get("lineage_id") and lineage_ref.get("source_refs"))
-
-
-def _runtime_trust_data_quality_status(source_refs: list[dict[str, Any]]) -> str:
-    if not source_refs:
-        return "quality_unknown"
-    if all(source_ref.get("data_quality_status") == "complete" for source_ref in source_refs):
-        return "quality_passed"
-    return "quality_warning"
-
-
 def _table_from_select(query: str) -> str:
     for table_name in (
         "idea_candidate_record",
@@ -1149,168 +1060,3 @@ def _append_orphan_detail_rows(connection: FakePostgresConnection) -> None:
     orphan_outcome = dict(connection.rows["idea_conversion_outcome"][0])
     orphan_outcome["conversion_intent_id"] = "missing-intent"
     connection.rows["idea_conversion_outcome"].append(orphan_outcome)
-
-
-def _row_for_insert(table_name: str, params: Sequence[Any]) -> dict[str, Any]:
-    values = [_unwrap_jsonb(value) for value in params]
-    columns_by_table = {
-        "idea_candidate_record": (
-            "candidate_id",
-            "family",
-            "lifecycle_status",
-            "review_posture",
-            "evidence_packet_id",
-            "evidence_hash",
-            "candidate_json",
-            "persisted_at_utc",
-            "updated_at_utc",
-        ),
-        "idea_idempotency_record": (
-            "idempotency_key",
-            "operation_name",
-            "payload_hash",
-            "candidate_id",
-            "created_at_utc",
-        ),
-        "idea_lifecycle_history": (
-            "lifecycle_history_id",
-            "candidate_id",
-            "source_status",
-            "target_status",
-            "actor_subject",
-            "changed_at_utc",
-        ),
-        "idea_audit_event": (
-            "audit_event_id",
-            "candidate_id",
-            "event_type",
-            "actor_subject",
-            "outcome",
-            "attributes_json",
-            "occurred_at_utc",
-        ),
-        "idea_outbox_event": (
-            "outbox_event_id",
-            "event_type",
-            "aggregate_type",
-            "aggregate_id",
-            "schema_version",
-            "payload_json",
-            "status",
-            "occurred_at_utc",
-            "idempotency_fingerprint",
-            "correlation_id",
-            "causation_id",
-            "published_at_utc",
-            "failure_reason",
-            "retry_count",
-            "lease_owner",
-            "lease_attempt_id",
-            "lease_expires_at_utc",
-        ),
-        "idea_review_decision": (
-            "review_decision_id",
-            "candidate_id",
-            "action",
-            "actor_subject",
-            "decision_json",
-            "decided_at_utc",
-        ),
-        "idea_feedback_event": (
-            "feedback_event_id",
-            "candidate_id",
-            "actor_subject",
-            "feedback_json",
-            "recorded_at_utc",
-        ),
-        "idea_conversion_intent": (
-            "conversion_intent_id",
-            "candidate_id",
-            "target",
-            "actor_subject",
-            "intent_json",
-            "requested_at_utc",
-        ),
-        "idea_conversion_outcome": (
-            "conversion_outcome_id",
-            "conversion_intent_id",
-            "source_system",
-            "status",
-            "outcome_json",
-            "recorded_at_utc",
-        ),
-        "idea_report_evidence_pack_request": (
-            "report_evidence_pack_id",
-            "candidate_id",
-            "conversion_intent_id",
-            "purpose",
-            "evidence_hash",
-            "evidence_pack_json",
-            "requested_at_utc",
-        ),
-        "idea_downstream_submission": (
-            "idempotency_key",
-            "request_fingerprint",
-            "resource_type",
-            "resource_id",
-            "target",
-            "source_authority",
-            "status",
-            "downstream_failure_reason",
-            "correlation_id",
-            "trace_id",
-            "submitted_at_utc",
-        ),
-        "idea_ai_explanation_lineage": (
-            "ai_explanation_request_id",
-            "candidate_id",
-            "evidence_packet_id",
-            "evidence_content_hash",
-            "workflow_pack_id",
-            "workflow_pack_version",
-            "purpose",
-            "posture",
-            "verifier_outcome",
-            "fallback_used",
-            "fallback_reason",
-            "lineage_hash",
-            "lineage_json",
-            "requested_at_utc",
-            "evaluated_at_utc",
-        ),
-    }
-    return dict(zip(columns_by_table[table_name], values, strict=True))
-
-
-def update_candidate_record_row(
-    connection: FakePostgresConnection,
-    params: Sequence[Any],
-) -> list[dict[str, Any]]:
-    (
-        family,
-        lifecycle_status,
-        review_posture,
-        evidence_packet_id,
-        evidence_hash,
-        candidate_json,
-        updated_at_utc,
-        candidate_id,
-    ) = [_unwrap_jsonb(value) for value in params]
-    for row in connection.rows["idea_candidate_record"]:
-        if row["candidate_id"] != candidate_id:
-            continue
-        row["family"] = family
-        row["lifecycle_status"] = lifecycle_status
-        row["review_posture"] = review_posture
-        row["evidence_packet_id"] = evidence_packet_id
-        row["evidence_hash"] = evidence_hash
-        row["candidate_json"] = candidate_json
-        row["updated_at_utc"] = updated_at_utc
-        return [dict(row)]
-    return []
-
-
-def _unwrap_jsonb(value: Any) -> Any:
-    if hasattr(value, "obj"):
-        return value.obj
-    return value

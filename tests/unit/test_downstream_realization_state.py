@@ -12,6 +12,9 @@ from app.runtime.downstream_realization_state import (
     POOL_TIMEOUT_SECONDS_ENV,
     REPORT_BASE_URL_ENV,
     REPORT_SUBMIT_PATH_ENV,
+    RETRY_INITIAL_BACKOFF_SECONDS_ENV,
+    RETRY_MAX_ATTEMPTS_ENV,
+    RETRY_MAX_BACKOFF_SECONDS_ENV,
     TIMEOUT_SECONDS_ENV,
     ConversionRealizationClients,
     DownstreamRealizationClientsUnavailableError,
@@ -107,6 +110,35 @@ def test_invalid_pool_timeout_fails_closed(monkeypatch: pytest.MonkeyPatch) -> N
         DownstreamRealizationClientsUnavailableError,
         match=f"{POOL_TIMEOUT_SECONDS_ENV} must be positive",
     ):
+        get_conversion_realization_clients()
+
+
+@pytest.mark.parametrize(
+    ("env_name", "env_value", "message"),
+    [
+        (RETRY_MAX_ATTEMPTS_ENV, "0", f"{RETRY_MAX_ATTEMPTS_ENV} must be positive"),
+        (
+            RETRY_INITIAL_BACKOFF_SECONDS_ENV,
+            "-0.01",
+            f"{RETRY_INITIAL_BACKOFF_SECONDS_ENV} must not be negative",
+        ),
+        (
+            RETRY_MAX_BACKOFF_SECONDS_ENV,
+            "slow",
+            f"{RETRY_MAX_BACKOFF_SECONDS_ENV} must be numeric",
+        ),
+    ],
+)
+def test_invalid_retry_policy_fails_closed(
+    monkeypatch: pytest.MonkeyPatch,
+    env_name: str,
+    env_value: str,
+    message: str,
+) -> None:
+    configure_conversion_env(monkeypatch)
+    monkeypatch.setenv(env_name, env_value)
+
+    with pytest.raises(DownstreamRealizationClientsUnavailableError, match=message):
         get_conversion_realization_clients()
 
 

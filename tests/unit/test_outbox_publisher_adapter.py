@@ -21,6 +21,9 @@ from app.runtime.outbox_publisher_state import (
     OUTBOX_BROKER_MAX_CONNECTIONS_ENV,
     OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV,
     OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV,
+    OUTBOX_BROKER_RETRY_INITIAL_BACKOFF_SECONDS_ENV,
+    OUTBOX_BROKER_RETRY_MAX_ATTEMPTS_ENV,
+    OUTBOX_BROKER_RETRY_MAX_BACKOFF_SECONDS_ENV,
     OUTBOX_BROKER_TIMEOUT_SECONDS_ENV,
     build_outbox_publisher_from_environment,
 )
@@ -37,6 +40,7 @@ def test_http_outbox_event_publisher_posts_source_safe_event_envelope() -> None:
         captured["path"] = request.url.path
         captured["correlation_id"] = request.headers["X-Correlation-Id"]
         captured["trace_id"] = request.headers["X-Trace-Id"]
+        captured["idempotency_key"] = request.headers["Idempotency-Key"]
         captured["payload"] = request.read()
         return httpx.Response(202, json={"accepted": True})
 
@@ -49,6 +53,7 @@ def test_http_outbox_event_publisher_posts_source_safe_event_envelope() -> None:
     assert captured["path"] == "/events/lotus-idea/outbox"
     assert captured["correlation_id"] == "corr-outbox"
     assert captured["trace_id"] == "cause-outbox"
+    assert captured["idempotency_key"] == event.idempotency_fingerprint
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
         "eventId": event.event_id,
@@ -106,6 +111,47 @@ def test_http_outbox_event_publisher_maps_transport_error_to_unavailable() -> No
 
     assert outcome.accepted is False
     assert outcome.failure_reason == "publisher_unavailable"
+
+
+def test_http_outbox_event_publisher_retries_with_event_idempotency_fingerprint() -> None:
+    captured_idempotency_keys: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured_idempotency_keys.append(request.headers["Idempotency-Key"])
+        if len(captured_idempotency_keys) == 1:
+            return httpx.Response(503, json={})
+        return httpx.Response(202, json={"accepted": True})
+
+    event = outbox_event()
+    publisher = HttpOutboxEventPublisher(
+        OutboxBrokerPublisherConfig(
+            base_url="https://broker.example",
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=DownstreamJsonClient(
+            DownstreamClientConfig(
+                base_url="https://broker.example",
+                timeout_seconds=0.5,
+                retry_max_attempts=2,
+                retry_initial_backoff_seconds=0,
+                retry_max_backoff_seconds=0,
+            ),
+            client=httpx.Client(
+                base_url="https://broker.example",
+                transport=httpx.MockTransport(handler),
+            ),
+        ),
+    )
+
+    outcome = publisher.publish(event)
+
+    assert outcome.accepted is True
+    assert captured_idempotency_keys == [
+        event.idempotency_fingerprint,
+        event.idempotency_fingerprint,
+    ]
 
 
 @pytest.mark.parametrize(
@@ -179,6 +225,12 @@ def test_outbox_broker_publisher_config_rejects_invalid_configuration(
         (OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS_ENV, "0"),
         (OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV, "not-numeric"),
         (OUTBOX_BROKER_POOL_TIMEOUT_SECONDS_ENV, "0"),
+        (OUTBOX_BROKER_RETRY_MAX_ATTEMPTS_ENV, "not-integer"),
+        (OUTBOX_BROKER_RETRY_MAX_ATTEMPTS_ENV, "0"),
+        (OUTBOX_BROKER_RETRY_INITIAL_BACKOFF_SECONDS_ENV, "not-numeric"),
+        (OUTBOX_BROKER_RETRY_INITIAL_BACKOFF_SECONDS_ENV, "-0.01"),
+        (OUTBOX_BROKER_RETRY_MAX_BACKOFF_SECONDS_ENV, "not-numeric"),
+        (OUTBOX_BROKER_RETRY_MAX_BACKOFF_SECONDS_ENV, "-0.01"),
     ],
 )
 def test_outbox_publisher_state_rejects_invalid_resource_settings(

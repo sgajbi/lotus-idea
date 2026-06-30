@@ -34,6 +34,13 @@ SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
     "LOTUS_IDEA_SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS"
 )
 SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_POOL_TIMEOUT_SECONDS"
+SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_ATTEMPTS"
+SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV = (
+    "LOTUS_IDEA_SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS"
+)
+SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV = (
+    "LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS"
+)
 
 
 @dataclass(frozen=True)
@@ -142,6 +149,13 @@ def _core_source_client_configs(
     pool_timeout_seconds = _positive_float_env(
         SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV, default=2.0
     )
+    retry_max_attempts = _positive_int_env(SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV, default=1)
+    retry_initial_backoff_seconds = _non_negative_float_env(
+        SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+    )
+    retry_max_backoff_seconds = _non_negative_float_env(
+        SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+    )
     return (
         DownstreamClientConfig(
             base_url=core_source_urls.query_base_url,
@@ -149,6 +163,10 @@ def _core_source_client_configs(
             max_connections=max_connections,
             max_keepalive_connections=max_keepalive_connections,
             pool_timeout_seconds=pool_timeout_seconds,
+            retry_max_attempts=retry_max_attempts,
+            retry_initial_backoff_seconds=retry_initial_backoff_seconds,
+            retry_max_backoff_seconds=retry_max_backoff_seconds,
+            retry_post_without_idempotency=True,
         ),
         DownstreamClientConfig(
             base_url=core_source_urls.query_control_plane_base_url,
@@ -156,6 +174,10 @@ def _core_source_client_configs(
             max_connections=max_connections,
             max_keepalive_connections=max_keepalive_connections,
             pool_timeout_seconds=pool_timeout_seconds,
+            retry_max_attempts=retry_max_attempts,
+            retry_initial_backoff_seconds=retry_initial_backoff_seconds,
+            retry_max_backoff_seconds=retry_max_backoff_seconds,
+            retry_post_without_idempotency=True,
         ),
     )
 
@@ -180,6 +202,17 @@ def _positive_float_env(name: str, *, default: float) -> float:
     if timeout <= 0:
         raise DownstreamClientConfigurationError(f"{name} must be positive")
     return timeout
+
+
+def _non_negative_float_env(name: str, *, default: float) -> float:
+    raw_duration = os.getenv(name, str(default))
+    try:
+        duration_seconds = float(raw_duration)
+    except ValueError as exc:
+        raise DownstreamClientConfigurationError(f"{name} must be numeric") from exc
+    if duration_seconds < 0:
+        raise DownstreamClientConfigurationError(f"{name} must not be negative")
+    return duration_seconds
 
 
 def _positive_int_env(name: str, *, default: int) -> int:

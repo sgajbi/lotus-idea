@@ -188,6 +188,40 @@ def test_downstream_transport_errors_do_not_leak_raw_exception_text() -> None:
     assert outcome.failure_reason == "downstream_unavailable"
 
 
+def test_downstream_retry_exhaustion_maps_to_bounded_timeout_reason() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        raise httpx.ReadTimeout("raw timeout must not leak", request=request)
+
+    adapter = HttpAdviseProposalRealizationClient(
+        DownstreamRealizationAdapterConfig(
+            base_url="https://advise.example",
+            submit_path="/advisory/idea-intake",
+            source_authority=SourceSystem.LOTUS_ADVISE,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=downstream_json_client(
+            "https://advise.example",
+            httpx.MockTransport(handler),
+            retry_max_attempts=2,
+        ),
+    )
+
+    outcome = adapter.submit_proposal_intent(
+        conversion_intent(ConversionTarget.ADVISE_PROPOSAL, SourceSystem.LOTUS_ADVISE),
+        idempotency_key="submission-idempotency-001",
+    )
+
+    assert outcome.accepted is False
+    assert outcome.failure_reason == "downstream_timeout"
+    assert attempts == 2
+
+
 def test_downstream_adapter_rejects_wrong_conversion_target() -> None:
     adapter = HttpAdviseProposalRealizationClient(
         DownstreamRealizationAdapterConfig(
@@ -267,9 +301,17 @@ def test_downstream_adapter_rejects_wrong_source_authority() -> None:
 def downstream_json_client(
     base_url: str,
     transport: httpx.MockTransport,
+    *,
+    retry_max_attempts: int = 1,
 ) -> DownstreamJsonClient:
     return DownstreamJsonClient(
-        DownstreamClientConfig(base_url=base_url, timeout_seconds=0.5),
+        DownstreamClientConfig(
+            base_url=base_url,
+            timeout_seconds=0.5,
+            retry_max_attempts=retry_max_attempts,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
         client=httpx.Client(base_url=base_url, transport=transport),
     )
 

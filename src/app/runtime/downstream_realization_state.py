@@ -27,6 +27,11 @@ TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_TIMEOUT_SECONDS"
 MAX_CONNECTIONS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_CONNECTIONS"
 MAX_KEEPALIVE_CONNECTIONS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_MAX_KEEPALIVE_CONNECTIONS"
 POOL_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_POOL_TIMEOUT_SECONDS"
+RETRY_MAX_ATTEMPTS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_ATTEMPTS"
+RETRY_INITIAL_BACKOFF_SECONDS_ENV = (
+    "LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_INITIAL_BACKOFF_SECONDS"
+)
+RETRY_MAX_BACKOFF_SECONDS_ENV = "LOTUS_IDEA_DOWNSTREAM_REALIZATION_RETRY_MAX_BACKOFF_SECONDS"
 
 
 class DownstreamRealizationClientsUnavailableError(RuntimeError):
@@ -117,6 +122,13 @@ def _adapter_config(
             max_connections=_positive_int_env(MAX_CONNECTIONS_ENV, default=20),
             max_keepalive_connections=_positive_int_env(MAX_KEEPALIVE_CONNECTIONS_ENV, default=10),
             pool_timeout_seconds=_positive_float_env(POOL_TIMEOUT_SECONDS_ENV, default=2.0),
+            retry_max_attempts=_positive_int_env(RETRY_MAX_ATTEMPTS_ENV, default=1),
+            retry_initial_backoff_seconds=_non_negative_float_env(
+                RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+            ),
+            retry_max_backoff_seconds=_non_negative_float_env(
+                RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+            ),
         )
     except DownstreamRealizationConfigurationError as exc:
         raise DownstreamRealizationClientsUnavailableError(str(exc)) from exc
@@ -141,6 +153,17 @@ def _positive_float_env(name: str, *, default: float) -> float:
         raise DownstreamRealizationClientsUnavailableError(f"{name} must be numeric") from exc
     if duration_seconds <= 0:
         raise DownstreamRealizationClientsUnavailableError(f"{name} must be positive")
+    return duration_seconds
+
+
+def _non_negative_float_env(name: str, *, default: float) -> float:
+    raw_duration = os.getenv(name, str(default)).strip()
+    try:
+        duration_seconds = float(raw_duration)
+    except ValueError as exc:
+        raise DownstreamRealizationClientsUnavailableError(f"{name} must be numeric") from exc
+    if duration_seconds < 0:
+        raise DownstreamRealizationClientsUnavailableError(f"{name} must not be negative")
     return duration_seconds
 
 
