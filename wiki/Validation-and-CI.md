@@ -165,6 +165,16 @@ secret patterns and secret validity checks as disabled for this repository, so
 they are not release-evidence claims. `make ci-contract-gate` fails if the
 source-controlled controls are removed or weakened.
 
+CI timing and signal-quality evidence is retained as report-only release
+support evidence. Feature Lane, PR Merge Gate, and Main Releasability run an
+`if: always()` CI Signal Evidence job that reads GitHub job timing metadata with
+`actions: read`, writes source-safe `ci-signal-evidence.json`, and uploads a
+lane-specific artifact. Main Releasability release evidence references
+`main-releasability-ci-signal-evidence` and `ci-signal-evidence.json`.
+`make ci-signal-evidence-contract-gate` validates the artifact schema and keeps
+`thresholdEnforced` false; `make ci-contract-gate` blocks removal of the
+workflow wiring. No CI duration threshold is enforced yet.
+
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
 1. `PR Merge Gate / Workflow Lint`

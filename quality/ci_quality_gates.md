@@ -117,7 +117,8 @@ security audit, Docker build, release evidence, least-privilege workflow permiss
 timeouts, no soft-failed critical jobs, implementation-truth enforcement, non-suppressed
 auto-merge dispatch posture, verified immutable GitHub Action SHA pins with version provenance,
 scoped test-target variables for focused fix-forward validation, repo-native GitHub test and
-coverage target usage, and pass/fail unit coverage for the CI contract gate itself. The CI contract
+coverage target usage, report-only CI timing/signal evidence, and pass/fail unit coverage for the
+CI contract gate itself. The CI contract
 gate now explicitly fails if these current blocking lint gates are removed from `make lint`, so
 agent-driven quality controls cannot quietly become optional local commands.
 Main Releasability is intentionally `workflow_dispatch` only: merged PRs use
@@ -165,6 +166,16 @@ call `make coverage-gate COVERAGE_DATA_DIR=coverage-data` after downloading suit
 logic, and `make ci-contract-gate` rejects raw workflow-level `coverage combine coverage-data` or
 `coverage report --fail-under=99` shortcuts so future agents cannot make GitHub appear green while
 bypassing local governance.
+
+CI timing and signal-quality evidence is report-only. Feature Lane, PR Merge Gate, and Main
+Releasability have an `if: always()` CI Signal Evidence job that reads GitHub's run-job metadata
+through `actions: read`, generates source-safe `ci-signal-evidence.json` with
+`scripts/ci_signal_evidence.py`, and uploads lane-specific artifacts. Main Releasability's
+`release-evidence.json` references the `main-releasability-ci-signal-evidence` artifact and
+`ci-signal-evidence.json` path. `make ci-signal-evidence-contract-gate` validates the schema shape,
+keeps `thresholdEnforced` false, and blocks sensitive source markers; `make ci-contract-gate`
+prevents workflow wiring drift. This establishes a measured baseline for future optimization
+without introducing duration pass/fail thresholds.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also
