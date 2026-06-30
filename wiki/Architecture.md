@@ -259,15 +259,18 @@ client-communication authority.
 foundation. It projects persisted candidate snapshots through the deterministic
 Slice 07 queue policy, applies optional tenant/book/portfolio/client scope
 filters, applies platform caller-context entitlement scope when provided, and
-returns ranked items plus exclusions without a durable queue store, Workbench
-surface, or supported-feature promotion. `lotus-gateway` publishes this as a
+returns ranked items plus exclusions through bounded `limit`/`offset` paging
+with default 25 and max 100. Repository-side durable pagination is not yet
+certified, so this remains a bounded foundation API rather than a production
+queue-store claim. `lotus-gateway` publishes this as a
 bounded read-only route at `GET /api/v1/ideas/review-queues/advisor`, forwards
 the caller entitlement-scope headers, and does not generate or rank ideas.
 
 `GET /api/v1/review-queues/advisor/readiness` is the certified internal
 operator diagnostic for queue supportability. It reuses the same Slice 07
 queue projection path but returns only aggregate candidate counts, exclusion
-counts, durable-storage posture, and certification blockers. It does not expose
+counts, durable-storage posture, repository-side pagination posture, and
+certification blockers. It does not expose
 candidate identifiers or access-scope identifiers, and it is not a Gateway
 route, Workbench proof, data-product certification, PM/compliance queue
 surface, client-ready publication, or supported-feature promotion.

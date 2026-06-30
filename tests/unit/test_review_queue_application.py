@@ -12,6 +12,7 @@ from app.application.high_cash_signal import (
 )
 from app.application.review_queue import (
     BuildReviewQueueFromRepositoryCommand,
+    MAX_REVIEW_QUEUE_PAGE_LIMIT,
     build_review_queue_from_repository,
     build_review_queue_readiness_snapshot,
 )
@@ -19,6 +20,7 @@ from app.domain import (
     CandidatePersistenceDecision,
     EvidenceFreshness,
     IdeaLifecycleStatus,
+    IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     QueueExclusionReason,
     QueueSnooze,
@@ -126,6 +128,99 @@ def test_build_review_queue_from_repository_projects_persisted_candidates() -> N
     )
     assert [item.rank for item in queue.items] == [1, 2]
     assert queue.exclusions == ()
+    assert queue.page.limit == 25
+    assert queue.page.offset == 0
+    assert queue.page.returned_item_count == 2
+    assert queue.page.total_reviewable_item_count == 2
+    assert queue.page.next_offset is None
+    assert queue.page.has_next_page is False
+
+
+def test_build_review_queue_from_repository_pages_reviewable_items_deterministically() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_ids = [
+        persist_high_cash_candidate(
+            repository,
+            cash_weight=Decimal("0.18") + Decimal(index) / Decimal("100"),
+            suffix=f"-page-{index}",
+            idempotency_key=f"signal-ingestion:high-cash:page-{index}",
+        )
+        for index in range(3)
+    ]
+
+    first_page = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            limit=1,
+            offset=0,
+        ),
+        repository=repository,
+    )
+    second_page = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            limit=1,
+            offset=1,
+        ),
+        repository=repository,
+    )
+
+    assert [item.candidate.candidate_id for item in first_page.items] == [sorted(candidate_ids)[0]]
+    assert [item.candidate.candidate_id for item in second_page.items] == [sorted(candidate_ids)[1]]
+    assert first_page.page.total_reviewable_item_count == 3
+    assert first_page.page.returned_item_count == 1
+    assert first_page.page.next_offset == 1
+    assert first_page.page.has_next_page is True
+    assert second_page.page.offset == 1
+    assert second_page.page.next_offset == 2
+
+
+def test_build_review_queue_from_repository_pages_scope_filtered_items_and_exclusions() -> None:
+    repository = InMemoryIdeaRepository()
+    first_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-scope-page-first",
+        idempotency_key="signal-ingestion:high-cash:scope-page-first",
+        candidate_scope=access_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+    )
+    second_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-scope-page-second",
+        idempotency_key="signal-ingestion:high-cash:scope-page-second",
+        candidate_scope=access_scope(portfolio_id="PB_SG_GLOBAL_BAL_002"),
+    )
+    excluded_candidate_id = persist_high_cash_candidate(
+        repository,
+        suffix="-scope-page-excluded",
+        idempotency_key="signal-ingestion:high-cash:scope-page-excluded",
+        candidate_scope=access_scope(portfolio_id="PB_SG_OUT_OF_SCOPE_003"),
+    )
+
+    page = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            limit=1,
+            offset=0,
+            access_scope_filter=QueueAccessScopeFilter(
+                tenant_id="tenant-private-bank-sg",
+                book_id="book-advisor-001",
+                portfolio_id=("PB_SG_GLOBAL_BAL_001", "PB_SG_GLOBAL_BAL_002"),
+                client_id="client-001",
+            ),
+        ),
+        repository=repository,
+    )
+
+    assert [item.candidate.candidate_id for item in page.items] == [
+        sorted([first_candidate_id, second_candidate_id])[0]
+    ]
+    assert [exclusion.candidate_id for exclusion in page.exclusions] == [excluded_candidate_id]
+    assert page.page.returned_item_count == 1
+    assert page.page.total_reviewable_item_count == 2
+    assert page.page.returned_exclusion_count == 1
+    assert page.page.total_excluded_candidate_count == 1
+    assert page.page.next_offset == 1
+    assert page.page.has_next_page is True
 
 
 def test_build_review_queue_from_repository_filters_by_advisor_access_scope() -> None:
@@ -276,6 +371,20 @@ def test_build_review_queue_from_repository_requires_timezone_aware_evaluation_t
         )
 
 
+def test_build_review_queue_from_repository_rejects_unsafe_page_controls() -> None:
+    with pytest.raises(ValueError, match=f"between 1 and {MAX_REVIEW_QUEUE_PAGE_LIMIT}"):
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            limit=MAX_REVIEW_QUEUE_PAGE_LIMIT + 1,
+        )
+
+    with pytest.raises(ValueError, match="offset must be greater than or equal to zero"):
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            offset=-1,
+        )
+
+
 def test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture() -> None:
     repository = InMemoryIdeaRepository()
     reviewable_candidate_id = persist_high_cash_candidate(repository, suffix="-reviewable")
@@ -311,11 +420,13 @@ def test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture()
     assert snapshot.scored_candidate_count == 2
     assert snapshot.unscored_candidate_count == 0
     assert snapshot.durable_storage_backed is False
+    assert snapshot.repository_side_pagination_certified is False
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.certification_ready is False
     assert snapshot.certification_blockers == (
         "durable_repository_not_configured",
+        "repository_side_queue_pagination_not_certified",
         "workbench_product_proof_missing",
         "data_product_certification_missing",
         "certified_runtime_trust_telemetry_missing",
@@ -337,4 +448,29 @@ def test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers() 
     assert snapshot.readiness_status == "blocked"
     assert snapshot.certification_ready is False
     assert "durable_repository_not_configured" not in snapshot.certification_blockers
+    assert "repository_side_queue_pagination_not_certified" in snapshot.certification_blockers
     assert "workbench_product_proof_missing" in snapshot.certification_blockers
+
+
+def test_build_review_queue_readiness_snapshot_reads_repository_once() -> None:
+    repository = InMemoryIdeaRepository()
+    persist_high_cash_candidate(repository)
+
+    class CountingRepository:
+        def __init__(self, wrapped: InMemoryIdeaRepository) -> None:
+            self.wrapped = wrapped
+            self.snapshot_count = 0
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            self.snapshot_count += 1
+            return self.wrapped.snapshot()
+
+    counting_repository = CountingRepository(repository)
+
+    build_review_queue_readiness_snapshot(
+        BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=EVALUATED_AT),
+        repository=counting_repository,
+        durable_storage_backed=False,
+    )
+
+    assert counting_repository.snapshot_count == 1

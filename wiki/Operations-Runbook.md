@@ -253,11 +253,13 @@ The internal `GET /api/v1/review-queues/advisor/readiness` diagnostic is
 available for operators with `idea.review.queue.readiness.read` to inspect
 aggregate advisor queue posture, exclusion counts, durable-storage posture, and
 remaining certification blockers without exposing candidate identifiers or
-access-scope identifiers. It remains `not_certified` until durable queue
-posture, Workbench proof, data-product certification, and runtime trust
-telemetry exist. The first bounded Gateway advisor queue route now forwards
-platform caller-context scope headers, and the internal queue API enforces those
-entitlements fail-closed.
+access-scope identifiers. It also reports whether repository-side queue
+pagination has been certified. It remains `not_certified` until durable queue
+posture, repository-side pagination proof, Workbench proof, data-product
+certification, and runtime trust telemetry exist. The first bounded Gateway
+advisor queue route now forwards platform caller-context scope headers, and the
+internal queue API enforces those entitlements fail-closed while limiting
+advisor queue responses with default page size 25 and max page size 100.
 The internal `GET /api/v1/ai-explanations/readiness` diagnostic is available
 for operators with `idea.ai-explanation.readiness.read` to inspect AI
 explanation guardrail availability, model-risk supportability posture, and
