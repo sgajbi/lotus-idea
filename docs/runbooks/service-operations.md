@@ -196,6 +196,10 @@ flowchart TD
     The generated file is ignored under `output/trust-telemetry/runtime/` and
     includes product coverage posture. It remains blocked until product coverage
     is complete and platform mesh certification is complete.
+    When PostgreSQL is the active repository provider, the HTTP preview and
+    snapshot diagnostics use a bounded runtime trust telemetry projection over
+    candidate and workflow tables rather than hydrating unrelated repository
+    state families.
 
 ## Current Operation Event Diagnostics
 
