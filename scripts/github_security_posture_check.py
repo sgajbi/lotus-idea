@@ -7,9 +7,12 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 DEFAULT_REPOSITORY = "sgajbi/lotus-idea"
 REQUIRED_LANGUAGES = frozenset({"actions", "python"})
+SECURITY_POLICY_PATH = "SECURITY.md"
+DEPENDABOT_PATH = ".github/dependabot.yml"
 REQUIRED_SECURITY_FEATURES = {
     "dependabot_security_updates": "Dependabot security updates",
     "secret_scanning": "Secret scanning",
@@ -24,12 +27,15 @@ ADVANCED_SECRET_SCANNING_FEATURES = {
 @dataclass(frozen=True)
 class GitHubSecurityPostureSnapshot:
     repository: str
+    default_branch: str
     security_and_analysis: dict[str, Any]
     codeql_default_setup: dict[str, Any]
     private_vulnerability_reporting: dict[str, Any]
     open_code_scanning_alerts: int
     open_secret_scanning_alerts: int
     open_dependabot_alerts: int
+    default_branch_security_policy_present: bool = True
+    default_branch_dependabot_config_present: bool = True
 
 
 def _run_gh_json(path: str) -> Any:
@@ -55,6 +61,24 @@ def _alert_count(repository: str, alert_family: str) -> int:
     return len(response)
 
 
+def _repository_file_exists(repository: str, path: str, ref: str) -> bool:
+    encoded_path = quote(path, safe="/")
+    completed = subprocess.run(
+        ["gh", "api", f"repos/{repository}/contents/{encoded_path}?ref={ref}"],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if completed.returncode == 0:
+        return True
+    if "Not Found" in completed.stderr or "Not Found" in completed.stdout:
+        return False
+    detail = completed.stderr.strip() or completed.stdout.strip() or "unknown gh api error"
+    raise RuntimeError(
+        f"`gh api repos/{repository}/contents/{encoded_path}?ref={ref}` failed: {detail}"
+    )
+
+
 def collect_live_snapshot(repository: str = DEFAULT_REPOSITORY) -> GitHubSecurityPostureSnapshot:
     repository_response = _run_gh_json(f"repos/{repository}")
     if not isinstance(repository_response, dict):
@@ -62,6 +86,9 @@ def collect_live_snapshot(repository: str = DEFAULT_REPOSITORY) -> GitHubSecurit
     security_and_analysis = repository_response.get("security_and_analysis")
     if not isinstance(security_and_analysis, dict):
         raise RuntimeError("Repository payload did not include security_and_analysis")
+    default_branch = repository_response.get("default_branch")
+    if not isinstance(default_branch, str) or not default_branch:
+        raise RuntimeError("Repository payload did not include default_branch")
 
     codeql_default_setup = _run_gh_json(f"repos/{repository}/code-scanning/default-setup")
     if not isinstance(codeql_default_setup, dict):
@@ -77,12 +104,19 @@ def collect_live_snapshot(repository: str = DEFAULT_REPOSITORY) -> GitHubSecurit
 
     return GitHubSecurityPostureSnapshot(
         repository=repository,
+        default_branch=default_branch,
         security_and_analysis=security_and_analysis,
         codeql_default_setup=codeql_default_setup,
         private_vulnerability_reporting=private_vulnerability_reporting,
         open_code_scanning_alerts=_alert_count(repository, "code-scanning"),
         open_secret_scanning_alerts=_alert_count(repository, "secret-scanning"),
         open_dependabot_alerts=_alert_count(repository, "dependabot"),
+        default_branch_security_policy_present=_repository_file_exists(
+            repository, SECURITY_POLICY_PATH, default_branch
+        ),
+        default_branch_dependabot_config_present=_repository_file_exists(
+            repository, DEPENDABOT_PATH, default_branch
+        ),
     )
 
 
@@ -90,12 +124,19 @@ def load_snapshot(path: Path) -> GitHubSecurityPostureSnapshot:
     payload = json.loads(path.read_text(encoding="utf-8"))
     return GitHubSecurityPostureSnapshot(
         repository=str(payload["repository"]),
+        default_branch=str(payload.get("default_branch", "main")),
         security_and_analysis=dict(payload["security_and_analysis"]),
         codeql_default_setup=dict(payload["codeql_default_setup"]),
         private_vulnerability_reporting=dict(payload["private_vulnerability_reporting"]),
         open_code_scanning_alerts=int(payload["open_code_scanning_alerts"]),
         open_secret_scanning_alerts=int(payload["open_secret_scanning_alerts"]),
         open_dependabot_alerts=int(payload["open_dependabot_alerts"]),
+        default_branch_security_policy_present=bool(
+            payload.get("default_branch_security_policy_present", True)
+        ),
+        default_branch_dependabot_config_present=bool(
+            payload.get("default_branch_dependabot_config_present", True)
+        ),
     )
 
 
@@ -112,6 +153,7 @@ def validate_snapshot(
     *,
     max_open_alerts: int = 0,
     require_advanced_secret_scanning: bool = False,
+    require_default_branch_security_files: bool = False,
 ) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -157,6 +199,22 @@ def validate_snapshot(
                 f"Open {label} alerts must be <= {max_open_alerts}; GitHub reports {count}"
             )
 
+    default_branch_file_statuses = {
+        SECURITY_POLICY_PATH: snapshot.default_branch_security_policy_present,
+        DEPENDABOT_PATH: snapshot.default_branch_dependabot_config_present,
+    }
+    for path, present in default_branch_file_statuses.items():
+        if present:
+            continue
+        message = (
+            f"{path} is not present on default branch `{snapshot.default_branch}`; "
+            "GitHub Security tab will not expose that repo-authored control until it is merged"
+        )
+        if require_default_branch_security_files:
+            errors.append(message)
+        else:
+            warnings.append(message)
+
     return errors, warnings
 
 
@@ -166,6 +224,7 @@ def _format_summary(snapshot: GitHubSecurityPostureSnapshot, warnings: list[str]
         f"Open code scanning alerts: {snapshot.open_code_scanning_alerts}",
         f"Open secret scanning alerts: {snapshot.open_secret_scanning_alerts}",
         f"Open Dependabot alerts: {snapshot.open_dependabot_alerts}",
+        f"Default branch: {snapshot.default_branch}",
         "CodeQL default setup: "
         f"{snapshot.codeql_default_setup.get('state')} / "
         f"{snapshot.codeql_default_setup.get('query_suite')} / "
@@ -183,6 +242,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--snapshot", type=Path, help="Validate a captured posture JSON payload")
     parser.add_argument("--max-open-alerts", type=int, default=0)
     parser.add_argument("--require-advanced-secret-scanning", action="store_true")
+    parser.add_argument("--require-default-branch-security-files", action="store_true")
     args = parser.parse_args(argv)
 
     try:
@@ -193,6 +253,7 @@ def main(argv: list[str] | None = None) -> int:
             snapshot,
             max_open_alerts=args.max_open_alerts,
             require_advanced_secret_scanning=args.require_advanced_secret_scanning,
+            require_default_branch_security_files=args.require_default_branch_security_files,
         )
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
