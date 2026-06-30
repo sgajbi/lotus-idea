@@ -56,6 +56,7 @@ make quality-scorecard-gate
 make monetary-float-guard
 make no-sensitive-content-guard
 make source-observability-contract-gate
+make api-route-metadata-gate
 make signal-api-contract-gate
 make operation-metric-contract-gate
 make ai-model-risk-ops-contract-gate
@@ -109,7 +110,7 @@ make clean
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
-OpenAPI quality, source-observability contract enforcement, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+OpenAPI quality, source-observability contract enforcement, API route metadata governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,

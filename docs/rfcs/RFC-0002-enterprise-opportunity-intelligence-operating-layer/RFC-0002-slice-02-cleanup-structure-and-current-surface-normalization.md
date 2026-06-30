@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers normalized behind the API runtime dependency facade and architecture-boundary enforcement retained
+Status: Partially implemented - runtime composition providers and route metadata governance normalized behind shared API support modules with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -32,6 +32,11 @@ Implemented in this slice:
    runtime composition helpers used by route modules. API routes no longer
    import `app.runtime` directly, and the blocking architecture-boundary gate
    now fails any route that bypasses this facade.
+8. `src/app/api/route_metadata.py` now owns the shared route-registration
+   metadata `TypedDict` for API modules. Non-signal route modules and
+   `app.api.signal_api_support` use the same metadata contract, and
+   `make api-route-metadata-gate` blocks future local `RouteMetadata` or
+   `SignalRouteMetadata` clones.
 
 Validation evidence from the cleanup slice:
 
@@ -41,6 +46,8 @@ Validation evidence from the cleanup slice:
 4. `make test-unit UNIT_TESTS=tests/unit/test_ci_enforcement_contract.py`
 5. `.venv\Scripts\python.exe -m pytest tests\unit\test_ci_enforcement_contract.py -q`
 6. `.venv\Scripts\python.exe -m ruff check scripts\architecture_boundary_gate.py src\app\api tests\unit\test_ci_enforcement_contract.py`
+7. `.venv\Scripts\python.exe scripts\api_route_metadata_gate.py`
+8. `.venv\Scripts\python.exe -m pytest tests\unit\test_ci_enforcement_contract.py -q`
 
 ## Remaining Work
 

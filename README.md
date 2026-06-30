@@ -104,8 +104,7 @@ flowchart LR
     Idea -->|"review-gated intent, submission posture, outcome tracking"| Downstream
 ```
 
-- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified
-  internal API foundations, and the route runtime dependency facade.
+- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified internal API foundations, shared route metadata, and the route runtime dependency facade.
 - `src/app/application/`: use-case orchestration for signal evaluation,
   source ingestion, candidate detail, evidence replay, review queues,
   lifecycle, feedback, AI diagnostics, conversion, report evidence, downstream
@@ -261,6 +260,7 @@ Local controls keep implementation claims grounded:
 - `make implementation-truth-gate` blocks unqualified support, certification, live-source, Gateway/Workbench, and client-ready claims.
 - `make documentation-contract-gate` protects the README, repo context, docs, quality pages, evidence guide, and wiki pages.
 - `make source-observability-contract-gate` prevents raw logs, raw `print()`, direct Python logging, and unsafe observability bypasses.
+- `make api-route-metadata-gate` prevents duplicate route metadata type definitions outside `app.api.route_metadata`.
 - `make signal-api-contract-gate` prevents copy-pasted signal evaluation policy,
   source-authority, operation-event, error-model code, and weak 400/403
   `ProblemDetails` OpenAPI examples in caller-supplied signal APIs.

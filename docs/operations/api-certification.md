@@ -18,6 +18,11 @@ each route. Caller-supplied signal routes remain governed by
 `app.api.signal_api_support`, which owns their permission, source-authority,
 operation-event, and 400/403 OpenAPI metadata as one contract.
 
+Route metadata dictionaries should use `app.api.route_metadata.RouteMetadata`.
+`make api-route-metadata-gate` blocks local `RouteMetadata` and
+`SignalRouteMetadata` `TypedDict` clones, keeping route-registration metadata
+on one reviewable API contract while preserving route-family support modules.
+
 The machine-readable source for endpoint certification tracking is:
 
 - docs/operations/endpoint-certification-ledger.json
