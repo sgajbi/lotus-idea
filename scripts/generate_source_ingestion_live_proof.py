@@ -37,6 +37,11 @@ from app.runtime.repository_state import (
     idea_repository_durable_storage_backed,
 )
 
+try:
+    from scripts.proof_generator_io import timeout_seconds_from_args, write_json_payload
+except ModuleNotFoundError:
+    from proof_generator_io import timeout_seconds_from_args, write_json_payload  # type: ignore[import-not-found,no-redef]
+
 CORE_BASE_URL_HELP = (
     f"Optional compatibility Core base URL used for both Core query and query-control-plane "
     f"clients. Prefer --core-query-base-url and --core-query-control-plane-base-url for live "
@@ -53,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         core_query_base_url, core_query_control_plane_base_url = _core_source_base_urls(args)
-        timeout_seconds = _timeout_seconds(args)
+        timeout_seconds = timeout_seconds_from_args(args)
         core_source = LotusCoreHighCashSourceAdapter(
             query_client=DownstreamJsonClient(
                 DownstreamClientConfig(
@@ -82,7 +87,7 @@ def main(argv: list[str] | None = None) -> int:
             worker_summary=worker_summary,
             live_core_source_attempted=True,
         )
-        _write_payload(proof_payload, output=args.output)
+        write_json_payload(proof_payload, output=args.output)
         return 0
     except (CoreSourceEntitlementDenied, CoreSourceUnavailable, DownstreamServiceError) as exc:
         return _write_blocked_source_proof(args=args, error_code=_source_error_code(exc))
@@ -106,7 +111,7 @@ def _write_blocked_source_proof(*, args: argparse.Namespace, error_code: str) ->
             worker_summary=worker_summary,
             live_core_source_attempted=True,
         )
-        _write_payload(proof_payload, output=args.output)
+        write_json_payload(proof_payload, output=args.output)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"source ingestion live proof error: {exc}", file=sys.stderr)
         return 2
@@ -179,16 +184,6 @@ def _core_source_base_urls(args: argparse.Namespace) -> tuple[str, str]:
     return query_base_url, query_control_plane_base_url
 
 
-def _timeout_seconds(args: argparse.Namespace) -> float:
-    try:
-        timeout = float(args.timeout_seconds)
-    except ValueError as exc:
-        raise ValueError("timeout seconds must be numeric") from exc
-    if timeout <= 0:
-        raise ValueError("timeout seconds must be positive")
-    return timeout
-
-
 def _parse_instant(value: str, field_name: str) -> datetime:
     parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
     if parsed.tzinfo is None or parsed.utcoffset() is None:
@@ -201,16 +196,6 @@ def _source_error_code(exc: Exception) -> str:
         return "core_source_entitlement_denied"
     code = getattr(exc, "code", "")
     return str(code).strip() or "core_source_unavailable"
-
-
-def _write_payload(payload: dict[str, Any], *, output: str | None) -> None:
-    rendered = json.dumps(payload, indent=2, sort_keys=True)
-    if output:
-        output_path = Path(output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(f"{rendered}\n", encoding="utf-8")
-        return
-    print(rendered)
 
 
 if __name__ == "__main__":
