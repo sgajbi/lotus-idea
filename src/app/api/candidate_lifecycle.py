@@ -22,6 +22,7 @@ from app.api.problem_details import (
     permission_denied_metadata,
     permission_denied_problem,
 )
+from app.api.request_validation import require_non_empty_reason_codes
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
 from app.api.runtime_dependencies import (
@@ -88,14 +89,9 @@ class CandidateLifecycleTransitionRequest(CamelModel):
             raise ValueError("transitionId is required")
         return value
 
-    @field_validator("reason_codes")
-    @classmethod
-    def _reason_codes_must_not_be_empty(
-        cls, value: tuple[ReasonCode, ...]
-    ) -> tuple[ReasonCode, ...]:
-        if not value:
-            raise ValueError("reasonCodes is required")
-        return tuple(value)
+    _reason_codes_must_not_be_empty = field_validator("reason_codes")(
+        require_non_empty_reason_codes
+    )
 
     @field_validator("target_lifecycle_status")
     @classmethod
