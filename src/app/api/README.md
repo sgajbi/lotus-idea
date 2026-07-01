@@ -24,7 +24,8 @@ routes require `Idempotency-Key`. Route modules should not define local
 idempotency validator clones; `make api-idempotency-boundary-gate` blocks
 duplicates so blank-key request handling stays consistent across lifecycle,
 review, feedback, conversion, report-evidence, and downstream realization
-routes.
+routes. The same module owns the certified route list whose generated OpenAPI
+must advertise `Idempotency-Key` as a required header with no default value.
 
 ## DTO Base Models
 

@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
+from fastapi.openapi.utils import get_openapi
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.ai_governance import register_ai_governance_routes
 from app.api.allocation_drift_signals import register_allocation_drift_signal_routes
@@ -30,6 +31,7 @@ from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_rou
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.api.underperformance_signals import register_underperformance_signal_routes
 from app.api.durable_write_guard import durable_write_readiness_payload
+from app.api.idempotency import mark_required_idempotency_openapi_headers
 from app.api.problem_details import problem_details_response as problem_response
 from app.api.runtime_dependencies import idea_repository_runtime_posture
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
@@ -50,6 +52,7 @@ def create_app() -> FastAPI:
     _register_product_routes(application)
     _register_platform_routes(application)
     Instrumentator().instrument(application).expose(application, include_in_schema=False)
+    _configure_openapi_contract_overrides(application)
     application.router.add_event_handler("shutdown", close_downstream_realization_clients)
     configure_logging()
     return application
@@ -182,6 +185,21 @@ def _register_platform_routes(application: FastAPI) -> None:
             }
         },
     )(metadata)
+
+
+def _configure_openapi_contract_overrides(application: FastAPI) -> None:
+    def governed_openapi() -> dict[str, object]:
+        if application.openapi_schema:
+            return application.openapi_schema
+        schema = get_openapi(
+            title=application.title,
+            version=application.version,
+            routes=application.routes,
+        )
+        application.openapi_schema = mark_required_idempotency_openapi_headers(schema)
+        return application.openapi_schema
+
+    application.openapi = governed_openapi  # type: ignore[method-assign]
 
 
 def _route_template(request: Request) -> str:

@@ -511,7 +511,7 @@ async def get_ai_explanation_readiness(
 async def evaluate_ai_explanation(
     request: AIExplanationEvaluationRequest,
     candidate_id: str = Path(..., alias="candidateId"),
-    idempotency_key: str = Header(default="", alias="Idempotency-Key"),
+    idempotency_key: str = Header(..., alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),

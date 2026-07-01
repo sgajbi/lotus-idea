@@ -578,6 +578,11 @@ Recent issue-derived patterns to preserve:
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
     proof gates, drift tests, and explicit non-proof boundaries; do not rely on
     a metric catalog alone for operator visibility claims.
+21. mutating workflow idempotency must be true in both runtime behavior and
+    OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
+    shared `app.api.idempotency` route list and validation helpers, and
+    `make api-idempotency-boundary-gate` must fail optional or defaulted
+    `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -613,6 +618,19 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    extending the PostgreSQL migration contract with advisor review queue
    access-scope indexes and tests that prove access-scope filters stay covered
    without changing advisory workflow ownership or API semantics.
+8. Dependency update atomicity: GitHub issue `#289` remains open as of
+   2026-07-01 and should be handled in the dependency-hygiene and CI-release
+   category by making Python dependency update automation move root pins,
+   resolved runtime locks, and the GitHub Dependency Graph mirror coherently.
+9. Lifecycle vocabulary authority: GitHub issue `#290` remains open as of
+   2026-07-01 and should be handled in the domain-vocabulary correctness
+   category by preventing generic idea lifecycle transitions from implying
+   downstream execution authority.
+10. Idempotency OpenAPI truth: GitHub issue `#291` is addressed by the shared
+    idempotency OpenAPI contract override and boundary gate, which require
+    certified mutating idempotency routes to publish `Idempotency-Key` as a
+    required header with no default while preserving product-safe runtime
+    validation behavior.
 
 Recently closed by PR `#273` and mainline validation:
 
