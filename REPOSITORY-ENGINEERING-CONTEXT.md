@@ -584,14 +584,16 @@ Branch-local fixed issues awaiting merge/CI/QA closure:
    release gates.
 10. GitHub issue `#258`: keep GitHub coverage enforcement on the repo-native
    coverage gate.
-11. GitHub issue `#265`: validate correlation and trace headers before logging
+11. GitHub issue `#256`: add report-only CI timing and signal evidence without
+   duration threshold enforcement.
+12. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-12. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+13. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-13. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-14. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+14. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+15. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-15. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+16. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
 Still-open issue categories after branch-local fixes:
