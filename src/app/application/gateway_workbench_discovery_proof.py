@@ -13,11 +13,16 @@ from app.application.platform_mesh_onboarding_proof import (
     REQUIRED_PRODUCER_PRODUCTS,
     platform_mesh_onboarding_proof_is_valid,
 )
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_file_evidence_present,
+    required_make_target_evidence_present,
+)
 from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
 
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_make_target_evidence_present = required_make_target_evidence_present
 
 GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF"
 GATEWAY_WORKBENCH_DISCOVERY_PROOF_SCHEMA_VERSION = "lotus-idea.gateway-workbench-discovery-proof.v1"
@@ -233,22 +238,18 @@ def _required_file_evidence_present(
     repository_root: Path,
     platform_root: Path,
 ) -> bool:
-    for ref in REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS:
-        if ref.startswith(("GET ", "POST ", "make ")):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    for ref in REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS:
-        if not (platform_root / ref.removeprefix("../lotus-platform/")).is_file():
-            return False
-    try:
-        makefile_text = (repository_root / "Makefile").read_text(encoding="utf-8")
-    except OSError:
-        return False
-    return all(
-        f"{ref.removeprefix('make ')}:" in makefile_text
-        for ref in REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS
-        if ref.startswith("make ")
+    evidence_refs = (
+        REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS
+        + REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_PLATFORM_EVIDENCE_REFS
+    )
+    return required_file_evidence_present(
+        repository_root=repository_root,
+        sibling_roots={"../lotus-platform/": platform_root},
+        evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("GET ", "POST ", "make "),
+    ) and _required_make_target_evidence_present(
+        repository_root=repository_root,
+        evidence_refs=REQUIRED_GATEWAY_WORKBENCH_DISCOVERY_LOCAL_EVIDENCE_REFS,
     )
 
 

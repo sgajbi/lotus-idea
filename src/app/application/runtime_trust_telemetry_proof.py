@@ -7,6 +7,7 @@ from typing import Any, Mapping
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 from app.application.runtime_trust_telemetry import build_runtime_trust_telemetry_preview
@@ -22,6 +23,7 @@ from app.domain import (
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 RUNTIME_TRUST_TELEMETRY_PROOF_ENV = "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF"
@@ -101,7 +103,9 @@ def build_runtime_trust_telemetry_proof_payload(
     evidence_refs = tuple(REQUIRED_RUNTIME_TRUST_TELEMETRY_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
+        sibling_roots={},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("make ", "GET "),
     )
     make_target_evidence_present = _required_make_target_evidence_present(
         repository_root=repository_root,
@@ -305,16 +309,3 @@ def _source_ref(product_id: str, *, generated_at_utc: datetime) -> SourceRef:
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("make ", "GET ")):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True

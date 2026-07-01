@@ -7,10 +7,12 @@ from typing import Any
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
@@ -47,7 +49,9 @@ def build_durable_repository_proof_payload(
     evidence_refs = tuple(REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
+        sibling_roots={},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("make ", "PR Merge Gate /"),
     )
     make_target_evidence_present = _required_make_target_evidence_present(
         repository_root=repository_root,
@@ -122,16 +126,3 @@ def durable_repository_proof_is_valid(payload: Mapping[str, Any]) -> bool:
     return proof_checks.get("postgresRuntimeProofCiLane") == (
         "PR Merge Gate / PostgreSQL Runtime Proof"
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith("make ") or ref.startswith("PR Merge Gate /"):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True

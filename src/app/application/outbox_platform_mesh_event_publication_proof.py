@@ -8,10 +8,12 @@ from typing import Any
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
@@ -84,8 +86,9 @@ def build_outbox_platform_mesh_event_publication_proof_payload(
     evidence_refs = tuple(REQUIRED_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
-        platform_root=platform_root,
+        sibling_roots={"../lotus-platform/": platform_root},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("GET ", "POST ", "make "),
     )
     make_target_evidence_present = _required_make_target_evidence_present(
         repository_root=repository_root,
@@ -348,23 +351,5 @@ def _platform_catalog_maps_idea_products(payload: Mapping[str, Any] | None) -> b
         if product.get("producer_repository") != "lotus-idea":
             return False
         if product.get("lifecycle_status") != "proposed":
-            return False
-    return True
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    platform_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("GET ", "POST ", "make ")):
-            continue
-        if ref.startswith("../lotus-platform/"):
-            path = platform_root / ref.removeprefix("../lotus-platform/")
-        else:
-            path = repository_root / ref
-        if not path.is_file():
             return False
     return True

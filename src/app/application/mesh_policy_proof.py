@@ -6,9 +6,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_file_evidence_present,
+)
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 
 
 MESH_POLICY_PROOF_ENV = "LOTUS_IDEA_MESH_POLICY_PROOF"
@@ -67,7 +71,9 @@ def build_mesh_policy_proof_payload(
     )
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
+        sibling_roots={},
         evidence_refs=REQUIRED_MESH_POLICY_EVIDENCE_REFS,
+        non_file_ref_prefixes=("GET ", "POST ", "make "),
     )
     readiness_references_policies = _readiness_references_policies(readiness)
     slo_policy_valid = _slo_policy_valid(slo)
@@ -227,16 +233,3 @@ def _evidence_policy_valid(payload: dict[str, Any] | None) -> bool:
         and field_access_classes.get("source_artifacts") == "operator_only"
         and field_access_classes.get("internal_debug") == "internal_only"
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("GET ", "POST ", "make ")):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True

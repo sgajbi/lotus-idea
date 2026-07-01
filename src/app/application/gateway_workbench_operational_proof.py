@@ -7,6 +7,7 @@ from typing import Any
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 from app.application.workbench_read_path_proof import (
@@ -16,6 +17,7 @@ from app.application.workbench_read_path_proof import (
 
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV = "LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF"
@@ -71,7 +73,9 @@ def build_gateway_workbench_operational_proof_payload(
         and generated_at_utc.utcoffset() is not None
         and _required_file_evidence_present(
             repository_root=repository_root,
+            sibling_roots={},
             evidence_refs=local_evidence_refs,
+            non_file_ref_prefixes=("make ",),
         )
         and _required_make_target_evidence_present(
             repository_root=repository_root,
@@ -96,7 +100,9 @@ def build_gateway_workbench_operational_proof_payload(
             and generated_at_utc.utcoffset() is not None,
             "fileEvidencePresent": _required_file_evidence_present(
                 repository_root=repository_root,
+                sibling_roots={},
                 evidence_refs=local_evidence_refs,
+                non_file_ref_prefixes=("make ",),
             ),
             "makeTargetEvidencePresent": _required_make_target_evidence_present(
                 repository_root=repository_root,
@@ -181,16 +187,3 @@ def gateway_workbench_operational_proof_is_valid(payload: Mapping[str, Any]) -> 
         and proof_checks.get("readOnlyDetailRouteRecorded")
         == "lotus-gateway GET /api/v1/ideas/candidates/{candidate_id}"
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith("make "):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True
