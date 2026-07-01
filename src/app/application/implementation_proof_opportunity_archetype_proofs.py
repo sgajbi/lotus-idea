@@ -88,7 +88,7 @@ OpportunityProofStep = tuple[
 def _apply_opportunity_archetype_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    source_ingestion_live_proof_valid: bool,
+    source_ingestion_live_proof_current: bool,
     source_ingestion_live_proof_ref: str | None,
     evaluated_at_utc: datetime,
     risk_concentration_live_proof: Mapping[str, object] | None,
@@ -126,7 +126,7 @@ def _apply_opportunity_archetype_proofs(
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     capabilities = _apply_source_ingestion_live_proof(
         capabilities,
-        source_ingestion_live_proof_valid=source_ingestion_live_proof_valid,
+        source_ingestion_live_proof_current=source_ingestion_live_proof_current,
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
     )
     for proof, proof_is_valid, apply_proof, proof_ref in _opportunity_proof_steps(locals()):
@@ -282,10 +282,10 @@ def _apply_valid_opportunity_proof(
 def _apply_source_ingestion_live_proof(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     *,
-    source_ingestion_live_proof_valid: bool,
+    source_ingestion_live_proof_current: bool,
     source_ingestion_live_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    if not source_ingestion_live_proof_valid:
+    if not source_ingestion_live_proof_current:
         return capabilities
     return tuple(
         apply_blocker_proof(
@@ -301,14 +301,14 @@ def _apply_source_ingestion_live_proof(
 def apply_opportunity_archetype_proofs_from_scope(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
-    source_ingestion_live_proof_valid: bool,
+    source_ingestion_live_proof_current: bool,
     source_ingestion_live_proof_ref: str | None,
     evaluated_at_utc: datetime,
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     return _apply_opportunity_archetype_proofs(
         capabilities=capabilities,
-        source_ingestion_live_proof_valid=source_ingestion_live_proof_valid,
+        source_ingestion_live_proof_current=source_ingestion_live_proof_current,
         source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
         evaluated_at_utc=evaluated_at_utc,
         risk_concentration_live_proof=_payload(scope, "risk_concentration_live_proof"),

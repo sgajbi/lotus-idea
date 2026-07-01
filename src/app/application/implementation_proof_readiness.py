@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 import json
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, cast
 
 from app.application.ai_governance import (
     AIExplanationReadinessSnapshot,
@@ -45,6 +45,9 @@ from app.application.source_ingestion_readiness import (
     SourceIngestionReadinessSnapshot,
     build_source_ingestion_readiness_snapshot,
 )
+from app.application.source_ingestion_live_proof import (
+    source_ingestion_live_proof_can_clear_aggregate_blockers,
+)
 from app.ports.idea_repository import OutboxDeliveryRepository
 
 SUPPORTED_FEATURES_PATH = Path("supported-features/supported-features.json")
@@ -55,6 +58,7 @@ def build_implementation_proof_readiness_snapshot(
     evaluated_at_utc: datetime,
     repository: OutboxDeliveryRepository,
     durable_storage_backed: bool,
+    source_ingestion_live_proof: Mapping[str, object] | None = None,
     source_ingestion_live_proof_ref: str | None = None,
     source_ingestion_scheduled_worker_proof_ref: str | None = None,
     durable_repository_proof: Mapping[str, object] | None = None,
@@ -162,20 +166,7 @@ def build_implementation_proof_readiness_snapshot(
         repository_root=repository_root,
     )
     supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
-    capabilities = _build_base_capabilities(
-        source_ingestion=source_ingestion,
-        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
-        source_ingestion_scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
-        review_queue=review_queue,
-        ai_explanation=ai_explanation,
-        data_mesh=data_mesh,
-        runtime_trust_telemetry=runtime_trust_telemetry,
-        outbox_delivery=outbox_delivery,
-        opportunity_archetype_scenario=opportunity_archetype_scenario,
-        downstream_realization=downstream_realization,
-        supported_feature_count=supported_feature_count,
-    )
-    capabilities = apply_available_proofs_from_scope(capabilities=capabilities, scope=locals())
+    capabilities = _build_capabilities_with_available_proofs(locals())
     return _readiness_snapshot(evaluated_at_utc, supported_feature_count, capabilities)
 
 
@@ -215,9 +206,48 @@ def _readiness_snapshot(
     )
 
 
+def _build_capabilities_with_available_proofs(
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    capabilities = _build_base_capabilities(
+        source_ingestion=cast(SourceIngestionReadinessSnapshot, scope["source_ingestion"]),
+        source_ingestion_live_proof_current=(
+            source_ingestion_live_proof_can_clear_aggregate_blockers(
+                cast(Mapping[str, object] | None, scope["source_ingestion_live_proof"]),
+                evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
+                proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+                repository_root=cast(Path, scope["repository_root"]),
+            )
+        ),
+        source_ingestion_live_proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+        source_ingestion_scheduled_worker_proof_ref=cast(
+            str | None,
+            scope["source_ingestion_scheduled_worker_proof_ref"],
+        ),
+        review_queue=cast(ReviewQueueReadinessSnapshot, scope["review_queue"]),
+        ai_explanation=cast(AIExplanationReadinessSnapshot, scope["ai_explanation"]),
+        data_mesh=cast(DataMeshReadinessSnapshot, scope["data_mesh"]),
+        runtime_trust_telemetry=cast(
+            RuntimeTrustTelemetryPreview, scope["runtime_trust_telemetry"]
+        ),
+        outbox_delivery=cast(OutboxDeliveryReadinessSnapshot, scope["outbox_delivery"]),
+        opportunity_archetype_scenario=cast(
+            ImplementationProofCapabilityReadiness,
+            scope["opportunity_archetype_scenario"],
+        ),
+        downstream_realization=cast(
+            DownstreamRealizationReadinessSnapshot,
+            scope["downstream_realization"],
+        ),
+        supported_feature_count=cast(int, scope["supported_feature_count"]),
+    )
+    return apply_available_proofs_from_scope(capabilities=capabilities, scope=scope)
+
+
 def _build_base_capabilities(
     *,
     source_ingestion: SourceIngestionReadinessSnapshot,
+    source_ingestion_live_proof_current: bool,
     source_ingestion_live_proof_ref: str | None,
     source_ingestion_scheduled_worker_proof_ref: str | None,
     review_queue: ReviewQueueReadinessSnapshot,
@@ -232,6 +262,7 @@ def _build_base_capabilities(
     return (
         _source_ingestion_capability(
             source_ingestion,
+            live_proof_current=source_ingestion_live_proof_current,
             live_proof_ref=source_ingestion_live_proof_ref,
             scheduled_worker_proof_ref=source_ingestion_scheduled_worker_proof_ref,
         ),
@@ -250,6 +281,7 @@ def _build_base_capabilities(
 def _source_ingestion_capability(
     snapshot: SourceIngestionReadinessSnapshot,
     *,
+    live_proof_current: bool,
     live_proof_ref: str | None,
     scheduled_worker_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
@@ -266,7 +298,7 @@ def _source_ingestion_capability(
         "GET /api/v1/source-ingestion/readiness",
         "POST /api/v1/source-ingestion/run-once",
     ]
-    if snapshot.live_core_source_proof_valid and live_proof_ref:
+    if live_proof_current and live_proof_ref:
         evidence_refs.append(live_proof_ref)
     if snapshot.scheduled_worker_deploy_proof_valid and scheduled_worker_proof_ref:
         evidence_refs.append(scheduled_worker_proof_ref)
@@ -276,11 +308,29 @@ def _source_ingestion_capability(
         readiness_status=snapshot.run_once_configuration_status,
         supportability_status=snapshot.certification_status,
         evidence_refs=tuple(dict.fromkeys(evidence_refs)),
-        blockers=(
-            *snapshot.configuration_blockers,
-            *snapshot.certification_blockers,
+        blockers=tuple(
+            dict.fromkeys(
+                (
+                    *snapshot.configuration_blockers,
+                    *_source_ingestion_certification_blockers(
+                        snapshot,
+                        live_proof_current=live_proof_current,
+                    ),
+                )
+            )
         ),
     )
+
+
+def _source_ingestion_certification_blockers(
+    snapshot: SourceIngestionReadinessSnapshot,
+    *,
+    live_proof_current: bool,
+) -> tuple[str, ...]:
+    blockers = list(snapshot.certification_blockers)
+    if not live_proof_current and "live_core_source_proof_missing" not in blockers:
+        blockers.insert(0, "live_core_source_proof_missing")
+    return tuple(blockers)
 
 
 def _review_queue_capability(

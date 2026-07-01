@@ -181,9 +181,9 @@ flowchart TD
    `scripts/generate_source_ingestion_live_proof.py --manifest <path> --core-query-base-url <query-url> --core-query-control-plane-base-url <control-plane-url> --generated-at-utc <timestamp> --output output/source-ingestion/live-proof.json`.
    Use `--core-base-url` only for legacy single-base Core stacks.
    Then set `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` to that output path.
-   A valid artifact clears only the live-Core blocker; it is not scheduled
-   worker, data-mesh, Gateway/Workbench, downstream, or supported-feature
-   proof.
+   A family-valid and aggregate-current artifact clears only the live-Core
+   blocker; it is not scheduled worker, data-mesh, Gateway/Workbench,
+   downstream, or supported-feature proof.
 9. For scheduled-worker deploy proof capture, run
    `scripts/generate_scheduled_source_ingestion_worker_proof.py --manifest <path> --generated-at-utc <timestamp> --output output/source-ingestion/scheduled-worker-proof.json`.
    Then set `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` to that

@@ -474,21 +474,24 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
     live_proof = tmp_path / "source-ingestion-live-proof.json"
     scheduled_proof = tmp_path / "source-ingestion-scheduled-worker-proof.json"
     manifest.write_text("{}", encoding="utf-8")
-    live_proof.write_text(
-        json.dumps(
-            build_source_ingestion_live_proof_payload(
-                generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-                live_core_source_attempted=True,
-                worker_summary={
-                    "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
-                    "mode": "run_once",
-                    "sourceAuthority": "lotus-core",
-                    "durableStorageBacked": True,
-                    "totalCount": 1,
-                    "decisionCounts": {"accepted": 1, "replayed": 0},
-                },
-            )
+    source_ingestion_live_proof_ref = "output/source-ingestion/live-proof.json"
+    source_ingestion_live_proof = _bound_aggregate_proof(
+        build_source_ingestion_live_proof_payload(
+            generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+            live_core_source_attempted=True,
+            worker_summary={
+                "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+                "mode": "run_once",
+                "sourceAuthority": "lotus-core",
+                "durableStorageBacked": True,
+                "totalCount": 1,
+                "decisionCounts": {"accepted": 1, "replayed": 0},
+            },
         ),
+        source_ingestion_live_proof_ref,
+    )
+    live_proof.write_text(
+        json.dumps(source_ingestion_live_proof),
         encoding="utf-8",
     )
     scheduled_proof.write_text(json.dumps(_valid_scheduled_worker_proof()), encoding="utf-8")
@@ -502,7 +505,8 @@ def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_
         evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
         repository=InMemoryIdeaRepository(),
         durable_storage_backed=False,
-        source_ingestion_live_proof_ref="output/source-ingestion/live-proof.json",
+        source_ingestion_live_proof=source_ingestion_live_proof,
+        source_ingestion_live_proof_ref=source_ingestion_live_proof_ref,
         source_ingestion_scheduled_worker_proof_ref=(
             "output/source-ingestion/scheduled-worker-proof.json"
         ),

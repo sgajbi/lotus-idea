@@ -142,8 +142,9 @@ documentation across opportunity signal APIs.
     RFC evidence, and wiki source now describe the live source-proof artifact
     contract, aggregate source-safe `blockReasonCounts`, and
     `make source-ingestion-live-proof-contract-gate`, while preserving the
-    boundary that a valid artifact clears only the live-Core blocker and does
-    not promote source ingestion as a supported feature.
+    boundary that only a family-valid and aggregate-current artifact clears the
+    live-Core blocker and does not promote source ingestion as a supported
+    feature.
 15. README, repository context, `docs/operations/source-ingestion-run-once.md`,
     `docs/operations/api-certification.md`, `docs/operations/observability.md`,
     `docs/operations/implementation-proof-readiness.md`, demo claims, quality

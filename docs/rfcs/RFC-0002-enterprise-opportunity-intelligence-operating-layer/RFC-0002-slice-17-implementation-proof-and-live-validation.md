@@ -96,10 +96,11 @@ Prove the complete supported opportunity journey end to end.
 11. `src/app/application/source_ingestion_live_proof.py`,
     `scripts/generate_source_ingestion_live_proof.py`, and
     `make source-ingestion-live-proof-contract-gate` now define and enforce the
-    source-safe live Core proof artifact shape. When a valid artifact is
-    referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`, the
-    source-ingestion readiness diagnostic can clear only
-    `live_core_source_proof_missing`; scheduled worker, data-mesh,
+    source-safe live Core proof artifact shape. The source-ingestion readiness
+    diagnostic may report a family-valid configured artifact, but aggregate
+    implementation-proof readiness clears only `live_core_source_proof_missing`
+    when the artifact is also aggregate-current with matching proof ref,
+    freshness, and source revision; scheduled worker, data-mesh,
     Gateway/Workbench, and supported-feature blockers remain.
     The artifact now carries aggregate `blockReasonCounts` for blocked proof
     attempts, with bounded codes for Core source unavailability, entitlement
@@ -374,8 +375,8 @@ Prove the complete supported opportunity journey end to end.
     preserving portfolio-scoped Manage proof, mandate performance-health,
     mandate risk-health, data-mesh, Workbench, client-publication,
     supported-feature, rebalance, action, and order-execution blockers.
-33. A valid source-ingestion live Core proof referenced through
-    `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
+33. A family-valid and aggregate-current source-ingestion live Core proof
+    referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` now clears only
     `opportunity_archetype_live_core_source_proof_missing` for the high-cash
     scenario while preserving Workbench, data-mesh, client-publication, and
     supported-feature blockers.

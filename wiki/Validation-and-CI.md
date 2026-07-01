@@ -150,7 +150,7 @@ source-ingestion worker manifest and source-safe output-contract validation,
 scheduled source-ingestion worker deploy-contract validation and generated
 deploy-proof artifact consumption plus source-safe artifact-ref recording in
 aggregate implementation-proof readiness, source-ingestion live-proof artifact
-contract validation,
+contract validation with aggregate-current provenance consumption,
 implementation-proof readiness artifact generation,
 runtime trust telemetry preview and snapshot artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
