@@ -51,14 +51,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/setup-python@0000000000000000000000000000000000000000 # v6.2.0
+      - uses: actions/setup-python@0000000000000000000000000000000000000000 # v6.3.0
 """
 
     errors = module._validate_action_pins("pr-merge-gate.yml", workflow)
 
     assert errors == [
         "pr-merge-gate.yml:7: actions/setup-python must pin "
-        "a309ff8b426b58ec0e2a45f0f869d46889d02405 for verified v6.2.0"
+        "ece7cb06caefa5fff74198d8649806c4678c61a1 for verified v6.3.0"
     ]
 
 
