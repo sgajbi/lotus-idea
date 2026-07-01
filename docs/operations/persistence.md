@@ -66,10 +66,11 @@ runtime proof lane; it does not connect to a database, replace
 storage unless `LOTUS_IDEA_DATABASE_URL` is actually configured.
 `GET /api/v1/outbox-delivery/readiness` now exposes the outbox delivery
 foundation as a certified internal operator diagnostic. It reports aggregate
-outbox status counts, delivery-ready backlog, durable repository posture,
-broker configuration posture, publisher-adapter presence, and certification
-blockers. It does not expose event identifiers, aggregate identifiers, raw
-idempotency keys, broker payloads, or downstream claims.
+outbox status counts, delivery-ready backlog, retry-deferred failed rows that
+are still cooling down, durable repository posture, broker configuration
+posture, publisher-adapter presence, and certification blockers. It does not
+expose event identifiers, aggregate identifiers, raw idempotency keys, broker
+payloads, or downstream claims.
 `contracts/outbox-events/lotus-idea-outbox-events.v1.json` and
 `make outbox-event-contract-gate` now define and enforce the repo-owned internal
 outbox event contract. Runtime construction, repository replay, contract-gate

@@ -56,6 +56,7 @@ class OutboxDeliveryReadinessSnapshot:
     external_broker_configured: bool
     external_broker_publisher_adapter_present: bool
     delivery_ready_count: int
+    retry_deferred_count: int
     expired_lease_count: int
     max_retry_count: int
     status_counts: OutboxDeliveryStatusCounts
@@ -104,6 +105,7 @@ def build_outbox_delivery_readiness_snapshot(
         external_broker_configured=bool(os.getenv(OUTBOX_BROKER_URL_ENV, "").strip()),
         external_broker_publisher_adapter_present=True,
         delivery_ready_count=readiness_summary.delivery_ready_count,
+        retry_deferred_count=readiness_summary.retry_deferred_count,
         expired_lease_count=readiness_summary.expired_lease_count,
         max_retry_count=max_retry_count,
         status_counts=_status_counts_from_summary(readiness_summary),
@@ -141,9 +143,10 @@ def _readiness_summary(
             max_retry_count=max_retry_count,
             evaluated_at_utc=evaluated_at_utc,
         )
-    status_counts, expired_lease_count = _snapshot_status_counts(
+    status_counts, expired_lease_count, retry_deferred_count = _snapshot_status_counts(
         repository,
         evaluated_at_utc=evaluated_at_utc,
+        max_retry_count=max_retry_count,
     )
     delivery_ready_count = len(
         repository.outbox_events_for_delivery(
@@ -159,6 +162,7 @@ def _readiness_summary(
         dead_letter_count=status_counts.dead_letter_count,
         expired_lease_count=expired_lease_count,
         delivery_ready_count=delivery_ready_count,
+        retry_deferred_count=retry_deferred_count,
     )
 
 
@@ -166,7 +170,8 @@ def _snapshot_status_counts(
     repository: CandidateSnapshotRepository,
     *,
     evaluated_at_utc: datetime,
-) -> tuple[OutboxDeliveryStatusCounts, int]:
+    max_retry_count: int,
+) -> tuple[OutboxDeliveryStatusCounts, int, int]:
     counts = {
         OutboxEventStatus.PENDING: 0,
         OutboxEventStatus.LEASED: 0,
@@ -175,6 +180,7 @@ def _snapshot_status_counts(
         OutboxEventStatus.DEAD_LETTER: 0,
     }
     expired_lease_count = 0
+    retry_deferred_count = 0
     for event in repository.snapshot().outbox_events.values():
         counts[event.status] += 1
         if (
@@ -183,6 +189,13 @@ def _snapshot_status_counts(
             and event.lease_expires_at_utc <= evaluated_at_utc
         ):
             expired_lease_count += 1
+        if (
+            event.status is OutboxEventStatus.FAILED
+            and event.retry_count < max_retry_count
+            and event.next_attempt_at_utc is not None
+            and event.next_attempt_at_utc > evaluated_at_utc
+        ):
+            retry_deferred_count += 1
     return (
         OutboxDeliveryStatusCounts(
             pending_count=counts[OutboxEventStatus.PENDING],
@@ -192,6 +205,7 @@ def _snapshot_status_counts(
             dead_letter_count=counts[OutboxEventStatus.DEAD_LETTER],
         ),
         expired_lease_count,
+        retry_deferred_count,
     )
 
 

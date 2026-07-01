@@ -199,18 +199,19 @@ Implemented first-wave internal scope:
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
     requires the `operator` role and `idea.outbox-delivery.readiness.read`,
-    returns aggregate status counts, due delivery-ready backlog, leased and expired
-    lease counts, durable repository posture, broker configuration posture, publisher-adapter presence,
+    returns aggregate status counts, due delivery-ready backlog,
+    retry-deferred failed-row counts, leased and expired lease counts, durable
+    repository posture, broker configuration posture, publisher-adapter presence,
     source-of-truth paths, and certification blockers, and emits bounded
     `outbox_delivery_readiness_read` operation events. It does not expose event identifiers, aggregate
     identifiers, raw idempotency keys, broker payloads, downstream contracts,
     Gateway/Workbench support, or supported-feature promotion.
     PostgreSQL-backed readiness now uses a repository-side aggregate projection
-    over `idea_outbox_event` for status counts, expired leases, and due
-    delivery-ready counts instead of hydrating unrelated repository snapshot
-    tables. The adapter also reads only pending, due failed, and expired leased
-    events through a bounded `idea_outbox_event` query for worker polling
-    semantics.
+    over `idea_outbox_event` for status counts, expired leases, due
+    delivery-ready counts, and retry-deferred failed-row counts instead of
+    hydrating unrelated repository snapshot tables. The adapter also reads only
+    pending, due failed, and expired leased events through a bounded
+    `idea_outbox_event` query for worker polling semantics.
 21. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,

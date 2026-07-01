@@ -103,6 +103,7 @@ class OutboxDeliveryReadinessResponse(CamelModel):
         ..., alias="externalBrokerPublisherAdapterPresent"
     )
     delivery_ready_count: int = Field(..., alias="deliveryReadyCount")
+    retry_deferred_count: int = Field(..., alias="retryDeferredCount")
     expired_lease_count: int = Field(..., alias="expiredLeaseCount")
     max_retry_count: int = Field(..., alias="maxRetryCount")
     status_counts: OutboxDeliveryStatusCountsResponse = Field(..., alias="statusCounts")
@@ -127,6 +128,7 @@ class OutboxDeliveryReadinessResponse(CamelModel):
                 snapshot.external_broker_publisher_adapter_present
             ),
             deliveryReadyCount=snapshot.delivery_ready_count,
+            retryDeferredCount=snapshot.retry_deferred_count,
             expiredLeaseCount=snapshot.expired_lease_count,
             maxRetryCount=snapshot.max_retry_count,
             statusCounts=OutboxDeliveryStatusCountsResponse.from_domain(snapshot.status_counts),

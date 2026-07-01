@@ -40,6 +40,7 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
         leased_event("idea.lifecycle.transitioned.v1"),
         expired_lease_event("idea.conversion.intent_requested.v1"),
         failed_event("idea.conversion.outcome_recorded.v1"),
+        deferred_failed_event("idea.feedback.recorded.v1"),
         published_event("idea.review.decision_recorded.v1"),
         dead_letter_event("idea.report_evidence_pack.requested.v1"),
     )
@@ -58,14 +59,15 @@ def test_outbox_delivery_readiness_reports_blocked_foundation_posture(
     assert snapshot.external_broker_configured is False
     assert snapshot.external_broker_publisher_adapter_present is True
     assert snapshot.delivery_ready_count == 3
+    assert snapshot.retry_deferred_count == 1
     assert snapshot.expired_lease_count == 1
     assert snapshot.max_retry_count == DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT
     assert snapshot.status_counts.pending_count == 1
     assert snapshot.status_counts.leased_count == 2
-    assert snapshot.status_counts.failed_count == 1
+    assert snapshot.status_counts.failed_count == 2
     assert snapshot.status_counts.published_count == 1
     assert snapshot.status_counts.dead_letter_count == 1
-    assert snapshot.status_counts.total_count == 6
+    assert snapshot.status_counts.total_count == 7
     assert snapshot.configuration_blockers == ("outbox_broker_not_configured",)
     assert "external_broker_runtime_proof_missing" in snapshot.certification_blockers
     assert (
@@ -123,6 +125,7 @@ def test_outbox_delivery_readiness_uses_repository_projection_without_snapshot(
             dead_letter_count=6,
             expired_lease_count=1,
             delivery_ready_count=7,
+            retry_deferred_count=8,
         )
     )
 
@@ -135,6 +138,7 @@ def test_outbox_delivery_readiness_uses_repository_projection_without_snapshot(
 
     assert repository.summary_request == (4, PUBLISHED_AT)
     assert snapshot.delivery_ready_count == 7
+    assert snapshot.retry_deferred_count == 8
     assert snapshot.expired_lease_count == 1
     assert snapshot.status_counts.pending_count == 2
     assert snapshot.status_counts.leased_count == 3
@@ -191,6 +195,16 @@ def failed_event(event_type: str) -> OutboxEventRecord:
         failed_at_utc=PUBLISHED_AT - timedelta(minutes=5),
         max_retry_count=DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
         next_attempt_at_utc=PUBLISHED_AT - timedelta(minutes=1),
+    )
+
+
+def deferred_failed_event(event_type: str) -> OutboxEventRecord:
+    return mark_outbox_event_failed(
+        pending_event(event_type),
+        failure_reason="publisher_rejected",
+        failed_at_utc=PUBLISHED_AT - timedelta(minutes=5),
+        max_retry_count=DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+        next_attempt_at_utc=PUBLISHED_AT + timedelta(minutes=1),
     )
 
 

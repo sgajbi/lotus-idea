@@ -740,7 +740,8 @@ proof, client-ready publication, or supported-feature promotion.
 
 `GET /api/v1/outbox-delivery/readiness` is the certified internal outbox
 delivery readiness diagnostic. It returns aggregate backlog and status posture,
-due retry posture, durable-storage posture, publisher-adapter presence,
+due retry posture, retry-deferred failed-row count, durable-storage posture,
+publisher-adapter presence,
 source-of-truth paths, and certification blockers for operators without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, or broker
 payloads.

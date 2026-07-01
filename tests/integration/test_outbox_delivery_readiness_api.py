@@ -70,6 +70,7 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
         repository=repository_with_events(
             pending_event("idea.candidate.persisted.v1"),
             failed_event("idea.lifecycle.transitioned.v1"),
+            deferred_failed_event("idea.feedback.recorded.v1"),
         )
     )
     client = TestClient(app)
@@ -89,14 +90,15 @@ def test_outbox_delivery_readiness_api_returns_source_safe_blocked_posture(
     assert payload["externalBrokerConfigured"] is False
     assert payload["externalBrokerPublisherAdapterPresent"] is True
     assert payload["deliveryReadyCount"] == 2
+    assert payload["retryDeferredCount"] == 1
     assert payload["expiredLeaseCount"] == 0
     assert payload["statusCounts"] == {
         "pendingCount": 1,
         "leasedCount": 0,
-        "failedCount": 1,
+        "failedCount": 2,
         "publishedCount": 0,
         "deadLetterCount": 0,
-        "totalCount": 2,
+        "totalCount": 3,
     }
     assert payload["configurationBlockers"] == ["outbox_broker_not_configured"]
     assert "external_broker_runtime_proof_missing" in payload["certificationBlockers"]
@@ -502,7 +504,7 @@ def failed_event(event_type: str) -> OutboxEventRecord:
         failure_reason="publisher_rejected",
         failed_at_utc=EVENT_TIME,
         max_retry_count=3,
-        next_attempt_at_utc=EVENT_TIME + timedelta(seconds=60),
+        next_attempt_at_utc=EVENT_TIME + timedelta(days=30),
     )
 
 
@@ -514,6 +516,16 @@ def repository_with_events(*events: OutboxEventRecord) -> InMemoryIdeaRepository
             idempotency_candidates={},
             outbox_events={event.event_id: event for event in events},
         )
+    )
+
+
+def deferred_failed_event(event_type: str) -> OutboxEventRecord:
+    return mark_outbox_event_failed(
+        pending_event(event_type),
+        failure_reason="publisher_rejected",
+        failed_at_utc=EVENT_TIME,
+        max_retry_count=3,
+        next_attempt_at_utc=EVENT_TIME + timedelta(seconds=60),
     )
 
 
