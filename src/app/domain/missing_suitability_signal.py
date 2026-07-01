@@ -22,7 +22,11 @@ from app.domain.ideas import (
     SourceRef,
     UnsupportedEvidenceReason,
 )
-from app.domain.signal_evaluation import SignalEvaluationOutcome, SignalEvaluationResult
+from app.domain.signal_evaluation import (
+    SignalEvaluationOutcome,
+    SignalEvaluationResult,
+    blocked_signal_result,
+)
 
 
 @dataclass(frozen=True)
@@ -91,37 +95,37 @@ def _blocking_result(
 ) -> SignalEvaluationResult | None:
     family = OpportunityFamily.MISSING_SUITABILITY_CONTEXT
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.policy_ref is None:
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.policy_ref.freshness is not EvidenceFreshness.CURRENT:
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if source_input.client_ready_publication is None:
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.client_ready_publication.upper() != "BLOCKED":
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
         )
     if source_input.evaluation_status is None or source_input.sign_off_status is None:
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -131,7 +135,7 @@ def _blocking_result(
         or source_input.blocked_requirement_count is None
         or source_input.sign_off_blocker_count is None
     ):
-        return _blocked(
+        return blocked_signal_result(
             family=family,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -223,20 +227,6 @@ def _candidate_result(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
-    )
-
-
-def _blocked(
-    *,
-    family: OpportunityFamily,
-    reason_codes: tuple[ReasonCode, ...],
-    unsupported_reasons: tuple[UnsupportedEvidenceReason, ...],
-) -> SignalEvaluationResult:
-    return SignalEvaluationResult(
-        outcome=SignalEvaluationOutcome.BLOCKED,
-        family=family,
-        reason_codes=reason_codes,
-        unsupported_reasons=unsupported_reasons,
     )
 
 
