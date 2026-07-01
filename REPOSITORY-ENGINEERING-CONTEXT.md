@@ -559,8 +559,9 @@ Recent issue-derived patterns to preserve:
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. performance/projection efficiency remains the active unfixed issue category
-   on this branch; refresh GitHub issues before selecting the next category.
+1. No issue-discovery priorities are currently unfixed on this branch; refresh
+   GitHub issues before selecting the next category because branch-local fixes
+   are still open until merged, CI-green, and QA-verified.
 
 Branch-local fixed issues awaiting merge/CI/QA closure:
 
@@ -610,10 +611,20 @@ Branch-local fixed issues awaiting merge/CI/QA closure:
    `ready` as current; source adapters now require governed freshness
    vocabulary and the source-observability gate blocks freshness inference from
    readiness, supportability, data-quality, health-state, or coverage terms.
+22. GitHub issue `#254`: add repository-side advisor review queue pagination
+   so durable PostgreSQL queue reads use a bounded candidate projection with
+   stable filters, ordering, counts, limit, and offset instead of hydrating the
+   whole repository snapshot and unrelated state families.
+23. GitHub issue `#257`: add repository-side outbox readiness queries so
+   status counts, expired leases, and delivery-ready counts read the outbox
+   table directly instead of hydrating unrelated candidate, audit, review,
+   downstream, conversion, report evidence, or AI lineage state.
 
 Still-open issue categories after branch-local fixes:
 
-1. performance/projection efficiency.
+1. No branch-unfixed issue-discovery category remains after the current
+   branch-local fix set; GitHub issues remain open pending merge, CI, QA
+   evidence, and closure.
 
 Issues with branch-local fixes must not be claimed closed until merged to
 `main`, CI is green, and QA or issue-closure evidence exists.
