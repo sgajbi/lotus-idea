@@ -47,6 +47,7 @@ PINNED_ACTIONS: dict[str, tuple[str, str]] = {
 REQUIRED_TARGETS = (
     *REQUIRED_LINT_TARGETS,
     "postgres-integration-gate",
+    "duplicate-implementation-inventory",
     "typecheck",
     "architecture-boundary-gate",
     "openapi-gate",
