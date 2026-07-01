@@ -185,6 +185,28 @@ This slice also hardens repo-native CI test and coverage enforcement:
    data-mesh certification, live source ingestion, Workbench support, client
    publication, or production-ready claims.
 
+This slice also hardens the local aggregate command model after GitHub issue
+`#263` showed `make ci` could be cited as a local green signal without
+PostgreSQL runtime or Docker/release proof:
+
+1. `make ci` remains the broad local aggregate for lint, typecheck, contract
+   gates, OpenAPI, migrations, integration/e2e/coverage, and dependency audit.
+   It is not, by itself, PostgreSQL runtime, Docker build, container smoke,
+   image scan, SBOM, or release-evidence proof.
+2. `make ci-release` is the governed full-lane local command. It runs `make ci`
+   plus `postgres-integration-gate`, `docker-build`,
+   `container-runtime-smoke`, `container-image-scan`, and `release-sbom`.
+3. `scripts/ci_contract_gate.py` fails if `ci-release` drops PostgreSQL,
+   Docker build, container smoke, image scan, or SBOM proof dependencies.
+4. `tests/unit/test_ci_contract_gate.py` and
+   `tests/unit/test_ci_enforcement_contract.py` prove the command split and
+   full-lane dependency guard.
+5. GitHub PR Merge Gate and Main Releasability continue to call repo-native
+   targets rather than opaque inline proof commands.
+6. This is command-model governance. `make ci-release` should be cited only
+   when local Docker and disposable PostgreSQL prerequisites were actually
+   available and run.
+
 This slice also hardens downstream realization contract governance:
 
 1. `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`

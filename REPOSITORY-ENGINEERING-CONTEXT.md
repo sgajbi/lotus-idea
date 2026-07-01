@@ -447,14 +447,17 @@ make github-security-posture-check
 
 Current repo-native aggregate command posture:
 
-1. `make ci` is useful local aggregate evidence, but it must not be cited as
-   PostgreSQL runtime, Docker build, image scan, SBOM, or release-evidence
-   proof unless those families are explicitly included in the command model at
-   the time of validation.
-2. Until the governed full-lane command is aligned, cite and run the explicit
-   heavy proof targets when the slice depends on PostgreSQL runtime behavior or
-   container/release evidence.
-3. GitHub workflow YAML should keep calling repo-native targets rather than
+1. `make ci` is the broad local aggregate command for lint, typecheck,
+   contract gates, OpenAPI, migrations, tests, coverage, and dependency audit.
+   It is not Docker, PostgreSQL runtime, image-scan, SBOM, or release-evidence
+   proof by itself.
+2. `make ci-release` is the governed full-lane local command. It runs `make ci`
+   plus `postgres-integration-gate`, `docker-build`, `container-runtime-smoke`,
+   `container-image-scan`, and `release-sbom`. Cite it only when the required
+   local PostgreSQL and Docker prerequisites were actually available and run.
+3. `make ci-contract-gate` blocks drift if the full-lane command omits those
+   PostgreSQL or container/release proof families.
+4. GitHub workflow YAML should keep calling repo-native targets rather than
    reimplementing opaque inline proof.
 
 PostgreSQL evidence:
@@ -551,36 +554,35 @@ Recent issue-derived patterns to preserve:
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. Operability and release evidence: GitHub issue `#263` align repo-native
-   command coverage with PostgreSQL and Docker release proof gates or document
-   a governed light/full split.
-2. Evidence and proof contracts: GitHub issue `#260` require aggregate
+1. Evidence and proof contracts: GitHub issue `#260` require aggregate
    provenance for source-ingestion live proof consumption.
-3. Evidence and proof contracts: GitHub issue `#269` keep architecture
+2. Evidence and proof contracts: GitHub issue `#269` keep architecture
    boundary report evidence synchronized with current gate rules.
 
 Branch-local fixed issues awaiting merge/CI/QA closure:
 
-1. GitHub issue `#268`: require API idempotency for AI explanation lineage
+1. GitHub issue `#263`: add governed `make ci-release` full-lane command and
+   contract-gate enforcement for PostgreSQL, Docker, image scan, and SBOM proof.
+2. GitHub issue `#268`: require API idempotency for AI explanation lineage
    writes while preserving domain request-id lineage replay/conflict.
-2. GitHub issue `#267`: bind caller-context authorization headers to trusted
+3. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-3. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+4. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
    writes and map idempotency primary-key races to governed replay/conflict.
-4. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
+5. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
    describes.
-5. GitHub issue `#271`: require operator run identity for outbox delivery
+6. GitHub issue `#271`: require operator run identity for outbox delivery
    run-once actions.
-6. GitHub issue `#270`: add container startup health smoke proof to Docker
+7. GitHub issue `#270`: add container startup health smoke proof to Docker
    release gates.
-7. GitHub issue `#265`: validate correlation and trace headers before logging
+8. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-8. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+9. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-9. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-10. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+10. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+11. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-11. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+12. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
 Still-open issue categories after the current security batch:

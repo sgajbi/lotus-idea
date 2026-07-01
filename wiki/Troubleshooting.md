@@ -38,8 +38,10 @@ make supported-features-gate
 ```
 
 Use `make check` when the issue touches code, contracts, endpoint metadata, or
-tests. Use `make ci` before merge when the change could affect runtime parity,
-coverage, security, Docker, or PostgreSQL behavior.
+tests. Use `make ci` for broad local aggregate proof. Use `make ci-release`
+when the change could affect Docker, PostgreSQL runtime behavior, image scan,
+container smoke, SBOM, or release-lane parity and the required local services
+are available.
 
 ## Wiki Publication Problems
 
