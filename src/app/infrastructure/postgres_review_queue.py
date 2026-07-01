@@ -74,7 +74,7 @@ def _review_queue_candidate_predicates(
         "(candidate_json->'evidence_packet'->>'supportability') <> %s",
     ]
     params: list[Any] = [
-        tuple(
+        [
             status.value
             for status in (
                 IdeaLifecycleStatus.GENERATED,
@@ -83,7 +83,7 @@ def _review_queue_candidate_predicates(
                 IdeaLifecycleStatus.GOVERNANCE_CHECKED,
                 IdeaLifecycleStatus.READY_FOR_REVIEW,
             )
-        ),
+        ],
         ReviewPosture.SUPPRESSED.value,
         EvidenceSupportability.BLOCKED.value,
     ]
@@ -96,7 +96,7 @@ def _review_queue_candidate_predicates(
         ):
             if values:
                 predicates.append(f"(candidate_json->'access_scope'->>'{field_name}') = ANY(%s)")
-                params.append(tuple(values))
+                params.append(list(values))
     return " AND ".join(predicates), tuple(params)
 
 

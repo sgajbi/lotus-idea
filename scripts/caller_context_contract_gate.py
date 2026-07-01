@@ -146,7 +146,7 @@ def main() -> int:
     errors = validate_caller_context_contract()
     if errors:
         print("Caller context contract gate failed:")
-        print("\n".join(errors))
+        print(f"{len(errors)} caller context contract violation(s) found")
         return 1
     print("Caller context contract gate passed")
     return 0

@@ -8,7 +8,10 @@ import pytest
 
 from app.domain import IdeaCandidate, QueueAccessScopeFilter, ReviewAccessScope
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from app.infrastructure.postgres_review_queue import load_review_queue_candidate_page
+from app.infrastructure.postgres_review_queue import (
+    _review_queue_candidate_predicates,
+    load_review_queue_candidate_page,
+)
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
@@ -83,6 +86,16 @@ def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
             limit=1,
             offset=-1,
         )
+
+
+def test_review_queue_predicates_use_postgres_array_parameters() -> None:
+    _predicate_sql, params = _review_queue_candidate_predicates(
+        QueueAccessScopeFilter(portfolio_id="portfolio-001")
+    )
+
+    assert isinstance(params[0], list)
+    assert isinstance(params[3], list)
+    assert params[3] == ["portfolio-001"]
 
 
 def test_review_queue_candidate_page_handles_empty_count_result() -> None:
