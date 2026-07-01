@@ -505,11 +505,13 @@ existing file/function-size maintainability gate:
    request construction in `scripts/proof_request_builders.py`, and centralize
    mutating API reason-code validation in `app.api.request_validation`, and
    centralize bounded API telemetry count buckets in
-   `app.api.telemetry_buckets`, and centralize caller-supplied signal response
-   DTO projection in `app.api.signal_models.SignalEvaluationResponse`; each
+   `app.api.telemetry_buckets`, centralize caller-supplied signal response
+   DTO projection in `app.api.signal_models.SignalEvaluationResponse`, and
+   centralize application-layer portfolio-only signal review scopes in
+   `app.application.access_scope`; each
    proof gate, generator, contract gate, and API route retains family-specific
    policy/argument behavior, direct script execution remains supported, and the
-   current measured baseline scans 1,629 functions and reports 13 exact
+   current measured baseline scans 1,621 functions and reports 12 exact
    duplicate clusters.
 5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
    without adding duplicate thresholds to `make lint`.

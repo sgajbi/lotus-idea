@@ -17,6 +17,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_high_cash_signal,
 )
+from app.application.access_scope import portfolio_only_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
     CoreHighCashEvidence,
@@ -127,7 +128,7 @@ def evaluate_high_cash_signal_from_core(
                 cashflow_projection_ref=None,
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=_portfolio_only_scope(command.portfolio_id),
+                access_scope=portfolio_only_scope(command.portfolio_id),
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -195,7 +196,7 @@ def evaluate_and_persist_high_cash_signal_from_core(
                 cashflow_projection_ref=None,
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=_portfolio_only_scope(command.evaluation.portfolio_id),
+                access_scope=portfolio_only_scope(command.evaluation.portfolio_id),
                 duplicate_of_candidate_id=command.evaluation.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -257,7 +258,7 @@ def _evaluate_high_cash_core_evidence(
             cashflow_projection_ref=evidence.cashflow_projection_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=_portfolio_only_scope(command.portfolio_id),
+            access_scope=portfolio_only_scope(command.portfolio_id),
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
@@ -338,15 +339,6 @@ def _source_ref_payload(source_ref: SourceRef) -> dict[str, str]:
         "route": source_ref.route,
         "source_system": source_ref.source_system.value,
     }
-
-
-def _portfolio_only_scope(portfolio_id: str) -> ReviewAccessScope:
-    return ReviewAccessScope(
-        tenant_id="unknown",
-        book_id="unknown",
-        portfolio_id=portfolio_id,
-        client_id="unknown",
-    )
 
 
 def _access_scope_payload(scope: ReviewAccessScope | None) -> dict[str, str] | None:
