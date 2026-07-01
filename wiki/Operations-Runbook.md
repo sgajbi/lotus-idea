@@ -432,6 +432,10 @@ the shared client retries only transport timeouts/failures and `429`, `502`,
 `503`, or `504` responses. Realization and outbox `POST` retries require an
 idempotency key; source-ingestion Core query/control-plane `POST` calls are
 explicitly marked as read-only source queries before they can retry without one.
+Computed backoff delays use a fixed central 20% downward jitter window to avoid
+synchronized retry waves across source ingestion, downstream realization, and
+outbox publication. Valid upstream `Retry-After` values remain capped by the
+configured maximum backoff but are not jittered.
 Runtime-cached realization clients close on application shutdown and test reset;
 source-ingestion runtime objects expose `close()` for deterministic cleanup.
 These controls improve operability and capacity posture only. They do not
