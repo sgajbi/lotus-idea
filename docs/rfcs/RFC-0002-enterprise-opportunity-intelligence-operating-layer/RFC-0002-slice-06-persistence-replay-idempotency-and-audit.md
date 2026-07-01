@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation, certified outbox delivery readiness diagnostic and run-once operator action with PostgreSQL repository-side readiness projection, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation with durable retry scheduling, certified outbox delivery readiness diagnostic and run-once operator action with PostgreSQL repository-side readiness projection, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
 
 ## Outcome
 
@@ -144,19 +144,23 @@ Implemented first-wave internal scope:
     `src/app/ports/outbox_publisher.py`, and
     `src/app/ports/idea_repository.py` now add the first internal outbox
     delivery semantics. Delivery-ready reads include pending events, retryable
-    failed events below the configured retry limit, and expired leases. Delivery
-    runs claim a bounded batch with lease owner, attempt id, and expiry before
-    broker publication, publish only claimed events, and complete or fail
-    delivery only when the same owner/attempt still owns the lease. Status
-    updates can mark an event published, failed for retry, or dead-lettered when
-    the retry limit is reached. Publisher exceptions are mapped to bounded
+    failed events below the configured retry limit only after their durable
+    `next_attempt_at_utc` is due, and expired leases. Delivery runs claim a
+    bounded batch with lease owner, attempt id, and expiry before broker
+    publication, publish only claimed events, and complete or fail delivery only
+    when the same owner/attempt still owns the lease. Status updates can mark an
+    event published, failed for retry with first/last failure timing and a
+    deterministic capped next-attempt schedule, or dead-lettered when the retry
+    limit is reached. Publisher exceptions are mapped to bounded
     `publisher_unavailable` failure reason codes, failure reasons reject
     source/client-sensitive marker names, and run summaries expose aggregate
     counts only. `src/app/infrastructure/outbox_publisher.py` adds a
     source-safe HTTP broker-publisher adapter foundation with bounded envelopes,
     trace headers, and product-safe failure reasons. `PostgresIdeaRepository`
-    persists claim/lease metadata and uses row-scoped claim plus conditional
-    completion/failure updates through the existing `idea_outbox_event` table.
+    persists claim/lease metadata, failure timing, and next-attempt eligibility
+    through the existing `idea_outbox_event` table. Retry claims clear the due
+    timestamp while preserving first/last failure timing until publication or
+    dead-letter closure.
     This is not certified live broker runtime,
     downstream delivery, Gateway event publication, data-product certification,
     or supported-feature promotion.
@@ -195,17 +199,18 @@ Implemented first-wave internal scope:
     `GET /api/v1/outbox-delivery/readiness` now expose the outbox delivery
     foundation through a certified internal operator diagnostic. The endpoint
     requires the `operator` role and `idea.outbox-delivery.readiness.read`,
-    returns aggregate status counts, delivery-ready backlog, leased and expired
+    returns aggregate status counts, due delivery-ready backlog, leased and expired
     lease counts, durable repository posture, broker configuration posture, publisher-adapter presence,
     source-of-truth paths, and certification blockers, and emits bounded
     `outbox_delivery_readiness_read` operation events. It does not expose event identifiers, aggregate
     identifiers, raw idempotency keys, broker payloads, downstream contracts,
     Gateway/Workbench support, or supported-feature promotion.
     PostgreSQL-backed readiness now uses a repository-side aggregate projection
-    over `idea_outbox_event` for status counts, expired leases, and
+    over `idea_outbox_event` for status counts, expired leases, and due
     delivery-ready counts instead of hydrating unrelated repository snapshot
-    tables. The adapter also reads delivery-ready events through a bounded
-    `idea_outbox_event` query for worker polling semantics.
+    tables. The adapter also reads only pending, due failed, and expired leased
+    events through a bounded `idea_outbox_event` query for worker polling
+    semantics.
 21. `migrations/001_idea_repository_foundation.sql` and
     `migrations/001_idea_repository_foundation.rollback.sql` now define the
     first versioned database schema and rollback contract for future candidate,

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once with PostgreSQL repository-side readiness projection, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once with durable retry scheduling and PostgreSQL repository-side readiness projection, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
 
 ## Outcome
 
@@ -136,15 +136,16 @@ foundation:
     downstream realization readiness diagnostic.
 27. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose certified internal outbox
-    delivery readiness for aggregate backlog, status counts, durable repository
-    posture, broker configuration posture, publisher-adapter presence,
-    source-of-truth paths, and certification blockers. The route requires both
-    the `operator` role and
+    delivery readiness for aggregate backlog, status counts, due retry posture,
+    durable repository posture, broker configuration posture,
+    publisher-adapter presence, source-of-truth paths, and certification
+    blockers. The route requires both the `operator` role and
     `idea.outbox-delivery.readiness.read`, returns source-safe aggregate counts
     only, and emits bounded `outbox_delivery_readiness_read` operation events.
     Durable PostgreSQL providers compute the readiness summary with bounded
-    `idea_outbox_event` aggregate queries instead of materializing unrelated
-    repository snapshots.
+    `idea_outbox_event` aggregate queries that count failed events as
+    delivery-ready only when their `next_attempt_at_utc` is due, instead of
+    materializing unrelated repository snapshots.
 28. `tests/unit/test_outbox_delivery_readiness.py` and
     `tests/unit/test_postgres_outbox_readiness.py`, plus
     `tests/integration/test_outbox_delivery_readiness_api.py`, prove the
@@ -156,7 +157,9 @@ foundation:
     delivery orchestration as an internal operator action with
     `idea.outbox-delivery.run`. It emits bounded
     `outbox_delivery_run_once` events, fails closed without valid broker
-    configuration, and returns aggregate counts only.
+    configuration, records first/last failure timing plus a deterministic
+    capped next-attempt schedule for failed publication attempts, and returns
+    aggregate counts only.
 30. `tests/integration/test_outbox_delivery_readiness_api.py` proves the
     run-once action's blocked-without-broker posture, configured publisher
     delivery path, permission denial, UTC validation, product-safe response

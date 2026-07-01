@@ -516,8 +516,9 @@ counting outbox state through whole-store repository snapshots:
 1. `OutboxDeliveryReadinessProjectionRepository` and
    `OutboxDeliveryReadinessRepositorySummary` define an internal readiness
    projection contract for aggregate outbox status, expired-lease, and
-   delivery-ready counts; this is design modularity only, not a separate
-   runtime outbox service.
+   delivery-ready counts; later durable retry scheduling narrows failed-event
+   readiness to rows whose next-attempt timestamp is due. This is design
+   modularity only, not a separate runtime outbox service.
 2. `PostgresIdeaRepository.outbox_delivery_readiness_summary(...)` reads
    aggregate counts directly from `idea_outbox_event`, while
    `PostgresIdeaRepository.outbox_events_for_delivery(...)` now uses a bounded
@@ -685,6 +686,33 @@ API-level run identity before external side effects:
    mutation, conflict without mutation, source-safe response posture,
    permission ordering, and operation-event attributes.
 5. This is internal operator-action hardening only. It does not certify
+   external broker publication, downstream delivery, platform mesh event
+   publication, Gateway/Workbench support, client-ready publication, or
+   supported-feature promotion.
+
+This slice also hardens durable outbox retry scheduling after GitHub issue
+`#297` showed failed events could be reclaimed immediately on every polling
+pass:
+
+1. `OutboxEventRecord` now carries source-safe failure timing and
+   `next_attempt_at_utc` eligibility. Retryable failed events require
+   first/last failure timing plus a future next-attempt timestamp; dead-lettered
+   events retain first/last failure timing and cannot carry a next-attempt
+   timestamp.
+2. The domain and PostgreSQL delivery paths compute deterministic capped retry
+   eligibility, starting at 60 seconds and capping at 900 seconds. Failed rows
+   below the retry limit are not delivery-ready until the durable timestamp is
+   due; expired leases remain immediately recoverable.
+3. PostgreSQL claim/readiness queries use `status` plus `next_attempt_at_utc`
+   predicates and the migration contract now requires
+   `idx_idea_outbox_event_retry_due`. Retry claims clear only the due timestamp
+   and lease fields needed for the active attempt, preserving first/last
+   failure timing until successful publication clears the failure lifecycle or
+   dead-letter closure retains final failure evidence.
+4. Unit and integration tests cover immediate no-reclaim behavior, due retry
+   behavior, retry-to-dead-letter behavior, publication cleanup, repository-side
+   readiness counts, and Postgres adapter parity.
+5. This is internal outbox operability hardening only. It does not certify
    external broker publication, downstream delivery, platform mesh event
    publication, Gateway/Workbench support, client-ready publication, or
    supported-feature promotion.
