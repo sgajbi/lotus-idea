@@ -269,9 +269,12 @@ This slice also hardens workflow/operator API error-model polish:
 This slice also hardens runtime Docker and release image identity governance:
 
 1. The Dockerfile now builds from a governed `PYTHON_BASE_IMAGE` argument,
-   installs only runtime package dependencies, preserves `/app/src` on
-   `PYTHONPATH`, copies only the runtime source-ingestion worker entrypoints
-   from `scripts/`, and runs the service as the non-root `lotus` user.
+   installs the resolved runtime dependency lock before copying `src`, installs
+   the local service package afterward with `--no-deps`, preserves `/app/src`
+   on `PYTHONPATH`, copies only the runtime source-ingestion worker entrypoints
+   from `scripts/`, and runs the service as the non-root `lotus` user. After
+   GitHub issue `#295`, the CI release-evidence contract also rejects
+   source-before-dependency-install ordering and dependency reinstall drift.
 2. `Makefile` exposes `CONTAINER_BASE_IMAGE` and passes it into the Docker
    build. PR merge and main releasability workflows expose both
    `CONTAINER_BASE_IMAGE` and pinned `TRIVY_IMAGE` values so release evidence

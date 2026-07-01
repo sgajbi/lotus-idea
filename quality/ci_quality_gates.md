@@ -195,6 +195,14 @@ runtime may not have durable write storage configured; this is startup and
 health-surface proof, not production readiness, live upstream connectivity, or
 supported-feature proof.
 
+The runtime Dockerfile is cache-aware without weakening release proof. It copies
+`pyproject.toml`, `README.md`, and `requirements/runtime-resolved.lock.txt`,
+installs the resolved runtime dependency lock before `COPY src`, then installs
+the local service package with `--no-deps`. `make ci-contract-gate` rejects
+source-before-dependency-install ordering and package installs that would
+reinstall dependencies after a source-only change. Docker build, runtime smoke,
+image scan, and SBOM evidence remain blocking release-lane proof.
+
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell

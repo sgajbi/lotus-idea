@@ -589,6 +589,10 @@ Recent issue-derived patterns to preserve:
     shared `app.api.idempotency` route list and validation helpers, and
     `make api-idempotency-boundary-gate` must fail optional or defaulted
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
+22. Docker runtime images should install the resolved runtime dependency lock
+    before copying application source, then install the local service package
+    with `--no-deps` after `COPY src`; `make ci-contract-gate` must catch
+    source-before-dependency-install ordering and dependency reinstall drift.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -664,6 +668,12 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     `workflowWallClockSeconds` recording the same feedback-time basis and
     `longestJobName`/`longestJobSeconds` retaining the optimization signal.
     `thresholdEnforced` remains false and no duration threshold is promoted.
+14. Docker cache-aware release builds: GitHub issue `#295` is addressed by
+    moving resolved runtime dependency installation ahead of `COPY src`,
+    installing the local package afterward with `--no-deps`, and extending the
+    release-evidence contract/tests to reject source-before-dependency-install
+    ordering or dependency reinstall drift. Docker build, runtime smoke,
+    container scan, and runtime SBOM evidence remain intact.
 
 Recently closed by PR `#273` and mainline validation:
 
