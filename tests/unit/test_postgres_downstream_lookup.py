@@ -99,3 +99,11 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     assert "idea_candidate_record" not in executed_sql
     assert "idea_outbox_event" not in executed_sql
     assert "idea_downstream_submission" not in executed_sql
+
+
+def test_postgres_downstream_lookups_return_none_for_missing_records() -> None:
+    repository = PostgresIdeaRepository(FakePostgresConnection())
+
+    assert repository.conversion_intent_by_id("missing-conversion") is None
+    assert repository.candidate_record_for_conversion_intent("missing-conversion") is None
+    assert repository.report_evidence_pack_by_id("missing-report-pack") is None
