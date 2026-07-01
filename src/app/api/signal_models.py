@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import Self
 
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.domain import EvidenceFreshness, IdeaCandidate, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    IdeaCandidate,
+    SignalEvaluationResult,
+    SourceRef,
+    SourceSystem,
+)
 from app.domain.access_scope import ReviewAccessScope
 
 
@@ -149,4 +156,42 @@ class IdeaCandidateSummaryResponse(CamelModel):
                 SourceRefResponse.from_domain(source_ref)
                 for source_ref in candidate.evidence_packet.source_refs
             ),
+        )
+
+
+class SignalEvaluationResponse(CamelModel):
+    outcome: str
+    family: str
+    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
+    unsupported_reasons: tuple[str, ...] = Field(..., alias="unsupportedReasons")
+    candidate: IdeaCandidateSummaryResponse | None
+    source_authority: str = Field(..., alias="sourceAuthority")
+    supported_feature_promoted: bool = Field(
+        False,
+        alias="supportedFeaturePromoted",
+        description=(
+            "False until live source, Gateway/Workbench, data-mesh, and "
+            "supported-feature proof exists."
+        ),
+    )
+
+    @classmethod
+    def from_domain(
+        cls,
+        result: SignalEvaluationResult,
+        *,
+        source_authority: str,
+    ) -> Self:
+        return cls(
+            outcome=result.outcome.value,
+            family=result.family.value,
+            reasonCodes=tuple(reason.value for reason in result.reason_codes),
+            unsupportedReasons=tuple(reason.value for reason in result.unsupported_reasons),
+            candidate=(
+                IdeaCandidateSummaryResponse.from_domain(result.candidate)
+                if result.candidate is not None
+                else None
+            ),
+            sourceAuthority=source_authority,
+            supportedFeaturePromoted=False,
         )

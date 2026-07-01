@@ -2,14 +2,26 @@ from __future__ import annotations
 
 import importlib.util
 from datetime import UTC, date, datetime
+from decimal import Decimal
 from pathlib import Path
 from types import ModuleType
 
 import pytest
 from pydantic import ValidationError
 
-from app.api.signal_models import ReviewAccessScopeRequest, SourceRefRequest
-from app.domain import EvidenceFreshness, SourceSystem
+from app.api.signal_models import (
+    ReviewAccessScopeRequest,
+    SignalEvaluationResponse,
+    SourceRefRequest,
+)
+from app.domain import (
+    EvidenceFreshness,
+    HighCashSignalInput,
+    HighCashSignalPolicy,
+    SourceRef,
+    SourceSystem,
+    evaluate_high_cash_signal,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -74,6 +86,49 @@ def test_source_ref_request_preserves_source_authority_metadata() -> None:
     assert source_ref.freshness is EvidenceFreshness.CURRENT
 
 
+def test_signal_evaluation_response_maps_domain_result_source_safely() -> None:
+    source_refs = (
+        _source_ref("lotus-core:PortfolioStateSnapshot:v1"),
+        _source_ref("lotus-core:HoldingsAsOf:v1"),
+        _source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
+        _source_ref("lotus-core:PortfolioCashflowProjection:v1"),
+    )
+    result = evaluate_high_cash_signal(
+        HighCashSignalInput(
+            as_of_date=date(2026, 6, 21),
+            source_reported_cash_weight=Decimal("0.18"),
+            portfolio_state_ref=source_refs[0],
+            holdings_ref=source_refs[1],
+            cash_movement_ref=source_refs[2],
+            cashflow_projection_ref=source_refs[3],
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        ),
+        HighCashSignalPolicy(
+            policy_version="idle-liquidity-v1",
+            cash_weight_threshold=Decimal("0.12"),
+            candidate_score=Decimal("82"),
+        ),
+    )
+
+    response = SignalEvaluationResponse.from_domain(result, source_authority="lotus-core")
+
+    payload = response.model_dump(by_alias=True)
+    assert payload["outcome"] == "candidate_created"
+    assert payload["family"] == "high_cash"
+    assert payload["reasonCodes"] == (
+        "high_cash_ratio",
+        "cash_source_ready",
+        "review_required",
+    )
+    assert payload["sourceAuthority"] == "lotus-core"
+    assert payload["supportedFeaturePromoted"] is False
+    assert payload["candidate"]["sourceRefs"][0]["productId"] == (
+        "lotus-core:PortfolioStateSnapshot:v1"
+    )
+    assert "route" not in payload["candidate"]["sourceRefs"][0]
+    assert "contentHash" not in payload["candidate"]["sourceRefs"][0]
+
+
 def test_api_signal_model_boundary_gate_passes_current_repository() -> None:
     module = _load_api_signal_model_boundary_gate()
 
@@ -95,3 +150,23 @@ def test_api_signal_model_boundary_gate_blocks_route_module_dto_import(tmp_path:
         "src/app/api/unsafe_signal.py:1: shared signal API DTOs (SourceRefRequest) must "
         "be imported from `app.api.signal_models`, not from the `idea_signals` route module"
     ]
+
+
+def _source_ref(product_id: str) -> SourceRef:
+    route_by_product = {
+        "lotus-core:PortfolioStateSnapshot:v1": "/integration/portfolios/{portfolioRef}/core-snapshot",
+        "lotus-core:HoldingsAsOf:v1": "/portfolios/{portfolioRef}/cash-balances",
+        "lotus-core:PortfolioCashMovementSummary:v1": "/portfolios/{portfolioRef}/cash-movement-summary",
+        "lotus-core:PortfolioCashflowProjection:v1": "/portfolios/{portfolioRef}/cashflow-projection",
+    }
+    return SourceRef(
+        product_id=product_id,
+        source_system=SourceSystem.LOTUS_CORE,
+        product_version="v1",
+        route=route_by_product[product_id],
+        as_of_date=date(2026, 6, 21),
+        generated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        content_hash=f"sha256:{product_id}",
+        data_quality_status="complete",
+        freshness=EvidenceFreshness.CURRENT,
+    )

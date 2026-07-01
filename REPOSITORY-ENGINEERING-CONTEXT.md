@@ -717,8 +717,10 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     evidence request construction in `scripts/proof_request_builders.py`, and
     centralize mutating API reason-code validation in
     `app.api.request_validation`, and centralize bounded API telemetry count
-    buckets in `app.api.telemetry_buckets`; the current measured baseline scans
-    1,640 functions and reports 14 exact clusters.
+    buckets in `app.api.telemetry_buckets`, and centralize caller-supplied
+    signal response DTO projection in `app.api.signal_models.SignalEvaluationResponse`;
+    the current measured baseline scans 1,629 functions and reports 13 exact
+    clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 
