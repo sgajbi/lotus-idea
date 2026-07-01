@@ -1,0 +1,152 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [
+    {
+      "targetBlank": true,
+      "title": "Operator Workflows Operations Runbook",
+      "type": "link",
+      "url": "docs/runbooks/operator-workflows-operations.md"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "sum by (operation, outcome, supportability_status) (increase(lotus_idea_operation_events_total{operation=~\"source_ingestion_readiness_read|source_ingestion_run_once\"}[15m]))",
+          "legendFormat": "{{operation}} {{outcome}} {{supportability_status}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Source Ingestion Readiness And Run Once",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum by (operation, outcome, durable_storage_backed) (increase(lotus_idea_operation_events_total{operation=~\"outbox_delivery_readiness_read|outbox_delivery_run_once\"}[15m]))",
+          "legendFormat": "{{operation}} {{outcome}} durable={{durable_storage_backed}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Outbox Delivery Backlog And Recovery Posture",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "sum by (operation, outcome, source_authority) (increase(lotus_idea_operation_events_total{operation=~\"downstream_realization_readiness_read|downstream_realization_submission\"}[15m]))",
+          "legendFormat": "{{operation}} {{outcome}} source={{source_authority}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Downstream Realization Readiness And Submission",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum by (operation, outcome, supported_feature_promoted) (increase(lotus_idea_operation_events_total{operation=~\"mesh_readiness_read|mesh_trust_telemetry_preview_read|mesh_trust_telemetry_snapshot_read|implementation_proof_readiness_read\"}[15m]))",
+          "legendFormat": "{{operation}} {{outcome}} promoted={{supported_feature_promoted}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Runtime Trust And Implementation Proof Readiness",
+      "type": "stat"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": [
+    "lotus-idea",
+    "operator-workflows",
+    "operations",
+    "private-banking"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "Lotus Idea Operator Workflow Operations",
+  "uid": "lotus-idea-operator-workflows-operations",
+  "version": 1,
+  "weekStart": ""
+}

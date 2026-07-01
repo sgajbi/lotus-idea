@@ -1,0 +1,191 @@
+{
+  "contract_id": "lotus-idea-operator-workflows-operations",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "lifecycle_status": "implemented_internal_foundation",
+  "supportability_status": "not_certified",
+  "supported_feature_promoted": false,
+  "dashboard_certified": true,
+  "alert_certified": true,
+  "source_of_truth": {
+    "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
+    "contract_gate": "scripts/operator_workflows_operations_contract_gate.py",
+    "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+    "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
+    "alert_rules": "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml",
+    "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
+    "operations_doc": "docs/operations/observability.md",
+    "service_operations_runbook": "docs/runbooks/service-operations.md",
+    "operations_wiki": "wiki/Operations-Runbook.md",
+    "source_ingestion_source": "src/app/application/source_ingestion_readiness.py",
+    "outbox_delivery_source": "src/app/application/outbox_delivery_readiness.py",
+    "downstream_realization_source": "src/app/application/downstream_realization_readiness.py",
+    "runtime_trust_source": "src/app/application/runtime_trust_telemetry.py",
+    "implementation_proof_source": "src/app/application/implementation_proof_readiness.py",
+    "rfc_slice_15": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md",
+    "rfc_slice_17": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-17-implementation-proof-and-live-validation.md"
+  },
+  "operator_dashboard_controls": [
+    {
+      "control_id": "source-ingestion-readiness-and-run-once-posture",
+      "operator_question": "Can operators see source-ingestion readiness and run-once blockage without source payloads or portfolio identifiers?",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "source_ingestion_readiness_read",
+        "source_ingestion_run_once"
+      ],
+      "required_labels": [
+        "operation",
+        "outcome",
+        "supportability_status",
+        "source_authority",
+        "durable_storage_backed",
+        "supported_feature_promoted"
+      ],
+      "required_endpoints": [
+        "GET /api/v1/source-ingestion/readiness",
+        "POST /api/v1/source-ingestion/run-once"
+      ],
+      "certification_status": "certified"
+    },
+    {
+      "control_id": "outbox-delivery-backlog-and-recovery-posture",
+      "operator_question": "Can operators see outbox readiness and run-once failure pressure before dead-letter or recovery work is handled manually?",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "outbox_delivery_readiness_read",
+        "outbox_delivery_run_once"
+      ],
+      "required_labels": [
+        "operation",
+        "outcome",
+        "supportability_status",
+        "source_authority",
+        "durable_storage_backed",
+        "supported_feature_promoted"
+      ],
+      "required_endpoints": [
+        "GET /api/v1/outbox-delivery/readiness",
+        "POST /api/v1/outbox-delivery/run-once"
+      ],
+      "certification_status": "certified"
+    },
+    {
+      "control_id": "downstream-realization-readiness-and-submission-posture",
+      "operator_question": "Can operators distinguish downstream readiness blockers from local submission posture without claiming downstream execution outcomes?",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "downstream_realization_readiness_read",
+        "downstream_realization_submission"
+      ],
+      "required_labels": [
+        "operation",
+        "outcome",
+        "supportability_status",
+        "source_authority",
+        "durable_storage_backed",
+        "supported_feature_promoted"
+      ],
+      "required_endpoints": [
+        "GET /api/v1/downstream-realization/readiness",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
+      ],
+      "certification_status": "certified"
+    },
+    {
+      "control_id": "runtime-trust-and-implementation-proof-readiness-posture",
+      "operator_question": "Can operators see runtime trust telemetry and aggregate implementation-proof readiness regressions before support promotion is considered?",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "mesh_readiness_read",
+        "mesh_trust_telemetry_preview_read",
+        "mesh_trust_telemetry_snapshot_read",
+        "implementation_proof_readiness_read"
+      ],
+      "required_labels": [
+        "operation",
+        "outcome",
+        "supportability_status",
+        "source_authority",
+        "durable_storage_backed",
+        "supported_feature_promoted"
+      ],
+      "required_endpoints": [
+        "GET /api/v1/data-mesh/readiness",
+        "GET /api/v1/data-mesh/trust-telemetry/runtime-preview",
+        "GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot",
+        "GET /api/v1/implementation-proof/readiness"
+      ],
+      "certification_status": "certified"
+    }
+  ],
+  "operator_alert_candidates": [
+    {
+      "alert_id": "source-ingestion-readiness-blocked",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "source_ingestion_readiness_read",
+        "source_ingestion_run_once"
+      ],
+      "required_outcomes": [
+        "blocked",
+        "invalid_state"
+      ],
+      "operator_response": "Use the source-ingestion readiness endpoint and configured manifest proof to separate missing configuration, unavailable Core query/control-plane URLs, and unproven scheduled-worker posture.",
+      "certification_status": "certified"
+    },
+    {
+      "alert_id": "outbox-delivery-readiness-blocked",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "outbox_delivery_readiness_read",
+        "outbox_delivery_run_once"
+      ],
+      "required_outcomes": [
+        "blocked",
+        "invalid_state"
+      ],
+      "operator_response": "Inspect outbox readiness and run-once posture before retrying; preserve idempotent operator run identity and do not inspect raw downstream payloads.",
+      "certification_status": "certified"
+    },
+    {
+      "alert_id": "downstream-realization-readiness-blocked",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "downstream_realization_readiness_read",
+        "downstream_realization_submission"
+      ],
+      "required_outcomes": [
+        "blocked",
+        "invalid_state",
+        "permission_denied"
+      ],
+      "operator_response": "Use downstream realization readiness and local submission posture only; downstream execution, suitability, mandate, report rendering, and archive outcomes remain source-owned.",
+      "certification_status": "certified"
+    },
+    {
+      "alert_id": "implementation-proof-readiness-blocked",
+      "implemented_metric_family": "lotus_idea_operation_events_total",
+      "required_operations": [
+        "mesh_readiness_read",
+        "mesh_trust_telemetry_preview_read",
+        "mesh_trust_telemetry_snapshot_read",
+        "implementation_proof_readiness_read"
+      ],
+      "required_outcomes": [
+        "blocked"
+      ],
+      "operator_response": "Use implementation-proof readiness to identify remaining blockers and preserve not-certified/support-promotion boundaries until all source, runtime, Gateway, Workbench, and CI evidence exists.",
+      "certification_status": "certified"
+    }
+  ],
+  "non_proof_boundaries": [
+    "This contract is not live source-ingestion certification.",
+    "This contract is not external broker runtime certification.",
+    "This contract is not downstream execution outcome authority.",
+    "This contract is not data-mesh certification.",
+    "This contract is not Gateway or Workbench proof.",
+    "This contract is not supported-feature promotion."
+  ]
+}

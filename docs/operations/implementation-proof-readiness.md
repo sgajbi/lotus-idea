@@ -788,8 +788,12 @@ Implementation-backed evidence:
    `make ai-model-risk-ops-contract-gate`,
 10. AI model-risk operations proof gate:
    `make ai-model-risk-operations-proof-contract-gate`,
-11. downstream contract check: `make downstream-realization-contract-gate`,
-12. report-owned planned intake contract:
+11. non-AI operator workflow operations contract:
+    `contracts/observability/lotus-idea-operator-workflows-operations.v1.json`,
+12. non-AI operator workflow operations proof gate:
+    `make operator-workflows-operations-proof-contract-gate`,
+13. downstream contract check: `make downstream-realization-contract-gate`,
+14. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
 13. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
@@ -981,6 +985,15 @@ proof gate. Those refs clear only the model-risk dashboard/alert operations
 blockers. They do not clear `lotus-ai` runtime execution, runtime trust
 telemetry, Workbench product proof, client-ready publication, or
 supported-feature promotion.
+
+The non-AI operator workflow operations evidence includes the source-safe
+dashboard, Prometheus alert rules, runbook, and proof gates for implemented
+source-ingestion, outbox delivery, downstream realization, runtime trust
+telemetry, and implementation-proof readiness operation events. Those refs
+certify operator visibility only; live source ingestion, external broker
+publication, downstream execution outcomes, Gateway/Workbench proof,
+data-mesh certification, and supported-feature promotion remain separate
+blockers.
 
 Run:
 

@@ -1,0 +1,43 @@
+groups:
+  - name: lotus-idea-operator-workflows-operations
+    rules:
+      - alert: LotusIdeaSourceIngestionReadinessBlocked
+        expr: sum(increase(lotus_idea_operation_events_total{operation=~"source_ingestion_readiness_read|source_ingestion_run_once",outcome=~"blocked|invalid_state"}[15m])) > 0
+        for: 15m
+        labels:
+          alert_id: source-ingestion-readiness-blocked
+          severity: P3
+          owner_repo: lotus-idea
+        annotations:
+          summary: Source ingestion readiness or run-once posture is blocked.
+          runbook: docs/runbooks/operator-workflows-operations.md#source-ingestion-readiness-blocked
+      - alert: LotusIdeaOutboxDeliveryReadinessBlocked
+        expr: sum(increase(lotus_idea_operation_events_total{operation=~"outbox_delivery_readiness_read|outbox_delivery_run_once",outcome=~"blocked|invalid_state"}[15m])) > 0
+        for: 15m
+        labels:
+          alert_id: outbox-delivery-readiness-blocked
+          severity: P3
+          owner_repo: lotus-idea
+        annotations:
+          summary: Outbox delivery readiness or run-once posture is blocked.
+          runbook: docs/runbooks/operator-workflows-operations.md#outbox-delivery-readiness-blocked
+      - alert: LotusIdeaDownstreamRealizationReadinessBlocked
+        expr: sum(increase(lotus_idea_operation_events_total{operation=~"downstream_realization_readiness_read|downstream_realization_submission",outcome=~"blocked|invalid_state|permission_denied"}[15m])) > 0
+        for: 15m
+        labels:
+          alert_id: downstream-realization-readiness-blocked
+          severity: P3
+          owner_repo: lotus-idea
+        annotations:
+          summary: Downstream realization readiness or local submission posture is blocked.
+          runbook: docs/runbooks/operator-workflows-operations.md#downstream-realization-readiness-blocked
+      - alert: LotusIdeaImplementationProofReadinessBlocked
+        expr: sum(increase(lotus_idea_operation_events_total{operation=~"mesh_readiness_read|mesh_trust_telemetry_preview_read|mesh_trust_telemetry_snapshot_read|implementation_proof_readiness_read",outcome="blocked"}[30m])) > 0
+        for: 30m
+        labels:
+          alert_id: implementation-proof-readiness-blocked
+          severity: P3
+          owner_repo: lotus-idea
+        annotations:
+          summary: Runtime trust telemetry or aggregate implementation-proof readiness is blocked.
+          runbook: docs/runbooks/operator-workflows-operations.md#implementation-proof-readiness-blocked

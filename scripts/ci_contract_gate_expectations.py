@@ -23,6 +23,8 @@ REQUIRED_LINT_TARGETS = (
     "operation-metric-contract-gate",
     "ai-model-risk-ops-contract-gate",
     "ai-model-risk-operations-proof-contract-gate",
+    "operator-workflows-ops-contract-gate",
+    "operator-workflows-operations-proof-contract-gate",
     "ci-signal-evidence-contract-gate",
     "implementation-truth-gate",
     "data-mesh-contract-gate",
@@ -191,6 +193,12 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
     "ai-model-risk-operations-proof-contract-gate": (
         "scripts/ai_model_risk_operations_proof_contract_gate.py"
+    ),
+    "operator-workflows-ops-contract-gate": (
+        "scripts/operator_workflows_operations_contract_gate.py"
+    ),
+    "operator-workflows-operations-proof-contract-gate": (
+        "scripts/operator_workflows_operations_proof_contract_gate.py"
     ),
     "ci-signal-evidence-contract-gate": "scripts/ci_signal_evidence_contract_gate.py",
     "high-volatility-live-proof-contract-gate": (

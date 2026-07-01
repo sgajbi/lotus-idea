@@ -113,6 +113,8 @@ lint:
 	$(MAKE) operation-metric-contract-gate
 	$(MAKE) ai-model-risk-ops-contract-gate
 	$(MAKE) ai-model-risk-operations-proof-contract-gate
+	$(MAKE) operator-workflows-ops-contract-gate
+	$(MAKE) operator-workflows-operations-proof-contract-gate
 	$(MAKE) ci-signal-evidence-contract-gate
 	$(MAKE) implementation-truth-gate
 	$(MAKE) data-mesh-contract-gate
@@ -226,6 +228,12 @@ ai-model-risk-ops-contract-gate:
 
 ai-model-risk-operations-proof-contract-gate:
 	$(VENV_PYTHON) scripts/ai_model_risk_operations_proof_contract_gate.py
+
+operator-workflows-ops-contract-gate:
+	$(VENV_PYTHON) scripts/operator_workflows_operations_contract_gate.py
+
+operator-workflows-operations-proof-contract-gate:
+	$(VENV_PYTHON) scripts/operator_workflows_operations_proof_contract_gate.py
 
 ci-signal-evidence-contract-gate:
 	$(VENV_PYTHON) scripts/ci_signal_evidence_contract_gate.py

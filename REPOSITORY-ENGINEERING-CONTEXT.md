@@ -396,6 +396,13 @@ AI model-risk operations proof is limited to implemented AI explanation
 telemetry. It does not certify `lotus-ai` runtime execution, provider calls,
 Workbench behavior, data-mesh certification, or supported-feature promotion.
 
+Non-AI operator workflow operations proof is limited to source-safe dashboard
+and alert visibility over implemented source-ingestion, outbox delivery,
+downstream realization, runtime trust telemetry, and implementation-proof
+readiness operation events. It does not certify live source ingestion,
+external broker publication, downstream execution outcomes, Gateway/Workbench
+behavior, data-mesh certification, or supported-feature promotion.
+
 Implementation-proof readiness is an aggregate blocker view. It should help
 operators find missing proof; it must not be presented as full live journey
 proof while blockers remain.
@@ -567,6 +574,10 @@ Recent issue-derived patterns to preserve:
 19. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
+20. dashboard and alert certification should be pattern-backed with a
+    machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
+    proof gates, drift tests, and explicit non-proof boundaries; do not rely on
+    a metric catalog alone for operator visibility claims.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -587,6 +598,21 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    rather than only direct requirements. The gate also keeps the GitHub
    Dependency Graph requirements manifest mirrored to the resolved runtime lock
    so Security-tab graph updates stay parseable.
+5. Operator observability certification: GitHub issue `#282` is addressed by
+   the non-AI operator workflow operations contract and proof gates, which
+   certify source-safe dashboard/alert artifacts over implemented operation
+   telemetry while preserving live-source, external-broker, downstream
+   execution, Gateway/Workbench, data-mesh, and supported-feature blockers.
+6. Resilience retry control: GitHub issue `#286` remains open as of
+   2026-07-01 and should be handled in the resilience category by adding
+   deterministic jitter to centralized downstream retry backoff, with tests
+   that prove bounded delays, retry-wave de-synchronization, and no drift in
+   existing timeout or failure-classification behavior.
+7. PostgreSQL review-queue performance: GitHub issue `#287` remains open as of
+   2026-07-01 and should be handled in the database-operations category by
+   extending the PostgreSQL migration contract with advisor review queue
+   access-scope indexes and tests that prove access-scope filters stay covered
+   without changing advisory workflow ownership or API semantics.
 
 Recently closed by PR `#273` and mainline validation:
 

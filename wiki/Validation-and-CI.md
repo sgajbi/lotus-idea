@@ -69,6 +69,8 @@ make signal-api-contract-gate
 make operation-metric-contract-gate
 make ai-model-risk-ops-contract-gate
 make ai-model-risk-operations-proof-contract-gate
+make operator-workflows-ops-contract-gate
+make operator-workflows-operations-proof-contract-gate
 make implementation-truth-gate
 make data-mesh-contract-gate
 make mesh-policy-proof-contract-gate
@@ -665,6 +667,15 @@ dashboard controls, missing alert candidates, sensitive labels, unsupported
 operation names, missing source-of-truth paths, and premature model-risk
 dashboard, alert, `lotus-ai`, Workbench, or supported-feature certification
 claims.
+
+The operator workflows operations contract gates validate
+`contracts/observability/lotus-idea-operator-workflows-operations.v1.json`
+and the repo-owned Grafana dashboard, Prometheus alert rules, and runbook for
+source ingestion, outbox delivery, downstream realization, runtime trust, and
+implementation-proof readiness telemetry. They block unsupported operation
+names, sensitive labels, missing runbook refs, unimplemented metrics, and
+premature live-source, external-broker, downstream-execution,
+Gateway/Workbench, data-mesh, or supported-feature claims.
 
 The AI workflow-pack registration proof contract gate validates the bounded
 cross-repo `lotus-ai` workflow-pack registration proof consumed by aggregate
