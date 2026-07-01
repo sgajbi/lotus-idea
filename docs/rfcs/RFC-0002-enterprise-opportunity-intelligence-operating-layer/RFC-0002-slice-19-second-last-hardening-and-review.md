@@ -499,13 +499,25 @@ whole-store snapshot:
    `idx_idea_candidate_record_review_queue_order`, and
    `migration_contract_gate.py` requires that index so the hot queue path stays
    index-backed.
-4. Review queue application tests prove repository-side page projections bypass
+4. After GitHub issue `#287`, Migration 001 also includes narrow expression
+   indexes for the exact tenant/book/portfolio/client `access_scope` JSONB
+   predicates used by scoped advisor queue reads:
+   `idx_idea_candidate_record_scope_tenant`,
+   `idx_idea_candidate_record_scope_book`,
+   `idx_idea_candidate_record_scope_portfolio`, and
+   `idx_idea_candidate_record_scope_client`. This preserves design modularity
+   inside the existing repository adapter; there is no runtime queue-service
+   split because workload, failure-isolation, ownership, and operability
+   evidence do not justify a distributed boundary.
+5. Review queue application tests prove repository-side page projections bypass
    `snapshot()` for ordinary page reads and clear only the
    `repository_side_queue_pagination_not_certified` blocker when durable
    storage exposes the projection. PostgreSQL adapter tests prove the page read
    does not select outbox, downstream submission, report evidence-pack, or AI
-   lineage tables.
-5. This is production-scale internal read-path hardening only. It does not
+   lineage tables, and now prove scoped count/page reads retain eligibility
+   filters, all indexed scope predicates, stable ordering, count, and
+   `LIMIT`/`OFFSET` bounds.
+6. This is production-scale internal read-path hardening only. It does not
    certify Workbench support, data-product promotion, PM/compliance queue
    support, client-ready publication, or supported-feature promotion.
 
