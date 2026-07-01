@@ -5,7 +5,10 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Mapping
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_make_target_evidence_present,
+)
 from app.application.runtime_trust_telemetry import build_runtime_trust_telemetry_preview
 from app.domain import (
     EvidenceFreshness,
@@ -19,6 +22,7 @@ from app.domain import (
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_make_target_evidence_present = required_make_target_evidence_present
 
 RUNTIME_TRUST_TELEMETRY_PROOF_ENV = "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF"
 RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION = "lotus-idea.runtime-trust-telemetry-proof.v1"
@@ -312,23 +316,5 @@ def _required_file_evidence_present(
         if ref.startswith(("make ", "GET ")):
             continue
         if not (repository_root / ref).is_file():
-            return False
-    return True
-
-
-def _required_make_target_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    try:
-        makefile_text = (repository_root / "Makefile").read_text(encoding="utf-8")
-    except OSError:
-        return False
-    for ref in evidence_refs:
-        if not ref.startswith("make "):
-            continue
-        target = f"{ref.removeprefix('make ')}:"
-        if target not in makefile_text:
             return False
     return True

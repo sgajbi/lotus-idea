@@ -5,9 +5,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_make_target_evidence_present,
+)
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_make_target_evidence_present = required_make_target_evidence_present
 
 
 WORKBENCH_READ_PATH_PROOF_ENV = "LOTUS_IDEA_WORKBENCH_READ_PATH_PROOF"
@@ -152,24 +156,5 @@ def _required_file_evidence_present(
         if ref.startswith("make "):
             continue
         if not (repository_root / ref).is_file():
-            return False
-    return True
-
-
-def _required_make_target_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    makefile_path = repository_root / "Makefile"
-    try:
-        makefile_text = makefile_path.read_text(encoding="utf-8")
-    except OSError:
-        return False
-    for ref in evidence_refs:
-        if not ref.startswith("make "):
-            continue
-        target = f"{ref.removeprefix('make ')}:"
-        if target not in makefile_text:
             return False
     return True
