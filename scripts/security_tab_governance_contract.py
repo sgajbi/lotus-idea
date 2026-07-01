@@ -19,6 +19,9 @@ SECURITY_POLICY_REQUIRED_FRAGMENTS = {
 }
 DEPENDABOT_REQUIRED_FRAGMENTS = {
     'package-ecosystem: "pip"': "dependabot.yml must monitor Python dependencies",
+    'directory: "/requirements"': (
+        "dependabot.yml must monitor the GitHub Dependency Graph requirements manifest"
+    ),
     'package-ecosystem: "github-actions"': "dependabot.yml must monitor GitHub Actions",
     'interval: "weekly"': "dependabot.yml must use a weekly cadence",
     'timezone: "Asia/Singapore"': "dependabot.yml must use the governed timezone",

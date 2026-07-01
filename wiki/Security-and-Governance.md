@@ -47,7 +47,9 @@ GitHub Security posture:
    with the pinned CycloneDX tool, and `release-evidence.json` ties that SBOM
    to the built service image reference and image id. Container OS package
    posture remains covered by the Trivy image scan, not by the runtime
-   dependency SBOM.
+   dependency SBOM. The `requirements/requirements.txt` mirror exists only to
+   keep GitHub Dependency Graph updates parseable and is gated against the
+   resolved runtime lock.
 
 Mesh certification rule:
 
