@@ -27,6 +27,10 @@ feedback, conversion, report evidence-pack, and advisor queue workflow path
 against a real PostgreSQL 18 service when
 `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is configured, including schema
 rollback/reapply recovery.
+PostgreSQL-backed repository mutations use optimistic candidate-row
+compare-and-set protection and idempotency conflict retry from a fresh database
+snapshot, so stale same-candidate writes fail safely and duplicate keys return
+governed replay or conflict posture instead of leaking raw database collisions.
 Runtime profile is explicit: `LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`,
 `local` and `test` allow process-local writes, and `demo`, `staging`, and
 `production` require `LOTUS_IDEA_DATABASE_URL`. Missing durable storage in a

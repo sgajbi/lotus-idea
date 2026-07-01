@@ -201,6 +201,14 @@ For mutation workflows, preserve idempotency, audit, operation events, source
 authority, and supportability posture. Do not bypass repository mutation
 methods just to optimize a write path.
 
+For PostgreSQL-backed mutations, candidate-row updates use an optimistic
+`updated_at_utc` compare-and-set guard and reject stale same-candidate snapshot
+writes before detail rows or outbox events can be committed. Idempotency rows
+are inserted with PostgreSQL conflict detection; concurrent duplicate-key races
+roll back and retry once from a fresh database snapshot so same-payload reuse
+returns governed replay posture and changed-payload reuse returns governed
+conflict posture.
+
 ## Outbound HTTP Resilience Pattern
 
 Outbound HTTP resilience is centralized in
@@ -521,8 +529,9 @@ Recent issue-derived patterns to preserve:
 9. caller-supplied capability, role, and entitlement headers are simulation
    inputs in local/test; production-like profiles require the shared trusted
    caller-context provenance guard before those headers can authorize a route,
-10. PostgreSQL mutation paths need explicit same-candidate concurrency guards;
-   full-snapshot mutation helpers must not silently overwrite stale state,
+10. PostgreSQL mutation paths need optimistic same-candidate guards and
+   database idempotency-collision retry; full-snapshot mutation helpers must
+   not silently overwrite stale state or leak raw primary-key collisions,
 11. persisted AI explanation lineage writes need API-level idempotency in
    addition to domain request-id replay protection,
 12. privileged operator run-once mutations need explicit operator run identity
@@ -540,36 +549,36 @@ Recent issue-derived patterns to preserve:
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. Correctness, idempotency, and persistence: GitHub issue `#266` guard
-   PostgreSQL idea mutations against stale snapshot writes.
-2. Correctness, idempotency, and persistence: GitHub issue `#268` require API
+1. Correctness, idempotency, and persistence: GitHub issue `#268` require API
    idempotency for AI explanation lineage writes.
-3. Operability and release evidence: GitHub issue `#263` align repo-native
+2. Operability and release evidence: GitHub issue `#263` align repo-native
    command coverage with PostgreSQL and Docker release proof gates or document
    a governed light/full split.
-4. Evidence and proof contracts: GitHub issue `#260` require aggregate
+3. Evidence and proof contracts: GitHub issue `#260` require aggregate
    provenance for source-ingestion live proof consumption.
-5. Evidence and proof contracts: GitHub issue `#269` keep architecture
+4. Evidence and proof contracts: GitHub issue `#269` keep architecture
    boundary report evidence synchronized with current gate rules.
 
 Branch-local fixed issues awaiting merge/CI/QA closure:
 
 1. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-2. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
+2. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+   writes and map idempotency primary-key races to governed replay/conflict.
+3. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
    describes.
-3. GitHub issue `#271`: require operator run identity for outbox delivery
+4. GitHub issue `#271`: require operator run identity for outbox delivery
    run-once actions.
-4. GitHub issue `#270`: add container startup health smoke proof to Docker
+5. GitHub issue `#270`: add container startup health smoke proof to Docker
    release gates.
-5. GitHub issue `#265`: validate correlation and trace headers before logging
+6. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-6. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+7. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-7. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-8. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+8. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+9. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-9. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+10. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
 Still-open issue categories after the current security batch:
@@ -680,7 +689,8 @@ Current gaps remain explicit:
 10. no AI provider-runtime certification,
 11. no full production identity-provider integration, signed caller assertion,
     or Workbench entitlement-denied proof for caller-context authorization,
-12. no PostgreSQL same-candidate stale-write guard across all mutations,
+12. no production multi-process PostgreSQL concurrency certification beyond
+    adapter-level stale-write and idempotency-collision proof,
 13. no API-level idempotency contract for AI explanation lineage writes,
 14. no full container-image SBOM or registry attestation,
 15. no deterministic freshness check for committed architecture boundary

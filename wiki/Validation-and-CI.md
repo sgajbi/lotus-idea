@@ -219,7 +219,10 @@ Persistence adapter validation:
    adapter with a fake Postgres cursor across candidate persistence,
    idempotency replay, lifecycle history, audit events, review decisions,
    feedback, conversion intent/outcome, report evidence-pack requests, snapshot
-   hydration, commit behavior, and rollback on flush failure.
+   hydration, commit behavior, rollback on flush failure, optimistic stale
+   same-candidate update rejection, idempotency primary-key collision retry to
+   governed replay/conflict decisions, and atomic rollback of failed mutation
+   attempts.
 2. `tests/unit/test_repository_state.py` proves repository provider selection,
    runtime profile semantics, local/test process-local write allowance,
    production-like durable-write blockers, `PostgresIdeaRepository` when
