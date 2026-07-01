@@ -159,6 +159,81 @@ def test_endpoint_certification_gate_accepts_operation_event_evidence() -> None:
     assert errors == []
 
 
+def test_endpoint_certification_gate_blocks_missing_openapi_caller_context_publication() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_requires_signal_evaluation_capability",
+            "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events",
+        ]
+    )
+    endpoint["method"] = "POST"
+    endpoint["path"] = "/api/v1/example"
+    openapi_spec = {
+        "paths": {
+            "/api/v1/example": {
+                "post": {
+                    "security": [],
+                    "parameters": [
+                        {"name": "X-Caller-Capabilities", "in": "header"},
+                        {"name": "X-Lotus-Trusted-Caller-Context", "in": "header"},
+                    ],
+                }
+            }
+        }
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint, openapi_spec)
+
+    assert (
+        "('POST', '/api/v1/example'): OpenAPI must publish Lotus caller-context security"
+    ) in errors
+    assert (
+        "('POST', '/api/v1/example'): OpenAPI must publish `x-lotus-caller-context` requirements"
+    ) in errors
+
+
+def test_endpoint_certification_gate_accepts_openapi_caller_context_publication() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_requires_signal_evaluation_capability",
+            "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events",
+        ]
+    )
+    endpoint["method"] = "POST"
+    endpoint["path"] = "/api/v1/example"
+    openapi_spec = {
+        "paths": {
+            "/api/v1/example": {
+                "post": {
+                    "security": [{"LotusCallerContext": []}],
+                    "x-lotus-caller-context": {
+                        "requiredCapabilities": ["idea.example.read"],
+                        "trustedCallerContextProvenance": "trusted ingress required",
+                    },
+                    "parameters": [
+                        {
+                            "name": "X-Caller-Capabilities",
+                            "in": "header",
+                            "description": "caller capabilities",
+                        },
+                        {
+                            "name": "X-Lotus-Trusted-Caller-Context",
+                            "in": "header",
+                            "description": "trusted provenance",
+                        },
+                    ],
+                }
+            }
+        }
+    }
+
+    errors = module._validate_certified_endpoint_posture(endpoint, openapi_spec)
+
+    assert errors == []
+
+
 def test_endpoint_certification_gate_accepts_bounded_gateway_publication_boundary() -> None:
     module = _load_endpoint_certification_gate()
     endpoint = {

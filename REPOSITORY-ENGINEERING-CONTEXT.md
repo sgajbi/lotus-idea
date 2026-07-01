@@ -668,19 +668,26 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    role/wrong capability/scoped-denial tests, and extending
    `make signal-api-contract-gate` so future signal-route slices cannot
    reintroduce role-or-capability authorization.
-9. Resilience retry control: GitHub issue `#286` is addressed by fixed central
+9. OpenAPI caller-context publication: GitHub issue `#302` is addressed by
+   adding `app.api.caller_context_openapi` as the centralized generated-OpenAPI
+   contract for protected caller-context requirements, publishing
+   `LotusCallerContext` security plus `x-lotus-caller-context` required
+   capability/role/provenance metadata, and extending
+   `make endpoint-certification-gate` so certified endpoints with `idea.*`
+   capabilities cannot omit matching OpenAPI caller-context publication.
+10. Resilience retry control: GitHub issue `#286` is addressed by fixed central
    jitter in `DownstreamJsonClient` computed backoff delays, deterministic
    jitter injection in tests, and no change to retry attempts, retryable status
    codes, valid `Retry-After` handling, POST idempotency rules, or adapter-local
    retry-loop boundaries.
-10. PostgreSQL review-queue performance: GitHub issue `#287` is addressed by
+11. PostgreSQL review-queue performance: GitHub issue `#287` is addressed by
    narrow expression indexes for the advisor review queue tenant/book/
    portfolio/client access-scope JSONB predicates, migration rollback coverage,
    `migration_contract_gate.py` required-index enforcement, and PostgreSQL
    queue tests that prove scoped count/page reads retain eligibility filters,
    stable ordering, and `LIMIT`/`OFFSET` bounds without changing advisory
    workflow ownership or API semantics.
-11. Dependency update atomicity: GitHub issue `#289` is addressed by removing
+12. Dependency update atomicity: GitHub issue `#289` is addressed by removing
     the separate `/requirements` Dependabot stream, grouping Python root updates
     as dependency-closure root changes, adding `make dependency-refresh` to
     install from root pins and regenerate both runtime lock files, and protecting
@@ -690,7 +697,7 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    before normal repo-native gates. Existing install,
    runtime-closure, audit, Docker, SBOM, and release evidence gates remain
    strict.
-12. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
+13. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
    quarantining downstream-authority lifecycle statuses from caller-settable
    lifecycle transitions. The API request contract uses a caller-settable
    lifecycle enum that excludes `accepted` and `executed`, the domain graph no
@@ -698,25 +705,25 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    the application command rejects them before repository mutation or outbox
    emission. Conversion outcomes and downstream submissions remain the
    source-authority paths for downstream acceptance posture.
-13. Idempotency OpenAPI truth: GitHub issue `#291` is addressed by the shared
+14. Idempotency OpenAPI truth: GitHub issue `#291` is addressed by the shared
     idempotency OpenAPI contract override and boundary gate, which require
     certified mutating idempotency routes to publish `Idempotency-Key` as a
     required header with no default while preserving product-safe runtime
     validation behavior.
-14. CI signal feedback-time truth: GitHub issue `#293` is addressed by keeping
+15. CI signal feedback-time truth: GitHub issue `#293` is addressed by keeping
     report-only CI signal evidence source-safe while distinguishing workflow
     feedback time from longest individual job duration. `criticalPathSeconds`
     now uses first-job-start to last-job-completion wall-clock time, with
     `workflowWallClockSeconds` recording the same feedback-time basis and
     `longestJobName`/`longestJobSeconds` retaining the optimization signal.
     `thresholdEnforced` remains false and no duration threshold is promoted.
-15. Docker cache-aware release builds: GitHub issue `#295` is addressed by
+16. Docker cache-aware release builds: GitHub issue `#295` is addressed by
     moving resolved runtime dependency installation ahead of `COPY src`,
     installing the local package afterward with `--no-deps`, and extending the
     release-evidence contract/tests to reject source-before-dependency-install
     ordering or dependency reinstall drift. Docker build, runtime smoke,
     container scan, and runtime SBOM evidence remain intact.
-16. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
+17. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
     repo-native `make duplicate-implementation-inventory` command that reports
     exact duplicate function-body clusters across `src/app` and `scripts`
     without writing artifacts or enforcing thresholds. The initial baseline

@@ -30,6 +30,7 @@ from app.api.review_workflow import register_review_workflow_routes
 from app.api.runtime_trust_telemetry import register_runtime_trust_telemetry_routes
 from app.api.source_ingestion_readiness import register_source_ingestion_readiness_routes
 from app.api.underperformance_signals import register_underperformance_signal_routes
+from app.api.caller_context_openapi import apply_caller_context_openapi_contract
 from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.idempotency import mark_required_idempotency_openapi_headers
 from app.api.problem_details import problem_details_response as problem_response
@@ -196,7 +197,8 @@ def _configure_openapi_contract_overrides(application: FastAPI) -> None:
             version=application.version,
             routes=application.routes,
         )
-        application.openapi_schema = mark_required_idempotency_openapi_headers(schema)
+        schema = mark_required_idempotency_openapi_headers(schema)
+        application.openapi_schema = apply_caller_context_openapi_contract(schema)
         return application.openapi_schema
 
     application.openapi = governed_openapi  # type: ignore[method-assign]
