@@ -44,7 +44,7 @@ risk-profile, mandate/restriction, and missing-benchmark signal endpoints
 expose bounded caller-supplied evidence evaluation over source-owned Risk,
 Performance, Core, Advise, or Manage
 posture evidence. They create only source-safe review candidates or blocked
-posture, require `idea.signal.evaluate` or advisor role, redact raw source
+posture, require advisor role and `idea.signal.evaluate` capability, redact raw source
 routes and content hashes from response candidates, emit bounded operation
 events, and do not infer client income needs, provide funding advice, issue
 treasury instructions, approve planning suitability, recommend replacement
@@ -299,8 +299,8 @@ The evaluate endpoint returns deterministic posture only:
 4. `not_eligible` when source-reported evidence is current but below the
    relevant policy threshold or outside the review window.
 
-The evaluate endpoint is permissioned by `idea.signal.evaluate` capability or
-advisor role. The evaluate-and-persist endpoint is permissioned by
+The evaluate endpoint is permissioned by advisor role and
+`idea.signal.evaluate` capability. The evaluate-and-persist endpoint is permissioned by
 `idea.candidate.persist` and requires `Idempotency-Key`. Validation,
 permission, and idempotency-conflict failures return product-safe Problem
 Details.

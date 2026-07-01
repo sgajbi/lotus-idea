@@ -15,7 +15,7 @@ from app.security.caller_context import (
     CallerContext,
     CapabilityPolicy,
     PermissionDeniedError,
-    require_capability,
+    require_role_and_capability,
 )
 
 
@@ -60,7 +60,7 @@ def signal_problem_responses() -> dict[int | str, dict[str, Any]]:
         },
         status.HTTP_403_FORBIDDEN: {
             "model": ProblemDetails,
-            "description": "Caller lacks the required signal-evaluation capability.",
+            "description": "Caller lacks the required signal-evaluation role or capability.",
             "content": {
                 "application/json": {
                     "example": {
@@ -97,7 +97,7 @@ def signal_permission_problem_or_none(
     requested_access_scope: ReviewAccessScope | None = None,
 ) -> JSONResponse | None:
     try:
-        require_capability(caller, SIGNAL_EVALUATION_POLICY)
+        require_role_and_capability(caller, SIGNAL_EVALUATION_POLICY)
     except PermissionDeniedError:
         emit_event(
             IdeaOperation.SIGNAL_EVALUATION,

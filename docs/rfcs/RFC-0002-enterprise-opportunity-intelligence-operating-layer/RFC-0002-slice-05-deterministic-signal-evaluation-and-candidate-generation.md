@@ -131,7 +131,7 @@ Additional implemented bond-maturity / reinvestment foundation:
 5. `src/app/api/bond_maturity_signals.py` exposes
    `POST /api/v1/idea-signals/bond-maturity/evaluate` as a bounded
    caller-supplied API foundation over Core holdings maturity evidence. It
-   requires `idea.signal.evaluate` or advisor role, emits bounded operation
+   requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
    events, redacts source route/hash fields from candidate responses, and does
    not fetch Core sources, recommend replacement products, calculate
    reinvestment advice, own maturity schedules, approve planning suitability,
@@ -224,8 +224,8 @@ Additional implemented underperformance foundation:
 6. `src/app/api/underperformance_signals.py` exposes
    `POST /api/v1/idea-signals/underperformance/evaluate` as a bounded
    caller-supplied API foundation over Lotus Performance active-return and
-   benchmark-context evidence. It requires `idea.signal.evaluate` or advisor
-   role, emits bounded operation events, redacts source route/hash fields from
+   benchmark-context evidence. It requires advisor role and
+   `idea.signal.evaluate` capability, emits bounded operation events, redacts source route/hash fields from
    candidate responses, and does not fetch Performance sources, calculate
    returns, assign benchmarks, certify benchmark methodology, recommend trades,
    create rebalance actions, publish client communication, certify data
@@ -294,7 +294,7 @@ Additional implemented missing-benchmark foundation:
 4. `src/app/api/missing_benchmark_signals.py` exposes
    `POST /api/v1/idea-signals/missing-benchmark/evaluate` as a bounded
    caller-supplied API foundation over Core benchmark-assignment posture. It
-   requires `idea.signal.evaluate` or advisor role, emits bounded operation
+   requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
    events, redacts source route/hash fields from candidate responses, and does
    not assign benchmarks, calculate performance, certify methodology, publish
    client communication, or promote support.
@@ -348,8 +348,8 @@ Additional implemented allocation-drift / mandate-review foundation:
 5. `src/app/api/allocation_drift_signals.py` exposes
    `POST /api/v1/idea-signals/allocation-drift/evaluate` as a bounded
    caller-supplied API foundation over source-owned Manage action-register and
-   mandate-health source-ref posture. It requires `idea.signal.evaluate` or
-   advisor role, emits bounded operation events, redacts source route/hash
+   mandate-health source-ref posture. It requires advisor role and
+   `idea.signal.evaluate` capability, emits bounded operation events, redacts source route/hash
    fields from candidate responses, returns portfolio-manager review
    candidates or blocked/not-eligible/suppressed posture, and does not fetch
    Manage sources, calculate allocation drift, approve mandate compliance,
@@ -426,7 +426,7 @@ Additional implemented high-volatility foundation:
 8. `src/app/api/high_volatility_signals.py` exposes
    `POST /api/v1/idea-signals/high-volatility/evaluate` as a bounded
    caller-supplied API foundation over Lotus Risk `RiskMetricsReport:v1`
-   volatility evidence. It requires `idea.signal.evaluate` or advisor role,
+   volatility evidence. It requires advisor role and `idea.signal.evaluate` capability,
    emits bounded operation events, redacts source route/hash fields from
    candidate responses, and does not fetch Risk sources, calculate volatility,
    approve Risk methodology, recommend trades, create rebalance actions,
@@ -468,7 +468,7 @@ Additional implemented drawdown-review foundation:
    `POST /api/v1/idea-signals/drawdown-review/evaluate` as a bounded
    caller-supplied API foundation over Lotus Risk
    `DrawdownAnalyticsReport:v1` maximum-drawdown evidence. It requires
-   `idea.signal.evaluate` or advisor role, emits bounded operation events,
+   advisor role and `idea.signal.evaluate` capability, emits bounded operation events,
    redacts source route/hash fields from candidate responses, and does not
    fetch Risk sources, calculate drawdown, approve risk methodology,
    recommend trades, create rebalance actions, publish client communication,
@@ -662,7 +662,7 @@ Additional implemented low-income / liquidity-shortfall foundation:
 6. `src/app/api/low_income_signals.py` exposes
    `POST /api/v1/idea-signals/low-income/evaluate` as a bounded
    caller-supplied API foundation over Core cashflow projection and cash
-   movement evidence. It requires `idea.signal.evaluate` or advisor role,
+   movement evidence. It requires advisor role and `idea.signal.evaluate` capability,
    emits source-authority-preserving operation events, redacts source routes and
    content hashes from response candidates, and does not fetch Core sources,
    infer client income needs, approve planning suitability, provide funding

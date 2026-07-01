@@ -700,8 +700,10 @@ caller-supplied signal routes keep their stricter route-family metadata in
 
 The signal API contract gate blocks duplicated caller-supplied signal API
 authorization, source-authority, operation-event, and error-model mechanics.
-Signal routes must use shared signal API support so future slices do not
-reintroduce copy-pasted policy or inconsistent problem-detail behavior.
+Signal routes must use shared signal API support, and that support must require
+both advisor role and `idea.signal.evaluate` capability before source-owned
+evidence evaluation, so future slices do not reintroduce copy-pasted policy,
+role-only authorization, or inconsistent problem-detail behavior.
 
 The API idempotency boundary gate blocks route-local `Idempotency-Key`
 validator clones and verifies generated OpenAPI for certified idempotent
@@ -766,9 +768,9 @@ bounded read-only Gateway publication, the gate requires the ledger to cite the 
 supported-feature boundaries.
 
 The signal API contract gate blocks weak caller-supplied opportunity signal API posture. It requires
-shared permission, source-authority, operation-event, outcome-mapping, and product-safe 400/403
-`ProblemDetails` OpenAPI response metadata, so new signal families cannot introduce copy-pasted or
-weaker error-model documentation.
+shared advisor-role plus `idea.signal.evaluate` authorization, source-authority, operation-event,
+outcome-mapping, and product-safe 400/403 `ProblemDetails` OpenAPI response metadata, so new signal
+families cannot introduce copy-pasted role-only authorization or weaker error-model documentation.
 
 Data-mesh foundation checks:
 
