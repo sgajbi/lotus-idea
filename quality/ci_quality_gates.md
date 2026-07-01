@@ -217,11 +217,11 @@ scans exact function-body duplicates across `src/app` and `scripts`, writes no a
 defaults to `thresholdEnforced: false`. The initial six-line baseline scanned 1,750 functions and
 reported 31 exact duplicate clusters, including the known proof source-safety helper families. The
 first proof-helper consolidations moved source-safety traversal into
-`scripts/proof_source_safety.py` and live-proof generator timeout/output plumbing into
-`scripts/proof_generator_io.py`, and shared proof timestamp validation, make-target evidence
-checks, and cross-repository file-evidence checks into
-`src/app/application/source_safe_cross_repo_proof.py`; the current measured baseline scans 1,656
-functions and reports 21 exact duplicate clusters. The CI contract gate protects the target wiring, but duplicate
+`scripts/proof_source_safety.py` and live-proof generator timeout/output plumbing plus
+generated-at UTC parsing into `scripts/proof_generator_io.py`, and shared proof timestamp
+validation, make-target evidence checks, and cross-repository file-evidence checks into
+`src/app/application/source_safe_cross_repo_proof.py`; the current measured baseline scans 1,652
+functions and reports 20 exact duplicate clusters. The CI contract gate protects the target wiring, but duplicate
 thresholds remain unpromoted until the signal is calibrated and shared-helper ownership is clear.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
