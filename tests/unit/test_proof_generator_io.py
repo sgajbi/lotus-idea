@@ -1,12 +1,34 @@
 from __future__ import annotations
 
 from argparse import Namespace
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from pytest import CaptureFixture
 
-from scripts.proof_generator_io import timeout_seconds_from_args, write_json_payload
+from scripts.proof_generator_io import (
+    parse_generated_at_utc,
+    timeout_seconds_from_args,
+    write_json_payload,
+)
+
+
+def test_parse_generated_at_utc_accepts_zulu_timestamp() -> None:
+    assert parse_generated_at_utc("2026-06-21T10:10:00Z") == datetime(
+        2026, 6, 21, 10, 10, tzinfo=UTC
+    )
+
+
+def test_parse_generated_at_utc_normalizes_offset_timestamp() -> None:
+    assert parse_generated_at_utc("2026-06-21T18:10:00+08:00") == datetime(
+        2026, 6, 21, 10, 10, tzinfo=UTC
+    )
+
+
+def test_parse_generated_at_utc_rejects_naive_timestamp() -> None:
+    with pytest.raises(ValueError, match="generated-at-utc must be timezone-aware"):
+        parse_generated_at_utc("2026-06-21T10:10:00")
 
 
 def test_timeout_seconds_from_args_parses_positive_numeric_text() -> None:
