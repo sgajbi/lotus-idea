@@ -110,9 +110,11 @@ Implemented first-wave internal scope:
    lifecycle transition orchestration over the same repository contract.
    `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` requires
    `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
-   canonical domain lifecycle transition graph, writes lifecycle history and
-   audit evidence, returns accepted/replayed/not-found/conflict/invalid-state
-   posture, and keeps `supportedFeaturePromoted=false`.
+   canonical caller-settable domain lifecycle transition graph, writes
+   lifecycle history and audit evidence, returns accepted/replayed/not-found/
+   conflict/invalid-state posture, rejects `accepted` and `executed` as generic
+   lifecycle transition inputs before repository mutation or outbox emission,
+   and keeps `supportedFeaturePromoted=false`.
 16. `src/app/application/candidate_evidence_replay.py` and
     `src/app/api/candidate_evidence_replay.py` now expose evidence replay
     posture as a certified internal operator API at

@@ -27,6 +27,16 @@ review, feedback, conversion, report-evidence, and downstream realization
 routes. The same module owns the certified route list whose generated OpenAPI
 must advertise `Idempotency-Key` as a required header with no default value.
 
+## Lifecycle Input Vocabulary
+
+Workflow routes must not expose storage-only or downstream-authority lifecycle
+statuses as caller-settable input. `candidate_lifecycle.py` uses
+`CallerSettableIdeaLifecycleStatus` for lifecycle transition requests so
+`accepted` and `executed` remain readable legacy/downstream posture values in
+the full domain enum, but cannot be persisted through generic idea lifecycle
+transitions. Downstream acceptance posture belongs to conversion outcome and
+downstream submission contracts.
+
 ## DTO Base Models
 
 Use `app.api.base_model.CamelModel` for API request and response DTOs that need
