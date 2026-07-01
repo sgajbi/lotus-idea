@@ -588,14 +588,16 @@ Branch-local fixed issues awaiting merge/CI/QA closure:
    duration threshold enforcement.
 12. GitHub issue `#253`: deduplicate post-merge Main Releasability dispatch
    while preserving authoritative merged-PR release proof.
-13. GitHub issue `#265`: validate correlation and trace headers before logging
+13. GitHub issue `#252`: govern Docker base and scanner image identity in
+   release evidence with resolved digest provenance.
+14. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-14. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+15. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-15. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-16. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+16. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+17. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-17. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+18. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
 Still-open issue categories after branch-local fixes:
