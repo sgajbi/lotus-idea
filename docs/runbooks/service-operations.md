@@ -6,7 +6,8 @@
 | --- | --- |
 | `make lint` | Fast local governance and contract gates. |
 | `make typecheck` | Static typing proof for service code. |
-| `make ci` | Broader CI-equivalent local suite. |
+| `make ci` | Broad local aggregate suite without Docker/PostgreSQL release proof. |
+| `make ci-release` | Full local release-lane proof when Docker and disposable PostgreSQL are available. |
 | `make postgres-integration-gate` | Real PostgreSQL persistence/replay proof. |
 | `make source-ingestion-worker-check` | Manifest and source-safe check-only output contract proof. |
 | `make source-ingestion-scheduled-worker-check` | Scheduled worker deploy-contract proof. |
@@ -148,7 +149,9 @@ flowchart TD
    If readiness is degraded with `durable_repository_not_configured`, either
    configure `LOTUS_IDEA_DATABASE_URL` for the production-like profile or switch
    the runtime profile explicitly to `local`/`test` for non-production work.
-3. Run local parity check (`make ci`) before hotfix PR.
+3. Run broad local parity check (`make ci`) before hotfix PR. Run
+   `make ci-release` instead when the fix could affect Docker, PostgreSQL
+   runtime behavior, image scan, container smoke, SBOM, or release-lane proof.
 4. For persistence or repository-provider changes, run
    `make postgres-integration-gate` with `LOTUS_IDEA_POSTGRES_INTEGRATION_URL`
    pointed at a disposable PostgreSQL database. The gate proves the current

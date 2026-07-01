@@ -360,6 +360,7 @@ Initial commands:
 make install
 make check
 make ci
+make ci-release
 make postgres-integration-gate
 make durable-repository-proof-contract-gate
 make source-ingestion-worker-check

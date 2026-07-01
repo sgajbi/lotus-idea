@@ -49,6 +49,7 @@ Repo-native validation commands:
 ```powershell
 make check
 make ci
+make ci-release
 make ci-contract-gate
 make repository-hygiene-gate
 make maintainability-gate
@@ -113,6 +114,17 @@ make architecture-boundary-report
 make quality-baseline
 make clean
 ```
+
+`make ci` is the broad local aggregate for lint, typecheck, contract gates,
+OpenAPI, migrations, integration/e2e/coverage, and dependency audit. It must
+not be cited as PostgreSQL runtime, Docker build, container smoke, image scan,
+SBOM, or release evidence unless those targets were run separately.
+`make ci-release` is the governed full-lane local command: it runs `make ci`
+plus `postgres-integration-gate`, `docker-build`, `container-runtime-smoke`,
+`container-image-scan`, and `release-sbom`. Run and cite `make ci-release`
+only when local Docker and disposable PostgreSQL prerequisites are available.
+`make ci-contract-gate` blocks drift if the full-lane target drops any of those
+heavy proof families.
 
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, protected private import boundary enforcement, documentation contract enforcement,
