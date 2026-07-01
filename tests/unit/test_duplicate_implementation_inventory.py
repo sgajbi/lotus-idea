@@ -61,6 +61,40 @@ def calculate(value):
     assert validate_duplicate_inventory(tmp_path, min_function_lines=3) == []
 
 
+def test_duplicate_inventory_ignores_non_implementation_protocol_stubs(
+    tmp_path: Path,
+) -> None:
+    protocol_body = """
+from typing import Protocol
+
+
+class FirstPort(Protocol):
+    def record_event(
+        self,
+        event_id: str,
+        *,
+        actor_subject: str,
+        payload: dict[str, object],
+    ) -> None: ...
+
+
+class SecondPort(Protocol):
+    def publish_event(
+        self,
+        event_id: str,
+        *,
+        actor_subject: str,
+        payload: dict[str, object],
+    ) -> None: ...
+"""
+    _write(tmp_path / "src" / "app" / "ports.py", protocol_body)
+
+    inventory = build_duplicate_inventory(tmp_path, min_function_lines=6)
+
+    assert inventory["duplicateClusterCount"] == 0
+    assert inventory["functionCount"] == 0
+
+
 def test_duplicate_inventory_explicit_fail_mode_reports_duplicate_clusters(
     tmp_path: Path,
 ) -> None:

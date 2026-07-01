@@ -239,7 +239,8 @@ loading into `app.runtime.proof_artifact_files`, and source-product proof payloa
 normalization into `app.application.source_product_proof_values`, and outbox contract
 forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
 operation, and label validation into `scripts.operations_contract_validators`; the current
-measured baseline scans 1,607 functions and reports 1 exact duplicate cluster. The CI contract gate protects the target wiring,
+measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,582 executable function
+bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the target wiring,
 but duplicate thresholds remain unpromoted until the signal is calibrated and shared-helper
 ownership is clear.
 
