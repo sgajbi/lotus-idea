@@ -11,12 +11,20 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from app.observability import (  # noqa: E402
-    FORBIDDEN_OPERATION_FIELD_KEYS,
-    OPERATION_METRIC_LABELS,
-    IdeaOperation,
-    OperationOutcome,
-)
+from app.observability import OperationOutcome  # noqa: E402
+
+try:
+    from scripts.operations_contract_validators import (  # noqa: E402
+        validate_operations_contract_payload,
+        validate_required_labels,
+        validate_required_operations,
+    )
+except ModuleNotFoundError:
+    from operations_contract_validators import (  # type: ignore[import-not-found,no-redef] # noqa: E402
+        validate_operations_contract_payload,
+        validate_required_labels,
+        validate_required_operations,
+    )
 
 CONTRACT_PATH = Path("contracts/observability/lotus-idea-operator-workflows-operations.v1.json")
 EXPECTED_METRIC_NAME = "lotus_idea_operation_events_total"
@@ -62,18 +70,12 @@ def validate_operator_workflows_operations_contract(
     )
 
 
+# fmt: off
 def validate_operator_workflows_operations_contract_payload(
-    payload: dict[str, Any],
-    *,
-    repository_root: Path = ROOT,
+    payload: dict[str, Any], *, repository_root: Path = ROOT
 ) -> list[str]:
-    errors: list[str] = []
-    errors.extend(_validate_header(payload))
-    errors.extend(_validate_source_of_truth(payload, repository_root=repository_root))
-    errors.extend(_validate_dashboard_controls(payload))
-    errors.extend(_validate_alert_candidates(payload))
-    errors.extend(_validate_non_proof_boundaries(payload))
-    return sorted(errors)
+    return validate_operations_contract_payload(payload, repository_root=repository_root, validators=OPERATIONS_CONTRACT_VALIDATORS)
+# fmt: on
 
 
 def _validate_header(payload: dict[str, Any]) -> list[str]:
@@ -173,8 +175,8 @@ def _validate_dashboard_controls(payload: dict[str, Any]) -> list[str]:
         endpoints = control.get("required_endpoints")
         if not isinstance(endpoints, list) or not endpoints:
             errors.append(f"{control_id}: required_endpoints must be a non-empty list")
-        errors.extend(_validate_operations(control_id, control.get("required_operations")))
-        errors.extend(_validate_labels(control_id, control.get("required_labels")))
+        errors.extend(validate_required_operations(control_id, control.get("required_operations")))
+        errors.extend(validate_required_labels(control_id, control.get("required_labels")))
     return _validate_expected_ids(
         errors,
         observed,
@@ -205,7 +207,7 @@ def _validate_alert_candidates(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{alert_id}: certification_status must be certified")
         if not alert.get("operator_response"):
             errors.append(f"{alert_id}: operator_response is required")
-        errors.extend(_validate_operations(alert_id, alert.get("required_operations")))
+        errors.extend(validate_required_operations(alert_id, alert.get("required_operations")))
         outcomes = alert.get("required_outcomes")
         if not isinstance(outcomes, list) or not outcomes:
             errors.append(f"{alert_id}: required_outcomes must be a non-empty list")
@@ -239,36 +241,6 @@ def _validate_expected_ids(
     return errors
 
 
-def _validate_operations(owner: str, operations: Any) -> list[str]:
-    if not isinstance(operations, list) or not operations:
-        return [f"{owner}: required_operations must be a non-empty list"]
-    valid_operations = {operation.value for operation in IdeaOperation}
-    invalid = sorted(operation for operation in operations if operation not in valid_operations)
-    if invalid:
-        return [
-            f"{owner}: required_operations contain unsupported operations: {', '.join(invalid)}"
-        ]
-    return []
-
-
-def _validate_labels(owner: str, labels: Any) -> list[str]:
-    if not isinstance(labels, list) or not labels:
-        return [f"{owner}: required_labels must be a non-empty list"]
-    valid_labels = set(OPERATION_METRIC_LABELS)
-    invalid = sorted(label for label in labels if label not in valid_labels)
-    sensitive = sorted(
-        label
-        for label in labels
-        if isinstance(label, str) and label in FORBIDDEN_OPERATION_FIELD_KEYS
-    )
-    errors: list[str] = []
-    if invalid:
-        errors.append(f"{owner}: required_labels contain unsupported labels: {', '.join(invalid)}")
-    if sensitive:
-        errors.append(f"{owner}: required_labels contain sensitive labels: {', '.join(sensitive)}")
-    return errors
-
-
 def _validate_non_proof_boundaries(payload: dict[str, Any]) -> list[str]:
     boundaries = payload.get("non_proof_boundaries")
     if not isinstance(boundaries, list):
@@ -282,6 +254,15 @@ def _validate_non_proof_boundaries(payload: dict[str, Any]) -> list[str]:
             + "; ".join(missing)
         ]
     return []
+
+
+OPERATIONS_CONTRACT_VALIDATORS = (
+    _validate_header,
+    _validate_source_of_truth,
+    _validate_dashboard_controls,
+    _validate_alert_candidates,
+    _validate_non_proof_boundaries,
+)
 
 
 def parse_args() -> argparse.Namespace:

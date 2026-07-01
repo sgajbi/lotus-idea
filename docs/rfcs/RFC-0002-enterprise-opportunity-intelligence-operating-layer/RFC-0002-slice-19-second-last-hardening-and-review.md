@@ -518,11 +518,13 @@ existing file/function-size maintainability gate:
    `app.runtime.proof_artifact_files`, and centralize source-product proof
    payload text-sequence normalization in
    `app.application.source_product_proof_values`, and centralize outbox
-   contract forbidden-text traversal in `scripts.contract_text_guards`; each
+   contract forbidden-text traversal in `scripts.contract_text_guards`, and
+   centralize operations-contract payload, operation, and label validation in
+   `scripts.operations_contract_validators`; each
    proof gate, generator, contract gate, and API route retains family-specific
    policy/argument behavior, direct script execution remains supported, and the
-   current measured baseline scans 1,610 functions and reports 4 exact
-   duplicate clusters.
+   current measured baseline scans 1,607 functions and reports 1 exact
+   duplicate cluster.
 5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
    without adding duplicate thresholds to `make lint`.
 6. This is measured maintainability evidence only. It does not block all
