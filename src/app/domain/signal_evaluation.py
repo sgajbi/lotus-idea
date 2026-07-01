@@ -221,6 +221,20 @@ class SignalEvaluationResult:
     candidate: IdeaCandidate | None = None
 
 
+def blocked_signal_result(
+    *,
+    family: OpportunityFamily,
+    reason_codes: tuple[ReasonCode, ...],
+    unsupported_reasons: tuple[UnsupportedEvidenceReason, ...],
+) -> SignalEvaluationResult:
+    return SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.BLOCKED,
+        family=family,
+        reason_codes=reason_codes,
+        unsupported_reasons=unsupported_reasons,
+    )
+
+
 def evaluate_high_cash_signal(
     source_input: HighCashSignalInput,
     policy: HighCashSignalPolicy,
@@ -231,13 +245,13 @@ def evaluate_high_cash_signal(
     source_refs = _available_source_refs(source_input)
     missing_reasons = _missing_required_sources(source_input)
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if missing_reasons:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=missing_reasons,
@@ -248,7 +262,7 @@ def evaluate_high_cash_signal(
         if source_ref.freshness is not EvidenceFreshness.CURRENT
     ]
     if stale_sources:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
@@ -260,7 +274,7 @@ def evaluate_high_cash_signal(
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.source_reported_cash_weight is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_CASH,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -334,31 +348,31 @@ def evaluate_concentration_risk_signal(
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.concentration_ref is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.concentration_ref.freshness is not EvidenceFreshness.CURRENT:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if source_input.issuer_coverage_status is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.issuer_coverage_status.lower() != "complete":
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
@@ -379,7 +393,7 @@ def evaluate_concentration_risk_signal(
         "top_issuer_weight_current",
     )
     if top_position_weight is None and top_issuer_weight is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.CONCENTRATION,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -451,25 +465,25 @@ def evaluate_underperformance_signal(
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.performance_ref is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.performance_ref.freshness is not EvidenceFreshness.CURRENT:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if not source_input.benchmark_context_available:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.MISSING_BENCHMARK,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -481,7 +495,7 @@ def evaluate_underperformance_signal(
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.source_reported_active_return is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.UNDERPERFORMANCE,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -558,37 +572,37 @@ def evaluate_mandate_health_signal(
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.action_register_ref is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.action_register_ref.freshness is not EvidenceFreshness.CURRENT:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if not source_input.portfolio_scope_confirmed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.manage_supportability_state is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.manage_supportability_state.lower() != "ready":
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
@@ -600,7 +614,7 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.workflow_decision_count is None or source_input.lineage_edge_count is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -688,31 +702,31 @@ def evaluate_high_volatility_signal(
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.risk_ref is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.risk_ref.freshness is not EvidenceFreshness.CURRENT:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if source_input.risk_supportability_state is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.risk_supportability_state.lower() != "ready":
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
@@ -724,7 +738,7 @@ def evaluate_high_volatility_signal(
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.source_reported_volatility is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -799,31 +813,31 @@ def evaluate_drawdown_review_signal(
         raise ValueError("evaluated_at_utc must be timezone-aware")
 
     if not source_input.entitlement_allowed:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.REVIEW_REQUIRED,),
             unsupported_reasons=(UnsupportedEvidenceReason.ENTITLEMENT_DENIED,),
         )
     if source_input.risk_ref is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.risk_ref.freshness is not EvidenceFreshness.CURRENT:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_STALE,),
             unsupported_reasons=(UnsupportedEvidenceReason.STALE_SOURCE,),
         )
     if source_input.risk_supportability_state is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
     if source_input.risk_supportability_state.lower() != "ready":
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.SOURCE_UNCERTIFIED,),
@@ -835,7 +849,7 @@ def evaluate_drawdown_review_signal(
             reason_codes=(ReasonCode.DUPLICATE_SUPPRESSED,),
         )
     if source_input.source_reported_max_drawdown is None:
-        return _blocked(
+        return blocked_signal_result(
             family=OpportunityFamily.HIGH_VOLATILITY,
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
@@ -896,20 +910,6 @@ def evaluate_drawdown_review_signal(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
-    )
-
-
-def _blocked(
-    *,
-    family: OpportunityFamily,
-    reason_codes: tuple[ReasonCode, ...],
-    unsupported_reasons: tuple[UnsupportedEvidenceReason, ...],
-) -> SignalEvaluationResult:
-    return SignalEvaluationResult(
-        outcome=SignalEvaluationOutcome.BLOCKED,
-        family=family,
-        reason_codes=reason_codes,
-        unsupported_reasons=unsupported_reasons,
     )
 
 
