@@ -20,7 +20,7 @@ supported-feature promotion.
 | Panel | Operator Question | Expected Use |
 | --- | --- | --- |
 | Source Ingestion Readiness And Run Once | Are source-ingestion readiness checks or run-once attempts blocked? | Start with configuration, manifest, Core query/control-plane URL, and scheduled-worker proof posture. |
-| Outbox Delivery Backlog And Recovery Posture | Are outbox readiness checks or run-once attempts blocked or invalid? | Inspect broker configuration, retry/dead-letter posture, and idempotent operator run identity. |
+| Outbox Delivery Backlog And Recovery Posture | Are outbox readiness checks or run-once attempts blocked or invalid? | Inspect broker configuration, due retry/dead-letter posture, expired leases, and idempotent operator run identity. |
 | Downstream Realization Readiness And Submission | Are downstream readiness or local submission paths blocked? | Separate local submission posture from downstream-owned execution or approval outcomes. |
 | Runtime Trust And Implementation Proof Readiness | Are runtime trust telemetry or aggregate proof readiness checks blocked? | Identify remaining proof blockers before any support or product-surface promotion. |
 
@@ -48,8 +48,9 @@ increase within the alert window.
 Response:
 
 1. Read `GET /api/v1/outbox-delivery/readiness`.
-2. Inspect backlog, retryable, final, dead-letter, and blocker posture through
-   source-safe aggregate fields only.
+2. Inspect backlog, due retry, cooling-down failed, final, dead-letter,
+   expired-lease, and blocker posture through source-safe aggregate fields
+   only.
 3. Preserve idempotent operator run identity before invoking
    `POST /api/v1/outbox-delivery/run-once`.
 4. Do not inspect raw event payloads or downstream payload bodies in dashboard

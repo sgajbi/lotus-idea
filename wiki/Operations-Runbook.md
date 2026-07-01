@@ -342,7 +342,7 @@ timestamp without source payloads or raw downstream responses.
 | --- | --- | --- |
 | Source ingestion | Manifest plus source-safe check-only output gate, scheduled-worker deploy-contract gate, live-proof artifact contract, internal run-once foundation, and aggregate-only operator route | Live source certification, mesh certification, Gateway/Workbench support, downstream proof, or supported ingestion product |
 | Persistence | PostgreSQL integration proof for internal persistence/replay paths plus source-safe durable repository proof artifact for aggregate readiness evidence | Runtime database configuration, production storage certification, or production recovery readiness |
-| Outbox delivery foundation | Source-safe records, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded platform mesh event publication proof artifact | Certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
+| Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded platform mesh event publication proof artifact | Certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Data mesh | Proposed contracts, source-safe readiness diagnostics, and bounded platform source-manifest/catalog onboarding proof | Promoted data product, mesh certification, Gateway/Workbench discovery, or supported-feature promotion |
 | Downstream realization | Readiness diagnostics plus certified internal submission posture over current workflow counts, source-safe adapter-foundation presence, planned Advise/Manage/Report handoff contract posture, default Advise proposal, Manage action, Report intake route, and bounded Report materialization proof when sibling evidence is present | Suitability, mandate/rebalance authority, execution, order creation, client publication, or supported-feature promotion |
 
@@ -738,20 +738,24 @@ proof, client-ready publication, or supported-feature promotion.
 
 `GET /api/v1/outbox-delivery/readiness` is the certified internal outbox
 delivery readiness diagnostic. It returns aggregate backlog and status posture,
-durable-storage posture, publisher-adapter presence, source-of-truth paths, and
-certification blockers for operators without exposing event identifiers,
+due retry posture, durable-storage posture, publisher-adapter presence,
+source-of-truth paths, and certification blockers for operators without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, or broker
 payloads.
 When the active repository is PostgreSQL, the diagnostic uses bounded
 repository-side `idea_outbox_event` projections for status counts, expired
-leases, and delivery-ready counts rather than materializing unrelated idea
-state.
+leases, and due delivery-ready counts rather than materializing unrelated idea
+state. Failed rows below the retry limit remain cooling down until
+`next_attempt_at_utc`; expired leases remain immediately recoverable.
 
 `POST /api/v1/outbox-delivery/run-once` is the certified internal outbox
 delivery operator action. It runs one bounded delivery pass through the active
 repository and configured publisher adapter, requires
 `idea.outbox-delivery.run`, returns aggregate counts only, and fails closed
-without mutating records when broker configuration is missing or invalid. It is
+without mutating records when broker configuration is missing or invalid.
+Rejected publication attempts record first/last failure timing plus a
+deterministic capped retry schedule; the same failed row is not reclaimed again
+until the durable next-attempt timestamp is due. It is
 not certified live broker runtime, downstream delivery proof, platform mesh
 event certification, Gateway/Workbench proof, client-ready publication, or
 supported-feature promotion.

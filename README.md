@@ -112,12 +112,12 @@ flowchart LR
 - `src/app/domain/`: framework-free domain models, policies, scoring,
   lifecycle, review, AI governance, conversion, report evidence, persistence
   records, idempotency, replay, audit primitives, outbox records, downstream
-  submission posture records, claim/lease fencing, retry/dead-letter semantics, and public domain API exports guarded by `make private-import-boundary-gate`.
+  submission posture records, claim/lease fencing, durable outbox retry
+  scheduling, retry/dead-letter semantics, and public domain API exports guarded by `make private-import-boundary-gate`.
 - `src/app/ports/`: source-owned service, outbox publisher, and repository
   protocols.
 - `src/app/infrastructure/`: Core, Performance, Risk, and Manage source adapters,
-  migration helpers,
-  outbox publisher adapter, public PostgreSQL codec APIs, and PostgreSQL
+  migration helpers, outbox publisher adapter, public PostgreSQL codec APIs, and PostgreSQL
   repository adapter.
 - `src/app/middleware/`: HTTP boundary controls for correlation, trusted
   hosts, CORS allowlisting, request-size limits, JSON writes, and security headers.

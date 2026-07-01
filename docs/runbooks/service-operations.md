@@ -217,10 +217,13 @@ flowchart TD
     binds the operator run identity to safe request parameters and caller
     subject before claiming events. Same-key/same-request retries return
     `runStatus=replayed` without mutation; same-key/different-request reuse
-    returns product-safe `409 idempotency_conflict`. Responses include only
-    aggregate counts and a source-safe `operatorRunReference`, never raw
-    idempotency keys, event ids, broker payloads, source payloads, or downstream
-    payloads.
+    returns product-safe `409 idempotency_conflict`. Failed broker publication
+    attempts record first/last failure timing and a deterministic capped retry
+    schedule; failed rows below the retry limit are claimed again only after
+    their durable next-attempt timestamp is due, while expired leases stay
+    immediately recoverable. Responses include only aggregate counts and a
+    source-safe `operatorRunReference`, never raw idempotency keys, event ids,
+    broker payloads, source payloads, or downstream payloads.
 
 Outbound HTTP retry defaults remain disabled with one attempt. Operators can
 opt in with `LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_ATTEMPTS`,

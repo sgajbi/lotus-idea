@@ -230,11 +230,13 @@ source settings, blocks before mutation when those inputs are absent or
 invalid, and returns aggregate decision counts only.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
-status counts, delivery-ready backlog, durable repository posture, broker
+status counts, due delivery-ready backlog, durable repository posture, broker
 configuration posture, publisher-adapter presence, and certification blockers.
-PostgreSQL-backed readiness computes status, expired-lease, and ready-count
-posture through repository-side `idea_outbox_event` projections instead of a
-whole idea repository snapshot.
+PostgreSQL-backed readiness computes status, expired-lease, and due
+ready-count posture through repository-side `idea_outbox_event` projections
+instead of a whole idea repository snapshot. Failed rows below the retry limit
+are not delivery-ready until their durable `next_attempt_at_utc` is due;
+expired leases remain immediately recoverable.
 `POST /api/v1/outbox-delivery/run-once` exposes the bounded internal operator
 action for one delivery pass through the active repository and configured
 publisher adapter. It requires `Idempotency-Key`, binds the operator run

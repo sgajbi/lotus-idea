@@ -793,7 +793,7 @@ promotion.
 The internal outbox-delivery-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route and durable PostgreSQL repository-side outbox
-status/ready-count projection only; they do not certify external broker
+status/due-ready-count projection only; they do not certify external broker
 publication, downstream delivery, platform mesh event publication,
 Gateway/Workbench support, client-ready publication, or supported-feature
 promotion.
