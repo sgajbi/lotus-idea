@@ -43,14 +43,15 @@ def claim_event(
     *,
     attempt_id: str,
     owner: str = "worker-1",
+    claimed_at_utc: datetime = EVALUATED_AT,
 ) -> OutboxEventRecord:
     claimed = repository.claim_outbox_events_for_delivery(
         limit=10,
         max_retry_count=3,
         lease_owner=owner,
         lease_attempt_id=attempt_id,
-        claimed_at_utc=EVALUATED_AT,
-        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+        claimed_at_utc=claimed_at_utc,
+        lease_expires_at_utc=claimed_at_utc + timedelta(minutes=5),
     )
     for event in claimed:
         if event.event_id == event_id:
@@ -121,15 +122,31 @@ def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> No
         lease_owner="worker-1",
         lease_attempt_id="attempt-failed-1",
         failure_reason="publisher_unavailable",
+        failed_at_utc=EVALUATED_AT,
         max_retry_count=2,
     )
-    retryable = repository.outbox_events_for_delivery(limit=10, max_retry_count=2)
-    claimed_retry = claim_event(repository, event.event_id, attempt_id="attempt-failed-2")
+    retryable = repository.outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        evaluated_at_utc=EVALUATED_AT + timedelta(seconds=59),
+    )
+    due_retryable = repository.outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        evaluated_at_utc=EVALUATED_AT + timedelta(seconds=60),
+    )
+    claimed_retry = claim_event(
+        repository,
+        event.event_id,
+        attempt_id="attempt-failed-2",
+        claimed_at_utc=EVALUATED_AT + timedelta(seconds=60),
+    )
     dead_lettered = repository.mark_outbox_event_failed(
         event.event_id,
         lease_owner="worker-1",
         lease_attempt_id="attempt-failed-2",
         failure_reason="publisher_unavailable",
+        failed_at_utc=EVALUATED_AT + timedelta(seconds=60),
         max_retry_count=2,
     )
     delivered = repository.outbox_events_for_delivery(limit=10, max_retry_count=2)
@@ -152,12 +169,22 @@ def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> No
     assert failed.event is not None
     assert failed.event.status is OutboxEventStatus.FAILED
     assert failed.event.retry_count == 1
-    assert retryable == (failed.event,)
+    assert failed.event.first_failed_at_utc == EVALUATED_AT
+    assert failed.event.last_failed_at_utc == EVALUATED_AT
+    assert failed.event.next_attempt_at_utc == EVALUATED_AT + timedelta(seconds=60)
+    assert retryable == ()
+    assert due_retryable == (failed.event,)
     assert claimed_retry.status is OutboxEventStatus.LEASED
+    assert claimed_retry.first_failed_at_utc == EVALUATED_AT
+    assert claimed_retry.last_failed_at_utc == EVALUATED_AT
+    assert claimed_retry.next_attempt_at_utc is None
     assert dead_lettered.decision is OutboxDeliveryDecision.DEAD_LETTERED
     assert dead_lettered.event is not None
     assert dead_lettered.event.status is OutboxEventStatus.DEAD_LETTER
     assert dead_lettered.event.retry_count == 2
+    assert dead_lettered.event.first_failed_at_utc == EVALUATED_AT
+    assert dead_lettered.event.last_failed_at_utc == EVALUATED_AT + timedelta(seconds=60)
+    assert dead_lettered.event.next_attempt_at_utc is None
     assert delivered == ()
     assert published_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED
     assert failed_after_dead_letter.decision is OutboxDeliveryDecision.DEAD_LETTERED

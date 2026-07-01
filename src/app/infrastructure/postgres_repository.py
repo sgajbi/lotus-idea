@@ -382,7 +382,9 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         lease_owner: str,
         lease_attempt_id: str,
         failure_reason: str,
+        failed_at_utc: datetime | None = None,
         max_retry_count: int = 3,
+        next_attempt_at_utc: datetime | None = None,
     ) -> OutboxDeliveryResult:
         return mark_postgres_outbox_event_failed(
             self._connection,
@@ -390,7 +392,9 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
             lease_owner=lease_owner,
             lease_attempt_id=lease_attempt_id,
             failure_reason=failure_reason,
+            failed_at_utc=failed_at_utc,
             max_retry_count=max_retry_count,
+            next_attempt_at_utc=next_attempt_at_utc,
         )
 
     def record_ai_explanation_lineage(
@@ -615,6 +619,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
                    schema_version, payload_json, status, occurred_at_utc,
                    idempotency_fingerprint, correlation_id, causation_id,
                    published_at_utc, failure_reason, retry_count,
+                   first_failed_at_utc, last_failed_at_utc, next_attempt_at_utc,
                    lease_owner, lease_attempt_id, lease_expires_at_utc
             FROM idea_outbox_event
             ORDER BY occurred_at_utc, outbox_event_id

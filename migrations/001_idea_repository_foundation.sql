@@ -66,6 +66,9 @@ CREATE TABLE IF NOT EXISTS idea_outbox_event (
     published_at_utc TIMESTAMPTZ,
     failure_reason TEXT,
     retry_count INTEGER NOT NULL DEFAULT 0,
+    first_failed_at_utc TIMESTAMPTZ,
+    last_failed_at_utc TIMESTAMPTZ,
+    next_attempt_at_utc TIMESTAMPTZ,
     lease_owner TEXT,
     lease_attempt_id TEXT,
     lease_expires_at_utc TIMESTAMPTZ
@@ -159,6 +162,9 @@ CREATE INDEX IF NOT EXISTS idx_idea_audit_event_candidate_time
 
 CREATE INDEX IF NOT EXISTS idx_idea_outbox_event_status_time
     ON idea_outbox_event (status, occurred_at_utc);
+
+CREATE INDEX IF NOT EXISTS idx_idea_outbox_event_retry_due
+    ON idea_outbox_event (status, next_attempt_at_utc);
 
 CREATE INDEX IF NOT EXISTS idx_idea_outbox_event_lease_expiry
     ON idea_outbox_event (status, lease_expires_at_utc);

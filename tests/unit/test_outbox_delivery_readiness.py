@@ -188,7 +188,9 @@ def failed_event(event_type: str) -> OutboxEventRecord:
     return mark_outbox_event_failed(
         pending_event(event_type),
         failure_reason="publisher_rejected",
+        failed_at_utc=PUBLISHED_AT - timedelta(minutes=5),
         max_retry_count=DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
+        next_attempt_at_utc=PUBLISHED_AT - timedelta(minutes=1),
     )
 
 
@@ -221,7 +223,9 @@ def dead_letter_event(event_type: str) -> OutboxEventRecord:
     return mark_outbox_event_failed(
         pending_event(event_type),
         failure_reason="publisher_rejected",
+        failed_at_utc=PUBLISHED_AT - timedelta(minutes=5),
         max_retry_count=1,
+        next_attempt_at_utc=None,
     )
 
 
@@ -296,6 +300,8 @@ class ProjectionOnlyOutboxRepository:
         lease_owner: str,
         lease_attempt_id: str,
         failure_reason: str,
+        failed_at_utc: datetime | None = None,
         max_retry_count: int = 3,
+        next_attempt_at_utc: datetime | None = None,
     ) -> OutboxDeliveryResult:
         raise AssertionError("readiness projection must not fail events")

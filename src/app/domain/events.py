@@ -63,6 +63,9 @@ class OutboxEventRecord:
     published_at_utc: datetime | None = None
     failure_reason: str | None = None
     retry_count: int = 0
+    first_failed_at_utc: datetime | None = None
+    last_failed_at_utc: datetime | None = None
+    next_attempt_at_utc: datetime | None = None
     lease_owner: str | None = None
     lease_attempt_id: str | None = None
     lease_expires_at_utc: datetime | None = None
@@ -82,6 +85,12 @@ class OutboxEventRecord:
         _require_aware_utc(self.occurred_at_utc, "occurred_at_utc")
         if self.published_at_utc is not None:
             _require_aware_utc(self.published_at_utc, "published_at_utc")
+        if self.first_failed_at_utc is not None:
+            _require_aware_utc(self.first_failed_at_utc, "first_failed_at_utc")
+        if self.last_failed_at_utc is not None:
+            _require_aware_utc(self.last_failed_at_utc, "last_failed_at_utc")
+        if self.next_attempt_at_utc is not None:
+            _require_aware_utc(self.next_attempt_at_utc, "next_attempt_at_utc")
         if self.lease_expires_at_utc is not None:
             _require_aware_utc(self.lease_expires_at_utc, "lease_expires_at_utc")
         if self.retry_count < 0:
@@ -100,6 +109,28 @@ class OutboxEventRecord:
             raise ValueError("published_at_utc is required for published outbox events")
         if self.status in {OutboxEventStatus.FAILED, OutboxEventStatus.DEAD_LETTER}:
             _require_text(self.failure_reason or "", "failure_reason")
+            if self.first_failed_at_utc is None:
+                raise ValueError("first_failed_at_utc is required for failed outbox events")
+            if self.last_failed_at_utc is None:
+                raise ValueError("last_failed_at_utc is required for failed outbox events")
+        elif self.status is OutboxEventStatus.LEASED:
+            if (self.first_failed_at_utc is None) != (self.last_failed_at_utc is None):
+                raise ValueError("leased outbox failure timing must include first and last failure")
+            if self.next_attempt_at_utc is not None:
+                raise ValueError("leased outbox events cannot have next_attempt_at_utc")
+        elif any(
+            value is not None
+            for value in (
+                self.first_failed_at_utc,
+                self.last_failed_at_utc,
+                self.next_attempt_at_utc,
+            )
+        ):
+            raise ValueError("failure timing is allowed only for failed or leased outbox events")
+        if self.status is OutboxEventStatus.FAILED and self.next_attempt_at_utc is None:
+            raise ValueError("next_attempt_at_utc is required for retryable failed outbox events")
+        if self.status is OutboxEventStatus.DEAD_LETTER and self.next_attempt_at_utc is not None:
+            raise ValueError("dead-lettered outbox events cannot have next_attempt_at_utc")
         leaked = FORBIDDEN_OUTBOX_PAYLOAD_KEYS.intersection(self.payload)
         if leaked:
             raise ValueError(
@@ -155,6 +186,9 @@ def lease_outbox_event(
         status=OutboxEventStatus.LEASED,
         published_at_utc=None,
         failure_reason=None,
+        first_failed_at_utc=event.first_failed_at_utc,
+        last_failed_at_utc=event.last_failed_at_utc,
+        next_attempt_at_utc=None,
         lease_owner=lease_owner,
         lease_attempt_id=lease_attempt_id,
         lease_expires_at_utc=lease_expires_at_utc,
@@ -172,6 +206,9 @@ def mark_outbox_event_published(
         status=OutboxEventStatus.PUBLISHED,
         published_at_utc=published_at_utc,
         failure_reason=None,
+        first_failed_at_utc=None,
+        last_failed_at_utc=None,
+        next_attempt_at_utc=None,
         lease_owner=None,
         lease_attempt_id=None,
         lease_expires_at_utc=None,
@@ -182,9 +219,12 @@ def mark_outbox_event_failed(
     event: OutboxEventRecord,
     *,
     failure_reason: str,
+    failed_at_utc: datetime,
     max_retry_count: int,
+    next_attempt_at_utc: datetime | None,
 ) -> OutboxEventRecord:
     validate_outbox_failure_reason(failure_reason)
+    _require_aware_utc(failed_at_utc, "failed_at_utc")
     _require_positive(max_retry_count, "max_retry_count")
     retry_count = event.retry_count + 1
     status = (
@@ -192,12 +232,23 @@ def mark_outbox_event_failed(
         if retry_count >= max_retry_count
         else OutboxEventStatus.FAILED
     )
+    if status is OutboxEventStatus.FAILED:
+        if next_attempt_at_utc is None:
+            raise ValueError("next_attempt_at_utc is required for retryable failed outbox events")
+        _require_aware_utc(next_attempt_at_utc, "next_attempt_at_utc")
+        if next_attempt_at_utc <= failed_at_utc:
+            raise ValueError("next_attempt_at_utc must be after failed_at_utc")
+    elif next_attempt_at_utc is not None:
+        raise ValueError("dead-lettered outbox events cannot have next_attempt_at_utc")
     return replace(
         event,
         status=status,
         published_at_utc=None,
         failure_reason=failure_reason,
         retry_count=retry_count,
+        first_failed_at_utc=event.first_failed_at_utc or failed_at_utc,
+        last_failed_at_utc=failed_at_utc,
+        next_attempt_at_utc=next_attempt_at_utc,
         lease_owner=None,
         lease_attempt_id=None,
         lease_expires_at_utc=None,

@@ -172,7 +172,9 @@ class DeliveryEdgeRepository:
         lease_owner: str,
         lease_attempt_id: str,
         failure_reason: str,
+        failed_at_utc: datetime | None = None,
         max_retry_count: int = 3,
+        next_attempt_at_utc: datetime | None = None,
     ) -> OutboxDeliveryResult:
         self.failure_reason = failure_reason
         return OutboxDeliveryResult(decision=self.fail_decision, event=self.event)
@@ -218,19 +220,34 @@ def test_run_outbox_delivery_once_retries_then_dead_letters_failed_events() -> N
         max_retry_count=2,
         **operator_run_kwargs("outbox-run:dead-letter:001", max_retry_count=2),
     )
+    failed_after_first = repository.snapshot().outbox_events[event.event_id]
+    immediate_retry = run_outbox_delivery_once(
+        repository,
+        RejectingPublisher(),
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-immediate",
+        max_retry_count=2,
+        **operator_run_kwargs("outbox-run:dead-letter:immediate", max_retry_count=2),
+    )
     second = run_outbox_delivery_once(
         repository,
         RejectingPublisher(),
         lease_owner="worker-1",
         lease_attempt_id="attempt-2",
         max_retry_count=2,
-        **operator_run_kwargs("outbox-run:dead-letter:002", max_retry_count=2),
+        **operator_run_kwargs(
+            "outbox-run:dead-letter:002",
+            max_retry_count=2,
+            delivered_at_utc=DELIVERED_AT + timedelta(seconds=60),
+        ),
     )
     dead_lettered = repository.snapshot().outbox_events[event.event_id]
 
     assert first.attempted_count == 1
     assert first.failed_count == 1
     assert first.dead_lettered_count == 0
+    assert failed_after_first.next_attempt_at_utc == DELIVERED_AT + timedelta(seconds=60)
+    assert immediate_retry.attempted_count == 0
     assert second.attempted_count == 1
     assert second.failed_count == 0
     assert second.dead_lettered_count == 1

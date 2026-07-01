@@ -712,18 +712,25 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
         lease_owner="worker-1",
         lease_attempt_id="attempt-1",
         failure_reason="publisher_unavailable",
+        failed_at_utc=EVALUATED_AT,
         max_retry_count=2,
     )
-    retryable = PostgresIdeaRepository(connection).outbox_events_for_delivery(
+    not_due_retryable = PostgresIdeaRepository(connection).outbox_events_for_delivery(
         limit=10,
         max_retry_count=2,
+        evaluated_at_utc=EVALUATED_AT + timedelta(seconds=59),
+    )
+    due_retryable = PostgresIdeaRepository(connection).outbox_events_for_delivery(
+        limit=10,
+        max_retry_count=2,
+        evaluated_at_utc=EVALUATED_AT + timedelta(seconds=60),
     )
     retry_claim = PostgresIdeaRepository(connection).claim_outbox_events_for_delivery(
         limit=10,
         max_retry_count=2,
         lease_owner="worker-1",
         lease_attempt_id="attempt-3",
-        claimed_at_utc=EVALUATED_AT + timedelta(minutes=1),
+        claimed_at_utc=EVALUATED_AT + timedelta(seconds=60),
         lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=6),
     )
     published = PostgresIdeaRepository(connection).mark_outbox_event_published(
@@ -754,14 +761,24 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     assert failed.decision is OutboxDeliveryDecision.ACCEPTED
     assert failed.event is not None
     assert failed.event.status is OutboxEventStatus.FAILED
-    assert retryable == (failed.event,)
+    assert failed.event.first_failed_at_utc == EVALUATED_AT
+    assert failed.event.last_failed_at_utc == EVALUATED_AT
+    assert failed.event.next_attempt_at_utc == EVALUATED_AT + timedelta(seconds=60)
+    assert not_due_retryable == ()
+    assert due_retryable == (failed.event,)
     assert retry_claim[0].status is OutboxEventStatus.LEASED
+    assert retry_claim[0].first_failed_at_utc == EVALUATED_AT
+    assert retry_claim[0].last_failed_at_utc == EVALUATED_AT
+    assert retry_claim[0].next_attempt_at_utc is None
     assert published.decision is OutboxDeliveryDecision.ACCEPTED
     assert already_published.decision is OutboxDeliveryDecision.ALREADY_PUBLISHED
     assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
     assert reloaded.status is OutboxEventStatus.PUBLISHED
     assert reloaded.published_at_utc == EVALUATED_AT + timedelta(minutes=1)
     assert reloaded.failure_reason is None
+    assert reloaded.first_failed_at_utc is None
+    assert reloaded.last_failed_at_utc is None
+    assert reloaded.next_attempt_at_utc is None
 
 
 def test_postgres_repository_rejects_sensitive_outbox_failure_reason() -> None:

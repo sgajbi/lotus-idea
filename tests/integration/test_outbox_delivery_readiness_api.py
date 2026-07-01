@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from collections.abc import Iterator
 from typing import Any
 
@@ -500,7 +500,9 @@ def failed_event(event_type: str) -> OutboxEventRecord:
     return mark_outbox_event_failed(
         pending_event(event_type),
         failure_reason="publisher_rejected",
+        failed_at_utc=EVENT_TIME,
         max_retry_count=3,
+        next_attempt_at_utc=EVENT_TIME + timedelta(seconds=60),
     )
 
 

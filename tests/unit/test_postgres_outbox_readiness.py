@@ -93,4 +93,13 @@ def _outbox_row(
     row["lease_attempt_id"] = f"{event_id}:lease" if status is OutboxEventStatus.LEASED else None
     row["published_at_utc"] = EVALUATED_AT if status is OutboxEventStatus.PUBLISHED else None
     row["failure_reason"] = "publisher_unavailable" if status is OutboxEventStatus.FAILED else None
+    row["first_failed_at_utc"] = (
+        EVALUATED_AT - timedelta(minutes=5) if status is OutboxEventStatus.FAILED else None
+    )
+    row["last_failed_at_utc"] = (
+        EVALUATED_AT - timedelta(minutes=5) if status is OutboxEventStatus.FAILED else None
+    )
+    row["next_attempt_at_utc"] = (
+        EVALUATED_AT - timedelta(minutes=1) if status is OutboxEventStatus.FAILED else None
+    )
     return row

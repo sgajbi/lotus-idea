@@ -1046,7 +1046,9 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         lease_owner: str,
         lease_attempt_id: str,
         failure_reason: str,
+        failed_at_utc: datetime | None = None,
         max_retry_count: int = 3,
+        next_attempt_at_utc: datetime | None = None,
     ) -> OutboxDeliveryResult:
         return mark_owned_outbox_event_failed(
             self._outbox_events,
@@ -1054,7 +1056,9 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             lease_owner=lease_owner,
             lease_attempt_id=lease_attempt_id,
             failure_reason=failure_reason,
+            failed_at_utc=failed_at_utc or datetime.now(UTC),
             max_retry_count=max_retry_count,
+            next_attempt_at_utc=next_attempt_at_utc,
         )
 
     def snapshot(self) -> IdeaRepositorySnapshot:

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Mapping
 
@@ -12,6 +12,9 @@ from app.domain.events import (
     mark_outbox_event_failed,
     mark_outbox_event_published,
 )
+
+OUTBOX_RETRY_BACKOFF_BASE_SECONDS = 60
+OUTBOX_RETRY_BACKOFF_MAX_SECONDS = 900
 
 
 class OutboxDeliveryDecision(StrEnum):
@@ -125,11 +128,15 @@ def mark_owned_outbox_event_failed(
     lease_owner: str,
     lease_attempt_id: str,
     failure_reason: str,
-    max_retry_count: int,
+    failed_at_utc: datetime | None = None,
+    max_retry_count: int = 3,
+    next_attempt_at_utc: datetime | None = None,
 ) -> OutboxDeliveryResult:
+    failed_at = failed_at_utc or datetime.now(UTC)
     _require_text(event_id, "event_id")
     _require_text(lease_owner, "lease_owner")
     _require_text(lease_attempt_id, "lease_attempt_id")
+    _require_aware_utc(failed_at, "failed_at_utc")
     event = events.get(event_id)
     terminal = _terminal_outbox_delivery_result(event)
     if terminal is not None:
@@ -141,10 +148,19 @@ def mark_owned_outbox_event_failed(
         lease_attempt_id=lease_attempt_id,
     ):
         return OutboxDeliveryResult(decision=OutboxDeliveryDecision.LEASE_LOST, event=event)
+    retry_at = next_attempt_at_utc
+    if retry_at is None:
+        retry_at = next_outbox_retry_attempt_at_utc(
+            event,
+            failed_at_utc=failed_at,
+            max_retry_count=max_retry_count,
+        )
     updated = mark_outbox_event_failed(
         event,
         failure_reason=failure_reason,
+        failed_at_utc=failed_at,
         max_retry_count=max_retry_count,
+        next_attempt_at_utc=retry_at,
     )
     events[event_id] = updated
     decision = (
@@ -153,6 +169,24 @@ def mark_owned_outbox_event_failed(
         else OutboxDeliveryDecision.ACCEPTED
     )
     return OutboxDeliveryResult(decision=decision, event=updated)
+
+
+def next_outbox_retry_attempt_at_utc(
+    event: OutboxEventRecord,
+    *,
+    failed_at_utc: datetime,
+    max_retry_count: int,
+) -> datetime | None:
+    _require_aware_utc(failed_at_utc, "failed_at_utc")
+    _require_positive(max_retry_count, "max_retry_count")
+    next_retry_count = event.retry_count + 1
+    if next_retry_count >= max_retry_count:
+        return None
+    delay_seconds = min(
+        OUTBOX_RETRY_BACKOFF_BASE_SECONDS * (2 ** (next_retry_count - 1)),
+        OUTBOX_RETRY_BACKOFF_MAX_SECONDS,
+    )
+    return failed_at_utc + timedelta(seconds=delay_seconds)
 
 
 def _terminal_outbox_delivery_result(
@@ -178,7 +212,12 @@ def _outbox_event_delivery_ready(
 ) -> bool:
     return (
         event.status is OutboxEventStatus.PENDING
-        or (event.status is OutboxEventStatus.FAILED and event.retry_count < max_retry_count)
+        or (
+            event.status is OutboxEventStatus.FAILED
+            and event.retry_count < max_retry_count
+            and event.next_attempt_at_utc is not None
+            and event.next_attempt_at_utc <= evaluated_at_utc
+        )
         or (
             event.status is OutboxEventStatus.LEASED
             and event.lease_expires_at_utc is not None
