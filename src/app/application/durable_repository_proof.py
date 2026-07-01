@@ -5,6 +5,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+
+_is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+
 
 DURABLE_REPOSITORY_PROOF_ENV = "LOTUS_IDEA_DURABLE_REPOSITORY_PROOF"
 DURABLE_REPOSITORY_PROOF_SCHEMA_VERSION = "lotus-idea.durable-repository-proof.v1"
@@ -146,13 +150,3 @@ def _required_make_target_evidence_present(
         if target not in makefile_text:
             return False
     return True
-
-
-def _is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
