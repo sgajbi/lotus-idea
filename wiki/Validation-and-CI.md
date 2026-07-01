@@ -201,9 +201,12 @@ support evidence. Feature Lane, PR Merge Gate, and Main Releasability run an
 `actions: read`, writes source-safe `ci-signal-evidence.json`, and uploads a
 lane-specific artifact. Main Releasability release evidence references
 `main-releasability-ci-signal-evidence` and `ci-signal-evidence.json`.
-`make ci-signal-evidence-contract-gate` validates the artifact schema and keeps
-`thresholdEnforced` false; `make ci-contract-gate` blocks removal of the
-workflow wiring. No CI duration threshold is enforced yet.
+The artifact distinguishes workflow feedback time from longest individual job
+duration: `workflowWallClockSeconds` and `criticalPathSeconds` measure first
+job start through last job completion, while `longestJobName` and
+`longestJobSeconds` identify the largest single job. `make ci-signal-evidence-contract-gate`
+validates the artifact schema and keeps `thresholdEnforced` false; `make ci-contract-gate` blocks
+removal of the workflow wiring. No CI duration threshold is enforced yet.
 
 Main Releasability SBOM evidence is runtime-dependency scoped. `make release-sbom`
 generates `sbom.cdx.json` from `requirements/runtime-resolved.lock.txt` with the pinned

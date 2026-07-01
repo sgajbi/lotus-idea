@@ -453,8 +453,11 @@ showed workflow duration and failure signal existed only in GitHub UI/API:
 
 1. `scripts/ci_signal_evidence.py` generates source-safe
    `ci-signal-evidence.json` from GitHub run-job metadata, including job and
-   step duration, conclusion, critical path, failure category, and
-   `thresholdEnforced: false`.
+   step duration, conclusion, workflow feedback time, longest-job duration,
+   failure category, and `thresholdEnforced: false`. The artifact reports
+   first-job-start to last-job-completion wall-clock time as
+   `workflowWallClockSeconds` and `criticalPathSeconds`; it reports the largest
+   single job separately as `longestJobName` and `longestJobSeconds`.
 2. Feature Lane, PR Merge Gate, and Main Releasability upload lane-specific CI
    signal evidence artifacts through `if: always()` jobs with `actions: read`.
 3. Main Releasability `release-evidence.json` references

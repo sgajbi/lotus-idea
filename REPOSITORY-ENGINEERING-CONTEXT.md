@@ -657,6 +657,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     certified mutating idempotency routes to publish `Idempotency-Key` as a
     required header with no default while preserving product-safe runtime
     validation behavior.
+13. CI signal feedback-time truth: GitHub issue `#293` is addressed by keeping
+    report-only CI signal evidence source-safe while distinguishing workflow
+    feedback time from longest individual job duration. `criticalPathSeconds`
+    now uses first-job-start to last-job-completion wall-clock time, with
+    `workflowWallClockSeconds` recording the same feedback-time basis and
+    `longestJobName`/`longestJobSeconds` retaining the optimization signal.
+    `thresholdEnforced` remains false and no duration threshold is promoted.
 
 Recently closed by PR `#273` and mainline validation:
 

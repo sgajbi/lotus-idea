@@ -229,10 +229,13 @@ Releasability have an `if: always()` CI Signal Evidence job that reads GitHub's 
 through `actions: read`, generates source-safe `ci-signal-evidence.json` with
 `scripts/ci_signal_evidence.py`, and uploads lane-specific artifacts. Main Releasability's
 `release-evidence.json` references the `main-releasability-ci-signal-evidence` artifact and
-`ci-signal-evidence.json` path. `make ci-signal-evidence-contract-gate` validates the schema shape,
-keeps `thresholdEnforced` false, and blocks sensitive source markers; `make ci-contract-gate`
-prevents workflow wiring drift. This establishes a measured baseline for future optimization
-without introducing duration pass/fail thresholds.
+`ci-signal-evidence.json` path. The artifact reports workflow feedback time from the first job
+start to the last job completion as `workflowWallClockSeconds` and `criticalPathSeconds`, while
+`longestJobName` and `longestJobSeconds` retain the longest individual job signal for optimization
+triage. `make ci-signal-evidence-contract-gate` validates the schema shape, keeps
+`thresholdEnforced` false, and blocks sensitive source markers; `make ci-contract-gate` prevents
+workflow wiring drift. This establishes a measured baseline for future optimization without
+introducing duration pass/fail thresholds.
 
 GitHub branch protection requires the strict PR Merge Gate contexts, including
 `PR Merge Gate / PostgreSQL Runtime Proof`, before `main` can move. The Docker validation job also
