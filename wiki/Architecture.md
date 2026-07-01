@@ -264,9 +264,13 @@ or client-communication authority.
 certified internal lifecycle transition API foundation. It requires
 `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the
 canonical domain lifecycle graph, records lifecycle history and audit evidence,
-and returns replay/conflict/not-found/invalid-transition posture without
-granting downstream proposal, manage-review, report, execution, or
-client-communication authority.
+and returns replay/conflict/not-found/invalid-transition posture. Request input
+uses a caller-settable lifecycle vocabulary that excludes `accepted` and
+`executed`; those downstream-authority posture values remain readable only in
+stored/response vocabulary and must come from conversion outcome or downstream
+submission source-authority contracts. The lifecycle route does not grant
+downstream proposal, manage-review, report, execution, or client-communication
+authority.
 
 `GET /api/v1/review-queues/advisor` is the certified internal advisor queue API
 foundation. It projects persisted candidate snapshots through the deterministic

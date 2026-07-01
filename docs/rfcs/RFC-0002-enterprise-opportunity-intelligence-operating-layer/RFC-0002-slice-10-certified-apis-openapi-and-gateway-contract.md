@@ -68,10 +68,13 @@ storage is absent.
 The lifecycle transition endpoint exposes the Slice 06 internal lifecycle
 history, idempotency, and audit foundation over persisted candidates. It
 requires `Idempotency-Key` and `idea.candidate.lifecycle.transition`, applies
-the canonical domain lifecycle transition graph, returns replay/conflict,
-not-found, and invalid-transition posture, and keeps
-`supportedFeaturePromoted=false`. `durableStorageBacked` follows the active
-repository provider.
+the canonical caller-settable domain lifecycle transition graph, returns
+replay/conflict, not-found, and invalid-transition posture, and keeps
+`supportedFeaturePromoted=false`. The OpenAPI request contract references
+`CallerSettableIdeaLifecycleStatus` so `accepted` and `executed` cannot be
+submitted through generic lifecycle transitions; downstream acceptance posture
+belongs to conversion outcomes and downstream submissions. `durableStorageBacked`
+follows the active repository provider.
 
 The candidate detail endpoint exposes a source-safe internal read projection
 over persisted candidate snapshots. It requires

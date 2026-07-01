@@ -622,10 +622,14 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    2026-07-01 and should be handled in the dependency-hygiene and CI-release
    category by making Python dependency update automation move root pins,
    resolved runtime locks, and the GitHub Dependency Graph mirror coherently.
-9. Lifecycle vocabulary authority: GitHub issue `#290` remains open as of
-   2026-07-01 and should be handled in the domain-vocabulary correctness
-   category by preventing generic idea lifecycle transitions from implying
-   downstream execution authority.
+9. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
+   quarantining downstream-authority lifecycle statuses from caller-settable
+   lifecycle transitions. The API request contract uses a caller-settable
+   lifecycle enum that excludes `accepted` and `executed`, the domain graph no
+   longer permits new transitions into those downstream-authority statuses, and
+   the application command rejects them before repository mutation or outbox
+   emission. Conversion outcomes and downstream submissions remain the
+   source-authority paths for downstream acceptance posture.
 10. Idempotency OpenAPI truth: GitHub issue `#291` is addressed by the shared
     idempotency OpenAPI contract override and boundary gate, which require
     certified mutating idempotency routes to publish `Idempotency-Key` as a
