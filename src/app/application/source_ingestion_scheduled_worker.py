@@ -5,11 +5,14 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
 from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     SourceIngestionWorkerPlan,
 )
 
+
+_is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 
 SCHEDULED_WORKER_SCHEMA_VERSION = "lotus-idea.source-ingestion.scheduled-worker.v1"
 SCHEDULED_WORKER_PROOF_SCHEMA_VERSION = "lotus-idea.source-ingestion.scheduled-worker-proof.v1"
@@ -196,13 +199,3 @@ def _positive_int(value: object, field_name: str, *, default: int) -> int:
 
 def _is_positive_int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
-
-
-def _is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None

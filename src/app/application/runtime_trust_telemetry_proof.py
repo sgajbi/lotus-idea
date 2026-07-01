@@ -5,6 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Mapping
 
+from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
 from app.application.runtime_trust_telemetry import build_runtime_trust_telemetry_preview
 from app.domain import (
     EvidenceFreshness,
@@ -16,6 +17,8 @@ from app.domain import (
     SourceSystem,
     evaluate_high_cash_signal,
 )
+
+_is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
 
 RUNTIME_TRUST_TELEMETRY_PROOF_ENV = "LOTUS_IDEA_RUNTIME_TRUST_TELEMETRY_PROOF"
 RUNTIME_TRUST_TELEMETRY_PROOF_SCHEMA_VERSION = "lotus-idea.runtime-trust-telemetry-proof.v1"
@@ -329,13 +332,3 @@ def _required_make_target_evidence_present(
         if target not in makefile_text:
             return False
     return True
-
-
-def _is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None

@@ -5,6 +5,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+
+_is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+
 
 OUTBOX_BROKER_PROOF_ENV = "LOTUS_IDEA_OUTBOX_BROKER_PROOF"
 OUTBOX_BROKER_PROOF_SCHEMA_VERSION = "lotus-idea.outbox-broker-proof.v1"
@@ -183,13 +187,3 @@ def _configured_publisher_runtime_evidence_present(*, repository_root: Path) -> 
         '"external_broker_runtime_proof_missing" in payload["certificationBlockers"]',
     )
     return all(fragment in api_test_text for fragment in required_fragments)
-
-
-def _is_timezone_aware_datetime_text(value: object) -> bool:
-    if not isinstance(value, str) or not value.strip():
-        return False
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return False
-    return parsed.tzinfo is not None and parsed.utcoffset() is not None
