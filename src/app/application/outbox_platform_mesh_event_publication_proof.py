@@ -6,9 +6,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_make_target_evidence_present,
+)
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_make_target_evidence_present = required_make_target_evidence_present
 
 
 OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV = (
@@ -362,23 +366,5 @@ def _required_file_evidence_present(
         else:
             path = repository_root / ref
         if not path.is_file():
-            return False
-    return True
-
-
-def _required_make_target_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    try:
-        makefile_text = (repository_root / "Makefile").read_text(encoding="utf-8")
-    except OSError:
-        return False
-    for ref in evidence_refs:
-        if not ref.startswith("make "):
-            continue
-        target = f"{ref.removeprefix('make ')}:"
-        if target not in makefile_text:
             return False
     return True
