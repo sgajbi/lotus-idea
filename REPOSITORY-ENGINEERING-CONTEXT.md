@@ -614,21 +614,28 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    certify source-safe dashboard/alert artifacts over implemented operation
    telemetry while preserving live-source, external-broker, downstream
    execution, Gateway/Workbench, data-mesh, and supported-feature blockers.
-6. Resilience retry control: GitHub issue `#286` is addressed by fixed central
+6. Aggregate operator workflow proof consumption: GitHub issue `#292` is
+   addressed by a distinct `operator-workflows-operations` implementation-proof
+   readiness capability, CLI/env/API proof-artifact consumption, and regression
+   tests that clear only operator dashboard/alert blockers while retaining
+   live-source, external-broker, downstream execution, Gateway/Workbench,
+   data-mesh, and supported-feature blockers unless their owning proof artifacts
+   are also present.
+7. Resilience retry control: GitHub issue `#286` is addressed by fixed central
    jitter in `DownstreamJsonClient` computed backoff delays, deterministic
    jitter injection in tests, and no change to retry attempts, retryable status
    codes, valid `Retry-After` handling, POST idempotency rules, or adapter-local
    retry-loop boundaries.
-7. PostgreSQL review-queue performance: GitHub issue `#287` remains open as of
+8. PostgreSQL review-queue performance: GitHub issue `#287` remains open as of
    2026-07-01 and should be handled in the database-operations category by
    extending the PostgreSQL migration contract with advisor review queue
    access-scope indexes and tests that prove access-scope filters stay covered
    without changing advisory workflow ownership or API semantics.
-8. Dependency update atomicity: GitHub issue `#289` remains open as of
+9. Dependency update atomicity: GitHub issue `#289` remains open as of
    2026-07-01 and should be handled in the dependency-hygiene and CI-release
    category by making Python dependency update automation move root pins,
    resolved runtime locks, and the GitHub Dependency Graph mirror coherently.
-9. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
+10. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
    quarantining downstream-authority lifecycle statuses from caller-settable
    lifecycle transitions. The API request contract uses a caller-settable
    lifecycle enum that excludes `accepted` and `executed`, the domain graph no
@@ -636,7 +643,7 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    the application command rejects them before repository mutation or outbox
    emission. Conversion outcomes and downstream submissions remain the
    source-authority paths for downstream acceptance posture.
-10. Idempotency OpenAPI truth: GitHub issue `#291` is addressed by the shared
+11. Idempotency OpenAPI truth: GitHub issue `#291` is addressed by the shared
     idempotency OpenAPI contract override and boundary gate, which require
     certified mutating idempotency routes to publish `Idempotency-Key` as a
     required header with no default while preserving product-safe runtime
