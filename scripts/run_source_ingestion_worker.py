@@ -33,6 +33,11 @@ from app.runtime.repository_state import (
     idea_repository_durable_storage_backed,
 )
 
+try:
+    from scripts.proof_generator_io import timeout_seconds_from_args
+except ModuleNotFoundError:
+    from proof_generator_io import timeout_seconds_from_args  # type: ignore[import-not-found,no-redef]
+
 CORE_BASE_URL_HELP = (
     f"Optional compatibility Core base URL used for both Core query and query-control-plane "
     f"clients. Prefer --core-query-base-url and --core-query-control-plane-base-url for the "
@@ -56,7 +61,7 @@ def main(argv: list[str] | None = None) -> int:
     repository = get_idea_repository()
     try:
         core_query_base_url, core_query_control_plane_base_url = _core_source_base_urls(args)
-        timeout_seconds = _timeout_seconds(args)
+        timeout_seconds = timeout_seconds_from_args(args)
         core_source = LotusCoreHighCashSourceAdapter(
             query_client=DownstreamJsonClient(
                 DownstreamClientConfig(
@@ -178,16 +183,6 @@ def _core_source_base_urls(args: argparse.Namespace) -> tuple[str, str]:
         missing.append(f"or compatibility --core-base-url/{CORE_BASE_URL_ENV}")
         raise ValueError("Core source URLs are required for run mode: " + ", ".join(missing))
     return query_base_url, query_control_plane_base_url
-
-
-def _timeout_seconds(args: argparse.Namespace) -> float:
-    try:
-        timeout = float(args.timeout_seconds)
-    except ValueError as exc:
-        raise ValueError("timeout seconds must be numeric") from exc
-    if timeout <= 0:
-        raise ValueError("timeout seconds must be positive")
-    return timeout
 
 
 def _write_json(payload: dict[str, Any]) -> None:

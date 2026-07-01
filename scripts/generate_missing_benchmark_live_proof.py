@@ -5,7 +5,6 @@ from datetime import UTC, date, datetime
 import json
 import os
 import sys
-from pathlib import Path
 
 from app.application.missing_benchmark_live_proof import (
     build_missing_benchmark_live_proof_payload,
@@ -30,6 +29,11 @@ from app.ports.core_sources import (
 )
 
 
+try:
+    from scripts.proof_generator_io import timeout_seconds_from_args, write_json_payload
+except ModuleNotFoundError:
+    from proof_generator_io import timeout_seconds_from_args, write_json_payload  # type: ignore[import-not-found,no-redef]
+
 CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV = "LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_CORE_TIMEOUT_SECONDS"
@@ -46,7 +50,7 @@ def main(argv: list[str] | None = None) -> int:
             DownstreamJsonClient(
                 DownstreamClientConfig(
                     base_url=_core_control_plane_base_url(args),
-                    timeout_seconds=_timeout_seconds(args),
+                    timeout_seconds=timeout_seconds_from_args(args),
                 )
             )
         )
@@ -69,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
                 evaluated_at_utc=evaluated_at_utc,
             ),
         )
-        _write_payload(proof_payload, output=args.output)
+        write_json_payload(proof_payload, output=args.output)
         return 0
     except (
         CoreSourceEntitlementDenied,
@@ -104,7 +108,7 @@ def _write_blocked_source_proof(*, args: argparse.Namespace, error_code: str) ->
                 "unsupportedReasons": ["source_unavailable"],
             },
         )
-        _write_payload(proof_payload, output=args.output)
+        write_json_payload(proof_payload, output=args.output)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"missing benchmark live proof error: {exc}", file=sys.stderr)
         return 2
@@ -191,16 +195,6 @@ def _core_control_plane_base_url(args: argparse.Namespace) -> str:
     return base_url
 
 
-def _timeout_seconds(args: argparse.Namespace) -> float:
-    try:
-        timeout = float(args.timeout_seconds)
-    except ValueError as exc:
-        raise ValueError("timeout seconds must be numeric") from exc
-    if timeout <= 0:
-        raise ValueError("timeout seconds must be positive")
-    return timeout
-
-
 def _parse_date(value: str, field_name: str) -> date:
     try:
         return date.fromisoformat(value.strip())
@@ -220,16 +214,6 @@ def _source_error_code(exc: Exception) -> str:
         return "core_source_entitlement_denied"
     code = getattr(exc, "code", "")
     return str(code).strip() or "core_benchmark_assignment_source_unavailable"
-
-
-def _write_payload(payload: dict[str, object], *, output: str | None) -> None:
-    rendered = json.dumps(payload, indent=2, sort_keys=True)
-    if output:
-        output_path = Path(output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(f"{rendered}\n", encoding="utf-8")
-        return
-    print(rendered)
 
 
 if __name__ == "__main__":
