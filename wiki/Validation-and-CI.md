@@ -243,8 +243,10 @@ leaving Docker build, runtime smoke, image scan, and SBOM evidence intact.
 
 Duplicate implementation inventory is report-only. `make duplicate-implementation-inventory`
 scans exact function-body duplicates across `src/app` and `scripts`, writes no artifacts, and
-reports `thresholdEnforced: false`. The initial six-line baseline scans 1,750 functions and reports
-31 exact duplicate clusters, including the known proof source-safety helper families.
+reports `thresholdEnforced: false`. The initial six-line baseline scanned 1,750 functions and
+reported 31 exact duplicate clusters, including the known proof source-safety helper families. The
+first source-safety helper consolidation moved traversal into `scripts/proof_source_safety.py`; the
+current measured baseline scans 1,721 functions and reports 29 exact duplicate clusters.
 `make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
 yet.
 

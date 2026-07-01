@@ -491,11 +491,16 @@ existing file/function-size maintainability gate:
    duplicates across `src/app` and `scripts`.
 2. The inventory writes no artifacts, reports `thresholdEnforced: false`, and
    supports an explicit `--fail-on-duplicates` mode for calibration tests only.
-3. The initial six-line baseline scans 1,750 functions and reports 31 exact
+3. The initial six-line baseline scanned 1,750 functions and reported 31 exact
    duplicate clusters, including the known proof source-safety helper families.
-4. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
+4. The first follow-through refactor moves proof source-safety traversal into
+   `scripts/proof_source_safety.py`; each proof gate retains its family-specific
+   forbidden key/text policy, direct script execution remains supported, and the
+   current measured baseline scans 1,721 functions and reports 29 exact
+   duplicate clusters.
+5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
    without adding duplicate thresholds to `make lint`.
-5. This is measured maintainability evidence only. It does not block all
+6. This is measured maintainability evidence only. It does not block all
    repetition, refactor every proof family, or promote an LLM-based quality
    gate.
 
