@@ -203,6 +203,13 @@ source-before-dependency-install ordering and package installs that would
 reinstall dependencies after a source-only change. Docker build, runtime smoke,
 image scan, and SBOM evidence remain blocking release-lane proof.
 
+Duplicate implementation measurement is report-only. `make duplicate-implementation-inventory`
+scans exact function-body duplicates across `src/app` and `scripts`, writes no artifacts, and
+defaults to `thresholdEnforced: false`. The initial six-line baseline scans 1,750 functions and
+reports 31 exact duplicate clusters, including the known proof source-safety helper families. The
+CI contract gate protects the target wiring, but duplicate thresholds remain unpromoted until the
+signal is calibrated and shared-helper ownership is clear.
+
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 
 ```powershell

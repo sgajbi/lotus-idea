@@ -234,6 +234,13 @@ runtime dependency closure to reinstall. `make ci-contract-gate` blocks
 source-before-dependency-install ordering and dependency reinstall drift while
 leaving Docker build, runtime smoke, image scan, and SBOM evidence intact.
 
+Duplicate implementation inventory is report-only. `make duplicate-implementation-inventory`
+scans exact function-body duplicates across `src/app` and `scripts`, writes no artifacts, and
+reports `thresholdEnforced: false`. The initial six-line baseline scans 1,750 functions and reports
+31 exact duplicate clusters, including the known proof source-safety helper families.
+`make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
+yet.
+
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
 1. `PR Merge Gate / Workflow Lint`

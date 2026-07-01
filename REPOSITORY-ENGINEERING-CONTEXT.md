@@ -593,6 +593,12 @@ Recent issue-derived patterns to preserve:
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `make ci-contract-gate` must catch
     source-before-dependency-install ordering and dependency reinstall drift.
+23. duplicate-implementation controls start as measured report-only inventory,
+    not a noisy merge blocker. `make duplicate-implementation-inventory`
+    scans exact first-party function-body duplicates across `src/app` and
+    `scripts`, identifies known proof-helper clusters, writes no artifacts, and
+    should be used to guide shared-helper consolidation before any strict
+    threshold is promoted.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -674,6 +680,14 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     release-evidence contract/tests to reject source-before-dependency-install
     ordering or dependency reinstall drift. Docker build, runtime smoke,
     container scan, and runtime SBOM evidence remain intact.
+15. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
+    repo-native `make duplicate-implementation-inventory` command that reports
+    exact duplicate function-body clusters across `src/app` and `scripts`
+    without writing artifacts or enforcing thresholds. The initial baseline
+    scans 1,750 functions at the six-line threshold and reports 31 exact
+    clusters, including the known proof source-safety validation helper
+    families; `make ci-contract-gate` protects the target wiring while strict
+    duplicate blocking remains unpromoted.
 
 Recently closed by PR `#273` and mainline validation:
 
