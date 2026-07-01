@@ -551,13 +551,16 @@ Recent issue-derived patterns to preserve:
    gate rules or be documented as on-demand evidence rather than current proof,
 16. ignored report-only artifacts must not be cited as durable current-state
    proof unless a deterministic committed-artifact drift gate exists,
-17. documentation should record the durable rule, not only the one-off fix.
+17. documentation should record the durable rule, not only the one-off fix,
+18. supportability, readiness, health-state, and data-quality vocabulary must
+    not be treated as freshness-current evidence unless a source-owned freshness
+    field explicitly uses governed freshness vocabulary.
 
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. No issue-discovery priorities are currently queued in repo context; refresh
-   GitHub issues before selecting the next category.
+1. performance/projection efficiency remains the active unfixed issue category
+   on this branch; refresh GitHub issues before selecting the next category.
 
 Branch-local fixed issues awaiting merge/CI/QA closure:
 
@@ -603,14 +606,14 @@ Branch-local fixed issues awaiting merge/CI/QA closure:
    stream.
 20. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
+21. GitHub issue `#255`: stop treating Manage source-ref freshness value
+   `ready` as current; source adapters now require governed freshness
+   vocabulary and the source-observability gate blocks freshness inference from
+   readiness, supportability, data-quality, health-state, or coverage terms.
 
 Still-open issue categories after branch-local fixes:
 
-1. security/authorization and HTTP boundary controls,
-2. correctness/idempotency/persistence,
-3. operability/release evidence,
-4. evidence/proof contract synchronization,
-5. performance/projection efficiency.
+1. performance/projection efficiency.
 
 Issues with branch-local fixes must not be claimed closed until merged to
 `main`, CI is green, and QA or issue-closure evidence exists.
