@@ -373,10 +373,18 @@ signal without widening lotus-idea's product boundary:
 2. `SECURITY.md` defines the supported security baseline, private
    vulnerability reporting path, source-safe report-content boundary, and
    lotus-idea product-ownership limits.
-3. `.github/dependabot.yml` adds weekly grouped Python and GitHub Actions
-   dependency monitoring with an open-PR cap to keep dependency work
-   actionable.
-4. `scripts/github_security_posture_check.py` and
+3. `.github/dependabot.yml` adds one weekly grouped Python dependency-closure
+   root update stream plus weekly grouped GitHub Actions dependency monitoring
+   with an open-PR cap to keep dependency work actionable. It deliberately does
+   not open separate `/requirements` lock-only Python PRs.
+4. `make dependency-refresh` is the governed follow-up path for Python
+   dependency PRs: it installs from root pins without a stale runtime-lock
+   constraint, then regenerates both `requirements/runtime-resolved.lock.txt`
+   and the `requirements/requirements.txt` GitHub Dependency Graph mirror from
+   the active runtime closure. Run
+   `python -m scripts.refresh_runtime_dependency_locks --check` to verify
+   committed lock truth before merge validation.
+5. `scripts/github_security_posture_check.py` and
    `make github-security-posture-check` provide an operator-run live check for
    mutable GitHub Security settings, CodeQL `default` / `remote` posture,
    private vulnerability reporting, and zero open code-scanning,
@@ -385,11 +393,12 @@ signal without widening lotus-idea's product boundary:
    `.github/dependabot.yml` are not present on the default branch that GitHub
    renders publicly, preventing unmerged branch truth from being mistaken for
    active Security-tab posture.
-5. `scripts/ci_contract_gate.py` requires the security policy and Dependabot
-   coverage, while `tests/unit/test_security_tab_governance_contract.py`
-   covers policy, client-data, dependency-ecosystem, and PR-noise regression
+6. `scripts/ci_contract_gate.py` requires the security policy, Dependabot
+   coverage, and dependency refresh target wiring, while
+   `tests/unit/test_security_tab_governance_contract.py` covers policy,
+   client-data, dependency-ecosystem, lock-only stream, and PR-noise regression
    cases.
-6. This is GitHub Security and CI-governance hardening only. It does not
+7. This is GitHub Security and CI-governance hardening only. It does not
    certify service-to-service authentication, platform entitlement proof, live
    threat monitoring, production incident response, or supported-feature
    promotion.
