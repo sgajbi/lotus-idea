@@ -6,7 +6,11 @@ from types import ModuleType
 
 import pytest
 
-from app.api.idempotency import IDEMPOTENCY_KEY_REQUIRED_MESSAGE, validate_idempotency_key
+from app.api.idempotency import (
+    IDEMPOTENCY_KEY_REQUIRED_MESSAGE,
+    mark_required_idempotency_openapi_headers,
+    validate_idempotency_key,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -67,6 +71,30 @@ def test_api_idempotency_boundary_gate_blocks_optional_openapi_header() -> None:
         "missing OpenAPI operation",
         "POST /api/v1/outbox-delivery/run-once: missing OpenAPI operation",
     ]
+
+
+def test_openapi_idempotency_marker_tolerates_malformed_schema_shapes() -> None:
+    schemas = [
+        {},
+        {"paths": []},
+        {"paths": {"/api/v1/idea-signals/high-cash/evaluate-and-persist": None}},
+        {"paths": {"/api/v1/idea-signals/high-cash/evaluate-and-persist": {"post": []}}},
+        {
+            "paths": {
+                "/api/v1/idea-signals/high-cash/evaluate-and-persist": {"post": {"parameters": {}}}
+            }
+        },
+        {
+            "paths": {
+                "/api/v1/idea-signals/high-cash/evaluate-and-persist": {
+                    "post": {"parameters": [None]}
+                }
+            }
+        },
+    ]
+
+    for schema in schemas:
+        assert mark_required_idempotency_openapi_headers(schema) is schema
 
 
 def test_api_idempotency_boundary_gate_blocks_route_local_validator(tmp_path: Path) -> None:
