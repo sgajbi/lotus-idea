@@ -10,9 +10,9 @@ from app.domain import (
     request_report_evidence_pack,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
-    FakePostgresConnection,
     access_scope,
     conversion_command,
     high_cash_candidate,
@@ -42,7 +42,7 @@ def test_postgres_conversion_intent_lookup_uses_direct_table_query() -> None:
     conversion_result = request_conversion_intent(candidate, conversion_command())
     repository.record_conversion_intent(
         conversion_result,
-        idempotency_key="conversion:downstream-lookup",
+        idempotency_key=conversion_result.conversion_intent.idempotency_key,
         payload={"conversionIntentId": "conversion-report-001"},
     )
     connection.executed_sql.clear()
@@ -73,7 +73,7 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     conversion_result = request_conversion_intent(candidate, conversion_command())
     conversion_persistence = repository.record_conversion_intent(
         conversion_result,
-        idempotency_key="conversion:report-pack-lookup",
+        idempotency_key=conversion_result.conversion_intent.idempotency_key,
         payload={"conversionIntentId": "conversion-report-001"},
     )
     assert conversion_persistence.record is not None
@@ -84,7 +84,7 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     )
     repository.record_report_evidence_pack(
         pack_result,
-        idempotency_key="report-pack:downstream-lookup",
+        idempotency_key=pack_result.evidence_pack.idempotency_key,
         payload={"reportEvidencePackId": "report-evidence-pack-001"},
     )
     connection.executed_sql.clear()

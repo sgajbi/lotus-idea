@@ -5,9 +5,9 @@ from datetime import timedelta
 
 from app.domain import IdeaCandidate, QueueAccessScopeFilter, ReviewAccessScope
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
-    FakePostgresConnection,
     access_scope,
     high_cash_candidate,
 )
