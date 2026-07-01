@@ -223,8 +223,9 @@ validation, make-target evidence checks, and cross-repository file-evidence chec
 `src/app/application/source_safe_cross_repo_proof.py`, and AST call-name parsing into
 `scripts/ast_gate_helpers.py`, and Core live-proof base URL resolution into
 `scripts/proof_generator_io.py`, and Advise/Manage proof evidence request construction into
-`scripts/proof_request_builders.py`; the current measured baseline scans 1,645 functions and
-reports 16 exact duplicate clusters. The CI contract gate protects the target wiring, but duplicate thresholds
+`scripts/proof_request_builders.py`, and mutating API reason-code validation into
+`app.api.request_validation`; the current measured baseline scans 1,642 functions and reports 15
+exact duplicate clusters. The CI contract gate protects the target wiring, but duplicate thresholds
 remain unpromoted until the signal is calibrated and shared-helper ownership is clear.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:

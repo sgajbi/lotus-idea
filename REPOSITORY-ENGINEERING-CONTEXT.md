@@ -714,9 +714,10 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     call-name parsing for contract gates in `scripts/ast_gate_helpers.py`, and
     centralize Core live-proof base URL resolution in
     `scripts/proof_generator_io.py`, and centralize Advise/Manage proof
-    evidence request construction in `scripts/proof_request_builders.py`; the
-    current measured baseline scans 1,645 functions and reports 16 exact
-    clusters.
+    evidence request construction in `scripts/proof_request_builders.py`, and
+    centralize mutating API reason-code validation in
+    `app.api.request_validation`; the current measured baseline scans 1,642
+    functions and reports 15 exact clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 
