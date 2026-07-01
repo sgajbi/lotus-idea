@@ -49,6 +49,9 @@ from app.application.missing_risk_profile_live_proof import (
 from app.application.missing_risk_profile_source_product_proof import (
     MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_ENV,
 )
+from app.application.operator_workflows_operations_proof import (
+    OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_PROOF_ENV,
@@ -89,6 +92,11 @@ PROOF_ARTIFACT_ARGS: tuple[tuple[str, str, str], ...] = (
         "--ai-model-risk-operations-proof",
         AI_MODEL_RISK_OPERATIONS_PROOF_ENV,
         "Optional AI model-risk operations dashboard and alert proof artifact path.",
+    ),
+    (
+        "--operator-workflows-operations-proof",
+        OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+        "Optional non-AI operator workflow operations dashboard and alert proof artifact path.",
     ),
     (
         "--ai-workflow-pack-registration-proof",

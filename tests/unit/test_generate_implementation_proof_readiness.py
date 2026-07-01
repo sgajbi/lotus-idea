@@ -98,6 +98,7 @@ def test_implementation_proof_readiness_payload_is_source_safe() -> None:
         "data-mesh-certification",
         "runtime-trust-telemetry-preview",
         "outbox-delivery",
+        "operator-workflows-operations",
         "workbench-product-proof",
         "opportunity-archetype-scenarios",
         "downstream-realization",

@@ -25,6 +25,10 @@ from app.application.durable_repository_proof import (
     DURABLE_REPOSITORY_PROOF_ENV,
     build_durable_repository_proof_payload,
 )
+from app.application.operator_workflows_operations_proof import (
+    OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+    build_operator_workflows_operations_proof_payload,
+)
 from app.application.runtime_trust_telemetry_proof import (
     RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
     build_runtime_trust_telemetry_proof_payload,
@@ -91,6 +95,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     monkeypatch.delenv(DURABLE_REPOSITORY_PROOF_ENV, raising=False)
     monkeypatch.delenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, raising=False)
     monkeypatch.delenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, raising=False)
+    monkeypatch.delenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, raising=False)
     monkeypatch.delenv(WORKBENCH_READ_PATH_PROOF_ENV, raising=False)
     monkeypatch.delenv(REPORT_INTAKE_ROUTE_PROOF_ENV, raising=False)
     monkeypatch.delenv(BOND_MATURITY_LIVE_PROOF_ENV, raising=False)
@@ -105,9 +110,9 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportabilityStatus"] == "not_certified"
     assert payload["certificationReady"] is False
-    assert payload["capabilityCount"] == 10
+    assert payload["capabilityCount"] == 11
     assert payload["certificationReadyCapabilityCount"] == 0
-    assert payload["blockedCapabilityCount"] == 10
+    assert payload["blockedCapabilityCount"] == 11
     assert payload["supportedFeatureCount"] == 0
     assert payload["supportedFeaturesPromoted"] is False
     assert payload["supportedFeaturePromoted"] is False
@@ -133,6 +138,7 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
         "data-mesh-certification",
         "runtime-trust-telemetry-preview",
         "outbox-delivery",
+        "operator-workflows-operations",
         "workbench-product-proof",
         "opportunity-archetype-scenarios",
         "downstream-realization",
@@ -154,6 +160,13 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert "model_risk_operations_dashboard_not_certified" not in ai_explanation_blockers
     assert "model_risk_operations_alerts_not_certified" not in ai_explanation_blockers
     assert "certified_runtime_trust_telemetry_missing" in ai_explanation_blockers
+    operator_workflows = capabilities["operator-workflows-operations"]
+    assert (
+        "contracts/observability/lotus-idea-operator-workflows-operations.v1.json"
+        in operator_workflows["evidenceRefs"]
+    )
+    assert "operator_workflow_dashboard_not_certified" in operator_workflows["blockers"]
+    assert "operator_workflow_alerts_not_certified" in operator_workflows["blockers"]
     archetype_scenarios = capabilities["opportunity-archetype-scenarios"]
     assert (
         "contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json"
@@ -182,102 +195,11 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     tmp_path: Path,
 ) -> None:
     evaluated_at_utc = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
-    manifest_path = tmp_path / "source-ingestion-manifest.json"
-    live_proof_path = tmp_path / "source-ingestion-live-proof.json"
-    scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
-    durable_proof_path = tmp_path / "durable-repository-proof.json"
-    runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
-    ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
-    ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-proof.json"
-    workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
-    report_route_proof_path = tmp_path / "report-intake-route-proof.json"
-    bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
-    manifest_path.write_text("{}", encoding="utf-8")
-    live_proof_path.write_text(
-        json.dumps(
-            build_source_ingestion_live_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                live_core_source_attempted=True,
-                worker_summary={
-                    "schemaVersion": MANIFEST_SCHEMA_VERSION,
-                    "mode": "run_once",
-                    "sourceAuthority": "lotus-core",
-                    "durableStorageBacked": True,
-                    "totalCount": 1,
-                    "decisionCounts": {"accepted": 1, "replayed": 0},
-                },
-            )
-        ),
-        encoding="utf-8",
+    _configure_readiness_proof_artifacts(
+        monkeypatch=monkeypatch,
+        tmp_path=tmp_path,
+        evaluated_at_utc=evaluated_at_utc,
     )
-    scheduled_proof_path.write_text(
-        json.dumps(_valid_scheduled_worker_proof(generated_at_utc=evaluated_at_utc)),
-        encoding="utf-8",
-    )
-    durable_proof_path.write_text(
-        json.dumps(
-            build_durable_repository_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
-        ),
-        encoding="utf-8",
-    )
-    runtime_proof_path.write_text(
-        json.dumps(
-            build_runtime_trust_telemetry_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
-        ),
-        encoding="utf-8",
-    )
-    ai_lineage_proof_path.write_text(
-        json.dumps(
-            build_ai_lineage_store_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
-        ),
-        encoding="utf-8",
-    )
-    ai_model_risk_proof_path.write_text(
-        json.dumps(
-            build_ai_model_risk_operations_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
-        ),
-        encoding="utf-8",
-    )
-    workbench_proof_path.write_text(
-        json.dumps(
-            build_workbench_read_path_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
-        ),
-        encoding="utf-8",
-    )
-    report_route_proof_path.write_text(
-        json.dumps(_valid_report_intake_route_proof()),
-        encoding="utf-8",
-    )
-    bond_maturity_live_proof_path.write_text(
-        json.dumps(_valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc)),
-        encoding="utf-8",
-    )
-    monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
-    monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof_path))
-    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
-    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
-    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
-    monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
-    monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
-    monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
-    monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
-    monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
-    monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
     monkeypatch.delenv("LOTUS_IDEA_DATABASE_URL", raising=False)
     reset_idea_repository_for_tests()
     client = TestClient(app)
@@ -297,6 +219,8 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
     assert "data_mesh_runtime_telemetry_not_certified" in payload["overallBlockers"]
     assert "runtime_trust_telemetry_product_coverage_incomplete" in payload["overallBlockers"]
     assert "certified_ai_lineage_store_missing" not in payload["overallBlockers"]
+    assert "operator_workflow_dashboard_not_certified" not in payload["overallBlockers"]
+    assert "operator_workflow_alerts_not_certified" not in payload["overallBlockers"]
     assert "workbench_gateway_bff_consumption_proof_missing" not in payload["overallBlockers"]
     assert "lotus_report_live_intake_route_proof_missing" not in payload["overallBlockers"]
     assert (
@@ -340,6 +264,14 @@ def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
         in (capabilities["ai-explanation"]["evidenceRefs"])
     )
     assert "lotus_ai_runtime_execution_missing" in capabilities["ai-explanation"]["blockers"]
+    assert (
+        "operator workflows operations proof artifact"
+        in capabilities["operator-workflows-operations"]["evidenceRefs"]
+    )
+    assert (
+        "external_broker_runtime_proof_missing"
+        in (capabilities["operator-workflows-operations"]["blockers"])
+    )
     assert (
         "workbench read-path proof artifact"
         in capabilities["workbench-product-proof"]["evidenceRefs"]
@@ -461,6 +393,123 @@ def test_implementation_proof_readiness_api_reports_unavailable_contracts_safely
             "implementation_proof_readiness_unavailable",
         )
     ]
+
+
+def _configure_readiness_proof_artifacts(
+    *,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    evaluated_at_utc: datetime,
+) -> None:
+    manifest_path = tmp_path / "source-ingestion-manifest.json"
+    live_proof_path = tmp_path / "source-ingestion-live-proof.json"
+    scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
+    durable_proof_path = tmp_path / "durable-repository-proof.json"
+    runtime_proof_path = tmp_path / "runtime-trust-telemetry-proof.json"
+    ai_lineage_proof_path = tmp_path / "ai-lineage-store-proof.json"
+    ai_model_risk_proof_path = tmp_path / "ai-model-risk-operations-proof.json"
+    operator_workflows_proof_path = tmp_path / "operator-workflows-operations-proof.json"
+    workbench_proof_path = tmp_path / "workbench-read-path-proof.json"
+    report_route_proof_path = tmp_path / "report-intake-route-proof.json"
+    bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
+
+    manifest_path.write_text("{}", encoding="utf-8")
+    live_proof_path.write_text(
+        json.dumps(
+            build_source_ingestion_live_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                live_core_source_attempted=True,
+                worker_summary={
+                    "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                    "mode": "run_once",
+                    "sourceAuthority": "lotus-core",
+                    "durableStorageBacked": True,
+                    "totalCount": 1,
+                    "decisionCounts": {"accepted": 1, "replayed": 0},
+                },
+            )
+        ),
+        encoding="utf-8",
+    )
+    scheduled_proof_path.write_text(
+        json.dumps(_valid_scheduled_worker_proof(generated_at_utc=evaluated_at_utc)),
+        encoding="utf-8",
+    )
+    durable_proof_path.write_text(
+        json.dumps(
+            build_durable_repository_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    runtime_proof_path.write_text(
+        json.dumps(
+            build_runtime_trust_telemetry_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    ai_lineage_proof_path.write_text(
+        json.dumps(
+            build_ai_lineage_store_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    ai_model_risk_proof_path.write_text(
+        json.dumps(
+            build_ai_model_risk_operations_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    operator_workflows_proof_path.write_text(
+        json.dumps(
+            build_operator_workflows_operations_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    workbench_proof_path.write_text(
+        json.dumps(
+            build_workbench_read_path_proof_payload(
+                generated_at_utc=evaluated_at_utc,
+                repository_root=ROOT,
+            )
+        ),
+        encoding="utf-8",
+    )
+    report_route_proof_path.write_text(
+        json.dumps(_valid_report_intake_route_proof()),
+        encoding="utf-8",
+    )
+    bond_maturity_live_proof_path.write_text(
+        json.dumps(_valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc)),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
+    monkeypatch.setenv(LIVE_PROOF_ENV, str(live_proof_path))
+    monkeypatch.setenv(SCHEDULED_WORKER_PROOF_ENV, str(scheduled_proof_path))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setenv(DURABLE_REPOSITORY_PROOF_ENV, str(durable_proof_path))
+    monkeypatch.setenv(RUNTIME_TRUST_TELEMETRY_PROOF_ENV, str(runtime_proof_path))
+    monkeypatch.setenv(AI_LINEAGE_STORE_PROOF_ENV, str(ai_lineage_proof_path))
+    monkeypatch.setenv(AI_MODEL_RISK_OPERATIONS_PROOF_ENV, str(ai_model_risk_proof_path))
+    monkeypatch.setenv(OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV, str(operator_workflows_proof_path))
+    monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
+    monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
+    monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
 
 
 def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, object]:
