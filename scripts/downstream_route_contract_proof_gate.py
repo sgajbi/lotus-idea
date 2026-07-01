@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Mapping
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 import json
 from pathlib import Path
@@ -23,6 +22,11 @@ from app.application.downstream_route_contract_proof import (
     advise_proposal_route_proof_is_valid,
     manage_action_route_proof_is_valid,
 )
+
+try:
+    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
+except ModuleNotFoundError:
+    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -54,6 +58,12 @@ FORBIDDEN_TEXT_FRAGMENTS = {
     "response-body",
     "/source-owned/",
 }
+
+
+_validate_forbidden_content = forbidden_content_validator(
+    FORBIDDEN_KEYS,
+    FORBIDDEN_TEXT_FRAGMENTS,
+)
 
 
 def validate_downstream_route_contract_proofs() -> list[str]:
@@ -114,26 +124,7 @@ def _validate_profile_proof(
         errors.append(f"{route_valid_field} must retain downstream authority blockers")
     if not valid(proof):
         errors.append(f"{route_valid_field} must validate against downstream contract truth")
-    _validate_forbidden_content(proof, errors)
-
-
-def _validate_forbidden_content(value: object, errors: list[str], path: str = "$") -> None:
-    if isinstance(value, Mapping):
-        for key, nested in value.items():
-            key_text = str(key)
-            next_path = f"{path}.{key_text}"
-            if key_text in FORBIDDEN_KEYS:
-                errors.append(f"{next_path}: forbidden source-sensitive key is present")
-            _validate_forbidden_content(nested, errors, next_path)
-        return
-    if isinstance(value, (list, tuple)):
-        for index, nested in enumerate(value):
-            _validate_forbidden_content(nested, errors, f"{path}[{index}]")
-        return
-    if isinstance(value, str):
-        for fragment in FORBIDDEN_TEXT_FRAGMENTS:
-            if fragment in value:
-                errors.append(f"{path}: forbidden source-sensitive text `{fragment}` is present")
+    validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
 
 
 def _write_advise_fixture(temp_root: Path) -> Path:

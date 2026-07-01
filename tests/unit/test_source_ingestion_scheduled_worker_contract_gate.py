@@ -5,8 +5,10 @@ from datetime import datetime
 from app.application.source_ingestion_scheduled_worker import (
     build_scheduled_worker_deploy_proof_payload,
 )
+from scripts.proof_source_safety import validate_forbidden_content
 from scripts.source_ingestion_scheduled_worker_contract_gate import (
-    _validate_forbidden_content,
+    FORBIDDEN_KEYS,
+    FORBIDDEN_TEXT_FRAGMENTS,
     validate_source_ingestion_scheduled_worker_contract,
 )
 
@@ -17,7 +19,7 @@ def test_scheduled_worker_contract_gate_passes_current_contract() -> None:
 
 def test_scheduled_worker_contract_gate_detects_source_sensitive_content() -> None:
     errors: list[str] = []
-    _validate_forbidden_content(
+    validate_forbidden_content(
         build_scheduled_worker_deploy_proof_payload(
             generated_at_utc=datetime.fromisoformat("2026-06-21T10:10:00+00:00"),
             check_summary={
@@ -40,6 +42,8 @@ def test_scheduled_worker_contract_gate_detects_source_sensitive_content() -> No
             docker_compose_service_present=True,
         ),
         errors,
+        FORBIDDEN_KEYS,
+        FORBIDDEN_TEXT_FRAGMENTS,
     )
 
     assert any("portfolioId" in error for error in errors)
