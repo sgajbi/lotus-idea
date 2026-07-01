@@ -45,6 +45,12 @@ def downstream_lookup_rows(
             for row in connection.rows[table_name]
             if row["report_evidence_pack_id"] == lookup_value
         ]
+    if "where idempotency_key = %s" in query:
+        return [
+            dict(row)
+            for row in connection.rows[table_name]
+            if row["idempotency_key"] == lookup_value
+        ]
     raise AssertionError(f"unexpected downstream lookup query: {query}")
 
 

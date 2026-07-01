@@ -3,9 +3,14 @@ from __future__ import annotations
 from dataclasses import replace
 
 from app.domain import (
+    ConversionTarget,
+    DownstreamSubmissionPosture,
+    DownstreamSubmissionRecord,
+    DownstreamSubmissionResourceType,
     IdeaCandidate,
     IdeaLifecycleStatus,
     ReviewPosture,
+    SourceSystem,
     request_conversion_intent,
     request_report_evidence_pack,
 )
@@ -101,9 +106,42 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
     assert "idea_downstream_submission" not in executed_sql
 
 
+def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_query() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    record = DownstreamSubmissionRecord(
+        idempotency_key="downstream-submit:bounded-lookup",
+        request_fingerprint="sha256:downstream-submit-bounded",
+        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
+        resource_id="conversion-bounded-lookup",
+        target=ConversionTarget.ADVISE_PROPOSAL,
+        source_authority=SourceSystem.LOTUS_ADVISE,
+        status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        submitted_at_utc=EVALUATED_AT,
+        correlation_id="corr-downstream-bounded",
+        trace_id="trace-downstream-bounded",
+    )
+    repository.record_downstream_submission(record)
+    connection.executed_sql.clear()
+
+    loaded = repository.downstream_submission_by_idempotency_key("downstream-submit:bounded-lookup")
+
+    assert loaded == record
+    executed_sql = " ".join(connection.executed_sql)
+    assert "/* lotus-idea downstream-lookup-submission-idempotency */" in executed_sql
+    assert "where idempotency_key = %s" in executed_sql
+    assert "idea_downstream_submission" in executed_sql
+    assert "idea_candidate_record" not in executed_sql
+    assert "idea_outbox_event" not in executed_sql
+    assert "idea_conversion_intent" not in executed_sql
+    assert "idea_report_evidence_pack_request" not in executed_sql
+    assert "idea_ai_explanation_lineage" not in executed_sql
+
+
 def test_postgres_downstream_lookups_return_none_for_missing_records() -> None:
     repository = PostgresIdeaRepository(FakePostgresConnection())
 
     assert repository.conversion_intent_by_id("missing-conversion") is None
     assert repository.candidate_record_for_conversion_intent("missing-conversion") is None
     assert repository.report_evidence_pack_by_id("missing-report-pack") is None
+    assert repository.downstream_submission_by_idempotency_key("missing-submission") is None
