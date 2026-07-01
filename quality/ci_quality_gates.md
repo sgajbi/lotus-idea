@@ -228,8 +228,9 @@ validation, make-target evidence checks, and cross-repository file-evidence chec
 `app.api.telemetry_buckets`, and caller-supplied signal response DTO projection into
 `app.api.signal_models.SignalEvaluationResponse`, and application-layer portfolio-only signal
 review scopes into `app.application.access_scope`, and source-reference/access-scope write-side
-payload projection into `app.ports.evidence_payloads`; the current measured baseline scans 1,617
-functions and reports 10 exact duplicate clusters. The CI contract gate protects the target wiring,
+payload projection into `app.ports.evidence_payloads`, and API persistence-summary response
+projection into `app.api.persistence_summary`; the current measured baseline scans 1,615
+functions and reports 9 exact duplicate clusters. The CI contract gate protects the target wiring,
 but duplicate thresholds remain unpromoted until the signal is calibrated and shared-helper
 ownership is clear.
 
