@@ -9,11 +9,7 @@ from psycopg.types.json import Jsonb
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
 from app.domain.events import OutboxEventRecord
-from app.domain.downstream_submission import (
-    DownstreamSubmissionPosture,
-    DownstreamSubmissionRecord,
-    DownstreamSubmissionResourceType,
-)
+from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.conversion_governance import (
     ConversionIntentResult,
     ConversionOutcomeResult,
@@ -21,10 +17,8 @@ from app.domain.conversion_governance import (
     GovernedConversionIntent,
 )
 from app.domain.ideas import (
-    ConversionTarget,
     IdeaCandidate,
     IdeaLifecycleStatus,
-    SourceSystem,
     SourceRef,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
@@ -85,8 +79,10 @@ from app.infrastructure.postgres_outbox_writes import insert_outbox_event
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_downstream_lookup import (
+    downstream_submission_from_row,
     load_candidate_record_for_conversion_intent,
     load_conversion_intent_by_id,
+    load_downstream_submission_by_idempotency_key,
     load_report_evidence_pack_by_id,
 )
 from app.infrastructure.postgres_downstream_readiness import (
@@ -422,8 +418,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         self,
         idempotency_key: str,
     ) -> DownstreamSubmissionRecord | None:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.downstream_submission_by_idempotency_key(idempotency_key)
+        return load_downstream_submission_by_idempotency_key(self._connection, idempotency_key)
 
     def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None:
         self._mutate(lambda repository: repository.record_downstream_submission(record))
@@ -646,21 +641,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         )
         records: dict[str, DownstreamSubmissionRecord] = {}
         for row in cursor.fetchall():
-            record = DownstreamSubmissionRecord(
-                idempotency_key=read_row_value(row, "idempotency_key"),
-                request_fingerprint=read_row_value(row, "request_fingerprint"),
-                resource_type=DownstreamSubmissionResourceType(
-                    read_row_value(row, "resource_type")
-                ),
-                resource_id=read_row_value(row, "resource_id"),
-                target=ConversionTarget(read_row_value(row, "target")),
-                source_authority=SourceSystem(read_row_value(row, "source_authority")),
-                status=DownstreamSubmissionPosture(read_row_value(row, "status")),
-                downstream_failure_reason=read_row_value(row, "downstream_failure_reason"),
-                correlation_id=read_row_value(row, "correlation_id"),
-                trace_id=read_row_value(row, "trace_id"),
-                submitted_at_utc=read_row_value(row, "submitted_at_utc"),
-            )
+            record = downstream_submission_from_row(row)
             records[record.idempotency_key] = record
         return records
 

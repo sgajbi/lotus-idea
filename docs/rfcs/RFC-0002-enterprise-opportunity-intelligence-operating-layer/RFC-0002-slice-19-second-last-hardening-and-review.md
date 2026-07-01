@@ -668,11 +668,15 @@ repository snapshots before adapter calls:
    while `candidate_record_for_conversion_intent(...)` resolves the candidate
    through a bounded conversion-intent lookup plus the existing
    candidate-detail projection.
-3. Application tests prove downstream submission uses lookup methods without
+3. `PostgresIdeaRepository.downstream_submission_by_idempotency_key(...)` now
+   queries `idea_downstream_submission` by primary-key idempotency key directly
+   before replay/conflict handling instead of hydrating a whole repository
+   snapshot.
+4. Application tests prove downstream submission uses lookup methods without
    hydrating `snapshot()`. PostgreSQL tests prove lookup queries avoid
-   candidate snapshots, outbox, downstream submission, and unrelated state
-   tables.
-4. This is production-scale internal read-path hardening only. It does not
+   candidate snapshots, outbox, conversion, report evidence-pack, AI-lineage,
+   and unrelated state tables.
+5. This is production-scale internal read-path hardening only. It does not
    certify downstream execution, route existence, suitability/rebalance/report
    authority, client-ready publication, or supported-feature promotion.
 

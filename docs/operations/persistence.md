@@ -261,6 +261,11 @@ flowchart LR
     counts: PostgreSQL reads `idea_conversion_intent`,
     `idea_conversion_outcome`, and `idea_report_evidence_pack_request`
     directly instead of hydrating unrelated repository state.
+    Downstream submission idempotency replay/conflict checks now use a direct
+    PostgreSQL primary-key lookup against `idea_downstream_submission`, so
+    duplicate downstream submission requests no longer hydrate candidate,
+    outbox, conversion, report evidence-pack, or AI-lineage state before
+    adapter execution.
     Runtime trust telemetry preview and snapshot diagnostics also use a
     repository-side PostgreSQL aggregate projection over candidate and workflow
     tables, so ordinary operator reads avoid hydrating audit, outbox,
