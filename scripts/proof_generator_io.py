@@ -6,6 +6,58 @@ from pathlib import Path
 from typing import Any
 
 
+def required_base_url_from_args(
+    args: object,
+    *,
+    primary_attr: str,
+    fallback_attr: str,
+    primary_option: str,
+    fallback_option: str,
+    primary_env: str,
+    fallback_env: str,
+) -> str:
+    base_url = str(getattr(args, primary_attr) or getattr(args, fallback_attr) or "").strip()
+    if not base_url:
+        raise ValueError(
+            f"{primary_option}, {fallback_option}, {primary_env}, or {fallback_env} is required"
+        )
+    return base_url
+
+
+def core_control_plane_base_url_from_args(
+    args: object,
+    *,
+    control_plane_env: str,
+    base_env: str,
+) -> str:
+    return required_base_url_from_args(
+        args,
+        primary_attr="core_query_control_plane_base_url",
+        fallback_attr="core_base_url",
+        primary_option="--core-query-control-plane-base-url",
+        fallback_option="--core-base-url",
+        primary_env=control_plane_env,
+        fallback_env=base_env,
+    )
+
+
+def core_query_base_url_from_args(
+    args: object,
+    *,
+    query_env: str,
+    base_env: str,
+) -> str:
+    return required_base_url_from_args(
+        args,
+        primary_attr="core_query_base_url",
+        fallback_attr="core_base_url",
+        primary_option="--core-query-base-url",
+        fallback_option="--core-base-url",
+        primary_env=query_env,
+        fallback_env=base_env,
+    )
+
+
 def parse_generated_at_utc(value: str) -> datetime:
     normalized = value.strip()
     if normalized.endswith("Z"):
