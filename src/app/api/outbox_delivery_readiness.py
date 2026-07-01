@@ -28,6 +28,7 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.telemetry_buckets import bounded_count_bucket
 from app.api.temporal_validation import is_utc_datetime
 from app.application.outbox_delivery import (
     OutboxDeliveryRunStatus,
@@ -434,7 +435,7 @@ def _emit_outbox_delivery_run_event(
 ) -> None:
     attributes: dict[str, str] = {}
     if attempted_count is not None:
-        attributes["attempted_count_bucket"] = _count_bucket(attempted_count)
+        attributes["attempted_count_bucket"] = bounded_count_bucket(attempted_count)
     if operator_run_reference is not None:
         attributes["operator_run_reference"] = operator_run_reference
     emit_operation_event(
@@ -449,16 +450,6 @@ def _emit_outbox_delivery_run_event(
             attributes=attributes,
         )
     )
-
-
-def _count_bucket(value: int) -> str:
-    if value == 0:
-        return "0"
-    if value <= 10:
-        return "1-10"
-    if value <= 100:
-        return "11-100"
-    return "100+"
 
 
 OUTBOX_DELIVERY_READINESS_ROUTE: RouteMetadata = {

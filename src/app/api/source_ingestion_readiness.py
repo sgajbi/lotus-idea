@@ -17,6 +17,7 @@ from app.api.runtime_dependencies import (
 from app.api.runtime_dependencies import (
     build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
 )
+from app.api.telemetry_buckets import bounded_count_bucket
 from app.application.source_ingestion import (
     HighCashSourceIngestionBatchResult,
     HighCashSourceIngestionDecision,
@@ -341,7 +342,7 @@ def _emit_source_ingestion_run_event(
 ) -> None:
     attributes: dict[str, str] = {}
     if total_count is not None:
-        attributes["work_item_count_bucket"] = _count_bucket(total_count)
+        attributes["work_item_count_bucket"] = bounded_count_bucket(total_count)
     emit_operation_event(
         OperationEvent(
             operation=IdeaOperation.SOURCE_INGESTION_RUN_ONCE,
@@ -373,16 +374,6 @@ def _empty_decision_counts() -> dict[str, int]:
 def _source_ingestion_certification_blockers() -> tuple[str, ...]:
     snapshot = build_source_ingestion_readiness_snapshot()
     return (*snapshot.certification_blockers, "supported_feature_promotion_missing")
-
-
-def _count_bucket(value: int) -> str:
-    if value == 0:
-        return "0"
-    if value <= 10:
-        return "1-10"
-    if value <= 100:
-        return "11-100"
-    return "100+"
 
 
 SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {
