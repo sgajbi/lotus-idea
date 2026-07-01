@@ -22,6 +22,14 @@ class StaleCandidateMutationError(RuntimeError):
         self.candidate_id = candidate_id
 
 
+class ConcurrentIdempotencyMutationError(RuntimeError):
+    """Raised when a concurrent unit of work already committed an idempotency key."""
+
+    def __init__(self, idempotency_key: str) -> None:
+        super().__init__(f"concurrent idempotency mutation detected for {idempotency_key}")
+        self.idempotency_key = idempotency_key
+
+
 def update_postgres_candidate_record(
     cursor: PostgresWriteCursor,
     *,
