@@ -6,9 +6,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_file_evidence_present,
+)
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 
 
 PLATFORM_MESH_ONBOARDING_PROOF_ENV = "LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF"
@@ -96,8 +100,9 @@ def build_platform_mesh_onboarding_proof_payload(
     evidence_refs = tuple(REQUIRED_PLATFORM_MESH_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
-        platform_root=platform_root,
+        sibling_roots={"../lotus-platform/": platform_root},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("GET ", "POST ", "make "),
     )
     platform_source_manifest_includes_idea = _source_manifest_includes_idea(source_manifest)
     platform_catalog_includes_idea_products = _catalog_includes_idea_products(catalog)
@@ -281,23 +286,5 @@ def _maturity_matrix_keeps_idea_deferred(payload: dict[str, Any] | None) -> bool
         if product.get("maturity_wave") != "future_wave":
             return False
         if product.get("lifecycle_status") != "proposed":
-            return False
-    return True
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    platform_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("GET ", "POST ", "make ")):
-            continue
-        if ref.startswith("../lotus-platform/"):
-            path = platform_root / ref.removeprefix("../lotus-platform/")
-        else:
-            path = repository_root / ref
-        if not path.is_file():
             return False
     return True

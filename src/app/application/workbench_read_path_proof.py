@@ -7,10 +7,12 @@ from typing import Any
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
@@ -51,7 +53,9 @@ def build_workbench_read_path_proof_payload(
     local_evidence_refs = tuple(REQUIRED_WORKBENCH_READ_PATH_LOCAL_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
+        sibling_roots={},
         evidence_refs=local_evidence_refs,
+        non_file_ref_prefixes=("make ",),
     )
     make_target_evidence_present = _required_make_target_evidence_present(
         repository_root=repository_root,
@@ -145,16 +149,3 @@ def workbench_read_path_proof_is_valid(payload: Mapping[str, Any]) -> bool:
     ):
         return False
     return proof_checks.get("workbenchMergedPrRecorded") == "lotus-workbench PR #391"
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith("make "):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True

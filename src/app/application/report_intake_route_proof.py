@@ -7,9 +7,13 @@ import os
 from pathlib import Path
 from typing import Any
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_file_evidence_present,
+)
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 
 
 REPORT_INTAKE_ROUTE_PROOF_ENV = "LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF"
@@ -56,8 +60,9 @@ def build_report_intake_route_proof_payload(
     )
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
-        report_root=report_root,
+        sibling_roots={"../lotus-report/": report_root},
         evidence_refs=REQUIRED_REPORT_INTAKE_ROUTE_EVIDENCE_REFS,
+        non_file_ref_prefixes=("GET ", "POST ", "make "),
     )
     report_contract_proves_route = _report_contract_proves_route(contract)
     report_contract_preserves_non_proof_boundaries = (
@@ -220,21 +225,3 @@ def _report_contract_retains_materialization_blockers(payload: dict[str, Any] | 
         "lotus_report_live_intake_route_proof_missing" not in blockers
         and set(REMAINING_REPORT_INTAKE_ROUTE_BLOCKERS) <= blockers
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    report_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("GET ", "POST ", "make ")):
-            continue
-        if ref.startswith("../lotus-report/"):
-            path = report_root / ref.removeprefix("../lotus-report/")
-        else:
-            path = repository_root / ref
-        if not path.is_file():
-            return False
-    return True

@@ -8,10 +8,12 @@ from typing import Any
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
@@ -53,7 +55,9 @@ def build_outbox_consumer_runtime_proof_payload(
     evidence_refs = tuple(REQUIRED_OUTBOX_CONSUMER_RUNTIME_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
+        sibling_roots={},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("make ",),
     )
     make_target_evidence_present = _required_make_target_evidence_present(
         repository_root=repository_root,
@@ -161,19 +165,6 @@ def _load_json_object(path: Path) -> Mapping[str, Any] | None:
     if not isinstance(payload, Mapping):
         return None
     return payload
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith("make "):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True
 
 
 def _declared_consumer_coverage_present(contract_payload: Mapping[str, Any] | None) -> bool:

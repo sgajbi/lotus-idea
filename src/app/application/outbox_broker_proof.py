@@ -7,10 +7,12 @@ from typing import Any
 
 from app.application.source_safe_cross_repo_proof import (
     is_timezone_aware_datetime_text,
+    required_file_evidence_present,
     required_make_target_evidence_present,
 )
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 _required_make_target_evidence_present = required_make_target_evidence_present
 
 
@@ -58,7 +60,9 @@ def build_outbox_broker_proof_payload(
     evidence_refs = tuple(REQUIRED_OUTBOX_BROKER_EVIDENCE_REFS)
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
+        sibling_roots={},
         evidence_refs=evidence_refs,
+        non_file_ref_prefixes=("make ", "GET ", "POST "),
     )
     make_target_evidence_present = _required_make_target_evidence_present(
         repository_root=repository_root,
@@ -142,19 +146,6 @@ def outbox_broker_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         == "GET /api/v1/outbox-delivery/readiness"
         and proof_checks.get("runOnceEndpointCertified") == "POST /api/v1/outbox-delivery/run-once"
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    for ref in evidence_refs:
-        if ref.startswith(("make ", "GET ", "POST ")):
-            continue
-        if not (repository_root / ref).is_file():
-            return False
-    return True
 
 
 def _configured_publisher_runtime_evidence_present(*, repository_root: Path) -> bool:

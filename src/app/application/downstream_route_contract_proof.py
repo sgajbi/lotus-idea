@@ -8,9 +8,13 @@ import os
 from pathlib import Path
 from typing import Any
 
-from app.application.source_safe_cross_repo_proof import is_timezone_aware_datetime_text
+from app.application.source_safe_cross_repo_proof import (
+    is_timezone_aware_datetime_text,
+    required_file_evidence_present,
+)
 
 _is_timezone_aware_datetime_text = is_timezone_aware_datetime_text
+_required_file_evidence_present = required_file_evidence_present
 
 DOWNSTREAM_ROUTE_CONTRACT_PROOF_SCHEMA_VERSION = "lotus-idea.downstream-route-contract-proof.v1"
 
@@ -179,9 +183,9 @@ def _build_route_contract_proof_payload(
     )
     file_evidence_present = _required_file_evidence_present(
         repository_root=repository_root,
-        downstream_root=downstream_root,
-        owner_repository=profile.owner_repository,
+        sibling_roots={f"../{profile.owner_repository}/": downstream_root},
         evidence_refs=profile.evidence_refs,
+        non_file_ref_prefixes=("GET ", "POST ", "make "),
     )
     downstream_contract_proves_route = _downstream_contract_proves_route(contract, profile)
     downstream_contract_preserves_non_proof_boundaries = (
@@ -362,24 +366,3 @@ def _downstream_contract_retains_authority_blockers(
         not set(profile.blockers_cleared).intersection(blockers)
         and set(profile.remaining_blockers) <= blockers
     )
-
-
-def _required_file_evidence_present(
-    *,
-    repository_root: Path,
-    downstream_root: Path,
-    owner_repository: str,
-    evidence_refs: tuple[str, ...],
-) -> bool:
-    prefix = f"../{owner_repository}/"
-    for ref in evidence_refs:
-        if ref.startswith(("GET ", "POST ", "make ")):
-            continue
-        path = (
-            downstream_root / ref.removeprefix(prefix)
-            if ref.startswith(prefix)
-            else repository_root / ref
-        )
-        if not path.is_file():
-            return False
-    return True
