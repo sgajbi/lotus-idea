@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 
 from app.application.source_ingestion_live_proof import (
@@ -11,6 +10,11 @@ from app.application.source_ingestion_live_proof import (
     live_core_source_proof_is_valid,
 )
 
+
+try:
+    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
+except ModuleNotFoundError:
+    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
 ROOT = Path(__file__).resolve().parents[1]
 LIVE_PROOF_SCRIPT = ROOT / "scripts" / "generate_source_ingestion_live_proof.py"
@@ -59,6 +63,12 @@ REQUIRED_TOP_LEVEL_KEYS = {
     "evidenceRefs",
     "nonProofBoundaries",
 }
+
+
+_validate_forbidden_content = forbidden_content_validator(
+    FORBIDDEN_KEYS,
+    FORBIDDEN_TEXT_FRAGMENTS,
+)
 
 
 def validate_source_ingestion_live_proof_contract() -> list[str]:
@@ -130,28 +140,9 @@ def validate_source_ingestion_live_proof_contract() -> list[str]:
     if live_core_source_proof_is_valid(blocked_payload):
         errors.append("blocked live proof fixture must not validate as live Core proof")
 
-    _validate_forbidden_content(payload, errors)
-    _validate_forbidden_content(blocked_payload, errors)
+    validate_forbidden_content(payload, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
+    validate_forbidden_content(blocked_payload, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
-
-
-def _validate_forbidden_content(value: object, errors: list[str], path: str = "$") -> None:
-    if isinstance(value, Mapping):
-        for key, nested in value.items():
-            key_text = str(key)
-            next_path = f"{path}.{key_text}"
-            if key_text in FORBIDDEN_KEYS:
-                errors.append(f"{next_path}: forbidden source-sensitive key is present")
-            _validate_forbidden_content(nested, errors, next_path)
-        return
-    if isinstance(value, list):
-        for index, nested in enumerate(value):
-            _validate_forbidden_content(nested, errors, f"{path}[{index}]")
-        return
-    if isinstance(value, str):
-        for fragment in FORBIDDEN_TEXT_FRAGMENTS:
-            if fragment in value:
-                errors.append(f"{path}: forbidden source-sensitive text `{fragment}` is present")
 
 
 def main() -> int:

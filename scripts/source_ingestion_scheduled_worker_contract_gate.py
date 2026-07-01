@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -20,6 +19,11 @@ from app.application.source_ingestion_scheduled_worker import (
 )
 from app.application.source_ingestion_worker import source_ingestion_worker_plan_from_manifest
 
+
+try:
+    from scripts.proof_source_safety import forbidden_content_validator, validate_forbidden_content
+except ModuleNotFoundError:
+    from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE_MANIFEST_PATH = (
@@ -50,6 +54,12 @@ FORBIDDEN_TEXT_FRAGMENTS = {
     "response-body",
     "signal-ingestion:high-cash:lotus-core",
 }
+
+
+_validate_forbidden_content = forbidden_content_validator(
+    FORBIDDEN_KEYS,
+    FORBIDDEN_TEXT_FRAGMENTS,
+)
 
 
 def validate_source_ingestion_scheduled_worker_contract() -> list[str]:
@@ -84,8 +94,8 @@ def validate_source_ingestion_scheduled_worker_contract() -> list[str]:
             f"{SCHEDULED_WORKER_ENTRYPOINT}"
         )
 
-    _validate_forbidden_content(check_summary, errors)
-    _validate_forbidden_content(proof, errors)
+    validate_forbidden_content(check_summary, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
+    validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     return errors
 
 
@@ -98,25 +108,6 @@ def _docker_compose_service_present() -> bool:
         DOCKER_COMPOSE_WORKER_SERVICE in compose_text
         and SCHEDULED_WORKER_ENTRYPOINT in compose_text
     )
-
-
-def _validate_forbidden_content(value: object, errors: list[str], path: str = "$") -> None:
-    if isinstance(value, Mapping):
-        for key, nested in value.items():
-            key_text = str(key)
-            next_path = f"{path}.{key_text}"
-            if key_text in FORBIDDEN_KEYS:
-                errors.append(f"{next_path}: forbidden source-sensitive key is present")
-            _validate_forbidden_content(nested, errors, next_path)
-        return
-    if isinstance(value, list):
-        for index, nested in enumerate(value):
-            _validate_forbidden_content(nested, errors, f"{path}[{index}]")
-        return
-    if isinstance(value, str):
-        for fragment in FORBIDDEN_TEXT_FRAGMENTS:
-            if fragment in value:
-                errors.append(f"{path}: forbidden source-sensitive text `{fragment}` is present")
 
 
 def _read_manifest(path: Path) -> dict[str, Any]:
