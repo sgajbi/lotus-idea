@@ -8,7 +8,10 @@ import pytest
 from pytest import CaptureFixture
 
 from scripts.proof_generator_io import (
+    core_control_plane_base_url_from_args,
+    core_query_base_url_from_args,
     parse_generated_at_utc,
+    required_base_url_from_args,
     timeout_seconds_from_args,
     write_json_payload,
 )
@@ -43,6 +46,80 @@ def test_timeout_seconds_from_args_rejects_non_numeric_text() -> None:
 def test_timeout_seconds_from_args_rejects_non_positive_values() -> None:
     with pytest.raises(ValueError, match="timeout seconds must be positive"):
         timeout_seconds_from_args(Namespace(timeout_seconds="0"))
+
+
+def test_required_base_url_from_args_prefers_primary_value() -> None:
+    assert (
+        required_base_url_from_args(
+            Namespace(primary_url=" https://core-query.example ", fallback_url="https://core"),
+            primary_attr="primary_url",
+            fallback_attr="fallback_url",
+            primary_option="--primary-url",
+            fallback_option="--fallback-url",
+            primary_env="PRIMARY_URL",
+            fallback_env="FALLBACK_URL",
+        )
+        == "https://core-query.example"
+    )
+
+
+def test_required_base_url_from_args_uses_fallback_value() -> None:
+    assert (
+        required_base_url_from_args(
+            Namespace(primary_url=None, fallback_url=" https://core.example "),
+            primary_attr="primary_url",
+            fallback_attr="fallback_url",
+            primary_option="--primary-url",
+            fallback_option="--fallback-url",
+            primary_env="PRIMARY_URL",
+            fallback_env="FALLBACK_URL",
+        )
+        == "https://core.example"
+    )
+
+
+def test_required_base_url_from_args_rejects_absent_values() -> None:
+    with pytest.raises(
+        ValueError,
+        match="--primary-url, --fallback-url, PRIMARY_URL, or FALLBACK_URL is required",
+    ):
+        required_base_url_from_args(
+            Namespace(primary_url=" ", fallback_url=None),
+            primary_attr="primary_url",
+            fallback_attr="fallback_url",
+            primary_option="--primary-url",
+            fallback_option="--fallback-url",
+            primary_env="PRIMARY_URL",
+            fallback_env="FALLBACK_URL",
+        )
+
+
+def test_core_control_plane_base_url_from_args_uses_control_plane_before_base() -> None:
+    assert (
+        core_control_plane_base_url_from_args(
+            Namespace(
+                core_query_control_plane_base_url=" https://core-control.example ",
+                core_base_url="https://core.example",
+            ),
+            control_plane_env="LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL",
+            base_env="LOTUS_CORE_BASE_URL",
+        )
+        == "https://core-control.example"
+    )
+
+
+def test_core_query_base_url_from_args_uses_core_query_before_base() -> None:
+    assert (
+        core_query_base_url_from_args(
+            Namespace(
+                core_query_base_url=" https://core-query.example ",
+                core_base_url="https://core.example",
+            ),
+            query_env="LOTUS_CORE_QUERY_BASE_URL",
+            base_env="LOTUS_CORE_BASE_URL",
+        )
+        == "https://core-query.example"
+    )
 
 
 def test_write_json_payload_writes_sorted_indented_file(tmp_path: Path) -> None:

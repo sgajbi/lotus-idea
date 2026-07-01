@@ -26,9 +26,17 @@ from app.ports.core_sources import (
 
 
 try:
-    from scripts.proof_generator_io import timeout_seconds_from_args, write_json_payload
+    from scripts.proof_generator_io import (
+        core_query_base_url_from_args,
+        timeout_seconds_from_args,
+        write_json_payload,
+    )
 except ModuleNotFoundError:
-    from proof_generator_io import timeout_seconds_from_args, write_json_payload  # type: ignore[import-not-found,no-redef]
+    from proof_generator_io import (  # type: ignore[import-not-found,no-redef]
+        core_query_base_url_from_args,
+        timeout_seconds_from_args,
+        write_json_payload,
+    )
 
 CORE_BASE_URL_ENV = "LOTUS_CORE_BASE_URL"
 CORE_QUERY_BASE_URL_ENV = "LOTUS_CORE_QUERY_BASE_URL"
@@ -44,7 +52,11 @@ def main(argv: list[str] | None = None) -> int:
         core_source = LotusCoreHighCashSourceAdapter(
             DownstreamJsonClient(
                 DownstreamClientConfig(
-                    base_url=_core_query_base_url(args),
+                    base_url=core_query_base_url_from_args(
+                        args,
+                        query_env=CORE_QUERY_BASE_URL_ENV,
+                        base_env=CORE_BASE_URL_ENV,
+                    ),
                     timeout_seconds=timeout_seconds_from_args(args),
                 )
             )
@@ -151,16 +163,6 @@ def _evidence_summary(evidence: CoreBondMaturityEvidence) -> dict[str, object]:
             [evidence.maturity_diagnostic] if evidence.maturity_diagnostic else []
         ),
     }
-
-
-def _core_query_base_url(args: argparse.Namespace) -> str:
-    base_url = str(args.core_query_base_url or args.core_base_url or "").strip()
-    if not base_url:
-        raise ValueError(
-            "--core-query-base-url, --core-base-url, "
-            f"{CORE_QUERY_BASE_URL_ENV}, or {CORE_BASE_URL_ENV} is required"
-        )
-    return base_url
 
 
 def _parse_date(value: str, field_name: str) -> date:
