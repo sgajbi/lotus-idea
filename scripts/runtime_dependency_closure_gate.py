@@ -12,6 +12,7 @@ from packaging.utils import canonicalize_name
 ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 RUNTIME_LOCK_PATH = ROOT / "requirements" / "runtime-resolved.lock.txt"
+DEPENDENCY_GRAPH_REQUIREMENTS_PATH = ROOT / "requirements" / "requirements.txt"
 
 
 def _read_runtime_roots(pyproject_path: Path) -> list[Requirement]:
@@ -69,12 +70,20 @@ def _runtime_dependency_closure(runtime_roots: list[Requirement]) -> dict[str, s
 def validate_runtime_dependency_closure(
     pyproject_path: Path = PYPROJECT_PATH,
     lock_path: Path = RUNTIME_LOCK_PATH,
+    dependency_graph_path: Path = DEPENDENCY_GRAPH_REQUIREMENTS_PATH,
 ) -> list[str]:
     errors: list[str] = []
     runtime_roots = _read_runtime_roots(pyproject_path)
     locked = _read_lockfile(lock_path)
+    dependency_graph_locked = _read_lockfile(dependency_graph_path)
     closure = _runtime_dependency_closure(runtime_roots)
     root_names = {canonicalize_name(requirement.name) for requirement in runtime_roots}
+
+    if dependency_graph_locked != locked:
+        errors.append(
+            "requirements/requirements.txt must mirror "
+            "requirements/runtime-resolved.lock.txt for GitHub dependency graph support"
+        )
 
     if set(locked) <= root_names:
         errors.append(

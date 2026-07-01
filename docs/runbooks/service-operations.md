@@ -32,7 +32,7 @@
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `make container-runtime-smoke` | Start the built `backend-service:ci-test` image, probe `/health`, `/health/live`, and reachable default-profile `/health/ready`, print container logs on failure, and remove the smoke container. |
 | `make release-sbom` | Generate `sbom.cdx.json` from `requirements/runtime-resolved.lock.txt` with the pinned CI-tooling CycloneDX package used by main releasability. |
-| `make runtime-dependency-closure-gate` | Confirm the resolved runtime lock covers the installed runtime dependency closure before SBOM or audit evidence is cited. |
+| `make runtime-dependency-closure-gate` | Confirm the resolved runtime lock covers the installed runtime dependency closure and mirrors `requirements/requirements.txt` for GitHub Dependency Graph support before SBOM or audit evidence is cited. |
 | `make container-image-scan` | Scan the built `backend-service:ci-test` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
 | `make caller-context-contract-gate` | Validate that caller authorization headers are bound through the shared trusted caller-context provenance guard before production-like use. |
 | `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |

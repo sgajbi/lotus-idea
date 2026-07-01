@@ -182,7 +182,8 @@ image id. This is not a full container image SBOM; container OS and packaged
 image posture remain covered by the Trivy image scan.
 `make runtime-dependency-closure-gate` blocks direct-only runtime locks by
 checking the resolved lock against the installed transitive dependency closure
-for the `pyproject.toml` runtime roots.
+for the `pyproject.toml` runtime roots and against the
+`requirements/requirements.txt` GitHub Dependency Graph mirror.
 
 PR Merge Gate and Main Releasability now run `make container-runtime-smoke`
 after `make docker-build` and before Docker release evidence can pass. The

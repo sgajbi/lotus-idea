@@ -13,6 +13,19 @@ updates:
         patterns:
           - "*"
 
+  - package-ecosystem: "pip"
+    directory: "/requirements"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:05"
+      timezone: "Asia/Singapore"
+    open-pull-requests-limit: 5
+    groups:
+      python-runtime-locks:
+        patterns:
+          - "*"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

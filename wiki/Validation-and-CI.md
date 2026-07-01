@@ -209,7 +209,8 @@ CycloneDX tool, and `release-evidence.json` records the SBOM scope, generator,
 dependency source, project metadata, target service image reference, and built image id.
 `make runtime-dependency-closure-gate` blocks direct-only runtime locks by
 checking the resolved lock against the installed transitive dependency closure
-for the `pyproject.toml` runtime roots.
+for the `pyproject.toml` runtime roots and against the
+`requirements/requirements.txt` GitHub Dependency Graph mirror.
 Container OS/package posture remains the Trivy image scan's responsibility; the SBOM is
 not represented as a full image SBOM or registry attestation.
 

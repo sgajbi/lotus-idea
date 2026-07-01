@@ -65,6 +65,20 @@ def test_security_tab_governance_contract_blocks_missing_github_actions_coverage
     assert "dependabot.yml must monitor GitHub Actions" in errors
 
 
+def test_security_tab_governance_contract_blocks_missing_requirements_graph_coverage() -> None:
+    module = _load_security_tab_contract()
+    security_policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+    dependabot_config = (
+        (ROOT / ".github" / "dependabot.yml")
+        .read_text(encoding="utf-8")
+        .replace('directory: "/requirements"', 'directory: "/missing-requirements"')
+    )
+
+    errors = module.validate_security_tab_governance(security_policy, dependabot_config)
+
+    assert "dependabot.yml must monitor the GitHub Dependency Graph requirements manifest" in errors
+
+
 def test_security_tab_governance_contract_blocks_unbounded_dependency_pr_noise() -> None:
     module = _load_security_tab_contract()
     security_policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")

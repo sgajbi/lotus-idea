@@ -553,7 +553,9 @@ Recent issue-derived patterns to preserve:
     as release proof,
 14. runtime dependency SBOM evidence must come from the resolved runtime
     dependency closure in `requirements/runtime-resolved.lock.txt`, not from
-    direct-only runtime requirements or an ambiguous CI environment,
+    direct-only runtime requirements or an ambiguous CI environment; the
+    supported-name `requirements/requirements.txt` exists only as a gated
+    mirror for GitHub Dependency Graph support,
 15. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
@@ -582,7 +584,9 @@ repeated defect patterns are fixed once and pinned with tests or gates:
 4. Runtime supply-chain evidence: GitHub issue `#279` is addressed by the
    runtime-resolved lock plus `runtime-dependency-closure-gate`, so release
    SBOM and dependency audit evidence cover transitive runtime dependencies
-   rather than only direct requirements.
+   rather than only direct requirements. The gate also keeps the GitHub
+   Dependency Graph requirements manifest mirrored to the resolved runtime lock
+   so Security-tab graph updates stay parseable.
 
 Recently closed by PR `#273` and mainline validation:
 
