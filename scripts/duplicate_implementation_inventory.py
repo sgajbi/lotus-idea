@@ -100,6 +100,8 @@ def _function_records(
                 line_count = end_line - node.lineno + 1
                 if line_count < min_function_lines:
                     continue
+                if _is_non_implementation_stub(node):
+                    continue
                 records.append(
                     FunctionRecord(
                         path=path.relative_to(root).as_posix(),
@@ -110,6 +112,19 @@ def _function_records(
                     )
                 )
     return records
+
+
+def _is_non_implementation_stub(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    if len(node.body) != 1:
+        return False
+    statement = node.body[0]
+    if isinstance(statement, ast.Pass):
+        return True
+    return (
+        isinstance(statement, ast.Expr)
+        and isinstance(statement.value, ast.Constant)
+        and statement.value.value is Ellipsis
+    )
 
 
 def _fingerprint_function_body(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:

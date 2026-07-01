@@ -525,8 +525,8 @@ existing file/function-size maintainability gate:
    `scripts.operations_contract_validators`; each
    proof gate, generator, contract gate, and API route retains family-specific
    policy/argument behavior, direct script execution remains supported, and the
-   current measured baseline scans 1,607 functions and reports 1 exact
-   duplicate cluster.
+   current measured baseline ignores pass/ellipsis-only protocol stubs, scans
+   1,582 executable function bodies, and reports 0 exact duplicate clusters.
 5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
    without adding duplicate thresholds to `make lint`.
 6. This is measured maintainability evidence only. It does not block all
