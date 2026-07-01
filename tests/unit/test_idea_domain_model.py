@@ -7,8 +7,10 @@ from decimal import Decimal
 import pytest
 
 from app.domain import (
+    ALLOWED_LIFECYCLE_TRANSITIONS,
     ConversionOutcomeStatus,
     ConversionTarget,
+    DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES,
     EvidenceFreshness,
     EvidenceSupportability,
     FeedbackOutcome,
@@ -272,6 +274,42 @@ def test_invalid_lifecycle_transition_blocks_direct_conversion() -> None:
 
     assert error.value.source is IdeaLifecycleStatus.GENERATED
     assert error.value.target is IdeaLifecycleStatus.CONVERTED_TO_REPORT
+
+
+def test_lifecycle_graph_quarantines_downstream_authority_statuses() -> None:
+    assert DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES == frozenset(
+        {
+            IdeaLifecycleStatus.ACCEPTED,
+            IdeaLifecycleStatus.EXECUTED,
+        }
+    )
+    assert IdeaLifecycleStatus.ACCEPTED not in {
+        *ALLOWED_LIFECYCLE_TRANSITIONS[IdeaLifecycleStatus.APPROVED],
+        *ALLOWED_LIFECYCLE_TRANSITIONS[IdeaLifecycleStatus.CONVERTED_TO_PROPOSAL],
+        *ALLOWED_LIFECYCLE_TRANSITIONS[IdeaLifecycleStatus.CONVERTED_TO_MANAGE_REVIEW],
+        *ALLOWED_LIFECYCLE_TRANSITIONS[IdeaLifecycleStatus.CONVERTED_TO_REPORT],
+    }
+    assert (
+        IdeaLifecycleStatus.EXECUTED
+        not in ALLOWED_LIFECYCLE_TRANSITIONS[IdeaLifecycleStatus.ACCEPTED]
+    )
+
+    with pytest.raises(InvalidLifecycleTransition):
+        transition_candidate(
+            candidate(lifecycle_status=IdeaLifecycleStatus.APPROVED),
+            IdeaLifecycleStatus.ACCEPTED,
+        )
+    with pytest.raises(InvalidLifecycleTransition):
+        transition_candidate(
+            candidate(lifecycle_status=IdeaLifecycleStatus.ACCEPTED),
+            IdeaLifecycleStatus.EXECUTED,
+        )
+
+    closed_legacy = transition_candidate(
+        candidate(lifecycle_status=IdeaLifecycleStatus.ACCEPTED),
+        IdeaLifecycleStatus.CLOSED,
+    )
+    assert closed_legacy.lifecycle_status is IdeaLifecycleStatus.CLOSED
 
 
 def test_closed_lifecycle_is_terminal() -> None:

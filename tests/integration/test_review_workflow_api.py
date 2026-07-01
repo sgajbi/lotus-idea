@@ -4,7 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from app.runtime.repository_state import reset_idea_repository_for_tests
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.main import app
 
 
@@ -404,6 +404,52 @@ def test_lifecycle_transition_api_requires_permission_and_valid_request() -> Non
     assert naive_time_response.status_code == 400
     assert no_reasons_response.status_code == 400
     assert blank_idempotency_response.status_code == 400
+
+
+def test_lifecycle_transition_api_rejects_downstream_authority_statuses_without_outbox() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="seed-lifecycle-downstream-authority-001",
+    )
+    approve_candidate_for_conversion(client, candidate_id)
+
+    accepted_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(
+            transition_id="lifecycle-accepted-forbidden-001",
+            target_status="accepted",
+            changed_at_utc="2026-06-21T10:20:00Z",
+        ),
+        headers=lifecycle_headers("lifecycle-api-accepted-forbidden-001"),
+    )
+    executed_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/lifecycle-transitions",
+        json=lifecycle_payload(
+            transition_id="lifecycle-executed-forbidden-001",
+            target_status="executed",
+            changed_at_utc="2026-06-21T10:21:00Z",
+        ),
+        headers=lifecycle_headers("lifecycle-api-executed-forbidden-001"),
+    )
+    snapshot = get_idea_repository().snapshot()
+    record = snapshot.candidate_records[candidate_id]
+
+    assert accepted_response.status_code == 400
+    assert accepted_response.json()["code"] == "invalid_request"
+    assert executed_response.status_code == 400
+    assert executed_response.json()["code"] == "invalid_request"
+    assert record.candidate.lifecycle_status.value == "approved"
+    assert {entry.target_status.value for entry in record.lifecycle_history}.isdisjoint(
+        {"accepted", "executed"}
+    )
+    lifecycle_outbox_targets = {
+        event.payload.get("target_status")
+        for event in snapshot.outbox_events.values()
+        if event.event_type == "idea.lifecycle.transitioned.v1"
+    }
+    assert lifecycle_outbox_targets.isdisjoint({"accepted", "executed"})
 
 
 def test_lifecycle_transition_api_enables_review_approval_without_bypassing_state() -> None:

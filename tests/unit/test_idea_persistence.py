@@ -521,6 +521,45 @@ def test_lifecycle_transition_returns_not_found_and_blocks_invalid_transition() 
         )
 
 
+def test_lifecycle_transition_blocks_downstream_authority_targets_before_outbox() -> None:
+    candidate, refs = approved_high_cash_candidate()
+    repository = InMemoryIdeaRepository()
+    persisted = repository.persist_candidate(
+        candidate,
+        idempotency_key="signal-ingestion:approved-high-cash:001",
+        payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    assert persisted.record is not None
+
+    with pytest.raises(InvalidLifecycleTransition):
+        repository.record_lifecycle_transition(
+            persisted.record.candidate.candidate_id,
+            IdeaLifecycleStatus.ACCEPTED,
+            idempotency_key="lifecycle:accepted:forbidden",
+            payload={
+                "target_status": "accepted",
+                "transition_id": "transition-accepted-forbidden-001",
+            },
+            actor_subject="idea-lifecycle-worker",
+            occurred_at_utc=datetime(2026, 6, 21, 10, 1, tzinfo=UTC),
+            transition_id="transition-accepted-forbidden-001",
+            reason_codes=("review_required",),
+        )
+
+    snapshot = repository.snapshot()
+    assert snapshot.candidate_records[candidate.candidate_id].candidate.lifecycle_status is (
+        IdeaLifecycleStatus.APPROVED
+    )
+    lifecycle_outbox_targets = {
+        event.payload.get("target_status")
+        for event in snapshot.outbox_events.values()
+        if event.event_type == "idea.lifecycle.transitioned.v1"
+    }
+    assert lifecycle_outbox_targets.isdisjoint({"accepted", "executed"})
+
+
 def test_repository_snapshot_recovers_candidate_idempotency_and_replay_state() -> None:
     candidate, refs = high_cash_candidate()
     repository = InMemoryIdeaRepository()

@@ -7,6 +7,7 @@ from typing import Any
 from app.domain import (
     IdeaLifecycleStatus,
     LifecyclePersistenceResult,
+    validate_caller_settable_lifecycle_status,
 )
 from app.ports.idea_repository import CandidateLifecycleRepository
 
@@ -30,6 +31,7 @@ class ApplyCandidateLifecycleTransitionCommand:
             raise ValueError("reason_codes is required")
         if any(not reason_code.strip() for reason_code in self.reason_codes):
             raise ValueError("reason_codes cannot contain blank values")
+        validate_caller_settable_lifecycle_status(self.target_status)
         if self.changed_at_utc.tzinfo is None or self.changed_at_utc.utcoffset() is None:
             raise ValueError("changed_at_utc must be timezone-aware")
         object.__setattr__(self, "reason_codes", tuple(self.reason_codes))

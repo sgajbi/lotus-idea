@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 
 from fastapi import FastAPI, Header, Path, status
 from fastapi.responses import JSONResponse
@@ -37,6 +38,7 @@ from app.domain import (
     LifecyclePersistenceDecision,
     LifecyclePersistenceResult,
     ReasonCode,
+    validate_caller_settable_lifecycle_status,
 )
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
@@ -45,9 +47,37 @@ from app.security.caller_context import CallerContext, PermissionDeniedError
 _LIFECYCLE_TRANSITION_CAPABILITY = "idea.candidate.lifecycle.transition"
 
 
+class CallerSettableIdeaLifecycleStatus(StrEnum):
+    DETECTED = "detected"
+    GENERATED = "generated"
+    ENRICHED = "enriched"
+    SCORED = "scored"
+    GOVERNANCE_CHECKED = "governance_checked"
+    READY_FOR_REVIEW = "ready_for_review"
+    REVIEWED_BY_ADVISOR = "reviewed_by_advisor"
+    APPROVED = "approved"
+    CONVERTED_TO_PROPOSAL = "converted_to_proposal"
+    CONVERTED_TO_MANAGE_REVIEW = "converted_to_manage_review"
+    CONVERTED_TO_REPORT = "converted_to_report"
+    REJECTED = "rejected"
+    EXPIRED = "expired"
+    CLOSED = "closed"
+
+    def to_domain_status(self) -> IdeaLifecycleStatus:
+        return IdeaLifecycleStatus(self.value)
+
+
 class CandidateLifecycleTransitionRequest(CamelModel):
     transition_id: str = Field(..., alias="transitionId")
-    target_lifecycle_status: IdeaLifecycleStatus = Field(..., alias="targetLifecycleStatus")
+    target_lifecycle_status: CallerSettableIdeaLifecycleStatus = Field(
+        ...,
+        alias="targetLifecycleStatus",
+        description=(
+            "Internal lotus-idea lifecycle target. Downstream-authority statuses such as "
+            "accepted or executed are intentionally not valid input; downstream posture is "
+            "recorded through conversion outcome and downstream submission contracts."
+        ),
+    )
     changed_at_utc: datetime = Field(..., alias="changedAtUtc")
     reason_codes: tuple[ReasonCode, ...] = Field(..., alias="reasonCodes")
 
@@ -67,6 +97,14 @@ class CandidateLifecycleTransitionRequest(CamelModel):
             raise ValueError("reasonCodes is required")
         return tuple(value)
 
+    @field_validator("target_lifecycle_status")
+    @classmethod
+    def _target_lifecycle_status_must_be_caller_settable(
+        cls, value: CallerSettableIdeaLifecycleStatus
+    ) -> CallerSettableIdeaLifecycleStatus:
+        validate_caller_settable_lifecycle_status(value.to_domain_status())
+        return value
+
     @field_validator("changed_at_utc")
     @classmethod
     def _changed_at_must_be_aware(cls, value: datetime) -> datetime:
@@ -82,7 +120,7 @@ class CandidateLifecycleTransitionRequest(CamelModel):
         return ApplyCandidateLifecycleTransitionCommand(
             candidate_id=candidate_id,
             transition_id=self.transition_id,
-            target_status=self.target_lifecycle_status,
+            target_status=self.target_lifecycle_status.to_domain_status(),
             changed_at_utc=self.changed_at_utc,
             reason_codes=tuple(reason.value for reason in self.reason_codes),
             actor_subject=caller.subject,
@@ -214,7 +252,7 @@ async def record_candidate_lifecycle_transition(
             CandidateLifecycleTransitionSummaryResponse(
                 transitionId=request.transition_id,
                 candidateId=candidate_id,
-                lifecycleStatus=request.target_lifecycle_status,
+                lifecycleStatus=request.target_lifecycle_status.to_domain_status(),
                 changedAtUtc=request.changed_at_utc,
                 reasonCodes=tuple(reason.value for reason in request.reason_codes),
                 grantsDownstreamAuthority=False,

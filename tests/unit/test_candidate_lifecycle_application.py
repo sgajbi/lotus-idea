@@ -49,3 +49,14 @@ def test_candidate_lifecycle_transition_command_rejects_invalid_inputs(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         lifecycle_command(**{field_name: bad_value})
+
+
+@pytest.mark.parametrize(
+    "target_status",
+    [IdeaLifecycleStatus.ACCEPTED, IdeaLifecycleStatus.EXECUTED],
+)
+def test_candidate_lifecycle_transition_command_rejects_downstream_authority_targets(
+    target_status: IdeaLifecycleStatus,
+) -> None:
+    with pytest.raises(ValueError, match="reserved for downstream source-authority outcomes"):
+        lifecycle_command(target_status=target_status)
