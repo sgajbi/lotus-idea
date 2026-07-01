@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import json
 from pathlib import Path
 import sys
@@ -10,6 +9,11 @@ from app.application.mesh_policy_proof import (
     build_mesh_policy_proof_payload,
     mesh_policy_proof_is_valid,
 )
+
+try:
+    from scripts.proof_generator_io import parse_generated_at_utc
+except ModuleNotFoundError:
+    from proof_generator_io import parse_generated_at_utc  # type: ignore[import-not-found,no-redef]
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,7 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", required=True, help="JSON output path.")
     args = parser.parse_args(argv)
     try:
-        generated_at_utc = _parse_generated_at_utc(args.generated_at_utc)
+        generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
         payload = build_mesh_policy_proof_payload(
             generated_at_utc=generated_at_utc,
             repository_root=ROOT,
@@ -45,16 +49,6 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"mesh policy proof error: {exc}", file=sys.stderr)
         return 2
-
-
-def _parse_generated_at_utc(value: str) -> datetime:
-    normalized = value.strip()
-    if normalized.endswith("Z"):
-        normalized = f"{normalized[:-1]}+00:00"
-    parsed = datetime.fromisoformat(normalized)
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise ValueError("generated-at-utc must be timezone-aware")
-    return parsed.astimezone(UTC)
 
 
 if __name__ == "__main__":

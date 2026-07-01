@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import json
 import sys
 from pathlib import Path
@@ -15,6 +14,11 @@ from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+
+try:
+    from scripts.proof_generator_io import parse_generated_at_utc
+except ModuleNotFoundError:
+    from proof_generator_io import parse_generated_at_utc  # type: ignore[import-not-found,no-redef]
 
 
 REQUIRED_CONTRACT_FIELDS = {
@@ -111,7 +115,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = _parser()
     args = parser.parse_args(argv)
     try:
-        generated_at_utc = _parse_generated_at_utc(args.generated_at_utc)
+        generated_at_utc = parse_generated_at_utc(args.generated_at_utc)
         output_path = Path(args.output)
         repository = get_idea_repository()
         snapshot = build_runtime_trust_telemetry_snapshot(
@@ -259,16 +263,6 @@ def _parser() -> argparse.ArgumentParser:
         help="JSON output path. Parent directories are created when needed.",
     )
     return parser
-
-
-def _parse_generated_at_utc(value: str) -> datetime:
-    normalized = value.strip()
-    if normalized.endswith("Z"):
-        normalized = f"{normalized[:-1]}+00:00"
-    parsed = datetime.fromisoformat(normalized)
-    if parsed.tzinfo is None or parsed.utcoffset() is None:
-        raise ValueError("generated-at-utc must be timezone-aware")
-    return parsed.astimezone(UTC)
 
 
 if __name__ == "__main__":
