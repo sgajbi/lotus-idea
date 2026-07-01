@@ -209,7 +209,7 @@ def test_ci_contract_gate_blocks_removed_release_sbom_target_artifact(
 def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(
-        "python -m pip install --no-cache-dir .",
+        "python -m pip install --no-cache-dir --constraint requirements/runtime-resolved.lock.txt .",
         'python -m pip install --no-cache-dir -e ".[dev]"',
     )
 
@@ -231,3 +231,18 @@ def test_ci_contract_gate_accepts_hardened_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
 
     assert validate_dockerfile_runtime(dockerfile) == []
+
+
+def test_ci_contract_gate_blocks_unconstrained_runtime_dockerfile() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "python -m pip install --no-cache-dir --constraint requirements/runtime-resolved.lock.txt .",
+        "python -m pip install --no-cache-dir .",
+    )
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert (
+        "Dockerfile must constrain runtime install to the resolved runtime dependency lockfile"
+        in errors
+    )

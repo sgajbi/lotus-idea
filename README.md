@@ -158,13 +158,13 @@ Run the Docker entrypoint from a clean checkout:
 docker compose up --build
 ```
 
-Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs only runtime dependencies, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image references plus resolved immutable digests in CI release evidence, runs a bounded container startup smoke proof over `/health`, `/health/live`, and reachable default-profile `/health/ready`, and ties a runtime Python dependency SBOM from `requirements/shared-runtime.lock.txt` to the built service image reference/id. This remains runtime-parity evidence only, not production, full container-image SBOM, registry attestation, Workbench, data-mesh, client-publication, or supported-feature proof.
+Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs only runtime dependencies constrained by `requirements/runtime-resolved.lock.txt`, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image references plus resolved immutable digests in CI release evidence, runs a bounded container startup smoke proof over `/health`, `/health/live`, and reachable default-profile `/health/ready`, and ties a runtime Python dependency SBOM from the resolved runtime dependency closure to the built service image reference/id. This remains runtime-parity evidence only, not production, full container-image SBOM, registry attestation, Workbench, data-mesh, client-publication, or supported-feature proof.
 
 ## Common Commands
 
 | Command | Purpose |
 | --- | --- |
-| `make install` | Create `.venv` and install runtime plus dev dependencies. |
+| `make install` | Create `.venv` and install runtime plus dev dependencies constrained by the resolved runtime lock. |
 | `make lint` | Run formatting, linting, and fast clean governance gates without generating ignored proof artifacts. |
 | `make typecheck` | Run `mypy` over the service. |
 | `make test-unit` | Run unit tests; override `UNIT_TESTS` for a focused path. |

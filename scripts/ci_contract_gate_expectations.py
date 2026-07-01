@@ -9,6 +9,7 @@ REQUIRED_LINT_TARGETS = (
     "quality-scorecard-gate",
     "monetary-float-guard",
     "no-sensitive-content-guard",
+    "runtime-dependency-closure-gate",
     "source-observability-contract-gate",
     "api-route-metadata-gate",
     "api-problem-details-boundary-gate",
@@ -196,6 +197,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
         "scripts/high_volatility_live_proof_contract_gate.py"
     ),
     "private-import-boundary-gate": "scripts/private_import_boundary_gate.py",
+    "runtime-dependency-closure-gate": "scripts/runtime_dependency_closure_gate.py",
 }
 
 GENERATED_READINESS_ARTIFACTS = (

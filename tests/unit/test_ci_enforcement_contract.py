@@ -36,6 +36,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) monetary-float-guard" in makefile
     assert "no-sensitive-content-guard:" in makefile
     assert "$(MAKE) no-sensitive-content-guard" in makefile
+    assert "runtime-dependency-closure-gate:" in makefile
+    assert "$(MAKE) runtime-dependency-closure-gate" in makefile
     assert "source-observability-contract-gate:" in makefile
     assert "$(MAKE) source-observability-contract-gate" in makefile
     assert "api-route-metadata-gate:" in makefile
@@ -209,6 +211,21 @@ def test_ci_contract_gate_blocks_missing_merge_grade_checks() -> None:
     assert "Makefile ci target missing `security-audit`" in errors
 
 
+def test_ci_contract_gate_blocks_unconstrained_install_target() -> None:
+    module = _load_ci_contract_gate()
+    makefile = _read("Makefile").replace(
+        '$(VENV_PYTHON) -m pip install --constraint requirements/runtime-resolved.lock.txt -e ".[dev]"',
+        '$(VENV_PYTHON) -m pip install -e ".[dev]"',
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile install target must constrain dev installation with "
+        "`requirements/runtime-resolved.lock.txt`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_full_lane_release_proof_dependencies() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace(
@@ -248,7 +265,7 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
     makefile = (
         _read("Makefile")
         .replace("$(VENV_PYTHON) -m cyclonedx_py requirements", "cyclonedx-py requirements")
-        .replace("requirements/shared-runtime.lock.txt", "requirements/ci-tooling.lock.txt")
+        .replace("requirements/runtime-resolved.lock.txt", "requirements/shared-runtime.lock.txt")
         .replace(" --pyproject pyproject.toml", "")
         .replace(" --output-reproducible", "")
         .replace(
@@ -268,7 +285,13 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile release-sbom target must run pinned venv `cyclonedx_py requirements`" in errors
-    assert "Makefile release-sbom target must use the shared runtime lockfile" in errors
+    assert (
+        "Makefile release-sbom target must use the resolved runtime dependency lockfile"
+    ) in errors
+    assert (
+        "Makefile release-sbom target must not use the direct-only shared runtime lockfile"
+        in errors
+    )
     assert "Makefile release-sbom target must attach project metadata" in errors
     assert "Makefile release-sbom target must generate reproducible SBOM output" in errors
     assert (
@@ -293,7 +316,7 @@ def test_ci_contract_gate_blocks_ungoverned_release_evidence_targets() -> None:
 def test_ci_contract_gate_blocks_ambiguous_environment_release_sbom() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace(
-        "$(VENV_PYTHON) -m cyclonedx_py requirements requirements/shared-runtime.lock.txt --pyproject pyproject.toml --output-reproducible",
+        "$(VENV_PYTHON) -m cyclonedx_py requirements requirements/runtime-resolved.lock.txt --pyproject pyproject.toml --output-reproducible",
         "$(VENV_PYTHON) -m cyclonedx_py environment",
     )
 

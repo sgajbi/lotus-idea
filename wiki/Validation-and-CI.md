@@ -204,9 +204,12 @@ lane-specific artifact. Main Releasability release evidence references
 workflow wiring. No CI duration threshold is enforced yet.
 
 Main Releasability SBOM evidence is runtime-dependency scoped. `make release-sbom`
-generates `sbom.cdx.json` from `requirements/shared-runtime.lock.txt` with the pinned
+generates `sbom.cdx.json` from `requirements/runtime-resolved.lock.txt` with the pinned
 CycloneDX tool, and `release-evidence.json` records the SBOM scope, generator,
 dependency source, project metadata, target service image reference, and built image id.
+`make runtime-dependency-closure-gate` blocks direct-only runtime locks by
+checking the resolved lock against the installed transitive dependency closure
+for the `pyproject.toml` runtime roots.
 Container OS/package posture remains the Trivy image scan's responsibility; the SBOM is
 not represented as a full image SBOM or registry attestation.
 

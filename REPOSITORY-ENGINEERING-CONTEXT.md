@@ -442,22 +442,29 @@ make source-ingestion-live-proof-contract-gate
 make source-ingestion-scheduled-worker-check
 make quality-scorecard-gate
 make repository-hygiene-gate
+make runtime-dependency-closure-gate
 make github-security-posture-check
 ```
 
 Current repo-native aggregate command posture:
 
-1. `make ci` is the broad local aggregate command for lint, typecheck,
+1. `make install` creates the development virtual environment with
+   `requirements/runtime-resolved.lock.txt` as a constraint, so CI and local
+   validation exercise the same governed runtime transitive dependency pins
+   while still installing dev tooling.
+2. `make ci` is the broad local aggregate command for lint, typecheck,
    contract gates, OpenAPI, migrations, tests, coverage, and dependency audit.
    It is not Docker, PostgreSQL runtime, image-scan, SBOM, or release-evidence
-   proof by itself.
-2. `make ci-release` is the governed full-lane local command. It runs `make ci`
+   proof by itself. Its lint lane includes `runtime-dependency-closure-gate`
+   so release SBOM inputs cannot silently fall back to direct-only runtime
+   dependency evidence.
+3. `make ci-release` is the governed full-lane local command. It runs `make ci`
    plus `postgres-integration-gate`, `docker-build`, `container-runtime-smoke`,
    `container-image-scan`, and `release-sbom`. Cite it only when the required
    local PostgreSQL and Docker prerequisites were actually available and run.
-3. `make ci-contract-gate` blocks drift if the full-lane command omits those
+4. `make ci-contract-gate` blocks drift if the full-lane command omits those
    PostgreSQL or container/release proof families.
-4. GitHub workflow YAML should keep calling repo-native targets rather than
+5. GitHub workflow YAML should keep calling repo-native targets rather than
    reimplementing opaque inline proof.
 
 PostgreSQL evidence:
@@ -542,34 +549,40 @@ Recent issue-derived patterns to preserve:
 12. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
 13. release evidence artifacts must name their scope, target artifact or
-   dependency source, generator, path, and non-proof boundary before being cited
-   as release proof,
-14. Docker build and scan evidence must be paired with bounded packaged-runtime
-   startup and health-surface smoke proof before claiming release image
-   confidence,
-15. generated proof and quality evidence must be reproducible from current
-   gate rules or be documented as on-demand evidence rather than current proof,
-16. ignored report-only artifacts must not be cited as durable current-state
-   proof unless a deterministic committed-artifact drift gate exists,
-17. documentation should record the durable rule, not only the one-off fix,
-18. supportability, readiness, health-state, and data-quality vocabulary must
+    dependency source, generator, path, and non-proof boundary before being cited
+    as release proof,
+14. runtime dependency SBOM evidence must come from the resolved runtime
+    dependency closure in `requirements/runtime-resolved.lock.txt`, not from
+    direct-only runtime requirements or an ambiguous CI environment,
+15. Docker build and scan evidence must be paired with bounded packaged-runtime
+    startup and health-surface smoke proof before claiming release image
+    confidence,
+16. generated proof and quality evidence must be reproducible from current
+    gate rules or be documented as on-demand evidence rather than current proof,
+17. ignored report-only artifacts must not be cited as durable current-state
+    proof unless a deterministic committed-artifact drift gate exists,
+18. documentation should record the durable rule, not only the one-off fix,
+19. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
 
-Current open issue priorities should be worked category-wise so repeated defect
-patterns are fixed once and pinned with tests or gates:
+Recent GitHub issue categories should keep being worked category-wise so
+repeated defect patterns are fixed once and pinned with tests or gates:
 
-1. Migration/data durability coverage: GitHub issue `#274` requires the
-   migration contract gate to cover durable downstream submission state,
-   resource lookup indexes, and rollback coverage so repository runtime state
-   cannot drift from migration truth.
-2. CI lane hygiene and release evidence: GitHub issue `#275` requires
-   artifact-producing implementation-proof readiness generation to stay out of
-   fast `make lint` while clean proof-family contract gates remain blocking and
-   release/review evidence remains available through explicit commands.
-3. Repo context truth: GitHub issue `#278` tracks this curated issue posture so
-   future agents see mainline truth instead of stale branch-local closure
+1. Migration/data durability coverage: GitHub issue `#274` was fixed by PR
+   `#280` by expanding migration contract coverage for downstream submission
+   state, resource lookup indexes, and rollback truth.
+2. CI lane hygiene and release evidence: GitHub issue `#275` was fixed by PR
+   `#280` by keeping artifact-producing implementation-proof readiness
+   generation out of fast `make lint` while preserving explicit release/review
+   evidence commands.
+3. Repo context truth: GitHub issue `#278` was fixed by PR `#280` by curating
+   this file to current mainline issue posture instead of branch-local closure
    claims.
+4. Runtime supply-chain evidence: GitHub issue `#279` is addressed by the
+   runtime-resolved lock plus `runtime-dependency-closure-gate`, so release
+   SBOM and dependency audit evidence cover transitive runtime dependencies
+   rather than only direct requirements.
 
 Recently closed by PR `#273` and mainline validation:
 

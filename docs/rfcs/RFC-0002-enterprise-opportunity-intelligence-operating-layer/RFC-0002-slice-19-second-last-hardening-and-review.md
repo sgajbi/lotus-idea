@@ -319,8 +319,9 @@ Main Releasability uploaded an ambiguous CI-environment SBOM beside image scan
 evidence:
 
 1. `make release-sbom` now generates `sbom.cdx.json` from
-   `requirements/shared-runtime.lock.txt` with the pinned CycloneDX tool and
-   project metadata, rather than inventorying the CI virtual environment.
+   `requirements/runtime-resolved.lock.txt` with the pinned CycloneDX tool and
+   project metadata, rather than inventorying the CI virtual environment or only
+   the direct runtime dependency list.
 2. Main Releasability records the built service image reference and local image
    id, then writes `sboms[]` release metadata with SBOM path, scope, target
    artifact, target artifact id, dependency source, project metadata,

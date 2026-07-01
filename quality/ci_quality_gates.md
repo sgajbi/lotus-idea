@@ -174,12 +174,15 @@ agents cannot preserve only mutable tag evidence.
 
 Main Releasability SBOM evidence is also explicit about scope. `make
 release-sbom` uses the pinned CycloneDX tool against
-`requirements/shared-runtime.lock.txt`, not the CI virtual environment, and
+`requirements/runtime-resolved.lock.txt`, not the CI virtual environment, and
 writes `sbom.cdx.json` as runtime Python dependency evidence. The release
 manifest records that SBOM under `sboms[]` with scope, path, generator,
 dependency source, project metadata, target service image reference, and built
 image id. This is not a full container image SBOM; container OS and packaged
 image posture remain covered by the Trivy image scan.
+`make runtime-dependency-closure-gate` blocks direct-only runtime locks by
+checking the resolved lock against the installed transitive dependency closure
+for the `pyproject.toml` runtime roots.
 
 PR Merge Gate and Main Releasability now run `make container-runtime-smoke`
 after `make docker-build` and before Docker release evidence can pass. The
