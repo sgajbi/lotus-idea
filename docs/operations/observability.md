@@ -16,6 +16,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Request diagnostic events | Validation, HTTP, and unhandled error triage | Route templates, not raw URL paths |
 | Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
 | AI model-risk operations contract | Machine-readable dashboard-control and alert posture for AI explanation operations, backed by repo-owned dashboard/rule/runbook artifacts | Not `lotus-ai`, Workbench, data-mesh, client-ready, or supported-feature certification |
+| Operator workflows operations contract | Machine-readable dashboard-control and alert posture for non-AI operator workflows, backed by repo-owned dashboard/rule/runbook artifacts | Not live source, external broker, downstream execution, Gateway/Workbench, data-mesh, or supported-feature certification |
 
 ## Sensitive-Content Rule
 
@@ -136,6 +137,27 @@ to certified source-safe dashboard and alert artifacts. It still does not prove
 certification, client-ready publication, or supported-feature promotion. AI
 lineage store proof remains a separate source-safe persistence artifact
 consumed by aggregate implementation-proof readiness.
+
+## Operator Workflows Operations Contract
+
+`contracts/observability/lotus-idea-operator-workflows-operations.v1.json`
+defines the current non-AI operator workflow operations contract for source
+ingestion, outbox delivery, downstream realization, runtime trust telemetry,
+and aggregate implementation-proof readiness. It is validated by
+`make operator-workflows-ops-contract-gate`. The concrete dashboard, alert
+rules, and runbook are certified by
+`make operator-workflows-operations-proof-contract-gate`.
+
+| Contract area | Implemented evidence | Boundary |
+| --- | --- | --- |
+| Dashboard controls | Source-ingestion, outbox, downstream realization, runtime trust, and implementation-proof readiness posture over implemented operation telemetry | Certified source-safe dashboard artifact |
+| Alert rules | Blocked readiness and run-once/submission posture over implemented operation telemetry | Certified source-safe alert artifact |
+| Source-of-truth paths | Operation metric contract, operator runbook, source-ingestion, outbox, downstream, runtime-trust, implementation-proof source modules, and RFC slices | No live source, external broker, downstream execution, Gateway/Workbench, or support-promotion proof |
+
+This contract closes the non-AI dashboard/alert certification gap raised by
+GitHub issue `#282` without changing runtime modularity or feature support
+posture. It certifies operator visibility over existing bounded operation
+telemetry only.
 
 ## Operator Interpretation
 

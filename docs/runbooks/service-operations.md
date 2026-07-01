@@ -27,6 +27,7 @@
 | `make downstream-route-contract-proof-gate` | Source-safe Advise proposal and Manage action route-proof contract for aggregate readiness without granting suitability, rebalance/execution, or supported-feature authority. |
 | `make ai-lineage-store-proof-contract-gate` | Source-safe AI lineage store proof contract without, by itself, certifying `lotus-ai` runtime, Workbench, or supported-feature promotion. |
 | `make ai-model-risk-operations-proof-contract-gate` | Source-safe AI model-risk operations proof contract for repo-owned dashboard, alert-rule, and runbook artifacts without certifying `lotus-ai`, Workbench, client-ready publication, or supported-feature promotion. |
+| `make operator-workflows-operations-proof-contract-gate` | Source-safe non-AI operator workflow operations proof contract for repo-owned dashboard, alert-rule, and runbook artifacts without certifying live source ingestion, external broker publication, downstream execution, Gateway/Workbench, data mesh, or supported-feature promotion. |
 | `make implementation-proof-readiness-check` | Scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, Gateway/Workbench operational, default Advise proposal route, default Manage action route, default Report intake route, default platform mesh onboarding, AI lineage store, AI model-risk operations, AI workflow-pack, optional Risk concentration, high-volatility, drawdown, Performance underperformance, missing-benchmark Performance readiness, Core benchmark assignment, Core portfolio-state, missing-benchmark Core, Manage mandate, Advise mandate/restriction live proof, typed Advise mandate/restriction source-product proof, Advise missing-suitability, typed Advise missing risk-profile source-product proof, Advise missing risk-profile live proof, and RFC-0002 aggregate proof-readiness evidence. |
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
@@ -278,6 +279,18 @@ RFC-0002 Slice 15 adds bounded operation-event logs and the
 13. source-ingestion readiness diagnostic reads,
 14. downstream-realization readiness diagnostic reads,
 15. implementation-proof readiness diagnostic reads.
+
+The non-AI operator workflow dashboard and alert pack lives in
+`contracts/observability/lotus-idea-operator-workflows-operations.v1.json`,
+`monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json`,
+`monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
+and `docs/runbooks/operator-workflows-operations.md`.
+`make operator-workflows-ops-contract-gate` and
+`make operator-workflows-operations-proof-contract-gate` certify only
+source-safe dashboard/alert visibility over implemented operation telemetry.
+Live source ingestion, external broker publication, downstream execution
+outcomes, data-mesh certification, Gateway/Workbench proof, and
+supported-feature promotion remain separate blockers.
 
 Use the operation `outcome` before inspecting payload-level evidence:
 

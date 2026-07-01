@@ -270,10 +270,10 @@ Local controls keep implementation claims grounded:
 - `make ai-model-risk-ops-contract-gate` keeps the AI model-risk operations
   contract aligned to implemented AI explanation/readiness telemetry and
   certified dashboard/alert artifact references.
-- `make ai-model-risk-operations-proof-contract-gate` proves the repo-owned
-  dashboard, alert rules, and runbook reference only implemented, bounded
-  operation telemetry while still blocking `lotus-ai`, Workbench,
-  data-mesh, client-ready, and supported-feature overclaims.
+- AI model-risk and non-AI operator workflow proof gates keep dashboard, alert
+  rule, and runbook evidence tied only to implemented, bounded operation
+  telemetry while preserving `lotus-ai`, live-source, external-broker,
+  downstream-execution, Workbench, data-mesh, and support-promotion blockers.
 - `make ai-lineage-store-proof-contract-gate` keeps the AI lineage store proof
   artifact source-safe and prevents durable persistence evidence from becoming
   a false `lotus-ai` runtime, Workbench, client-demo, or supported-feature

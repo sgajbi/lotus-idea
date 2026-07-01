@@ -562,6 +562,18 @@ evidence only; it is not dashboard certification, alert certification,
 data-mesh certification, Gateway/Workbench proof, or supported-feature
 promotion.
 
+The non-AI operator workflow dashboard and alert pack lives at
+`contracts/observability/lotus-idea-operator-workflows-operations.v1.json`,
+`monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json`,
+`monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
+and `docs/runbooks/operator-workflows-operations.md`. Use
+`make operator-workflows-ops-contract-gate` and
+`make operator-workflows-operations-proof-contract-gate` to certify source-safe
+dashboard/alert visibility over implemented source-ingestion, outbox,
+downstream-realization, runtime-trust, and implementation-proof readiness
+telemetry. This is not live source, external broker, downstream execution,
+Gateway/Workbench, data-mesh, or supported-feature certification.
+
 Request validation, HTTP, and unhandled-error diagnostics use the central
 request diagnostic helper and log route templates rather than raw URL paths.
 `make source-observability-contract-gate` blocks raw `print()`, direct Python
