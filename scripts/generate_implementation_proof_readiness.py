@@ -262,6 +262,11 @@ def _proof_artifact_inputs(args: argparse.Namespace) -> dict[str, ProofArtifactI
             artifact_name="AI model-risk operations proof",
             ref_name="AI model-risk operations proof artifact",
         ),
+        "operator_workflows_operations": _proof_artifact_input(
+            args.operator_workflows_operations_proof,
+            artifact_name="operator workflows operations proof",
+            ref_name="operator workflows operations proof artifact",
+        ),
         "ai_workflow_pack_registration": _proof_artifact_input(
             args.ai_workflow_pack_registration_proof,
             artifact_name="AI workflow-pack registration proof",

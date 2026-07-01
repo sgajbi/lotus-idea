@@ -25,6 +25,9 @@ from app.application.gateway_workbench_discovery_proof import (
 from app.application.low_income_core_cashflow_live_proof import (
     LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
 )
+from app.application.operator_workflows_operations_proof import (
+    OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+)
 from app.application.outbox_broker_proof import OUTBOX_BROKER_PROOF_ENV
 from app.application.outbox_platform_mesh_event_publication_proof import (
     OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
@@ -50,6 +53,8 @@ class ConfiguredImplementationProofArtifacts:
     ai_lineage_store_proof_ref: str | None
     ai_model_risk_operations_proof: dict[str, Any] | None
     ai_model_risk_operations_proof_ref: str | None
+    operator_workflows_operations_proof: dict[str, Any] | None
+    operator_workflows_operations_proof_ref: str | None
     ai_workflow_pack_registration_proof: dict[str, Any] | None
     ai_workflow_pack_registration_proof_ref: str | None
     ai_workflow_pack_runtime_execution_proof: dict[str, Any] | None
@@ -112,6 +117,12 @@ _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
         "ai_model_risk_operations_proof",
         "ai_model_risk_operations_proof_ref",
         "AI model-risk operations proof",
+    ),
+    (
+        OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV,
+        "operator_workflows_operations_proof",
+        "operator_workflows_operations_proof_ref",
+        "operator workflows operations proof",
     ),
     (
         AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,

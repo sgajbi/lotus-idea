@@ -43,6 +43,10 @@ from app.application.mesh_policy_proof import (
     MESH_POLICY_BLOCKERS_CLEARED,
     mesh_policy_proof_is_valid,
 )
+from app.application.operator_workflows_operations_proof import (
+    OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
+    operator_workflows_operations_proof_is_valid,
+)
 from app.application.outbox_broker_proof import outbox_broker_proof_is_valid
 from app.application.outbox_consumer_runtime_proof import (
     OUTBOX_CONSUMER_RUNTIME_BLOCKERS_CLEARED,
@@ -97,6 +101,8 @@ def _apply_available_proofs(
     ai_lineage_store_proof_ref: str | None,
     ai_model_risk_operations_proof: Mapping[str, object] | None,
     ai_model_risk_operations_proof_ref: str | None,
+    operator_workflows_operations_proof: Mapping[str, object] | None,
+    operator_workflows_operations_proof_ref: str | None,
     ai_workflow_pack_registration_proof: Mapping[str, object] | None,
     ai_workflow_pack_registration_proof_ref: str | None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None,
@@ -189,27 +195,9 @@ def _apply_available_proofs(
         report_materialization_proof=report_materialization_proof,
         report_materialization_proof_ref=report_materialization_proof_ref,
     )
-    capabilities = _apply_platform_and_surface_proofs(
+    capabilities = _apply_platform_surface_and_operator_proofs(
         capabilities=capabilities,
-        evaluated_at_utc=evaluated_at_utc,
-        mesh_policy_proof=mesh_policy_proof,
-        mesh_policy_proof_ref=mesh_policy_proof_ref,
-        outbox_broker_proof=outbox_broker_proof,
-        outbox_broker_proof_ref=outbox_broker_proof_ref,
-        outbox_consumer_runtime_proof=outbox_consumer_runtime_proof,
-        outbox_consumer_runtime_proof_ref=outbox_consumer_runtime_proof_ref,
-        outbox_platform_mesh_event_publication_proof=outbox_platform_mesh_event_publication_proof,
-        outbox_platform_mesh_event_publication_proof_ref=(
-            outbox_platform_mesh_event_publication_proof_ref
-        ),
-        platform_mesh_onboarding_proof=platform_mesh_onboarding_proof,
-        platform_mesh_onboarding_proof_ref=platform_mesh_onboarding_proof_ref,
-        workbench_read_path_proof=workbench_read_path_proof,
-        workbench_read_path_proof_ref=workbench_read_path_proof_ref,
-        gateway_workbench_operational_proof=gateway_workbench_operational_proof,
-        gateway_workbench_operational_proof_ref=gateway_workbench_operational_proof_ref,
-        gateway_workbench_discovery_proof=gateway_workbench_discovery_proof,
-        gateway_workbench_discovery_proof_ref=gateway_workbench_discovery_proof_ref,
+        scope=locals(),
     )
     return _apply_opportunity_archetype_proofs(capabilities=capabilities, scope=locals())
 
@@ -231,6 +219,19 @@ def _apply_opportunity_archetype_proofs(
         evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
         scope=scope,
     )
+
+
+def _apply_platform_surface_and_operator_proofs(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    scope: Mapping[str, object],
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    proof_args: dict[str, Any] = {
+        name: scope[name]
+        for name in _apply_platform_and_surface_proofs.__annotations__
+        if name not in {"capabilities", "return"}
+    }
+    return _apply_platform_and_surface_proofs(capabilities=capabilities, **proof_args)
 
 
 def _apply_storage_and_runtime_proofs(
@@ -406,6 +407,8 @@ def _apply_platform_and_surface_proofs(
     gateway_workbench_operational_proof_ref: str | None,
     gateway_workbench_discovery_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_proof_ref: str | None,
+    operator_workflows_operations_proof: Mapping[str, object] | None,
+    operator_workflows_operations_proof_ref: str | None,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     if _proof_can_clear_blockers(
         mesh_policy_proof,
@@ -498,7 +501,38 @@ def _apply_platform_and_surface_proofs(
             )
             for capability in capabilities
         )
+    capabilities = _apply_operator_workflows_operations_proof_if_valid(
+        capabilities=capabilities,
+        evaluated_at_utc=evaluated_at_utc,
+        operator_workflows_operations_proof=operator_workflows_operations_proof,
+        operator_workflows_operations_proof_ref=operator_workflows_operations_proof_ref,
+    )
     return capabilities
+
+
+def _apply_operator_workflows_operations_proof_if_valid(
+    *,
+    capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
+    evaluated_at_utc: datetime,
+    operator_workflows_operations_proof: Mapping[str, object] | None,
+    operator_workflows_operations_proof_ref: str | None,
+) -> tuple[ImplementationProofCapabilityReadiness, ...]:
+    if not _proof_can_clear_blockers(
+        operator_workflows_operations_proof,
+        operator_workflows_operations_proof_ref,
+        evaluated_at_utc=evaluated_at_utc,
+        proof_is_valid=operator_workflows_operations_proof_is_valid,
+    ):
+        return capabilities
+    return tuple(
+        _apply_downstream_route_contract_proof(
+            capability,
+            capability_id="operator-workflows-operations",
+            blockers_cleared=OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
+            proof_ref=operator_workflows_operations_proof_ref,
+        )
+        for capability in capabilities
+    )
 
 
 def _proof_can_clear_blockers(
@@ -552,7 +586,7 @@ def _apply_mesh_policy_proof(
 ) -> ImplementationProofCapabilityReadiness:
     return apply_blocker_proof(
         capability,
-        capability_ids=("data-mesh-certification",),
+        capability_ids=("data-mesh-certification", "operator-workflows-operations"),
         blockers_cleared=MESH_POLICY_BLOCKERS_CLEARED,
         proof_ref=mesh_policy_proof_ref,
     )
@@ -628,7 +662,7 @@ def _apply_gateway_workbench_operational_proof(
 ) -> ImplementationProofCapabilityReadiness:
     return apply_blocker_proof(
         capability,
-        capability_ids=("source-ingestion", "outbox-delivery"),
+        capability_ids=("source-ingestion", "outbox-delivery", "operator-workflows-operations"),
         blockers_cleared=GATEWAY_WORKBENCH_OPERATIONAL_BLOCKERS_CLEARED,
         proof_ref=gateway_workbench_operational_proof_ref,
     )
@@ -758,7 +792,7 @@ def _apply_outbox_broker_proof(
     capability: ImplementationProofCapabilityReadiness,
     outbox_broker_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if capability.capability_id != "outbox-delivery":
+    if capability.capability_id not in {"outbox-delivery", "operator-workflows-operations"}:
         return capability
     blockers_to_clear = {
         "outbox_broker_not_configured",

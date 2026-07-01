@@ -274,9 +274,9 @@ def test_implementation_proof_readiness_reports_blocked_foundation_posture(
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.certification_ready is False
-    assert snapshot.capability_count == 10
+    assert snapshot.capability_count == 11
     assert snapshot.certification_ready_capability_count == 0
-    assert snapshot.blocked_capability_count == 10
+    assert snapshot.blocked_capability_count == 11
     assert snapshot.supported_feature_count == 0
     assert snapshot.supported_features_promoted is False
     assert "outbox_broker_not_configured" in snapshot.overall_blockers
@@ -315,6 +315,7 @@ def test_implementation_proof_readiness_capabilities_are_source_safe() -> None:
         "data-mesh-certification",
         "runtime-trust-telemetry-preview",
         "outbox-delivery",
+        "operator-workflows-operations",
         "workbench-product-proof",
         "opportunity-archetype-scenarios",
         "downstream-realization",

@@ -17,6 +17,7 @@ from app.application.source_safe_cross_repo_proof import (
 OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION = (
     "lotus-idea.operator-workflows-operations-proof.v1"
 )
+OPERATOR_WORKFLOWS_OPERATIONS_PROOF_ENV = "LOTUS_IDEA_OPERATOR_WORKFLOWS_OPERATIONS_PROOF"
 OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED = (
     "operator_workflow_dashboard_not_certified",
     "operator_workflow_alerts_not_certified",
@@ -37,6 +38,7 @@ REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS = (
     "docs/runbooks/operator-workflows-operations.md",
     "src/app/observability/logging.py",
     "tests/unit/test_operator_workflows_operations_proof.py",
+    "make operator-workflows-ops-contract-gate",
     "make operator-workflows-operations-proof-contract-gate",
 )
 EXPECTED_METRIC_NAME = "lotus_idea_operation_events_total"

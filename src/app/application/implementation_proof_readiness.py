@@ -28,6 +28,11 @@ from app.application.opportunity_archetype_contracts import OPPORTUNITY_ARCHETYP
 from app.application.opportunity_archetype_readiness import (
     build_opportunity_archetype_scenario_readiness,
 )
+from app.application.operator_workflows_operations_proof import (
+    OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
+    REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
+    REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS,
+)
 from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
@@ -69,6 +74,8 @@ def build_implementation_proof_readiness_snapshot(
     ai_lineage_store_proof_ref: str | None = None,
     ai_model_risk_operations_proof: Mapping[str, object] | None = None,
     ai_model_risk_operations_proof_ref: str | None = None,
+    operator_workflows_operations_proof: Mapping[str, object] | None = None,
+    operator_workflows_operations_proof_ref: str | None = None,
     ai_workflow_pack_registration_proof: Mapping[str, object] | None = None,
     ai_workflow_pack_registration_proof_ref: str | None = None,
     ai_workflow_pack_runtime_execution_proof: Mapping[str, object] | None = None,
@@ -271,6 +278,7 @@ def _build_base_capabilities(
         _data_mesh_capability(data_mesh),
         _runtime_trust_telemetry_capability(runtime_trust_telemetry),
         _outbox_delivery_capability(outbox_delivery),
+        _operator_workflows_operations_capability(),
         _workbench_product_capability(),
         opportunity_archetype_scenario,
         _downstream_realization_capability(downstream_realization),
@@ -442,6 +450,20 @@ def _outbox_delivery_capability(
         blockers=(
             *snapshot.configuration_blockers,
             *snapshot.certification_blockers,
+        ),
+    )
+
+
+def _operator_workflows_operations_capability() -> ImplementationProofCapabilityReadiness:
+    return build_capability_readiness(
+        "operator-workflows-operations",
+        "Non-AI operator workflow operations",
+        readiness_status="blocked",
+        supportability_status="not_certified",
+        evidence_refs=REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS,
+        blockers=(
+            *OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
+            *REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
         ),
     )
 

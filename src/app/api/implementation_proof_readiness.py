@@ -30,6 +30,8 @@ from app.application.implementation_proof_readiness import (
     build_implementation_proof_readiness_snapshot,
 )
 from app.api.problem_details import problem_details_response as problem_response
+from app.ports.idea_repository import IdeaRepository
+from app.runtime.proof_artifacts import ConfiguredImplementationProofArtifacts
 from app.observability import (
     IdeaOperation,
     OperationEvent,
@@ -165,68 +167,11 @@ async def get_implementation_proof_readiness(
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     try:
-        proof_artifacts = configured_implementation_proof_artifacts()
-        snapshot = build_implementation_proof_readiness_snapshot(
+        snapshot = _build_readiness_snapshot_from_configured_artifacts(
             evaluated_at_utc=evaluated_at_utc,
             repository=repository,
             durable_storage_backed=durable_storage_backed,
-            source_ingestion_live_proof=proof_artifacts.source_ingestion_live_proof,
-            source_ingestion_live_proof_ref=proof_artifacts.source_ingestion_live_proof_ref,
-            source_ingestion_scheduled_worker_proof_ref=(
-                proof_artifacts.source_ingestion_scheduled_worker_proof_ref
-            ),
-            durable_repository_proof=proof_artifacts.durable_repository_proof,
-            durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
-            runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry_proof,
-            runtime_trust_telemetry_proof_ref=proof_artifacts.runtime_trust_telemetry_proof_ref,
-            ai_lineage_store_proof=proof_artifacts.ai_lineage_store_proof,
-            ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store_proof_ref,
-            ai_model_risk_operations_proof=(proof_artifacts.ai_model_risk_operations_proof),
-            ai_model_risk_operations_proof_ref=(proof_artifacts.ai_model_risk_operations_proof_ref),
-            ai_workflow_pack_registration_proof=(
-                proof_artifacts.ai_workflow_pack_registration_proof
-            ),
-            ai_workflow_pack_registration_proof_ref=(
-                proof_artifacts.ai_workflow_pack_registration_proof_ref
-            ),
-            ai_workflow_pack_runtime_execution_proof=(
-                proof_artifacts.ai_workflow_pack_runtime_execution_proof
-            ),
-            ai_workflow_pack_runtime_execution_proof_ref=(
-                proof_artifacts.ai_workflow_pack_runtime_execution_proof_ref
-            ),
-            outbox_broker_proof=proof_artifacts.outbox_broker_proof,
-            outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
-            outbox_platform_mesh_event_publication_proof=(
-                proof_artifacts.outbox_platform_mesh_event_publication_proof
-            ),
-            outbox_platform_mesh_event_publication_proof_ref=(
-                proof_artifacts.outbox_platform_mesh_event_publication_proof_ref
-            ),
-            report_intake_route_proof=proof_artifacts.report_intake_route_proof,
-            report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,
-            platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding_proof,
-            platform_mesh_onboarding_proof_ref=(proof_artifacts.platform_mesh_onboarding_proof_ref),
-            workbench_read_path_proof=proof_artifacts.workbench_read_path_proof,
-            workbench_read_path_proof_ref=proof_artifacts.workbench_read_path_proof_ref,
-            gateway_workbench_operational_proof=(
-                proof_artifacts.gateway_workbench_operational_proof
-            ),
-            gateway_workbench_operational_proof_ref=(
-                proof_artifacts.gateway_workbench_operational_proof_ref
-            ),
-            gateway_workbench_discovery_proof=proof_artifacts.gateway_workbench_discovery_proof,
-            gateway_workbench_discovery_proof_ref=(
-                proof_artifacts.gateway_workbench_discovery_proof_ref
-            ),
-            bond_maturity_live_proof=proof_artifacts.bond_maturity_live_proof,
-            bond_maturity_live_proof_ref=proof_artifacts.bond_maturity_live_proof_ref,
-            low_income_core_cashflow_live_proof=(
-                proof_artifacts.low_income_core_cashflow_live_proof
-            ),
-            low_income_core_cashflow_live_proof_ref=(
-                proof_artifacts.low_income_core_cashflow_live_proof_ref
-            ),
+            proof_artifacts=configured_implementation_proof_artifacts(),
         )
     except (FileNotFoundError, json.JSONDecodeError, ValueError):
         _emit_implementation_proof_readiness_event(
@@ -267,6 +212,75 @@ def _emit_implementation_proof_readiness_event(
     )
 
 
+def _build_readiness_snapshot_from_configured_artifacts(
+    *,
+    evaluated_at_utc: datetime,
+    repository: IdeaRepository,
+    durable_storage_backed: bool,
+    proof_artifacts: ConfiguredImplementationProofArtifacts,
+) -> ImplementationProofReadinessSnapshot:
+    return build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=evaluated_at_utc,
+        repository=repository,
+        durable_storage_backed=durable_storage_backed,
+        source_ingestion_live_proof=proof_artifacts.source_ingestion_live_proof,
+        source_ingestion_live_proof_ref=proof_artifacts.source_ingestion_live_proof_ref,
+        source_ingestion_scheduled_worker_proof_ref=(
+            proof_artifacts.source_ingestion_scheduled_worker_proof_ref
+        ),
+        durable_repository_proof=proof_artifacts.durable_repository_proof,
+        durable_repository_proof_ref=proof_artifacts.durable_repository_proof_ref,
+        runtime_trust_telemetry_proof=proof_artifacts.runtime_trust_telemetry_proof,
+        runtime_trust_telemetry_proof_ref=proof_artifacts.runtime_trust_telemetry_proof_ref,
+        ai_lineage_store_proof=proof_artifacts.ai_lineage_store_proof,
+        ai_lineage_store_proof_ref=proof_artifacts.ai_lineage_store_proof_ref,
+        ai_model_risk_operations_proof=proof_artifacts.ai_model_risk_operations_proof,
+        ai_model_risk_operations_proof_ref=proof_artifacts.ai_model_risk_operations_proof_ref,
+        operator_workflows_operations_proof=proof_artifacts.operator_workflows_operations_proof,
+        operator_workflows_operations_proof_ref=(
+            proof_artifacts.operator_workflows_operations_proof_ref
+        ),
+        ai_workflow_pack_registration_proof=proof_artifacts.ai_workflow_pack_registration_proof,
+        ai_workflow_pack_registration_proof_ref=(
+            proof_artifacts.ai_workflow_pack_registration_proof_ref
+        ),
+        ai_workflow_pack_runtime_execution_proof=(
+            proof_artifacts.ai_workflow_pack_runtime_execution_proof
+        ),
+        ai_workflow_pack_runtime_execution_proof_ref=(
+            proof_artifacts.ai_workflow_pack_runtime_execution_proof_ref
+        ),
+        outbox_broker_proof=proof_artifacts.outbox_broker_proof,
+        outbox_broker_proof_ref=proof_artifacts.outbox_broker_proof_ref,
+        outbox_platform_mesh_event_publication_proof=(
+            proof_artifacts.outbox_platform_mesh_event_publication_proof
+        ),
+        outbox_platform_mesh_event_publication_proof_ref=(
+            proof_artifacts.outbox_platform_mesh_event_publication_proof_ref
+        ),
+        report_intake_route_proof=proof_artifacts.report_intake_route_proof,
+        report_intake_route_proof_ref=proof_artifacts.report_intake_route_proof_ref,
+        platform_mesh_onboarding_proof=proof_artifacts.platform_mesh_onboarding_proof,
+        platform_mesh_onboarding_proof_ref=proof_artifacts.platform_mesh_onboarding_proof_ref,
+        workbench_read_path_proof=proof_artifacts.workbench_read_path_proof,
+        workbench_read_path_proof_ref=proof_artifacts.workbench_read_path_proof_ref,
+        gateway_workbench_operational_proof=proof_artifacts.gateway_workbench_operational_proof,
+        gateway_workbench_operational_proof_ref=(
+            proof_artifacts.gateway_workbench_operational_proof_ref
+        ),
+        gateway_workbench_discovery_proof=proof_artifacts.gateway_workbench_discovery_proof,
+        gateway_workbench_discovery_proof_ref=(
+            proof_artifacts.gateway_workbench_discovery_proof_ref
+        ),
+        bond_maturity_live_proof=proof_artifacts.bond_maturity_live_proof,
+        bond_maturity_live_proof_ref=proof_artifacts.bond_maturity_live_proof_ref,
+        low_income_core_cashflow_live_proof=proof_artifacts.low_income_core_cashflow_live_proof,
+        low_income_core_cashflow_live_proof_ref=(
+            proof_artifacts.low_income_core_cashflow_live_proof_ref
+        ),
+    )
+
+
 IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
     "path": "/api/v1/implementation-proof/readiness",
     "operation_id": "getIdeaImplementationProofReadiness",
@@ -275,8 +289,9 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
         "Returns an aggregate, source-safe operator readiness snapshot for RFC-0002 "
         "implementation proof. The endpoint summarizes existing internal foundations "
         "and remaining blockers for source ingestion, review queue, AI explanation, "
-        "data mesh, runtime trust telemetry preview, outbox delivery, Workbench "
-        "realization, downstream realization, and supported-feature promotion. It "
+        "data mesh, runtime trust telemetry preview, outbox delivery, non-AI "
+        "operator workflow operations, Workbench realization, downstream realization, "
+        "and supported-feature promotion. It "
         "does not expose candidate identifiers, source payloads, outbox event "
         "identifiers, broker payloads, Workbench proof, data-product certification, "
         "client-ready publication, or a supported feature."
@@ -295,13 +310,15 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
                         "readinessStatus": "blocked",
                         "supportabilityStatus": "not_certified",
                         "certificationReady": False,
-                        "capabilityCount": 9,
+                        "capabilityCount": 11,
                         "certificationReadyCapabilityCount": 0,
-                        "blockedCapabilityCount": 9,
+                        "blockedCapabilityCount": 11,
                         "supportedFeatureCount": 0,
                         "supportedFeaturesPromoted": False,
                         "overallBlockers": [
                             "source_ingestion_manifest_not_configured",
+                            "operator_workflow_dashboard_not_certified",
+                            "operator_workflow_alerts_not_certified",
                             "workbench_panel_missing",
                             "no_supported_features_promoted",
                         ],
@@ -314,13 +331,26 @@ IMPLEMENTATION_PROOF_READINESS_ROUTE: RouteMetadata = {
                         },
                         "capabilities": [
                             {
-                                "capabilityId": "advisor-review-queue",
-                                "name": "Deterministic advisor review queue",
+                                "capabilityId": "operator-workflows-operations",
+                                "name": "Non-AI operator workflow operations",
                                 "readinessStatus": "blocked",
                                 "supportabilityStatus": "not_certified",
                                 "certificationReady": False,
-                                "evidenceRefs": ["GET /api/v1/review-queues/advisor"],
-                                "blockers": ["workbench_product_proof_missing"],
+                                "evidenceRefs": [
+                                    (
+                                        "contracts/observability/"
+                                        "lotus-idea-operator-workflows-operations.v1.json"
+                                    ),
+                                    "make operator-workflows-ops-contract-gate",
+                                    "make operator-workflows-operations-proof-contract-gate",
+                                ],
+                                "blockers": [
+                                    "operator_workflow_dashboard_not_certified",
+                                    "operator_workflow_alerts_not_certified",
+                                    "external_broker_runtime_proof_missing",
+                                    "gateway_workbench_proof_missing",
+                                    "supported_feature_promotion_missing",
+                                ],
                                 "supportedFeaturePromoted": False,
                             }
                         ],
