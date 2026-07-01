@@ -107,7 +107,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         '"scope": "runtime_python_dependencies"',
         '"target_artifact": os.environ["CONTAINER_IMAGE_NAME"]',
         '"target_artifact_id": os.environ["CONTAINER_IMAGE_ID"]',
-        '"dependency_source": "requirements/shared-runtime.lock.txt"',
+        '"dependency_source": "requirements/runtime-resolved.lock.txt"',
         '"project_metadata": "pyproject.toml"',
         '"generator": "cyclonedx-bom==7.3.0"',
         '"container_scanner": os.environ["TRIVY_IMAGE"]',

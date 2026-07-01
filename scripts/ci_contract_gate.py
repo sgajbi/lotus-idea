@@ -215,10 +215,27 @@ def _validate_security_audit_target(makefile: str) -> list[str]:
     security_audit = _target_block(makefile, "security-audit")
     if "-m pip_audit" not in security_audit:
         errors.append("Makefile security-audit target must run pip-audit")
-    if "requirements/shared-runtime.lock.txt" not in security_audit:
-        errors.append("Makefile security-audit target must audit shared runtime lock")
+    if "requirements/runtime-resolved.lock.txt" not in security_audit:
+        errors.append("Makefile security-audit target must audit resolved runtime lock")
+    if "requirements/shared-runtime.lock.txt" in security_audit:
+        errors.append("Makefile security-audit target must not audit direct-only runtime lock")
     if "requirements/ci-tooling.lock.txt" not in security_audit:
         errors.append("Makefile security-audit target must audit CI tooling lock")
+    return errors
+
+
+def _validate_install_target(makefile: str) -> list[str]:
+    errors: list[str] = []
+    install = _target_block(makefile, "install")
+    expected_command = (
+        "$(VENV_PYTHON) -m pip install --constraint "
+        'requirements/runtime-resolved.lock.txt -e ".[dev]"'
+    )
+    if expected_command not in install:
+        errors.append(
+            "Makefile install target must constrain dev installation with "
+            "`requirements/runtime-resolved.lock.txt`"
+        )
     return errors
 
 
@@ -255,6 +272,7 @@ def validate_makefile(makefile: str) -> list[str]:
         *_validate_required_makefile_targets(makefile),
         *_validate_aggregate_makefile_targets(makefile),
         *_validate_test_targets(makefile),
+        *_validate_install_target(makefile),
         *_validate_security_audit_target(makefile),
         *validate_release_evidence_targets(makefile),
         *_validate_script_targets(makefile),

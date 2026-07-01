@@ -14,9 +14,10 @@ ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
 WORKDIR /app
 
 COPY pyproject.toml README.md ./
+COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt
 COPY src ./src
 RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir .
+    && python -m pip install --no-cache-dir --constraint requirements/runtime-resolved.lock.txt .
 
 COPY contracts ./contracts
 COPY migrations ./migrations

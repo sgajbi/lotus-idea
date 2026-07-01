@@ -87,8 +87,14 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         errors.append(
             "Makefile release-sbom target must not generate an ambiguous environment SBOM"
         )
-    if "requirements/shared-runtime.lock.txt" not in release_sbom:
-        errors.append("Makefile release-sbom target must use the shared runtime lockfile")
+    if "requirements/runtime-resolved.lock.txt" not in release_sbom:
+        errors.append(
+            "Makefile release-sbom target must use the resolved runtime dependency lockfile"
+        )
+    if "requirements/shared-runtime.lock.txt" in release_sbom:
+        errors.append(
+            "Makefile release-sbom target must not use the direct-only shared runtime lockfile"
+        )
     if "--pyproject pyproject.toml" not in release_sbom:
         errors.append("Makefile release-sbom target must attach project metadata")
     if "--output-reproducible" not in release_sbom:
@@ -152,8 +158,14 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
         'org.opencontainers.image.base.name="${PYTHON_BASE_IMAGE}"': (
             "Dockerfile must label the runtime base image"
         ),
-        "python -m pip install --no-cache-dir .": (
-            "Dockerfile must install only runtime project dependencies"
+        "COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt": (
+            "Dockerfile must copy the resolved runtime dependency lockfile"
+        ),
+        (
+            "python -m pip install --no-cache-dir --constraint "
+            "requirements/runtime-resolved.lock.txt ."
+        ): (
+            "Dockerfile must constrain runtime install to the resolved runtime dependency lockfile"
         ),
         "USER lotus": "Dockerfile must run the service as the non-root `lotus` user",
         "PYTHONPATH=/app/src": (

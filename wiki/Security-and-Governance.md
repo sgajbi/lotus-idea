@@ -43,7 +43,7 @@ GitHub Security posture:
    checks as disabled even after an admin API enable attempt, so they remain
    advisory future controls and are not release-evidence claims.
 6. Main Releasability SBOM evidence is explicitly runtime-dependency scoped.
-   `make release-sbom` inventories `requirements/shared-runtime.lock.txt`
+   `make release-sbom` inventories `requirements/runtime-resolved.lock.txt`
    with the pinned CycloneDX tool, and `release-evidence.json` ties that SBOM
    to the built service image reference and image id. Container OS package
    posture remains covered by the Trivy image scan, not by the runtime

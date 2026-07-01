@@ -31,7 +31,8 @@
 | `make runtime-trust-telemetry-preview-check` | Source-safe runtime trust telemetry preview evidence. |
 | `make runtime-trust-telemetry-snapshot-check` | Source-safe runtime trust telemetry snapshot evidence under ignored `output/`. |
 | `make container-runtime-smoke` | Start the built `backend-service:ci-test` image, probe `/health`, `/health/live`, and reachable default-profile `/health/ready`, print container logs on failure, and remove the smoke container. |
-| `make release-sbom` | Generate `sbom.cdx.json` from `requirements/shared-runtime.lock.txt` with the pinned CI-tooling CycloneDX package used by main releasability. |
+| `make release-sbom` | Generate `sbom.cdx.json` from `requirements/runtime-resolved.lock.txt` with the pinned CI-tooling CycloneDX package used by main releasability. |
+| `make runtime-dependency-closure-gate` | Confirm the resolved runtime lock covers the installed runtime dependency closure before SBOM or audit evidence is cited. |
 | `make container-image-scan` | Scan the built `backend-service:ci-test` image with the pinned Trivy container and write JSON evidence under `output/security/`. |
 | `make caller-context-contract-gate` | Validate that caller authorization headers are bound through the shared trusted caller-context provenance guard before production-like use. |
 | `docker compose up --build` | Local container entrypoint using `.env.example` safe defaults and optional ignored `.env` overrides. |
@@ -59,12 +60,13 @@ This path proves local container startup and operator ergonomics only. It does
 not certify production recovery, live source ingestion, Workbench support,
 data-mesh readiness, client publication, or supported-feature status.
 
-The built runtime image installs only runtime dependencies, runs as the
+The built runtime image installs only runtime dependencies constrained by
+`requirements/runtime-resolved.lock.txt`, runs as the
 non-root `lotus` user, keeps only the service plus source-ingestion worker
 entrypoint scripts from `scripts/`, and records governed Docker base image plus
 Trivy scanner image identity plus resolved digest provenance in CI release evidence. The Main
 Releasability SBOM is explicitly scoped to runtime Python dependencies from
-`requirements/shared-runtime.lock.txt` and is tied in `release-evidence.json` to the built
+`requirements/runtime-resolved.lock.txt` and is tied in `release-evidence.json` to the built
 `backend-service:ci-test` image reference and local image id. Container OS package posture remains
 covered by the Trivy image scan, not by the runtime dependency SBOM. Development tooling and bulk CI
 helper scripts must not be copied into the runtime image.
