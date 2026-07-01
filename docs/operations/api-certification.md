@@ -21,6 +21,16 @@ that lack OpenAPI examples. Caller-supplied signal routes remain governed by
 `app.api.signal_api_support`, which owns their permission, source-authority,
 operation-event, and 400/403 OpenAPI metadata as one contract.
 
+Protected business/operator endpoints publish caller-context requirements in
+generated OpenAPI through the `LotusCallerContext` security scheme and the
+`x-lotus-caller-context` operation extension. The extension records required
+`idea.*` capabilities, required or alternative roles where policy uses them,
+entitlement-scope behavior, product-safe 403 posture, and production-like
+trusted-ingress provenance for privileged `X-Caller-*` headers. `make
+endpoint-certification-gate` fails if a certified endpoint names an `idea.*`
+capability in the ledger but generated OpenAPI omits the matching caller-context
+publication or leaves key caller-context headers undescribed.
+
 Route metadata dictionaries should use `app.api.route_metadata.RouteMetadata`.
 `make api-route-metadata-gate` blocks local `RouteMetadata` and
 `SignalRouteMetadata` `TypedDict` clones, keeping route-registration metadata
@@ -52,7 +62,11 @@ blocks weak certification by requiring:
     supported-feature boundaries,
 11. at least one non-operation-event integration API behavior test and at least one negative or
     degraded-path test reference for every certified business/operator endpoint, so endpoint
-    certification cannot be based only on schema examples, unit tests, or telemetry assertions.
+    certification cannot be based only on schema examples, unit tests, or telemetry assertions,
+12. generated OpenAPI caller-context security publication for every certified endpoint that names
+    an `idea.*` capability, including matching required capability values, trusted caller-context
+    provenance wording, and descriptions for `X-Caller-Capabilities` and
+    `X-Lotus-Trusted-Caller-Context`.
 
 ## Certified Foundation Endpoints
 

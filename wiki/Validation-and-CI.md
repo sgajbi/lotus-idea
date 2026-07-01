@@ -765,7 +765,10 @@ promotion aligned to the test pyramid instead of allowing schema examples, unit-
 telemetry-only evidence to stand in for executable API behavior. When an endpoint has implemented
 bounded read-only Gateway publication, the gate requires the ledger to cite the exact
 `lotus-gateway` route and still preserve Workbench, data-product, client-ready publication, and
-supported-feature boundaries.
+supported-feature boundaries. For every certified endpoint that names an `idea.*` capability, the
+gate also validates generated OpenAPI caller-context publication: `LotusCallerContext` security,
+`x-lotus-caller-context` required capabilities, trusted caller-context provenance wording, and
+descriptions for the key caller-context headers.
 
 The signal API contract gate blocks weak caller-supplied opportunity signal API posture. It requires
 shared advisor-role plus `idea.signal.evaluate` authorization, source-authority, operation-event,

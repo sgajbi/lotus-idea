@@ -34,6 +34,12 @@ BASELINE_OPERATIONS = {
 }
 BOUNDARY_TERMS = ("Gateway", "Workbench", "supported-feature promotion")
 CAPABILITY_PATTERN = re.compile(r"\bidea\.[a-z0-9.-]+\b")
+CALLER_CONTEXT_EXTENSION = "x-lotus-caller-context"
+CALLER_CONTEXT_SECURITY_SCHEME = "LotusCallerContext"
+CALLER_CONTEXT_HEADERS_REQUIRING_DESCRIPTIONS = (
+    "X-Caller-Capabilities",
+    "X-Lotus-Trusted-Caller-Context",
+)
 TEST_REFERENCE_PATTERN = re.compile(r"^(?P<path>tests/.+\.py)::(?P<test>[A-Za-z_][A-Za-z0-9_]*)$")
 OPERATION_EVENT_TEST_TERMS = ("operation_event", "operation_events")
 NEGATIVE_OR_DEGRADED_TEST_TERMS = (
@@ -70,11 +76,16 @@ GATEWAY_PUBLICATION_BOUNDARY_TERMS = (
 )
 
 
-def _openapi_operations_from_app() -> set[tuple[str, str]]:
+def _openapi_schema_from_app() -> dict[str, Any]:
     from app.main import app
 
+    return app.openapi()
+
+
+def _openapi_operations_from_app() -> set[tuple[str, str]]:
+    openapi = _openapi_schema_from_app()
     operations: set[tuple[str, str]] = set()
-    for path, path_item in app.openapi().get("paths", {}).items():
+    for path, path_item in openapi.get("paths", {}).items():
         if not isinstance(path_item, dict):
             continue
         for method in path_item:
@@ -156,7 +167,10 @@ def _validate_test_reference(operation: tuple[str, str], reference: str) -> list
     return [f"{operation}: test_evidence test does not exist: {reference}"]
 
 
-def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
+def _validate_certified_endpoint_posture(
+    endpoint: dict[str, Any],
+    openapi_spec: dict[str, Any] | None = None,
+) -> list[str]:
     operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
     if endpoint["certification_status"] != "certified":
         return []
@@ -165,14 +179,8 @@ def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
     if operation in BASELINE_OPERATIONS:
         errors.append(f"{operation}: baseline operation must not use certified status")
 
-    combined_evidence_text = " ".join(
-        [
-            str(endpoint.get("when_to_use", "")),
-            str(endpoint.get("when_not_to_use", "")),
-            " ".join(str(example) for example in endpoint.get("error_examples", [])),
-        ]
-    )
-    if not CAPABILITY_PATTERN.search(combined_evidence_text):
+    capabilities = _capabilities_from_endpoint(endpoint)
+    if not capabilities:
         errors.append(f"{operation}: certified endpoint must name at least one idea.* capability")
 
     unsupported_boundary = str(endpoint.get("when_not_to_use", ""))
@@ -200,7 +208,115 @@ def _validate_certified_endpoint_posture(endpoint: dict[str, Any]) -> list[str]:
 
     errors.extend(_validate_certified_endpoint_test_pyramid(operation, test_evidence))
     errors.extend(_validate_gateway_publication_posture(endpoint))
+    if openapi_spec is not None:
+        errors.extend(_validate_openapi_caller_context_publication(endpoint, openapi_spec))
 
+    return errors
+
+
+def _capabilities_from_endpoint(endpoint: dict[str, Any]) -> tuple[str, ...]:
+    combined_evidence_text = " ".join(
+        [
+            str(endpoint.get("when_to_use", "")),
+            str(endpoint.get("when_not_to_use", "")),
+            " ".join(str(example) for example in endpoint.get("error_examples", [])),
+            " ".join(str(example) for example in endpoint.get("request_examples", [])),
+        ]
+    )
+    return tuple(sorted(set(CAPABILITY_PATTERN.findall(combined_evidence_text))))
+
+
+def _validate_openapi_caller_context_publication(
+    endpoint: dict[str, Any], openapi_spec: dict[str, Any]
+) -> list[str]:
+    operation = (str(endpoint["method"]).upper(), str(endpoint["path"]))
+    capabilities = _capabilities_from_endpoint(endpoint)
+    if not capabilities:
+        return []
+
+    operation_schema = _openapi_operation(openapi_spec, operation)
+    if operation_schema is None:
+        return [f"{operation}: missing OpenAPI operation for caller-context publication"]
+
+    errors: list[str] = []
+    security = operation_schema.get("security")
+    if not _security_names(security) or CALLER_CONTEXT_SECURITY_SCHEME not in _security_names(
+        security
+    ):
+        errors.append(f"{operation}: OpenAPI must publish Lotus caller-context security")
+
+    caller_context = operation_schema.get(CALLER_CONTEXT_EXTENSION)
+    if not isinstance(caller_context, dict):
+        return [
+            *errors,
+            f"{operation}: OpenAPI must publish `{CALLER_CONTEXT_EXTENSION}` requirements",
+        ]
+
+    published_capabilities = caller_context.get("requiredCapabilities")
+    if not isinstance(published_capabilities, list) or any(
+        capability not in published_capabilities for capability in capabilities
+    ):
+        errors.append(
+            f"{operation}: OpenAPI caller-context requirements must include capabilities "
+            f"{', '.join(capabilities)}"
+        )
+
+    if not str(caller_context.get("trustedCallerContextProvenance", "")).strip():
+        errors.append(
+            f"{operation}: OpenAPI caller-context requirements must describe trusted "
+            "caller-context provenance"
+        )
+
+    errors.extend(_validate_caller_header_descriptions(operation, operation_schema))
+    return errors
+
+
+def _openapi_operation(
+    openapi_spec: dict[str, Any], operation: tuple[str, str]
+) -> dict[str, Any] | None:
+    method, path = operation
+    paths = openapi_spec.get("paths")
+    if not isinstance(paths, dict):
+        return None
+    path_item = paths.get(path)
+    if not isinstance(path_item, dict):
+        return None
+    operation_schema = path_item.get(method.lower())
+    return operation_schema if isinstance(operation_schema, dict) else None
+
+
+def _security_names(security: object) -> set[str]:
+    names: set[str] = set()
+    if not isinstance(security, list):
+        return names
+    for requirement in security:
+        if isinstance(requirement, dict):
+            names.update(str(name) for name in requirement)
+    return names
+
+
+def _validate_caller_header_descriptions(
+    operation: tuple[str, str], operation_schema: dict[str, Any]
+) -> list[str]:
+    parameters = operation_schema.get("parameters")
+    if not isinstance(parameters, list):
+        return [f"{operation}: OpenAPI must publish caller-context header parameters"]
+
+    descriptions: dict[str, str] = {}
+    for parameter in parameters:
+        if not isinstance(parameter, dict) or parameter.get("in") != "header":
+            continue
+        name = parameter.get("name")
+        if isinstance(name, str):
+            descriptions[name] = str(parameter.get("description", "")).strip()
+
+    errors: list[str] = []
+    for header_name in CALLER_CONTEXT_HEADERS_REQUIRING_DESCRIPTIONS:
+        if not descriptions.get(header_name):
+            errors.append(
+                f"{operation}: OpenAPI caller-context header `{header_name}` must have a "
+                "description"
+            )
     return errors
 
 
@@ -292,7 +408,14 @@ def main() -> int:
         errors.append("endpoints must be a list")
         entries = []
 
-    openapi_operations = _openapi_operations()
+    openapi_spec = _openapi_schema_from_app()
+    openapi_operations = {
+        (method, path)
+        for path, path_item in openapi_spec.get("paths", {}).items()
+        if isinstance(path_item, dict)
+        for method in (method.upper() for method in path_item)
+        if method in {"GET", "POST", "PUT", "PATCH", "DELETE"}
+    }
     ledger_operations: set[tuple[str, str]] = set()
     allowed_statuses = {"baseline_certified", "certified", "planned", "not_applicable"}
 
@@ -347,7 +470,7 @@ def main() -> int:
         ):
             errors.append(f"{operation}: baseline endpoint must use baseline_certified status")
 
-        errors.extend(_validate_certified_endpoint_posture(endpoint))
+        errors.extend(_validate_certified_endpoint_posture(endpoint, openapi_spec))
 
     missing_from_ledger = sorted(openapi_operations - ledger_operations)
     stale_in_ledger = sorted(ledger_operations - openapi_operations)
