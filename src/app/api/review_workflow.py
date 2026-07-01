@@ -21,6 +21,7 @@ from app.api.problem_details import (
     permission_denied_metadata,
     permission_denied_problem,
 )
+from app.api.request_validation import require_non_empty_reason_codes
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
 from app.api.runtime_dependencies import (
@@ -139,6 +140,10 @@ class ReviewActionRequest(CamelModel):
             message="datetime fields must be timezone-aware",
         )
 
+    _reason_codes_must_not_be_empty = field_validator("reason_codes")(
+        require_non_empty_reason_codes
+    )
+
     def to_command(
         self,
         *,
@@ -182,6 +187,10 @@ class FeedbackRequest(CamelModel):
     @classmethod
     def _recorded_at_must_be_aware(cls, value: datetime) -> datetime:
         return require_timezone_aware(value, field_name="recordedAtUtc")
+
+    _reason_codes_must_not_be_empty = field_validator("reason_codes")(
+        require_non_empty_reason_codes
+    )
 
     def to_command(
         self,
