@@ -604,10 +604,12 @@ Recent issue-derived patterns to preserve:
     scans exact first-party function-body duplicates across `src/app` and
     `scripts`, identifies known proof-helper clusters, writes no artifacts, and
     should be used to guide shared-helper consolidation before any strict
-    threshold is promoted. The first follow-through consolidation moved repeated
-    proof source-safety traversal into `scripts/proof_source_safety.py`, removing
-    the known source-safety duplicate function-body clusters while preserving
-    family-specific forbidden key/text policies in each proof gate.
+    threshold is promoted. The first follow-through consolidations moved repeated
+    proof source-safety traversal into `scripts/proof_source_safety.py` and
+    live-proof generator timeout/output plumbing into
+    `scripts/proof_generator_io.py`, removing known duplicate function-body
+    clusters while preserving family-specific proof policy and generator
+    argument behavior.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -698,11 +700,12 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     without writing artifacts or enforcing thresholds. The initial baseline
     scanned 1,750 functions at the six-line threshold and reported 31 exact
     clusters, including the known proof source-safety validation helper
-    families. The first follow-through refactor centralizes proof source-safety
-    traversal in `scripts/proof_source_safety.py`; the current measured baseline
-    scans 1,721 functions and reports 29 exact clusters. `make ci-contract-gate`
-    protects the target wiring while strict duplicate blocking remains
-    unpromoted.
+    families. The first follow-through refactors centralize proof source-safety
+    traversal in `scripts/proof_source_safety.py` and live-proof generator
+    timeout/output plumbing in `scripts/proof_generator_io.py`; the current
+    measured baseline scans 1,692 functions and reports 27 exact clusters.
+    `make ci-contract-gate` protects the target wiring while strict duplicate
+    blocking remains unpromoted.
 
 Recently closed by PR `#273` and mainline validation:
 
