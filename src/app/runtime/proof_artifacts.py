@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import json
 import os
 from pathlib import Path
 from typing import Any
@@ -38,6 +37,7 @@ from app.application.report_intake_route_proof import REPORT_INTAKE_ROUTE_PROOF_
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
 from app.application.source_ingestion_readiness import LIVE_PROOF_ENV, SCHEDULED_WORKER_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
+from app.runtime.proof_artifact_files import read_optional_json_object
 
 
 @dataclass(frozen=True)
@@ -215,7 +215,7 @@ def configured_implementation_proof_artifacts(
             root=root,
             artifact_name=f"{artifact_name} artifact",
         )
-        payload = _read_optional_json_object(path, artifact_name=artifact_name)
+        payload = read_optional_json_object(path, artifact_name=artifact_name)
         if payload is not None and path is not None and proof_ref is not None:
             payload = bind_aggregate_proof_provenance(
                 payload,
@@ -237,19 +237,6 @@ def _configured_path(env_name: str, *, root: Path) -> Path | None:
     if configured_path.is_absolute():
         return configured_path
     return root / configured_path
-
-
-def _read_optional_json_object(
-    path: Path | None,
-    *,
-    artifact_name: str,
-) -> dict[str, Any] | None:
-    if path is None:
-        return None
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError(f"{artifact_name} must be a JSON object")
-    return payload
 
 
 def _source_safe_artifact_ref(
