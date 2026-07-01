@@ -633,11 +633,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    jitter injection in tests, and no change to retry attempts, retryable status
    codes, valid `Retry-After` handling, POST idempotency rules, or adapter-local
    retry-loop boundaries.
-9. PostgreSQL review-queue performance: GitHub issue `#287` remains open as of
-   2026-07-01 and should be handled in the database-operations category by
-   extending the PostgreSQL migration contract with advisor review queue
-   access-scope indexes and tests that prove access-scope filters stay covered
-   without changing advisory workflow ownership or API semantics.
+9. PostgreSQL review-queue performance: GitHub issue `#287` is addressed by
+   narrow expression indexes for the advisor review queue tenant/book/
+   portfolio/client access-scope JSONB predicates, migration rollback coverage,
+   `migration_contract_gate.py` required-index enforcement, and PostgreSQL
+   queue tests that prove scoped count/page reads retain eligibility filters,
+   stable ordering, and `LIMIT`/`OFFSET` bounds without changing advisory
+   workflow ownership or API semantics.
 10. Dependency update atomicity: GitHub issue `#289` remains open as of
    2026-07-01 and should be handled in the dependency-hygiene and CI-release
    category by making Python dependency update automation move root pins,

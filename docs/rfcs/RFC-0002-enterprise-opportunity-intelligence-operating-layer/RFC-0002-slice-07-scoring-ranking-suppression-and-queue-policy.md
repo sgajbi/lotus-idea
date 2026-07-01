@@ -94,6 +94,13 @@ Implemented on the Slice 07 foundation branch:
     `X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` on the bounded
     advisor review queue route, so the first Gateway publication path preserves
     queue entitlement scope instead of relying on query-only filters.
+19. The durable PostgreSQL advisor queue projection now has narrow expression
+    indexes for the exact tenant/book/portfolio/client `access_scope` JSONB
+    predicates used by scoped queue reads. The existing repository-side page
+    projection stays inside the same deployable service boundary, applies
+    eligibility and scope predicates before stable score/created-time ordering,
+    count, and `LIMIT`/`OFFSET` bounds, and is guarded by migration contract
+    and adapter tests.
 
 ## Remaining Gaps
 
@@ -147,3 +154,7 @@ Targeted validation:
 11. `python -m pytest tests\integration\test_ideas_router.py tests\contract\test_ideas_contract.py -q`
     passed with `5 passed` in `lotus-gateway` after adding entitlement-scope
     header forwarding proof for the advisor queue route.
+12. `python -m pytest tests/unit/test_postgres_review_queue.py tests/unit/test_migration_contract_gate.py tests/integration/test_review_queue_api.py`
+    passed with `34 passed` after adding expression-index-backed
+    tenant/book/portfolio/client scope predicate coverage and migration
+    contract enforcement.
