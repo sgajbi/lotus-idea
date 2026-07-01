@@ -475,9 +475,10 @@ Persistence adapter validation:
    events without invoking `lotus-ai` or exposing prompts, provider payloads,
    candidate identifiers, source routes, portfolio identifiers, or client
    identifiers. `tests/integration/test_postgres_runtime_integration.py` proves
-   the configured PostgreSQL runtime records, replays, and conflict-checks
-   source-safe AI explanation lineage through the API without promoting
-   `lotus-ai` runtime execution or AI explanation support.
+   the configured PostgreSQL runtime records, same-key replays, distinct-key
+   request-id conflict-checks, and API idempotency-gates source-safe AI
+   explanation lineage through the API without promoting `lotus-ai` runtime
+   execution or AI explanation support.
 21. `tests/unit/test_outbox_delivery_readiness.py` and
    `tests/unit/test_postgres_outbox_readiness.py`, plus
    `tests/integration/test_outbox_delivery_readiness_api.py`, prove the

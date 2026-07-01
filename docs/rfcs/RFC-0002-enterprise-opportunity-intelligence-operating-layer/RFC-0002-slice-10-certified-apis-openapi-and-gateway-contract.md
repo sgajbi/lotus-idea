@@ -138,9 +138,11 @@ supported-feature promotion.
 
 The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires
-`idea.ai-explanation.evaluate`, returns redacted evidence only, blocks
-unsupported claims and forbidden actions, never calls providers or executes
-`lotus-ai` runtime workflows, never certifies runtime AI lineage-store proof, never grants
+`idea.ai-explanation.evaluate` plus `Idempotency-Key`, returns redacted
+evidence only, blocks unsupported claims and forbidden actions, replays
+same-key/same-request submissions without duplicate lineage writes, rejects
+same-key/different-request reuse with product-safe `409 idempotency_conflict`,
+never calls providers or executes `lotus-ai` runtime workflows, never certifies runtime AI lineage-store proof, never grants
 downstream authority, and keeps `durableStorageBacked=false`,
 `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
 
@@ -332,14 +334,18 @@ hash posture, returns product-safe replay status, and returns Problem Details
 for permission, validation, or missing-candidate failures.
 
 The AI explanation endpoint is permissioned by
-`idea.ai-explanation.evaluate`. It accepts a governed workflow-pack reference,
-approved metadata, optional workflow output, and a requested timestamp. If no
-workflow output is supplied, it returns deterministic fallback. If workflow
-output is supplied, it verifies source-product claim support and forbidden
-action policy, returning a blocked posture for unsupported claims or prohibited
-actions. Missing candidates, permission failure, invalid request shape,
-forbidden metadata, and invalid candidate lifecycle posture return product-safe
-Problem Details.
+`idea.ai-explanation.evaluate` and requires `Idempotency-Key`. It accepts a
+governed workflow-pack reference, approved metadata, optional workflow output,
+and a requested timestamp. If no workflow output is supplied, it returns
+deterministic fallback. If workflow output is supplied, it verifies
+source-product claim support and forbidden action policy, returning a blocked
+posture for unsupported claims or prohibited actions. Same-key/same-request
+submissions replay without duplicate lineage writes; same-key/different-request
+reuse returns product-safe `409 idempotency_conflict`; distinct-key AI
+request-id replay/conflict remains governed by the lineage store. Missing
+candidates, permission failure, invalid request shape, missing/blank
+`Idempotency-Key`, forbidden metadata, and invalid candidate lifecycle posture
+return product-safe Problem Details.
 
 The lifecycle transition endpoint is permissioned by
 `idea.candidate.lifecycle.transition` and requires `Idempotency-Key`. It accepts

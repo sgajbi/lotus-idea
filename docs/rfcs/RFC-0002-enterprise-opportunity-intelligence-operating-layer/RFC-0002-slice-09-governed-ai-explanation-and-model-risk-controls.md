@@ -1,6 +1,6 @@
 # RFC-0002 Slice 09: Governed AI Explanation And Model-Risk Controls
 
-Status: Partially implemented - internal AI governance, certified API foundation, and source-safe lineage persistence with PostgreSQL runtime proof
+Status: Partially implemented - internal AI governance, certified API foundation, and source-safe API-idempotent lineage persistence with PostgreSQL runtime proof
 
 ## Outcome
 
@@ -44,15 +44,17 @@ Implemented in this slice:
 9. `src/app/application/ai_governance.py` orchestrates persisted candidate
    lookup through the shared bounded candidate lookup helper, governed request
    construction, deterministic fallback, verifier evaluation, and source-safe
-   lineage recording without provider execution or supported-feature claims.
+   API-idempotent lineage recording without provider execution or
+   supported-feature claims.
    For projection-capable repositories this avoids whole-repository snapshot
    hydration before evaluation; lineage persistence remains on the existing
    repository mutation path.
 10. `src/app/api/ai_governance.py` exposes the certified internal endpoint
     `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`.
     It requires `idea.ai-explanation.evaluate`, returns redacted evidence only,
-    blocks unsupported claims and forbidden actions, records source-safe
-    lineage, emits bounded `ai_explanation` operation events, reports
+    blocks unsupported claims and forbidden actions, requires
+    `Idempotency-Key`, records source-safe lineage, emits bounded
+    `ai_explanation` operation events, reports
     `durableStorageBacked` from the active repository provider, and keeps
     `lotusAiRuntimeExecuted=false` and `supportedFeaturePromoted=false`.
 11. `src/app/application/ai_governance.py` also exposes a deterministic
@@ -68,7 +70,10 @@ Implemented in this slice:
     idempotent lineage persistence decisions. `InMemoryIdeaRepository` records
     exactly one lineage record per AI request id, replays identical lineage,
     blocks changed-content conflicts, appends the safe audit event, and does
-    not create outbox work for AI explanation evaluation.
+    not create outbox work for AI explanation evaluation. The repository port
+    also exposes request-level idempotency for lineage writes so same-key
+    retries replay and same-key changed fingerprints conflict before duplicate
+    lineage writes.
 13. `migrations/002_ai_explanation_lineage.sql`,
     `migrations/002_ai_explanation_lineage.rollback.sql`,
     `src/app/infrastructure/postgres_codecs.py`, and
@@ -86,18 +91,21 @@ Implemented in this slice:
     fallback, verified-output acceptance, unsupported-claim blocking,
     forbidden-action blocking, permission denial, missing candidate handling,
     invalid candidate state, forbidden metadata, and source-safe AI readiness
-    diagnostics, plus accepted/replayed/conflicting lineage persistence.
+    diagnostics, plus API idempotency required/replay/conflict behavior and
+    accepted/replayed/conflicting lineage persistence.
 16. `tests/integration/test_api_operation_events.py` proves the API emits the
     bounded `ai_explanation` operation event and the not-certified
     `ai_explanation_readiness_read` operation event.
 17. `tests/unit/test_idea_persistence.py` and
     `tests/unit/test_postgres_repository.py` prove in-memory and PostgreSQL
-    lineage acceptance, replay, conflict handling, snapshot recovery, and
-    source-safe JSON persistence.
+    lineage acceptance, API idempotency replay/conflict handling, request-id
+    replay/conflict handling, snapshot recovery, and source-safe JSON
+    persistence.
 18. `tests/integration/test_postgres_runtime_integration.py` proves the
     FastAPI runtime path records AI explanation lineage through the configured
-    PostgreSQL repository, replays the same AI request id after repository
-    reload, rejects changed lineage with a source-safe `409`, includes
+    PostgreSQL repository, replays the same API idempotency key after
+    repository reload, rejects distinct-key changed request-id lineage with a
+    source-safe `409`, includes
     `idea_ai_explanation_lineage` in rollback/reapply schema proof, and keeps
     prompts, provider payloads, raw source routes, trace ids, correlation ids,
     portfolio ids, client ids, and free-form source payloads out of the stored

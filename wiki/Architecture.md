@@ -321,8 +321,13 @@ supported feature.
 certified internal AI explanation evaluator foundation. It evaluates
 deterministic fallback or supplied workflow output against persisted candidate
 evidence, redacts source refs, blocks unsupported claims and forbidden actions,
-and emits bounded `ai_explanation` operation events. It does not call providers,
-execute `lotus-ai` runtime workflows, grant downstream authority, expose a
+requires `Idempotency-Key`, records source-safe lineage through the active
+repository mutation path, and emits bounded `ai_explanation` operation events.
+Same-key/same-request calls replay without duplicate lineage writes,
+same-key/different-request calls return product-safe
+`409 idempotency_conflict`, and distinct-key AI request-id replay/conflict
+remains governed by the lineage store. It does not call providers, execute
+`lotus-ai` runtime workflows, grant downstream authority, expose a
 Gateway/Workbench surface, authorize client-ready publication, or promote a
 supported feature. Source-safe lineage persistence is proven separately by the
 AI lineage store proof artifact.
