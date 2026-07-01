@@ -218,6 +218,8 @@ def test_ai_explanation_uses_candidate_projection_without_snapshot() -> None:
             candidate_id="idea-ai-001",
             explanation=command(AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION),
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key="ai-explanation:projection:001",
+            idempotency_payload={"candidateId": "idea-ai-001", "requestId": "ai-explanation-001"},
         ),
         repository=repository,
     )
@@ -614,6 +616,9 @@ class ProjectionOnlyAIExplanationRepository:
 
     def record_ai_explanation_lineage(self, *args: Any, **kwargs: Any) -> Any:
         return self._repository.record_ai_explanation_lineage(*args, **kwargs)
+
+    def record_ai_explanation_lineage_request(self, *args: Any, **kwargs: Any) -> Any:
+        return self._repository.record_ai_explanation_lineage_request(*args, **kwargs)
 
     def snapshot(self) -> Any:
         raise AssertionError("AI explanation candidate lookup must not hydrate a full snapshot")

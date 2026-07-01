@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from app.domain import (
-    AIExplanationLineageRecord,
     CandidatePersistenceRecord,
     DownstreamSubmissionRecord,
     GovernedConversionIntent,
@@ -17,6 +16,7 @@ from app.domain import (
 )
 from app.domain.audit import AuditEvent
 from app.domain.idempotency import IdempotencyRecord
+from app.infrastructure.postgres_ai_lineage_writes import insert_ai_explanation_lineage_record
 
 
 class PostgresSnapshotDeltaWriter(Protocol):
@@ -110,13 +110,6 @@ class PostgresSnapshotDeltaWriter(Protocol):
         evidence_pack: GovernedReportEvidencePack,
     ) -> None: ...
 
-    def _insert_ai_explanation_lineage_record(
-        self,
-        cursor: Any,
-        candidate_id: str,
-        lineage_record: AIExplanationLineageRecord,
-    ) -> None: ...
-
 
 def apply_postgres_snapshot_delta(
     writer: PostgresSnapshotDeltaWriter,
@@ -207,7 +200,7 @@ def _insert_record_detail_delta(
     lineage_request_ids = {lineage.request_id for lineage in before.ai_explanation_lineage_records}
     for lineage_record in after.ai_explanation_lineage_records:
         if lineage_record.request_id not in lineage_request_ids:
-            writer._insert_ai_explanation_lineage_record(
+            insert_ai_explanation_lineage_record(
                 cursor,
                 candidate_id,
                 lineage_record,

@@ -14,6 +14,7 @@ from app.api.durable_write_guard import (
     durable_repository_not_configured_metadata,
     durable_write_problem,
 )
+from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -29,6 +30,7 @@ from app.api.runtime_dependencies import (
 from app.application.ai_governance import (
     AIExplanationEvaluationDecision,
     AIExplanationReadinessSnapshot,
+    AIExplanationWorkflowResult,
     EvaluateAIExplanationToRepositoryCommand,
     build_ai_explanation_readiness_snapshot,
     evaluate_ai_explanation_to_repository,
@@ -208,6 +210,7 @@ class AIExplanationEvaluationRequest(CamelModel):
         *,
         candidate_id: str,
         caller: CallerContext,
+        idempotency_key: str,
     ) -> EvaluateAIExplanationToRepositoryCommand:
         return EvaluateAIExplanationToRepositoryCommand(
             candidate_id=candidate_id,
@@ -219,6 +222,11 @@ class AIExplanationEvaluationRequest(CamelModel):
                 requested_at_utc=self.requested_at_utc,
             ),
             fallback_reason=self.fallback_reason,
+            idempotency_key=idempotency_key,
+            idempotency_payload={
+                "candidateId": candidate_id,
+                "request": self.model_dump(mode="json", by_alias=True),
+            },
             workflow_output=(
                 self.workflow_output.to_domain(
                     request_id=self.request_id,
@@ -503,6 +511,7 @@ async def get_ai_explanation_readiness(
 async def evaluate_ai_explanation(
     request: AIExplanationEvaluationRequest,
     candidate_id: str = Path(..., alias="candidateId"),
+    idempotency_key: str = Header(default="", alias="Idempotency-Key"),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
@@ -519,6 +528,7 @@ async def evaluate_ai_explanation(
     )
     try:
         _require_ai_explanation_caller(caller)
+        validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         configuration_problem = durable_write_problem(repository)
@@ -530,7 +540,11 @@ async def evaluate_ai_explanation(
             )
             return configuration_problem
         result = evaluate_ai_explanation_to_repository(
-            request.to_command(candidate_id=candidate_id, caller=caller),
+            request.to_command(
+                candidate_id=candidate_id,
+                caller=caller,
+                idempotency_key=idempotency_key,
+            ),
             repository=repository,
         )
     except PermissionDeniedError:
@@ -569,19 +583,43 @@ async def evaluate_ai_explanation(
             detail="Correct the AI explanation evaluation request and retry.",
         )
 
+    problem = _ai_explanation_result_problem(result)
+    if problem is not None:
+        return problem
+    assert result.explanation_result is not None
+    assert result.lineage_persistence_result is not None
+    _emit_ai_explanation_operation_event(
+        _operation_outcome_from_ai_result(result.explanation_result)
+    )
+    return AIExplanationEvaluationResponse.from_domain(
+        result.explanation_result,
+        ai_lineage_recorded=result.lineage_persistence_result.lineage_record is not None,
+        ai_lineage_persistence_decision=result.lineage_persistence_result.decision.value,
+        durable_storage_backed=bool(getattr(repository, "durable_storage_backed", False)),
+    )
+
+
+def _ai_explanation_result_problem(
+    result: AIExplanationWorkflowResult,
+) -> JSONResponse | None:
     if result.decision is AIExplanationEvaluationDecision.NOT_FOUND:
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.NOT_FOUND,
-            "candidate_not_found",
-        )
+        _emit_ai_explanation_operation_event(OperationOutcome.NOT_FOUND, "candidate_not_found")
         return problem_response(
             status_code=status.HTTP_404_NOT_FOUND,
             code="candidate_not_found",
             title="Candidate not found",
             detail="The idea candidate was not found.",
         )
-    assert result.explanation_result is not None
-    assert result.lineage_persistence_result is not None
+    if result.decision is AIExplanationEvaluationDecision.IDEMPOTENCY_CONFLICT:
+        _emit_ai_explanation_operation_event(OperationOutcome.CONFLICT, "idempotency_conflict")
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="idempotency_conflict",
+            title="Idempotency conflict",
+            detail="The idempotency key was already used with a different request payload.",
+        )
+    if result.lineage_persistence_result is None:
+        return None
     if (
         result.lineage_persistence_result.decision
         is AIExplanationLineagePersistenceDecision.CONFLICT
@@ -600,25 +638,14 @@ async def evaluate_ai_explanation(
         result.lineage_persistence_result.decision
         is AIExplanationLineagePersistenceDecision.NOT_FOUND
     ):
-        _emit_ai_explanation_operation_event(
-            OperationOutcome.NOT_FOUND,
-            "candidate_not_found",
-        )
+        _emit_ai_explanation_operation_event(OperationOutcome.NOT_FOUND, "candidate_not_found")
         return problem_response(
             status_code=status.HTTP_404_NOT_FOUND,
             code="candidate_not_found",
             title="Candidate not found",
             detail="The idea candidate was not found.",
         )
-    _emit_ai_explanation_operation_event(
-        _operation_outcome_from_ai_result(result.explanation_result)
-    )
-    return AIExplanationEvaluationResponse.from_domain(
-        result.explanation_result,
-        ai_lineage_recorded=result.lineage_persistence_result.lineage_record is not None,
-        ai_lineage_persistence_decision=result.lineage_persistence_result.decision.value,
-        durable_storage_backed=bool(getattr(repository, "durable_storage_backed", False)),
-    )
+    return None
 
 
 def _require_ai_explanation_caller(caller: CallerContext) -> None:
@@ -765,7 +792,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
         "Evaluates an internal AI explanation workflow result or deterministic fallback "
         "against a persisted idea candidate. The route applies redaction, source-product "
         "claim verification, forbidden-action blocking, source-safe lineage recording, "
-        "and bounded operation telemetry. "
+        "API Idempotency-Key replay/conflict protection, and bounded operation telemetry. "
         "It does not call an AI provider, execute lotus-ai runtime workflows, persist "
         "provider payloads or prompts, grant downstream authority, or promote a supported feature."
     ),
@@ -839,7 +866,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
             },
         },
         **invalid_request_metadata(
-            detail="Correct the AI explanation evaluation request and retry.",
+            detail=("Correct the AI explanation evaluation request or Idempotency-Key and retry."),
         ),
         **permission_denied_metadata(
             detail="The caller is not permitted to evaluate idea AI explanations.",
@@ -852,13 +879,13 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
             description="Candidate was not found.",
         ),
         **conflict_metadata(
-            code="invalid_ai_explanation_purpose",
-            title="Invalid AI explanation purpose",
+            code="idempotency_conflict",
+            title="AI explanation request conflict",
             detail=(
-                "The requested AI explanation purpose is not valid for the current "
-                "idea candidate state."
+                "The requested AI explanation conflicts with the candidate state, "
+                "existing request lineage, or Idempotency-Key fingerprint."
             ),
-            description="Requested AI explanation purpose is invalid for candidate state.",
+            description="AI explanation evaluation request conflicts with governed state.",
         ),
         **durable_repository_not_configured_metadata(),
     },

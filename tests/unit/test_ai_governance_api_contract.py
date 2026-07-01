@@ -151,6 +151,11 @@ def test_ai_explanation_application_command_rejects_blank_candidate() -> None:
                 requested_at_utc=datetime(2026, 6, 21, 10, 12, tzinfo=UTC),
             ),
             fallback_reason=AIFallbackReason.AI_UNAVAILABLE,
+            idempotency_key="ai-explanation:blank-candidate:001",
+            idempotency_payload={
+                "candidateId": " ",
+                "requestId": "ai-explanation-001",
+            },
         )
 
 

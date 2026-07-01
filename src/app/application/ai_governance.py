@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any, Mapping
 
 from app.application.candidate_lookup import candidate_record_by_id
 from app.domain import (
     AIFallbackReason,
     AIExplanationCommand,
+    AIExplanationLineagePersistenceDecision,
     AIExplanationLineagePersistenceResult,
     AIExplanationResult,
     AIWorkflowOutput,
@@ -19,6 +21,7 @@ from app.ports.idea_repository import AIExplanationRepository
 
 class AIExplanationEvaluationDecision(StrEnum):
     ACCEPTED = "accepted"
+    IDEMPOTENCY_CONFLICT = "idempotency_conflict"
     NOT_FOUND = "not_found"
 
 
@@ -51,11 +54,15 @@ class EvaluateAIExplanationToRepositoryCommand:
     candidate_id: str
     explanation: AIExplanationCommand
     fallback_reason: AIFallbackReason
+    idempotency_key: str
+    idempotency_payload: Mapping[str, Any]
     workflow_output: AIWorkflowOutput | None = None
 
     def __post_init__(self) -> None:
         if not self.candidate_id.strip():
             raise ValueError("candidate_id is required")
+        if not self.idempotency_key.strip():
+            raise ValueError("idempotency_key is required")
 
 
 @dataclass(frozen=True)
@@ -124,7 +131,20 @@ def evaluate_ai_explanation_to_repository(
             command.workflow_output,
         )
 
-    lineage_persistence_result = repository.record_ai_explanation_lineage(explanation_result)
+    lineage_persistence_result = repository.record_ai_explanation_lineage_request(
+        explanation_result,
+        idempotency_key=command.idempotency_key,
+        payload=dict(command.idempotency_payload),
+    )
+    if (
+        lineage_persistence_result.decision is AIExplanationLineagePersistenceDecision.CONFLICT
+        and lineage_persistence_result.lineage_record is None
+    ):
+        return AIExplanationWorkflowResult(
+            decision=AIExplanationEvaluationDecision.IDEMPOTENCY_CONFLICT,
+            explanation_result=explanation_result,
+            lineage_persistence_result=lineage_persistence_result,
+        )
 
     return AIExplanationWorkflowResult(
         decision=AIExplanationEvaluationDecision.ACCEPTED,

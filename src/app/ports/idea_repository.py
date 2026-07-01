@@ -250,6 +250,14 @@ class AIExplanationRepository(CandidateSnapshotRepository, Protocol):
         result: AIExplanationResult,
     ) -> AIExplanationLineagePersistenceResult: ...
 
+    def record_ai_explanation_lineage_request(
+        self,
+        result: AIExplanationResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> AIExplanationLineagePersistenceResult: ...
+
 
 class DownstreamSubmissionRepository(CandidateSnapshotRepository, Protocol):
     def conversion_intent_by_id(

@@ -419,12 +419,13 @@ def report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def ai_headers() -> dict[str, str]:
+def ai_headers(idempotency_key: str = "operation-ai-explanation-001") -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
         "X-Correlation-Id": "corr-operation-ai-api",
+        "Idempotency-Key": idempotency_key,
     }
 
 
