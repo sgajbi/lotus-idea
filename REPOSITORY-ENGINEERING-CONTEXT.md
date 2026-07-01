@@ -569,31 +569,37 @@ Recent issue-derived patterns to preserve:
     direct-only runtime requirements or an ambiguous CI environment; the
     supported-name `requirements/requirements.txt` exists only as a gated
     mirror for GitHub Dependency Graph support,
-15. Docker build and scan evidence must be paired with bounded packaged-runtime
+15. Python dependency updates must move root pins and runtime lock evidence
+    through the governed `make dependency-refresh` path. Dependabot must not
+    open a separate `/requirements` lock-only stream; lock refreshes should
+    regenerate both `requirements/runtime-resolved.lock.txt` and
+    `requirements/requirements.txt` from the active runtime closure before
+    merge validation,
+16. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
-16. generated proof and quality evidence must be reproducible from current
+17. generated proof and quality evidence must be reproducible from current
     gate rules or be documented as on-demand evidence rather than current proof,
-17. ignored report-only artifacts must not be cited as durable current-state
+18. ignored report-only artifacts must not be cited as durable current-state
     proof unless a deterministic committed-artifact drift gate exists,
-18. documentation should record the durable rule, not only the one-off fix,
-19. supportability, readiness, health-state, and data-quality vocabulary must
+19. documentation should record the durable rule, not only the one-off fix,
+20. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
-20. dashboard and alert certification should be pattern-backed with a
+21. dashboard and alert certification should be pattern-backed with a
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
     proof gates, drift tests, and explicit non-proof boundaries; do not rely on
     a metric catalog alone for operator visibility claims.
-21. mutating workflow idempotency must be true in both runtime behavior and
+22. mutating workflow idempotency must be true in both runtime behavior and
     OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
     shared `app.api.idempotency` route list and validation helpers, and
     `make api-idempotency-boundary-gate` must fail optional or defaulted
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
-22. Docker runtime images should install the resolved runtime dependency lock
+23. Docker runtime images should install the resolved runtime dependency lock
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `make ci-contract-gate` must catch
     source-before-dependency-install ordering and dependency reinstall drift.
-23. duplicate-implementation controls start as measured report-only inventory,
+24. duplicate-implementation controls start as measured report-only inventory,
     not a noisy merge blocker. `make duplicate-implementation-inventory`
     scans exact first-party function-body duplicates across `src/app` and
     `scripts`, identifies known proof-helper clusters, writes no artifacts, and
@@ -650,10 +656,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    queue tests that prove scoped count/page reads retain eligibility filters,
    stable ordering, and `LIMIT`/`OFFSET` bounds without changing advisory
    workflow ownership or API semantics.
-10. Dependency update atomicity: GitHub issue `#289` remains open as of
-   2026-07-01 and should be handled in the dependency-hygiene and CI-release
-   category by making Python dependency update automation move root pins,
-   resolved runtime locks, and the GitHub Dependency Graph mirror coherently.
+10. Dependency update atomicity: GitHub issue `#289` is addressed by removing
+   the separate `/requirements` Dependabot stream, grouping Python root updates
+   as dependency-closure root changes, adding `make dependency-refresh` to
+   install from root pins and regenerate both runtime lock files, and protecting
+   the workflow through security/CI contract tests. Existing install,
+   runtime-closure, audit, Docker, SBOM, and release evidence gates remain
+   strict.
 11. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
    quarantining downstream-authority lifecycle statuses from caller-settable
    lifecycle transitions. The API request contract uses a caller-settable

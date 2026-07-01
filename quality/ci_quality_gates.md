@@ -150,9 +150,11 @@ Dependabot alerts/security updates enabled, secret scanning with push
 protection enabled, private vulnerability reporting enabled, and CodeQL default
 setup configured for GitHub-owned static analysis over Python and GitHub
 Actions. Source-controlled `SECURITY.md` and `.github/dependabot.yml` define
-the supported security baseline, source-safe report content, and weekly grouped
-Python plus GitHub Actions dependency monitoring; `make ci-contract-gate`
-rejects removal or weakening of those files. GitHub currently reports
+the supported security baseline, source-safe report content, a single weekly
+grouped Python dependency-closure root update stream, and weekly grouped
+GitHub Actions dependency monitoring; `make ci-contract-gate` rejects removal
+or weakening of those files and blocks reintroduced `/requirements` lock-only
+Python update streams. GitHub currently reports
 non-provider secret patterns and secret validity checks as disabled for this
 repository even after an admin API enable attempt, so those controls are
 advisory future options and are not claimed as active release evidence.
@@ -184,6 +186,13 @@ image posture remain covered by the Trivy image scan.
 checking the resolved lock against the installed transitive dependency closure
 for the `pyproject.toml` runtime roots and against the
 `requirements/requirements.txt` GitHub Dependency Graph mirror.
+`make dependency-refresh` is the governed local reconciliation command for
+Python dependency update PRs: it installs from root pins without the stale
+runtime-lock constraint, then regenerates both
+`requirements/runtime-resolved.lock.txt` and `requirements/requirements.txt`
+from the active runtime closure. Run
+`python -m scripts.refresh_runtime_dependency_locks --check` to validate that
+the committed locks match the active validation venv.
 
 PR Merge Gate and Main Releasability now run `make container-runtime-smoke`
 after `make docker-build` and before Docker release evidence can pass. The

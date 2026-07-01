@@ -184,8 +184,11 @@ scanning with push protection is enabled, private vulnerability reporting is
 enabled, and CodeQL default setup is configured for GitHub-owned static
 analysis over Python and GitHub Actions. `SECURITY.md` defines supported
 security review scope, private reporting expectations, and source-safe report
-content, while `.github/dependabot.yml` defines weekly grouped Python and
-GitHub Actions dependency monitoring. GitHub currently reports non-provider
+content, while `.github/dependabot.yml` defines a single weekly grouped Python
+dependency-closure root update stream plus weekly grouped GitHub Actions
+dependency monitoring. It must not define a separate `/requirements` lock-only
+Python update stream; use `make dependency-refresh` to regenerate runtime lock
+truth from root pins before merge validation. GitHub currently reports non-provider
 secret patterns and secret validity checks as disabled for this repository even
 after an admin API enable attempt, so they are advisory future controls and are
 not release-evidence claims. `make github-security-posture-check` verifies the
@@ -216,6 +219,10 @@ dependency source, project metadata, target service image reference, and built i
 checking the resolved lock against the installed transitive dependency closure
 for the `pyproject.toml` runtime roots and against the
 `requirements/requirements.txt` GitHub Dependency Graph mirror.
+`make dependency-refresh` is the governed Python dependency PR reconciliation
+command: it installs from root pins without a stale runtime-lock constraint,
+then regenerates `requirements/runtime-resolved.lock.txt` and
+`requirements/requirements.txt` from the active runtime closure.
 Container OS/package posture remains the Trivy image scan's responsibility; the SBOM is
 not represented as a full image SBOM or registry attestation.
 
