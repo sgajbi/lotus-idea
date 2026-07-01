@@ -838,9 +838,10 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
     def _update_candidate_record(
         self,
         cursor: PostgresCursor,
+        before: CandidatePersistenceRecord,
         record: CandidatePersistenceRecord,
     ) -> None:
-        update_postgres_candidate_record(cursor, record)
+        update_postgres_candidate_record(cursor, before=before, record=record)
 
     def _insert_idempotency_record(
         self,

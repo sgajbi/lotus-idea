@@ -147,10 +147,13 @@ def update_candidate_record_row(
         candidate_json,
         updated_at_utc,
         candidate_id,
+        expected_updated_at_utc,
     ) = [_unwrap_jsonb(value) for value in params]
     for row in rows["idea_candidate_record"]:
         if row["candidate_id"] != candidate_id:
             continue
+        if row["updated_at_utc"] != expected_updated_at_utc:
+            return []
         row["family"] = family
         row["lifecycle_status"] = lifecycle_status
         row["review_posture"] = review_posture

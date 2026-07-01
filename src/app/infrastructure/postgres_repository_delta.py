@@ -35,6 +35,7 @@ class PostgresSnapshotDeltaWriter(Protocol):
     def _update_candidate_record(
         self,
         cursor: Any,
+        before: CandidatePersistenceRecord,
         record: CandidatePersistenceRecord,
     ) -> None: ...
 
@@ -132,7 +133,7 @@ def apply_postgres_snapshot_delta(
             continue
 
         if after_record.candidate != before_record.candidate:
-            writer._update_candidate_record(cursor, after_record)
+            writer._update_candidate_record(cursor, before_record, after_record)
         _insert_record_detail_delta(writer, cursor, before_record, after_record)
 
     for key, idempotency_record in after.idempotency_records.items():
