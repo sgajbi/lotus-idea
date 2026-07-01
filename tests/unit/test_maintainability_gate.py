@@ -45,6 +45,27 @@ def test_maintainability_gate_blocks_oversized_source_function(tmp_path: Path) -
     assert "source functions must stay at or below 130 lines" in errors[0]
 
 
+def test_maintainability_gate_ignores_non_implementation_protocol_stubs(
+    tmp_path: Path,
+) -> None:
+    module = _load_maintainability_gate()
+    protocol_body = [
+        "from typing import Protocol",
+        "",
+        "",
+        "class OversizedPort(Protocol):",
+        "    def publish(",
+        "        self,",
+        "        event_id: str,",
+        "        *,",
+        *[f"        field_{index}: str," for index in range(140)],
+        "    ) -> None: ...",
+    ]
+    _write_python(tmp_path / "src" / "app" / "ports.py", protocol_body)
+
+    assert module.validate_maintainability(tmp_path) == []
+
+
 def test_maintainability_gate_blocks_oversized_script_file(tmp_path: Path) -> None:
     module = _load_maintainability_gate()
     _write_python(
