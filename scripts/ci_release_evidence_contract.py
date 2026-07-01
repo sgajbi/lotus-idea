@@ -162,10 +162,11 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
             "Dockerfile must copy the resolved runtime dependency lockfile"
         ),
         (
-            "python -m pip install --no-cache-dir --constraint "
-            "requirements/runtime-resolved.lock.txt ."
-        ): (
-            "Dockerfile must constrain runtime install to the resolved runtime dependency lockfile"
+            "python -m pip install --no-cache-dir --requirement "
+            "requirements/runtime-resolved.lock.txt"
+        ): ("Dockerfile must install the resolved runtime dependency lockfile before source copy"),
+        "python -m pip install --no-cache-dir --no-deps .": (
+            "Dockerfile must install the local service package without reinstalling dependencies"
         ),
         "USER lotus": "Dockerfile must run the service as the non-root `lotus` user",
         "PYTHONPATH=/app/src": (
@@ -195,6 +196,18 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
     for fragment, error in prohibited_fragments.items():
         if fragment in dockerfile:
             errors.append(error)
+    ordered_fragments = [
+        "COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt",
+        "python -m pip install --no-cache-dir --requirement requirements/runtime-resolved.lock.txt",
+        "COPY src ./src",
+        "python -m pip install --no-cache-dir --no-deps .",
+    ]
+    positions = [dockerfile.find(fragment) for fragment in ordered_fragments]
+    if all(position >= 0 for position in positions) and positions != sorted(positions):
+        errors.append(
+            "Dockerfile must install resolved runtime dependencies before copying source and "
+            "installing the local package"
+        )
     return errors
 
 

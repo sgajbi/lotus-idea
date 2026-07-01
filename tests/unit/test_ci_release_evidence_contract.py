@@ -209,7 +209,7 @@ def test_ci_contract_gate_blocks_removed_release_sbom_target_artifact(
 def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(
-        "python -m pip install --no-cache-dir --constraint requirements/runtime-resolved.lock.txt .",
+        "python -m pip install --no-cache-dir --no-deps .",
         'python -m pip install --no-cache-dir -e ".[dev]"',
     )
 
@@ -236,13 +236,55 @@ def test_ci_contract_gate_accepts_hardened_runtime_dockerfile() -> None:
 def test_ci_contract_gate_blocks_unconstrained_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(
-        "python -m pip install --no-cache-dir --constraint requirements/runtime-resolved.lock.txt .",
+        "python -m pip install --no-cache-dir --requirement requirements/runtime-resolved.lock.txt",
+        "python -m pip install --no-cache-dir fastapi uvicorn",
+    )
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert (
+        "Dockerfile must install the resolved runtime dependency lockfile before source copy"
+        in errors
+    )
+
+
+def test_ci_contract_gate_blocks_source_copy_before_runtime_dependency_install() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    cache_aware_install = (
+        "RUN python -m pip install --no-cache-dir --upgrade pip \\\n"
+        "    && python -m pip install --no-cache-dir --requirement "
+        "requirements/runtime-resolved.lock.txt\n\n"
+        "COPY src ./src\n"
+        "RUN python -m pip install --no-cache-dir --no-deps ."
+    )
+    source_before_dependencies = (
+        "COPY src ./src\n"
+        "RUN python -m pip install --no-cache-dir --upgrade pip \\\n"
+        "    && python -m pip install --no-cache-dir --requirement "
+        "requirements/runtime-resolved.lock.txt\n"
+        "RUN python -m pip install --no-cache-dir --no-deps ."
+    )
+    degraded = dockerfile.replace(cache_aware_install, source_before_dependencies)
+    assert degraded != dockerfile
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert (
+        "Dockerfile must install resolved runtime dependencies before copying source and "
+        "installing the local package"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_dependency_reinstall_during_local_package_install() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "python -m pip install --no-cache-dir --no-deps .",
         "python -m pip install --no-cache-dir .",
     )
 
     errors = validate_dockerfile_runtime(degraded)
 
     assert (
-        "Dockerfile must constrain runtime install to the resolved runtime dependency lockfile"
+        "Dockerfile must install the local service package without reinstalling dependencies"
         in errors
     )

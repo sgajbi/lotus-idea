@@ -15,9 +15,11 @@ WORKDIR /app
 
 COPY pyproject.toml README.md ./
 COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt
-COPY src ./src
 RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir --constraint requirements/runtime-resolved.lock.txt .
+    && python -m pip install --no-cache-dir --requirement requirements/runtime-resolved.lock.txt
+
+COPY src ./src
+RUN python -m pip install --no-cache-dir --no-deps .
 
 COPY contracts ./contracts
 COPY migrations ./migrations
