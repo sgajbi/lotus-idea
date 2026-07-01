@@ -207,6 +207,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "private-import-boundary-gate": "scripts/private_import_boundary_gate.py",
     "runtime-dependency-closure-gate": "scripts/runtime_dependency_closure_gate.py",
     "duplicate-implementation-inventory": "scripts/duplicate_implementation_inventory.py",
+    "dependency-refresh": "scripts.refresh_runtime_dependency_locks",
 }
 
 GENERATED_READINESS_ARTIFACTS = (

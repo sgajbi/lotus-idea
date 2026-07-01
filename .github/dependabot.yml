@@ -9,20 +9,7 @@ updates:
       timezone: "Asia/Singapore"
     open-pull-requests-limit: 5
     groups:
-      python-runtime-and-ci-dependencies:
-        patterns:
-          - "*"
-
-  - package-ecosystem: "pip"
-    directory: "/requirements"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "08:05"
-      timezone: "Asia/Singapore"
-    open-pull-requests-limit: 5
-    groups:
-      python-runtime-locks:
+      python-dependency-closure-roots:
         patterns:
           - "*"
 
@@ -31,7 +18,7 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-      time: "08:15"
+      time: "08:05"
       timezone: "Asia/Singapore"
     open-pull-requests-limit: 5
     groups:

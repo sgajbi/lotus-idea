@@ -22,6 +22,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "ci: lint typecheck architecture-boundary-gate" in makefile
     assert "ci-contract-gate:" in makefile
     assert "$(MAKE) ci-contract-gate" in makefile
+    assert "dependency-refresh:" in makefile
+    assert "scripts.refresh_runtime_dependency_locks" in makefile
     assert "repository-hygiene-gate:" in makefile
     assert "$(MAKE) repository-hygiene-gate" in makefile
     assert "maintainability-gate:" in makefile
