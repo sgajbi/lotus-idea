@@ -15,6 +15,7 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.telemetry_buckets import bounded_count_bucket
 from app.api.temporal_validation import is_timezone_aware
 from app.application.runtime_trust_telemetry import (
     RuntimeTrustTelemetryProductPosture,
@@ -362,7 +363,10 @@ def _emit_runtime_trust_telemetry_event(
 ) -> None:
     attributes: dict[str, str] = {}
     if candidate_snapshot_count is not None:
-        attributes["candidate_snapshot_count_bucket"] = _count_bucket(candidate_snapshot_count)
+        attributes["candidate_snapshot_count_bucket"] = bounded_count_bucket(
+            candidate_snapshot_count,
+            overflow_label="101+",
+        )
     emit_operation_event(
         OperationEvent(
             operation=operation,
@@ -375,16 +379,6 @@ def _emit_runtime_trust_telemetry_event(
             attributes=attributes,
         )
     )
-
-
-def _count_bucket(value: int) -> str:
-    if value == 0:
-        return "0"
-    if value <= 10:
-        return "1-10"
-    if value <= 100:
-        return "11-100"
-    return "101+"
 
 
 def _candidate_snapshot_count_from_payload(payload: Mapping[str, Any]) -> int:
