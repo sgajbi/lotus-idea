@@ -501,10 +501,11 @@ existing file/function-size maintainability gate:
    `src/app/application/source_safe_cross_repo_proof.py`, and centralize AST
    call-name parsing for contract gates in `scripts/ast_gate_helpers.py`, and
    centralize Core live-proof base URL resolution in
-   `scripts/proof_generator_io.py`; each proof gate, generator, and contract
-   gate retains family-specific policy/argument behavior, direct script
-   execution remains supported, and the current measured baseline scans 1,647
-   functions and reports 17 exact duplicate clusters.
+   `scripts/proof_generator_io.py`, and centralize Advise/Manage proof evidence
+   request construction in `scripts/proof_request_builders.py`; each proof
+   gate, generator, and contract gate retains family-specific policy/argument
+   behavior, direct script execution remains supported, and the current measured
+   baseline scans 1,645 functions and reports 16 exact duplicate clusters.
 5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
    without adding duplicate thresholds to `make lint`.
 6. This is measured maintainability evidence only. It does not block all
