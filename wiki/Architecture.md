@@ -348,7 +348,7 @@ supported feature.
 aggregate RFC-0002 proof-readiness diagnostic. It reports source-safe
 capability blockers across source ingestion, advisor queue, AI explanation,
 data mesh, runtime trust telemetry preview/snapshot evidence, outbox delivery,
-Workbench realization, downstream realization, and supported-feature
+non-AI operator workflow operations, Workbench realization, downstream realization, and supported-feature
 promotion. It is not live implementation proof, certified live broker runtime, downstream
 delivery, data-product certification, certified runtime trust telemetry,
 Gateway/Workbench proof, client-ready publication, or supported-feature

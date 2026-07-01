@@ -764,219 +764,222 @@ The endpoint returns aggregate capability posture only. It does not expose:
 Implementation-backed evidence:
 
 1. application builder: `src/app/application/implementation_proof_readiness.py`,
-2. API route: `src/app/api/implementation_proof_readiness.py`,
-3. runtime artifact loader: `src/app/runtime/proof_artifacts.py`,
-4. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
-5. repo-native check that generates and consumes the scheduled-worker
+1. API route: `src/app/api/implementation_proof_readiness.py`,
+1. runtime artifact loader: `src/app/runtime/proof_artifacts.py`,
+1. artifact generator: `scripts/generate_implementation_proof_readiness.py`,
+1. repo-native check that generates and consumes the scheduled-worker
    deploy-proof, durable repository proof, runtime telemetry proof, Workbench
    read-path proof, Advise proposal route proof, Manage action route proof,
    Report intake route proof, Report materialization proof, outbox broker
    proof, outbox consumer runtime proof, and outbox platform mesh event
-   publication proof artifacts, and records validated proof refs in capability
-   evidence:
+   publication proof artifacts, generates default AI model-risk and non-AI
+   operator workflow operations proof artifacts unless explicit artifacts are
+   supplied, and records validated proof refs in capability evidence:
    `make implementation-proof-readiness-check`,
-6. opportunity archetype scenario contract:
+1. opportunity archetype scenario contract:
    `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`,
-7. opportunity archetype contract gate:
+1. opportunity archetype contract gate:
    `make opportunity-archetype-contract-gate`,
    including allocation-drift API module, endpoint, and integration-test
    evidence refs so the scenario readiness contract cannot understate the
    bounded caller-supplied API foundation,
-8. AI model-risk operations contract:
+1. AI model-risk operations contract:
    `contracts/observability/lotus-idea-ai-model-risk-operations.v1.json`,
-9. AI model-risk operations contract gate:
+1. AI model-risk operations contract gate:
    `make ai-model-risk-ops-contract-gate`,
-10. AI model-risk operations proof gate:
+1. AI model-risk operations proof gate:
    `make ai-model-risk-operations-proof-contract-gate`,
-11. non-AI operator workflow operations contract:
+1. non-AI operator workflow operations contract:
     `contracts/observability/lotus-idea-operator-workflows-operations.v1.json`,
-12. non-AI operator workflow operations proof gate:
+1. non-AI operator workflow operations contract gate:
+    `make operator-workflows-ops-contract-gate`,
+1. non-AI operator workflow operations proof gate:
     `make operator-workflows-operations-proof-contract-gate`,
-13. downstream contract check: `make downstream-realization-contract-gate`,
-14. report-owned planned intake contract:
+1. downstream contract check: `make downstream-realization-contract-gate`,
+1. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
-13. runtime trust telemetry snapshot check:
+1. runtime trust telemetry snapshot check:
    `make runtime-trust-telemetry-snapshot-check`,
-14. runtime trust telemetry snapshot endpoint:
+1. runtime trust telemetry snapshot endpoint:
    `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`,
-15. generated runtime telemetry evidence:
+1. generated runtime telemetry evidence:
    `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`,
-16. source-ingestion run-once endpoint:
+1. source-ingestion run-once endpoint:
    `POST /api/v1/source-ingestion/run-once`,
-17. source-ingestion run-once runbook:
+1. source-ingestion run-once runbook:
     `docs/operations/source-ingestion-run-once.md`,
-18. source-ingestion live-proof generator:
+1. source-ingestion live-proof generator:
     `scripts/generate_source_ingestion_live_proof.py`,
-19. source-ingestion block-reason diagnostics tests:
+1. source-ingestion block-reason diagnostics tests:
     `tests/unit/test_source_ingestion_worker.py`,
-20. scheduled source-ingestion worker proof generator:
+1. scheduled source-ingestion worker proof generator:
     `scripts/generate_scheduled_source_ingestion_worker_proof.py`,
-21. scheduled source-ingestion worker contract gate:
+1. scheduled source-ingestion worker contract gate:
     `make source-ingestion-scheduled-worker-check`,
-22. source-ingestion live-proof contract gate:
+1. source-ingestion live-proof contract gate:
     `make source-ingestion-live-proof-contract-gate`,
-23. Risk concentration live-proof generator:
+1. Risk concentration live-proof generator:
     `scripts/generate_risk_concentration_live_proof.py`,
-24. Risk concentration live-proof contract gate:
+1. Risk concentration live-proof contract gate:
     `make risk-concentration-live-proof-contract-gate`,
-25. High-volatility live-proof generator:
+1. High-volatility live-proof generator:
     `scripts/generate_high_volatility_live_proof.py`,
-26. High-volatility live-proof contract gate:
+1. High-volatility live-proof contract gate:
     `make high-volatility-live-proof-contract-gate`,
-27. Risk drawdown live-proof generator:
+1. Risk drawdown live-proof generator:
     `scripts/generate_risk_drawdown_live_proof.py`,
-28. Risk drawdown live-proof contract gate:
+1. Risk drawdown live-proof contract gate:
     `make risk-drawdown-live-proof-contract-gate`,
-29. Missing-suitability live-proof generator:
+1. Missing-suitability live-proof generator:
     `scripts/generate_missing_suitability_live_proof.py`,
-30. Missing-suitability live-proof contract gate:
+1. Missing-suitability live-proof contract gate:
     `make missing-suitability-live-proof-contract-gate`,
-31. Missing risk-profile source-product proof generator:
+1. Missing risk-profile source-product proof generator:
     `scripts/generate_missing_risk_profile_source_product_proof.py`,
-32. Missing risk-profile source-product proof contract gate:
+1. Missing risk-profile source-product proof contract gate:
     `make missing-risk-profile-source-product-proof-contract-gate`,
-33. Mandate/restriction source-product proof generator:
+1. Mandate/restriction source-product proof generator:
     `scripts/generate_mandate_restriction_source_product_proof.py`,
-34. Mandate/restriction source-product proof contract gate:
+1. Mandate/restriction source-product proof contract gate:
     `make mandate-restriction-source-product-proof-contract-gate`,
-33. Missing risk-profile live-proof generator:
+1. Missing risk-profile live-proof generator:
     `scripts/generate_missing_risk_profile_live_proof.py`,
-34. Missing risk-profile live-proof contract gate:
+1. Missing risk-profile live-proof contract gate:
     `make missing-risk-profile-live-proof-contract-gate`,
-33. Manage mandate live-proof generator:
+1. Manage mandate live-proof generator:
     `scripts/generate_manage_mandate_live_proof.py`,
-34. Manage mandate live-proof contract gate:
+1. Manage mandate live-proof contract gate:
     `make manage-mandate-live-proof-contract-gate`,
-35. Mandate/restriction live-proof generator:
+1. Mandate/restriction live-proof generator:
     `scripts/generate_mandate_restriction_live_proof.py`,
-36. Mandate/restriction live-proof contract gate:
+1. Mandate/restriction live-proof contract gate:
     `make mandate-restriction-live-proof-contract-gate`,
-35. Performance underperformance live-proof generator:
+1. Performance underperformance live-proof generator:
     `scripts/generate_performance_underperformance_live_proof.py`,
-36. Performance underperformance live-proof contract gate:
+1. Performance underperformance live-proof contract gate:
     `make performance-underperformance-live-proof-contract-gate`,
-37. Missing-benchmark Performance readiness proof generator:
+1. Missing-benchmark Performance readiness proof generator:
     `scripts/generate_missing_benchmark_performance_readiness_proof.py`,
-38. Missing-benchmark Performance readiness proof contract gate:
+1. Missing-benchmark Performance readiness proof contract gate:
     `make missing-benchmark-performance-readiness-proof-contract-gate`,
-39. Core benchmark assignment live-proof generator:
+1. Core benchmark assignment live-proof generator:
     `scripts/generate_core_benchmark_assignment_live_proof.py`,
-40. Core benchmark assignment live-proof contract gate:
+1. Core benchmark assignment live-proof contract gate:
     `make core-benchmark-assignment-live-proof-contract-gate`,
-41. Core portfolio-state live-proof generator:
+1. Core portfolio-state live-proof generator:
     `scripts/generate_core_portfolio_state_live_proof.py`,
-42. Core portfolio-state live-proof contract gate:
+1. Core portfolio-state live-proof contract gate:
     `make core-portfolio-state-live-proof-contract-gate`,
-43. Core portfolio-state live-proof tests:
+1. Core portfolio-state live-proof tests:
     `tests/unit/test_core_portfolio_state_live_proof.py`,
-44. Bond maturity live-proof generator:
+1. Bond maturity live-proof generator:
     `scripts/generate_bond_maturity_live_proof.py`,
-45. Bond maturity live-proof contract gate:
+1. Bond maturity live-proof contract gate:
     `make bond-maturity-live-proof-contract-gate`,
-46. Bond maturity live-proof tests:
+1. Bond maturity live-proof tests:
     `tests/unit/test_bond_maturity_live_proof.py`,
-47. Low-income Core cashflow live-proof generator:
+1. Low-income Core cashflow live-proof generator:
     `scripts/generate_low_income_core_cashflow_live_proof.py`,
-48. Low-income Core cashflow live-proof contract gate:
+1. Low-income Core cashflow live-proof contract gate:
     `make low-income-core-cashflow-live-proof-contract-gate`,
-49. Low-income Core cashflow live-proof tests:
+1. Low-income Core cashflow live-proof tests:
     `tests/unit/test_low_income_core_cashflow_live_proof.py`,
-27. durable repository proof generator:
+1. durable repository proof generator:
     `scripts/generate_durable_repository_proof.py`,
-26. durable repository proof contract gate:
+1. durable repository proof contract gate:
     `make durable-repository-proof-contract-gate`,
-27. runtime trust telemetry proof generator:
+1. runtime trust telemetry proof generator:
     `scripts/generate_runtime_trust_telemetry_proof.py`,
-28. runtime trust telemetry proof contract gate:
+1. runtime trust telemetry proof contract gate:
     `make runtime-trust-telemetry-proof-contract-gate`,
-29. Workbench read-path proof generator:
+1. Workbench read-path proof generator:
     `scripts/generate_workbench_read_path_proof.py`,
-30. Workbench read-path proof contract gate:
+1. Workbench read-path proof contract gate:
     `make workbench-read-path-proof-contract-gate`,
-28. Gateway/Workbench operational proof generator:
+1. Gateway/Workbench operational proof generator:
     `scripts/generate_gateway_workbench_operational_proof.py`,
-29. Gateway/Workbench operational proof contract gate:
+1. Gateway/Workbench operational proof contract gate:
     `make gateway-workbench-operational-proof-contract-gate`,
-30. Gateway/Workbench discovery proof generator:
+1. Gateway/Workbench discovery proof generator:
     `scripts/generate_gateway_workbench_discovery_proof.py`,
-31. Gateway/Workbench discovery proof contract gate:
+1. Gateway/Workbench discovery proof contract gate:
     `make gateway-workbench-discovery-proof-contract-gate`,
-32. outbox broker proof generator:
+1. outbox broker proof generator:
     `scripts/generate_outbox_broker_proof.py`,
-31. outbox consumer contract gate:
+1. outbox consumer contract gate:
     `make outbox-consumer-contract-gate`,
-32. outbox consumer runtime proof generator:
+1. outbox consumer runtime proof generator:
     `scripts/generate_outbox_consumer_runtime_proof.py`,
-33. outbox consumer runtime proof contract gate:
+1. outbox consumer runtime proof contract gate:
     `make outbox-consumer-runtime-proof-contract-gate`,
-34. outbox consumer runtime proof tests:
+1. outbox consumer runtime proof tests:
     `tests/unit/test_outbox_consumer_runtime_proof.py`,
-35. outbox broker proof contract gate:
+1. outbox broker proof contract gate:
     `make outbox-broker-proof-contract-gate`,
-36. outbox platform mesh event publication proof generator:
+1. outbox platform mesh event publication proof generator:
     `scripts/generate_outbox_platform_mesh_event_publication_proof.py`,
-37. outbox platform mesh event publication proof contract gate:
+1. outbox platform mesh event publication proof contract gate:
     `make outbox-platform-mesh-event-publication-proof-contract-gate`,
-38. outbox platform mesh event publication proof tests:
+1. outbox platform mesh event publication proof tests:
     `tests/unit/test_outbox_platform_mesh_event_publication_proof.py`,
-39. Advise proposal route proof generator:
+1. Advise proposal route proof generator:
     `scripts/generate_advise_proposal_route_proof.py`,
-40. Manage action route proof generator:
+1. Manage action route proof generator:
     `scripts/generate_manage_action_route_proof.py`,
-41. downstream route proof contract gate:
+1. downstream route proof contract gate:
     `make downstream-route-contract-proof-gate`,
-42. downstream route proof tests:
+1. downstream route proof tests:
     `tests/unit/test_downstream_route_contract_proof.py`,
-43. report intake route proof generator:
+1. report intake route proof generator:
     `scripts/generate_report_intake_route_proof.py`,
-44. report intake route proof contract gate:
+1. report intake route proof contract gate:
     `make report-intake-route-proof-contract-gate`,
-45. report intake route proof tests:
+1. report intake route proof tests:
     `tests/unit/test_report_intake_route_proof.py`,
-46. report materialization proof generator:
+1. report materialization proof generator:
     `scripts/generate_report_materialization_proof.py`,
-47. report materialization proof contract gate:
+1. report materialization proof contract gate:
     `make report-materialization-proof-contract-gate`,
-48. report materialization proof tests:
+1. report materialization proof tests:
     `tests/unit/test_report_materialization_proof.py`,
-49. outbox broker proof tests:
+1. outbox broker proof tests:
     `tests/unit/test_outbox_broker_proof.py`,
-50. platform mesh onboarding proof generator:
+1. platform mesh onboarding proof generator:
     `scripts/generate_platform_mesh_onboarding_proof.py`,
-51. platform mesh onboarding proof contract gate:
+1. platform mesh onboarding proof contract gate:
     `make platform-mesh-onboarding-proof-contract-gate`,
-52. platform mesh onboarding proof tests:
+1. platform mesh onboarding proof tests:
     `tests/unit/test_platform_mesh_onboarding_proof.py`,
-53. Workbench read-path proof tests:
+1. Workbench read-path proof tests:
     `tests/unit/test_workbench_read_path_proof.py`,
-54. runtime trust telemetry proof tests:
+1. runtime trust telemetry proof tests:
     `tests/unit/test_runtime_trust_telemetry_proof.py`,
-55. outbox delivery run-once endpoint:
+1. outbox delivery run-once endpoint:
     `POST /api/v1/outbox-delivery/run-once`,
-56. operation event: `implementation_proof_readiness_read`,
-53. endpoint ledger:
+1. operation event: `implementation_proof_readiness_read`,
+1. endpoint ledger:
     `docs/operations/endpoint-certification-ledger.json`,
-54. runtime artifact loader tests:
+1. runtime artifact loader tests:
     `tests/unit/test_proof_artifacts.py`,
-55. unit tests:
+1. unit tests:
     `tests/unit/test_implementation_proof_readiness.py`,
-56. durable repository proof tests:
+1. durable repository proof tests:
     `tests/unit/test_durable_repository_proof.py`,
-57. generator tests:
+1. generator tests:
     `tests/unit/test_generate_implementation_proof_readiness.py`,
-58. AI workflow-pack registration proof generator:
+1. AI workflow-pack registration proof generator:
     `scripts/generate_ai_workflow_pack_registration_proof.py`,
-59. AI workflow-pack registration proof contract gate:
+1. AI workflow-pack registration proof contract gate:
     `make ai-workflow-pack-registration-proof-contract-gate`,
-60. AI workflow-pack registration proof tests:
+1. AI workflow-pack registration proof tests:
     `tests/unit/test_ai_workflow_pack_registration_proof.py`,
-61. AI workflow-pack runtime execution proof generator:
+1. AI workflow-pack runtime execution proof generator:
     `scripts/generate_ai_workflow_pack_runtime_execution_proof.py`,
-62. AI workflow-pack runtime execution proof contract gate:
+1. AI workflow-pack runtime execution proof contract gate:
     `make ai-workflow-pack-runtime-execution-proof-contract-gate`,
-63. AI workflow-pack runtime execution proof tests:
+1. AI workflow-pack runtime execution proof tests:
     `tests/unit/test_ai_workflow_pack_runtime_execution_proof.py`,
-64. integration tests:
+1. integration tests:
     `tests/integration/test_implementation_proof_readiness_api.py`.
 
 The `ai-explanation` capability evidence includes the AI model-risk operations

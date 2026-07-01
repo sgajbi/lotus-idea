@@ -143,6 +143,15 @@ without treating the readiness endpoint itself as product support proof.
 dashboard, alert-rule, and runbook artifacts against implemented operation
 telemetry while leaving `lotus-ai`, Workbench, client-ready, and
 supported-feature blockers intact.
+It also records the non-AI operator workflow operations contract,
+`make operator-workflows-ops-contract-gate`, and
+`make operator-workflows-operations-proof-contract-gate` in the
+`operator-workflows-operations` capability evidence. A current proof clears
+only `operator_workflow_dashboard_not_certified` and
+`operator_workflow_alerts_not_certified`; source-ingestion certification,
+external broker runtime, downstream execution authority, Gateway/Workbench,
+data-mesh, and supported-feature blockers stay controlled by their owning proof
+artifacts.
 It also records the generated AI lineage store proof when
 `make ai-lineage-store-proof-contract-gate` passes, clearing only
 `certified_ai_lineage_store_missing` while preserving `lotus-ai` runtime,
@@ -293,7 +302,8 @@ available for operators with `idea.implementation-proof.readiness.read` to
 inspect aggregate RFC-0002 proof posture across source ingestion, advisor
 queue, AI explanation, data mesh, runtime trust telemetry preview/snapshot
 evidence, outbox delivery, Workbench realization, downstream realization, and
-supported-feature promotion. It remains `not_certified` and `blocked` while
+non-AI operator workflow operations, and supported-feature promotion. It
+remains `not_certified` and `blocked` while
 any proof family lacks live evidence, and it must not be used as live implementation proof,
 live broker runtime, downstream delivery, Gateway/Workbench proof,
 data-product certification, certified runtime trust telemetry, client-ready
@@ -632,7 +642,8 @@ promotion.
 aggregate proof-readiness diagnostic. It returns capability-level blockers,
 source-of-truth paths, and current supportability posture for operators without
 exposing candidate identifiers, source payloads, portfolio identifiers, or
-client identifiers. It includes the outbox-delivery proof family but does not
+client identifiers. It includes the outbox-delivery and operator-workflow
+operations proof families but does not
 expose event identifiers, aggregate identifiers, raw idempotency keys, or
 broker payloads. It is not live implementation proof, certified broker runtime,
 downstream delivery, data-product certification, Workbench proof,

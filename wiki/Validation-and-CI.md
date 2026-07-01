@@ -300,7 +300,8 @@ Persistence adapter validation:
    `make implementation-proof-readiness-check` prove the aggregate RFC-0002
    implementation-proof readiness artifact, including source-ingestion proof
    artifact refs, durable repository proof, runtime trust telemetry proof
-   consumption, Workbench read-path proof consumption, Gateway/Workbench
+   consumption, non-AI operator workflow operations proof consumption,
+   Workbench read-path proof consumption, Gateway/Workbench
    operational proof consumption, Gateway/Workbench discovery proof consumption, bounded outbox broker
    proof consumption, default Advise proposal route proof generation and
    consumption, default Manage action route proof generation and consumption,
