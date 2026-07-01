@@ -582,17 +582,19 @@ Branch-local fixed issues awaiting merge/CI/QA closure:
    run-once actions.
 9. GitHub issue `#270`: add container startup health smoke proof to Docker
    release gates.
-10. GitHub issue `#265`: validate correlation and trace headers before logging
+10. GitHub issue `#258`: keep GitHub coverage enforcement on the repo-native
+   coverage gate.
+11. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-11. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+12. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-12. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-13. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+13. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+14. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-14. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+15. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
-Still-open issue categories after the current security batch:
+Still-open issue categories after branch-local fixes:
 
 1. security/authorization and HTTP boundary controls,
 2. correctness/idempotency/persistence,
