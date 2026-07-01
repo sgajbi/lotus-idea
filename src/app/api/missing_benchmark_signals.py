@@ -9,8 +9,8 @@ from pydantic import Field, field_validator
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
 from app.api.signal_models import (
-    IdeaCandidateSummaryResponse,
     ReviewAccessScopeRequest,
+    SignalEvaluationResponse,
     SourceRefRequest,
 )
 from app.api.temporal_validation import require_timezone_aware
@@ -25,7 +25,6 @@ from app.application.missing_benchmark_signal import (
     EvaluateMissingBenchmarkSignalCommand,
     evaluate_missing_benchmark_signal_command,
 )
-from app.domain import SignalEvaluationResult
 from app.observability import emit_foundation_operation_event
 
 
@@ -109,39 +108,8 @@ class EvaluateMissingBenchmarkSignalRequest(CamelModel):
         )
 
 
-class EvaluateMissingBenchmarkSignalResponse(CamelModel):
-    outcome: str
-    family: str
-    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
-    unsupported_reasons: tuple[str, ...] = Field(..., alias="unsupportedReasons")
-    candidate: IdeaCandidateSummaryResponse | None
-    source_authority: str = Field(..., alias="sourceAuthority")
-    supported_feature_promoted: bool = Field(
-        False,
-        alias="supportedFeaturePromoted",
-        description="False until live source adapters, Gateway/Workbench proof, and supported-feature registration exist.",
-    )
-
-    @classmethod
-    def from_domain(
-        cls,
-        result: SignalEvaluationResult,
-        *,
-        source_authority: str,
-    ) -> "EvaluateMissingBenchmarkSignalResponse":
-        return cls(
-            outcome=result.outcome.value,
-            family=result.family.value,
-            reasonCodes=tuple(reason.value for reason in result.reason_codes),
-            unsupportedReasons=tuple(reason.value for reason in result.unsupported_reasons),
-            candidate=(
-                IdeaCandidateSummaryResponse.from_domain(result.candidate)
-                if result.candidate is not None
-                else None
-            ),
-            sourceAuthority=source_authority,
-            supportedFeaturePromoted=False,
-        )
+class EvaluateMissingBenchmarkSignalResponse(SignalEvaluationResponse):
+    pass
 
 
 async def evaluate_missing_benchmark_signal(

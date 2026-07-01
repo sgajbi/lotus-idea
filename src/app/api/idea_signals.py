@@ -18,8 +18,8 @@ from app.api.runtime_dependencies import (
     idea_repository_durable_storage_backed,
 )
 from app.api.signal_models import (
-    IdeaCandidateSummaryResponse,
     ReviewAccessScopeRequest,
+    SignalEvaluationResponse,
     SourceRefRequest,
 )
 from app.api.temporal_validation import require_timezone_aware
@@ -236,78 +236,16 @@ class EvaluateMandateRestrictionSignalRequest(CamelModel):
         )
 
 
-class EvaluateHighCashSignalResponse(CamelModel):
-    outcome: str
-    family: str
-    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
-    unsupported_reasons: tuple[str, ...] = Field(..., alias="unsupportedReasons")
-    candidate: IdeaCandidateSummaryResponse | None
+class EvaluateHighCashSignalResponse(SignalEvaluationResponse):
     source_authority: str = Field(
         "lotus-core",
         alias="sourceAuthority",
         description="Service that owns the cash-weight and source evidence facts.",
     )
-    supported_feature_promoted: bool = Field(
-        False,
-        alias="supportedFeaturePromoted",
-        description="False until live source adapters, Gateway/Workbench proof, and supported-feature registration exist.",
-    )
-
-    @classmethod
-    def from_domain(
-        cls,
-        result: SignalEvaluationResult,
-        *,
-        source_authority: str,
-    ) -> "EvaluateHighCashSignalResponse":
-        return cls(
-            outcome=result.outcome.value,
-            family=result.family.value,
-            reasonCodes=tuple(reason.value for reason in result.reason_codes),
-            unsupportedReasons=tuple(reason.value for reason in result.unsupported_reasons),
-            candidate=(
-                IdeaCandidateSummaryResponse.from_domain(result.candidate)
-                if result.candidate is not None
-                else None
-            ),
-            sourceAuthority=source_authority,
-            supportedFeaturePromoted=False,
-        )
 
 
-class EvaluateMandateRestrictionSignalResponse(CamelModel):
-    outcome: str
-    family: str
-    reason_codes: tuple[str, ...] = Field(..., alias="reasonCodes")
-    unsupported_reasons: tuple[str, ...] = Field(..., alias="unsupportedReasons")
-    candidate: IdeaCandidateSummaryResponse | None
-    source_authority: str = Field(..., alias="sourceAuthority")
-    supported_feature_promoted: bool = Field(
-        False,
-        alias="supportedFeaturePromoted",
-        description="False until live source adapters, Gateway/Workbench proof, and supported-feature registration exist.",
-    )
-
-    @classmethod
-    def from_domain(
-        cls,
-        result: SignalEvaluationResult,
-        *,
-        source_authority: str,
-    ) -> "EvaluateMandateRestrictionSignalResponse":
-        return cls(
-            outcome=result.outcome.value,
-            family=result.family.value,
-            reasonCodes=tuple(reason.value for reason in result.reason_codes),
-            unsupportedReasons=tuple(reason.value for reason in result.unsupported_reasons),
-            candidate=(
-                IdeaCandidateSummaryResponse.from_domain(result.candidate)
-                if result.candidate is not None
-                else None
-            ),
-            sourceAuthority=source_authority,
-            supportedFeaturePromoted=False,
-        )
+class EvaluateMandateRestrictionSignalResponse(SignalEvaluationResponse):
+    pass
 
 
 class CandidatePersistenceSummaryResponse(CamelModel):
