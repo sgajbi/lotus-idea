@@ -703,8 +703,9 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     families. The first follow-through refactors centralize proof source-safety
     traversal in `scripts/proof_source_safety.py` and live-proof generator
     timeout/output plumbing in `scripts/proof_generator_io.py`, then consolidate
-    proof timestamp validation through `src/app/application/source_safe_cross_repo_proof.py`;
-    the current measured baseline scans 1,677 functions and reports 26 exact clusters.
+    proof timestamp validation and make-target evidence checks through
+    `src/app/application/source_safe_cross_repo_proof.py`; the current measured
+    baseline scans 1,669 functions and reports 24 exact clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 
