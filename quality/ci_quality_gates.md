@@ -220,9 +220,10 @@ first proof-helper consolidations moved source-safety traversal into
 `scripts/proof_source_safety.py` and live-proof generator timeout/output plumbing plus
 generated-at UTC parsing into `scripts/proof_generator_io.py`, and shared proof timestamp
 validation, make-target evidence checks, and cross-repository file-evidence checks into
-`src/app/application/source_safe_cross_repo_proof.py`; the current measured baseline scans 1,652
-functions and reports 20 exact duplicate clusters. The CI contract gate protects the target wiring, but duplicate
-thresholds remain unpromoted until the signal is calibrated and shared-helper ownership is clear.
+`src/app/application/source_safe_cross_repo_proof.py`, and AST call-name parsing into
+`scripts/ast_gate_helpers.py`; the current measured baseline scans 1,649 functions and reports 19
+exact duplicate clusters. The CI contract gate protects the target wiring, but duplicate thresholds
+remain unpromoted until the signal is calibrated and shared-helper ownership is clear.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 

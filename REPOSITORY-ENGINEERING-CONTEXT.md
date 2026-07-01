@@ -609,7 +609,8 @@ Recent issue-derived patterns to preserve:
     live-proof generator timeout/output plumbing and generated-at UTC parsing into
     `scripts/proof_generator_io.py`, and centralized proof timestamp,
     make-target evidence, and cross-repository file-evidence checks in
-    `src/app/application/source_safe_cross_repo_proof.py`, removing known
+    `src/app/application/source_safe_cross_repo_proof.py`, plus AST call-name
+    parsing in `scripts/ast_gate_helpers.py`, removing known
     duplicate function-body clusters while preserving family-specific proof
     policy and generator argument behavior.
 
@@ -708,8 +709,10 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     `scripts/proof_generator_io.py`, then consolidate proof timestamp
     validation, make-target evidence checks, and cross-repository file-evidence
     checks through
-    `src/app/application/source_safe_cross_repo_proof.py`; the current measured
-    baseline scans 1,652 functions and reports 20 exact clusters.
+    `src/app/application/source_safe_cross_repo_proof.py`, and centralize AST
+    call-name parsing for contract gates in `scripts/ast_gate_helpers.py`; the
+    current measured baseline scans 1,649 functions and reports 19 exact
+    clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 
