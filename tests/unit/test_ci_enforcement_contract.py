@@ -26,6 +26,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) repository-hygiene-gate" in makefile
     assert "maintainability-gate:" in makefile
     assert "$(MAKE) maintainability-gate" in makefile
+    assert "duplicate-implementation-inventory:" in makefile
+    assert "scripts/duplicate_implementation_inventory.py" in makefile
     assert "private-import-boundary-gate:" in makefile
     assert "$(MAKE) private-import-boundary-gate" in makefile
     assert "documentation-contract-gate:" in makefile
