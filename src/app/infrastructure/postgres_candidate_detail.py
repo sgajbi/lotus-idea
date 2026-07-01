@@ -181,7 +181,7 @@ def _attach_conversion_outcomes(
     cursor: PostgresCursor,
     record: CandidatePersistenceRecord,
 ) -> CandidatePersistenceRecord:
-    intent_ids = tuple(intent.intent.conversion_intent_id for intent in record.conversion_intents)
+    intent_ids = [intent.intent.conversion_intent_id for intent in record.conversion_intents]
     if not intent_ids:
         return record
     cursor.execute(

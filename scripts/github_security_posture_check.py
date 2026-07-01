@@ -222,7 +222,6 @@ def _format_summary(snapshot: GitHubSecurityPostureSnapshot, warnings: list[str]
     lines = [
         f"GitHub security posture check passed for {snapshot.repository}",
         f"Open code scanning alerts: {snapshot.open_code_scanning_alerts}",
-        f"Open secret scanning alerts: {snapshot.open_secret_scanning_alerts}",
         f"Open Dependabot alerts: {snapshot.open_dependabot_alerts}",
         f"Default branch: {snapshot.default_branch}",
         "CodeQL default setup: "
@@ -231,8 +230,9 @@ def _format_summary(snapshot: GitHubSecurityPostureSnapshot, warnings: list[str]
         f"{snapshot.codeql_default_setup.get('threat_model')}",
     ]
     if warnings:
-        lines.append("Advisory controls not claimed as active release evidence:")
-        lines.extend(f"- {warning}" for warning in warnings)
+        lines.append(
+            f"Advisory control warning count not claimed as active release evidence: {len(warnings)}"
+        )
     return "\n".join(lines)
 
 
@@ -255,12 +255,15 @@ def main(argv: list[str] | None = None) -> int:
             require_advanced_secret_scanning=args.require_advanced_secret_scanning,
             require_default_branch_security_files=args.require_default_branch_security_files,
         )
-    except RuntimeError as exc:
-        print(str(exc), file=sys.stderr)
+    except RuntimeError:
+        print("GitHub security posture check could not collect required evidence", file=sys.stderr)
         return 1
 
     if errors:
-        print("\n".join(errors), file=sys.stderr)
+        print(
+            f"GitHub security posture check failed: {len(errors)} requirement(s) unmet",
+            file=sys.stderr,
+        )
         return 1
     print(_format_summary(snapshot, warnings))
     return 0
