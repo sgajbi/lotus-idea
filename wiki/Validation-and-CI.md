@@ -263,8 +263,9 @@ projection into `app.api.persistence_summary`, and API review access-scope DTOs 
 `app.domain.signal_evaluation.blocked_signal_result`, and optional proof-artifact JSON object
 loading into `app.runtime.proof_artifact_files`, and source-product proof payload text-sequence
 normalization into `app.application.source_product_proof_values`, and outbox contract
-forbidden-text traversal into `scripts.contract_text_guards`; the current measured baseline
-scans 1,610 functions and reports 4 exact duplicate clusters.
+forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
+operation, and label validation into `scripts.operations_contract_validators`; the current
+measured baseline scans 1,607 functions and reports 1 exact duplicate cluster.
 `make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
 yet.
 
