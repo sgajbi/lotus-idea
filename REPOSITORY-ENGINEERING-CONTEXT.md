@@ -61,8 +61,9 @@ Current implementation includes these bounded foundations:
 8. source-safe outbox event publication foundations with retry/dead-letter
    state, idempotent operator run-once identity, and bounded broker proof
    artifacts,
-9. AI explanation foundations with deterministic evidence, lineage storage,
-   model-risk operations evidence, and no provider-runtime certification,
+9. AI explanation foundations with deterministic evidence, API-idempotent
+   lineage storage, model-risk operations evidence, and no provider-runtime
+   certification,
 10. implementation-proof readiness diagnostics that aggregate blockers instead
     of promoting support.
 
@@ -532,8 +533,9 @@ Recent issue-derived patterns to preserve:
 10. PostgreSQL mutation paths need optimistic same-candidate guards and
    database idempotency-collision retry; full-snapshot mutation helpers must
    not silently overwrite stale state or leak raw primary-key collisions,
-11. persisted AI explanation lineage writes need API-level idempotency in
-   addition to domain request-id replay protection,
+11. persisted AI explanation lineage writes need both API-level idempotency and
+    domain request-id replay protection; same-key replay/conflict and
+    distinct-key request-id conflict must remain separately tested,
 12. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
 13. release evidence artifacts must name their scope, target artifact or
@@ -549,36 +551,36 @@ Recent issue-derived patterns to preserve:
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. Correctness, idempotency, and persistence: GitHub issue `#268` require API
-   idempotency for AI explanation lineage writes.
-2. Operability and release evidence: GitHub issue `#263` align repo-native
+1. Operability and release evidence: GitHub issue `#263` align repo-native
    command coverage with PostgreSQL and Docker release proof gates or document
    a governed light/full split.
-3. Evidence and proof contracts: GitHub issue `#260` require aggregate
+2. Evidence and proof contracts: GitHub issue `#260` require aggregate
    provenance for source-ingestion live proof consumption.
-4. Evidence and proof contracts: GitHub issue `#269` keep architecture
+3. Evidence and proof contracts: GitHub issue `#269` keep architecture
    boundary report evidence synchronized with current gate rules.
 
 Branch-local fixed issues awaiting merge/CI/QA closure:
 
-1. GitHub issue `#267`: bind caller-context authorization headers to trusted
+1. GitHub issue `#268`: require API idempotency for AI explanation lineage
+   writes while preserving domain request-id lineage replay/conflict.
+2. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-2. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+3. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
    writes and map idempotency primary-key races to governed replay/conflict.
-3. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
+4. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
    describes.
-4. GitHub issue `#271`: require operator run identity for outbox delivery
+5. GitHub issue `#271`: require operator run identity for outbox delivery
    run-once actions.
-5. GitHub issue `#270`: add container startup health smoke proof to Docker
+6. GitHub issue `#270`: add container startup health smoke proof to Docker
    release gates.
-6. GitHub issue `#265`: validate correlation and trace headers before logging
+7. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-7. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+8. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-8. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-9. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+9. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+10. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-10. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+11. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
 Still-open issue categories after the current security batch:
@@ -691,9 +693,8 @@ Current gaps remain explicit:
     or Workbench entitlement-denied proof for caller-context authorization,
 12. no production multi-process PostgreSQL concurrency certification beyond
     adapter-level stale-write and idempotency-collision proof,
-13. no API-level idempotency contract for AI explanation lineage writes,
-14. no full container-image SBOM or registry attestation,
-15. no deterministic freshness check for committed architecture boundary
+13. no full container-image SBOM or registry attestation,
+14. no deterministic freshness check for committed architecture boundary
     report evidence.
 
 These gaps are acceptable only while current-state surfaces keep them visible.

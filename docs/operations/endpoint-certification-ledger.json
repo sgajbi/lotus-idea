@@ -481,10 +481,11 @@
       "path": "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Evaluate an internal AI explanation workflow result or deterministic fallback against a persisted idea candidate with redaction, source-claim verification, forbidden-action blocking, source-safe lineage recording, and bounded operation telemetry.",
-      "when_to_use": "Use as the RFC-0002 Slice 09 and Slice 10 API foundation when an internal caller has a persisted candidate, idea.ai-explanation.evaluate capability, and needs governed AI explanation evaluation without provider execution.",
+      "purpose": "Evaluate an internal AI explanation workflow result or deterministic fallback against a persisted idea candidate with redaction, source-claim verification, forbidden-action blocking, source-safe idempotent lineage recording, and bounded operation telemetry.",
+      "when_to_use": "Use as the RFC-0002 Slice 09 and Slice 10 API foundation when an internal caller has a persisted candidate, idea.ai-explanation.evaluate capability, an Idempotency-Key, and needs governed AI explanation evaluation without provider execution.",
       "when_not_to_use": "Do not use as lotus-ai runtime proof, AI provider execution proof, autonomous advice, suitability approval, downstream authority, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication, or supported-feature promotion. Use the separate AI lineage store proof artifact for source-safe persistence evidence.",
       "request_examples": [
+        "POST /api/v1/idea-candidates/idea_high_cash_8d57adbf52f7f5a7/ai-explanations/evaluate with X-Caller-Capabilities: idea.ai-explanation.evaluate and Idempotency-Key: ai-explanation-api-001",
         "{\"requestId\":\"ai-explanation-001\",\"workflowPack\":{\"workflowPackId\":\"lotus-ai:idea-explanation:v1\",\"workflowPackVersion\":\"v1\",\"purpose\":\"advisor_rationale_draft\",\"evaluationRef\":\"lotus-ai:governed-verifier:v1\"},\"approvedMetadata\":{\"channel\":\"advisor-workbench\"},\"requestedAtUtc\":\"2026-06-21T10:12:00Z\",\"fallbackReason\":\"ai_unavailable\",\"workflowOutput\":{\"outputId\":\"ai-output-001\",\"explanationText\":\"Candidate has elevated idle cash and source-ready evidence.\",\"claims\":[{\"claimId\":\"claim-001\",\"claimText\":\"Cash weight is above idle-liquidity policy threshold.\",\"sourceProductIds\":[\"lotus-core:PortfolioStateSnapshot:v1\"]}],\"proposedActions\":[{\"actionType\":\"advisor_review\",\"actionLabel\":\"Route to advisor review\"}],\"verifierRanAtUtc\":\"2026-06-21T10:12:30Z\"}}",
         "{\"requestId\":\"ai-explanation-fallback-001\",\"workflowPack\":{\"workflowPackId\":\"lotus-ai:idea-explanation:v1\",\"workflowPackVersion\":\"v1\",\"purpose\":\"missing_evidence_check\",\"evaluationRef\":\"lotus-ai:governed-verifier:v1\"},\"approvedMetadata\":{\"channel\":\"advisor-workbench\"},\"requestedAtUtc\":\"2026-06-21T10:12:00Z\",\"fallbackReason\":\"ai_unavailable\"}"
       ],
@@ -496,13 +497,15 @@
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.ai-explanation.evaluate capability.",
         "404 returns product-safe Problem Details when the candidate is not found.",
-        "409 returns product-safe Problem Details when rationale or meeting-preparation drafting is requested before ready evidence and review-ready lifecycle, or when an AI request id is replayed with changed lineage.",
-        "400 returns product-safe Problem Details when request validation fails, approved metadata contains forbidden keys, or workflow output is invalid."
+        "409 returns product-safe Problem Details when rationale or meeting-preparation drafting is requested before ready evidence and review-ready lifecycle, when an AI request id is replayed with changed lineage, or when Idempotency-Key is reused for a different request fingerprint.",
+        "400 returns product-safe Problem Details when request validation fails, Idempotency-Key is absent or blank, approved metadata contains forbidden keys, or workflow output is invalid."
       ],
       "test_evidence": [
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions",
+        "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request",
+        "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_requires_idempotency_key",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_requires_permission_and_existing_candidate",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metadata",
         "tests/integration/test_api_operation_events.py::test_ai_explanation_api_emits_bounded_operation_event",

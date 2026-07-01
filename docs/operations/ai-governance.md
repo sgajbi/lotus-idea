@@ -4,9 +4,10 @@
 implementation is an internal domain and API foundation; it does not call
 providers, does not execute `lotus-ai` runtime workflows, and does not promote
 AI-assisted explanation as a supported feature. The evaluator now records
-source-safe lineage through the repository port; when PostgreSQL is configured
-that lineage is stored durably. The repo now also carries certified
-source-safe model-risk operations dashboard and alert artifacts over
+source-safe lineage through the repository port behind API `Idempotency-Key`
+replay/conflict protection; when PostgreSQL is configured that lineage is
+stored durably. The repo now also carries certified source-safe model-risk
+operations dashboard and alert artifacts over
 implemented AI explanation telemetry. None of this is certified `lotus-ai`
 runtime lineage, live-provider execution, Workbench product proof, or
 supported-feature promotion.
@@ -26,13 +27,15 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
 6. explicit no-downstream-authority semantics for AI output,
 7. a certified internal API foundation at
    `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`,
-8. source-safe lineage persistence for request id, candidate id, evidence
+8. required API `Idempotency-Key` validation for lineage writes with same-key
+   replay, same-key conflict, and preserved domain request-id replay/conflict,
+9. source-safe lineage persistence for request id, candidate id, evidence
    packet id, evidence content hash, workflow-pack identity, posture, verifier
    outcome, fallback state, reason codes, output summary ids, actor, timestamps,
    and no-downstream-authority posture,
-9. bounded operation telemetry through `ai_explanation` events with
+10. bounded operation telemetry through `ai_explanation` events with
    `accepted`, `fallback`, or `blocked` outcomes,
-10. a certified internal operator diagnostic at
+11. a certified internal operator diagnostic at
    `GET /api/v1/ai-explanations/readiness` that reports guardrail availability,
    `not_certified` supportability, and remaining certification blockers without
    invoking `lotus-ai` or exposing prompts, provider payloads, candidate
@@ -145,6 +148,13 @@ Unsupported claims and forbidden actions return `200` with a blocked posture
 because the verifier successfully evaluated and rejected the output. Missing
 candidates, permission failures, invalid request shape, forbidden metadata, and
 invalid candidate lifecycle posture return product-safe Problem Details.
+
+The write route requires `Idempotency-Key`. Same-key/same-request submissions
+replay without duplicate lineage records. Same-key/different-request
+submissions return product-safe `409 idempotency_conflict`. Distinct-key
+replays of the same AI request id still use the lineage store's request-id
+replay/conflict guard, so API retry semantics and domain lineage identity do
+not diverge.
 
 ## Prohibited Behavior
 
