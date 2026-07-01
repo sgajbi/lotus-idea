@@ -145,6 +145,21 @@ CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_review_queue_order
         candidate_id
     );
 
+-- Advisor review queue entitlement-scope filters use these exact JSONB
+-- expressions before stable queue ordering. Keep these expression indexes
+-- narrow rather than adding a broad JSONB index over the full candidate body.
+CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_scope_tenant
+    ON idea_candidate_record ((candidate_json->'access_scope'->>'tenant_id'));
+
+CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_scope_book
+    ON idea_candidate_record ((candidate_json->'access_scope'->>'book_id'));
+
+CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_scope_portfolio
+    ON idea_candidate_record ((candidate_json->'access_scope'->>'portfolio_id'));
+
+CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_scope_client
+    ON idea_candidate_record ((candidate_json->'access_scope'->>'client_id'));
+
 CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_evidence_hash
     ON idea_candidate_record (evidence_hash);
 

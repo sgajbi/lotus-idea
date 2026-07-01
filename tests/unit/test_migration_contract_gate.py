@@ -133,6 +133,59 @@ def test_migration_contract_gate_blocks_missing_downstream_submission_resource_i
     assert "Migration 001 missing index `idx_idea_downstream_submission_resource`" in errors
 
 
+def test_migration_contract_gate_blocks_missing_review_queue_scope_index(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    forward = tmp_path / "001_idea_repository_foundation.sql"
+    rollback = tmp_path / "001_idea_repository_foundation.rollback.sql"
+    forward.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.sql")
+        .read_text(encoding="utf-8")
+        .replace(
+            "CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_scope_portfolio",
+            "CREATE INDEX IF NOT EXISTS idx_idea_candidate_record_scope_account",
+        ),
+        encoding="utf-8",
+    )
+    rollback.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.rollback.sql").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    migration = _foundation_contract(module, forward, rollback)
+    errors = module.validate_migration_contracts((migration,))
+
+    assert "Migration 001 missing index `idx_idea_candidate_record_scope_portfolio`" in errors
+
+
+def test_migration_contract_gate_blocks_missing_review_queue_scope_index_rollback(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    forward = tmp_path / "001_idea_repository_foundation.sql"
+    rollback = tmp_path / "001_idea_repository_foundation.rollback.sql"
+    forward.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.sql").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    rollback.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.rollback.sql")
+        .read_text(encoding="utf-8")
+        .replace("DROP INDEX IF EXISTS idx_idea_candidate_record_scope_portfolio;", ""),
+        encoding="utf-8",
+    )
+
+    migration = _foundation_contract(module, forward, rollback)
+    errors = module.validate_migration_contracts((migration,))
+
+    assert (
+        "Migration 001 rollback missing index `idx_idea_candidate_record_scope_portfolio`" in errors
+    )
+
+
 def test_migration_contract_gate_blocks_missing_outbox_event_contract_constraints(
     tmp_path: Path,
 ) -> None:

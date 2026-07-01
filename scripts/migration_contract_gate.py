@@ -26,6 +26,10 @@ REQUIRED_TABLES = (
 REQUIRED_INDEXES = (
     "idx_idea_candidate_record_family_status",
     "idx_idea_candidate_record_review_queue_order",
+    "idx_idea_candidate_record_scope_tenant",
+    "idx_idea_candidate_record_scope_book",
+    "idx_idea_candidate_record_scope_portfolio",
+    "idx_idea_candidate_record_scope_client",
     "idx_idea_candidate_record_evidence_hash",
     "idx_idea_candidate_record_persisted_at",
     "idx_idea_idempotency_record_candidate",
