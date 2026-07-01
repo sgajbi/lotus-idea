@@ -574,7 +574,10 @@ Recent issue-derived patterns to preserve:
     open a separate `/requirements` lock-only stream; lock refreshes should
     regenerate both `requirements/runtime-resolved.lock.txt` and
     `requirements/requirements.txt` from the active runtime closure before
-    merge validation,
+    merge validation. Routine Dependabot version-update PRs are paused with
+    `open-pull-requests-limit: 0` while RFC implementation is active; security
+    alerts and security-update posture remain governed through the GitHub
+    Security tab and `make github-security-posture-check`,
 16. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
@@ -666,10 +669,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    stable ordering, and `LIMIT`/`OFFSET` bounds without changing advisory
    workflow ownership or API semantics.
 10. Dependency update atomicity: GitHub issue `#289` is addressed by removing
-   the separate `/requirements` Dependabot stream, grouping Python root updates
-   as dependency-closure root changes, adding `make dependency-refresh` to
-   install from root pins and regenerate both runtime lock files, and protecting
-   the workflow through security/CI contract tests. Existing install,
+    the separate `/requirements` Dependabot stream, grouping Python root updates
+    as dependency-closure root changes, adding `make dependency-refresh` to
+    install from root pins and regenerate both runtime lock files, and protecting
+   the workflow through security/CI contract tests. Routine Dependabot
+   version-update PRs are paused during RFC delivery; dependency suggestions are
+   manually regenerated or cherry-picked into the active implementation branch
+   before normal repo-native gates. Existing install,
    runtime-closure, audit, Docker, SBOM, and release evidence gates remain
    strict.
 11. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
