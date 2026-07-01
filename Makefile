@@ -156,9 +156,7 @@ lint:
 	$(MAKE) missing-risk-profile-source-product-proof-contract-gate
 	$(MAKE) missing-risk-profile-live-proof-contract-gate
 	$(MAKE) performance-underperformance-live-proof-contract-gate
-	$(MAKE) implementation-proof-readiness-check
 	$(MAKE) runtime-trust-telemetry-preview-check
-	$(MAKE) runtime-trust-telemetry-snapshot-check
 	$(MAKE) supported-features-gate
 	$(MAKE) endpoint-certification-gate
 
@@ -456,7 +454,7 @@ check: lint typecheck architecture-boundary-gate openapi-gate migration-contract
 
 ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-gate migration-execution-gate supported-features-gate endpoint-certification-gate test-integration test-e2e test-coverage security-audit
 
-ci-release: ci postgres-integration-gate docker-build container-runtime-smoke container-image-scan release-sbom
+ci-release: ci implementation-proof-readiness-check runtime-trust-telemetry-snapshot-check postgres-integration-gate docker-build container-runtime-smoke container-image-scan release-sbom
 
 docker-build:
 	docker build --build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE) -t $(CONTAINER_IMAGE_NAME) .

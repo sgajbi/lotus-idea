@@ -97,14 +97,75 @@ def test_ci_contract_gate_blocks_missing_mandate_restriction_live_proof_gate() -
     ) in errors
 
 
-def test_ci_contract_gate_blocks_missing_implementation_proof_readiness_lint_gate() -> None:
+def test_ci_contract_gate_blocks_missing_implementation_proof_readiness_release_gate() -> None:
     module = _load_ci_contract_gate()
     errors = module.validate_makefile(
-        _makefile_without("$(MAKE) implementation-proof-readiness-check\n")
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "ci-release: ci implementation-proof-readiness-check "
+            "runtime-trust-telemetry-snapshot-check postgres-integration-gate",
+            "ci-release: ci runtime-trust-telemetry-snapshot-check postgres-integration-gate",
+        )
     )
 
+    assert ("Makefile ci-release target missing `implementation-proof-readiness-check`") in errors
+
+
+def test_ci_contract_gate_blocks_implementation_proof_readiness_in_lint() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(MAKE) performance-underperformance-live-proof-contract-gate\n",
+            "$(MAKE) performance-underperformance-live-proof-contract-gate\n"
+            "\t$(MAKE) implementation-proof-readiness-check\n",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
     assert (
-        "Makefile lint target must call `$(MAKE) implementation-proof-readiness-check`"
+        "Makefile lint target must not call artifact-producing "
+        "`$(MAKE) implementation-proof-readiness-check`; use `make ci-release` "
+        "or the explicit readiness command for generated proof evidence"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_missing_runtime_trust_telemetry_snapshot_release_gate() -> None:
+    module = _load_ci_contract_gate()
+    errors = module.validate_makefile(
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "ci-release: ci implementation-proof-readiness-check "
+            "runtime-trust-telemetry-snapshot-check postgres-integration-gate",
+            "ci-release: ci implementation-proof-readiness-check postgres-integration-gate",
+        )
+    )
+
+    assert ("Makefile ci-release target missing `runtime-trust-telemetry-snapshot-check`") in errors
+
+
+def test_ci_contract_gate_blocks_runtime_trust_telemetry_snapshot_in_lint() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(MAKE) runtime-trust-telemetry-preview-check\n",
+            "$(MAKE) runtime-trust-telemetry-preview-check\n"
+            "\t$(MAKE) runtime-trust-telemetry-snapshot-check\n",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must not call artifact-producing "
+        "`$(MAKE) runtime-trust-telemetry-snapshot-check`; use `make ci-release` "
+        "or the explicit snapshot command for generated proof evidence"
     ) in errors
 
 

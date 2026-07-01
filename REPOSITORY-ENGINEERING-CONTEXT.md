@@ -559,79 +559,34 @@ Recent issue-derived patterns to preserve:
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. No issue-discovery priorities are currently unfixed on this branch; refresh
-   GitHub issues before selecting the next category because branch-local fixes
-   are still open until merged, CI-green, and QA-verified.
+1. Migration/data durability coverage: GitHub issue `#274` requires the
+   migration contract gate to cover durable downstream submission state,
+   resource lookup indexes, and rollback coverage so repository runtime state
+   cannot drift from migration truth.
+2. CI lane hygiene and release evidence: GitHub issue `#275` requires
+   artifact-producing implementation-proof readiness generation to stay out of
+   fast `make lint` while clean proof-family contract gates remain blocking and
+   release/review evidence remains available through explicit commands.
+3. Repo context truth: GitHub issue `#278` tracks this curated issue posture so
+   future agents see mainline truth instead of stale branch-local closure
+   claims.
 
-Branch-local fixed issues awaiting merge/CI/QA closure:
+Recently closed by PR `#273` and mainline validation:
 
-1. GitHub issue `#263`: add governed `make ci-release` full-lane command and
-   contract-gate enforcement for PostgreSQL, Docker, image scan, and SBOM proof.
-2. GitHub issue `#269`: stop treating ignored architecture boundary report
-   artifacts as durable current-state proof; blocking boundary enforcement
-   remains `make architecture-boundary-gate`, and scorecard truth now points to
-   on-demand report generation only.
-3. GitHub issue `#260`: require source-ingestion live proof to be family-valid
-   and aggregate-current before clearing source-ingestion or high-cash
-   opportunity-archetype live Core blockers.
-4. GitHub issue `#268`: require API idempotency for AI explanation lineage
-   writes while preserving domain request-id lineage replay/conflict.
-5. GitHub issue `#267`: bind caller-context authorization headers to trusted
-   ingress before production-like use.
-6. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
-   writes and map idempotency primary-key races to governed replay/conflict.
-7. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
-   describes.
-8. GitHub issue `#271`: require operator run identity for outbox delivery
-   run-once actions.
-9. GitHub issue `#270`: add container startup health smoke proof to Docker
-   release gates.
-10. GitHub issue `#258`: keep GitHub coverage enforcement on the repo-native
-   coverage gate.
-11. GitHub issue `#256`: add report-only CI timing and signal evidence without
-   duration threshold enforcement.
-12. GitHub issue `#253`: deduplicate post-merge Main Releasability dispatch
-   while preserving authoritative merged-PR release proof.
-13. GitHub issue `#252`: govern Docker base and scanner image identity in
-   release evidence with resolved digest provenance.
-14. GitHub issue `#251`: run the packaged service container as the non-root
-   `lotus` application user.
-15. GitHub issue `#250`: build the runtime Docker image without development,
-   test, lint, audit, or SBOM tooling in the packaged runtime layer.
-16. GitHub issue `#265`: validate correlation and trace headers before logging
-   or reflecting them.
-17. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
-   application and domain commands.
-18. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-19. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
-   stream.
-20. GitHub issue `#259`: add bounded retry and backoff policy to downstream
-   HTTP calls.
-21. GitHub issue `#255`: stop treating Manage source-ref freshness value
-   `ready` as current; source adapters now require governed freshness
-   vocabulary and the source-observability gate blocks freshness inference from
-   readiness, supportability, data-quality, health-state, or coverage terms.
-22. GitHub issue `#254`: add repository-side advisor review queue pagination
-   so durable PostgreSQL queue reads use a bounded candidate projection with
-   stable filters, ordering, counts, limit, and offset instead of hydrating the
-   whole repository snapshot and unrelated state families.
-23. GitHub issue `#257`: add repository-side outbox readiness queries so
-   status counts, expired leases, and delivery-ready counts read the outbox
-   table directly instead of hydrating unrelated candidate, audit, review,
-   downstream, conversion, report evidence, or AI lineage state.
+1. GitHub issues `#250` through `#272` were fixed by PR `#273`, merged to
+   `main` at `41ac1524a4d4a06a64c88236ff7095cb60d7e1f6`, validated by green
+   GitHub mainline checks and local `make ci`, and closed with issue evidence
+   on 2026-07-01.
+2. The fixed categories included Docker/runtime hardening, GitHub Security-tab
+   posture, CI/release evidence, source-authority freshness semantics,
+   bounded repository queries, downstream retry/idempotency, request-size and
+   correlation header controls, stale PostgreSQL snapshot protection, outbox
+   operator identity, coverage enforcement, and SBOM/runtime-artifact binding.
 
-Still-open issue categories after branch-local fixes:
-
-1. No branch-unfixed issue-discovery category remains after the current
-   branch-local fix set; GitHub issues remain open pending merge, CI, QA
-   evidence, and closure.
-
-Issues with branch-local fixes must not be claimed closed until merged to
-`main`, CI is green, and QA or issue-closure evidence exists.
-
-Close or claim issue progress only after implementation, tests, docs/context
-truth, and validation evidence exist. Keep issue count under control by fixing
-classes of defects rather than isolated symptoms.
+Do not close or claim issue progress until implementation, meaningful tests,
+docs/context truth, merge to `main`, CI evidence, and QA or issue-closure
+evidence exist. Keep issue count under control by fixing classes of defects
+rather than isolated symptoms.
 
 ## RFC And Documentation Rules
 

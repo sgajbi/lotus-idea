@@ -77,6 +77,62 @@ def test_migration_contract_gate_blocks_missing_required_table(tmp_path: Path) -
     assert "Migration 001 missing table `idea_audit_event`" in errors
 
 
+def test_migration_contract_gate_blocks_missing_downstream_submission_table(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    forward = tmp_path / "001_idea_repository_foundation.sql"
+    rollback = tmp_path / "001_idea_repository_foundation.rollback.sql"
+    forward.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.sql")
+        .read_text(encoding="utf-8")
+        .replace(
+            "CREATE TABLE IF NOT EXISTS idea_downstream_submission",
+            "CREATE TABLE IF NOT EXISTS idea_downstream_delivery",
+        ),
+        encoding="utf-8",
+    )
+    rollback.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.rollback.sql").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    migration = _foundation_contract(module, forward, rollback)
+    errors = module.validate_migration_contracts((migration,))
+
+    assert "Migration 001 missing table `idea_downstream_submission`" in errors
+
+
+def test_migration_contract_gate_blocks_missing_downstream_submission_resource_index(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    forward = tmp_path / "001_idea_repository_foundation.sql"
+    rollback = tmp_path / "001_idea_repository_foundation.rollback.sql"
+    forward.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.sql")
+        .read_text(encoding="utf-8")
+        .replace(
+            "CREATE INDEX IF NOT EXISTS idx_idea_downstream_submission_resource",
+            "CREATE INDEX IF NOT EXISTS idx_idea_downstream_submission_target",
+        ),
+        encoding="utf-8",
+    )
+    rollback.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.rollback.sql").read_text(
+            encoding="utf-8"
+        ),
+        encoding="utf-8",
+    )
+
+    migration = _foundation_contract(module, forward, rollback)
+    errors = module.validate_migration_contracts((migration,))
+
+    assert "Migration 001 missing index `idx_idea_downstream_submission_resource`" in errors
+
+
 def test_migration_contract_gate_blocks_missing_outbox_event_contract_constraints(
     tmp_path: Path,
 ) -> None:
@@ -192,3 +248,30 @@ def test_migration_contract_gate_blocks_missing_rollback_table(tmp_path: Path) -
     errors = module.validate_migration_contracts((migration,))
 
     assert "Migration 001 rollback missing table `idea_candidate_record`" in errors
+
+
+def test_migration_contract_gate_blocks_missing_downstream_submission_rollback(
+    tmp_path: Path,
+) -> None:
+    module = _load_migration_contract_gate()
+    forward = tmp_path / "001_idea_repository_foundation.sql"
+    rollback = tmp_path / "001_idea_repository_foundation.rollback.sql"
+    forward.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.sql").read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
+    rollback.write_text(
+        (ROOT / "migrations" / "001_idea_repository_foundation.rollback.sql")
+        .read_text(encoding="utf-8")
+        .replace("DROP INDEX IF EXISTS idx_idea_downstream_submission_resource;", "")
+        .replace("DROP TABLE IF EXISTS idea_downstream_submission;", ""),
+        encoding="utf-8",
+    )
+
+    migration = _foundation_contract(module, forward, rollback)
+    errors = module.validate_migration_contracts((migration,))
+
+    assert (
+        "Migration 001 rollback missing index `idx_idea_downstream_submission_resource`" in errors
+    )
+    assert "Migration 001 rollback missing table `idea_downstream_submission`" in errors

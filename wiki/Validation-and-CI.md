@@ -125,9 +125,11 @@ OpenAPI, migrations, integration/e2e/coverage, and dependency audit. It must
 not be cited as PostgreSQL runtime, Docker build, container smoke, image scan,
 SBOM, or release evidence unless those targets were run separately.
 `make ci-release` is the governed full-lane local command: it runs `make ci`
-plus `postgres-integration-gate`, `docker-build`, `container-runtime-smoke`,
-`container-image-scan`, and `release-sbom`. Run and cite `make ci-release`
-only when local Docker and disposable PostgreSQL prerequisites are available.
+plus `implementation-proof-readiness-check`,
+`runtime-trust-telemetry-snapshot-check`, `postgres-integration-gate`,
+`docker-build`, `container-runtime-smoke`, `container-image-scan`, and
+`release-sbom`. Run and cite `make ci-release` only when local Docker and
+disposable PostgreSQL prerequisites are available.
 `make ci-contract-gate` blocks drift if the full-lane target drops any of those
 heavy proof families.
 
@@ -152,12 +154,12 @@ AI lineage store proof contract validation,
 AI workflow-pack registration proof contract validation,
 AI workflow-pack runtime execution proof contract validation,
 source-ingestion worker manifest and source-safe output-contract validation,
-scheduled source-ingestion worker deploy-contract validation and generated
-deploy-proof artifact consumption plus source-safe artifact-ref recording in
-aggregate implementation-proof readiness, source-ingestion live-proof artifact
-contract validation with aggregate-current provenance consumption,
-implementation-proof readiness artifact generation,
-runtime trust telemetry preview and snapshot artifact generation,
+scheduled source-ingestion worker deploy-contract validation and source-safe
+artifact-ref recording in aggregate implementation-proof readiness,
+source-ingestion live-proof artifact contract validation with aggregate-current
+provenance consumption, implementation-proof readiness release-lane artifact
+generation, runtime trust telemetry preview validation and runtime trust
+telemetry snapshot release-lane artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
 non-root container execution, governed Docker base/scanner image identity and
 resolved digest provenance in release evidence, runtime Python dependency SBOM
@@ -165,8 +167,10 @@ evidence tied to the built service image reference/id, packaged container startu
 smoke proof over health/live/readiness, bounded GitHub job timeouts, no soft-failed
 critical jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
-`make lint`, including implementation-proof readiness and runtime trust telemetry preview
-generation, so enforcement cannot silently degrade into optional local commands.
+`make lint`, if artifact-producing implementation-proof readiness or runtime
+trust telemetry snapshot generation is added back to `make lint`, or if
+`make ci-release` drops those release/review evidence generators, so enforcement
+cannot silently degrade into optional local commands.
 It also fails if Main Releasability regains a `push` trigger while the merged-PR
 dispatch workflow remains active, because normal merges should produce one
 authoritative release-proof run rather than a paired cancelled run and

@@ -64,6 +64,8 @@ REQUIRED_TARGETS = (
     "container-runtime-smoke",
     "release-sbom",
     "container-image-scan",
+    "implementation-proof-readiness-check",
+    "runtime-trust-telemetry-snapshot-check",
 )
 REQUIRED_LINT_CALLS = tuple(f"$(MAKE) {target}" for target in REQUIRED_LINT_TARGETS)
 REQUIRED_CHECK_DEPS = (
@@ -93,6 +95,8 @@ REQUIRED_CI_DEPS = (
 )
 REQUIRED_CI_RELEASE_DEPS = (
     "ci",
+    "implementation-proof-readiness-check",
+    "runtime-trust-telemetry-snapshot-check",
     "postgres-integration-gate",
     "docker-build",
     "container-runtime-smoke",
@@ -158,6 +162,18 @@ def _validate_aggregate_makefile_targets(makefile: str) -> list[str]:
     for call in REQUIRED_LINT_CALLS:
         if call not in lint_block:
             errors.append(f"Makefile lint target must call `{call}`")
+    if "$(MAKE) implementation-proof-readiness-check" in lint_block:
+        errors.append(
+            "Makefile lint target must not call artifact-producing "
+            "`$(MAKE) implementation-proof-readiness-check`; use `make ci-release` "
+            "or the explicit readiness command for generated proof evidence"
+        )
+    if "$(MAKE) runtime-trust-telemetry-snapshot-check" in lint_block:
+        errors.append(
+            "Makefile lint target must not call artifact-producing "
+            "`$(MAKE) runtime-trust-telemetry-snapshot-check`; use `make ci-release` "
+            "or the explicit snapshot command for generated proof evidence"
+        )
     check_deps = _target_deps(makefile, "check")
     for dependency in REQUIRED_CHECK_DEPS:
         if dependency not in check_deps:
