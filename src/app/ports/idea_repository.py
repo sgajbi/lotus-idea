@@ -321,7 +321,9 @@ class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
         lease_owner: str,
         lease_attempt_id: str,
         failure_reason: str,
+        failed_at_utc: datetime | None = None,
         max_retry_count: int = 3,
+        next_attempt_at_utc: datetime | None = None,
     ) -> OutboxDeliveryResult: ...
 
 

@@ -32,6 +32,7 @@ REQUIRED_INDEXES = (
     "idx_idea_lifecycle_history_candidate_time",
     "idx_idea_audit_event_candidate_time",
     "idx_idea_outbox_event_status_time",
+    "idx_idea_outbox_event_retry_due",
     "idx_idea_outbox_event_lease_expiry",
     "idx_idea_outbox_event_aggregate_time",
     "idx_idea_review_decision_candidate_time",

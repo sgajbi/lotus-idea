@@ -8,6 +8,11 @@ from typing import Any, Mapping
 
 from app.domain import OutboxDeliveryDecision, OutboxEventRecord, OutboxEventStatus
 from app.domain.idempotency import IdempotencyDecision
+from app.domain.outbox_delivery_state import (
+    OUTBOX_RETRY_BACKOFF_BASE_SECONDS,
+    OUTBOX_RETRY_BACKOFF_MAX_SECONDS,
+    next_outbox_retry_attempt_at_utc,
+)
 from app.ports.idea_repository import OutboxDeliveryRepository
 from app.ports.outbox_publisher import OutboxEventPublisher, OutboxPublishOutcome
 
@@ -32,6 +37,8 @@ class OutboxDeliveryRunSummary:
     run_status: OutboxDeliveryRunStatus = OutboxDeliveryRunStatus.COMPLETED
     supportability_status: str = "foundation_only"
     external_broker_publication_supported: bool = False
+    retry_backoff_base_seconds: int = OUTBOX_RETRY_BACKOFF_BASE_SECONDS
+    retry_backoff_max_seconds: int = OUTBOX_RETRY_BACKOFF_MAX_SECONDS
 
 
 def outbox_delivery_run_request_payload(
@@ -131,12 +138,19 @@ def run_outbox_delivery_once(
                 published_at_utc=delivered_at,
             )
         else:
+            next_attempt_at = next_outbox_retry_attempt_at_utc(
+                event,
+                failed_at_utc=delivered_at,
+                max_retry_count=max_retry_count,
+            )
             result = repository.mark_outbox_event_failed(
                 event.event_id,
                 lease_owner=owner,
                 lease_attempt_id=attempt_id,
                 failure_reason=outcome.failure_reason or "publisher_rejected",
+                failed_at_utc=delivered_at,
                 max_retry_count=max_retry_count,
+                next_attempt_at_utc=next_attempt_at,
             )
 
         if result.decision is OutboxDeliveryDecision.ACCEPTED:
@@ -156,6 +170,8 @@ def run_outbox_delivery_once(
         dead_lettered_count=dead_lettered,
         skipped_count=skipped,
         max_retry_count=max_retry_count,
+        retry_backoff_base_seconds=OUTBOX_RETRY_BACKOFF_BASE_SECONDS,
+        retry_backoff_max_seconds=OUTBOX_RETRY_BACKOFF_MAX_SECONDS,
         lease_owner=owner,
         lease_attempt_id=attempt_id,
         operator_run_reference=operator_run_reference,
@@ -177,6 +193,8 @@ def _outbox_delivery_no_mutation_summary(
         dead_lettered_count=0,
         skipped_count=0,
         max_retry_count=max_retry_count,
+        retry_backoff_base_seconds=OUTBOX_RETRY_BACKOFF_BASE_SECONDS,
+        retry_backoff_max_seconds=OUTBOX_RETRY_BACKOFF_MAX_SECONDS,
         lease_owner=lease_owner,
         lease_attempt_id=lease_attempt_id,
         operator_run_reference=operator_run_reference,
