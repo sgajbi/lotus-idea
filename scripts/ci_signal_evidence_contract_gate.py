@@ -60,6 +60,17 @@ def main() -> int:
         source="contract-gate-example",
     )
     errors = validate_ci_signal_evidence(artifact)
+    summary = artifact["summary"]
+    if summary["workflowWallClockSeconds"] != 310:
+        errors.append(
+            "workflowWallClockSeconds must measure first job start to last job completion"
+        )
+    if summary["criticalPathSeconds"] != 310:
+        errors.append("criticalPathSeconds must report workflow feedback time")
+    if summary["longestJobName"] != "PR Merge Gate / Lint Typecheck Security":
+        errors.append("longestJobName must retain the longest individual job signal")
+    if summary["longestJobSeconds"] != 240:
+        errors.append("longestJobSeconds must retain the longest individual job duration")
     if errors:
         for error in errors:
             print(error)
