@@ -70,7 +70,9 @@ Downstream HTTP runtime posture:
    bounded to timeouts, transport failures, `429`, `502`, `503`, and `504`.
    Advise/Manage/Report `POST` retries require the request `Idempotency-Key`;
    `400`, `401`, `403`, `404`, `409`, malformed upstream responses, and local
-   idempotency or business-state failures are not retried.
+   idempotency or business-state failures are not retried. Computed backoff
+   delays use the shared client's fixed 20% downward jitter window; valid
+   upstream `Retry-After` values remain capped but not jittered.
 5. Invalid or internally inconsistent resource settings fail closed before a
    downstream submission is attempted.
 6. This lifecycle and resource-control posture is not downstream route

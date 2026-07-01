@@ -239,6 +239,12 @@ responses, or ordinary client errors such as `400`, `401`, `403`, `404`, and
 the route as read-only source-query traffic. Today that exception is limited to
 Core source-ingestion query/control-plane `POST` calls.
 
+Configured retry backoff uses a fixed central 20% downward jitter window for
+computed backoff delays so source ingestion, downstream realization, and outbox
+publication do not create synchronized retry waves. Valid upstream
+`Retry-After` values remain authoritative and are only capped by
+`retry_max_backoff_seconds`; they are not jittered.
+
 Outbox publication propagates the event idempotency fingerprint as the
 outbound `Idempotency-Key`.
 
@@ -608,11 +614,11 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    certify source-safe dashboard/alert artifacts over implemented operation
    telemetry while preserving live-source, external-broker, downstream
    execution, Gateway/Workbench, data-mesh, and supported-feature blockers.
-6. Resilience retry control: GitHub issue `#286` remains open as of
-   2026-07-01 and should be handled in the resilience category by adding
-   deterministic jitter to centralized downstream retry backoff, with tests
-   that prove bounded delays, retry-wave de-synchronization, and no drift in
-   existing timeout or failure-classification behavior.
+6. Resilience retry control: GitHub issue `#286` is addressed by fixed central
+   jitter in `DownstreamJsonClient` computed backoff delays, deterministic
+   jitter injection in tests, and no change to retry attempts, retryable status
+   codes, valid `Retry-After` handling, POST idempotency rules, or adapter-local
+   retry-loop boundaries.
 7. PostgreSQL review-queue performance: GitHub issue `#287` remains open as of
    2026-07-01 and should be handled in the database-operations category by
    extending the PostgreSQL migration contract with advisor review queue

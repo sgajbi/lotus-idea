@@ -218,7 +218,9 @@ client. Retry defaults remain one attempt; when operators explicitly raise the
 attempt count, only timeouts, transport failures, `429`, `502`, `503`, and
 `504` are retried, and downstream realization `POST` retries require the
 submission `Idempotency-Key`. Client/business failures, malformed responses,
-and local idempotency conflicts are not retried.
+and local idempotency conflicts are not retried. Computed backoff delays use a
+fixed central 20% downward jitter window; valid upstream `Retry-After` values
+remain capped but are not jittered.
 When the generated or overridden report-intake route proof is valid, the Report contract row
 uses `POST /reports/idea-evidence-packs` and reports
 `route_foundation_proven_not_certified`; it still remains blocked for
