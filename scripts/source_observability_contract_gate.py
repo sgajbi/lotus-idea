@@ -4,6 +4,11 @@ import ast
 import sys
 from pathlib import Path
 
+try:
+    from scripts.ast_gate_helpers import call_name
+except ModuleNotFoundError:
+    from ast_gate_helpers import call_name  # type: ignore[import-not-found,no-redef]
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "src" / "app"
@@ -73,15 +78,6 @@ def _is_allowed_logging_module(path: Path, root: Path) -> bool:
     return Path(_relative(path, root)) in ALLOWED_LOGGING_MODULES
 
 
-def _call_name(node: ast.AST) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        parent = _call_name(node.value)
-        return f"{parent}.{node.attr}" if parent else node.attr
-    return None
-
-
 def _validate_file(path: Path, root: Path) -> list[str]:
     relative_path = _relative(path, root)
     relative = Path(relative_path)
@@ -129,30 +125,33 @@ def _validate_file(path: Path, root: Path) -> list[str]:
                 )
 
         if isinstance(node, ast.Call):
-            call_name = _call_name(node.func)
-            if call_name == "print":
+            current_call_name = call_name(node.func)
+            if current_call_name == "print":
                 errors.append(
                     f"{relative_path}:{node.lineno}: print() is prohibited in application "
                     "source; use bounded structured logging"
                 )
-            if call_name == "log_event" and not allowed_logging_module:
+            if current_call_name == "log_event" and not allowed_logging_module:
                 errors.append(
                     f"{relative_path}:{node.lineno}: call emit_operation_event or "
                     "emit_foundation_operation_event instead of log_event"
                 )
             if (
-                call_name
-                and call_name.startswith("logging.")
-                and call_name.removeprefix("logging.") in PROHIBITED_LOGGING_ATTRIBUTES
+                current_call_name
+                and current_call_name.startswith("logging.")
+                and current_call_name.removeprefix("logging.") in PROHIBITED_LOGGING_ATTRIBUTES
                 and not allowed_logging_module
             ):
                 errors.append(
                     f"{relative_path}:{node.lineno}: direct logging calls are only allowed in "
                     "src/app/observability/logging.py"
                 )
-            if call_name in {"hashlib.sha256", "json.dumps"} and prohibited_source_hash_modules:
+            if (
+                current_call_name in {"hashlib.sha256", "json.dumps"}
+                and prohibited_source_hash_modules
+            ):
                 errors.append(
-                    f"{relative_path}:{node.lineno}: {call_name} fallback is prohibited "
+                    f"{relative_path}:{node.lineno}: {current_call_name} fallback is prohibited "
                     "because upstream source-ref hashes must be source-authored"
                 )
 
