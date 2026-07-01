@@ -606,7 +606,7 @@ Recent issue-derived patterns to preserve:
     should be used to guide shared-helper consolidation before any strict
     threshold is promoted. The first follow-through consolidations moved repeated
     proof source-safety traversal into `scripts/proof_source_safety.py` and
-    live-proof generator timeout/output plumbing into
+    live-proof generator timeout/output plumbing and generated-at UTC parsing into
     `scripts/proof_generator_io.py`, and centralized proof timestamp,
     make-target evidence, and cross-repository file-evidence checks in
     `src/app/application/source_safe_cross_repo_proof.py`, removing known
@@ -704,11 +704,12 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     clusters, including the known proof source-safety validation helper
     families. The first follow-through refactors centralize proof source-safety
     traversal in `scripts/proof_source_safety.py` and live-proof generator
-    timeout/output plumbing in `scripts/proof_generator_io.py`, then consolidate
-    proof timestamp validation, make-target evidence checks, and
-    cross-repository file-evidence checks through
+    timeout/output plumbing plus generated-at UTC parsing in
+    `scripts/proof_generator_io.py`, then consolidate proof timestamp
+    validation, make-target evidence checks, and cross-repository file-evidence
+    checks through
     `src/app/application/source_safe_cross_repo_proof.py`; the current measured
-    baseline scans 1,656 functions and reports 21 exact clusters.
+    baseline scans 1,652 functions and reports 20 exact clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 
