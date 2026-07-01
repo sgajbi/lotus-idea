@@ -43,6 +43,7 @@ from app.domain.review_governance import (
     ReviewAction,
     ReviewActorRole,
 )
+from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
 
 __all__ = (
     "ai_explanation_lineage_from_json",
@@ -159,7 +160,7 @@ def _candidate_to_json(candidate: IdeaCandidate) -> dict[str, Any]:
         "evidence_packet": _evidence_packet_to_json(candidate.evidence_packet),
         "source_signal_ids": list(candidate.source_signal_ids),
         "score": _score_to_json(candidate.score) if candidate.score is not None else None,
-        "access_scope": _access_scope_to_json(candidate.access_scope),
+        "access_scope": access_scope_payload(candidate.access_scope),
         "suppression_reason": (
             candidate.suppression_reason.value if candidate.suppression_reason is not None else None
         ),
@@ -457,17 +458,6 @@ def _ai_explanation_lineage_from_json(
     )
 
 
-def _access_scope_to_json(scope: ReviewAccessScope | None) -> dict[str, Any] | None:
-    if scope is None:
-        return None
-    return {
-        "tenant_id": scope.tenant_id,
-        "book_id": scope.book_id,
-        "portfolio_id": scope.portfolio_id,
-        "client_id": scope.client_id,
-    }
-
-
 def _access_scope_from_json(payload: Mapping[str, Any]) -> ReviewAccessScope:
     return ReviewAccessScope(
         tenant_id=str(payload["tenant_id"]),
@@ -481,7 +471,7 @@ def _evidence_packet_to_json(packet: IdeaEvidencePacket) -> dict[str, Any]:
     return {
         "evidence_packet_id": packet.evidence_packet_id,
         "supportability": packet.supportability.value,
-        "source_refs": [_source_ref_to_json(source_ref) for source_ref in packet.source_refs],
+        "source_refs": [source_ref_payload(source_ref) for source_ref in packet.source_refs],
         "lineage_ref": _lineage_ref_to_json(packet.lineage_ref),
         "reason_codes": [reason.value for reason in packet.reason_codes],
         "unsupported_reasons": [reason.value for reason in packet.unsupported_reasons],
@@ -506,7 +496,7 @@ def _evidence_packet_from_json(payload: Mapping[str, Any]) -> IdeaEvidencePacket
 def _lineage_ref_to_json(lineage_ref: LineageRef) -> dict[str, Any]:
     return {
         "lineage_id": lineage_ref.lineage_id,
-        "source_refs": [_source_ref_to_json(source_ref) for source_ref in lineage_ref.source_refs],
+        "source_refs": [source_ref_payload(source_ref) for source_ref in lineage_ref.source_refs],
         "content_hash": lineage_ref.content_hash,
     }
 
@@ -517,20 +507,6 @@ def _lineage_ref_from_json(payload: Mapping[str, Any]) -> LineageRef:
         source_refs=tuple(_source_ref_from_json(item) for item in payload["source_refs"]),
         content_hash=str(payload["content_hash"]),
     )
-
-
-def _source_ref_to_json(source_ref: SourceRef) -> dict[str, Any]:
-    return {
-        "product_id": source_ref.product_id,
-        "source_system": source_ref.source_system.value,
-        "product_version": source_ref.product_version,
-        "route": source_ref.route,
-        "as_of_date": source_ref.as_of_date.isoformat(),
-        "generated_at_utc": source_ref.generated_at_utc.isoformat(),
-        "content_hash": source_ref.content_hash,
-        "data_quality_status": source_ref.data_quality_status,
-        "freshness": source_ref.freshness.value,
-    }
 
 
 def _source_ref_from_json(payload: Mapping[str, Any]) -> SourceRef:
