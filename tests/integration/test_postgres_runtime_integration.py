@@ -326,7 +326,7 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     accepted = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=request_payload,
-        headers=_ai_explanation_headers(),
+        headers=_ai_explanation_headers("postgres-runtime-proof-ai-lineage-write-001"),
     )
 
     assert accepted.status_code == 200
@@ -342,7 +342,7 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     replayed = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=request_payload,
-        headers=_ai_explanation_headers(),
+        headers=_ai_explanation_headers("postgres-runtime-proof-ai-lineage-write-001"),
     )
 
     assert replayed.status_code == 200
@@ -358,7 +358,7 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     conflict = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=changed_payload,
-        headers=_ai_explanation_headers(),
+        headers=_ai_explanation_headers("postgres-runtime-proof-ai-lineage-write-002"),
     )
 
     assert conflict.status_code == 409
@@ -587,12 +587,13 @@ def _report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def _ai_explanation_headers() -> dict[str, str]:
+def _ai_explanation_headers(idempotency_key: str) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.ai-explanation.evaluate",
         "X-Correlation-Id": "corr-postgres-runtime-proof-ai-lineage",
+        "Idempotency-Key": idempotency_key,
     }
 
 

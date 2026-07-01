@@ -865,6 +865,55 @@ def test_postgres_repository_round_trips_ai_explanation_lineage() -> None:
     assert "portfolio_id" not in connection.rows["idea_ai_explanation_lineage"][0]["lineage_json"]
 
 
+def test_postgres_repository_applies_idempotency_to_ai_lineage_requests() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:ai-lineage-idempotency",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    explanation_result = ai_explanation_result_for_candidate(candidate)
+    idempotency_key = "ai-lineage-request:idempotency-001"
+    idempotency_payload = {
+        "candidateId": candidate.candidate_id,
+        "requestId": explanation_result.request.request_id,
+    }
+
+    accepted = repository.record_ai_explanation_lineage_request(
+        explanation_result,
+        idempotency_key=idempotency_key,
+        payload=idempotency_payload,
+    )
+    replayed = PostgresIdeaRepository(connection).record_ai_explanation_lineage_request(
+        explanation_result,
+        idempotency_key=idempotency_key,
+        payload=idempotency_payload,
+    )
+    conflict = PostgresIdeaRepository(connection).record_ai_explanation_lineage_request(
+        explanation_result,
+        idempotency_key=idempotency_key,
+        payload={**idempotency_payload, "requestId": "changed-ai-lineage-request"},
+    )
+
+    assert accepted.decision is AIExplanationLineagePersistenceDecision.ACCEPTED
+    assert replayed.decision is AIExplanationLineagePersistenceDecision.REPLAYED
+    assert conflict.decision is AIExplanationLineagePersistenceDecision.CONFLICT
+    assert conflict.lineage_record is None
+    assert len(connection.rows["idea_ai_explanation_lineage"]) == 1
+    assert [
+        row["idempotency_key"]
+        for row in connection.rows["idea_idempotency_record"]
+        if row["idempotency_key"] == idempotency_key
+    ] == [idempotency_key]
+
+
 def test_postgres_repository_ignores_orphan_detail_rows_during_hydration() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)

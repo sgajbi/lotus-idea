@@ -56,11 +56,16 @@ def lifecycle_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
-def ai_headers(capabilities: str = "idea.ai-explanation.evaluate") -> dict[str, str]:
+def ai_headers(
+    capabilities: str = "idea.ai-explanation.evaluate",
+    *,
+    idempotency_key: str = "ai-explanation-api-001",
+) -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": capabilities,
+        "Idempotency-Key": idempotency_key,
         "X-Correlation-Id": "corr-ai-governance-api",
     }
 
@@ -203,7 +208,7 @@ def test_ai_explanation_api_accepts_verified_output_for_review_ready_candidate()
             purpose="advisor_rationale_draft",
             workflow_output=workflow_output(),
         ),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-accepted-api-001"),
     )
 
     assert response.status_code == 200
@@ -232,7 +237,7 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
                 claim_source_ids=["lotus-risk:RiskDecomposition:v1"],
             ),
         ),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-unsupported-api-001"),
     )
     forbidden_action = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
@@ -240,7 +245,7 @@ def test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions() ->
             request_id="ai-explanation-forbidden-001",
             workflow_output=workflow_output(action_type="final_investment_recommendation"),
         ),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-forbidden-api-001"),
     )
 
     assert unsupported_claim.status_code == 200
@@ -262,19 +267,19 @@ def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request()
     first = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=payload,
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-replay-api-001"),
     )
     replayed = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=payload,
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-replay-api-001"),
     )
     changed = dict(payload)
     changed["fallbackReason"] = "workflow_not_approved"
     conflict = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=changed,
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-replay-api-001"),
     )
 
     assert first.status_code == 200
@@ -282,8 +287,33 @@ def test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request()
     assert replayed.status_code == 200
     assert replayed.json()["aiLineagePersistenceDecision"] == "replayed"
     assert conflict.status_code == 409
-    assert conflict.json()["code"] == "ai_explanation_lineage_conflict"
+    assert conflict.json()["code"] == "idempotency_conflict"
     assert "workflow_not_approved" not in conflict.text
+
+
+def test_ai_explanation_api_requires_idempotency_key() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persisted_candidate_id(client, idempotency_key="seed-ai-idempotency-001")
+    headers = ai_headers(idempotency_key="ai-explanation-missing-api-001")
+    headers.pop("Idempotency-Key")
+
+    missing = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(request_id="ai-explanation-missing-idempotency-001"),
+        headers=headers,
+    )
+    blank = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(request_id="ai-explanation-blank-idempotency-001"),
+        headers={**headers, "Idempotency-Key": " "},
+    )
+
+    assert missing.status_code == 400
+    assert missing.json()["code"] == "invalid_request"
+    assert blank.status_code == 400
+    assert blank.json()["code"] == "invalid_request"
+    assert "ai-explanation-missing-idempotency-001" not in missing.text
 
 
 def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None:
@@ -294,12 +324,12 @@ def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None
     denied = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(),
-        headers=ai_headers("idea.review.record"),
+        headers=ai_headers("idea.review.record", idempotency_key="ai-explanation-denied-api-001"),
     )
     missing = client.post(
         "/api/v1/idea-candidates/missing-candidate/ai-explanations/evaluate",
         json=ai_request_payload(),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-missing-candidate-api-001"),
     )
 
     assert denied.status_code == 403
@@ -316,12 +346,12 @@ def test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metada
     invalid_state = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(purpose="advisor_rationale_draft"),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-invalid-state-api-001"),
     )
     leaked_metadata = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(approved_metadata={"prompt": "summarize private client data"}),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-leaked-metadata-api-001"),
     )
 
     assert invalid_state.status_code == 409
@@ -349,14 +379,14 @@ def test_ai_explanation_api_returns_product_safe_errors_for_invalid_output_and_m
     invalid_output = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-invalid-output-api-001"),
     )
     monkeypatch.undo()
 
     blank_metadata_value = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
         json=ai_request_payload(approved_metadata={"channel": " "}),
-        headers=ai_headers(),
+        headers=ai_headers(idempotency_key="ai-explanation-blank-metadata-api-001"),
     )
 
     assert invalid_output.status_code == 400

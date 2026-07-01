@@ -120,6 +120,7 @@ from app.domain.outbox_delivery_state import (
     OutboxDeliveryDecision,
     OutboxDeliveryResult,
 )
+from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.persistence import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -137,8 +138,6 @@ from app.domain.persistence import (
     LifecycleHistoryEntry,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
-    evidence_hash_for_candidate,
-    evidence_hash_for_source_refs,
 )
 from app.domain.report_evidence import (
     GovernedReportEvidencePack,

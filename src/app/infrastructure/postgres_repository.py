@@ -29,7 +29,6 @@ from app.domain.ideas import (
 )
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
-from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
 from app.domain.outbox_delivery_state import OutboxDeliveryResult
 from app.domain.persistence import (
@@ -60,7 +59,6 @@ from app.infrastructure.postgres_candidate_writes import (
 )
 from app.infrastructure.postgres_codecs import (
     ai_explanation_lineage_from_json,
-    ai_explanation_lineage_to_json,
     conversion_intent_from_json,
     conversion_intent_to_json,
     conversion_outcome_from_json,
@@ -75,6 +73,7 @@ from app.infrastructure.postgres_codecs import (
     review_decision_from_json,
     review_decision_to_json,
 )
+from app.infrastructure.postgres_ai_lineage_writes import insert_ai_explanation_lineage_records
 from app.infrastructure.postgres_outbox_delivery import (
     claim_outbox_events_for_delivery as claim_postgres_outbox_events_for_delivery,
     mark_outbox_event_failed as mark_postgres_outbox_event_failed,
@@ -399,6 +398,21 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         result: AIExplanationResult,
     ) -> AIExplanationLineagePersistenceResult:
         return self._mutate(lambda repository: repository.record_ai_explanation_lineage(result))
+
+    def record_ai_explanation_lineage_request(
+        self,
+        result: AIExplanationResult,
+        *,
+        idempotency_key: str,
+        payload: dict[str, Any],
+    ) -> AIExplanationLineagePersistenceResult:
+        return self._mutate(
+            lambda repository: repository.record_ai_explanation_lineage_request(
+                result,
+                idempotency_key=idempotency_key,
+                payload=payload,
+            )
+        )
 
     def downstream_submission_by_idempotency_key(
         self,
@@ -880,7 +894,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         self._insert_conversion_intents(cursor, record)
         self._insert_conversion_outcomes(cursor, record)
         self._insert_report_evidence_packs(cursor, record)
-        self._insert_ai_explanation_lineage_records(cursor, record)
+        insert_ai_explanation_lineage_records(cursor, record)
 
     def _insert_downstream_submission_record(
         self,
@@ -1132,49 +1146,6 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
                 evidence_pack.evidence_content_hash,
                 Jsonb(report_evidence_pack_to_json(evidence_pack)),
                 evidence_pack.requested_at_utc,
-            ),
-        )
-
-    def _insert_ai_explanation_lineage_records(
-        self,
-        cursor: PostgresCursor,
-        record: CandidatePersistenceRecord,
-    ) -> None:
-        candidate_id = record.candidate.candidate_id
-        for lineage_record in record.ai_explanation_lineage_records:
-            self._insert_ai_explanation_lineage_record(cursor, candidate_id, lineage_record)
-
-    def _insert_ai_explanation_lineage_record(
-        self,
-        cursor: PostgresCursor,
-        candidate_id: str,
-        lineage_record: AIExplanationLineageRecord,
-    ) -> None:
-        cursor.execute(
-            """
-            INSERT INTO idea_ai_explanation_lineage (
-                ai_explanation_request_id, candidate_id, evidence_packet_id,
-                evidence_content_hash, workflow_pack_id, workflow_pack_version,
-                purpose, posture, verifier_outcome, fallback_used, fallback_reason,
-                lineage_hash, lineage_json, requested_at_utc, evaluated_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """,
-            (
-                lineage_record.request_id,
-                candidate_id,
-                lineage_record.evidence_packet_id,
-                lineage_record.evidence_content_hash,
-                lineage_record.workflow_pack_id,
-                lineage_record.workflow_pack_version,
-                lineage_record.purpose,
-                lineage_record.posture,
-                lineage_record.verifier_outcome,
-                lineage_record.fallback_used,
-                lineage_record.fallback_reason,
-                lineage_record.lineage_hash,
-                Jsonb(ai_explanation_lineage_to_json(lineage_record)),
-                lineage_record.requested_at_utc,
-                lineage_record.evaluated_at_utc,
             ),
         )
 

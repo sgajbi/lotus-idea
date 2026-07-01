@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 from enum import StrEnum
-import hashlib
-import json
 from types import MappingProxyType
 from typing import Any, Mapping
 
@@ -16,10 +14,15 @@ from app.domain.ai_lineage_persistence import (
     AIExplanationLineageRecord,
     ai_explanation_lineage_record_from_result,
 )
+from app.domain.ai_lineage_idempotency import (
+    ai_explanation_lineage_by_request_id,
+    record_ai_explanation_lineage_request_with_idempotency,
+)
 from app.domain.events import (
     OutboxEventRecord,
     build_candidate_outbox_event,
 )
+from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord, evaluate_idempotency
 from app.domain.outbox_delivery_state import (
@@ -919,7 +922,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         if existing_candidate_id is not None:
             existing_record = self._candidate_records.get(existing_candidate_id)
             existing_lineage = (
-                _ai_explanation_lineage_by_request_id(
+                ai_explanation_lineage_by_request_id(
                     existing_record,
                     lineage_record.request_id,
                 )
@@ -957,6 +960,23 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             record=updated,
             lineage_record=lineage_record,
             audit_event=result.audit_event,
+        )
+
+    def record_ai_explanation_lineage_request(
+        self,
+        result: AIExplanationResult,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+    ) -> AIExplanationLineagePersistenceResult:
+        return record_ai_explanation_lineage_request_with_idempotency(
+            result,
+            idempotency_key=idempotency_key,
+            payload=payload,
+            idempotency_records=self._idempotency_records,
+            idempotency_candidates=self._idempotency_candidates,
+            record_for_idempotency_key=self._record_for_idempotency_key,
+            record_lineage=self.record_ai_explanation_lineage,
         )
 
     def downstream_submission_by_idempotency_key(
@@ -1117,38 +1137,6 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             idempotency_key=idempotency_key,
         )
         self._outbox_events[event.event_id] = event
-
-
-def evidence_hash_for_candidate(candidate: IdeaCandidate) -> str:
-    return evidence_hash_for_source_refs(candidate.evidence_packet.source_refs)
-
-
-def evidence_hash_for_source_refs(source_refs: tuple[SourceRef, ...]) -> str:
-    payload = [
-        {
-            "content_hash": source_ref.content_hash,
-            "data_quality_status": source_ref.data_quality_status,
-            "freshness": source_ref.freshness.value,
-            "product_id": source_ref.product_id,
-            "product_version": source_ref.product_version,
-            "source_system": source_ref.source_system.value,
-        }
-        for source_ref in sorted(source_refs, key=lambda ref: ref.product_id)
-    ]
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return f"sha256:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
-
-
-def _ai_explanation_lineage_by_request_id(
-    record: CandidatePersistenceRecord | None,
-    request_id: str,
-) -> AIExplanationLineageRecord | None:
-    if record is None:
-        return None
-    for lineage_record in record.ai_explanation_lineage_records:
-        if lineage_record.request_id == request_id:
-            return lineage_record
-    return None
 
 
 def _audit_event(
