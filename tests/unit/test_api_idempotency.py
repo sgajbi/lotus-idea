@@ -26,6 +26,49 @@ def test_api_idempotency_boundary_gate_passes_current_repository() -> None:
     assert module.validate_api_idempotency_boundary(ROOT) == []
 
 
+def test_api_idempotency_boundary_gate_blocks_optional_openapi_header() -> None:
+    module = _load_api_idempotency_boundary_gate()
+    method, path = module.REQUIRED_OPENAPI_IDEMPOTENCY_OPERATIONS[0]
+    spec = {
+        "paths": {
+            path: {
+                method: {
+                    "parameters": [
+                        {
+                            "name": "Idempotency-Key",
+                            "in": "header",
+                            "required": False,
+                            "schema": {"type": "string", "default": ""},
+                        }
+                    ]
+                }
+            }
+        }
+    }
+
+    errors = module.validate_openapi_idempotency_headers(spec)
+
+    assert errors == [
+        f"{method.upper()} {path}: Idempotency-Key OpenAPI header must be required",
+        f"{method.upper()} {path}: Idempotency-Key OpenAPI header must not publish a default value",
+        "POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions: "
+        "missing OpenAPI operation",
+        "POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate: "
+        "missing OpenAPI operation",
+        "POST /api/v1/idea-candidates/{candidateId}/review-actions: missing OpenAPI operation",
+        "POST /api/v1/idea-candidates/{candidateId}/feedback: missing OpenAPI operation",
+        "POST /api/v1/idea-candidates/{candidateId}/conversion-intents: missing OpenAPI operation",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions: "
+        "missing OpenAPI operation",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/outcomes: missing OpenAPI operation",
+        "POST /api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs: "
+        "missing OpenAPI operation",
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions: "
+        "missing OpenAPI operation",
+        "POST /api/v1/outbox-delivery/run-once: missing OpenAPI operation",
+    ]
+
+
 def test_api_idempotency_boundary_gate_blocks_route_local_validator(tmp_path: Path) -> None:
     module = _load_api_idempotency_boundary_gate()
     api_dir = tmp_path / "src" / "app" / "api"

@@ -26,6 +26,11 @@ Route metadata dictionaries should use `app.api.route_metadata.RouteMetadata`.
 `SignalRouteMetadata` `TypedDict` clones, keeping route-registration metadata
 on one reviewable API contract while preserving route-family support modules.
 
+Rows below that require `Idempotency-Key` are enforced by
+`make api-idempotency-boundary-gate`: generated OpenAPI must mark the header as
+required with no default, and route code must use the shared idempotency
+boundary instead of route-local validator clones.
+
 The machine-readable source for endpoint certification tracking is:
 
 - docs/operations/endpoint-certification-ledger.json

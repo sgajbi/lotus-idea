@@ -138,7 +138,7 @@ heavy proof families.
 Baseline required checks include lint, format check, typecheck, architecture boundary enforcement,
 repository hygiene, maintainability thresholds, protected private import boundary enforcement, documentation contract enforcement,
 quality-scorecard truth, monetary precision guarding, no-sensitive-content evidence guarding,
-OpenAPI quality, source-observability contract enforcement, API route metadata governance, API DTO base-model governance, shared signal DTO governance, API ProblemDetails boundary governance, OpenAPI ProblemDetails example governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
+OpenAPI quality, source-observability contract enforcement, API route metadata governance, API DTO base-model governance, shared signal DTO governance, API ProblemDetails boundary governance, API idempotency boundary and OpenAPI required-header governance, OpenAPI ProblemDetails example governance, signal API contract enforcement, operation metric contract enforcement, implementation-truth gate, supported-feature gate, endpoint-certification gate,
 AI model-risk operations contract enforcement, AI model-risk operations proof contract enforcement,
 unit tests, integration tests, e2e tests, data-mesh contract validation,
 mesh policy proof contract validation, migration contract validation, coverage gate,
@@ -652,6 +652,12 @@ The signal API contract gate blocks duplicated caller-supplied signal API
 authorization, source-authority, operation-event, and error-model mechanics.
 Signal routes must use shared signal API support so future slices do not
 reintroduce copy-pasted policy or inconsistent problem-detail behavior.
+
+The API idempotency boundary gate blocks route-local `Idempotency-Key`
+validator clones and verifies generated OpenAPI for certified idempotent
+mutations. A route listed in `app.api.idempotency` must publish
+`Idempotency-Key` as a required header with no default value, even when the
+runtime keeps product-specific validation inside the route handler.
 
 The operation-metric contract gate validates
 `contracts/observability/lotus-idea-operation-metrics.v1.json` against the
