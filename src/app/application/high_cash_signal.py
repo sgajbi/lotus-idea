@@ -26,6 +26,7 @@ from app.ports.core_sources import (
     CoreSourceEntitlementDenied,
     CoreSourceUnavailable,
 )
+from app.ports.evidence_payloads import access_scope_payload, source_ref_payload
 from app.ports.idea_repository import CandidatePersistenceRepository
 
 
@@ -292,7 +293,7 @@ def _idempotency_payload_for_core_high_cash(
         "source_signal_ids": (
             list(evaluation.candidate.source_signal_ids) if evaluation.candidate is not None else []
         ),
-        "source_refs": [_source_ref_payload(source_ref) for source_ref in source_refs],
+        "source_refs": [source_ref_payload(source_ref) for source_ref in source_refs],
     }
 
 
@@ -308,14 +309,14 @@ def _idempotency_payload_for_high_cash(
         "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
         "family": OpportunityFamily.HIGH_CASH.value,
         "policy_version": policy.policy_version,
-        "access_scope": _access_scope_payload(command.access_scope),
+        "access_scope": access_scope_payload(command.access_scope),
         "source_reported_cash_weight": (
             str(command.source_reported_cash_weight)
             if command.source_reported_cash_weight is not None
             else None
         ),
         "source_refs": [
-            _source_ref_payload(source_ref)
+            source_ref_payload(source_ref)
             for source_ref in (
                 command.portfolio_state_ref,
                 command.holdings_ref,
@@ -324,31 +325,6 @@ def _idempotency_payload_for_high_cash(
             )
             if source_ref is not None
         ],
-    }
-
-
-def _source_ref_payload(source_ref: SourceRef) -> dict[str, str]:
-    return {
-        "as_of_date": source_ref.as_of_date.isoformat(),
-        "content_hash": source_ref.content_hash,
-        "data_quality_status": source_ref.data_quality_status,
-        "freshness": source_ref.freshness.value,
-        "generated_at_utc": source_ref.generated_at_utc.isoformat(),
-        "product_id": source_ref.product_id,
-        "product_version": source_ref.product_version,
-        "route": source_ref.route,
-        "source_system": source_ref.source_system.value,
-    }
-
-
-def _access_scope_payload(scope: ReviewAccessScope | None) -> dict[str, str] | None:
-    if scope is None:
-        return None
-    return {
-        "tenant_id": scope.tenant_id,
-        "book_id": scope.book_id,
-        "portfolio_id": scope.portfolio_id,
-        "client_id": scope.client_id,
     }
 
 

@@ -256,8 +256,9 @@ validation, make-target evidence checks, and cross-repository file-evidence chec
 `app.api.request_validation`, and bounded API telemetry count buckets into
 `app.api.telemetry_buckets`, and caller-supplied signal response DTO projection into
 `app.api.signal_models.SignalEvaluationResponse`, and application-layer portfolio-only signal
-review scopes into `app.application.access_scope`; the current measured baseline scans 1,621
-functions and reports 12 exact duplicate clusters.
+review scopes into `app.application.access_scope`, and source-reference/access-scope write-side
+payload projection into `app.ports.evidence_payloads`; the current measured baseline scans 1,617
+functions and reports 10 exact duplicate clusters.
 `make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
 yet.
 
