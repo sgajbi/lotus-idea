@@ -62,6 +62,8 @@ def test_invalid_resource_limits_are_rejected(kwargs: dict[str, Any], message: s
             "retry_max_backoff_seconds must be greater than or equal",
         ),
         ({"retry_backoff_multiplier": 0.5}, "retry_backoff_multiplier must be greater"),
+        ({"retry_jitter_ratio": -0.01}, "retry_jitter_ratio must be between 0 and 1"),
+        ({"retry_jitter_ratio": 1.01}, "retry_jitter_ratio must be between 0 and 1"),
         ({"retry_status_codes": frozenset({99})}, "retry_status_codes must be valid"),
     ],
 )
@@ -321,6 +323,7 @@ def test_retry_after_is_capped_by_max_backoff() -> None:
             transport=httpx.MockTransport(handler),
         ),
         sleep=sleeps.append,
+        jitter_random=lambda: 1,
     )
 
     assert client.get_json("/status") == {"status": "ok"}
@@ -328,7 +331,7 @@ def test_retry_after_is_capped_by_max_backoff() -> None:
 
 
 @pytest.mark.parametrize("retry_after", ["not-a-number", "-1"])
-def test_invalid_retry_after_uses_configured_backoff(retry_after: str) -> None:
+def test_invalid_retry_after_uses_jittered_configured_backoff(retry_after: str) -> None:
     sleeps: list[float] = []
     attempts = 0
 
@@ -352,10 +355,54 @@ def test_invalid_retry_after_uses_configured_backoff(retry_after: str) -> None:
             transport=httpx.MockTransport(handler),
         ),
         sleep=sleeps.append,
+        jitter_random=lambda: 0.5,
     )
 
     assert client.get_json("/status") == {"status": "ok"}
-    assert sleeps == [0.1]
+    assert sleeps == [pytest.approx(0.09)]
+
+
+def test_configured_backoff_jitter_de_synchronizes_retry_delays() -> None:
+    def client_with_jitter_sample(sample: float, sleeps: list[float]) -> DownstreamJsonClient:
+        attempts = 0
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                return httpx.Response(503, json={})
+            return httpx.Response(200, json={"status": "ok"})
+
+        return DownstreamJsonClient(
+            DownstreamClientConfig(
+                base_url="https://upstream.example",
+                timeout_seconds=0.5,
+                retry_max_attempts=2,
+                retry_initial_backoff_seconds=0.2,
+                retry_max_backoff_seconds=0.2,
+                retry_jitter_ratio=0.2,
+            ),
+            client=httpx.Client(
+                base_url="https://upstream.example",
+                transport=httpx.MockTransport(handler),
+            ),
+            sleep=sleeps.append,
+            jitter_random=lambda: sample,
+        )
+
+    no_jitter_sample_sleeps: list[float] = []
+    full_jitter_sample_sleeps: list[float] = []
+
+    assert client_with_jitter_sample(0.0, no_jitter_sample_sleeps).get_json("/status") == {
+        "status": "ok"
+    }
+    assert client_with_jitter_sample(1.0, full_jitter_sample_sleeps).get_json("/status") == {
+        "status": "ok"
+    }
+
+    assert no_jitter_sample_sleeps == [0.2]
+    assert full_jitter_sample_sleeps == [pytest.approx(0.16)]
+    assert full_jitter_sample_sleeps[0] < no_jitter_sample_sleeps[0]
 
 
 def test_retry_exhaustion_reports_bounded_attempt_count() -> None:

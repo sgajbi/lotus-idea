@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
+import random
 import time
 from typing import Any
 from urllib.parse import urlparse
@@ -44,6 +45,7 @@ class DownstreamClientConfig:
     retry_initial_backoff_seconds: float = 0.05
     retry_max_backoff_seconds: float = 0.5
     retry_backoff_multiplier: float = 2.0
+    retry_jitter_ratio: float = 0.2
     retry_status_codes: frozenset[int] = field(
         default_factory=lambda: frozenset({429, 502, 503, 504})
     )
@@ -91,6 +93,10 @@ class DownstreamClientConfig:
         if self.retry_backoff_multiplier < 1:
             raise DownstreamClientConfigurationError(
                 "Downstream retry_backoff_multiplier must be greater than or equal to 1."
+            )
+        if self.retry_jitter_ratio < 0 or self.retry_jitter_ratio > 1:
+            raise DownstreamClientConfigurationError(
+                "Downstream retry_jitter_ratio must be between 0 and 1."
             )
         invalid_statuses = [
             status_code
@@ -140,10 +146,12 @@ class DownstreamJsonClient:
         config: DownstreamClientConfig,
         client: httpx.Client | None = None,
         sleep: Callable[[float], None] = time.sleep,
+        jitter_random: Callable[[], float] = random.random,
     ) -> None:
         self._config = config
         self._owns_client = client is None
         self._sleep = sleep
+        self._jitter_random = jitter_random
         self._client = client or httpx.Client(
             base_url=config.base_url,
             timeout=config.timeout(),
@@ -306,7 +314,15 @@ class DownstreamJsonClient:
         backoff = self._config.retry_initial_backoff_seconds * (
             self._config.retry_backoff_multiplier ** max(attempt_count - 1, 0)
         )
-        return min(backoff, self._config.retry_max_backoff_seconds)
+        capped_backoff = min(backoff, self._config.retry_max_backoff_seconds)
+        return self._apply_jitter(capped_backoff)
+
+    def _apply_jitter(self, delay_seconds: float) -> float:
+        if delay_seconds <= 0 or self._config.retry_jitter_ratio == 0:
+            return delay_seconds
+        random_sample = min(max(self._jitter_random(), 0.0), 1.0)
+        jitter_factor = 1 - (self._config.retry_jitter_ratio * random_sample)
+        return delay_seconds * jitter_factor
 
 
 def _retry_after_seconds(response: httpx.Response | None) -> float | None:
