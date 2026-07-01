@@ -115,6 +115,11 @@ make quality-baseline
 make clean
 ```
 
+`make architecture-boundary-gate` is the durable blocking architecture proof.
+`make architecture-boundary-report` generates ignored local review evidence on
+demand; do not cite a committed architecture report as current proof unless a
+future deterministic report-drift gate is added.
+
 `make ci` is the broad local aggregate for lint, typecheck, contract gates,
 OpenAPI, migrations, integration/e2e/coverage, and dependency audit. It must
 not be cited as PostgreSQL runtime, Docker build, container smoke, image scan,

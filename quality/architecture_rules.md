@@ -27,7 +27,8 @@ modules; `make api-route-metadata-gate` enforces this as API design-modularity h
 
 Run `make architecture-boundary-gate` for blocking CI enforcement. Run
 `make architecture-boundary-report` when a report artifact is needed for scorecard or review
-evidence.
+evidence. Architecture reports are generated on demand into ignored local output and are not
+treated as committed current-state proof; the blocking gate is the durable enforcement source.
 
 Domain modules may keep private helpers for local readability, but cross-module callers must use
 public domain APIs exported through `app.domain`. Shared implementation-proof capability updates

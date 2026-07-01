@@ -79,13 +79,14 @@ Support commands:
 1. `make clean`
 2. `make github-security-posture-check`
 
-Report-only scaffold commands:
+On-demand local report commands:
 
 1. `make architecture-boundary-report`
 2. `make quality-baseline`
 
-Generated report artifacts from these commands are local evidence and are
-ignored by git unless an RFC explicitly promotes a specific evidence snapshot.
+Generated report artifacts from these commands are local review evidence and are
+ignored by git. They are not durable current-state proof in the quality
+scorecard; rerun the commands when a reviewer asks for a fresh artifact.
 
 `make ci-contract-gate` is the anti-drift gate for the day-one bank-buyable baseline. It checks that
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
