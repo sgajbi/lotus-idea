@@ -21,15 +21,16 @@ from app.infrastructure.downstream_client import (
 from app.infrastructure.lotus_manage_sources import LotusManageMandateHealthSourceAdapter
 from app.ports.manage_sources import (
     ManageMandateHealthEvidence,
-    ManageMandateHealthEvidenceRequest,
     ManageSourceEntitlementDenied,
     ManageSourceUnavailable,
 )
 
 
 try:
+    from scripts.proof_request_builders import build_manage_mandate_health_evidence_request
     from scripts.proof_generator_io import timeout_seconds_from_args, write_json_payload
 except ModuleNotFoundError:
+    from proof_request_builders import build_manage_mandate_health_evidence_request  # type: ignore[import-not-found,no-redef]
     from proof_generator_io import timeout_seconds_from_args, write_json_payload  # type: ignore[import-not-found,no-redef]
 
 MANAGE_BASE_URL_ENV = "LOTUS_MANAGE_BASE_URL"
@@ -52,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         evidence = manage_source.fetch_mandate_health_evidence(
-            _request(
+            build_manage_mandate_health_evidence_request(
                 portfolio_id=args.portfolio_id,
                 as_of_date=as_of_date,
                 evaluated_at_utc=evaluated_at_utc,
@@ -91,23 +92,6 @@ def main(argv: list[str] | None = None) -> int:
     ) as exc:
         print(f"manage mandate live proof configuration error: {exc}", file=sys.stderr)
         return 2
-
-
-def _request(
-    *,
-    portfolio_id: str,
-    as_of_date: date,
-    evaluated_at_utc: datetime,
-    correlation_id: str | None,
-    trace_id: str | None,
-) -> ManageMandateHealthEvidenceRequest:
-    return ManageMandateHealthEvidenceRequest(
-        portfolio_id=portfolio_id,
-        as_of_date=as_of_date,
-        evaluated_at_utc=evaluated_at_utc,
-        correlation_id=correlation_id,
-        trace_id=trace_id,
-    )
 
 
 class _StaticManageSource:
