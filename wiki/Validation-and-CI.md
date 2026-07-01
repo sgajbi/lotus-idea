@@ -253,7 +253,8 @@ validation, make-target evidence checks, and cross-repository file-evidence chec
 `scripts/ast_gate_helpers.py`, and Core live-proof base URL resolution into
 `scripts/proof_generator_io.py`, and Advise/Manage proof evidence request construction into
 `scripts/proof_request_builders.py`, and mutating API reason-code validation into
-`app.api.request_validation`; the current measured baseline scans 1,642 functions and reports 15
+`app.api.request_validation`, and bounded API telemetry count buckets into
+`app.api.telemetry_buckets`; the current measured baseline scans 1,640 functions and reports 14
 exact duplicate clusters.
 `make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
 yet.
