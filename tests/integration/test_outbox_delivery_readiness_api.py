@@ -8,6 +8,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.outbox_delivery_readiness as outbox_delivery_readiness_api
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.application.outbox_delivery_readiness import OUTBOX_BROKER_URL_ENV
 from app.domain import (
     IdeaRepositorySnapshot,
@@ -209,6 +210,7 @@ def test_outbox_delivery_run_once_api_blocks_when_durable_repository_is_required
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv(RUNTIME_PROFILE_ENV, "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
     monkeypatch.setenv(OUTBOX_BROKER_URL_ENV, "https://broker.example.invalid")
     event = pending_event("idea.candidate.persisted.v1")
     reset_idea_repository_for_tests(repository=repository_with_events(event))
@@ -216,7 +218,10 @@ def test_outbox_delivery_run_once_api_blocks_when_durable_repository_is_required
 
     response = client.post(
         "/api/v1/outbox-delivery/run-once",
-        headers=outbox_delivery_run_headers(),
+        headers={
+            **outbox_delivery_run_headers(),
+            TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
+        },
     )
 
     assert response.status_code == 503

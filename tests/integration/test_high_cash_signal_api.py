@@ -4,6 +4,7 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import InMemoryIdeaRepository
 from app.main import app
 from app.runtime.repository_state import (
@@ -212,6 +213,7 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_is_required(
     monkeypatch: Any,
 ) -> None:
     monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
     monkeypatch.delenv(DATABASE_URL_ENV, raising=False)
     reset_idea_repository_for_tests(reload_from_environment=True)
     client = TestClient(app)
@@ -220,7 +222,10 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_is_required(
         response = client.post(
             "/api/v1/idea-signals/high-cash/evaluate-and-persist",
             json=high_cash_payload(),
-            headers=persistence_headers("persist-high-cash-api-prod-missing-db-001"),
+            headers={
+                **persistence_headers("persist-high-cash-api-prod-missing-db-001"),
+                TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
+            },
         )
         repository = get_idea_repository()
     finally:
