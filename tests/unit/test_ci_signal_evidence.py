@@ -63,10 +63,16 @@ def test_ci_signal_evidence_summarizes_job_and_step_durations() -> None:
     )
 
     assert artifact["thresholdEnforced"] is False
-    assert artifact["summary"]["criticalPathJobName"] == (
+    assert artifact["summary"]["criticalPathBasis"] == "workflow_wall_clock"
+    assert artifact["summary"]["workflowStartedAtUtc"] == "2026-06-30T10:00:00Z"
+    assert artifact["summary"]["workflowCompletedAtUtc"] == "2026-06-30T10:03:10Z"
+    assert artifact["summary"]["workflowWallClockSeconds"] == 190
+    assert artifact["summary"]["criticalPathJobName"] is None
+    assert artifact["summary"]["criticalPathSeconds"] == 190
+    assert artifact["summary"]["longestJobName"] == (
         "Main Releasability / Coverage Gate (Combined)"
     )
-    assert artifact["summary"]["criticalPathSeconds"] == 120
+    assert artifact["summary"]["longestJobSeconds"] == 120
     assert artifact["summary"]["failureCategories"] == ["docker_build_or_scan"]
     assert artifact["jobs"][0]["steps"][0]["durationSeconds"] == 45
 
@@ -142,3 +148,5 @@ def test_ci_signal_evidence_cli_writes_artifact(tmp_path: Path) -> None:
     artifact = json.loads(output.read_text(encoding="utf-8"))
     assert artifact["schemaVersion"] == module.SCHEMA_VERSION
     assert artifact["summary"]["jobCount"] == 1
+    assert artifact["summary"]["criticalPathSeconds"] == 60
+    assert artifact["summary"]["longestJobSeconds"] == 60

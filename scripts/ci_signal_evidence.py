@@ -33,7 +33,10 @@ def build_ci_signal_evidence(
 ) -> dict[str, Any]:
     jobs = [_build_job(job) for job in jobs_payload.get("jobs", [])]
     completed_jobs = [job for job in jobs if job["completedAtUtc"]]
-    critical_path = max(completed_jobs, key=lambda job: job["durationSeconds"], default=None)
+    longest_job = max(completed_jobs, key=lambda job: job["durationSeconds"], default=None)
+    workflow_started_at, workflow_completed_at, workflow_wall_clock_seconds = _workflow_time_window(
+        jobs
+    )
     failed_jobs = [job for job in jobs if job["conclusion"] in {"failure", "timed_out"}]
     cancelled_jobs = [job for job in jobs if job["conclusion"] == "cancelled"]
     failure_categories = sorted(
@@ -57,8 +60,14 @@ def build_ci_signal_evidence(
             "completedJobCount": len(completed_jobs),
             "failedJobCount": len(failed_jobs),
             "cancelledJobCount": len(cancelled_jobs),
-            "criticalPathJobName": critical_path["name"] if critical_path else None,
-            "criticalPathSeconds": critical_path["durationSeconds"] if critical_path else 0,
+            "workflowStartedAtUtc": workflow_started_at,
+            "workflowCompletedAtUtc": workflow_completed_at,
+            "workflowWallClockSeconds": workflow_wall_clock_seconds,
+            "criticalPathBasis": "workflow_wall_clock",
+            "criticalPathJobName": None,
+            "criticalPathSeconds": workflow_wall_clock_seconds,
+            "longestJobName": longest_job["name"] if longest_job else None,
+            "longestJobSeconds": longest_job["durationSeconds"] if longest_job else 0,
             "failureCategories": failure_categories,
             "cacheEvidence": "not_captured_by_github_jobs_api",
         },
@@ -96,6 +105,31 @@ def validate_ci_signal_evidence(artifact: dict[str, Any]) -> list[str]:
         errors.append("jobs must be a list")
     if not isinstance(artifact.get("summary"), dict):
         errors.append("summary must be an object")
+    else:
+        summary = artifact["summary"]
+        required_summary_fields = {
+            "jobCount",
+            "completedJobCount",
+            "failedJobCount",
+            "cancelledJobCount",
+            "workflowStartedAtUtc",
+            "workflowCompletedAtUtc",
+            "workflowWallClockSeconds",
+            "criticalPathBasis",
+            "criticalPathJobName",
+            "criticalPathSeconds",
+            "longestJobName",
+            "longestJobSeconds",
+            "failureCategories",
+            "cacheEvidence",
+        }
+        missing_summary = sorted(required_summary_fields - summary.keys())
+        if missing_summary:
+            errors.append(f"summary missing fields: {', '.join(missing_summary)}")
+        if summary.get("criticalPathBasis") != "workflow_wall_clock":
+            errors.append("criticalPathBasis must be workflow_wall_clock")
+        if summary.get("criticalPathSeconds") != summary.get("workflowWallClockSeconds"):
+            errors.append("criticalPathSeconds must equal workflowWallClockSeconds")
     forbidden_paths = _find_forbidden_source_markers(artifact)
     if forbidden_paths:
         errors.append(f"artifact contains forbidden source markers: {', '.join(forbidden_paths)}")
@@ -167,8 +201,26 @@ def _duration_seconds(started_at: str | None, completed_at: str | None) -> int:
     return max(0, round((completed - started).total_seconds()))
 
 
+def _workflow_time_window(jobs: list[dict[str, Any]]) -> tuple[str | None, str | None, int]:
+    started_values = [_parse_utc(job["startedAtUtc"]) for job in jobs if job["startedAtUtc"]]
+    completed_values = [_parse_utc(job["completedAtUtc"]) for job in jobs if job["completedAtUtc"]]
+    if not started_values or not completed_values:
+        return None, None, 0
+    started = min(started_values)
+    completed = max(completed_values)
+    return (
+        _format_utc(started),
+        _format_utc(completed),
+        max(0, round((completed - started).total_seconds())),
+    )
+
+
 def _parse_utc(value: str) -> datetime:
     return datetime.fromisoformat(value.replace("Z", "+00:00")).astimezone(UTC)
+
+
+def _format_utc(value: datetime) -> str:
+    return value.astimezone(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
 def _optional_text(value: Any) -> str | None:
