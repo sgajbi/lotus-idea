@@ -412,7 +412,12 @@ when `LOTUS_IDEA_DATABASE_URL` is configured; production-like profiles fail
 closed before in-memory mutation when durable storage is absent. Normal
 PostgreSQL repository mutations apply row-delta inserts and candidate-row
 updates rather than table-wide snapshot replacement, preserving unrelated rows
-when independent mutations are applied from the same starting state. The real
+when independent mutations are applied from the same starting state. Candidate
+updates use an optimistic `updated_at_utc` compare-and-set guard to reject
+stale same-candidate snapshots before detail rows or outbox events commit.
+Idempotency inserts use PostgreSQL conflict detection and retry once from a
+fresh database snapshot so concurrent same-key races return governed replay or
+conflict posture instead of raw primary-key failures. The real
 PostgreSQL runtime proof now covers high-cash evaluate-and-persist replay plus the first internal advisor
 queue, review, feedback, conversion, report evidence-pack workflow path, and
 internal source-ingestion replay/conflict recovery. Unit tests also prove the
