@@ -227,6 +227,13 @@ logs on failure, and removes the container. This is packaged runtime startup
 proof, not production deployment, live upstream connectivity, Workbench,
 data-mesh certification, client publication, or supported-feature proof.
 
+The runtime Dockerfile preserves cacheable dependency layers. It installs
+`requirements/runtime-resolved.lock.txt` before copying `src`, then installs the
+local package with `--no-deps` so source-only changes do not force the full
+runtime dependency closure to reinstall. `make ci-contract-gate` blocks
+source-before-dependency-install ordering and dependency reinstall drift while
+leaving Docker build, runtime smoke, image scan, and SBOM evidence intact.
+
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
 1. `PR Merge Gate / Workflow Lint`
