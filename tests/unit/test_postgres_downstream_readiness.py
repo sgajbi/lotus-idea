@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from tests.unit.test_postgres_repository import FakePostgresConnection
+from tests.unit.postgres_repository_fake import FakePostgresConnection
 
 
 def test_postgres_repository_uses_downstream_only_readiness_projection() -> None:

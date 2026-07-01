@@ -93,6 +93,7 @@ from app.infrastructure.postgres_downstream_lookup import (
 from app.infrastructure.postgres_downstream_readiness import (
     load_downstream_realization_readiness_summary,
 )
+from app.infrastructure.postgres_mutation_retry import execute_postgres_mutation
 from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
     load_review_queue_candidate_page,
@@ -101,7 +102,6 @@ from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
-from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
 from app.ports.idea_repository import ReviewQueueRepositoryPage
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
@@ -483,31 +483,13 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
             raise
 
     def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
-        use_fresh_snapshot = False
-        for attempt_index in range(2):
-            try:
-                before = self._database_snapshot() if use_fresh_snapshot else self.snapshot()
-                repository = InMemoryIdeaRepository(before)
-                result = operation(repository)
-                with self._connection.cursor() as cursor:
-                    apply_postgres_snapshot_delta(
-                        self,
-                        cursor,
-                        before=before,
-                        after=repository.snapshot(),
-                    )
-                self._connection.commit()
-                return result
-            except ConcurrentIdempotencyMutationError:
-                self._connection.rollback()
-                if attempt_index == 0:
-                    use_fresh_snapshot = True
-                    continue
-                raise
-            except Exception:
-                self._connection.rollback()
-                raise
-        raise RuntimeError("postgres mutation retry exhausted")
+        return execute_postgres_mutation(
+            self,
+            self._connection,
+            self.snapshot,
+            self._database_snapshot,
+            operation,
+        )
 
     def _database_snapshot(self) -> IdeaRepositorySnapshot:
         return PostgresIdeaRepository(self._connection).snapshot()

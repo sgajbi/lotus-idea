@@ -5,9 +5,9 @@ from typing import Any
 
 from app.domain import OutboxEventStatus
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
-    FakePostgresConnection,
     high_cash_candidate,
 )
 
