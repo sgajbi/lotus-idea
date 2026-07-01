@@ -21,6 +21,7 @@ from app.api.problem_details import (
     permission_denied_metadata,
     permission_denied_problem,
 )
+from app.api.persistence_summary import persistence_summary_payload
 from app.api.request_validation import require_non_empty_reason_codes
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
@@ -278,17 +279,7 @@ class ReviewPersistenceSummaryResponse(CamelModel):
         cls,
         result: ReviewPersistenceResult,
     ) -> "ReviewPersistenceSummaryResponse":
-        record = result.record
-        audit_event = result.audit_event or (
-            record.audit_events[-1] if record is not None and record.audit_events else None
-        )
-        return cls(
-            decision=result.decision,
-            candidateId=record.candidate.candidate_id if record is not None else None,
-            lifecycleStatus=record.candidate.lifecycle_status.value if record is not None else None,
-            reviewPosture=record.candidate.review_posture.value if record is not None else None,
-            auditEventType=audit_event.event_type if audit_event is not None else None,
-        )
+        return cls(**persistence_summary_payload(result))
 
 
 class ReviewActionResponse(CamelModel):

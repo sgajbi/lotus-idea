@@ -721,8 +721,10 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     signal response DTO projection in `app.api.signal_models.SignalEvaluationResponse`,
     and centralize application-layer portfolio-only signal review scopes in
     `app.application.access_scope`, and centralize source-reference/access-scope
-    write-side payload projection in `app.ports.evidence_payloads`;
-    the current measured baseline scans 1,617 functions and reports 10 exact
+    write-side payload projection in `app.ports.evidence_payloads`, and
+    centralize API persistence-summary response projection in
+    `app.api.persistence_summary`;
+    the current measured baseline scans 1,615 functions and reports 9 exact
     clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
