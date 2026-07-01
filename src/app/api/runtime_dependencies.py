@@ -7,7 +7,10 @@ from app.runtime.downstream_realization_state import (
     get_report_evidence_pack_realization_client,
 )
 from app.runtime.outbox_publisher_state import build_outbox_publisher_from_environment
-from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
+from app.runtime.proof_artifacts import (
+    ConfiguredImplementationProofArtifacts,
+    configured_implementation_proof_artifacts,
+)
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -33,6 +36,7 @@ __all__ = [
     "build_outbox_publisher_from_environment",
     "build_source_ingestion_runtime_from_environment",
     "close_downstream_realization_clients",
+    "ConfiguredImplementationProofArtifacts",
     "configured_implementation_proof_artifacts",
     "get_conversion_realization_clients",
     "get_idea_repository",

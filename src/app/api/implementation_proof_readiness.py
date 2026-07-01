@@ -17,6 +17,7 @@ from app.api.problem_details import (
 )
 from app.api.route_metadata import RouteMetadata
 from app.api.runtime_dependencies import (
+    ConfiguredImplementationProofArtifacts,
     configured_implementation_proof_artifacts,
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -31,7 +32,6 @@ from app.application.implementation_proof_readiness import (
 )
 from app.api.problem_details import problem_details_response as problem_response
 from app.ports.idea_repository import IdeaRepository
-from app.runtime.proof_artifacts import ConfiguredImplementationProofArtifacts
 from app.observability import (
     IdeaOperation,
     OperationEvent,
