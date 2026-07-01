@@ -4,6 +4,11 @@ import ast
 import sys
 from pathlib import Path
 
+try:
+    from scripts.ast_gate_helpers import call_name
+except ModuleNotFoundError:
+    from ast_gate_helpers import call_name  # type: ignore[import-not-found,no-redef]
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -14,20 +19,12 @@ def _relative(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
-def _call_name(node: ast.AST) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
 def _is_true_constant(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and node.value is True
 
 
 def _is_populate_by_name_config(node: ast.Call) -> bool:
-    if _call_name(node.func) != "ConfigDict":
+    if call_name(node.func, qualified=False) != "ConfigDict":
         return False
     return any(
         keyword.arg == "populate_by_name" and _is_true_constant(keyword.value)

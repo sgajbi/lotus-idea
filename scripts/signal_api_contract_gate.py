@@ -4,6 +4,11 @@ import ast
 import sys
 from pathlib import Path
 
+try:
+    from scripts.ast_gate_helpers import call_name
+except ModuleNotFoundError:
+    from ast_gate_helpers import call_name  # type: ignore[import-not-found,no-redef]
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -43,15 +48,6 @@ def _relative(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
-def _call_name(node: ast.AST) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        parent = _call_name(node.value)
-        return f"{parent}.{node.attr}" if parent else node.attr
-    return None
-
-
 def _keyword_value(node: ast.Call, keyword_name: str) -> str | None:
     for keyword in node.keywords:
         if keyword.arg == keyword_name and isinstance(keyword.value, ast.Constant):
@@ -72,7 +68,7 @@ def _responses_include_signal_problem_responses(node: ast.AST | None) -> bool:
         return False
     for key, value in zip(node.keys, node.values, strict=True):
         if key is None and isinstance(value, ast.Call):
-            if _call_name(value.func) == "signal_problem_responses":
+            if call_name(value.func) == "signal_problem_responses":
                 return True
     return False
 
@@ -102,14 +98,14 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
                 "`operation_outcome_from_signal_evaluation` from signal_api_support"
             )
 
-        if isinstance(node, ast.Call) and _call_name(node.func) == "CapabilityPolicy.for_roles":
+        if isinstance(node, ast.Call) and call_name(node.func) == "CapabilityPolicy.for_roles":
             if _keyword_value(node, "required_capability") == "idea.signal.evaluate":
                 errors.append(
                     f"{relative_path}:{node.lineno}: signal evaluation permission policy "
                     "must be centralized in signal_api_support"
                 )
 
-        if isinstance(node, ast.Call) and _call_name(node.func) == "Header":
+        if isinstance(node, ast.Call) and call_name(node.func) == "Header":
             alias = _keyword_value(node, "alias")
             if alias in CALLER_HEADER_ALIASES:
                 errors.append(
@@ -119,7 +115,7 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
 
         if (
             isinstance(node, ast.Call)
-            and _call_name(node.func) == "signal_permission_problem_or_none"
+            and call_name(node.func) == "signal_permission_problem_or_none"
         ):
             if not any(keyword.arg == "requested_access_scope" for keyword in node.keywords):
                 errors.append(

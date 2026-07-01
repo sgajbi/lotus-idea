@@ -4,6 +4,11 @@ import ast
 import sys
 from pathlib import Path
 
+try:
+    from scripts.ast_gate_helpers import call_name
+except ModuleNotFoundError:
+    from ast_gate_helpers import call_name  # type: ignore[import-not-found,no-redef]
+
 
 ROOT = Path(__file__).resolve().parents[1]
 API_DIR = Path("src/app/api")
@@ -28,17 +33,8 @@ def _relative(path: Path, root: Path) -> str:
         return path.as_posix()
 
 
-def _call_name(node: ast.AST) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        parent = _call_name(node.value)
-        return f"{parent}.{node.attr}" if parent else node.attr
-    return None
-
-
 def _header_alias(node: ast.AST) -> str | None:
-    if not isinstance(node, ast.Call) or _call_name(node.func) != "Header":
+    if not isinstance(node, ast.Call) or call_name(node.func) != "Header":
         return None
     for keyword in node.keywords:
         if keyword.arg != "alias":
@@ -123,7 +119,7 @@ def _validate_api_module(path: Path, root: Path) -> list[str]:
                     f"must also bind `{TRUSTED_HEADER_VALUE}`"
                 )
 
-        if isinstance(node, ast.Call) and _call_name(node.func) == "caller_context_from_headers":
+        if isinstance(node, ast.Call) and call_name(node.func) == "caller_context_from_headers":
             if not any(keyword.arg == "trusted_caller_context" for keyword in node.keywords):
                 errors.append(
                     f"{relative_path}:{node.lineno}: route-local caller_context_from_headers "
