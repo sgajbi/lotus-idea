@@ -32,6 +32,7 @@ from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.runtime.proof_artifact_files import read_optional_json_object
 
 
 @dataclass(frozen=True)
@@ -133,7 +134,7 @@ def _proof_artifact_input(
 ) -> ProofArtifactInput:
     path = _resolve_optional_path(path_value)
     proof_ref = _source_safe_artifact_ref(path, artifact_name=ref_name)
-    payload = _read_optional_json_object(path, artifact_name=artifact_name)
+    payload = read_optional_json_object(path, artifact_name=artifact_name)
     if payload is not None and path is not None and proof_ref is not None:
         payload = bind_aggregate_proof_provenance(
             payload,
@@ -433,19 +434,6 @@ def _resolve_optional_path(path_value: str | None) -> Path | None:
     if not path_value:
         return None
     return Path(path_value)
-
-
-def _read_optional_json_object(
-    path: Path | None,
-    *,
-    artifact_name: str,
-) -> dict[str, Any] | None:
-    if path is None:
-        return None
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise ValueError(f"{artifact_name} must be a JSON object")
-    return payload
 
 
 def _source_safe_artifact_ref(

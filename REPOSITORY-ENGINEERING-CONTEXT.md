@@ -725,8 +725,10 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     centralize API persistence-summary response projection in
     `app.api.persistence_summary`, and centralize API review access-scope DTOs
     in `app.api.access_scope_models`, and centralize blocked signal-result
-    construction in `app.domain.signal_evaluation.blocked_signal_result`;
-    the current measured baseline scans 1,613 functions and reports 7 exact
+    construction in `app.domain.signal_evaluation.blocked_signal_result`, and
+    centralize optional proof-artifact JSON object loading in
+    `app.runtime.proof_artifact_files`;
+    the current measured baseline scans 1,612 functions and reports 6 exact
     clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
