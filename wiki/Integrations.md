@@ -115,7 +115,8 @@ Core's source-contract dependency was closed in `sgajbi/lotus-core#430`; live
 Core proof can now be captured through
 `scripts/generate_source_ingestion_live_proof.py` and referenced through
 `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`. That proof clears only the live-Core
-blocker. Scheduled worker deploy proof can now be captured separately through
+blocker when it is family-valid and aggregate-current. Scheduled worker deploy
+proof can now be captured separately through
 `scripts/generate_scheduled_source_ingestion_worker_proof.py` and referenced
 through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`; that proof clears
 only the scheduled-worker blocker. Mesh certification, Gateway/Workbench proof,

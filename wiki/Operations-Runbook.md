@@ -113,8 +113,9 @@ Core proof artifact for release reviewers. Prefer explicit
 `--core-query-base-url` and `--core-query-control-plane-base-url` values for
 canonical split Core runtimes; `--core-base-url` remains a compatibility
 fallback for older single-base stacks. Point
-`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a valid artifact to clear only the
-live-Core blocker in readiness.
+`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` at a family-valid and
+aggregate-current artifact to clear only the live-Core blocker in aggregate
+readiness.
 Blocked proof artifacts can still be useful operator evidence because
 `blockReasonCounts` identifies the bounded source blocker class without
 exposing portfolio, candidate, or source payload data.
@@ -640,7 +641,7 @@ content hash.
 The snapshot records validated proof artifact refs in capability
 evidence. Capability readiness and supportability are derived after proof
 artifact consumption, so a proof family can report `ready` and `supported` only
-when its blocker list is empty. The live operator API also honors valid source-ingestion live,
+when its blocker list is empty. The live operator API also honors aggregate-current source-ingestion live,
 source-ingestion scheduled-worker, durable repository, runtime trust telemetry,
 Workbench read-path, report-intake route, report materialization, platform mesh
 onboarding, AI lineage store, AI workflow-pack registration proof, and AI workflow-pack runtime execution proof
@@ -681,8 +682,9 @@ only `runtime_candidate_snapshot_missing`; it preserves
 `data_mesh_runtime_telemetry_not_certified` while declared producer product
 coverage is incomplete.
 
-Optional JSON proof artifacts now also require aggregate provenance before they
-can clear blockers. The CLI and runtime artifact loader attach
+Optional JSON proof artifacts, including source-ingestion live proof, now also
+require aggregate provenance before they can clear blockers. The CLI and
+runtime artifact loader attach
 `aggregateProofProvenance` with the source-safe proof ref, artifact SHA-256,
 source revision, source-tree dirty flag, and proof generation timestamp.
 Aggregate readiness keeps blockers when the envelope is missing, stale,

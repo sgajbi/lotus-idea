@@ -39,6 +39,7 @@ from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_
 
 @dataclass(frozen=True)
 class ConfiguredImplementationProofArtifacts:
+    source_ingestion_live_proof: dict[str, Any] | None
     source_ingestion_live_proof_ref: str | None
     source_ingestion_scheduled_worker_proof_ref: str | None
     durable_repository_proof: dict[str, Any] | None
@@ -75,11 +76,6 @@ class ConfiguredImplementationProofArtifacts:
 
 _REF_ONLY_PROOF_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
     (
-        LIVE_PROOF_ENV,
-        "source_ingestion_live_proof_ref",
-        "source ingestion live proof",
-    ),
-    (
         SCHEDULED_WORKER_PROOF_ENV,
         "source_ingestion_scheduled_worker_proof_ref",
         "source ingestion scheduled-worker proof",
@@ -87,6 +83,12 @@ _REF_ONLY_PROOF_ARTIFACTS: tuple[tuple[str, str, str], ...] = (
 )
 
 _JSON_PROOF_ARTIFACTS: tuple[tuple[str, str, str, str], ...] = (
+    (
+        LIVE_PROOF_ENV,
+        "source_ingestion_live_proof",
+        "source_ingestion_live_proof_ref",
+        "source ingestion live proof",
+    ),
     (
         DURABLE_REPOSITORY_PROOF_ENV,
         "durable_repository_proof",

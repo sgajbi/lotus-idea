@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
+
+from app.application.proof_provenance import aggregate_proof_artifact_is_current
 
 
 LIVE_PROOF_SCHEMA_VERSION = "lotus-idea.source-ingestion.live-proof.v1"
@@ -83,6 +86,25 @@ def live_core_source_proof_is_valid(payload: Mapping[str, Any]) -> bool:
         and isinstance(payload.get("proofBlockers"), list | tuple)
         and "live_core_source_proof_missing" not in _text_sequence(payload.get("proofBlockers"))
         and _has_ingestion_evidence(payload.get("decisionCounts"))
+    )
+
+
+def source_ingestion_live_proof_can_clear_aggregate_blockers(
+    payload: Mapping[str, object] | None,
+    *,
+    evaluated_at_utc: datetime,
+    proof_ref: str | None,
+    repository_root: Path | None = None,
+) -> bool:
+    return bool(
+        payload
+        and live_core_source_proof_is_valid(payload)
+        and aggregate_proof_artifact_is_current(
+            payload,
+            evaluated_at_utc=evaluated_at_utc,
+            proof_ref=proof_ref,
+            repository_root=repository_root,
+        )
     )
 
 

@@ -102,18 +102,28 @@ refs do not clear suitability policy authority, rebalance/action authority,
 client-publication authority, or supported-feature blockers.
 
 Source-ingestion live proof is captured by
-`scripts/generate_source_ingestion_live_proof.py`. A valid artifact referenced
-through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
-`live_core_source_proof_missing`; it does not clear scheduled worker,
+`scripts/generate_source_ingestion_live_proof.py`. The source-ingestion
+readiness endpoint may report the family-level live Core proof as valid from
+the configured artifact, but aggregate implementation-proof readiness clears
+`live_core_source_proof_missing` only when that family-valid artifact is also
+aggregate-current: it must carry `aggregateProofProvenance`, match the
+source-safe consumed proof ref, be no more than 24 hours old, not be
+future-dated, and be bound to the current Lotus Idea source revision. A current
+artifact referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears
+only `live_core_source_proof_missing`; it does not clear scheduled worker,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
 The artifact carries source-safe aggregate `blockReasonCounts` so blocked
 attempts can distinguish Core unavailable, entitlement denied, missing
 cash-weight evidence, and Core-reported blocked cash-weight supportability
 without exposing source payloads or reconstructing source-owned calculations.
-When aggregate implementation-proof readiness consumes a valid live proof path,
-the `source-ingestion` capability also records a source-safe artifact reference
-in `evidenceRefs`, so release reviewers can trace why that blocker cleared
-without exposing Core payloads or portfolio identity.
+When aggregate implementation-proof readiness consumes a family-valid and
+aggregate-current live proof path, the `source-ingestion` capability also
+records a source-safe artifact reference in `evidenceRefs`, so release
+reviewers can trace why that blocker cleared without exposing Core payloads or
+portfolio identity. Missing, stale, future-dated, wrong-ref, or
+wrong-source-revision provenance leaves the source-ingestion and high-cash
+opportunity-archetype live Core blockers in place and does not add the artifact
+ref as evidence.
 Canonical Core runtimes should pass explicit `--core-query-base-url` and
 `--core-query-control-plane-base-url` values because query-service reads and
 query-control-plane snapshots can be served by different Core processes.
@@ -147,7 +157,7 @@ supported-feature promotion.
 | `IMPLEMENTATION_PROOF_OUTPUT` | Writes the aggregate readiness JSON to a chosen ignored output path. |
 | `LOTUS_CORE_QUERY_BASE_URL` | Passes the live Core query-service URL into readiness generation. |
 | `LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL` | Passes the live Core query-control-plane URL into readiness generation. |
-| `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the validated live source-ingestion proof artifact into aggregate readiness. |
+| `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` | Passes the live source-ingestion proof artifact into aggregate readiness. The family proof must be valid and aggregate-current before it can clear source-ingestion or high-cash opportunity-archetype live Core blockers. |
 | `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF` | Passes a validated source-safe Lotus Risk concentration live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_source_proof_missing`; it does not certify data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF` | Passes a validated source-safe Lotus Risk high-volatility live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_risk_volatility_source_proof_missing`; it does not certify drawdown, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF` | Passes a validated source-safe Lotus Risk drawdown live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_drawdown_source_proof_missing`; it does not certify volatility, data mesh, Workbench, client publication, or supported-feature promotion. |
@@ -709,10 +719,11 @@ The `opportunity-archetype-scenarios` capability reads
 and prefixes its scenario blockers with `opportunity_archetype_` so they do not
 collide with source-ingestion, Workbench, data-mesh, or supported-feature
 blockers from other proof families. It is a taxonomy and scenario-readiness
-view only. A valid source-ingestion live Core proof can clear only the
-high-cash live Core scenario blocker, a valid Risk concentration proof can
-clear only the concentration live Risk scenario blocker, and a valid
-high-volatility proof can clear only the live Risk volatility scenario blocker,
+view only. A family-valid and aggregate-current source-ingestion live Core
+proof can clear only the high-cash live Core scenario blocker, a valid Risk
+concentration proof can clear only the concentration live Risk scenario blocker,
+and a valid high-volatility proof can clear only the live Risk volatility
+scenario blocker,
 and a valid Risk drawdown proof can clear only the drawdown source blocker.
 Valid Performance, Core benchmark assignment, low-income Core cashflow, Manage
 mandate, Core portfolio-state, Advise mandate/restriction source-product,

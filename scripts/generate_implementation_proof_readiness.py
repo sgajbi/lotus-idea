@@ -49,15 +49,18 @@ def main(argv: list[str] | None = None) -> int:
         evaluated_at_utc = _parse_evaluated_at_utc(args.evaluated_at_utc)
         with _temporary_environment(_readiness_environment_overrides(args)):
             repository = get_idea_repository()
+            source_ingestion_live_proof = _proof_artifact_input(
+                args.source_ingestion_live_proof,
+                artifact_name="source ingestion live proof",
+                ref_name="source ingestion live proof artifact",
+            )
             proof_artifacts = _proof_artifact_inputs(args)
             snapshot = build_implementation_proof_readiness_snapshot(
                 evaluated_at_utc=evaluated_at_utc,
                 repository=repository,
                 durable_storage_backed=idea_repository_durable_storage_backed(repository),
-                source_ingestion_live_proof_ref=_source_safe_artifact_ref(
-                    _resolve_optional_path(args.source_ingestion_live_proof),
-                    artifact_name="source ingestion live proof artifact",
-                ),
+                source_ingestion_live_proof=source_ingestion_live_proof.payload,
+                source_ingestion_live_proof_ref=source_ingestion_live_proof.proof_ref,
                 source_ingestion_scheduled_worker_proof_ref=_source_safe_artifact_ref(
                     _resolve_optional_path(args.source_ingestion_scheduled_worker_proof),
                     artifact_name="source ingestion scheduled-worker proof artifact",

@@ -30,12 +30,15 @@ The endpoint proves the service can:
 
 `scripts/generate_source_ingestion_live_proof.py` wraps the same worker path
 and writes a source-safe proof artifact for release reviewers. When that
-artifact is valid and referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`,
+artifact is family-valid, referenced through
+`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF`, and aggregate-current, aggregate
 readiness can clear only `live_core_source_proof_missing`; scheduled worker,
-data-mesh, Gateway/Workbench, and supported-feature blockers remain.
-Aggregate implementation-proof readiness also records the validated live-proof
-artifact ref in source-safe capability evidence so reviewers can audit the
-blocker clearance without seeing Core payloads or portfolio identity.
+data-mesh, Gateway/Workbench, and supported-feature blockers remain. Aggregate
+implementation-proof readiness also records the validated live-proof artifact
+ref in source-safe capability evidence so reviewers can audit the blocker
+clearance without seeing Core payloads or portfolio identity. Missing, stale,
+future-dated, wrong-ref, or wrong-source-revision provenance leaves the blocker
+in place.
 The live-proof artifact also includes aggregate `blockReasonCounts` for
 blocked attempts. These counts help operators distinguish Core unavailable,
 entitlement denied, omitted cash-weight evidence, and Core-reported blocked

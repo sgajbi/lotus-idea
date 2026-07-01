@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Mapping, cast
 
 from app.application.ai_lineage_store_proof import ai_lineage_store_proof_is_valid
@@ -63,6 +64,9 @@ from app.application.report_materialization_proof import (
 from app.application.runtime_trust_telemetry_proof import (
     runtime_trust_telemetry_proof_is_valid,
 )
+from app.application.source_ingestion_live_proof import (
+    source_ingestion_live_proof_can_clear_aggregate_blockers,
+)
 from app.application.source_ingestion_readiness import SourceIngestionReadinessSnapshot
 from app.application.workbench_read_path_proof import workbench_read_path_proof_is_valid
 
@@ -84,6 +88,7 @@ def _apply_available_proofs(
     *,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     evaluated_at_utc: datetime,
+    repository_root: Path,
     durable_repository_proof: Mapping[str, object] | None,
     durable_repository_proof_ref: str | None,
     runtime_trust_telemetry_proof: Mapping[str, object] | None,
@@ -118,6 +123,7 @@ def _apply_available_proofs(
     gateway_workbench_operational_proof_ref: str | None,
     gateway_workbench_discovery_proof: Mapping[str, object] | None,
     gateway_workbench_discovery_proof_ref: str | None,
+    source_ingestion_live_proof: Mapping[str, object] | None,
     source_ingestion_live_proof_ref: str | None,
     source_ingestion: SourceIngestionReadinessSnapshot,
     risk_concentration_live_proof: Mapping[str, object] | None,
@@ -213,10 +219,14 @@ def _apply_opportunity_archetype_proofs(
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
     scope: Mapping[str, object],
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
-    source_ingestion = cast(SourceIngestionReadinessSnapshot, scope["source_ingestion"])
     return apply_opportunity_archetype_proofs_from_scope(
         capabilities=capabilities,
-        source_ingestion_live_proof_valid=source_ingestion.live_core_source_proof_valid,
+        source_ingestion_live_proof_current=source_ingestion_live_proof_can_clear_aggregate_blockers(
+            cast(Mapping[str, object] | None, scope["source_ingestion_live_proof"]),
+            evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
+            proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
+            repository_root=cast(Path, scope["repository_root"]),
+        ),
         source_ingestion_live_proof_ref=cast(str | None, scope["source_ingestion_live_proof_ref"]),
         evaluated_at_utc=cast(datetime, scope["evaluated_at_utc"]),
         scope=scope,

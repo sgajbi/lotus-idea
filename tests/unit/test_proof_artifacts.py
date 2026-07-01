@@ -29,6 +29,7 @@ from app.application.outbox_platform_mesh_event_publication_proof import (
 )
 from app.application.platform_mesh_onboarding_proof import PLATFORM_MESH_ONBOARDING_PROOF_ENV
 from app.application.runtime_trust_telemetry_proof import RUNTIME_TRUST_TELEMETRY_PROOF_ENV
+from app.application.source_ingestion_readiness import LIVE_PROOF_ENV
 from app.application.workbench_read_path_proof import WORKBENCH_READ_PATH_PROOF_ENV
 from app.runtime.proof_artifacts import configured_implementation_proof_artifacts
 
@@ -38,6 +39,9 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     tmp_path: Path,
 ) -> None:
     durable_path = tmp_path / "output" / "persistence" / "durable-repository-proof.json"
+    source_ingestion_live_path = (
+        tmp_path / "output" / "source-ingestion" / "source-ingestion-live-proof.json"
+    )
     runtime_path = (
         tmp_path / "output" / "trust-telemetry" / "runtime" / "runtime-trust-telemetry-proof.json"
     )
@@ -62,8 +66,9 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
     bond_maturity_path = (
         tmp_path / "output" / "opportunity-archetypes" / "bond-maturity-live-proof.json"
     )
-    for path in (
+    _write_artifacts(
         durable_path,
+        source_ingestion_live_path,
         runtime_path,
         ai_lineage_path,
         ai_workflow_pack_path,
@@ -76,65 +81,18 @@ def test_configured_implementation_proof_artifacts_loads_relative_source_safe_re
         platform_mesh_path,
         bond_maturity_path,
         low_income_path,
-    ):
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps({"artifact": path.name}), encoding="utf-8")
-
-    monkeypatch.setenv(
-        DURABLE_REPOSITORY_PROOF_ENV,
-        "output/persistence/durable-repository-proof.json",
     )
-    monkeypatch.setenv(
-        RUNTIME_TRUST_TELEMETRY_PROOF_ENV,
-        "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json",
-    )
-    monkeypatch.setenv(
-        AI_LINEAGE_STORE_PROOF_ENV,
-        "output/ai/ai-lineage-store-proof.json",
-    )
-    monkeypatch.setenv(
-        AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV,
-        "output/ai/ai-workflow-pack-registration-proof.json",
-    )
-    monkeypatch.setenv(
-        AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV,
-        "output/ai/ai-workflow-pack-runtime-execution-proof.json",
-    )
-    monkeypatch.setenv(
-        WORKBENCH_READ_PATH_PROOF_ENV,
-        "output/workbench/workbench-read-path-proof.json",
-    )
-    monkeypatch.setenv(
-        GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV,
-        "output/workbench/gateway-workbench-operational-proof.json",
-    )
-    monkeypatch.setenv(
-        GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV,
-        "output/workbench/gateway-workbench-discovery-proof.json",
-    )
-    monkeypatch.setenv(
-        OUTBOX_BROKER_PROOF_ENV,
-        "output/outbox/outbox-broker-proof.json",
-    )
-    monkeypatch.setenv(
-        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV,
-        "output/outbox/outbox-platform-mesh-event-publication-proof.json",
-    )
-    monkeypatch.setenv(
-        PLATFORM_MESH_ONBOARDING_PROOF_ENV,
-        "output/data-mesh/platform-mesh-onboarding-proof.json",
-    )
-    monkeypatch.setenv(
-        BOND_MATURITY_LIVE_PROOF_ENV,
-        "output/opportunity-archetypes/bond-maturity-live-proof.json",
-    )
-    monkeypatch.setenv(
-        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV,
-        "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json",
-    )
+    _configure_relative_artifact_env(monkeypatch)
 
     artifacts = configured_implementation_proof_artifacts(repository_root=tmp_path)
 
+    _assert_bound_artifact(
+        artifacts.source_ingestion_live_proof,
+        "source-ingestion-live-proof.json",
+    )
+    assert artifacts.source_ingestion_live_proof_ref == (
+        "output/source-ingestion/source-ingestion-live-proof.json"
+    )
     _assert_bound_artifact(artifacts.durable_repository_proof, "durable-repository-proof.json")
     assert artifacts.durable_repository_proof_ref == (
         "output/persistence/durable-repository-proof.json"
@@ -218,6 +176,51 @@ def test_configured_implementation_proof_artifacts_rejects_non_object_payload(
 
     with pytest.raises(ValueError, match="durable repository proof must be a JSON object"):
         configured_implementation_proof_artifacts(repository_root=tmp_path)
+
+
+def _write_artifacts(*paths: Path) -> None:
+    for path in paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"artifact": path.name}), encoding="utf-8")
+
+
+def _configure_relative_artifact_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    env_paths = {
+        DURABLE_REPOSITORY_PROOF_ENV: "output/persistence/durable-repository-proof.json",
+        LIVE_PROOF_ENV: "output/source-ingestion/source-ingestion-live-proof.json",
+        RUNTIME_TRUST_TELEMETRY_PROOF_ENV: (
+            "output/trust-telemetry/runtime/runtime-trust-telemetry-proof.json"
+        ),
+        AI_LINEAGE_STORE_PROOF_ENV: "output/ai/ai-lineage-store-proof.json",
+        AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV: (
+            "output/ai/ai-workflow-pack-registration-proof.json"
+        ),
+        AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF_ENV: (
+            "output/ai/ai-workflow-pack-runtime-execution-proof.json"
+        ),
+        WORKBENCH_READ_PATH_PROOF_ENV: "output/workbench/workbench-read-path-proof.json",
+        GATEWAY_WORKBENCH_OPERATIONAL_PROOF_ENV: (
+            "output/workbench/gateway-workbench-operational-proof.json"
+        ),
+        GATEWAY_WORKBENCH_DISCOVERY_PROOF_ENV: (
+            "output/workbench/gateway-workbench-discovery-proof.json"
+        ),
+        OUTBOX_BROKER_PROOF_ENV: "output/outbox/outbox-broker-proof.json",
+        OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF_ENV: (
+            "output/outbox/outbox-platform-mesh-event-publication-proof.json"
+        ),
+        PLATFORM_MESH_ONBOARDING_PROOF_ENV: (
+            "output/data-mesh/platform-mesh-onboarding-proof.json"
+        ),
+        BOND_MATURITY_LIVE_PROOF_ENV: (
+            "output/opportunity-archetypes/bond-maturity-live-proof.json"
+        ),
+        LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF_ENV: (
+            "output/opportunity-archetypes/low-income-core-cashflow-live-proof.json"
+        ),
+    }
+    for env_name, path in env_paths.items():
+        monkeypatch.setenv(env_name, path)
 
 
 def _assert_bound_artifact(payload: dict[str, object] | None, artifact_name: str) -> None:

@@ -554,24 +554,25 @@ Recent issue-derived patterns to preserve:
 Current open issue priorities should be worked category-wise so repeated defect
 patterns are fixed once and pinned with tests or gates:
 
-1. Evidence and proof contracts: GitHub issue `#260` require aggregate
-   provenance for source-ingestion live proof consumption.
-2. Evidence and proof contracts: GitHub issue `#269` keep architecture
+1. Evidence and proof contracts: GitHub issue `#269` keep architecture
    boundary report evidence synchronized with current gate rules.
 
 Branch-local fixed issues awaiting merge/CI/QA closure:
 
 1. GitHub issue `#263`: add governed `make ci-release` full-lane command and
    contract-gate enforcement for PostgreSQL, Docker, image scan, and SBOM proof.
-2. GitHub issue `#268`: require API idempotency for AI explanation lineage
+2. GitHub issue `#260`: require source-ingestion live proof to be family-valid
+   and aggregate-current before clearing source-ingestion or high-cash
+   opportunity-archetype live Core blockers.
+3. GitHub issue `#268`: require API idempotency for AI explanation lineage
    writes while preserving domain request-id lineage replay/conflict.
-3. GitHub issue `#267`: bind caller-context authorization headers to trusted
+4. GitHub issue `#267`: bind caller-context authorization headers to trusted
    ingress before production-like use.
-4. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
+5. GitHub issue `#266`: guard PostgreSQL idea mutations against stale snapshot
    writes and map idempotency primary-key races to governed replay/conflict.
-5. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
+6. GitHub issue `#272`: tie release SBOM evidence to the runtime artifact it
    describes.
-6. GitHub issue `#271`: require operator run identity for outbox delivery
+7. GitHub issue `#271`: require operator run identity for outbox delivery
    run-once actions.
 7. GitHub issue `#270`: add container startup health smoke proof to Docker
    release gates.
