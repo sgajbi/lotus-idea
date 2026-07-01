@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import pytest
 
@@ -74,7 +75,7 @@ def test_api_idempotency_boundary_gate_blocks_optional_openapi_header() -> None:
 
 
 def test_openapi_idempotency_marker_tolerates_malformed_schema_shapes() -> None:
-    schemas = [
+    schemas: list[dict[str, Any]] = [
         {},
         {"paths": []},
         {"paths": {"/api/v1/idea-signals/high-cash/evaluate-and-persist": None}},
