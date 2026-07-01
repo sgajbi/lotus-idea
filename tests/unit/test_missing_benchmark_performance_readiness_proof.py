@@ -135,6 +135,33 @@ def test_missing_benchmark_performance_readiness_proof_requires_timezone_aware_t
         )
 
 
+def test_missing_benchmark_performance_readiness_proof_preserves_no_attempt_defaults() -> None:
+    payload = build_missing_benchmark_performance_readiness_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_performance_source_attempted=False,
+        performance_summary={
+            "sourceAuthority": "",
+            "sourceProductId": " ",
+            "sourceDiagnosticCodes": "not-a-list",
+        },
+    )
+
+    assert payload["sourceAuthority"] == "lotus-performance"
+    assert payload["sourceProductId"] == "lotus-performance:ReturnsSeriesBundle:v1"
+    assert payload["runStatus"] == "completed"
+    assert payload["sourceDiagnosticCodes"] == []
+    assert (
+        "missing_benchmark_performance_readiness_source_proof_missing" in payload["proofBlockers"]
+    )
+    assert "missing_benchmark_performance_readiness_source_ref_missing" in payload["proofBlockers"]
+    assert (
+        "missing_benchmark_performance_readiness_source_evidence_not_current"
+        in payload["proofBlockers"]
+    )
+    assert "missing_benchmark_performance_readiness_not_evaluated" in payload["proofBlockers"]
+    assert missing_benchmark_performance_readiness_proof_is_valid(payload) is False
+
+
 def test_missing_benchmark_performance_readiness_cli_writes_source_safe_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

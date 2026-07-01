@@ -2,9 +2,13 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import timedelta
+from typing import Any
+
+import pytest
 
 from app.domain import IdeaCandidate, QueueAccessScopeFilter, ReviewAccessScope
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_review_queue import load_review_queue_candidate_page
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
@@ -62,6 +66,42 @@ def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection
     assert "idea_ai_explanation_lineage" not in executed_sql
 
 
+def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
+    connection = FakePostgresConnection()
+
+    with pytest.raises(ValueError, match="limit must be positive"):
+        load_review_queue_candidate_page(
+            connection,
+            access_scope_filter=None,
+            limit=0,
+            offset=0,
+        )
+    with pytest.raises(ValueError, match="offset must be greater than or equal to zero"):
+        load_review_queue_candidate_page(
+            connection,
+            access_scope_filter=None,
+            limit=1,
+            offset=-1,
+        )
+
+
+def test_review_queue_candidate_page_handles_empty_count_result() -> None:
+    connection = EmptyReviewQueueConnection()
+
+    page = load_review_queue_candidate_page(
+        connection,
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+
+    assert page.candidate_records == ()
+    assert page.total_reviewable_item_count == 0
+    assert page.total_excluded_candidate_count == 0
+    assert "/* lotus-idea review-queue-count */" in " ".join(connection.executed_sql)
+    assert "/* lotus-idea review-queue-page */" in " ".join(connection.executed_sql)
+
+
 def queue_candidate(
     *,
     index: int,
@@ -74,3 +114,35 @@ def queue_candidate(
         created_at_utc=EVALUATED_AT + timedelta(minutes=index),
         updated_at_utc=EVALUATED_AT + timedelta(minutes=index),
     )
+
+
+class EmptyReviewQueueConnection:
+    def __init__(self) -> None:
+        self.executed_sql: list[str] = []
+
+    def cursor(self) -> "EmptyReviewQueueCursor":
+        return EmptyReviewQueueCursor(self)
+
+    def commit(self) -> None:
+        return None
+
+    def rollback(self) -> None:
+        return None
+
+
+class EmptyReviewQueueCursor:
+    def __init__(self, connection: EmptyReviewQueueConnection) -> None:
+        self.connection = connection
+
+    def execute(self, query: str, params: object | None = None) -> None:
+        del params
+        self.connection.executed_sql.append(" ".join(query.lower().split()))
+
+    def fetchall(self) -> list[dict[str, Any]]:
+        return []
+
+    def __enter__(self) -> "EmptyReviewQueueCursor":
+        return self
+
+    def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
+        return None

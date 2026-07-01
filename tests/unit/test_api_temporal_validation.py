@@ -55,6 +55,13 @@ def test_utc_validator_rejects_non_utc_datetimes() -> None:
         require_utc_datetime(value, field_name="deliveredAtUtc")
 
 
+def test_utc_validator_accepts_utc_datetimes() -> None:
+    value = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+
+    assert is_utc_datetime(value)
+    assert require_utc_datetime(value, field_name="deliveredAtUtc") is value
+
+
 def test_api_temporal_validation_boundary_gate_passes_current_repository() -> None:
     module = _load_api_temporal_validation_boundary_gate()
 

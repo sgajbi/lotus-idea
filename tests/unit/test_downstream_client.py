@@ -113,6 +113,33 @@ def test_owned_client_is_closed(monkeypatch: pytest.MonkeyPatch) -> None:
     assert created[0].closed is True
 
 
+def test_owned_client_context_manager_closes_client(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeHttpxClient:
+        def __init__(self, **kwargs: object) -> None:
+            self.kwargs = kwargs
+            self.closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    created: list[FakeHttpxClient] = []
+
+    def build_client(**kwargs: object) -> FakeHttpxClient:
+        client = FakeHttpxClient(**kwargs)
+        created.append(client)
+        return client
+
+    monkeypatch.setattr("app.infrastructure.downstream_client.httpx.Client", build_client)
+
+    with DownstreamJsonClient(
+        DownstreamClientConfig(base_url="https://upstream.example")
+    ) as client:
+        assert client.owns_client is True
+        assert created[0].closed is False
+
+    assert created[0].closed is True
+
+
 def test_injected_client_is_not_closed() -> None:
     class InjectedClient:
         def __init__(self) -> None:
@@ -214,6 +241,34 @@ def test_retryable_timeout_is_retried_before_success() -> None:
     assert attempts == 2
 
 
+def test_retryable_http_error_is_retried_before_success() -> None:
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise httpx.ConnectError("temporary connection failure", request=request)
+        return httpx.Response(200, json={"status": "ok"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0,
+            retry_max_backoff_seconds=0,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+    )
+
+    assert client.get_json("/status") == {"status": "ok"}
+    assert attempts == 2
+
+
 def test_retryable_status_is_retried_before_success() -> None:
     attempts = 0
 
@@ -270,6 +325,37 @@ def test_retry_after_is_capped_by_max_backoff() -> None:
 
     assert client.get_json("/status") == {"status": "ok"}
     assert sleeps == [0.25]
+
+
+@pytest.mark.parametrize("retry_after", ["not-a-number", "-1"])
+def test_invalid_retry_after_uses_configured_backoff(retry_after: str) -> None:
+    sleeps: list[float] = []
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(429, headers={"Retry-After": retry_after}, json={})
+        return httpx.Response(200, json={"status": "ok"})
+
+    client = DownstreamJsonClient(
+        DownstreamClientConfig(
+            base_url="https://upstream.example",
+            timeout_seconds=0.5,
+            retry_max_attempts=2,
+            retry_initial_backoff_seconds=0.1,
+            retry_max_backoff_seconds=0.5,
+        ),
+        client=httpx.Client(
+            base_url="https://upstream.example",
+            transport=httpx.MockTransport(handler),
+        ),
+        sleep=sleeps.append,
+    )
+
+    assert client.get_json("/status") == {"status": "ok"}
+    assert sleeps == [0.1]
 
 
 def test_retry_exhaustion_reports_bounded_attempt_count() -> None:

@@ -40,4 +40,4 @@ def execute_postgres_mutation(
         except Exception:
             connection.rollback()
             raise
-    raise RuntimeError("postgres mutation retry exhausted")
+    raise RuntimeError("postgres mutation retry exhausted")  # pragma: no cover - defensive guard

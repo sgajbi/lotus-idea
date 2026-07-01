@@ -152,6 +152,32 @@ def test_missing_benchmark_live_proof_requires_timezone_aware_generation_time() 
         )
 
 
+def test_missing_benchmark_live_proof_preserves_no_attempt_blockers_and_defaults() -> None:
+    payload = build_missing_benchmark_live_proof_payload(
+        generated_at_utc=GENERATED_AT,
+        live_core_source_attempted=False,
+        evaluation_summary={
+            "sourceAuthority": " ",
+            "sourceProductId": "",
+            "sourceDiagnosticCodes": "not-a-list",
+            "reasonCodes": None,
+            "unsupportedReasons": {"code": "not-a-sequence"},
+        },
+    )
+
+    assert payload["sourceAuthority"] == "lotus-core"
+    assert payload["sourceProductId"] == "lotus-core:BenchmarkAssignment:v1"
+    assert payload["runStatus"] == "completed"
+    assert payload["sourceDiagnosticCodes"] == []
+    assert payload["reasonCodes"] == []
+    assert payload["unsupportedReasons"] == []
+    assert "missing_benchmark_live_core_source_proof_missing" in payload["proofBlockers"]
+    assert "missing_benchmark_core_source_ref_missing" in payload["proofBlockers"]
+    assert "missing_benchmark_core_source_evidence_not_current" in payload["proofBlockers"]
+    assert "no_missing_benchmark_candidate_generated" in payload["proofBlockers"]
+    assert missing_benchmark_live_proof_is_valid(payload) is False
+
+
 def test_missing_benchmark_live_proof_cli_writes_source_safe_candidate_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

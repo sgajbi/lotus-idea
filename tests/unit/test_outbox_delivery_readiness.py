@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 import pytest
 
+import app.application.outbox_delivery_readiness as readiness_module
 from app.application.outbox_delivery_readiness import (
     DEFAULT_OUTBOX_DELIVERY_MAX_RETRY_COUNT,
     OUTBOX_BROKER_URL_ENV,
     build_outbox_delivery_readiness_snapshot,
+    outbox_delivery_certification_blockers,
 )
 from app.domain import (
     IdeaRepositorySnapshot,
@@ -148,6 +151,27 @@ def test_outbox_delivery_readiness_rejects_invalid_retry_limit() -> None:
             durable_storage_backed=False,
             max_retry_count=0,
         )
+
+
+def test_outbox_delivery_certification_blockers_report_missing_contracts(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        readiness_module,
+        "OUTBOX_CONSUMER_CONTRACT_PATH",
+        tmp_path / "missing-consumer-contract.json",
+    )
+    monkeypatch.setattr(
+        readiness_module,
+        "OUTBOX_EVENT_CONTRACT_PATH",
+        tmp_path / "missing-event-contract.json",
+    )
+
+    blockers = outbox_delivery_certification_blockers()
+
+    assert "downstream_consumer_contracts_missing" in blockers
+    assert "platform_mesh_event_contract_missing" in blockers
 
 
 def pending_event(event_type: str) -> OutboxEventRecord:
