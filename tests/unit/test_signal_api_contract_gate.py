@@ -26,6 +26,18 @@ def _write_signal_module(root: Path, relative_path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def _write_valid_signal_support(root: Path) -> None:
+    _write_signal_module(
+        root,
+        Path("src/app/api/signal_api_support.py"),
+        "SIGNAL_EVALUATION_POLICY = CapabilityPolicy.for_roles(\n"
+        "    required_capability='idea.signal.evaluate', allowed_roles=('advisor',)\n"
+        ")\n\n"
+        "def signal_permission_problem_or_none(caller, policy):\n"
+        "    return require_role_and_capability(caller, SIGNAL_EVALUATION_POLICY)\n",
+    )
+
+
 def test_signal_api_contract_gate_passes_current_repository() -> None:
     module = _load_gate()
 
@@ -36,6 +48,7 @@ def test_signal_api_contract_gate_blocks_local_signal_permission_policy(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    _write_valid_signal_support(tmp_path)
     module_path = Path("src/app/api/low_income_signals.py")
     _write_signal_module(
         tmp_path,
@@ -62,6 +75,7 @@ def test_signal_api_contract_gate_blocks_local_signal_outcome_helper(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    _write_valid_signal_support(tmp_path)
     module_path = Path("src/app/api/bond_maturity_signals.py")
     _write_signal_module(
         tmp_path,
@@ -86,6 +100,7 @@ def test_signal_api_contract_gate_requires_shared_signal_helpers(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    _write_valid_signal_support(tmp_path)
     module_path = Path("src/app/api/missing_benchmark_signals.py")
     _write_signal_module(
         tmp_path,
@@ -110,10 +125,63 @@ def test_signal_api_contract_gate_requires_shared_signal_helpers(
     ]
 
 
+def test_signal_api_contract_gate_requires_strict_shared_signal_authorization(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    support_path = Path("src/app/api/signal_api_support.py")
+    _write_signal_module(
+        tmp_path,
+        support_path,
+        "SIGNAL_EVALUATION_POLICY = CapabilityPolicy.for_roles(\n"
+        "    required_capability='idea.signal.evaluate', allowed_roles=('advisor',)\n"
+        ")\n\n"
+        "def signal_permission_problem_or_none(caller, policy):\n"
+        "    return require_capability(caller, policy)\n",
+    )
+    setattr(module, "SIGNAL_API_SUPPORT_MODULE", support_path)
+    setattr(module, "SIGNAL_API_MODULES", ())
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/signal_api_support.py: signal evaluation must use "
+        "`require_role_and_capability` for least-privilege route authorization",
+        "src/app/api/signal_api_support.py:6: signal evaluation must require both "
+        "`advisor` role and `idea.signal.evaluate` capability",
+    ]
+
+
+def test_signal_api_contract_gate_requires_advisor_role_in_shared_policy(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    support_path = Path("src/app/api/signal_api_support.py")
+    _write_signal_module(
+        tmp_path,
+        support_path,
+        "SIGNAL_EVALUATION_POLICY = CapabilityPolicy.for_roles(\n"
+        "    required_capability='idea.signal.evaluate'\n"
+        ")\n\n"
+        "def signal_permission_problem_or_none(caller, policy):\n"
+        "    return require_role_and_capability(caller, SIGNAL_EVALUATION_POLICY)\n",
+    )
+    setattr(module, "SIGNAL_API_SUPPORT_MODULE", support_path)
+    setattr(module, "SIGNAL_API_MODULES", ())
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/signal_api_support.py:1: signal evaluation policy must require "
+        "`idea.signal.evaluate` capability and `advisor` role"
+    ]
+
+
 def test_signal_api_contract_gate_requires_shared_problem_response_metadata(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    _write_valid_signal_support(tmp_path)
     module_path = Path("src/app/api/concentration_risk_signals.py")
     _write_signal_module(
         tmp_path,
@@ -143,6 +211,7 @@ def test_signal_api_contract_gate_blocks_route_local_caller_context_headers(
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    _write_valid_signal_support(tmp_path)
     module_path = Path("src/app/api/underperformance_signals.py")
     _write_signal_module(
         tmp_path,
@@ -170,6 +239,7 @@ def test_signal_api_contract_gate_requires_requested_access_scope_permission_che
     tmp_path: Path,
 ) -> None:
     module = _load_gate()
+    _write_valid_signal_support(tmp_path)
     module_path = Path("src/app/api/concentration_risk_signals.py")
     _write_signal_module(
         tmp_path,

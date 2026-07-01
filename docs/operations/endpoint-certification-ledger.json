@@ -18,7 +18,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"high_cash\",\"reasonCodes\":[\"review_required\"],\"unsupportedReasons\":[\"entitlement_denied\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -35,7 +35,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Manage action-register evidence for allocation-drift / mandate-review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Manage action-register posture, workflow decision count, lineage edge count, portfolio-scoped evidence confirmation, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Manage action-register posture, workflow decision count, lineage edge count, portfolio-scoped evidence confirmation, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, allocation-drift calculation, mandate compliance approval, suitability approval, rebalance action, order instruction, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"workflowDecisionCount\":2,\"lineageEdgeCount\":4,\"manageSupportabilityState\":\"ready\",\"portfolioScopeConfirmed\":true,\"actionRegisterRef\":{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"route\":\"/api/v1/rebalance/supportability/summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:portfolio-action-register\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -47,7 +47,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -67,7 +67,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Core cashflow evidence for low-income / liquidity-shortfall review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Core cashflow projection, cash movement, source refs, projected cumulative cashflow, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Core cashflow projection, cash movement, source refs, projected cumulative cashflow, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, client income-needs assessment, funding advice, treasury instruction, planning suitability approval, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedMinProjectedCumulativeCashflow\":\"-12500\",\"cashMovementCount\":4,\"cashMovementRef\":{\"productId\":\"lotus-core:PortfolioCashMovementSummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/cash-movement-summary\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:low-income-cash-movement\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"cashflowProjectionRef\":{\"productId\":\"lotus-core:PortfolioCashflowProjection:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/cashflow-projection\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:low-income-cashflow-projection\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -78,7 +78,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"low_income\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -96,7 +96,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Lotus Performance active-return and benchmark-context evidence for underperformance review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Lotus Performance returns evidence, benchmark-context posture, active return, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Lotus Performance returns evidence, benchmark-context posture, active return, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, returns calculation, benchmark assignment, benchmark methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedActiveReturn\":\"-0.0125\",\"benchmarkContextAvailable\":true,\"performanceRef\":{\"productId\":\"lotus-performance:ReturnsSeriesBundle:v1\",\"sourceSystem\":\"lotus-performance\",\"productVersion\":\"v1\",\"route\":\"/integration/returns/series\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:returns-series-bundle\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -108,7 +108,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"underperformance\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-performance\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -127,7 +127,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Core holdings maturity evidence for bond-maturity / reinvestment review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Core holdings maturity source refs, next maturity date, maturing position count, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Core holdings maturity source refs, next maturity date, maturing position count, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, replacement product recommendation, reinvestment advice, maturity schedule authority, planning suitability approval, order/execution authority, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedNextMaturityDate\":\"2026-07-10\",\"sourceReportedMaturingPositionCount\":2,\"holdingsRef\":{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/positions\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:bond-maturity-holdings\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"maturityFactRef\":{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/portfolios/PB_SG_GLOBAL_BAL_001/positions#maturity-date\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:bond-maturity-facts\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -138,7 +138,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"bond_maturity\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -156,7 +156,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Lotus Risk concentration evidence for single-position or issuer concentration review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Lotus Risk concentration source refs, source-reported concentration weights, issuer coverage posture, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Lotus Risk concentration source refs, source-reported concentration weights, issuer coverage posture, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, concentration calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"topPositionWeightCurrent\":\"0.18\",\"topIssuerWeightCurrent\":\"0.24\",\"issuerCoverageStatus\":\"complete\",\"concentrationRef\":{\"productId\":\"lotus-risk:ConcentrationRiskReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"route\":\"/analytics/risk/concentration\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:concentration-risk-report\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -168,7 +168,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"concentration\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -187,7 +187,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Lotus Risk drawdown analytics evidence for high-volatility / drawdown review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Lotus Risk drawdown evidence, source-reported maximum drawdown, Risk supportability posture, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Lotus Risk drawdown evidence, source-reported maximum drawdown, Risk supportability posture, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, drawdown calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedMaxDrawdown\":\"-0.1245\",\"riskSupportabilityState\":\"ready\",\"drawdownRef\":{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"route\":\"/analytics/risk/drawdown\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:drawdown-analytics-report\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -199,7 +199,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -218,7 +218,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Lotus Risk metrics evidence for high-volatility review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Lotus Risk volatility evidence, Risk supportability posture, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Lotus Risk volatility evidence, Risk supportability posture, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, volatility calculation, VaR calculation, tracking-error calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"sourceReportedVolatility\":\"14.25\",\"riskSupportabilityState\":\"ready\",\"riskRef\":{\"productId\":\"lotus-risk:RiskMetricsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"route\":\"/analytics/risk/calculate\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:risk-metrics-report\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"},\"entitlementAllowed\":true}"
@@ -230,7 +230,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -249,7 +249,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Core, Manage, or Advise evidence for mandate, restriction, or suitability-policy review posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized restriction posture, source refs, actionability flags, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized restriction posture, source refs, actionability flags, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, restriction clearance authority, mandate-change authority, suitability approval, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"restrictionRef\":{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"route\":\"/advisory/policy-evaluations/pev_001/restriction-posture\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:mandate-restriction-review\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"restrictionStatus\":\"REVIEW_REQUIRED\",\"changedSinceLastReview\":true,\"actionabilityBlocked\":true,\"entitlementAllowed\":true}"
@@ -259,7 +259,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"mandate_restriction\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -276,7 +276,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Advise evidence for missing, stale, expired, or review-due risk-profile posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized risk-profile posture, source refs, review-due flags, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized risk-profile posture, source refs, review-due flags, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, risk-profile approval authority, suitability approval, policy approval, proposal approval, typed risk-profile data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"riskProfileRef\":{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"route\":\"/advisory/policy-evaluations/pev_001/risk-profile-posture\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:missing-risk-profile-review\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"riskProfileStatus\":\"STALE\",\"riskProfileEffectiveForAsOfDate\":false,\"riskProfileReviewDue\":true,\"entitlementAllowed\":true}"
@@ -286,7 +286,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -303,7 +303,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Core benchmark-assignment evidence for missing, inactive, ineffective, or unversioned benchmark posture.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Core benchmark-assignment posture, source refs, assignment status, version posture, effective-date posture, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Core benchmark-assignment posture, source refs, assignment status, version posture, effective-date posture, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, benchmark-assignment authority, benchmark methodology authority, portfolio or benchmark performance calculation, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"benchmarkAssignmentRef\":{\"productId\":\"lotus-core:BenchmarkAssignment:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"route\":\"/integration/portfolios/PB_SG_GLOBAL_BAL_001/benchmark-assignment\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:benchmark-assignment-gap\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},\"benchmarkIdentityResolved\":false,\"assignmentEffectiveForAsOfDate\":false,\"assignmentStatus\":\"ACTIVE\",\"assignmentVersionPresent\":true,\"entitlementAllowed\":true}"
@@ -314,7 +314,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"missing_benchmark\",\"reasonCodes\":[\"source_stale\"],\"unsupportedReasons\":[\"stale_source\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
@@ -332,7 +332,7 @@
       "certification_status": "certified",
       "owner": "lotus-idea owners",
       "purpose": "Evaluate caller-supplied, source-owned Advise policy-evaluation evidence for open suitability, disclosure, consent, approval, or sign-off context.",
-      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has idea.signal.evaluate capability and already has source-authorized Advise policy-evaluation posture, source refs, requirement counts, sign-off posture, client-publication posture, and entitlement posture.",
+      "when_to_use": "Use as the RFC-0002 bounded API foundation when an internal caller has advisor role and idea.signal.evaluate capability and already has source-authorized Advise policy-evaluation posture, source refs, requirement counts, sign-off posture, client-publication posture, and entitlement posture.",
       "when_not_to_use": "Do not use as a live upstream source-ingestion API, suitability approval, policy approval, proposal approval, sign-off approval, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
       "request_examples": [
         "{\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"policyRef\":{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"route\":\"/advisory/policy-evaluations/pev_001/workflow\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"contentHash\":\"sha256:missing-suitability-context-review\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"},\"evaluationStatus\":\"PENDING_REVIEW\",\"openRequirementCount\":2,\"blockedRequirementCount\":0,\"signOffStatus\":\"PENDING_REVIEW\",\"signOffBlockerCount\":1,\"clientReadyPublication\":\"BLOCKED\",\"entitlementAllowed\":true}"
@@ -342,7 +342,7 @@
         "{\"outcome\":\"blocked\",\"family\":\"missing_suitability_context\",\"reasonCodes\":[\"review_required\"],\"unsupportedReasons\":[\"source_uncertified\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
-        "403 returns product-safe Problem Details when the caller lacks idea.signal.evaluate capability.",
+        "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [

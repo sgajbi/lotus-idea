@@ -154,6 +154,29 @@ def test_high_cash_api_requires_signal_evaluation_capability() -> None:
     }
 
 
+def test_high_cash_api_rejects_advisor_role_without_signal_evaluation_capability() -> None:
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate",
+        json=high_cash_payload(),
+        headers={"X-Caller-Subject": "advisor-001", "X-Caller-Roles": "advisor"},
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to evaluate idea signals.",
+    }
+    body = response.text
+    assert "PB_SG_GLOBAL_BAL_001" not in body
+    assert "client-001" not in body
+    assert "lotus-core:PortfolioStateSnapshot:v1" not in body
+
+
 def test_high_cash_api_validation_error_is_product_safe() -> None:
     client = TestClient(app)
     payload = high_cash_payload(cash_weight="1.1")

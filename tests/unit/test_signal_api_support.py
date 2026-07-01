@@ -43,6 +43,68 @@ def test_signal_permission_allows_in_scope_request() -> None:
     assert events == []
 
 
+def test_signal_permission_denies_capability_only_caller() -> None:
+    problem = signal_permission_problem_or_none(
+        caller=CallerContext.from_iterables(
+            subject="service-001",
+            capabilities=("idea.signal.evaluate",),
+        ),
+        source_authority="lotus-risk",
+        requested_access_scope=None,
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert problem is not None
+    assert problem.status_code == 403
+
+
+def test_signal_permission_denies_role_only_caller() -> None:
+    problem = signal_permission_problem_or_none(
+        caller=CallerContext.from_iterables(
+            subject="advisor-001",
+            roles=("advisor",),
+        ),
+        source_authority="lotus-risk",
+        requested_access_scope=None,
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert problem is not None
+    assert problem.status_code == 403
+
+
+def test_signal_permission_denies_wrong_role_with_capability() -> None:
+    problem = signal_permission_problem_or_none(
+        caller=CallerContext.from_iterables(
+            subject="viewer-001",
+            roles=("viewer",),
+            capabilities=("idea.signal.evaluate",),
+        ),
+        source_authority="lotus-risk",
+        requested_access_scope=None,
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert problem is not None
+    assert problem.status_code == 403
+
+
+def test_signal_permission_denies_wrong_capability_with_advisor_role() -> None:
+    problem = signal_permission_problem_or_none(
+        caller=CallerContext.from_iterables(
+            subject="advisor-001",
+            roles=("advisor",),
+            capabilities=("idea.signal.read",),
+        ),
+        source_authority="lotus-risk",
+        requested_access_scope=None,
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert problem is not None
+    assert problem.status_code == 403
+
+
 def test_signal_permission_denies_out_of_scope_request_with_bounded_event() -> None:
     events: list[tuple[tuple[Any, ...], dict[str, Any]]] = []
 

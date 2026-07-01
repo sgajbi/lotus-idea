@@ -12,6 +12,8 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parents[1]
 
+SIGNAL_API_SUPPORT_MODULE = Path("src/app/api/signal_api_support.py")
+
 SIGNAL_API_MODULES = (
     Path("src/app/api/allocation_drift_signals.py"),
     Path("src/app/api/idea_signals.py"),
@@ -54,6 +56,21 @@ def _keyword_value(node: ast.Call, keyword_name: str) -> str | None:
             if isinstance(keyword.value.value, str):
                 return keyword.value.value
     return None
+
+
+def _keyword_string_values(node: ast.Call, keyword_name: str) -> tuple[str, ...]:
+    for keyword in node.keywords:
+        if keyword.arg != keyword_name:
+            continue
+        if isinstance(keyword.value, (ast.Tuple, ast.List, ast.Set)):
+            values: list[str] = []
+            for item in keyword.value.elts:
+                if isinstance(item, ast.Constant) and isinstance(item.value, str):
+                    values.append(item.value)
+                else:
+                    return ()
+            return tuple(values)
+    return ()
 
 
 def _route_dict_value(node: ast.Dict, key_name: str) -> ast.AST | None:
@@ -141,8 +158,71 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
     return errors
 
 
+def _validate_signal_api_support(path: Path, root: Path) -> list[str]:
+    relative_path = _relative(path, root)
+    if not path.exists():
+        return [f"{relative_path}: missing shared signal API support module"]
+
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    errors: list[str] = []
+    signal_permission_function: ast.FunctionDef | None = None
+    signal_policy: ast.Call | None = None
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "signal_permission_problem_or_none":
+            signal_permission_function = node
+        if isinstance(node, ast.Assign):
+            if any(
+                isinstance(target, ast.Name) and target.id == "SIGNAL_EVALUATION_POLICY"
+                for target in node.targets
+            ):
+                if isinstance(node.value, ast.Call):
+                    signal_policy = node.value
+
+    if signal_permission_function is None:
+        return [
+            f"{relative_path}: shared signal API support must define "
+            "`signal_permission_problem_or_none`"
+        ]
+    if signal_policy is None or call_name(signal_policy.func) != "CapabilityPolicy.for_roles":
+        errors.append(
+            f"{relative_path}: shared signal API support must define "
+            "`SIGNAL_EVALUATION_POLICY` with `CapabilityPolicy.for_roles`"
+        )
+    elif _keyword_value(
+        signal_policy, "required_capability"
+    ) != "idea.signal.evaluate" or _keyword_string_values(signal_policy, "allowed_roles") != (
+        "advisor",
+    ):
+        errors.append(
+            f"{relative_path}:{signal_policy.lineno}: signal evaluation policy must require "
+            "`idea.signal.evaluate` capability and `advisor` role"
+        )
+
+    uses_strict_policy = False
+    for node in ast.walk(signal_permission_function):
+        if isinstance(node, ast.Call):
+            function_name = call_name(node.func)
+            if function_name == "require_capability":
+                errors.append(
+                    f"{relative_path}:{node.lineno}: signal evaluation must require both "
+                    "`advisor` role and `idea.signal.evaluate` capability"
+                )
+            if function_name == "require_role_and_capability":
+                uses_strict_policy = True
+
+    if not uses_strict_policy:
+        errors.append(
+            f"{relative_path}: signal evaluation must use `require_role_and_capability` "
+            "for least-privilege route authorization"
+        )
+
+    return errors
+
+
 def validate_signal_api_contract(root: Path = ROOT) -> list[str]:
     errors: list[str] = []
+    errors.extend(_validate_signal_api_support(root / SIGNAL_API_SUPPORT_MODULE, root))
     for relative_path in SIGNAL_API_MODULES:
         errors.extend(_validate_signal_api_module(root / relative_path, root))
     return sorted(errors)
