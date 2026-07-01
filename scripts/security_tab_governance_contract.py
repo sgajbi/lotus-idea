@@ -19,8 +19,8 @@ SECURITY_POLICY_REQUIRED_FRAGMENTS = {
 }
 DEPENDABOT_REQUIRED_FRAGMENTS = {
     'package-ecosystem: "pip"': "dependabot.yml must monitor Python dependencies",
-    'directory: "/requirements"': (
-        "dependabot.yml must monitor the GitHub Dependency Graph requirements manifest"
+    "python-dependency-closure-roots": (
+        "dependabot.yml must group Python root dependency updates for closure refresh"
     ),
     'package-ecosystem: "github-actions"': "dependabot.yml must monitor GitHub Actions",
     'interval: "weekly"': "dependabot.yml must use a weekly cadence",
@@ -28,6 +28,12 @@ DEPENDABOT_REQUIRED_FRAGMENTS = {
     "groups:": "dependabot.yml must group updates to reduce alert noise",
     "open-pull-requests-limit: 5": (
         "dependabot.yml must cap open dependency PRs to preserve signal quality"
+    ),
+}
+DEPENDABOT_PROHIBITED_FRAGMENTS = {
+    'directory: "/requirements"': (
+        "dependabot.yml must not open lock-only Python PRs for /requirements; "
+        "use `make dependency-refresh` to update runtime locks with root pins"
     ),
 }
 
@@ -43,6 +49,9 @@ def validate_security_tab_governance(security_policy: str, dependabot_config: st
             errors.append(message)
     for fragment, message in DEPENDABOT_REQUIRED_FRAGMENTS.items():
         if fragment not in dependabot_config:
+            errors.append(message)
+    for fragment, message in DEPENDABOT_PROHIBITED_FRAGMENTS.items():
+        if fragment in dependabot_config:
             errors.append(message)
     return errors
 
