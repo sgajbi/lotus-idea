@@ -9,6 +9,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
+try:
+    from scripts.ast_function_helpers import is_non_implementation_stub
+except ModuleNotFoundError:  # pragma: no cover - direct script execution path
+    from ast_function_helpers import is_non_implementation_stub
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SCOPES = ("src/app", "scripts")
@@ -100,7 +105,7 @@ def _function_records(
                 line_count = end_line - node.lineno + 1
                 if line_count < min_function_lines:
                     continue
-                if _is_non_implementation_stub(node):
+                if is_non_implementation_stub(node):
                     continue
                 records.append(
                     FunctionRecord(
@@ -112,19 +117,6 @@ def _function_records(
                     )
                 )
     return records
-
-
-def _is_non_implementation_stub(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
-    if len(node.body) != 1:
-        return False
-    statement = node.body[0]
-    if isinstance(statement, ast.Pass):
-        return True
-    return (
-        isinstance(statement, ast.Expr)
-        and isinstance(statement.value, ast.Constant)
-        and statement.value.value is Ellipsis
-    )
 
 
 def _fingerprint_function_body(node: ast.FunctionDef | ast.AsyncFunctionDef) -> str:
