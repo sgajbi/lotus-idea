@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
+from app.application.source_product_proof_values import text_sequence
+
 
 MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_ENV = "LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF"
 MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF_SCHEMA_VERSION = (
@@ -81,7 +83,7 @@ def build_mandate_restriction_source_product_proof_payload(
     summary = source_product_summary or {}
     diagnostics = tuple(
         dict.fromkeys(
-            _text_sequence(
+            text_sequence(
                 summary.get("requiredRestrictionDiagnostics"),
                 default=REQUIRED_RESTRICTION_DIAGNOSTICS,
             )
@@ -164,7 +166,7 @@ def mandate_restriction_source_product_proof_is_valid(payload: Mapping[str, Any]
         and payload.get("supportedFeaturePromoted") is False
         and payload.get("proofClosed") is False
         and isinstance(payload.get("proofBlockers"), list | tuple)
-        and not _text_sequence(payload.get("proofBlockers"))
+        and not text_sequence(payload.get("proofBlockers"))
         and tuple(payload.get("aggregateBlockersCleared", ()))
         == MANDATE_RESTRICTION_SOURCE_PRODUCT_BLOCKERS_CLEARED
         and all(
@@ -211,20 +213,8 @@ def _proof_blockers(*, summary: Mapping[str, Any], diagnostics: tuple[str, ...])
 
 def _has_required_diagnostics(value: object) -> bool:
     return set(REQUIRED_RESTRICTION_DIAGNOSTICS).issubset(
-        {diagnostic.strip().lower() for diagnostic in _text_sequence(value)}
+        {diagnostic.strip().lower() for diagnostic in text_sequence(value)}
     )
-
-
-def _text_sequence(
-    value: object,
-    *,
-    default: tuple[str, ...] = (),
-) -> tuple[str, ...]:
-    if value is None:
-        return default
-    if not isinstance(value, list | tuple):
-        return ()
-    return tuple(str(item) for item in value)
 
 
 def _text(value: object, default: str) -> str:

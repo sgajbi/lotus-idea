@@ -4,6 +4,8 @@ from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
+from app.application.source_product_proof_values import text_sequence
+
 
 MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF_ENV = (
     "LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF"
@@ -80,7 +82,7 @@ def build_missing_risk_profile_source_product_proof_payload(
     summary = source_product_summary or {}
     diagnostics = tuple(
         dict.fromkeys(
-            _text_sequence(
+            text_sequence(
                 summary.get("requiredRiskProfileDiagnostics"),
                 default=REQUIRED_RISK_PROFILE_DIAGNOSTICS,
             )
@@ -159,7 +161,7 @@ def missing_risk_profile_source_product_proof_is_valid(
         and payload.get("supportedFeaturePromoted") is False
         and payload.get("proofClosed") is False
         and isinstance(payload.get("proofBlockers"), list | tuple)
-        and not _text_sequence(payload.get("proofBlockers"))
+        and not text_sequence(payload.get("proofBlockers"))
         and tuple(payload.get("aggregateBlockersCleared", ()))
         == MISSING_RISK_PROFILE_SOURCE_PRODUCT_BLOCKERS_CLEARED
         and all(
@@ -206,20 +208,8 @@ def _proof_blockers(*, summary: Mapping[str, Any], diagnostics: tuple[str, ...])
 
 def _has_required_diagnostics(value: object) -> bool:
     return set(REQUIRED_RISK_PROFILE_DIAGNOSTICS).issubset(
-        {diagnostic.strip().lower() for diagnostic in _text_sequence(value)}
+        {diagnostic.strip().lower() for diagnostic in text_sequence(value)}
     )
-
-
-def _text_sequence(
-    value: object,
-    *,
-    default: tuple[str, ...] = (),
-) -> tuple[str, ...]:
-    if value is None:
-        return default
-    if not isinstance(value, list | tuple):
-        return ()
-    return tuple(str(item) for item in value)
 
 
 def _text(value: object, default: str) -> str:
