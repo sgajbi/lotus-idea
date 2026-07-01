@@ -592,14 +592,16 @@ Branch-local fixed issues awaiting merge/CI/QA closure:
    release evidence with resolved digest provenance.
 14. GitHub issue `#251`: run the packaged service container as the non-root
    `lotus` application user.
-15. GitHub issue `#265`: validate correlation and trace headers before logging
+15. GitHub issue `#250`: build the runtime Docker image without development,
+   test, lint, audit, or SBOM tooling in the packaged runtime layer.
+16. GitHub issue `#265`: validate correlation and trace headers before logging
    or reflecting them.
-16. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
+17. GitHub issue `#264`: prevent conversion intent idempotency mismatch across
    application and domain commands.
-17. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
-18. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
+18. GitHub issue `#262`: preserve runtime telemetry product coverage blockers.
+19. GitHub issue `#261`: enforce request-size limits on the actual HTTP body
    stream.
-19. GitHub issue `#259`: add bounded retry and backoff policy to downstream
+20. GitHub issue `#259`: add bounded retry and backoff policy to downstream
    HTTP calls.
 
 Still-open issue categories after branch-local fixes:
