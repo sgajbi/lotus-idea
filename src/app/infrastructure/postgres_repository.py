@@ -54,7 +54,10 @@ from app.domain.review_governance import (
     GovernedReviewDecision,
     ReviewActionResult,
 )
-from app.infrastructure.postgres_candidate_writes import update_postgres_candidate_record
+from app.infrastructure.postgres_candidate_writes import (
+    ConcurrentIdempotencyMutationError,
+    update_postgres_candidate_record,
+)
 from app.infrastructure.postgres_codecs import (
     ai_explanation_lineage_from_json,
     ai_explanation_lineage_to_json,
@@ -480,22 +483,34 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
             raise
 
     def _mutate(self, operation: Callable[[InMemoryIdeaRepository], _T]) -> _T:
-        try:
-            before = self.snapshot()
-            repository = InMemoryIdeaRepository(before)
-            result = operation(repository)
-            with self._connection.cursor() as cursor:
-                apply_postgres_snapshot_delta(
-                    self,
-                    cursor,
-                    before=before,
-                    after=repository.snapshot(),
-                )
-            self._connection.commit()
-            return result
-        except Exception:
-            self._connection.rollback()
-            raise
+        use_fresh_snapshot = False
+        for attempt_index in range(2):
+            try:
+                before = self._database_snapshot() if use_fresh_snapshot else self.snapshot()
+                repository = InMemoryIdeaRepository(before)
+                result = operation(repository)
+                with self._connection.cursor() as cursor:
+                    apply_postgres_snapshot_delta(
+                        self,
+                        cursor,
+                        before=before,
+                        after=repository.snapshot(),
+                    )
+                self._connection.commit()
+                return result
+            except ConcurrentIdempotencyMutationError:
+                self._connection.rollback()
+                if attempt_index == 0:
+                    use_fresh_snapshot = True
+                    continue
+                raise
+            except Exception:
+                self._connection.rollback()
+                raise
+        raise RuntimeError("postgres mutation retry exhausted")
+
+    def _database_snapshot(self) -> IdeaRepositorySnapshot:
+        return PostgresIdeaRepository(self._connection).snapshot()
 
     def _load_candidate_records(
         self,
@@ -857,6 +872,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
                 idempotency_key, operation_name, payload_hash, candidate_id,
                 created_at_utc
             ) VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (idempotency_key) DO NOTHING
+            RETURNING idempotency_key
             """,
             (
                 record.key,
@@ -866,6 +883,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
                 _idempotency_created_at(candidate_id, snapshot),
             ),
         )
+        if not cursor.fetchall():
+            raise ConcurrentIdempotencyMutationError(record.key)
 
     def _insert_record_details(
         self,

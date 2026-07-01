@@ -126,15 +126,8 @@ def apply_postgres_snapshot_delta(
     after: IdeaRepositorySnapshot,
 ) -> None:
     for candidate_id, after_record in after.candidate_records.items():
-        before_record = before.candidate_records.get(candidate_id)
-        if before_record is None:
+        if candidate_id not in before.candidate_records:
             writer._insert_candidate_record(cursor, after_record)
-            writer._insert_record_details(cursor, after_record)
-            continue
-
-        if after_record.candidate != before_record.candidate:
-            writer._update_candidate_record(cursor, before_record, after_record)
-        _insert_record_detail_delta(writer, cursor, before_record, after_record)
 
     for key, idempotency_record in after.idempotency_records.items():
         if key not in before.idempotency_records:
@@ -144,6 +137,16 @@ def apply_postgres_snapshot_delta(
                 candidate_id=after.idempotency_candidates.get(key),
                 snapshot=after,
             )
+
+    for candidate_id, after_record in after.candidate_records.items():
+        before_record = before.candidate_records.get(candidate_id)
+        if before_record is None:
+            writer._insert_record_details(cursor, after_record)
+            continue
+
+        if after_record.candidate != before_record.candidate:
+            writer._update_candidate_record(cursor, before_record, after_record)
+        _insert_record_detail_delta(writer, cursor, before_record, after_record)
 
     for event_id, outbox_event in after.outbox_events.items():
         if event_id not in before.outbox_events:

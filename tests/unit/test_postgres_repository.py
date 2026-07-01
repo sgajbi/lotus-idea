@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -173,14 +174,17 @@ class FakePostgresCursor:
             return
         if normalized.startswith("with selected"):
             assert params is not None
+            self.connection.begin_write()
             self._rows = claim_outbox_event_rows(self.connection, params)
             return
         if normalized.startswith("update idea_candidate_record"):
             assert params is not None
+            self.connection.begin_write()
             self._rows = update_candidate_record_row(self.connection.rows, params)
             return
         if normalized.startswith("update idea_outbox_event"):
             assert params is not None
+            self.connection.begin_write()
             if "set status = %s, published_at_utc = %s" in normalized:
                 self._rows = publish_outbox_event_row(self.connection, params)
             else:
@@ -201,14 +205,28 @@ class FakePostgresCursor:
             self._rows = list(self.connection.rows[_table_from_select(normalized)])
             return
         if normalized.startswith("delete from"):
+            self.connection.begin_write()
             self.connection.deletes += 1
             self.connection.rows[normalized.split()[2]].clear()
             return
         if normalized.startswith("insert into"):
             table_name = normalized.split()[2]
+            self.connection.begin_write()
             if table_name == self.connection.fail_on_insert:
                 raise RuntimeError(f"insert failed for {table_name}")
             assert params is not None
+            if table_name == "idea_idempotency_record" and "on conflict" in normalized:
+                idempotency_key = params[0]
+                if any(
+                    row["idempotency_key"] == idempotency_key
+                    for row in self.connection.rows[table_name]
+                ):
+                    self._rows = []
+                    return
+                row = row_for_insert(table_name, params)
+                self.connection.rows[table_name].append(row)
+                self._rows = [{"idempotency_key": idempotency_key}]
+                return
             self.connection.rows[table_name].append(row_for_insert(table_name, params))
             return
         raise AssertionError(f"unexpected SQL: {query}")
@@ -244,14 +262,23 @@ class FakePostgresConnection:
         self.rollbacks = 0
         self.deletes = 0
         self.executed_sql: list[str] = []
+        self._transaction_rows: dict[str, list[dict[str, Any]]] | None = None
 
     def cursor(self) -> FakePostgresCursor:
         return FakePostgresCursor(self)
 
+    def begin_write(self) -> None:
+        if self._transaction_rows is None:
+            self._transaction_rows = deepcopy(self.rows)
+
     def commit(self) -> None:
+        self._transaction_rows = None
         self.commits += 1
 
     def rollback(self) -> None:
+        if self._transaction_rows is not None:
+            self.rows = deepcopy(self._transaction_rows)
+            self._transaction_rows = None
         self.rollbacks += 1
 
 
@@ -692,6 +719,128 @@ def test_postgres_repository_rejects_stale_same_candidate_snapshot_write() -> No
         row["idempotency_key"] == "review:stale-same-candidate-second"
         for row in connection.rows["idea_idempotency_record"]
     )
+
+
+def test_postgres_repository_retries_idempotency_collision_as_replay() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_idempotency_collision_replay",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:idempotency-collision-replay",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    base_snapshot = PostgresIdeaRepository(connection).snapshot()
+
+    class StaleSnapshotRepository(PostgresIdeaRepository):
+        def __init__(
+            self,
+            stale_connection: FakePostgresConnection,
+            stale_snapshot: IdeaRepositorySnapshot,
+        ) -> None:
+            super().__init__(stale_connection)
+            self._stale_snapshot = stale_snapshot
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            return self._stale_snapshot
+
+    review = apply_review_action(
+        candidate,
+        review_command(review_id="review-idempotency-collision-replay"),
+    )
+    first = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        review,
+        idempotency_key="review:idempotency-collision-replay",
+        payload={"reviewId": review.decision.review_id},
+    )
+    replayed = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        review,
+        idempotency_key="review:idempotency-collision-replay",
+        payload={"reviewId": review.decision.review_id},
+    )
+    recovered = PostgresIdeaRepository(connection).snapshot()
+
+    assert first.decision is ReviewPersistenceDecision.ACCEPTED
+    assert replayed.decision is ReviewPersistenceDecision.REPLAYED
+    assert connection.rollbacks == 1
+    assert connection.commits == 3
+    assert [
+        decision.review_id
+        for decision in recovered.candidate_records[candidate.candidate_id].review_decisions
+    ] == ["review-idempotency-collision-replay"]
+    assert [
+        row["idempotency_key"]
+        for row in connection.rows["idea_idempotency_record"]
+        if row["idempotency_key"] == "review:idempotency-collision-replay"
+    ] == ["review:idempotency-collision-replay"]
+
+
+def test_postgres_repository_retries_idempotency_collision_as_conflict() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_idempotency_collision_conflict",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:idempotency-collision-conflict",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    base_snapshot = PostgresIdeaRepository(connection).snapshot()
+
+    class StaleSnapshotRepository(PostgresIdeaRepository):
+        def __init__(
+            self,
+            stale_connection: FakePostgresConnection,
+            stale_snapshot: IdeaRepositorySnapshot,
+        ) -> None:
+            super().__init__(stale_connection)
+            self._stale_snapshot = stale_snapshot
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            return self._stale_snapshot
+
+    review = apply_review_action(
+        candidate,
+        review_command(review_id="review-idempotency-collision-conflict"),
+    )
+    first = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        review,
+        idempotency_key="review:idempotency-collision-conflict",
+        payload={"reviewId": review.decision.review_id},
+    )
+    conflict = StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        review,
+        idempotency_key="review:idempotency-collision-conflict",
+        payload={"reviewId": "different-review-payload"},
+    )
+    recovered = PostgresIdeaRepository(connection).snapshot()
+
+    assert first.decision is ReviewPersistenceDecision.ACCEPTED
+    assert conflict.decision is ReviewPersistenceDecision.CONFLICT
+    assert conflict.record is not None
+    assert conflict.record.candidate.candidate_id == candidate.candidate_id
+    assert connection.rollbacks == 1
+    assert connection.commits == 3
+    assert [
+        decision.review_id
+        for decision in recovered.candidate_records[candidate.candidate_id].review_decisions
+    ] == ["review-idempotency-collision-conflict"]
+    assert [
+        row["idempotency_key"]
+        for row in connection.rows["idea_idempotency_record"]
+        if row["idempotency_key"] == "review:idempotency-collision-conflict"
+    ] == ["review:idempotency-collision-conflict"]
 
 
 def test_postgres_candidate_updates_use_optimistic_snapshot_guard() -> None:
