@@ -1,7 +1,7 @@
 from app.errors import ProblemDetails
 from app.application.service_profile import current_service_profile
 from app.domain.service_profile import DEFAULT_SERVICE_PROFILE, ServiceProfile
-from app.main import SERVICE_NAME
+from app.main import SERVICE_NAME, app
 
 
 def test_service_name_is_lotus_prefixed() -> None:
@@ -95,4 +95,19 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
     assert (
         payload["policy"]
         == "Every public OpenAPI operation requires certification evidence before promotion."
+    )
+
+
+def test_lifecycle_transition_openapi_excludes_downstream_authority_input_statuses() -> None:
+    schema = app.openapi()
+    request_schema = schema["components"]["schemas"]["CandidateLifecycleTransitionRequest"]
+    target_ref = request_schema["properties"]["targetLifecycleStatus"]["$ref"]
+    target_schema_name = target_ref.removeprefix("#/components/schemas/")
+    target_enum = set(schema["components"]["schemas"][target_schema_name]["enum"])
+
+    assert target_schema_name == "CallerSettableIdeaLifecycleStatus"
+    assert {"accepted", "executed"}.isdisjoint(target_enum)
+    assert {"approved", "converted_to_report", "closed"}.issubset(target_enum)
+    assert {"accepted", "executed"}.issubset(
+        set(schema["components"]["schemas"]["IdeaLifecycleStatus"]["enum"])
     )

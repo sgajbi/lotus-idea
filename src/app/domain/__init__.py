@@ -60,6 +60,8 @@ from app.domain.downstream_submission import (
 )
 from app.domain.ideas import (
     ALLOWED_LIFECYCLE_TRANSITIONS,
+    CALLER_SETTABLE_LIFECYCLE_STATUSES,
+    DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES,
     ConversionOutcomeStatus,
     ConversionTarget,
     EvidenceFreshness,
@@ -84,6 +86,7 @@ from app.domain.ideas import (
     SuppressionReason,
     UnsupportedEvidenceReason,
     transition_candidate,
+    validate_caller_settable_lifecycle_status,
 )
 from app.domain.missing_suitability_signal import (
     MissingSuitabilityContextSignalInput,
@@ -259,6 +262,8 @@ __all__ = [
     "mark_outbox_event_published",
     "validate_outbox_failure_reason",
     "ALLOWED_LIFECYCLE_TRANSITIONS",
+    "CALLER_SETTABLE_LIFECYCLE_STATUSES",
+    "DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES",
     "ConversionOutcomeStatus",
     "ConversionTarget",
     "EvidenceFreshness",
@@ -283,6 +288,7 @@ __all__ = [
     "SuppressionReason",
     "UnsupportedEvidenceReason",
     "transition_candidate",
+    "validate_caller_settable_lifecycle_status",
     "BondMaturitySignalInput",
     "BondMaturitySignalPolicy",
     "ConcentrationRiskSignalInput",

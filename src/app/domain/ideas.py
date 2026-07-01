@@ -123,6 +123,27 @@ class IdeaLifecycleStatus(StrEnum):
     CLOSED = "closed"
 
 
+DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES = frozenset(
+    {
+        IdeaLifecycleStatus.ACCEPTED,
+        IdeaLifecycleStatus.EXECUTED,
+    }
+)
+CALLER_SETTABLE_LIFECYCLE_STATUSES = frozenset(
+    status
+    for status in IdeaLifecycleStatus
+    if status not in DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES
+)
+
+
+def validate_caller_settable_lifecycle_status(target_status: IdeaLifecycleStatus) -> None:
+    if target_status in DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES:
+        raise ValueError(
+            f"{target_status.value} is reserved for downstream source-authority outcomes "
+            "and cannot be set through idea lifecycle transitions"
+        )
+
+
 class ReviewPosture(StrEnum):
     NOT_REVIEWED = "not_reviewed"
     ADVISOR_REVIEW_REQUIRED = "advisor_review_required"
@@ -440,38 +461,29 @@ ALLOWED_LIFECYCLE_TRANSITIONS: dict[IdeaLifecycleStatus, frozenset[IdeaLifecycle
             IdeaLifecycleStatus.CONVERTED_TO_PROPOSAL,
             IdeaLifecycleStatus.CONVERTED_TO_MANAGE_REVIEW,
             IdeaLifecycleStatus.CONVERTED_TO_REPORT,
-            IdeaLifecycleStatus.ACCEPTED,
             IdeaLifecycleStatus.EXPIRED,
             IdeaLifecycleStatus.CLOSED,
         }
     ),
     IdeaLifecycleStatus.CONVERTED_TO_PROPOSAL: frozenset(
         {
-            IdeaLifecycleStatus.ACCEPTED,
             IdeaLifecycleStatus.REJECTED,
             IdeaLifecycleStatus.CLOSED,
         }
     ),
     IdeaLifecycleStatus.CONVERTED_TO_MANAGE_REVIEW: frozenset(
         {
-            IdeaLifecycleStatus.ACCEPTED,
             IdeaLifecycleStatus.REJECTED,
             IdeaLifecycleStatus.CLOSED,
         }
     ),
     IdeaLifecycleStatus.CONVERTED_TO_REPORT: frozenset(
         {
-            IdeaLifecycleStatus.ACCEPTED,
             IdeaLifecycleStatus.REJECTED,
             IdeaLifecycleStatus.CLOSED,
         }
     ),
-    IdeaLifecycleStatus.ACCEPTED: frozenset(
-        {
-            IdeaLifecycleStatus.EXECUTED,
-            IdeaLifecycleStatus.CLOSED,
-        }
-    ),
+    IdeaLifecycleStatus.ACCEPTED: frozenset({IdeaLifecycleStatus.CLOSED}),
     IdeaLifecycleStatus.REJECTED: frozenset({IdeaLifecycleStatus.CLOSED}),
     IdeaLifecycleStatus.EXPIRED: frozenset({IdeaLifecycleStatus.CLOSED}),
     IdeaLifecycleStatus.EXECUTED: frozenset({IdeaLifecycleStatus.CLOSED}),
