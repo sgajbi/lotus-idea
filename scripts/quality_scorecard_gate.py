@@ -62,6 +62,10 @@ STALE_SCORECARD_PATTERNS: dict[str, re.Pattern[str]] = {
         r"\bDomain methodology not yet applicable\b",
         re.IGNORECASE,
     ),
+    "architecture_report_treated_as_current_proof": re.compile(
+        r"\breport-only architecture evidence\b",
+        re.IGNORECASE,
+    ),
 }
 
 
