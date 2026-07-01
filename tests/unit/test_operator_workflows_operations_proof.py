@@ -12,6 +12,7 @@ import pytest
 
 from app.application.operator_workflows_operations_proof import (
     EXPECTED_ALERT_IDS,
+    EXPECTED_DASHBOARD_OPERATIONS,
     EXPECTED_DASHBOARD_UID,
     EXPECTED_METRIC_NAME,
     OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS_CLEARED,
@@ -118,6 +119,30 @@ def test_rejects_operator_workflows_operations_proof_with_invalid_proof_checks()
     assert operator_workflows_operations_proof_is_valid(proof) is False
 
 
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "aggregateBlockersCleared",
+        "evidenceRefs",
+        "remainingCertificationBlockers",
+    ],
+)
+def test_rejects_operator_workflows_operations_proof_with_invalid_blocker_lists(
+    field_name: str,
+) -> None:
+    proof = _valid_operator_workflows_operations_proof()
+    proof[field_name] = ()
+
+    assert operator_workflows_operations_proof_is_valid(proof) is False
+
+
+def test_rejects_operator_workflows_operations_proof_with_non_mapping_checks() -> None:
+    proof = _valid_operator_workflows_operations_proof()
+    proof["proofChecks"] = []
+
+    assert operator_workflows_operations_proof_is_valid(proof) is False
+
+
 def test_operator_workflows_operations_proof_cli_writes_valid_artifact(tmp_path: Path) -> None:
     module = _load_generator_script()
     output_path = tmp_path / "proof" / "operator-workflows-operations-proof.json"
@@ -166,6 +191,65 @@ def test_artifact_certification_fails_closed(tmp_path: Path) -> None:
     assert _dashboard_artifact_certified(tmp_path) is False
 
 
+@pytest.mark.parametrize(
+    ("mutation", "expected"),
+    [
+        ({"title": "Wrong"}, False),
+        ({"annotations": {"source": "portfolio_id"}}, False),
+        (
+            {
+                "uid": EXPECTED_DASHBOARD_UID,
+                "title": "Lotus Idea Operator Workflow Operations",
+                "panels": [],
+            },
+            False,
+        ),
+    ],
+)
+def test_dashboard_artifact_certification_rejects_invalid_metadata(
+    tmp_path: Path,
+    mutation: dict[str, object],
+    expected: bool,
+) -> None:
+    payload = _valid_dashboard_payload()
+    payload.update(mutation)
+    _write_dashboard_payload(tmp_path, payload)
+
+    assert _dashboard_artifact_certified(tmp_path) is expected
+
+
+def test_dashboard_artifact_certification_rejects_unexpected_metric(tmp_path: Path) -> None:
+    payload = _valid_dashboard_payload()
+    payload["panels"] = [
+        {
+            "targets": [
+                {"expr": "sum(rate(lotus_local_operation_events_total[5m]))"},
+            ],
+        },
+    ]
+    _write_dashboard_payload(tmp_path, payload)
+
+    assert _dashboard_artifact_certified(tmp_path) is False
+
+
+def test_dashboard_artifact_certification_rejects_missing_operation(tmp_path: Path) -> None:
+    payload = _valid_dashboard_payload()
+    payload.pop("annotations")
+    payload["panels"] = [
+        {
+            "targets": [
+                {
+                    "expr": f'{EXPECTED_METRIC_NAME}{{operation="{EXPECTED_DASHBOARD_OPERATIONS[0]}"}}',
+                },
+            ],
+        }
+        for _ in range(4)
+    ]
+    _write_dashboard_payload(tmp_path, payload)
+
+    assert _dashboard_artifact_certified(tmp_path) is False
+
+
 def test_alert_rules_artifact_certification_rejects_missing_runbook_refs(
     tmp_path: Path,
 ) -> None:
@@ -178,11 +262,115 @@ def test_alert_rules_artifact_certification_rejects_missing_runbook_refs(
     assert _alert_rules_artifact_certified(tmp_path) is False
 
 
+def test_alert_rules_artifact_certification_rejects_missing_alert_id(tmp_path: Path) -> None:
+    path = (
+        tmp_path / "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml"
+    )
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "\n".join(
+            f"docs/runbooks/operator-workflows-operations.md#{alert_id}"
+            for alert_id in EXPECTED_ALERT_IDS
+        )
+        + "\n"
+        + "\n".join(EXPECTED_DASHBOARD_OPERATIONS),
+        encoding="utf-8",
+    )
+
+    assert _alert_rules_artifact_certified(tmp_path) is False
+
+
+def test_runbook_artifact_certification_rejects_forbidden_and_missing_text(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "docs/runbooks/operator-workflows-operations.md"
+    path.parent.mkdir(parents=True)
+    path.write_text("portfolio_id", encoding="utf-8")
+    assert _runbook_artifact_certified(tmp_path) is False
+
+    path.write_text(
+        "\n".join(f"## {alert_id}" for alert_id in EXPECTED_ALERT_IDS), encoding="utf-8"
+    )
+    assert _runbook_artifact_certified(tmp_path) is False
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        {"dashboard_certified": False},
+        {"alert_certified": False},
+        {"source_of_truth": []},
+        {
+            "source_of_truth": {
+                "dashboard": "wrong",
+                "alert_rules": "monitoring/prometheus/rules/"
+                "lotus-idea-operator-workflows-operations.rules.yml",
+                "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
+                "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+            },
+        },
+        {"operator_dashboard_controls": [{"certification_status": "pending"}]},
+        {"operator_alert_candidates": [{"certification_status": "pending"}]},
+    ],
+)
+def test_operations_contract_certification_rejects_invalid_contract_fields(
+    tmp_path: Path,
+    mutation: dict[str, object],
+) -> None:
+    payload = _valid_operations_contract_payload()
+    payload.update(mutation)
+    path = tmp_path / "contracts/observability/lotus-idea-operator-workflows-operations.v1.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+    assert _operations_contract_certified(tmp_path) is False
+
+
 def _valid_operator_workflows_operations_proof() -> dict[str, object]:
     return build_operator_workflows_operations_proof_payload(
         generated_at_utc=datetime(2026, 7, 1, 0, 0, tzinfo=UTC),
         repository_root=ROOT,
     )
+
+
+def _valid_dashboard_payload() -> dict[str, object]:
+    return {
+        "uid": EXPECTED_DASHBOARD_UID,
+        "title": "Lotus Idea Operator Workflow Operations",
+        "panels": [
+            {
+                "targets": [
+                    {
+                        "expr": f'{EXPECTED_METRIC_NAME}{{operation="{operation}"}}',
+                    },
+                ],
+            }
+            for operation in EXPECTED_DASHBOARD_OPERATIONS[:4]
+        ],
+        "annotations": {"operations": list(EXPECTED_DASHBOARD_OPERATIONS)},
+    }
+
+
+def _write_dashboard_payload(tmp_path: Path, payload: Mapping[str, object]) -> None:
+    path = tmp_path / "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json"
+    path.parent.mkdir(parents=True)
+    path.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def _valid_operations_contract_payload() -> dict[str, object]:
+    return {
+        "dashboard_certified": True,
+        "alert_certified": True,
+        "source_of_truth": {
+            "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
+            "alert_rules": "monitoring/prometheus/rules/"
+            "lotus-idea-operator-workflows-operations.rules.yml",
+            "operator_runbook": "docs/runbooks/operator-workflows-operations.md",
+            "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
+        },
+        "operator_dashboard_controls": [{"certification_status": "certified"}],
+        "operator_alert_candidates": [{"certification_status": "certified"}],
+    }
 
 
 def _load_generator_script() -> ModuleType:
