@@ -607,9 +607,11 @@ Recent issue-derived patterns to preserve:
     threshold is promoted. The first follow-through consolidations moved repeated
     proof source-safety traversal into `scripts/proof_source_safety.py` and
     live-proof generator timeout/output plumbing into
-    `scripts/proof_generator_io.py`, removing known duplicate function-body
-    clusters while preserving family-specific proof policy and generator
-    argument behavior.
+    `scripts/proof_generator_io.py`, and centralized proof timestamp,
+    make-target evidence, and cross-repository file-evidence checks in
+    `src/app/application/source_safe_cross_repo_proof.py`, removing known
+    duplicate function-body clusters while preserving family-specific proof
+    policy and generator argument behavior.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -703,9 +705,10 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     families. The first follow-through refactors centralize proof source-safety
     traversal in `scripts/proof_source_safety.py` and live-proof generator
     timeout/output plumbing in `scripts/proof_generator_io.py`, then consolidate
-    proof timestamp validation and make-target evidence checks through
+    proof timestamp validation, make-target evidence checks, and
+    cross-repository file-evidence checks through
     `src/app/application/source_safe_cross_repo_proof.py`; the current measured
-    baseline scans 1,669 functions and reports 24 exact clusters.
+    baseline scans 1,656 functions and reports 21 exact clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 

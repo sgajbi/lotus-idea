@@ -247,9 +247,10 @@ reports `thresholdEnforced: false`. The initial six-line baseline scanned 1,750 
 reported 31 exact duplicate clusters, including the known proof source-safety helper families. The
 first proof-helper consolidations moved source-safety traversal into
 `scripts/proof_source_safety.py` and live-proof generator timeout/output plumbing into
-`scripts/proof_generator_io.py`, and shared proof timestamp validation plus make-target evidence
-checks into `src/app/application/source_safe_cross_repo_proof.py`; the current measured baseline
-scans 1,669 functions and reports 24 exact duplicate clusters.
+`scripts/proof_generator_io.py`, and shared proof timestamp validation, make-target evidence
+checks, and cross-repository file-evidence checks into
+`src/app/application/source_safe_cross_repo_proof.py`; the current measured baseline scans 1,656
+functions and reports 21 exact duplicate clusters.
 `make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
 yet.
 
