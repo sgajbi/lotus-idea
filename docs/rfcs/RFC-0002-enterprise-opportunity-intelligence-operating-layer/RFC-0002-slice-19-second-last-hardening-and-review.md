@@ -495,10 +495,12 @@ existing file/function-size maintainability gate:
    duplicate clusters, including the known proof source-safety helper families.
 4. The first follow-through refactors move proof source-safety traversal into
    `scripts/proof_source_safety.py` and live-proof generator timeout/output
-   plumbing into `scripts/proof_generator_io.py`; each proof gate and generator
-   retains family-specific policy/argument behavior, direct script execution
-   remains supported, and the current measured baseline scans 1,692 functions
-   and reports 27 exact duplicate clusters.
+   plumbing into `scripts/proof_generator_io.py`, then consolidate proof
+   timestamp validation through
+   `src/app/application/source_safe_cross_repo_proof.py`; each proof gate and
+   generator retains family-specific policy/argument behavior, direct script
+   execution remains supported, and the current measured baseline scans 1,677
+   functions and reports 26 exact duplicate clusters.
 5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
    without adding duplicate thresholds to `make lint`.
 6. This is measured maintainability evidence only. It does not block all
