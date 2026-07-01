@@ -15,3 +15,7 @@
 - The first contract,
   `migrations/001_idea_repository_foundation.sql`, defines future durable idea
   repository state only. It does not by itself make API state database-backed.
+- Migration 001 contract coverage includes downstream submission durability:
+  `idea_downstream_submission`, `idx_idea_downstream_submission_resource`, and
+  the request fingerprint, resource identity, source-authority, and submitted
+  timestamp columns that support idempotent downstream realization posture.

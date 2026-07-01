@@ -66,9 +66,7 @@ REQUIRED_LINT_TARGETS = (
     "missing-risk-profile-source-product-proof-contract-gate",
     "missing-risk-profile-live-proof-contract-gate",
     "performance-underperformance-live-proof-contract-gate",
-    "implementation-proof-readiness-check",
     "runtime-trust-telemetry-preview-check",
-    "runtime-trust-telemetry-snapshot-check",
     "supported-features-gate",
     "endpoint-certification-gate",
 )

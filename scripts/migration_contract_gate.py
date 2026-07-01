@@ -20,6 +20,7 @@ REQUIRED_TABLES = (
     "idea_conversion_intent",
     "idea_conversion_outcome",
     "idea_report_evidence_pack_request",
+    "idea_downstream_submission",
 )
 
 REQUIRED_INDEXES = (
@@ -31,12 +32,14 @@ REQUIRED_INDEXES = (
     "idx_idea_lifecycle_history_candidate_time",
     "idx_idea_audit_event_candidate_time",
     "idx_idea_outbox_event_status_time",
+    "idx_idea_outbox_event_lease_expiry",
     "idx_idea_outbox_event_aggregate_time",
     "idx_idea_review_decision_candidate_time",
     "idx_idea_feedback_event_candidate_time",
     "idx_idea_conversion_intent_candidate_target",
     "idx_idea_conversion_outcome_intent_time",
     "idx_idea_report_evidence_pack_candidate_time",
+    "idx_idea_downstream_submission_resource",
 )
 
 REQUIRED_FORWARD_FRAGMENTS = (
@@ -48,6 +51,11 @@ REQUIRED_FORWARD_FRAGMENTS = (
     "ck_idea_outbox_event_event_type",
     "ck_idea_outbox_event_aggregate_type",
     "ck_idea_outbox_event_schema_version",
+    "request_fingerprint TEXT NOT NULL",
+    "resource_type TEXT NOT NULL",
+    "resource_id TEXT NOT NULL",
+    "source_authority TEXT NOT NULL",
+    "submitted_at_utc TIMESTAMPTZ NOT NULL",
 )
 
 AI_LINEAGE_REQUIRED_TABLES = ("idea_ai_explanation_lineage",)

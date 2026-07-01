@@ -83,8 +83,9 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
         "migration-contract-gate migration-execution-gate"
     ) in makefile
     assert (
-        "ci-release: ci postgres-integration-gate docker-build "
-        "container-runtime-smoke container-image-scan release-sbom"
+        "ci-release: ci implementation-proof-readiness-check "
+        "runtime-trust-telemetry-snapshot-check postgres-integration-gate "
+        "docker-build container-runtime-smoke container-image-scan release-sbom"
     ) in makefile
 
 
@@ -211,13 +212,16 @@ def test_ci_contract_gate_blocks_missing_merge_grade_checks() -> None:
 def test_ci_contract_gate_blocks_missing_full_lane_release_proof_dependencies() -> None:
     module = _load_ci_contract_gate()
     makefile = _read("Makefile").replace(
-        "ci-release: ci postgres-integration-gate docker-build "
-        "container-runtime-smoke container-image-scan release-sbom",
+        "ci-release: ci implementation-proof-readiness-check "
+        "runtime-trust-telemetry-snapshot-check postgres-integration-gate "
+        "docker-build container-runtime-smoke container-image-scan release-sbom",
         "ci-release: ci",
     )
 
     errors = module.validate_makefile(makefile)
 
+    assert "Makefile ci-release target missing `implementation-proof-readiness-check`" in errors
+    assert "Makefile ci-release target missing `runtime-trust-telemetry-snapshot-check`" in errors
     assert "Makefile ci-release target missing `postgres-integration-gate`" in errors
     assert "Makefile ci-release target missing `docker-build`" in errors
     assert "Makefile ci-release target missing `container-runtime-smoke`" in errors

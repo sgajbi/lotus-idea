@@ -53,26 +53,14 @@ Blocking scaffold commands:
 44. `make performance-underperformance-live-proof-contract-gate`
 45. `make core-benchmark-assignment-live-proof-contract-gate`
 46. `make core-portfolio-state-live-proof-contract-gate`
-47. `make implementation-proof-readiness-check` generates the scheduled-worker
-    deploy-proof artifact, durable repository proof artifact, runtime trust
-    telemetry proof artifact, Workbench read-path proof artifact,
-    Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, outbox
-    broker proof artifact, default Advise proposal route proof artifact,
-    default Manage action route proof artifact, default Report intake route
-    proof artifact, default mesh policy proof artifact, and default platform
-    mesh onboarding proof artifact, plus AI lineage store and AI workflow-pack
-    registration proof artifacts and optional Core portfolio-state, Manage
-    mandate, Advise mandate/restriction, missing-suitability, and missing
-    risk-profile live proof, then consumes all in aggregate RFC proof-readiness
-    evidence.
-48. `make supported-features-gate`
-49. `make endpoint-certification-gate`
-50. `make postgres-integration-gate`
-51. `make openapi-gate`
-52. `make coverage-gate`
-53. `make security-audit`
-54. `make docker-build`
-55. `make container-runtime-smoke`
+47. `make supported-features-gate`
+48. `make endpoint-certification-gate`
+49. `make postgres-integration-gate`
+50. `make openapi-gate`
+51. `make coverage-gate`
+52. `make security-audit`
+53. `make docker-build`
+54. `make container-runtime-smoke`
 
 Support commands:
 
@@ -87,6 +75,31 @@ On-demand local report commands:
 Generated report artifacts from these commands are local review evidence and are
 ignored by git. They are not durable current-state proof in the quality
 scorecard; rerun the commands when a reviewer asks for a fresh artifact.
+
+Release and review evidence commands:
+
+1. `make implementation-proof-readiness-check` generates the scheduled-worker
+   deploy-proof artifact, durable repository proof artifact, runtime trust
+   telemetry proof artifact, Workbench read-path proof artifact,
+   Gateway/Workbench operational proof artifact, Gateway/Workbench discovery
+   proof artifact, outbox broker proof artifact, default Advise proposal route
+   proof artifact, default Manage action route proof artifact, default Report
+   intake route proof artifact, default mesh policy proof artifact, and default
+   platform mesh onboarding proof artifact, plus AI lineage store and AI
+   workflow-pack registration proof artifacts and optional Core
+   portfolio-state, Manage mandate, Advise mandate/restriction,
+   missing-suitability, and missing risk-profile live proof, then consumes all
+   in aggregate RFC proof-readiness evidence.
+2. `make runtime-trust-telemetry-snapshot-check` writes the source-safe runtime
+   trust telemetry snapshot under ignored `output/` for release/review evidence.
+3. `make ci-release` runs `make ci`, the implementation-proof readiness
+   generator, runtime trust telemetry snapshot generation, PostgreSQL runtime
+   proof, Docker build, container startup smoke, image scan, and SBOM evidence.
+
+These commands intentionally write ignored local proof artifacts and are not
+part of `make lint`. Clean contract gates and non-writing preview checks for
+the same proof families remain blocking in lint so fast lanes stay
+deterministic.
 
 `make ci-contract-gate` is the anti-drift gate for the day-one bank-buyable baseline. It checks that
 the Makefile and GitHub workflow lanes still include architecture boundaries, maintainability,
@@ -111,7 +124,7 @@ Advise mandate/restriction live-proof contract validation,
 Workbench read-path proof contract validation,
 Gateway/Workbench discovery proof contract validation,
 outbox broker proof contract validation,
-implementation-proof readiness artifact generation, runtime trust telemetry preview generation,
+implementation-proof readiness target wiring and release-lane placement, runtime trust telemetry preview generation, runtime trust telemetry snapshot release-lane placement,
 source-observability contract validation, API route metadata validation,
 API ProblemDetails boundary validation, OpenAPI ProblemDetails example validation,
 protected private import boundary validation, operation metric contract validation, AI model-risk
@@ -122,8 +135,10 @@ auto-merge dispatch posture, verified immutable GitHub Action SHA pins with vers
 scoped test-target variables for focused fix-forward validation, repo-native GitHub test and
 coverage target usage, report-only CI timing/signal evidence, and pass/fail unit coverage for the
 CI contract gate itself. The CI contract
-gate now explicitly fails if these current blocking lint gates are removed from `make lint`, so
-agent-driven quality controls cannot quietly become optional local commands.
+gate now explicitly fails if clean blocking gates are removed from `make lint`,
+if artifact-producing implementation-proof readiness or runtime trust telemetry
+snapshot generation is added back to `make lint`, or if the release lane drops
+those evidence generators.
 Main Releasability is intentionally `workflow_dispatch` only: merged PRs use
 `merged-pr-main-releasability.yml` to dispatch one authoritative post-merge
 release-proof run, and manual reruns use the same dispatchable workflow. The
