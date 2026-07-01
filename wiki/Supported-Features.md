@@ -32,7 +32,7 @@ aggregate decision counts only, and remains `not_certified`. Accepted internal m
 lease-fenced delivery state, durable retry scheduling, retryable failed status,
 published status, and dead-letter status through the repository port. Certified
 internal outbox delivery readiness and run-once operator endpoints now report aggregate
-backlog/status, due retry, leased, and expired-lease posture and can execute one bounded
+backlog/status, due retry, retry-deferred, leased, and expired-lease posture and can execute one bounded
 configured-publisher pass that claims rows before broker publication without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
 or downstream claims. That is recoverability foundation only; no certified live

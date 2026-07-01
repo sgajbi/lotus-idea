@@ -44,6 +44,13 @@ def test_postgres_repository_uses_outbox_only_readiness_projection() -> None:
             OutboxEventStatus.FAILED,
             retry_count=1,
         ),
+        _outbox_row(
+            base_row,
+            "event-failed-deferred",
+            OutboxEventStatus.FAILED,
+            retry_count=1,
+            next_attempt_at_utc=EVALUATED_AT + timedelta(minutes=5),
+        ),
         _outbox_row(base_row, "event-published", OutboxEventStatus.PUBLISHED),
         _outbox_row(base_row, "event-dead-letter", OutboxEventStatus.DEAD_LETTER),
     ]
@@ -57,11 +64,12 @@ def test_postgres_repository_uses_outbox_only_readiness_projection() -> None:
     executed_sql = " ".join(connection.executed_sql)
     assert summary.pending_count == 1
     assert summary.leased_count == 2
-    assert summary.failed_count == 1
+    assert summary.failed_count == 2
     assert summary.published_count == 1
     assert summary.dead_letter_count == 1
     assert summary.expired_lease_count == 1
     assert summary.delivery_ready_count == 3
+    assert summary.retry_deferred_count == 1
     assert "/* lotus-idea outbox-readiness-summary */" in executed_sql
     assert "from idea_outbox_event" in executed_sql
     for unrelated_table in (
@@ -83,6 +91,7 @@ def _outbox_row(
     *,
     retry_count: int = 0,
     lease_expires_at_utc: datetime | None = None,
+    next_attempt_at_utc: datetime | None = None,
 ) -> dict[str, Any]:
     row = dict(base_row)
     row["outbox_event_id"] = event_id
@@ -99,7 +108,7 @@ def _outbox_row(
     row["last_failed_at_utc"] = (
         EVALUATED_AT - timedelta(minutes=5) if status is OutboxEventStatus.FAILED else None
     )
-    row["next_attempt_at_utc"] = (
-        EVALUATED_AT - timedelta(minutes=1) if status is OutboxEventStatus.FAILED else None
-    )
+    row["next_attempt_at_utc"] = next_attempt_at_utc
+    if status is OutboxEventStatus.FAILED and next_attempt_at_utc is None:
+        row["next_attempt_at_utc"] = EVALUATED_AT - timedelta(minutes=1)
     return row

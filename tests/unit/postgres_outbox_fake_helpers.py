@@ -83,6 +83,14 @@ def outbox_readiness_summary_row(
                     claimed_at_utc=evaluated_at_utc,
                 )
             ),
+            "retry_deferred_count": sum(
+                1
+                for row in rows
+                if row["status"] == OutboxEventStatus.FAILED.value
+                and row["retry_count"] < max_retry_count
+                and row.get("next_attempt_at_utc") is not None
+                and row["next_attempt_at_utc"] > evaluated_at_utc
+            ),
         }
     ]
 

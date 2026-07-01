@@ -53,6 +53,7 @@ class OutboxDeliveryReadinessRepositorySummary:
     dead_letter_count: int
     expired_lease_count: int
     delivery_ready_count: int
+    retry_deferred_count: int = 0
 
 
 @dataclass(frozen=True)

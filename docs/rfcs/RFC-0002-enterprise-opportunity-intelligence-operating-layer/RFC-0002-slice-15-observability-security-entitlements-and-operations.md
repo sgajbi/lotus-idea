@@ -137,21 +137,23 @@ foundation:
 27. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose certified internal outbox
     delivery readiness for aggregate backlog, status counts, due retry posture,
-    durable repository posture, broker configuration posture,
+    retry-deferred failed-row counts, durable repository posture, broker configuration posture,
     publisher-adapter presence, source-of-truth paths, and certification
     blockers. The route requires both the `operator` role and
     `idea.outbox-delivery.readiness.read`, returns source-safe aggregate counts
     only, and emits bounded `outbox_delivery_readiness_read` operation events.
     Durable PostgreSQL providers compute the readiness summary with bounded
     `idea_outbox_event` aggregate queries that count failed events as
-    delivery-ready only when their `next_attempt_at_utc` is due, instead of
-    materializing unrelated repository snapshots.
+    delivery-ready only when their `next_attempt_at_utc` is due and report
+    failed events still cooling down separately, instead of materializing
+    unrelated repository snapshots.
 28. `tests/unit/test_outbox_delivery_readiness.py` and
     `tests/unit/test_postgres_outbox_readiness.py`, plus
     `tests/integration/test_outbox_delivery_readiness_api.py`, prove the
     blocked/not-certified posture, broker-configured still-blocked posture,
-    invalid retry-limit guard, repository-side projection without snapshot
-    hydration, role plus capability enforcement, product-safe payloads, and
+    invalid retry-limit guard, retry-deferred count posture, repository-side
+    projection without snapshot hydration, role plus capability enforcement,
+    product-safe payloads, and
     operation-event behavior for the outbox delivery readiness diagnostic.
 29. `POST /api/v1/outbox-delivery/run-once` exposes the bounded outbox
     delivery orchestration as an internal operator action with
