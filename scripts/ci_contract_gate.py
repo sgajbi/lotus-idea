@@ -59,6 +59,7 @@ REQUIRED_TARGETS = (
     "test-coverage",
     "coverage-gate",
     "security-audit",
+    "ci-release",
     "docker-build",
     "container-runtime-smoke",
     "release-sbom",
@@ -89,6 +90,14 @@ REQUIRED_CI_DEPS = (
     "test-e2e",
     "test-coverage",
     "security-audit",
+)
+REQUIRED_CI_RELEASE_DEPS = (
+    "ci",
+    "postgres-integration-gate",
+    "docker-build",
+    "container-runtime-smoke",
+    "container-image-scan",
+    "release-sbom",
 )
 READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
 
@@ -157,6 +166,10 @@ def _validate_aggregate_makefile_targets(makefile: str) -> list[str]:
     for dependency in REQUIRED_CI_DEPS:
         if dependency not in ci_deps:
             errors.append(f"Makefile ci target missing `{dependency}`")
+    ci_release_deps = _target_deps(makefile, "ci-release")
+    for dependency in REQUIRED_CI_RELEASE_DEPS:
+        if dependency not in ci_release_deps:
+            errors.append(f"Makefile ci-release target missing `{dependency}`")
     return errors
 
 
