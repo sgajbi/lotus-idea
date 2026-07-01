@@ -14,6 +14,14 @@ from app.infrastructure.postgres_protocols import PostgresConnection
 from app.ports.idea_repository import ReviewQueueRepositoryPage
 
 
+REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS = (
+    "tenant_id",
+    "book_id",
+    "portfolio_id",
+    "client_id",
+)
+
+
 def load_review_queue_candidate_page(
     connection: PostgresConnection,
     *,
@@ -88,12 +96,14 @@ def _review_queue_candidate_predicates(
         EvidenceSupportability.BLOCKED.value,
     ]
     if access_scope_filter is not None:
-        for field_name, values in (
-            ("tenant_id", access_scope_filter.tenant_id),
-            ("book_id", access_scope_filter.book_id),
-            ("portfolio_id", access_scope_filter.portfolio_id),
-            ("client_id", access_scope_filter.client_id),
-        ):
+        filter_values = {
+            "tenant_id": access_scope_filter.tenant_id,
+            "book_id": access_scope_filter.book_id,
+            "portfolio_id": access_scope_filter.portfolio_id,
+            "client_id": access_scope_filter.client_id,
+        }
+        for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS:
+            values = filter_values[field_name]
             if values:
                 predicates.append(f"(candidate_json->'access_scope'->>'{field_name}') = ANY(%s)")
                 params.append(list(values))

@@ -9,6 +9,7 @@ import pytest
 from app.domain import IdeaCandidate, QueueAccessScopeFilter, ReviewAccessScope
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_review_queue import (
+    REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS,
     _review_queue_candidate_predicates,
     load_review_queue_candidate_page,
 )
@@ -69,6 +70,60 @@ def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection
     assert "idea_ai_explanation_lineage" not in executed_sql
 
 
+def test_postgres_review_queue_scope_filters_cover_all_indexed_fields_and_stable_bounds() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    in_scope = queue_candidate(index=1, candidate_scope=access_scope())
+    wrong_tenant = queue_candidate(
+        index=2,
+        candidate_scope=ReviewAccessScope(
+            tenant_id="tenant-out-of-scope",
+            book_id="book-001",
+            portfolio_id="portfolio-001",
+            client_id="client-001",
+        ),
+    )
+    wrong_client = queue_candidate(
+        index=3,
+        candidate_scope=ReviewAccessScope(
+            tenant_id="tenant-001",
+            book_id="book-001",
+            portfolio_id="portfolio-001",
+            client_id="client-out-of-scope",
+        ),
+    )
+    for candidate in (in_scope, wrong_tenant, wrong_client):
+        repository.persist_candidate(
+            candidate,
+            idempotency_key=f"signal-ingestion:high-cash:{candidate.candidate_id}",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=EVALUATED_AT,
+        )
+    connection.executed_sql.clear()
+
+    page = PostgresIdeaRepository(connection).review_queue_candidate_page(
+        access_scope_filter=QueueAccessScopeFilter(
+            tenant_id="tenant-001",
+            book_id="book-001",
+            portfolio_id="portfolio-001",
+            client_id="client-001",
+        ),
+        limit=10,
+        offset=0,
+    )
+
+    assert [record.candidate.candidate_id for record in page.candidate_records] == [
+        in_scope.candidate_id
+    ]
+    assert page.total_reviewable_item_count == 1
+    executed_sql = " ".join(connection.executed_sql)
+    for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS:
+        assert f"candidate_json->'access_scope'->>'{field_name}'" in executed_sql
+    assert "order by queue_score desc, queue_created_at_utc, candidate_id" in executed_sql
+    assert "limit %s offset %s" in executed_sql
+
+
 def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:
     connection = FakePostgresConnection()
 
@@ -96,6 +151,37 @@ def test_review_queue_predicates_use_postgres_array_parameters() -> None:
     assert isinstance(params[0], list)
     assert isinstance(params[3], list)
     assert params[3] == ["portfolio-001"]
+
+
+def test_review_queue_predicates_keep_scope_parameter_order_aligned_to_indexes() -> None:
+    predicate_sql, params = _review_queue_candidate_predicates(
+        QueueAccessScopeFilter(
+            tenant_id="tenant-001",
+            book_id="book-001",
+            portfolio_id="portfolio-001",
+            client_id="client-001",
+        )
+    )
+
+    assert REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS == (
+        "tenant_id",
+        "book_id",
+        "portfolio_id",
+        "client_id",
+    )
+    assert [
+        predicate_sql.index(f"->>'{field_name}'")
+        for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS
+    ] == sorted(
+        predicate_sql.index(f"->>'{field_name}'")
+        for field_name in REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS
+    )
+    assert params[3:] == (
+        ["tenant-001"],
+        ["book-001"],
+        ["portfolio-001"],
+        ["client-001"],
+    )
 
 
 def test_review_queue_candidate_page_handles_empty_count_result() -> None:
