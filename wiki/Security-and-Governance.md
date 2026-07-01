@@ -50,10 +50,13 @@ GitHub Security posture:
    dependency SBOM. The `requirements/requirements.txt` mirror exists only to
    keep GitHub Dependency Graph updates parseable and is gated against the
    resolved runtime lock.
-7. Dependabot Python updates use one grouped root-dependency stream. Separate
-   `/requirements` lock-only PRs are prohibited because they can strand lock
-   truth away from root pins; `make dependency-refresh` regenerates both runtime
-   lock files from the active closure before merge validation.
+7. Dependabot Python updates use one grouped root-dependency stream. Routine
+   version-update PRs are paused with `open-pull-requests-limit: 0` while RFC
+   delivery is active; dependency suggestions are manually regenerated or
+   cherry-picked into the active implementation branch before repo-native gates.
+   Separate `/requirements` lock-only PRs are prohibited because they can strand
+   lock truth away from root pins; `make dependency-refresh` regenerates both
+   runtime lock files from the active closure before merge validation.
 
 Mesh certification rule:
 

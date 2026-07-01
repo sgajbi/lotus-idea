@@ -373,10 +373,12 @@ signal without widening lotus-idea's product boundary:
 2. `SECURITY.md` defines the supported security baseline, private
    vulnerability reporting path, source-safe report-content boundary, and
    lotus-idea product-ownership limits.
-3. `.github/dependabot.yml` adds one weekly grouped Python dependency-closure
-   root update stream plus weekly grouped GitHub Actions dependency monitoring
-   with an open-PR cap to keep dependency work actionable. It deliberately does
-   not open separate `/requirements` lock-only Python PRs.
+3. `.github/dependabot.yml` defines one grouped Python dependency-closure root
+   update stream plus grouped GitHub Actions dependency monitoring, but routine
+   version-update PRs are paused with `open-pull-requests-limit: 0` while RFC
+   delivery is active. Dependency suggestions are manually regenerated or
+   cherry-picked into the active implementation branch before repo-native gates.
+   It deliberately does not open separate `/requirements` lock-only Python PRs.
 4. `make dependency-refresh` is the governed follow-up path for Python
    dependency PRs: it installs from root pins without a stale runtime-lock
    constraint, then regenerates both `requirements/runtime-resolved.lock.txt`

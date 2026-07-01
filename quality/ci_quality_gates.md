@@ -150,11 +150,14 @@ Dependabot alerts/security updates enabled, secret scanning with push
 protection enabled, private vulnerability reporting enabled, and CodeQL default
 setup configured for GitHub-owned static analysis over Python and GitHub
 Actions. Source-controlled `SECURITY.md` and `.github/dependabot.yml` define
-the supported security baseline, source-safe report content, a single weekly
-grouped Python dependency-closure root update stream, and weekly grouped
-GitHub Actions dependency monitoring; `make ci-contract-gate` rejects removal
-or weakening of those files and blocks reintroduced `/requirements` lock-only
-Python update streams. GitHub currently reports
+the supported security baseline, source-safe report content, a single grouped
+Python dependency-closure root update stream, and grouped GitHub Actions
+dependency monitoring. Routine Dependabot version-update PRs are paused with
+`open-pull-requests-limit: 0` while RFC delivery is active; dependency
+suggestions must be manually regenerated or cherry-picked into the active
+implementation branch and validated through repo-native gates. `make
+ci-contract-gate` rejects removal or weakening of those files and blocks
+reintroduced `/requirements` lock-only Python update streams. GitHub currently reports
 non-provider secret patterns and secret validity checks as disabled for this
 repository even after an admin API enable attempt, so those controls are
 advisory future options and are not claimed as active release evidence.

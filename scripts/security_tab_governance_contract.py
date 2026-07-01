@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,9 +27,6 @@ DEPENDABOT_REQUIRED_FRAGMENTS = {
     'interval: "weekly"': "dependabot.yml must use a weekly cadence",
     'timezone: "Asia/Singapore"': "dependabot.yml must use the governed timezone",
     "groups:": "dependabot.yml must group updates to reduce alert noise",
-    "open-pull-requests-limit: 5": (
-        "dependabot.yml must cap open dependency PRs to preserve signal quality"
-    ),
 }
 DEPENDABOT_PROHIBITED_FRAGMENTS = {
     'directory: "/requirements"': (
@@ -37,9 +35,24 @@ DEPENDABOT_PROHIBITED_FRAGMENTS = {
     ),
 }
 
+DEPENDABOT_VERSION_UPDATE_PAUSE_MESSAGE = (
+    "dependabot.yml must pause routine version-update PRs during RFC delivery"
+)
+
 
 def _read(path: Path) -> str:
     return path.read_text(encoding="utf-8")
+
+
+def _dependabot_open_pull_request_limits(dependabot_config: str) -> list[int]:
+    return [
+        int(match.group(1))
+        for match in re.finditer(
+            r"^\s*open-pull-requests-limit:\s*(\d+)\s*$",
+            dependabot_config,
+            flags=re.MULTILINE,
+        )
+    ]
 
 
 def validate_security_tab_governance(security_policy: str, dependabot_config: str) -> list[str]:
@@ -53,6 +66,9 @@ def validate_security_tab_governance(security_policy: str, dependabot_config: st
     for fragment, message in DEPENDABOT_PROHIBITED_FRAGMENTS.items():
         if fragment in dependabot_config:
             errors.append(message)
+    open_pull_request_limits = _dependabot_open_pull_request_limits(dependabot_config)
+    if not open_pull_request_limits or any(limit != 0 for limit in open_pull_request_limits):
+        errors.append(DEPENDABOT_VERSION_UPDATE_PAUSE_MESSAGE)
     return errors
 
 

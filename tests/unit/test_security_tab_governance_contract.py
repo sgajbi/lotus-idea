@@ -94,15 +94,29 @@ def test_security_tab_governance_contract_blocks_split_requirements_stream() -> 
     ) in errors
 
 
-def test_security_tab_governance_contract_blocks_unbounded_dependency_pr_noise() -> None:
+def test_security_tab_governance_contract_blocks_reenabled_version_update_pr_noise() -> None:
     module = _load_security_tab_contract()
     security_policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
     dependabot_config = (
         (ROOT / ".github" / "dependabot.yml")
         .read_text(encoding="utf-8")
-        .replace("open-pull-requests-limit: 5", "open-pull-requests-limit: 20")
+        .replace("open-pull-requests-limit: 0", "open-pull-requests-limit: 5")
     )
 
     errors = module.validate_security_tab_governance(security_policy, dependabot_config)
 
-    assert "dependabot.yml must cap open dependency PRs to preserve signal quality" in errors
+    assert "dependabot.yml must pause routine version-update PRs during RFC delivery" in errors
+
+
+def test_security_tab_governance_contract_blocks_partial_version_update_reenablement() -> None:
+    module = _load_security_tab_contract()
+    security_policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+    dependabot_config = (
+        (ROOT / ".github" / "dependabot.yml")
+        .read_text(encoding="utf-8")
+        .replace("open-pull-requests-limit: 0", "open-pull-requests-limit: 5", 1)
+    )
+
+    errors = module.validate_security_tab_governance(security_policy, dependabot_config)
+
+    assert "dependabot.yml must pause routine version-update PRs during RFC delivery" in errors

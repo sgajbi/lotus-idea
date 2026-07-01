@@ -7,7 +7,9 @@ updates:
       day: "monday"
       time: "08:00"
       timezone: "Asia/Singapore"
-    open-pull-requests-limit: 5
+    # Routine version-update PRs are paused during RFC implementation.
+    # Security alerts/updates stay governed through GitHub Security posture.
+    open-pull-requests-limit: 0
     groups:
       python-dependency-closure-roots:
         patterns:
@@ -20,7 +22,9 @@ updates:
       day: "monday"
       time: "08:05"
       timezone: "Asia/Singapore"
-    open-pull-requests-limit: 5
+    # Routine version-update PRs are paused during RFC implementation.
+    # Security alerts/updates stay governed through GitHub Security posture.
+    open-pull-requests-limit: 0
     groups:
       github-actions:
         patterns:
