@@ -64,6 +64,7 @@ from app.infrastructure.postgres_repository import (
     PostgresIdeaRepository,
     _idempotency_created_at,
 )
+from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError
 from app.infrastructure.postgres_codecs import (
     decode_datetime,
     read_json_object,
@@ -624,6 +625,108 @@ def test_postgres_repository_row_scoped_mutations_preserve_independent_rows() ->
         for decision in record.review_decisions
     } == {"review-row-scoped-first", "review-row-scoped-second"}
     assert len(connection.rows["idea_review_decision"]) == 2
+
+
+def test_postgres_repository_rejects_stale_same_candidate_snapshot_write() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_stale_same_candidate",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:stale-same-candidate",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    base_snapshot = PostgresIdeaRepository(connection).snapshot()
+
+    class StaleSnapshotRepository(PostgresIdeaRepository):
+        def __init__(
+            self,
+            stale_connection: FakePostgresConnection,
+            stale_snapshot: IdeaRepositorySnapshot,
+        ) -> None:
+            super().__init__(stale_connection)
+            self._stale_snapshot = stale_snapshot
+
+        def snapshot(self) -> IdeaRepositorySnapshot:
+            return self._stale_snapshot
+
+    first_review = apply_review_action(
+        candidate,
+        review_command(review_id="review-stale-same-candidate-first"),
+    )
+    second_review = apply_review_action(
+        candidate,
+        review_command(review_id="review-stale-same-candidate-second"),
+    )
+
+    StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+        first_review,
+        idempotency_key="review:stale-same-candidate-first",
+        payload={"reviewId": first_review.decision.review_id},
+    )
+    with pytest.raises(
+        StaleCandidateMutationError,
+        match="stale candidate mutation rejected for idea_high_cash_stale_same_candidate",
+    ):
+        StaleSnapshotRepository(connection, base_snapshot).record_review_action(
+            second_review,
+            idempotency_key="review:stale-same-candidate-second",
+            payload={"reviewId": second_review.decision.review_id},
+        )
+
+    recovered = PostgresIdeaRepository(connection).snapshot()
+
+    assert connection.commits == 2
+    assert connection.rollbacks == 1
+    assert [
+        decision.review_id
+        for decision in recovered.candidate_records[candidate.candidate_id].review_decisions
+    ] == ["review-stale-same-candidate-first"]
+    assert not any(
+        row["idempotency_key"] == "review:stale-same-candidate-second"
+        for row in connection.rows["idea_idempotency_record"]
+    )
+
+
+def test_postgres_candidate_updates_use_optimistic_snapshot_guard() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_optimistic_guard",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:optimistic-guard",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+
+    review = apply_review_action(
+        candidate,
+        review_command(review_id="review-optimistic-guard"),
+    )
+    repository.record_review_action(
+        review,
+        idempotency_key="review:optimistic-guard",
+        payload={"reviewId": review.decision.review_id},
+    )
+
+    update_sql = next(
+        statement
+        for statement in connection.executed_sql
+        if statement.startswith("update idea_candidate_record")
+    )
+    assert "where candidate_id = %s and updated_at_utc = %s" in update_sql
+    assert "returning candidate_id" in update_sql
 
 
 def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
