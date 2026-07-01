@@ -32,6 +32,24 @@ def test_outbox_consumer_contract_gate_rejects_premature_runtime_certification(
     assert "declaredConsumers[0].certificationStatus must stay not runtime certified" in errors
 
 
+def test_outbox_consumer_contract_gate_rejects_forbidden_contract_text(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+    source_contract = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-consumers.v1.json"
+    contract = json.loads(source_contract.read_text(encoding="utf-8"))
+    contract["consumerContractPolicy"]["authorityBoundary"] = "certified live consumer"
+    contract_path = tmp_path / "lotus-idea-outbox-consumers.v1.json"
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    errors = module.validate_outbox_consumer_contract(contract_path=contract_path)
+
+    assert any(
+        error.startswith("$.consumerContractPolicy.authorityBoundary: forbidden contract text")
+        for error in errors
+    )
+
+
 def _load_contract_gate_script() -> ModuleType:
     script_path = ROOT / "scripts" / "outbox_consumer_contract_gate.py"
     spec = importlib.util.spec_from_file_location("outbox_consumer_contract_gate", script_path)

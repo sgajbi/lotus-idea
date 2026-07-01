@@ -6,6 +6,11 @@ from pathlib import Path
 import sys
 from typing import Any
 
+try:
+    from scripts.contract_text_guards import validate_forbidden_contract_text
+except ModuleNotFoundError:
+    from contract_text_guards import validate_forbidden_contract_text  # type: ignore[import-not-found,no-redef]
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC_DIR = ROOT / "src"
 if str(SRC_DIR) not in sys.path:
@@ -104,7 +109,7 @@ def validate_outbox_event_contract(*, contract_path: Path = CONTRACT_PATH) -> li
     _validate_source_of_truth(payload, errors)
     _validate_source_code_alignment(errors)
     _validate_migration_alignment(errors)
-    _validate_forbidden_contract_text(payload, errors)
+    validate_forbidden_contract_text(payload, errors, FORBIDDEN_CONTRACT_TEXT)
     return errors
 
 
@@ -265,21 +270,6 @@ def _validate_migration_alignment(errors: list[str]) -> None:
         errors.append("migration outbox aggregate_type check missing")
     if f"schema_version = '{OUTBOX_EVENT_SCHEMA_VERSION}'" not in migration_text:
         errors.append("migration outbox schema_version check missing")
-
-
-def _validate_forbidden_contract_text(value: object, errors: list[str], path: str = "$") -> None:
-    if isinstance(value, Mapping):
-        for key, nested in value.items():
-            _validate_forbidden_contract_text(nested, errors, f"{path}.{key}")
-        return
-    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-        for index, nested in enumerate(value):
-            _validate_forbidden_contract_text(nested, errors, f"{path}[{index}]")
-        return
-    if isinstance(value, str):
-        for forbidden_text in FORBIDDEN_CONTRACT_TEXT:
-            if forbidden_text in value:
-                errors.append(f"{path}: forbidden contract text `{forbidden_text}`")
 
 
 def main() -> int:

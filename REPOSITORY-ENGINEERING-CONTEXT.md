@@ -729,8 +729,9 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     centralize optional proof-artifact JSON object loading in
     `app.runtime.proof_artifact_files`, and centralize source-product proof
     payload text-sequence normalization in
-    `app.application.source_product_proof_values`;
-    the current measured baseline scans 1,611 functions and reports 5 exact
+    `app.application.source_product_proof_values`, and centralize outbox
+    contract forbidden-text traversal in `scripts.contract_text_guards`;
+    the current measured baseline scans 1,610 functions and reports 4 exact
     clusters.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
