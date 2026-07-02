@@ -168,6 +168,28 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     }
 
 
+def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    candidate_id = persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-active-default",
+        idempotency_key="seed-review-queue-active-default-001",
+    )
+
+    response = client.get(
+        "/api/v1/review-queues/advisor",
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["evaluatedAtUtc"] == "2026-06-21T10:10:00Z"
+    assert [item["candidate"]["candidateId"] for item in payload["items"]] == [candidate_id]
+    assert payload["page"]["returnedItemCount"] == 1
+
+
 def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
