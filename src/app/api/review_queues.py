@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
@@ -55,6 +55,8 @@ _READ_QUEUE_READINESS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.review.queue.readiness.read",
     allowed_roles=("operator",),
 )
+
+ACTIVE_ADVISOR_REVIEW_QUEUE_EVALUATED_AT_UTC = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 
 
 class ReviewQueueCandidateResponse(CamelModel):
@@ -223,7 +225,7 @@ class ReviewQueueReadinessResponse(CamelModel):
 
 
 async def get_advisor_review_queue(
-    evaluated_at_utc: datetime = Query(..., alias="evaluatedAtUtc"),
+    evaluated_at_utc: datetime | None = Query(default=None, alias="evaluatedAtUtc"),
     tenant_id: str | None = Query(default=None, alias="tenantId"),
     book_id: str | None = Query(default=None, alias="bookId"),
     portfolio_id: str | None = Query(default=None, alias="portfolioId"),
@@ -281,7 +283,8 @@ async def get_advisor_review_queue(
             title="Permission denied",
             detail="The caller is not permitted to read advisor idea review queues.",
         )
-    if not is_timezone_aware(evaluated_at_utc):
+    resolved_evaluated_at_utc = evaluated_at_utc or ACTIVE_ADVISOR_REVIEW_QUEUE_EVALUATED_AT_UTC
+    if not is_timezone_aware(resolved_evaluated_at_utc):
         _emit_review_queue_operation_event(
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
@@ -330,7 +333,7 @@ async def get_advisor_review_queue(
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     queue = build_review_queue_from_repository(
         BuildReviewQueueFromRepositoryCommand(
-            evaluated_at_utc=evaluated_at_utc,
+            evaluated_at_utc=resolved_evaluated_at_utc,
             limit=limit,
             offset=offset,
             access_scope_filter=(
@@ -461,6 +464,8 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         "Returns the deterministic advisor review queue projection over persisted idea "
         "candidate snapshots. Optional tenantId, bookId, portfolioId, and clientId "
         "query filters constrain results to the requested advisor access scope. "
+        "When evaluatedAtUtc is omitted, the route returns the governed active "
+        "advisor queue evaluation snapshot. "
         f"limit and offset page the ranked items and exclusions with a default "
         f"limit of {DEFAULT_REVIEW_QUEUE_PAGE_LIMIT} and maximum limit of "
         f"{MAX_REVIEW_QUEUE_PAGE_LIMIT}. "
