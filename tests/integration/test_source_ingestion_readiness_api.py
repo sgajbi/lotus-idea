@@ -60,6 +60,7 @@ class RecordingCoreSource(CoreOpportunitySourcePort):
     seen_request: CoreHighCashEvidenceRequest | None = None
     error: Exception | None = None
     close_count: int = 0
+    close_error: Exception | None = None
 
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
@@ -71,6 +72,8 @@ class RecordingCoreSource(CoreOpportunitySourcePort):
 
     def close(self) -> None:
         self.close_count += 1
+        if self.close_error is not None:
+            raise self.close_error
 
 
 def source_ingestion_readiness_headers(
@@ -514,6 +517,91 @@ def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
     assert source.seen_request is not None
     assert source.close_count == 1
     assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_source_ingestion_run_once_api_preserves_bounded_result_when_runtime_close_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    reset_idea_repository_for_tests(repository=repository)
+    source = RecordingCoreSource(
+        error=CoreSourceUnavailable(),
+        close_error=RuntimeError("raw core close failure PB_SG_GLOBAL_BAL_001"),
+    )
+    runtime = SourceIngestionRuntime(
+        plan=source_ingestion_worker_plan_from_manifest(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "correlationId": "corr-source-ingestion-run-api",
+                "traceId": "trace-source-ingestion-run-api",
+                "workItems": [
+                    {
+                        "portfolioId": PORTFOLIO_ID,
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
+            }
+        ),
+        core_source=source,
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda _repository: True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        lambda: runtime,
+    )
+    events: list[tuple[str, str, str | None, dict[str, str]]] = []
+
+    def capture(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.error_code,
+                dict(event.attributes),
+            )
+        )
+
+    monkeypatch.setattr(source_ingestion_readiness_api, "emit_operation_event", capture)
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "completed"
+    assert payload["decisionCounts"]["blocked"] == 1
+    assert payload["decisionCounts"]["accepted"] == 0
+    assert source.close_count == 1
+    assert len(repository.snapshot().candidate_records) == 0
+    assert "raw core close failure" not in response.text
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
+    assert events == [
+        (
+            "source_ingestion_run_once",
+            "blocked",
+            None,
+            {"work_item_count_bucket": "1-10"},
+        ),
+        (
+            "source_ingestion_run_once",
+            "suppressed",
+            "runtime_cleanup_failed",
+            {"cleanup_phase": "runtime_close"},
+        ),
+    ]
 
 
 def test_source_ingestion_run_once_api_requires_operator_permission() -> None:

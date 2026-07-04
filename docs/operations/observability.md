@@ -247,3 +247,7 @@ idempotency keys, event ids, broker payloads, or downstream payloads. The route
 also closes its owned broker publisher after execution begins, so repeated
 operator runs do not leave HTTP client resources open; this is internal
 resource-lifecycle evidence, not external broker publication certification.
+Publisher cleanup failures emit a source-safe `suppressed` operation event with
+`publisher_cleanup_failed` and `cleanup_phase=publisher_close`; the already
+computed completed, replayed, conflict, or bounded failure response remains the
+operator contract.

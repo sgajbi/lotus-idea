@@ -879,7 +879,7 @@
       "path": "/api/v1/source-ingestion/run-once",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Run one bounded internal high-cash Core source-ingestion pass for operators using the configured worker manifest, active repository provider, and Core source adapter while returning aggregate counts only.",
+      "purpose": "Run one bounded internal high-cash Core source-ingestion pass for operators using the configured worker manifest, active repository provider, Core source adapter, and source-safe runtime cleanup-failure isolation while returning aggregate counts only.",
       "when_to_use": "Use for internal operator validation when a caller has idea.source-ingestion.run capability, durable repository configuration is active, and operators need to exercise the source-ingestion orchestration without exposing portfolio identifiers, idempotency keys, raw Core payloads, or candidate identifiers.",
       "when_not_to_use": "Do not use as live Core source-ingestion proof, scheduled worker deploy-contract proof, certified long-running scheduling proof, data-product certification proof, platform source-manifest inclusion proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [
@@ -897,6 +897,7 @@
         "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_blocks_without_durable_repository",
         "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_blocks_runtime_configuration_without_mutation",
         "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_executes_configured_batch_source_safely",
+        "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_preserves_bounded_result_when_runtime_close_fails",
         "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_requires_operator_permission",
         "tests/integration/test_source_ingestion_readiness_api.py::test_source_ingestion_run_once_api_emits_not_certified_operation_event"
       ],
@@ -936,7 +937,7 @@
       "path": "/api/v1/outbox-delivery/run-once",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider, configured publisher adapter, explicit operator run identity, and route-owned publisher cleanup while returning aggregate counts only.",
+      "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider, configured publisher adapter, explicit operator run identity, route-owned publisher cleanup, and source-safe cleanup-failure isolation while returning aggregate counts only.",
       "when_to_use": "Use for internal operator validation when a caller has idea.outbox-delivery.run capability and Idempotency-Key and needs to exercise outbox delivery orchestration without exposing raw idempotency keys, event identifiers, or claiming live broker certification.",
       "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform mesh event publication proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [
@@ -959,6 +960,7 @@
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_publishes_with_configured_publisher",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_idempotency_key",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating",
+        "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_preserves_results_when_publisher_close_fails",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different_parameters",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_requires_operator_permission",
         "tests/integration/test_outbox_delivery_readiness_api.py::test_outbox_delivery_run_once_api_emits_not_certified_operation_event"

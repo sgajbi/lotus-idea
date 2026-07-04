@@ -775,6 +775,15 @@ existing `not_certified` posture for live broker publication, downstream
 consumer proof, platform mesh event publication, Gateway/Workbench support, and
 supported-feature promotion.
 
+GitHub issue `#314` hardens the cleanup pattern itself. Route-owned cleanup is
+now best-effort after run-once execution begins: outbox publisher close failures
+emit `publisher_cleanup_failed` with `cleanup_phase=publisher_close`, and
+source-ingestion runtime close failures emit `runtime_cleanup_failed` with
+`cleanup_phase=runtime_close`. Both diagnostics use `suppressed` operation
+events and keep raw broker/Core details out of product responses, so already
+computed completed, replayed, conflict, and bounded blocked outcomes remain
+stable for operators.
+
 GitHub issue `#313` adds the matching run-once capacity guard. The
 source-ingestion command and manifest parser enforce a code-owned 100-item
 ceiling over both `maxItems` and raw `workItems`; the API returns the

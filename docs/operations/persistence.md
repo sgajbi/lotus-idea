@@ -251,7 +251,9 @@ flowchart LR
     `LOTUS_IDEA_OUTBOX_BROKER_POOL_TIMEOUT_SECONDS`; invalid values fail
     closed before publication is attempted. The outbox-delivery run-once API
     closes the route-owned broker publisher after execution begins so repeated
-    operator runs do not leak HTTP client resources. This is internal
+    operator runs do not leak HTTP client resources. Cleanup failures emit
+    source-safe `suppressed` operation events and do not replace completed,
+    replayed, conflict, or bounded blocked run-once responses. This is internal
     recoverability and adapter foundation only; certified live broker runtime,
     downstream consumers, and event-publication support remain unimplemented.
 16. `src/app/application/outbox_delivery_readiness.py` and

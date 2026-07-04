@@ -315,7 +315,10 @@ async def post_source_ingestion_run_once(
             durable_storage_backed=durable_storage_backed,
         )
     finally:
-        runtime.close()
+        _close_source_ingestion_runtime(
+            runtime,
+            durable_storage_backed=durable_storage_backed,
+        )
 
 
 def _emit_source_ingestion_readiness_event(
@@ -342,10 +345,13 @@ def _emit_source_ingestion_run_event(
     *,
     durable_storage_backed: bool = False,
     total_count: int | None = None,
+    cleanup_phase: str | None = None,
 ) -> None:
     attributes: dict[str, str] = {}
     if total_count is not None:
         attributes["work_item_count_bucket"] = bounded_count_bucket(total_count)
+    if cleanup_phase is not None:
+        attributes["cleanup_phase"] = cleanup_phase
     emit_operation_event(
         OperationEvent(
             operation=IdeaOperation.SOURCE_INGESTION_RUN_ONCE,
@@ -358,6 +364,22 @@ def _emit_source_ingestion_run_event(
             attributes=attributes,
         )
     )
+
+
+def _close_source_ingestion_runtime(
+    runtime: SourceIngestionRuntime,
+    *,
+    durable_storage_backed: bool,
+) -> None:
+    try:
+        runtime.close()
+    except Exception:
+        _emit_source_ingestion_run_event(
+            OperationOutcome.SUPPRESSED,
+            "runtime_cleanup_failed",
+            durable_storage_backed=durable_storage_backed,
+            cleanup_phase="runtime_close",
+        )
 
 
 def _source_ingestion_operation_outcome(
