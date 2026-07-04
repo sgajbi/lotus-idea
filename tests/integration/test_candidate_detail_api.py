@@ -88,6 +88,10 @@ def review_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -97,6 +101,10 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.feedback.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -305,7 +313,11 @@ def test_candidate_detail_api_returns_source_safe_persisted_candidate_detail() -
 def test_candidate_detail_api_returns_workflow_summaries_without_authority_promotion() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
-    candidate_id = persisted_candidate_id(client, idempotency_key="detail-seed-workflow-001")
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key="detail-seed-workflow-001",
+        scoped=True,
+    )
     seed_full_candidate_workflow(client, candidate_id)
 
     response = client.get(

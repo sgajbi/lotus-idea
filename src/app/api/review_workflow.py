@@ -54,7 +54,7 @@ from app.domain import (
 )
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
-from app.security.caller_context import CallerContext, PermissionDeniedError
+from app.security.caller_context import CallerContext, CallerEntitlementScope, PermissionDeniedError
 
 _REVIEW_ACTION_CAPABILITY = "idea.review.record"
 _FEEDBACK_CAPABILITY = "idea.feedback.record"
@@ -88,6 +88,14 @@ class ReviewActorScopeRequest(CamelModel):
             book_ids=frozenset(self.book_ids),
             portfolio_ids=frozenset(self.portfolio_ids),
             client_ids=frozenset(self.client_ids),
+        )
+
+    def is_subset_of_entitlement_scope(self, scope: CallerEntitlementScope) -> bool:
+        return (
+            _values_are_subset(self.tenant_ids, scope.tenant_ids)
+            and _values_are_subset(self.book_ids, scope.book_ids)
+            and _values_are_subset(self.portfolio_ids, scope.portfolio_ids)
+            and _values_are_subset(self.client_ids, scope.client_ids)
         )
 
 
@@ -136,7 +144,7 @@ class ReviewActionRequest(CamelModel):
             review=ReviewDecisionCommand(
                 review_id=self.review_id,
                 action=self.action,
-                actor=self.authorized_scope.to_actor_context(caller=caller, role=role),
+                actor=_caller_entitlement_actor_context(caller=caller, role=role),
                 access_scope=self.access_scope.to_domain(),
                 reason_codes=self.reason_codes,
                 decided_at_utc=self.decided_at_utc,
@@ -183,7 +191,7 @@ class FeedbackRequest(CamelModel):
             candidate_id=candidate_id,
             feedback=FeedbackCommand(
                 feedback_id=self.feedback_id,
-                actor=self.authorized_scope.to_actor_context(caller=caller, role=role),
+                actor=_caller_entitlement_actor_context(caller=caller, role=role),
                 access_scope=self.access_scope.to_domain(),
                 outcome=self.outcome,
                 reason_codes=self.reason_codes,
@@ -281,21 +289,33 @@ async def record_review_action(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> ReviewActionResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
+        caller = caller_context_from_headers(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+            trusted_caller_context=x_lotus_trusted_caller_context,
+        )
         role = _require_mutating_caller(
             caller,
             capability=_REVIEW_ACTION_CAPABILITY,
+        )
+        _require_body_scope_claim_within_caller_entitlements(
+            caller=caller,
+            authorized_scope=request.authorized_scope,
         )
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
@@ -390,21 +410,33 @@ async def record_feedback(
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
+    x_caller_tenant_ids: str | None = Header(default=None, alias="X-Caller-Tenant-Ids"),
+    x_caller_book_ids: str | None = Header(default=None, alias="X-Caller-Book-Ids"),
+    x_caller_portfolio_ids: str | None = Header(default=None, alias="X-Caller-Portfolio-Ids"),
+    x_caller_client_ids: str | None = Header(default=None, alias="X-Caller-Client-Ids"),
     x_lotus_trusted_caller_context: str | None = Header(
         default=None,
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> FeedbackResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
+        caller = caller_context_from_headers(
+            subject=x_caller_subject,
+            roles=x_caller_roles,
+            capabilities=x_caller_capabilities,
+            tenant_ids=x_caller_tenant_ids,
+            book_ids=x_caller_book_ids,
+            portfolio_ids=x_caller_portfolio_ids,
+            client_ids=x_caller_client_ids,
+            trusted_caller_context=x_lotus_trusted_caller_context,
+        )
         role = _require_mutating_caller(
             caller,
             capability=_FEEDBACK_CAPABILITY,
+        )
+        _require_body_scope_claim_within_caller_entitlements(
+            caller=caller,
+            authorized_scope=request.authorized_scope,
         )
         validate_idempotency_key(idempotency_key)
         repository = get_idea_repository()
@@ -493,6 +525,37 @@ def _require_mutating_caller(
     if len(matching_roles) != 1:
         raise PermissionDeniedError("idea.review.actor_role")
     return matching_roles[0]
+
+
+def _caller_entitlement_actor_context(
+    *,
+    caller: CallerContext,
+    role: ReviewActorRole,
+) -> ReviewActorContext:
+    scope = caller.entitlement_scope
+    if scope.is_empty:
+        raise PermissionDeniedError("idea.review.entitlement_scope")
+    return ReviewActorContext(
+        actor_subject=caller.subject,
+        role=role,
+        tenant_ids=frozenset(scope.tenant_ids),
+        book_ids=frozenset(scope.book_ids),
+        portfolio_ids=frozenset(scope.portfolio_ids),
+        client_ids=frozenset(scope.client_ids),
+    )
+
+
+def _require_body_scope_claim_within_caller_entitlements(
+    *,
+    caller: CallerContext,
+    authorized_scope: ReviewActorScopeRequest,
+) -> None:
+    if not authorized_scope.is_subset_of_entitlement_scope(caller.entitlement_scope):
+        raise PermissionDeniedError("idea.review.entitlement_scope")
+
+
+def _values_are_subset(values: tuple[str, ...], allowed_values: tuple[str, ...]) -> bool:
+    return bool(allowed_values) and set(values).issubset(allowed_values)
 
 
 def _problem_for_review_persistence(
