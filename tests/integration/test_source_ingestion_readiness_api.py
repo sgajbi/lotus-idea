@@ -31,6 +31,7 @@ from app.ports.core_sources import (
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
     CoreOpportunitySourcePort,
+    CoreSourceUnavailable,
 )
 from app.runtime.repository_state import DATABASE_URL_ENV
 from app.runtime.repository_state import reset_idea_repository_for_tests
@@ -55,12 +56,19 @@ def reset_repository_provider() -> Iterator[None]:
 @dataclass
 class RecordingCoreSource(CoreOpportunitySourcePort):
     seen_request: CoreHighCashEvidenceRequest | None = None
+    error: Exception | None = None
+    close_count: int = 0
 
     def fetch_high_cash_evidence(
         self, request: CoreHighCashEvidenceRequest
     ) -> CoreHighCashEvidence:
         self.seen_request = request
+        if self.error is not None:
+            raise self.error
         return _core_evidence()
+
+    def close(self) -> None:
+        self.close_count += 1
 
 
 def source_ingestion_readiness_headers(
@@ -400,9 +408,64 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
     assert len(repository.snapshot().candidate_records) == 1
     assert source.seen_request is not None
     assert source.seen_request.correlation_id == "corr-source-ingestion-run-api"
+    assert source.close_count == 1
     assert "PB_SG_GLOBAL_BAL_001" not in response.text
     assert "candidateId" not in response.text
     assert "idempotency" not in response.text.lower()
+
+
+def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    reset_idea_repository_for_tests(repository=repository)
+    source = RecordingCoreSource(error=CoreSourceUnavailable())
+    runtime = SourceIngestionRuntime(
+        plan=source_ingestion_worker_plan_from_manifest(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "correlationId": "corr-source-ingestion-run-api",
+                "traceId": "trace-source-ingestion-run-api",
+                "workItems": [
+                    {
+                        "portfolioId": PORTFOLIO_ID,
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
+            }
+        ),
+        core_source=source,
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda _repository: True,
+    )
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "_build_source_ingestion_runtime_from_environment",
+        lambda: runtime,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "completed"
+    assert payload["decisionCounts"]["blocked"] == 1
+    assert payload["decisionCounts"]["accepted"] == 0
+    assert source.seen_request is not None
+    assert source.close_count == 1
+    assert len(repository.snapshot().candidate_records) == 0
 
 
 def test_source_ingestion_run_once_api_requires_operator_permission() -> None:

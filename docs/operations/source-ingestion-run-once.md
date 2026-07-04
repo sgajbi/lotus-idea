@@ -239,9 +239,11 @@ Outbound Core HTTP runtime posture:
 - Invalid or inconsistent resource settings block runtime construction before
   Core is called.
 - `SourceIngestionRuntime.close()` releases owned Core HTTP clients for
-  deterministic worker/test cleanup. This is a resource lifecycle control only;
-  it does not certify live Core source ingestion, data-mesh status,
-  Gateway/Workbench support, or a supported feature.
+  deterministic worker/test cleanup. The operator run-once API closes the owned
+  runtime after both accepted and source-unavailable batch executions. This is a
+  resource lifecycle control only; it does not certify live Core source
+  ingestion, data-mesh status, Gateway/Workbench support, or a supported
+  feature.
 
 ## Evidence
 
