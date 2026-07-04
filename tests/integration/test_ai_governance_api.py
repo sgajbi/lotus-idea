@@ -102,10 +102,12 @@ def ai_request_payload(
     purpose: str = "missing_evidence_check",
     workflow_output: dict[str, Any] | None = None,
     approved_metadata: dict[str, str] | None = None,
+    workflow_pack: dict[str, str] | None = None,
 ) -> dict[str, Any]:
     payload = {
         "requestId": request_id,
-        "workflowPack": {
+        "workflowPack": workflow_pack
+        or {
             "workflowPackId": "lotus-ai:idea-explanation:v1",
             "workflowPackVersion": "v1",
             "purpose": purpose,
@@ -314,6 +316,48 @@ def test_ai_explanation_api_requires_idempotency_key() -> None:
     assert blank.status_code == 400
     assert blank.json()["code"] == "invalid_request"
     assert "ai-explanation-missing-idempotency-001" not in missing.text
+
+
+@pytest.mark.parametrize(
+    ("field_name", "field_value"),
+    (
+        ("workflowPackId", "lotus-ai:idea-unsupported-claim-verifier"),
+        ("workflowPackVersion", "v1.0.0"),
+        ("evaluationRef", "lotus-ai-eval:idea-verifier:v1"),
+    ),
+)
+def test_ai_explanation_api_rejects_unregistered_workflow_pack_identity(
+    field_name: str,
+    field_value: str,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    field_slug = field_name.lower()
+    candidate_id = persisted_candidate_id(
+        client,
+        idempotency_key=f"seed-ai-invalid-pack-{field_slug}",
+    )
+    workflow_pack = {
+        "workflowPackId": "lotus-ai:idea-explanation:v1",
+        "workflowPackVersion": "v1",
+        "purpose": "missing_evidence_check",
+        "evaluationRef": "lotus-ai:governed-verifier:v1",
+    }
+    workflow_pack[field_name] = field_value
+
+    response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/ai-explanations/evaluate",
+        json=ai_request_payload(
+            request_id=f"ai-explanation-invalid-pack-{field_slug}",
+            workflow_pack=workflow_pack,
+        ),
+        headers=ai_headers(idempotency_key=f"ai-explanation-invalid-pack-{field_slug}"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_ai_workflow_pack"
+    assert field_value not in response.text
+    assert candidate_id not in response.text
 
 
 def test_ai_explanation_api_requires_permission_and_existing_candidate() -> None:

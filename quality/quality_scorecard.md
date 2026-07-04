@@ -62,6 +62,14 @@ actor scope to trusted caller entitlement headers and persisted candidate access
 scope, closing request-body self-assertion while preserving product-safe denial
 responses.
 
+Current slice note: AI explanation evaluation now uses a single governed
+workflow-pack contract for public request identity and proof identity mapping.
+Unregistered workflow pack id, version, or evaluator refs fail closed with
+product-safe `400 invalid_ai_workflow_pack` before candidate lookup or lineage
+persistence. This is internal design modularity inside the existing API/domain
+runtime; no new runtime service boundary is introduced because workload,
+failure-isolation, ownership, and operability evidence do not justify one.
+
 Current slice note: `make opportunity-archetype-contract-gate` now enforces
 API evidence parity for every implemented caller-supplied signal API recorded
 in the opportunity archetype contract. The gate requires API module, route, and

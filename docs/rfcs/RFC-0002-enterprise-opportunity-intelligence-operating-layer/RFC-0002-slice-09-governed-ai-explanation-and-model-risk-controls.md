@@ -27,21 +27,29 @@ Implemented in this slice:
 4. Advisor rationale and meeting-preparation drafting require ready evidence
    and a review-ready candidate lifecycle. Missing-evidence checks can run on
    blocked evidence.
-5. Deterministic fallback records an AI-unavailable posture without exposing
+5. The API and domain command path now share one governed workflow-pack
+   contract: public request identity `lotus-ai:idea-explanation:v1`, version
+   `v1`, and evaluator `lotus-ai:governed-verifier:v1` deliberately map to
+   proof identity `idea_explanation.pack@v1`. Any unregistered pack id,
+   version, evaluator ref, or purpose fails closed with a product-safe
+   `400 invalid_ai_workflow_pack` before candidate lookup or lineage
+   persistence.
+6. Deterministic fallback records an AI-unavailable posture without exposing
    raw prompt/provider data and without changing candidate state.
-6. The verifier blocks unsupported source claims and forbidden actions such as
+7. The verifier blocks unsupported source claims and forbidden actions such as
    suitability approval, compliance approval, mandate approval, trade/order
    instructions, final recommendations, and client communication.
-7. AI explanation results expose `grants_downstream_authority=False`, so AI
+8. AI explanation results expose `grants_downstream_authority=False`, so AI
    output cannot approve suitability, compliance, mandate, execution, client
    communication, score, lifecycle, review, or conversion state.
-8. `tests/unit/test_ai_governance.py` covers redaction, sensitive metadata
+9. `tests/unit/test_ai_governance.py` covers redaction, sensitive metadata
    rejection, evidence/lifecycle gates, blocked-evidence missing-evidence
    checks, deterministic fallback, supported-output verification, unsupported
    claim blocking, forbidden-action blocking, request/workflow identity
-   validation, no candidate-state mutation, and projection-only candidate
-   lookup without `snapshot()` hydration before AI explanation evaluation.
-9. `src/app/application/ai_governance.py` orchestrates persisted candidate
+   validation, governed workflow-pack allowlist rejection, no candidate-state
+   mutation, and projection-only candidate lookup without `snapshot()`
+   hydration before AI explanation evaluation.
+10. `src/app/application/ai_governance.py` orchestrates persisted candidate
    lookup through the shared bounded candidate lookup helper, governed request
    construction, deterministic fallback, verifier evaluation, and source-safe
    API-idempotent lineage recording without provider execution or
@@ -49,7 +57,7 @@ Implemented in this slice:
    For projection-capable repositories this avoids whole-repository snapshot
    hydration before evaluation; lineage persistence remains on the existing
    repository mutation path.
-10. `src/app/api/ai_governance.py` exposes the certified internal endpoint
+11. `src/app/api/ai_governance.py` exposes the certified internal endpoint
     `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`.
     It requires `idea.ai-explanation.evaluate`, returns redacted evidence only,
     blocks unsupported claims and forbidden actions, requires
@@ -57,7 +65,7 @@ Implemented in this slice:
     `ai_explanation` operation events, reports
     `durableStorageBacked` from the active repository provider, and keeps
     `lotusAiRuntimeExecuted=false` and `supportedFeaturePromoted=false`.
-11. `src/app/application/ai_governance.py` also exposes a deterministic
+12. `src/app/application/ai_governance.py` also exposes a deterministic
     AI-explanation readiness snapshot, and `src/app/api/ai_governance.py`
     publishes it through `GET /api/v1/ai-explanations/readiness` for operator
     model-risk diagnostics. The route requires both the `operator` role and
@@ -66,7 +74,7 @@ Implemented in this slice:
     `durableAiLineageStoreBacked` from the active repository provider, and
     `supportedFeaturePromoted=false`, and returns only guardrail availability
     plus certification blockers.
-12. `src/app/domain/persistence.py` adds `AIExplanationLineageRecord` and
+13. `src/app/domain/persistence.py` adds `AIExplanationLineageRecord` and
     idempotent lineage persistence decisions. `InMemoryIdeaRepository` records
     exactly one lineage record per AI request id, replays identical lineage,
     blocks changed-content conflicts, appends the safe audit event, and does
@@ -74,7 +82,7 @@ Implemented in this slice:
     also exposes request-level idempotency for lineage writes so same-key
     retries replay and same-key changed fingerprints conflict before duplicate
     lineage writes.
-13. `migrations/002_ai_explanation_lineage.sql`,
+14. `migrations/002_ai_explanation_lineage.sql`,
     `migrations/002_ai_explanation_lineage.rollback.sql`,
     `src/app/infrastructure/postgres_codecs.py`, and
     `src/app/infrastructure/postgres_repository.py` add PostgreSQL persistence
@@ -85,23 +93,24 @@ Implemented in this slice:
     no-downstream-authority posture. It excludes prompts, provider payloads,
     raw source routes, trace ids, correlation ids, portfolio ids, client ids,
     request bodies, response bodies, and free-form source payloads.
-14. `tests/unit/test_ai_explanation_readiness.py` proves the readiness snapshot
+15. `tests/unit/test_ai_explanation_readiness.py` proves the readiness snapshot
     stays blocked and not certified until runtime and lineage evidence exist.
-15. `tests/integration/test_ai_governance_api.py` covers deterministic
+16. `tests/integration/test_ai_governance_api.py` covers deterministic
     fallback, verified-output acceptance, unsupported-claim blocking,
     forbidden-action blocking, permission denial, missing candidate handling,
-    invalid candidate state, forbidden metadata, and source-safe AI readiness
-    diagnostics, plus API idempotency required/replay/conflict behavior and
-    accepted/replayed/conflicting lineage persistence.
-16. `tests/integration/test_api_operation_events.py` proves the API emits the
+    invalid candidate state, forbidden metadata, unregistered workflow-pack
+    id/version/evaluator rejection, and source-safe AI readiness diagnostics,
+    plus API idempotency required/replay/conflict behavior and accepted/
+    replayed/conflicting lineage persistence.
+17. `tests/integration/test_api_operation_events.py` proves the API emits the
     bounded `ai_explanation` operation event and the not-certified
     `ai_explanation_readiness_read` operation event.
-17. `tests/unit/test_idea_persistence.py` and
+18. `tests/unit/test_idea_persistence.py` and
     `tests/unit/test_postgres_repository.py` prove in-memory and PostgreSQL
     lineage acceptance, API idempotency replay/conflict handling, request-id
     replay/conflict handling, snapshot recovery, and source-safe JSON
     persistence.
-18. `tests/integration/test_postgres_runtime_integration.py` proves the
+19. `tests/integration/test_postgres_runtime_integration.py` proves the
     FastAPI runtime path records AI explanation lineage through the configured
     PostgreSQL repository, replays the same API idempotency key after
     repository reload, rejects distinct-key changed request-id lineage with a
@@ -110,7 +119,7 @@ Implemented in this slice:
     prompts, provider payloads, raw source routes, trace ids, correlation ids,
     portfolio ids, client ids, and free-form source payloads out of the stored
     lineage JSON.
-19. `tests/unit/test_ai_explanation_readiness.py` and
+20. `tests/unit/test_ai_explanation_readiness.py` and
     `tests/integration/test_ai_governance_api.py` prove the readiness
     diagnostic reports durable AI lineage-store backing from the active
     repository while keeping supportability `not_certified`, blockers present,
@@ -142,6 +151,9 @@ Validation evidence from the implementation slice:
     reporting.
 12. `.venv\Scripts\python.exe -m pytest tests/unit/test_ai_governance.py::test_ai_explanation_uses_candidate_projection_without_snapshot`
     is the focused bounded candidate lookup proof for explanation evaluation.
+13. `python -m pytest tests/unit/test_ai_governance.py tests/unit/test_ai_governance_api_contract.py tests/unit/test_ai_workflow_pack_registration_proof.py tests/integration/test_ai_governance_api.py -q`
+    passed with `74 passed` after adding the governed workflow-pack allowlist
+    and product-safe `invalid_ai_workflow_pack` API rejection.
 
 ## Current Governance References
 
@@ -163,7 +175,7 @@ tests, RFC evidence, supported-features ledger, CI, and published wiki source.
 This slice is not yet a supported AI explanation product. Remaining work
 includes:
 
-1. `lotus-ai` workflow-pack registration and runtime execution,
+1. `lotus-ai` runtime execution,
 2. prompt registry, RAG, evaluation, and provider telemetry owned by
    `lotus-ai`,
 3. `lotus-ai` runtime execution and workflow-pack runtime certification beyond
@@ -176,12 +188,10 @@ includes:
 
 ## Required Work
 
-1. Define a bounded `lotus-ai` workflow pack for idea explanation or missing
-   evidence checking.
-2. Send only redacted evidence packets and approved metadata to `lotus-ai`.
-3. Persist lineage refs, workflow-pack version, evaluation posture, verifier
+1. Send only redacted evidence packets and approved metadata to `lotus-ai`.
+2. Persist lineage refs, workflow-pack version, evaluation posture, verifier
    result, fallback state, and review posture.
-4. Block unsupported claims, autonomous advice, client communication, and raw
+3. Block unsupported claims, autonomous advice, client communication, and raw
    provider output exposure.
 
 ## Acceptance Gate

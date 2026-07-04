@@ -51,6 +51,12 @@ proof artifact is implementation evidence for source-ingestion readiness only;
 it is not live source-worker certification or a supported feature. The AI
 explanation readiness diagnostic is an operator supportability check only; it
 does not invoke `lotus-ai` or promote AI explanation support. The AI
+explanation evaluator accepts only the governed
+`lotus-ai:idea-explanation:v1` / `v1` /
+`lotus-ai:governed-verifier:v1` workflow-pack contract and maps that public
+request identity to proof identity `idea_explanation.pack@v1`; arbitrary
+caller-supplied workflow-pack identities are rejected before candidate lookup
+or lineage persistence. The AI
 model-risk operations proof certifies repo-owned dashboard, alert-rule, and
 runbook artifacts against implemented operation telemetry without certifying
 Workbench, client-ready publication, or supported-feature promotion. Source-safe AI explanation lineage persistence has

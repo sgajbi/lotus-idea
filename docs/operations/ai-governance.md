@@ -19,23 +19,29 @@ RFC-0002 Slice 09 adds `src/app/domain/ai_governance.py`,
 `src/app/api/ai_governance.py` with:
 
 1. redacted evidence envelopes for `lotus-ai` workflow-pack requests,
-2. approved metadata validation that rejects portfolio, client, raw prompt,
+2. a single governed workflow-pack contract that accepts public request
+   identity `lotus-ai:idea-explanation:v1`, version `v1`, and evaluator
+   `lotus-ai:governed-verifier:v1`, deliberately mapped to proof identity
+   `idea_explanation.pack@v1`,
+3. product-safe fail-closed rejection of unregistered workflow-pack identity
+   before candidate lookup or lineage persistence,
+4. approved metadata validation that rejects portfolio, client, raw prompt,
    raw provider output, route, correlation, and trace identifiers,
-3. deterministic fallback records for AI-unavailable posture,
-4. verifier outcomes for unsupported claims and forbidden actions,
-5. safe audit events for AI explanation evaluation,
-6. explicit no-downstream-authority semantics for AI output,
-7. a certified internal API foundation at
+5. deterministic fallback records for AI-unavailable posture,
+6. verifier outcomes for unsupported claims and forbidden actions,
+7. safe audit events for AI explanation evaluation,
+8. explicit no-downstream-authority semantics for AI output,
+9. a certified internal API foundation at
    `POST /api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate`,
-8. required API `Idempotency-Key` validation for lineage writes with same-key
+10. required API `Idempotency-Key` validation for lineage writes with same-key
    replay, same-key conflict, and preserved domain request-id replay/conflict,
-9. source-safe lineage persistence for request id, candidate id, evidence
+11. source-safe lineage persistence for request id, candidate id, evidence
    packet id, evidence content hash, workflow-pack identity, posture, verifier
    outcome, fallback state, reason codes, output summary ids, actor, timestamps,
    and no-downstream-authority posture,
-10. bounded operation telemetry through `ai_explanation` events with
+12. bounded operation telemetry through `ai_explanation` events with
    `accepted`, `fallback`, or `blocked` outcomes,
-11. a certified internal operator diagnostic at
+13. a certified internal operator diagnostic at
    `GET /api/v1/ai-explanations/readiness` that reports guardrail availability,
    `not_certified` supportability, and remaining certification blockers without
    invoking `lotus-ai` or exposing prompts, provider payloads, candidate
