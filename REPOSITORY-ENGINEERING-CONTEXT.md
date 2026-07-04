@@ -148,9 +148,9 @@ runtime modularity:
 2. `src/app/application/`: use-case orchestration, proof-readiness builders,
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
-3. `src/app/api/`: FastAPI routes, DTOs, shared route metadata, caller-context
-   binding, idempotency header validation, product-safe problem details,
-   signal API support, and API-internal mutation-operation helpers.
+3. `src/app/api/`: FastAPI routes, shared DTO modules, shared route metadata,
+   caller-context binding, idempotency header validation, product-safe problem
+   details, signal API support, and API-internal mutation-operation helpers.
 4. `src/app/ports/`: repository, source, publisher, and downstream realization
    interfaces.
 5. `src/app/infrastructure/`: HTTP source adapters, PostgreSQL repository,
@@ -175,17 +175,19 @@ Use shared API helpers instead of route-local clones:
 3. `app.api.idempotency` for mutating route `Idempotency-Key` validation,
 4. `app.api.base_model.CamelModel` for camel-case API DTOs,
 5. `app.api.signal_models` for shared signal-family DTOs,
-6. `app.api.signal_api_support` for caller context, scope checks, source-ref
+6. `app.api.ai_governance_models` for AI explanation request/response DTOs
+   behind the existing `app.api.ai_governance` import surface,
+7. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-7. `app.api.review_workflow_operations` for review-action and feedback route
+8. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-8. `app.api.conversion_governance_operations` for conversion-intent and
+9. `app.api.conversion_governance_operations` for conversion-intent and
    conversion-outcome route caller parsing, mutating capability checks,
    idempotency validation, durable-write guards, operation-event mapping, and
    product-safe persistence problem mapping,
-9. `app.api.temporal_validation` for API timestamp awareness and UTC query
+10. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
 When one HTTP status can return multiple stable `ProblemDetails` codes, use

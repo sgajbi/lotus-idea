@@ -392,6 +392,16 @@ Gateway/Workbench surface, authorize client-ready publication, or promote a
 supported feature. Source-safe lineage persistence is proven separately by the
 AI lineage store proof artifact.
 
+AI explanation request and response DTOs live in
+`src/app/api/ai_governance_models.py`, while
+`src/app/api/ai_governance.py` keeps authorization, idempotency,
+durable-write checks, operation-event emission, route metadata, and response
+handling. This is an internal design-modularity boundary inside the same
+runtime deployable, not an AI governance service split or an AI execution
+runtime. The route still does not call providers, own prompts/provider
+payloads, execute `lotus-ai` runtime workflows, grant downstream authority, or
+promote a supported feature.
+
 `GET /api/v1/ai-explanations/readiness` is the certified internal AI
 explanation readiness diagnostic. It returns guardrail availability,
 `not_certified` model-risk supportability, and certification blockers for
