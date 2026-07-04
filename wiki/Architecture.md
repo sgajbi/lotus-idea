@@ -230,7 +230,8 @@ Gateway/Workbench, downstream, or supported-feature blockers.
 source-ingestion batch foundation through the service boundary for operators.
 It requires durable repository posture plus configured manifest and Core
 source settings, blocks before mutation when those inputs are absent or
-invalid, and returns aggregate decision counts only.
+invalid, closes owned Core HTTP runtime clients after accepted or
+source-unavailable execution, and returns aggregate decision counts only.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, due delivery-ready backlog, durable repository posture, broker

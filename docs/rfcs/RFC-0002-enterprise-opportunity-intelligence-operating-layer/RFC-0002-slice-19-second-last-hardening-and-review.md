@@ -758,6 +758,14 @@ retry/backoff contract:
    downstream execution, report materialization, client-ready publication,
    Gateway/Workbench support, or supported-feature promotion.
 
+GitHub issue `#312` extends that source-ingestion resilience hardening to
+route-owned runtime cleanup. `POST /api/v1/source-ingestion/run-once` now closes
+its owned `SourceIngestionRuntime` after accepted and source-unavailable batch
+execution, while durable-repository and runtime-configuration blockers that
+never construct a runtime remain unchanged. This is resource lifecycle proof
+only; it does not certify live Core ingestion, data-mesh promotion,
+Gateway/Workbench support, or supported-feature readiness.
+
 This slice also hardens outbox-delivery run-once operator identity after
 GitHub issue `#271` showed privileged run-once actions needed explicit
 API-level run identity before external side effects:

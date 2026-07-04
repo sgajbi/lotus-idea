@@ -298,21 +298,24 @@ async def post_source_ingestion_run_once(
             ),
         )
 
-    result = run_high_cash_source_ingestion_batch(
-        runtime.plan.command,
-        core_source=runtime.core_source,
-        repository=repository,
-    )
-    _emit_source_ingestion_run_event(
-        _source_ingestion_operation_outcome(result),
-        durable_storage_backed=durable_storage_backed,
-        total_count=result.total_count,
-    )
-    return SourceIngestionRunOnceResponse.from_domain(
-        result,
-        runtime=runtime,
-        durable_storage_backed=durable_storage_backed,
-    )
+    try:
+        result = run_high_cash_source_ingestion_batch(
+            runtime.plan.command,
+            core_source=runtime.core_source,
+            repository=repository,
+        )
+        _emit_source_ingestion_run_event(
+            _source_ingestion_operation_outcome(result),
+            durable_storage_backed=durable_storage_backed,
+            total_count=result.total_count,
+        )
+        return SourceIngestionRunOnceResponse.from_domain(
+            result,
+            runtime=runtime,
+            durable_storage_backed=durable_storage_backed,
+        )
+    finally:
+        runtime.close()
 
 
 def _emit_source_ingestion_readiness_event(

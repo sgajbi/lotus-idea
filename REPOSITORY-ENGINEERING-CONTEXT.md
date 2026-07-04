@@ -646,6 +646,10 @@ Recent issue-derived patterns to preserve:
     resolution in `scripts/proof_generator_io.py`, removing known
     duplicate function-body clusters while preserving family-specific proof
     policy and generator argument behavior.
+26. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
+    run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
+    path must close the runtime after accepted or source-unavailable execution
+    and must not rely on worker-only cleanup semantics.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -771,7 +775,12 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     `make ci-contract-gate` to reject Docker-context generated-artifact parity
     drift. This does not rewrite the Dockerfile or require deleting local proof
     artifacts before every Docker build.
-19. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
+19. Source-ingestion run-once resource lifecycle: GitHub issue `#312` is
+    addressed by closing `SourceIngestionRuntime` from the operator run-once API
+    after both accepted and source-unavailable batch executions. Configuration
+    blockers that never construct a runtime remain unchanged, and the route does
+    not certify live Core ingestion or supported-feature readiness.
+20. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
     repo-native `make duplicate-implementation-inventory` command that reports
     exact duplicate function-body clusters across `src/app` and `scripts`
     without writing artifacts. The initial baseline
