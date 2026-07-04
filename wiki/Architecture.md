@@ -204,6 +204,13 @@ durable storage behind one governed contract surface while default
 process-local and configured PostgreSQL-backed runtime postures remain
 truthful.
 
+Domain persistence data contracts are separated from repository behavior:
+`src/app/domain/persistence_models.py` owns immutable persistence decisions,
+records, results, lifecycle history, and snapshots, while
+`src/app/domain/persistence.py` keeps the existing public import surface and
+`InMemoryIdeaRepository` behavior. This is design modularity inside the same
+runtime deployable, not a persistence service split.
+
 `migrations/001_idea_repository_foundation.sql` and its rollback file define the
 first governed schema contract for future durable candidate, idempotency,
 lifecycle, audit, outbox, review, feedback, conversion, and report

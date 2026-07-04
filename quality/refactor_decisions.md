@@ -69,3 +69,35 @@ Evidence:
    required because the existing backend-delivery and codebase-review skills
    already require design-vs-runtime modularity, same-pattern scans, and
    evidence-backed ledger entries.
+
+## 2026-07-04: Domain Persistence Model Boundary
+
+Immutable persistence decisions, records, results, lifecycle history, and
+repository snapshots now live in `src/app/domain/persistence_models.py`.
+`src/app/domain/persistence.py` imports and re-exports those types while keeping
+`InMemoryIdeaRepository` behavior and existing public imports stable.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate service, queue boundary,
+worker boundary, or independent scaling. Persistence model contracts and
+repository behavior share the same domain-service ownership until workload,
+failure-isolation, ownership, or operability evidence justifies a runtime split.
+
+Private-banking boundary preserved:
+
+1. The repository still stores idea candidates, evidence replay, idempotency,
+   lifecycle, review, feedback, conversion, report evidence-pack, AI lineage,
+   outbox, and downstream submission posture.
+2. No portfolio accounting, official performance, risk, suitability,
+   compliance, rebalance execution, report rendering, archive authority, or AI
+   infrastructure authority moves into lotus-idea.
+
+Evidence:
+
+1. Code: `src/app/domain/persistence.py`,
+   `src/app/domain/persistence_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_idea_persistence.py tests\unit\test_postgres_repository.py tests\unit\test_repository_port_boundary.py tests\unit\test_domain_validation.py -q`
+   (`46 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/domain/persistence.py` moved from 1185 to
+   1004 lines; `src/app/domain/persistence_models.py` is 215 lines.

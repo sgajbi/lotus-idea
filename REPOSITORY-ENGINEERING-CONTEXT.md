@@ -142,9 +142,9 @@ authority.
 The codebase is organized around stable internal bounded modules before any
 runtime modularity:
 
-1. `src/app/domain/`: domain vocabulary, policies, lifecycle, evidence,
-   scoring, feedback, conversion, report evidence, outbox, and idempotency
-   invariants.
+1. `src/app/domain/`: domain vocabulary, immutable persistence models,
+   policies, lifecycle, evidence, scoring, feedback, conversion, report
+   evidence, outbox, and idempotency invariants.
 2. `src/app/application/`: use-case orchestration, proof-readiness builders,
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
@@ -206,6 +206,11 @@ Use public domain and infrastructure APIs:
    and domain serialization behavior,
 4. do not couple tests or application code to protected private helpers across
    modules.
+
+The public persistence import surface remains `app.domain.persistence`;
+immutable persistence records, decisions, and snapshots live in
+`app.domain.persistence_models` so repository behavior and domain data
+contracts can evolve independently without creating a runtime boundary.
 
 For durable reads, prefer bounded projections over whole repository snapshots:
 
