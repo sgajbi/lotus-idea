@@ -586,8 +586,8 @@ Recent issue-derived patterns to preserve:
     `sourceTreeDirty` provenance is diagnostic-only and must not add evidence
     refs or remove blockers.
 11. PostgreSQL mutation paths need optimistic same-candidate guards and
-   database idempotency-collision retry; full-snapshot mutation helpers must
-   not silently overwrite stale state or leak raw primary-key collisions,
+    database idempotency-collision retry; full-snapshot mutation helpers must
+    not silently overwrite stale state or leak raw primary-key collisions,
 12. persisted AI explanation lineage writes need both API-level idempotency and
     domain request-id replay protection; same-key replay/conflict and
     distinct-key request-id conflict must remain separately tested,
@@ -738,7 +738,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     shared row decoder, and adding PostgreSQL query-shape tests that prove the
     replay/conflict precheck avoids candidate, outbox, conversion, report
     evidence-pack, and AI-lineage tables.
-11. Dirty aggregate proof rejection: GitHub issue `#306` is addressed by
+11. Review/conversion idempotency prechecks: GitHub issue `#317` is addressed
+    by moving `PostgresIdeaRepository.precheck_review_mutation` and
+    `precheck_conversion_mutation` to a bounded `idea_idempotency_record`
+    lookup plus candidate-detail projection for the associated candidate only.
+    Review, feedback, and conversion-intent replay/conflict decisions must not
+    hydrate whole repository snapshots or unrelated outbox/downstream tables.
+12. Dirty aggregate proof rejection: GitHub issue `#306` is addressed by
     requiring aggregate proof provenance to carry `sourceTreeDirty=false`
     before `aggregate_proof_artifact_is_current()` can return true. Dirty or
     missing dirty-flag provenance now preserves blockers, suppresses the

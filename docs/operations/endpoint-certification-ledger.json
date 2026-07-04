@@ -562,7 +562,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Record an internal advisor review action for a persisted idea candidate through the review workflow foundation.",
       "when_to_use": "Use as the RFC-0002 Slice 08 and Slice 10 API foundation when an internal caller has a persisted candidate, upstream-authorized scope, idea.review.record capability, advisor role, and Idempotency-Key.",
-      "when_not_to_use": "Do not use as durable database persistence proof, suitability approval, compliance approval, mandate approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "when_not_to_use": "Durable PostgreSQL replay/conflict prechecks use bounded idempotency-key lookup plus candidate-detail projection instead of whole-store snapshot hydration. Do not use as durable database persistence proof, suitability approval, compliance approval, mandate approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, or supported-feature promotion.",
       "request_examples": [
         "{\"reviewId\":\"review-suppress-001\",\"action\":\"suppress\",\"accessScope\":{\"tenantId\":\"tenant-private-bank-sg\",\"bookId\":\"book-advisor-001\",\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"clientId\":\"client-001\"},\"authorizedScope\":{\"tenantIds\":[\"tenant-private-bank-sg\"],\"bookIds\":[\"book-advisor-001\"],\"portfolioIds\":[\"PB_SG_GLOBAL_BAL_001\"],\"clientIds\":[\"client-001\"]},\"reasonCodes\":[\"review_required\"],\"decidedAtUtc\":\"2026-06-21T10:05:00Z\",\"suppressionReason\":\"manual_suppression\"}"
       ],
@@ -583,6 +583,7 @@
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_state_conflict_for_generated_candidate_approval",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
         "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
+        "tests/unit/test_postgres_idempotency_precheck.py::test_postgres_review_and_conversion_idempotency_prechecks_are_bounded",
         "tests/unit/test_review_workflow_application.py::test_apply_review_action_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
@@ -594,7 +595,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Record source-provenanced internal advisor feedback for a persisted idea candidate through the feedback workflow foundation.",
       "when_to_use": "Use as the RFC-0002 Slice 08 and Slice 10 API foundation when an internal caller has a persisted candidate, upstream-authorized scope, idea.feedback.record capability, advisor role, and Idempotency-Key.",
-      "when_not_to_use": "Do not use as durable database persistence proof, model-training automation, data-product certification proof, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "when_not_to_use": "Durable PostgreSQL replay/conflict prechecks use bounded idempotency-key lookup plus candidate-detail projection instead of whole-store snapshot hydration. Do not use as durable database persistence proof, model-training automation, data-product certification proof, Gateway contract, Workbench product proof, or supported-feature promotion.",
       "request_examples": [
         "{\"feedbackId\":\"feedback-useful-001\",\"accessScope\":{\"tenantId\":\"tenant-private-bank-sg\",\"bookId\":\"book-advisor-001\",\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"clientId\":\"client-001\"},\"authorizedScope\":{\"tenantIds\":[\"tenant-private-bank-sg\"],\"bookIds\":[\"book-advisor-001\"],\"portfolioIds\":[\"PB_SG_GLOBAL_BAL_001\"],\"clientIds\":[\"client-001\"]},\"outcome\":\"useful\",\"reasonCodes\":[\"review_required\"],\"recordedAtUtc\":\"2026-06-21T10:06:00Z\"}"
       ],
@@ -612,6 +613,7 @@
         "tests/integration/test_review_workflow_api.py::test_review_action_api_returns_not_found_for_missing_candidate",
         "tests/integration/test_review_workflow_api.py::test_review_action_api_requires_mutating_capability_and_scope",
         "tests/integration/test_api_operation_events.py::test_lifecycle_queue_review_and_feedback_emit_operation_events",
+        "tests/unit/test_postgres_idempotency_precheck.py::test_postgres_review_and_conversion_idempotency_prechecks_are_bounded",
         "tests/unit/test_review_workflow_application.py::test_record_feedback_uses_candidate_projection_without_snapshot"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
@@ -623,7 +625,7 @@
       "owner": "lotus-idea owners",
       "purpose": "Record an internal governed conversion intent for a review-approved persisted idea candidate through the conversion workflow foundation.",
       "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 12 API foundation when an internal caller has an approved candidate, idea.conversion.intent.record capability, an Idempotency-Key, and needs to record intent-only conversion toward Advise, Manage, or Report.",
-      "when_not_to_use": "Do not use as durable database persistence proof, downstream proposal authority, manage-review authority, report-authority proof, suitability approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "when_not_to_use": "Durable PostgreSQL replay/conflict prechecks use bounded idempotency-key lookup plus candidate-detail projection instead of whole-store snapshot hydration. Do not use as durable database persistence proof, downstream proposal authority, manage-review authority, report-authority proof, suitability approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, or supported-feature promotion.",
       "request_examples": [
         "{\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"reasonCodes\":[\"review_approved_for_conversion\"],\"requestedAtUtc\":\"2026-06-21T10:15:00Z\"}"
       ],
@@ -642,6 +644,7 @@
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_replays_and_conflicts_idempotently",
         "tests/integration/test_review_workflow_api.py::test_conversion_intent_api_requires_approved_state_permission_and_valid_request",
         "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events",
+        "tests/unit/test_postgres_idempotency_precheck.py::test_postgres_review_and_conversion_idempotency_prechecks_are_bounded",
         "tests/unit/test_conversion_workflow_application.py::test_request_conversion_intent_uses_candidate_projection_without_snapshot",
         "tests/unit/test_conversion_workflow_application.py::test_request_conversion_intent_returns_not_found_without_snapshot_for_missing_candidate"
       ],

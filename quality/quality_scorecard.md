@@ -50,6 +50,13 @@ runtime service is introduced because there is no workload, failure-isolation,
 ownership, or operability evidence for a distributed split. The endpoint
 remains diagnostic and non-promoted.
 
+Current slice note: review, feedback, and conversion-intent replay/conflict
+prechecks now use a bounded PostgreSQL idempotency-key lookup plus
+candidate-detail projection, avoiding whole-store snapshot hydration and
+unrelated outbox/downstream state-family reads for duplicate mutating requests.
+Accepted mutations still use the governed repository mutation path and keep
+idempotency, audit, lifecycle, conversion, and outbox behavior unchanged.
+
 Current slice note: `make opportunity-archetype-contract-gate` now enforces
 API evidence parity for every implemented caller-supplied signal API recorded
 in the opportunity archetype contract. The gate requires API module, route, and

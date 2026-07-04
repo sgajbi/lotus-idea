@@ -308,9 +308,13 @@ Persistence adapter validation:
    feedback, conversion intent/outcome, report evidence-pack requests, snapshot
    hydration, commit behavior, rollback on flush failure, optimistic stale
    same-candidate update rejection, idempotency primary-key collision retry to
-   governed replay/conflict decisions, and atomic rollback of failed mutation
-   attempts.
-2. `tests/unit/test_repository_state.py` proves repository provider selection,
+    governed replay/conflict decisions, and atomic rollback of failed mutation
+    attempts.
+2. `tests/unit/test_postgres_idempotency_precheck.py` proves durable review,
+   feedback, and conversion-intent replay/conflict prechecks read
+   `idea_idempotency_record` by key plus candidate-detail projection without
+   hydrating unrelated outbox or downstream state.
+3. `tests/unit/test_repository_state.py` proves repository provider selection,
    runtime profile semantics, local/test process-local write allowance,
    production-like durable-write blockers, `PostgresIdeaRepository` when
    `LOTUS_IDEA_DATABASE_URL` is configured, psycopg mapping-row configuration,

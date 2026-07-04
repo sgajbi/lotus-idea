@@ -54,6 +54,22 @@ def downstream_lookup_rows(
     raise AssertionError(f"unexpected downstream lookup query: {query}")
 
 
+def idempotency_lookup_rows(
+    connection: Any,
+    query: str,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    table_name = _table_from_select(query)
+    idempotency_key = params[0]
+    if "where idempotency_key = %s" in query:
+        return [
+            dict(row)
+            for row in connection.rows[table_name]
+            if row["idempotency_key"] == idempotency_key
+        ]
+    raise AssertionError(f"unexpected idempotency lookup query: {query}")
+
+
 def _table_from_select(query: str) -> str:
     for table_name in (
         "idea_candidate_record",
