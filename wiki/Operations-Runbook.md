@@ -717,10 +717,13 @@ runtime artifact loader attach
 `aggregateProofProvenance` with the source-safe proof ref, artifact SHA-256,
 source revision, source-tree dirty flag, and proof generation timestamp.
 Aggregate readiness keeps blockers when the envelope is missing, stale,
-future-dated, proof-ref mismatched, or bound to a different Lotus Idea source
-revision. Deployed runtimes without `.git` metadata should set
-`LOTUS_IDEA_SOURCE_REVISION` to the deployed commit or deterministic source
-identifier when optional proof artifacts are expected to clear blockers.
+future-dated, proof-ref mismatched, bound to a different Lotus Idea source
+revision, or missing `sourceTreeDirty=false`. Dirty-tree proof artifacts are
+diagnostic only; they cannot clear release/readiness blockers or add their
+artifact ref to capability evidence. Deployed runtimes without `.git` metadata
+should set `LOTUS_IDEA_SOURCE_REVISION` to the deployed commit or
+deterministic source identifier when optional proof artifacts are expected to
+clear blockers.
 
 `GET /api/v1/downstream-realization/readiness` is the certified internal
 downstream realization readiness diagnostic. It returns workflow counts,

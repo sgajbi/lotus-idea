@@ -65,6 +65,8 @@ def aggregate_proof_artifact_is_current(
         return False
     if not _is_sha256_hex(provenance.get("artifactSha256")):
         return False
+    if provenance.get("sourceTreeDirty") is not False:
+        return False
 
     root = repository_root or Path.cwd()
     source_revision = provenance.get("sourceRevision")

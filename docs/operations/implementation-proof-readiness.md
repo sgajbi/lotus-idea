@@ -108,9 +108,10 @@ the configured artifact, but aggregate implementation-proof readiness clears
 `live_core_source_proof_missing` only when that family-valid artifact is also
 aggregate-current: it must carry `aggregateProofProvenance`, match the
 source-safe consumed proof ref, be no more than 24 hours old, not be
-future-dated, and be bound to the current Lotus Idea source revision. A current
-artifact referenced through `LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears
-only `live_core_source_proof_missing`; it does not clear scheduled worker,
+future-dated, be bound to the current Lotus Idea source revision, and declare
+`sourceTreeDirty=false`. A current artifact referenced through
+`LOTUS_IDEA_SOURCE_INGESTION_LIVE_PROOF` clears only
+`live_core_source_proof_missing`; it does not clear scheduled worker,
 data-mesh, Gateway/Workbench, downstream, or supported-feature blockers.
 The artifact carries source-safe aggregate `blockReasonCounts` so blocked
 attempts can distinguish Core unavailable, entitlement denied, missing
@@ -121,9 +122,9 @@ aggregate-current live proof path, the `source-ingestion` capability also
 records a source-safe artifact reference in `evidenceRefs`, so release
 reviewers can trace why that blocker cleared without exposing Core payloads or
 portfolio identity. Missing, stale, future-dated, wrong-ref, or
-wrong-source-revision provenance leaves the source-ingestion and high-cash
-opportunity-archetype live Core blockers in place and does not add the artifact
-ref as evidence.
+wrong-source-revision provenance, or provenance generated from a dirty source
+tree, leaves the source-ingestion and high-cash opportunity-archetype live Core
+blockers in place and does not add the artifact ref as evidence.
 Canonical Core runtimes should pass explicit `--core-query-base-url` and
 `--core-query-control-plane-base-url` values because query-service reads and
 query-control-plane snapshots can be served by different Core processes.
@@ -143,10 +144,13 @@ and proof generation timestamp before any optional proof can clear a blocker.
 
 Blockers remain in place when the provenance envelope is missing, the proof ref
 does not match the consumed artifact, `generatedAtUtc` is future-dated or older
-than the 24-hour freshness window, or the source revision does not match the
-current Lotus Idea source revision. Runtimes without a local `.git` checkout
-must set `LOTUS_IDEA_SOURCE_REVISION` to the deployed commit or deterministic
-source identifier when they expect optional proof artifacts to clear aggregate
+than the 24-hour freshness window, the source revision does not match the
+current Lotus Idea source revision, or `sourceTreeDirty` is missing or not
+`false`. Dirty-tree proof artifacts may be useful as diagnostic evidence, but
+they cannot clear release/readiness blockers or add their artifact ref to
+capability evidence. Runtimes without a local `.git` checkout must set
+`LOTUS_IDEA_SOURCE_REVISION` to the deployed commit or deterministic source
+identifier when they expect optional proof artifacts to clear aggregate
 readiness blockers. This provenance binding is internal implementation
 evidence; it is not data-mesh certification, client-publication approval, or
 supported-feature promotion.

@@ -563,24 +563,28 @@ Recent issue-derived patterns to preserve:
    downstream propagation,
 9. caller-supplied capability, role, and entitlement headers are simulation
    inputs in local/test; production-like profiles require the shared trusted
-   caller-context provenance guard before those headers can authorize a route,
-10. PostgreSQL mutation paths need optimistic same-candidate guards and
+   caller-context provenance guard before those headers can authorize routes,
+10. aggregate proof artifacts must be generated from clean source before they
+    can clear implementation-readiness blockers; dirty-tree or missing
+    `sourceTreeDirty` provenance is diagnostic-only and must not add evidence
+    refs or remove blockers.
+11. PostgreSQL mutation paths need optimistic same-candidate guards and
    database idempotency-collision retry; full-snapshot mutation helpers must
    not silently overwrite stale state or leak raw primary-key collisions,
-11. persisted AI explanation lineage writes need both API-level idempotency and
+12. persisted AI explanation lineage writes need both API-level idempotency and
     domain request-id replay protection; same-key replay/conflict and
     distinct-key request-id conflict must remain separately tested,
-12. privileged operator run-once mutations need explicit operator run identity
+13. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
-13. release evidence artifacts must name their scope, target artifact or
+14. release evidence artifacts must name their scope, target artifact or
     dependency source, generator, path, and non-proof boundary before being cited
     as release proof,
-14. runtime dependency SBOM evidence must come from the resolved runtime
+15. runtime dependency SBOM evidence must come from the resolved runtime
     dependency closure in `requirements/runtime-resolved.lock.txt`, not from
     direct-only runtime requirements or an ambiguous CI environment; the
     supported-name `requirements/requirements.txt` exists only as a gated
     mirror for GitHub Dependency Graph support,
-15. Python dependency updates must move root pins and runtime lock evidence
+16. Python dependency updates must move root pins and runtime lock evidence
     through the governed `make dependency-refresh` path. Dependabot must not
     open a separate `/requirements` lock-only stream; lock refreshes should
     regenerate both `requirements/runtime-resolved.lock.txt` and
@@ -589,31 +593,31 @@ Recent issue-derived patterns to preserve:
     `open-pull-requests-limit: 0` while RFC implementation is active; security
     alerts and security-update posture remain governed through the GitHub
     Security tab and `make github-security-posture-check`,
-16. Docker build and scan evidence must be paired with bounded packaged-runtime
+17. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
-17. generated proof and quality evidence must be reproducible from current
+18. generated proof and quality evidence must be reproducible from current
     gate rules or be documented as on-demand evidence rather than current proof,
-18. ignored report-only artifacts must not be cited as durable current-state
+19. ignored report-only artifacts must not be cited as durable current-state
     proof unless a deterministic committed-artifact drift gate exists,
-19. documentation should record the durable rule, not only the one-off fix,
-20. supportability, readiness, health-state, and data-quality vocabulary must
+20. documentation should record the durable rule, not only the one-off fix,
+21. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
-21. dashboard and alert certification should be pattern-backed with a
+22. dashboard and alert certification should be pattern-backed with a
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
     proof gates, drift tests, and explicit non-proof boundaries; do not rely on
     a metric catalog alone for operator visibility claims.
-22. mutating workflow idempotency must be true in both runtime behavior and
+23. mutating workflow idempotency must be true in both runtime behavior and
     OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
     shared `app.api.idempotency` route list and validation helpers, and
     `make api-idempotency-boundary-gate` must fail optional or defaulted
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
-23. Docker runtime images should install the resolved runtime dependency lock
+24. Docker runtime images should install the resolved runtime dependency lock
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `make ci-contract-gate` must catch
     source-before-dependency-install ordering and dependency reinstall drift.
-24. duplicate-implementation controls start as measured report-only inventory,
+25. duplicate-implementation controls start as measured report-only inventory,
     not a noisy merge blocker. `make duplicate-implementation-inventory`
     scans exact first-party function-body duplicates across `src/app` and
     `scripts`, identifies known proof-helper clusters, writes no artifacts, and
@@ -693,19 +697,25 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     shared row decoder, and adding PostgreSQL query-shape tests that prove the
     replay/conflict precheck avoids candidate, outbox, conversion, report
     evidence-pack, and AI-lineage tables.
-11. Resilience retry control: GitHub issue `#286` is addressed by fixed central
+11. Dirty aggregate proof rejection: GitHub issue `#306` is addressed by
+    requiring aggregate proof provenance to carry `sourceTreeDirty=false`
+    before `aggregate_proof_artifact_is_current()` can return true. Dirty or
+    missing dirty-flag provenance now preserves blockers, suppresses the
+    artifact evidence ref, and remains diagnostic-only until regenerated from
+    clean source.
+12. Resilience retry control: GitHub issue `#286` is addressed by fixed central
    jitter in `DownstreamJsonClient` computed backoff delays, deterministic
    jitter injection in tests, and no change to retry attempts, retryable status
    codes, valid `Retry-After` handling, POST idempotency rules, or adapter-local
    retry-loop boundaries.
-12. PostgreSQL review-queue performance: GitHub issue `#287` is addressed by
+13. PostgreSQL review-queue performance: GitHub issue `#287` is addressed by
    narrow expression indexes for the advisor review queue tenant/book/
    portfolio/client access-scope JSONB predicates, migration rollback coverage,
    `migration_contract_gate.py` required-index enforcement, and PostgreSQL
    queue tests that prove scoped count/page reads retain eligibility filters,
    stable ordering, and `LIMIT`/`OFFSET` bounds without changing advisory
    workflow ownership or API semantics.
-13. Dependency update atomicity: GitHub issue `#289` is addressed by removing
+14. Dependency update atomicity: GitHub issue `#289` is addressed by removing
     the separate `/requirements` Dependabot stream, grouping Python root updates
     as dependency-closure root changes, adding `make dependency-refresh` to
     install from root pins and regenerate both runtime lock files, and protecting
@@ -715,7 +725,7 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    before normal repo-native gates. Existing install,
    runtime-closure, audit, Docker, SBOM, and release evidence gates remain
    strict.
-14. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
+15. Lifecycle vocabulary authority: GitHub issue `#290` is addressed by
    quarantining downstream-authority lifecycle statuses from caller-settable
    lifecycle transitions. The API request contract uses a caller-settable
    lifecycle enum that excludes `accepted` and `executed`, the domain graph no

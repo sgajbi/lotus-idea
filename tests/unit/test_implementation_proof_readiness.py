@@ -73,9 +73,7 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
-from app.application.downstream_route_contract_proof import (
-    ADVISE_ROUTE_BLOCKERS_CLEARED,
-)
+from app.application.downstream_route_contract_proof import ADVISE_ROUTE_BLOCKERS_CLEARED
 from app.application.source_ingestion_scheduled_worker import (
     build_scheduled_worker_check_summary,
     build_scheduled_worker_deploy_proof_payload,
@@ -104,12 +102,14 @@ def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[s
     with tempfile.TemporaryDirectory() as directory:
         artifact_path = Path(directory) / "proof.json"
         artifact_path.write_text(json.dumps(payload), encoding="utf-8")
-        return bind_aggregate_proof_provenance(
+        bound = bind_aggregate_proof_provenance(
             payload,
             artifact_path=artifact_path,
             proof_ref=proof_ref,
             repository_root=ROOT,
         )
+        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
+        return bound
 
 
 def test_implementation_proof_capability_status_is_derived_from_remaining_blockers() -> None:
