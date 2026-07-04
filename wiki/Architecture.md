@@ -267,6 +267,12 @@ source settings, caps `maxItems` and `workItems` at 100, blocks before mutation
 when those inputs are absent, invalid, or above the run-once ceiling, closes
 owned Core HTTP runtime clients after accepted or source-unavailable execution,
 and returns aggregate decision counts only.
+The route imports source-ingestion readiness and run-once DTOs from
+`src/app/api/source_ingestion_readiness_models.py`, while runtime composition,
+caller authorization, cleanup, operation events, and route metadata remain in
+`src/app/api/source_ingestion_readiness.py`. This is design modularity inside
+the existing service, not a new source-ingestion service, worker boundary, data
+product, Gateway/Workbench product surface, or supported-feature promotion.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, due delivery-ready backlog, durable repository posture, broker
