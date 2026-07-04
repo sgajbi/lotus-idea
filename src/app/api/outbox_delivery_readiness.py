@@ -344,15 +344,18 @@ async def post_outbox_delivery_run_once(
             operator_run_reference=operator_run_reference,
         )
 
-    summary = run_outbox_delivery_once(
-        repository,
-        publisher_result,
-        limit=limit,
-        max_retry_count=max_retry_count,
-        idempotency_key=validated_idempotency_key,
-        request_payload=run_request_payload,
-        delivered_at_utc=delivered_at_utc,
-    )
+    try:
+        summary = run_outbox_delivery_once(
+            repository,
+            publisher_result,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            idempotency_key=validated_idempotency_key,
+            request_payload=run_request_payload,
+            delivered_at_utc=delivered_at_utc,
+        )
+    finally:
+        _close_outbox_publisher_if_supported(publisher_result)
     if summary.run_status is OutboxDeliveryRunStatus.CONFLICT:
         _emit_outbox_delivery_run_event(
             OperationOutcome.CONFLICT,
@@ -379,6 +382,12 @@ async def post_outbox_delivery_run_once(
 
 def _require_outbox_delivery_readiness_caller(caller: CallerContext) -> None:
     require_role_and_capability(caller, _READ_OUTBOX_DELIVERY_READINESS_POLICY)
+
+
+def _close_outbox_publisher_if_supported(publisher: object) -> None:
+    close = getattr(publisher, "close", None)
+    if callable(close):
+        close()
 
 
 def _outbox_delivery_run_permission_denied_response_args() -> dict[str, Any]:

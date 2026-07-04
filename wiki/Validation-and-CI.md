@@ -577,7 +577,8 @@ Persistence adapter validation:
    configuration posture, publisher-adapter presence, blocked-without-broker
    behavior, configured-publisher delivery path, operator plus capability
    enforcement, PostgreSQL repository-side readiness projection without
-   whole-snapshot hydration, product-safe payloads, UTC request validation, and bounded
+   whole-snapshot hydration, route-owned broker publisher cleanup after
+   run-once execution, product-safe payloads, UTC request validation, and bounded
    `not_certified` operation events without exposing event identifiers, raw
    idempotency keys, source payloads, broker payloads, or downstream contract
    details.

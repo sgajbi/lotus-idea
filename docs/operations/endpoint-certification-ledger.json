@@ -936,7 +936,7 @@
       "path": "/api/v1/outbox-delivery/run-once",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider, configured publisher adapter, and explicit operator run identity while returning aggregate counts only.",
+      "purpose": "Run one bounded internal outbox delivery pass for operators using the active repository provider, configured publisher adapter, explicit operator run identity, and route-owned publisher cleanup while returning aggregate counts only.",
       "when_to_use": "Use for internal operator validation when a caller has idea.outbox-delivery.run capability and Idempotency-Key and needs to exercise outbox delivery orchestration without exposing raw idempotency keys, event identifiers, or claiming live broker certification.",
       "when_not_to_use": "Do not use as certified live broker runtime proof, downstream delivery proof, platform mesh event publication proof, Gateway contract, Workbench product proof, business product discovery, client-ready publication, or supported-feature promotion.",
       "request_examples": [

@@ -65,6 +65,7 @@ from app.application.workbench_read_path_proof import (
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
+from tests.support.proof_provenance import bind_clean_aggregate_proof_provenance
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -401,6 +402,10 @@ def _configure_readiness_proof_artifacts(
     tmp_path: Path,
     evaluated_at_utc: datetime,
 ) -> None:
+    monkeypatch.setattr(
+        "app.runtime.proof_artifacts.bind_aggregate_proof_provenance",
+        bind_clean_aggregate_proof_provenance,
+    )
     manifest_path = tmp_path / "source-ingestion-manifest.json"
     live_proof_path = tmp_path / "source-ingestion-live-proof.json"
     scheduled_proof_path = tmp_path / "source-ingestion-scheduled-worker-proof.json"
@@ -414,88 +419,71 @@ def _configure_readiness_proof_artifacts(
     bond_maturity_live_proof_path = tmp_path / "bond-maturity-live-proof.json"
 
     manifest_path.write_text("{}", encoding="utf-8")
-    live_proof_path.write_text(
-        json.dumps(
-            build_source_ingestion_live_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                live_core_source_attempted=True,
-                worker_summary={
-                    "schemaVersion": MANIFEST_SCHEMA_VERSION,
-                    "mode": "run_once",
-                    "sourceAuthority": "lotus-core",
-                    "durableStorageBacked": True,
-                    "totalCount": 1,
-                    "decisionCounts": {"accepted": 1, "replayed": 0},
-                },
-            )
+    _write_proof(
+        live_proof_path,
+        build_source_ingestion_live_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            live_core_source_attempted=True,
+            worker_summary={
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "mode": "run_once",
+                "sourceAuthority": "lotus-core",
+                "durableStorageBacked": True,
+                "totalCount": 1,
+                "decisionCounts": {"accepted": 1, "replayed": 0},
+            },
         ),
-        encoding="utf-8",
     )
-    scheduled_proof_path.write_text(
-        json.dumps(_valid_scheduled_worker_proof(generated_at_utc=evaluated_at_utc)),
-        encoding="utf-8",
+    _write_proof(
+        scheduled_proof_path,
+        _valid_scheduled_worker_proof(generated_at_utc=evaluated_at_utc),
     )
-    durable_proof_path.write_text(
-        json.dumps(
-            build_durable_repository_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
+    _write_proof(
+        durable_proof_path,
+        build_durable_repository_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            repository_root=ROOT,
         ),
-        encoding="utf-8",
     )
-    runtime_proof_path.write_text(
-        json.dumps(
-            build_runtime_trust_telemetry_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
+    _write_proof(
+        runtime_proof_path,
+        build_runtime_trust_telemetry_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            repository_root=ROOT,
         ),
-        encoding="utf-8",
     )
-    ai_lineage_proof_path.write_text(
-        json.dumps(
-            build_ai_lineage_store_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
+    _write_proof(
+        ai_lineage_proof_path,
+        build_ai_lineage_store_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            repository_root=ROOT,
         ),
-        encoding="utf-8",
     )
-    ai_model_risk_proof_path.write_text(
-        json.dumps(
-            build_ai_model_risk_operations_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
+    _write_proof(
+        ai_model_risk_proof_path,
+        build_ai_model_risk_operations_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            repository_root=ROOT,
         ),
-        encoding="utf-8",
     )
-    operator_workflows_proof_path.write_text(
-        json.dumps(
-            build_operator_workflows_operations_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
+    _write_proof(
+        operator_workflows_proof_path,
+        build_operator_workflows_operations_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            repository_root=ROOT,
         ),
-        encoding="utf-8",
     )
-    workbench_proof_path.write_text(
-        json.dumps(
-            build_workbench_read_path_proof_payload(
-                generated_at_utc=evaluated_at_utc,
-                repository_root=ROOT,
-            )
+    _write_proof(
+        workbench_proof_path,
+        build_workbench_read_path_proof_payload(
+            generated_at_utc=evaluated_at_utc,
+            repository_root=ROOT,
         ),
-        encoding="utf-8",
     )
-    report_route_proof_path.write_text(
-        json.dumps(_valid_report_intake_route_proof()),
-        encoding="utf-8",
-    )
-    bond_maturity_live_proof_path.write_text(
-        json.dumps(_valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc)),
-        encoding="utf-8",
+    _write_proof(report_route_proof_path, _valid_report_intake_route_proof())
+    _write_proof(
+        bond_maturity_live_proof_path,
+        _valid_bond_maturity_live_proof(generated_at_utc=evaluated_at_utc),
     )
 
     monkeypatch.setenv(MANIFEST_ENV, str(manifest_path))
@@ -510,6 +498,13 @@ def _configure_readiness_proof_artifacts(
     monkeypatch.setenv(WORKBENCH_READ_PATH_PROOF_ENV, str(workbench_proof_path))
     monkeypatch.setenv(REPORT_INTAKE_ROUTE_PROOF_ENV, str(report_route_proof_path))
     monkeypatch.setenv(BOND_MATURITY_LIVE_PROOF_ENV, str(bond_maturity_live_proof_path))
+
+
+def _write_proof(path: Path, payload: dict[str, object]) -> None:
+    path.write_text(
+        json.dumps(payload),
+        encoding="utf-8",
+    )
 
 
 def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, object]:
