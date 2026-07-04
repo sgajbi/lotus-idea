@@ -16,15 +16,18 @@ from app.api.signal_models import (
 from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
+    SignalSourceRefContract,
     emit_signal_evaluation_event,
     signal_permission_problem_or_none,
     signal_problem_responses,
-    source_authority_from_refs,
+    signal_source_ref_contract_problem_or_none,
+    source_authority_from_contracts,
 )
 from app.application.missing_benchmark_signal import (
     EvaluateMissingBenchmarkSignalCommand,
     evaluate_missing_benchmark_signal_command,
 )
+from app.domain import SourceSystem
 from app.observability import emit_foundation_operation_event
 
 
@@ -116,7 +119,8 @@ async def evaluate_missing_benchmark_signal(
     request: EvaluateMissingBenchmarkSignalRequest,
     caller: CallerContextHeaders,
 ) -> EvaluateMissingBenchmarkSignalResponse | JSONResponse:
-    source_authority = source_authority_from_refs((request.benchmark_assignment_ref,))
+    source_contracts = _source_ref_contracts(request)
+    source_authority = source_authority_from_contracts(source_contracts)
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
         source_authority=source_authority,
@@ -127,6 +131,13 @@ async def evaluate_missing_benchmark_signal(
     )
     if permission_problem is not None:
         return permission_problem
+    contract_problem = signal_source_ref_contract_problem_or_none(
+        contracts=source_contracts,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if contract_problem is not None:
+        return contract_problem
 
     result = evaluate_missing_benchmark_signal_command(request.to_command())
     emit_signal_evaluation_event(
@@ -137,6 +148,18 @@ async def evaluate_missing_benchmark_signal(
     return EvaluateMissingBenchmarkSignalResponse.from_domain(
         result,
         source_authority=source_authority,
+    )
+
+
+def _source_ref_contracts(
+    request: EvaluateMissingBenchmarkSignalRequest,
+) -> tuple[SignalSourceRefContract, ...]:
+    return (
+        SignalSourceRefContract(
+            request.benchmark_assignment_ref,
+            SourceSystem.LOTUS_CORE,
+            ("lotus-core:BenchmarkAssignment:v1",),
+        ),
     )
 
 

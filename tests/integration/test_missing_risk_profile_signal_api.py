@@ -55,6 +55,39 @@ def test_missing_risk_profile_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
+def test_missing_risk_profile_signal_api_rejects_non_advise_source_ref() -> None:
+    client = TestClient(app)
+    payload = missing_risk_profile_payload()
+    payload["riskProfileRef"]["sourceSystem"] = "lotus-core"
+    payload["riskProfileRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-risk-profile/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+
+
+def test_missing_risk_profile_signal_api_rejects_wrong_advise_product_id() -> None:
+    client = TestClient(app)
+    payload = missing_risk_profile_payload()
+    payload["riskProfileRef"]["productId"] = "lotus-advise:ProposalReadinessRecord:v1"
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-risk-profile/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+
+
 def test_missing_risk_profile_signal_api_requires_signal_permission() -> None:
     client = TestClient(app)
 

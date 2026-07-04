@@ -136,6 +136,43 @@ def test_high_cash_api_returns_blocked_posture_for_stale_source_evidence() -> No
     assert payload["unsupportedReasons"] == ["stale_source"]
 
 
+def test_high_cash_api_rejects_wrong_core_product_id() -> None:
+    client = TestClient(app)
+    payload = high_cash_payload()
+    payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
+        "lotus-core:BenchmarkAssignment:v1"
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate",
+        json=payload,
+        headers=authorized_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+
+
+def test_high_cash_api_rejects_non_core_source_ref() -> None:
+    client = TestClient(app)
+    payload = high_cash_payload()
+    payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
+    payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
+        "lotus-risk:ConcentrationRiskReport:v1"
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate",
+        json=payload,
+        headers=authorized_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+
+
 def test_high_cash_api_requires_signal_evaluation_capability() -> None:
     client = TestClient(app)
 
@@ -217,6 +254,28 @@ def test_high_cash_persist_api_persists_created_candidate_with_audit_posture() -
     assert payload["persistence"]["auditEventType"] == "idea.candidate.persisted"
     assert payload["durableStorageBacked"] is False
     assert payload["supportedFeaturePromoted"] is False
+
+
+def test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    payload = high_cash_payload()
+    payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
+    payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
+        "lotus-risk:ConcentrationRiskReport:v1"
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=payload,
+        headers=persistence_headers("persist-high-cash-api-wrong-source-001"),
+    )
+
+    repository = get_idea_repository()
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert len(repository.snapshot().candidate_records) == 0
+    assert "lotus-risk:ConcentrationRiskReport:v1" not in response.text
 
 
 def test_high_cash_persist_api_reports_durable_storage_when_repository_is_durable() -> None:

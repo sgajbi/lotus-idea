@@ -131,6 +131,11 @@ Source refs must preserve producer product identity, source system, version,
 as-of date, generated-at timestamp, freshness, and content lineage where the
 source provides it. Do not synthesize source-owned hashes from response payloads
 unless the source contract explicitly permits it.
+Caller-supplied signal APIs must also validate source refs against the route's
+governed source contract before candidate creation: wrong `sourceSystem` or
+wrong `productId` is `400 invalid_request`, and rejection telemetry must use
+the expected source authority instead of the caller-supplied mismatched
+authority.
 
 ## Current Implementation Map
 

@@ -72,6 +72,13 @@ blocks weak certification by requiring:
 
 The current certified foundation inventory is:
 
+Caller-supplied signal endpoints reject source refs whose `sourceSystem` or
+`productId` does not match the route's governed source contract before domain
+evaluation or candidate creation. These rejections return product-safe
+`400 invalid_request` Problem Details and emit `signal_evaluation`
+`invalid_request` telemetry using the expected source authority rather than the
+caller-supplied mismatched authority.
+
 | Endpoint | Foundation Scope | Required Capability | Current Boundary |
 | --- | --- | --- | --- |
 | `POST /api/v1/idea-signals/high-cash/evaluate` | High-cash deterministic evaluation over caller-supplied, source-owned Core evidence. | advisor role and `idea.signal.evaluate` capability | No live source ingestion, durable state, Gateway, Workbench, mesh certification, or supported-feature promotion. |

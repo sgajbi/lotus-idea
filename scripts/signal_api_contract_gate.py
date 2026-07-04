@@ -35,9 +35,14 @@ SIGNAL_API_MODULES = (
 REQUIRED_SHARED_HELPERS = (
     "CallerContextHeaders",
     "signal_permission_problem_or_none",
+    "signal_source_ref_contract_problem_or_none",
     "emit_signal_evaluation_event",
     "signal_problem_responses",
+)
+
+SOURCE_AUTHORITY_HELPERS = (
     "source_authority_from_refs",
+    "source_authority_from_contracts",
 )
 
 CALLER_HEADER_ALIASES = (
@@ -85,6 +90,11 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
             errors.append(
                 f"{relative_path}: caller-supplied signal APIs must use shared `{helper}` support"
             )
+    if not any(helper in text for helper in SOURCE_AUTHORITY_HELPERS):
+        errors.append(
+            f"{relative_path}: caller-supplied signal APIs must use shared source-authority support "
+            "(`source_authority_from_refs` or `source_authority_from_contracts`)"
+        )
 
     for node in ast.walk(tree):
         if (

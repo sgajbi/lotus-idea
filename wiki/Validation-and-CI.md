@@ -470,6 +470,10 @@ Persistence adapter validation:
     The same test pack now proves every implemented caller-supplied signal API
     recorded in the archetype contract is also required by the contract gate:
     API module, route, and integration-test evidence cannot drift apart.
+    Representative Core, Risk, Performance, and Advise signal API tests also
+    prove wrong `sourceSystem` or `productId` source refs are rejected before
+    candidate creation or high-cash persistence, with product-safe
+    `400 invalid_request` responses and source-safe invalid-request telemetry.
     `tests/unit/test_risk_concentration_live_proof.py` and
     `make risk-concentration-live-proof-contract-gate` prove the optional Lotus
     Risk concentration live-proof artifact remains source-safe and can clear
@@ -804,6 +808,9 @@ The signal API contract gate blocks weak caller-supplied opportunity signal API 
 shared advisor-role plus `idea.signal.evaluate` authorization, source-authority, operation-event,
 outcome-mapping, and product-safe 400/403 `ProblemDetails` OpenAPI response metadata, so new signal
 families cannot introduce copy-pasted role-only authorization or weaker error-model documentation.
+Runtime route code now separately validates caller-supplied source refs against each route's
+governed source contract before domain evaluation, so copied route families cannot accept a valid
+shape from the wrong source authority or data product.
 
 Data-mesh foundation checks:
 

@@ -102,6 +102,23 @@ def test_drawdown_review_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
+def test_drawdown_review_signal_api_rejects_non_risk_source_ref() -> None:
+    client = TestClient(app)
+    payload = drawdown_review_payload()
+    payload["drawdownRef"]["sourceSystem"] = "lotus-core"
+    payload["drawdownRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+
+    response = client.post(
+        "/api/v1/idea-signals/drawdown-review/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+
+
 def test_drawdown_review_signal_api_requires_signal_permission() -> None:
     client = TestClient(app)
 
