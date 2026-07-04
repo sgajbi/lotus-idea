@@ -130,6 +130,14 @@ def test_supported_features_gate_accepts_current_empty_registry() -> None:
     assert validate_supported_features(payload) == []
 
 
+def test_supported_features_schema_reserves_features_for_implemented_entries() -> None:
+    schema = json.loads(Path("supported-features/supported-features.schema.json").read_text())
+
+    assert schema["$defs"]["feature"] == {"$ref": "#/$defs/implementedFeature"}
+    assert "plannedFeature" not in schema["$defs"]
+    assert "notApplicableFeature" not in schema["$defs"]
+
+
 def test_supported_features_gate_rejects_string_only_promotion_evidence() -> None:
     payload = _base_registry()
     payload["features"] = [
@@ -159,6 +167,43 @@ def test_supported_features_gate_rejects_implemented_entry_without_proof_artifac
     errors = validate_supported_features(payload)
 
     assert any("promotion_evidence missing fields: proof_artifacts" in error for error in errors)
+
+
+def test_supported_features_gate_rejects_planned_entries_under_features() -> None:
+    payload = _base_registry()
+    planned_capabilities = payload["planned_capabilities"]
+    assert isinstance(planned_capabilities, list)
+    payload["features"] = [planned_capabilities[0]]
+
+    errors = validate_supported_features(payload)
+
+    assert any(
+        "features[0].status 'planned' is not allowed under features[]" in error for error in errors
+    )
+
+
+def test_supported_features_gate_rejects_not_applicable_entries_under_features() -> None:
+    payload = _base_registry()
+    payload["features"] = [
+        {
+            "id": "advisor-review-queue",
+            "name": "Advisor review queue",
+            "status": "not_applicable",
+            "governing_rfc": (
+                "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/"
+                "RFC-0002-slice-07-scoring-ranking-suppression-and-queue-policy.md"
+            ),
+            "not_applicable_reason": "No promoted feature exists in this foundation posture.",
+            "last_reviewed_utc": "2026-07-04T00:00:00Z",
+        }
+    ]
+
+    errors = validate_supported_features(payload)
+
+    assert any(
+        "features[0].status 'not_applicable' is not allowed under features[]" in error
+        for error in errors
+    )
 
 
 def test_supported_features_gate_rejects_unknown_endpoint_promotion() -> None:
