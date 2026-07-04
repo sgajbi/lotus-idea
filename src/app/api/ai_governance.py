@@ -11,7 +11,7 @@ from app.api.base_model import CamelModel
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_not_configured_metadata,
+    durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
 from app.api.idempotency import validate_idempotency_key
@@ -887,7 +887,7 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
             ),
             description="AI explanation evaluation request conflicts with governed state.",
         ),
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 

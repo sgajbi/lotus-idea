@@ -342,6 +342,12 @@ replay without another adapter call, changed-fingerprint reuse returns
 target, resource id, bounded failure reason, correlation id, trace id, and
 timestamp without source payloads or raw downstream responses.
 
+OpenAPI for these submission routes uses named `ProblemDetails` examples where
+one status can return multiple stable codes. Operators should expect `503`
+examples for downstream adapter configuration and durable repository
+write-readiness, and must not add examples that expose downstream URLs, DSNs,
+hostnames, raw adapter errors, payloads, or idempotency keys.
+
 ## Operator Map
 
 | Operating area | Current proof | Must not be inferred |

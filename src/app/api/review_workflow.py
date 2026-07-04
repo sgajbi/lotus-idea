@@ -11,7 +11,7 @@ from app.api.base_model import CamelModel
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_not_configured_metadata,
+    durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
 from app.api.idempotency import validate_idempotency_key
@@ -619,7 +619,7 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
             detail="The review action is not valid for the current idea candidate state.",
             description="Idempotency conflict or invalid review state transition.",
         ),
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 
@@ -685,7 +685,7 @@ FEEDBACK_ROUTE: RouteMetadata = {
             detail="The idempotency key was already used with a different request payload.",
             description="Idempotency conflict.",
         ),
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 

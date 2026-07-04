@@ -9,6 +9,22 @@ from app.errors import ProblemDetails as ProblemDetails
 from app.errors import problem_response as _problem_response
 
 
+def _problem_details_example(
+    *,
+    status_code: int,
+    code: str,
+    title: str,
+    detail: str,
+) -> dict[str, Any]:
+    return {
+        "type": "about:blank",
+        "status": status_code,
+        "code": code,
+        "title": title,
+        "detail": detail,
+    }
+
+
 def problem_response_metadata(
     *,
     status_code: int,
@@ -23,15 +39,46 @@ def problem_response_metadata(
             "description": description,
             "content": {
                 "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": status_code,
-                        "code": code,
-                        "title": title,
-                        "detail": detail,
-                    }
+                    "example": _problem_details_example(
+                        status_code=status_code,
+                        code=code,
+                        title=title,
+                        detail=detail,
+                    )
                 }
             },
+        }
+    }
+
+
+def merged_problem_response_metadata(
+    *,
+    status_code: int,
+    description: str,
+    responses: tuple[dict[int | str, dict[str, Any]], ...],
+) -> dict[int | str, dict[str, Any]]:
+    examples: dict[str, dict[str, Any]] = {}
+    for metadata in responses:
+        response = metadata[status_code]
+        media = response["content"]["application/json"]
+        if "example" in media:
+            example = media["example"]
+            examples[str(example["code"])] = {
+                "summary": str(example["title"]),
+                "value": example,
+            }
+            continue
+        for key, example_metadata in media.get("examples", {}).items():
+            value = example_metadata["value"]
+            examples[str(key)] = {
+                "summary": str(example_metadata.get("summary", value["title"])),
+                "value": value,
+            }
+    return {
+        status_code: {
+            "model": ProblemDetails,
+            "description": description,
+            "content": {"application/json": {"examples": examples}},
         }
     }
 

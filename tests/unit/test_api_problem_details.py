@@ -8,6 +8,7 @@ from typing import Any
 from app.api.problem_details import (
     invalid_request_metadata,
     invalid_request_problem,
+    merged_problem_response_metadata,
     permission_denied_problem,
     problem_details_response,
     service_unavailable_metadata,
@@ -64,6 +65,35 @@ def test_service_unavailable_metadata_includes_product_safe_example() -> None:
         "title": "Downstream realization unavailable",
         "detail": "The downstream realization adapter foundation is not configured.",
     }
+
+
+def test_merged_problem_response_metadata_publishes_named_examples() -> None:
+    metadata = merged_problem_response_metadata(
+        status_code=503,
+        description="Service is not write-ready.",
+        responses=(
+            service_unavailable_metadata(
+                code="durable_repository_not_configured",
+                title="Durable repository not configured",
+                detail="Configure the durable repository before retrying.",
+                description="Durable repository is not configured.",
+            ),
+            service_unavailable_metadata(
+                code="downstream_realization_not_configured",
+                title="Downstream realization not configured",
+                detail="Configure the downstream adapter before retrying.",
+                description="Downstream adapter is not configured.",
+            ),
+        ),
+    )
+
+    examples = metadata[503]["content"]["application/json"]["examples"]
+
+    assert sorted(examples) == [
+        "downstream_realization_not_configured",
+        "durable_repository_not_configured",
+    ]
+    assert examples["downstream_realization_not_configured"]["value"]["status"] == 503
 
 
 def test_permission_denied_problem_response_is_product_safe() -> None:
@@ -123,6 +153,47 @@ def test_all_openapi_problem_details_responses_have_examples() -> None:
                     missing.append(f"{method.upper()} {path} {status_code}")
 
     assert missing == []
+
+
+def test_downstream_submission_openapi_problem_codes_match_runtime_contract() -> None:
+    openapi = app.openapi()
+    conversion_responses = openapi["paths"][
+        "/api/v1/conversion-intents/{conversionIntentId}/downstream-submissions"
+    ]["post"]["responses"]
+    report_responses = openapi["paths"][
+        "/api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
+    ]["post"]["responses"]
+
+    assert _problem_codes(conversion_responses["404"]) == {
+        "downstream_realization_resource_not_found"
+    }
+    assert _problem_codes(report_responses["404"]) == {"downstream_realization_resource_not_found"}
+    assert _problem_codes(conversion_responses["409"]) == {
+        "idempotency_conflict",
+        "unsupported_downstream_realization_target",
+    }
+    assert _problem_codes(report_responses["409"]) == {"idempotency_conflict"}
+    assert _problem_codes(conversion_responses["503"]) == {
+        "downstream_realization_not_configured",
+        "durable_repository_not_configured",
+        "durable_repository_unavailable",
+    }
+    assert _problem_codes(report_responses["503"]) == {
+        "downstream_realization_not_configured",
+        "durable_repository_not_configured",
+        "durable_repository_unavailable",
+    }
+    stale_codes = {
+        "conversion_intent_not_found",
+        "report_evidence_pack_not_found",
+        "unsupported_downstream_target",
+        "downstream_realization_unavailable",
+    }
+    actual_codes = set().union(
+        *(_problem_codes(response) for response in conversion_responses.values()),
+        *(_problem_codes(response) for response in report_responses.values()),
+    )
+    assert stale_codes.isdisjoint(actual_codes)
 
 
 def test_api_problem_details_boundary_gate_passes_current_repository() -> None:
@@ -189,3 +260,16 @@ def _load_api_problem_details_boundary_gate() -> ModuleType:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _problem_codes(response: dict[str, Any]) -> set[str]:
+    media = response.get("content", {}).get("application/json", {})
+    schema_ref = media.get("schema", {}).get("$ref", "")
+    if not schema_ref.endswith("/ProblemDetails"):
+        return set()
+    if "example" in media:
+        return {str(media["example"]["code"])}
+    return {
+        str(example_metadata["value"]["code"])
+        for example_metadata in media.get("examples", {}).values()
+    }

@@ -700,6 +700,14 @@ Workflow and operator routes plus app-entrypoint exception handlers use
 caller-supplied signal routes keep their stricter route-family metadata in
 `app.api.signal_api_support`.
 
+When one HTTP status can return multiple stable `ProblemDetails` codes, route
+metadata must merge named examples instead of spreading duplicate response keys.
+`tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract`
+guards the downstream submission routes so generated OpenAPI preserves
+runtime codes such as `downstream_realization_not_configured`,
+`durable_repository_unavailable`, `unsupported_downstream_realization_target`,
+and `idempotency_conflict`.
+
 The signal API contract gate blocks duplicated caller-supplied signal API
 authorization, source-authority, operation-event, and error-model mechanics.
 Signal routes must use shared signal API support, and that support must require

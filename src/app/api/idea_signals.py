@@ -10,7 +10,7 @@ from pydantic import Field, field_validator
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
 from app.api.durable_write_guard import (
-    durable_repository_not_configured_metadata,
+    durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
 from app.api.runtime_dependencies import (
@@ -708,7 +708,7 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
                 }
             },
         },
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 

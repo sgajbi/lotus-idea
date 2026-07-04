@@ -10,7 +10,7 @@ from app.api.base_model import CamelModel
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_not_configured_metadata,
+    durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
 from app.api.idempotency import validate_idempotency_key
@@ -576,7 +576,7 @@ CONVERSION_INTENT_ROUTE: RouteMetadata = {
             detail="The conversion intent is not valid for the current idea candidate state.",
             description="Idempotency conflict or invalid conversion intent state.",
         ),
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 
@@ -646,7 +646,7 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
             detail="The conversion outcome is not valid for the recorded conversion intent.",
             description="Idempotency conflict or invalid conversion outcome source.",
         ),
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 

@@ -266,6 +266,12 @@ The submission routes require explicit adapter configuration. Missing or blank
 configuration returns product-safe `503 downstream_realization_not_configured`
 instead of silently pretending to submit work.
 
+Generated OpenAPI for downstream submission routes must publish the same stable
+problem-detail codes the runtime can return. The `503` response uses named
+examples so adapter-not-configured and durable repository write-readiness
+failures are visible without exposing downstream URLs, DSNs, hostnames, raw
+adapter errors, request payloads, response payloads, or idempotency keys.
+
 | Adapter | Base URL env var | Submit path env var |
 | --- | --- | --- |
 | Advise proposal realization | `LOTUS_IDEA_ADVISE_REALIZATION_BASE_URL` | `LOTUS_IDEA_ADVISE_REALIZATION_SUBMIT_PATH` |

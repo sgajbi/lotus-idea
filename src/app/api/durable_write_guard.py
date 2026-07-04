@@ -5,7 +5,11 @@ from typing import Any
 from fastapi import status
 from fastapi.responses import JSONResponse
 
-from app.api.problem_details import problem_details_response, service_unavailable_metadata
+from app.api.problem_details import (
+    merged_problem_response_metadata,
+    problem_details_response,
+    service_unavailable_metadata,
+)
 from app.api.runtime_dependencies import (
     DURABLE_REPOSITORY_NOT_CONFIGURED as DURABLE_REPOSITORY_NOT_CONFIGURED,
     DURABLE_REPOSITORY_UNAVAILABLE as DURABLE_REPOSITORY_UNAVAILABLE,
@@ -58,6 +62,26 @@ def durable_repository_not_configured_metadata() -> dict[int | str, dict[str, An
         description=(
             "The runtime profile requires durable repository configuration before "
             "write-capable idea operations can run."
+        ),
+    )
+
+
+def durable_repository_unavailable_metadata() -> dict[int | str, dict[str, Any]]:
+    return service_unavailable_metadata(
+        code=DURABLE_REPOSITORY_UNAVAILABLE,
+        title="Durable repository unavailable",
+        detail=DURABLE_REPOSITORY_UNAVAILABLE_DETAIL,
+        description="Configured durable repository is unavailable.",
+    )
+
+
+def durable_repository_write_unavailable_metadata() -> dict[int | str, dict[str, Any]]:
+    return merged_problem_response_metadata(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        description="Durable repository is not write-ready.",
+        responses=(
+            durable_repository_not_configured_metadata(),
+            durable_repository_unavailable_metadata(),
         ),
     )
 
