@@ -211,6 +211,17 @@ records, results, lifecycle history, and snapshots, while
 `InMemoryIdeaRepository` behavior. This is design modularity inside the same
 runtime deployable, not a persistence service split.
 
+Domain signal evaluation data contracts are separated from evaluator behavior:
+`src/app/domain/signal_evaluation_models.py` owns immutable signal inputs,
+policies, outcomes, and result contracts, while
+`src/app/domain/signal_evaluation.py` keeps deterministic evaluator algorithms
+and the existing public import surface. This is design modularity inside the
+same runtime deployable, not a signal-evaluation service split. Signal policies
+continue to consume source-owned posture and deterministic thresholds;
+lotus-idea does not own portfolio accounting, official performance, risk,
+benchmark assignment, suitability, compliance, rebalance execution, report
+rendering, archive authority, or AI infrastructure.
+
 `migrations/001_idea_repository_foundation.sql` and its rollback file define the
 first governed schema contract for future durable candidate, idempotency,
 lifecycle, audit, outbox, review, feedback, conversion, and report

@@ -142,9 +142,9 @@ authority.
 The codebase is organized around stable internal bounded modules before any
 runtime modularity:
 
-1. `src/app/domain/`: domain vocabulary, immutable persistence models,
-   policies, lifecycle, evidence, scoring, feedback, conversion, report
-   evidence, outbox, and idempotency invariants.
+1. `src/app/domain/`: domain vocabulary, immutable persistence models, signal
+   evaluation model contracts, policies, lifecycle, evidence, scoring,
+   feedback, conversion, report evidence, outbox, and idempotency invariants.
 2. `src/app/application/`: use-case orchestration, proof-readiness builders,
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
@@ -211,6 +211,12 @@ The public persistence import surface remains `app.domain.persistence`;
 immutable persistence records, decisions, and snapshots live in
 `app.domain.persistence_models` so repository behavior and domain data
 contracts can evolve independently without creating a runtime boundary.
+
+The public signal evaluation import surface remains
+`app.domain.signal_evaluation`; immutable signal input, policy, outcome, and
+result contracts live in `app.domain.signal_evaluation_models` so deterministic
+signal-family contracts can evolve independently from evaluator algorithms
+without creating a runtime boundary.
 
 For durable reads, prefer bounded projections over whole repository snapshots:
 
