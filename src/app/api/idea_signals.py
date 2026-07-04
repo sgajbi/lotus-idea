@@ -25,10 +25,13 @@ from app.api.signal_models import (
 from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
+    SignalSourceRefContract,
     emit_signal_evaluation_event,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
     signal_problem_responses,
+    signal_source_ref_contract_problem_or_none,
+    source_authority_from_contracts,
     source_authority_from_refs,
 )
 from app.application.high_cash_signal import (
@@ -47,6 +50,7 @@ from app.domain import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
     SignalEvaluationResult,
+    SourceSystem,
 )
 from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
@@ -297,6 +301,7 @@ async def evaluate_high_cash_signal(
     caller: CallerContextHeaders,
 ) -> EvaluateHighCashSignalResponse | JSONResponse:
     source_authority = _high_cash_source_authority(request)
+    source_contracts = _high_cash_source_ref_contracts(request)
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
         source_authority=source_authority,
@@ -307,6 +312,13 @@ async def evaluate_high_cash_signal(
     )
     if permission_problem is not None:
         return permission_problem
+    contract_problem = signal_source_ref_contract_problem_or_none(
+        contracts=source_contracts,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if contract_problem is not None:
+        return contract_problem
 
     result = evaluate_high_cash_signal_command(request.to_command())
     emit_signal_evaluation_event(
@@ -380,6 +392,14 @@ async def evaluate_and_persist_high_cash_signal(
         )
 
     source_authority = _high_cash_source_authority(request)
+    source_contracts = _high_cash_source_ref_contracts(request)
+    contract_problem = signal_source_ref_contract_problem_or_none(
+        contracts=source_contracts,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if contract_problem is not None:
+        return contract_problem
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
     configuration_problem = durable_write_problem(repository)
@@ -464,14 +484,34 @@ def _operation_outcome_from_candidate_persistence(
 
 
 def _high_cash_source_authority(request: EvaluateHighCashSignalRequest) -> str:
+    return source_authority_from_contracts(_high_cash_source_ref_contracts(request))
+
+
+def _high_cash_source_ref_contracts(
+    request: EvaluateHighCashSignalRequest,
+) -> tuple[SignalSourceRefContract, ...]:
     evidence = request.source_evidence
-    return source_authority_from_refs(
-        (
+    return (
+        SignalSourceRefContract(
             evidence.portfolio_state_ref,
+            SourceSystem.LOTUS_CORE,
+            ("lotus-core:PortfolioStateSnapshot:v1",),
+        ),
+        SignalSourceRefContract(
             evidence.holdings_ref,
+            SourceSystem.LOTUS_CORE,
+            ("lotus-core:HoldingsAsOf:v1",),
+        ),
+        SignalSourceRefContract(
             evidence.cash_movement_ref,
+            SourceSystem.LOTUS_CORE,
+            ("lotus-core:PortfolioCashMovementSummary:v1",),
+        ),
+        SignalSourceRefContract(
             evidence.cashflow_projection_ref,
-        )
+            SourceSystem.LOTUS_CORE,
+            ("lotus-core:PortfolioCashflowProjection:v1",),
+        ),
     )
 
 

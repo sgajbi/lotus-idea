@@ -803,6 +803,15 @@ operator telemetry for `lotus-risk`, `lotus-performance`, `lotus-advise`,
 `lotus-manage`, and other governed source labels without permitting client,
 portfolio, account, request, response, raw entitlement, or local ad hoc labels.
 
+GitHub issue `#315` hardens caller-supplied signal source contracts. Signal
+routes now validate present source refs against the route-owned source system
+and product-id contract before domain evaluation or candidate creation. Wrong
+Risk, Performance, Core, Manage, or Advise source refs return product-safe
+`400 invalid_request` responses, and rejection operation events use the expected
+route source authority instead of the caller-supplied mismatched authority.
+Missing refs still flow to the existing deterministic blocked evaluation
+semantics.
+
 This slice also hardens outbox-delivery run-once operator identity after
 GitHub issue `#271` showed privileged run-once actions needed explicit
 API-level run identity before external side effects:

@@ -24,6 +24,8 @@
       "test_evidence": [
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_creates_candidate_from_source_owned_evidence",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_returns_blocked_posture_for_source_entitlement_denial",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_rejects_wrong_core_product_id",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_rejects_non_core_source_ref",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_api_requires_signal_evaluation_capability",
         "tests/integration/test_api_operation_events.py::test_signal_and_candidate_persistence_emit_bounded_operation_events"
       ],
@@ -116,6 +118,8 @@
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_above_threshold_not_eligible",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_missing_benchmark_context_blocker",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_non_performance_source_ref",
+        "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_wrong_performance_product_id",
         "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_requires_signal_permission",
         "tests/integration/test_api_operation_events.py::test_underperformance_signal_api_emits_bounded_operation_event"
       ],
@@ -176,6 +180,8 @@
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_below_threshold_not_eligible",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_partial_issuer_coverage_blocker",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_rejects_wrong_source_contract",
+        "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_rejects_wrong_risk_product_id",
         "tests/integration/test_concentration_risk_signal_api.py::test_concentration_risk_signal_api_requires_signal_permission",
         "tests/integration/test_api_operation_events.py::test_concentration_risk_signal_api_emits_bounded_operation_event"
       ],
@@ -207,6 +213,7 @@
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_below_threshold_not_eligible",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_non_ready_source_blocker",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_rejects_non_risk_source_ref",
         "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_api_requires_signal_permission",
         "tests/integration/test_api_operation_events.py::test_drawdown_review_signal_api_emits_bounded_operation_event"
       ],
@@ -238,6 +245,7 @@
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_reports_below_threshold_not_eligible",
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_reports_non_ready_source_blocker",
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_rejects_non_risk_source_ref",
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_api_requires_signal_permission",
         "tests/integration/test_api_operation_events.py::test_high_volatility_signal_api_emits_bounded_operation_event"
       ],
@@ -292,6 +300,8 @@
       "test_evidence": [
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_returns_review_candidate",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_rejects_non_advise_source_ref",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_rejects_wrong_advise_product_id",
         "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_api_requires_signal_permission",
         "tests/integration/test_api_operation_events.py::test_missing_risk_profile_signal_api_emits_bounded_operation_event"
       ],
@@ -376,6 +386,7 @@
       ],
       "test_evidence": [
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_persists_created_candidate_with_audit_posture",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_rejects_wrong_source_contract_before_persistence",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_replays_same_idempotency_payload",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_returns_conflict_for_changed_idempotency_payload",
         "tests/integration/test_high_cash_signal_api.py::test_high_cash_persist_api_rejects_blank_idempotency_key_safely",

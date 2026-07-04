@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and fail-closed Core maturity-summary source-adapter contract pending explicit Core-owned maturity facts, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and fail-closed Core maturity-summary source-adapter contract pending explicit Core-owned maturity facts, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -43,7 +43,13 @@ Implemented first-wave scope:
    duplicate candidate, and entitlement-denied cases return blocked or
    suppressed outcomes without candidate creation.
 6. Reason-code vocabulary now includes `cash_source_ready` and
-   `below_materiality`.
+    `below_materiality`.
+7. Caller-supplied signal API routes validate present source refs against the
+   route's governed source-system and source-product contract before domain
+   evaluation, candidate creation, or high-cash persistence. Contract mismatch
+   requests return product-safe `400 invalid_request` responses and emit
+   invalid-request telemetry under the expected route source authority, not the
+   caller-supplied mismatched authority.
 
 Additional implemented source-adapter foundation:
 

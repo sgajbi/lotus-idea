@@ -3,7 +3,9 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
+import app.api.concentration_risk_signals as concentration_risk_api
 from app.main import app
 
 
@@ -101,6 +103,63 @@ def test_concentration_risk_signal_api_reports_stale_source_blocker() -> None:
         "sourceAuthority": "lotus-risk",
         "supportedFeaturePromoted": False,
     }
+
+
+def test_concentration_risk_signal_api_rejects_wrong_source_contract(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    payload = concentration_payload()
+    payload["concentrationRef"]["sourceSystem"] = "lotus-core"
+    payload["concentrationRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(concentration_risk_api, "emit_foundation_operation_event", capture)
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "lotus-core:PortfolioStateSnapshot:v1" not in response.text
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-risk",
+            "source_ref_contract_mismatch",
+        )
+    ]
+
+
+def test_concentration_risk_signal_api_rejects_wrong_risk_product_id() -> None:
+    client = TestClient(app)
+    payload = concentration_payload()
+    payload["concentrationRef"]["productId"] = "lotus-risk:RiskMetricsReport:v1"
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
 
 
 def test_concentration_risk_signal_api_requires_signal_permission() -> None:

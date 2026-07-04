@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from dataclasses import dataclass
 from typing import Any, Protocol
 
 from fastapi import status
@@ -8,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.route_metadata import RouteMetadata as RouteMetadata
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
-from app.domain import SignalEvaluationResult
+from app.domain import SignalEvaluationResult, SourceSystem
 from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import (
@@ -20,7 +21,15 @@ from app.security.caller_context import (
 
 
 class _SourceRefLike(Protocol):
+    product_id: str
     source_system: Any
+
+
+@dataclass(frozen=True)
+class SignalSourceRefContract:
+    source_ref: _SourceRefLike | None
+    expected_source_system: SourceSystem
+    expected_product_ids: tuple[str, ...]
 
 
 SignalRouteMetadata = RouteMetadata
@@ -39,6 +48,51 @@ def source_authority_from_refs(source_refs: Iterable[_SourceRefLike | None]) -> 
     if len(source_systems) == 1:
         return next(iter(source_systems))
     return "source-owned"
+
+
+def source_authority_from_contracts(contracts: Iterable[SignalSourceRefContract]) -> str:
+    contract_tuple = tuple(contracts)
+    source_systems = {
+        str(contract.expected_source_system.value)
+        for contract in contract_tuple
+        if contract.source_ref is not None
+    }
+    if not source_systems:
+        source_systems = {str(contract.expected_source_system.value) for contract in contract_tuple}
+    if len(source_systems) == 1:
+        return next(iter(source_systems))
+    return "source-owned"
+
+
+def signal_source_ref_contract_problem_or_none(
+    *,
+    contracts: Iterable[SignalSourceRefContract],
+    source_authority: str,
+    emit_event: Callable[..., None],
+) -> JSONResponse | None:
+    for contract in contracts:
+        source_ref = contract.source_ref
+        if source_ref is None:
+            continue
+        if (
+            source_ref.source_system != contract.expected_source_system
+            or source_ref.product_id not in contract.expected_product_ids
+        ):
+            emit_event(
+                IdeaOperation.SIGNAL_EVALUATION,
+                OperationOutcome.INVALID_REQUEST,
+                source_authority=source_authority,
+                error_code="source_ref_contract_mismatch",
+            )
+            return problem_response(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                code="invalid_request",
+                title="Invalid request",
+                detail=(
+                    "Source refs must match the certified source contract for this signal family."
+                ),
+            )
+    return None
 
 
 def signal_problem_responses() -> dict[int | str, dict[str, Any]]:

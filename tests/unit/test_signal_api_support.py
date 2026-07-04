@@ -5,10 +5,14 @@ from typing import Any, cast
 import json
 
 from app.api.signal_api_support import (
+    SignalSourceRefContract,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
+    signal_source_ref_contract_problem_or_none,
+    source_authority_from_contracts,
     source_authority_from_refs,
 )
+from app.domain import SourceSystem
 from app.domain.access_scope import ReviewAccessScope
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import CallerContext, CallerEntitlementScope
@@ -21,6 +25,47 @@ def test_source_authority_falls_back_for_mixed_source_refs() -> None:
     )
 
     assert source_authority_from_refs(source_refs) == "source-owned"
+
+
+def test_source_authority_from_contracts_uses_expected_authority() -> None:
+    contracts = (
+        SignalSourceRefContract(
+            None,
+            SourceSystem.LOTUS_RISK,
+            ("lotus-risk:ConcentrationRiskReport:v1",),
+        ),
+    )
+
+    assert source_authority_from_contracts(contracts) == "lotus-risk"
+
+
+def test_signal_source_ref_contract_rejects_wrong_source_without_leaking_ref() -> None:
+    events: list[tuple[str, str, str | None]] = []
+    source_ref = SimpleNamespace(
+        source_system=SourceSystem.LOTUS_CORE,
+        product_id="lotus-core:PortfolioStateSnapshot:v1",
+    )
+
+    problem = signal_source_ref_contract_problem_or_none(
+        contracts=(
+            SignalSourceRefContract(
+                source_ref,
+                SourceSystem.LOTUS_RISK,
+                ("lotus-risk:ConcentrationRiskReport:v1",),
+            ),
+        ),
+        source_authority="lotus-risk",
+        emit_event=lambda operation, outcome, **kwargs: events.append(
+            (operation.value, outcome.value, kwargs.get("error_code"))
+        ),
+    )
+
+    assert problem is not None
+    assert problem.status_code == 400
+    body = problem.body if isinstance(problem.body, bytes) else problem.body.tobytes()
+    assert json.loads(body)["code"] == "invalid_request"
+    assert "PortfolioStateSnapshot" not in body.decode("utf-8")
+    assert events == [("signal_evaluation", "invalid_request", "source_ref_contract_mismatch")]
 
 
 def test_signal_outcome_maps_suppressed_to_operation_outcome() -> None:
