@@ -766,6 +766,14 @@ never construct a runtime remain unchanged. This is resource lifecycle proof
 only; it does not certify live Core ingestion, data-mesh promotion,
 Gateway/Workbench support, or supported-feature readiness.
 
+GitHub issue `#313` adds the matching run-once capacity guard. The
+source-ingestion command and manifest parser enforce a code-owned 100-item
+ceiling over both `maxItems` and raw `workItems`; the API returns the
+source-safe `source_ingestion_batch_limit_exceeded` blocker before Core calls or
+repository mutation when a manifest exceeds that ceiling. Larger ingestion
+remains a future chunked or scheduled workflow with capacity evidence, not a
+run-once manifest escalation.
+
 This slice also hardens outbox-delivery run-once operator identity after
 GitHub issue `#271` showed privileged run-once actions needed explicit
 API-level run identity before external side effects:

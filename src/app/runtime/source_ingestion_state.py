@@ -17,6 +17,7 @@ from app.application.source_ingestion_readiness import (
     core_source_runtime_urls_from_environment,
     resolve_source_ingestion_manifest_path,
 )
+from app.application.source_ingestion import SourceIngestionBatchLimitExceeded
 from app.application.source_ingestion_worker import (
     SourceIngestionWorkerPlan,
     source_ingestion_worker_plan_from_manifest,
@@ -94,6 +95,16 @@ def build_source_ingestion_runtime_from_environment() -> (
     try:
         plan = source_ingestion_worker_plan_from_manifest(_read_manifest(manifest_path))
         query_config, query_control_plane_config = _core_source_client_configs(core_source_urls)
+    except SourceIngestionBatchLimitExceeded:
+        return SourceIngestionRuntimeBlocker(
+            "source_ingestion_batch_limit_exceeded",
+            configured_manifest_available=configured_manifest_available,
+            core_base_url_configured=True,
+            core_query_base_url_configured=core_source_urls.query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                core_source_urls.query_control_plane_base_url_configured
+            ),
+        )
     except DownstreamClientConfigurationError:
         return SourceIngestionRuntimeBlocker(
             "lotus_core_base_url_invalid",

@@ -4,6 +4,7 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
+import json
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ from fastapi.testclient import TestClient
 
 import app.api.source_ingestion_readiness as source_ingestion_readiness_api
 from app.application.source_ingestion import HighCashSourceIngestionBatchResult
+from app.application.source_ingestion import SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING
 from app.application.source_ingestion_readiness import (
     CORE_BASE_URL_ENV,
     CORE_QUERY_BASE_URL_ENV,
@@ -342,6 +344,52 @@ def test_source_ingestion_run_once_api_blocks_runtime_configuration_without_muta
     assert payload["totalCount"] == 0
     assert "source_ingestion_manifest_not_configured" in payload["configurationBlockers"]
     assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_source_ingestion_run_once_api_blocks_manifest_over_batch_ceiling(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    reset_idea_repository_for_tests(repository=repository)
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "maxItems": SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
+                "workItems": [
+                    {
+                        "portfolioId": PORTFOLIO_ID,
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8310")
+    monkeypatch.setattr(
+        source_ingestion_readiness_api,
+        "idea_repository_durable_storage_backed",
+        lambda _repository: True,
+    )
+    client = TestClient(app)
+
+    response = client.post(
+        "/api/v1/source-ingestion/run-once",
+        headers=source_ingestion_run_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["runStatus"] == "blocked"
+    assert payload["configurationBlockers"] == ["source_ingestion_batch_limit_exceeded"]
+    assert payload["totalCount"] == 0
+    assert len(repository.snapshot().candidate_records) == 0
+    assert "PB_SG_GLOBAL_BAL_001" not in response.text
 
 
 def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(

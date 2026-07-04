@@ -24,6 +24,11 @@ from app.ports.idea_repository import CandidatePersistenceRepository
 
 SOURCE_INGESTION_ACTOR = "signal-ingestion-worker"
 DEFAULT_SOURCE_INGESTION_BATCH_LIMIT = 100
+SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING = 100
+
+
+class SourceIngestionBatchLimitExceeded(ValueError):
+    """Raised when run-once source ingestion exceeds the service-owned ceiling."""
 
 
 class HighCashSourceIngestionDecision(StrEnum):
@@ -85,8 +90,16 @@ class RunHighCashSourceIngestionBatchCommand:
             raise ValueError("evaluated_at_utc must be timezone-aware")
         if self.max_items < 1:
             raise ValueError("max_items must be positive")
+        if self.max_items > SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING:
+            raise SourceIngestionBatchLimitExceeded(
+                "max_items exceeds source_ingestion_run_once_batch_ceiling"
+            )
         if not work_items:
             raise ValueError("work_items must not be empty")
+        if len(work_items) > SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING:
+            raise SourceIngestionBatchLimitExceeded(
+                "work_items exceeds source_ingestion_run_once_batch_ceiling"
+            )
         if len(work_items) > self.max_items:
             raise ValueError("work_items exceeds max_items")
         object.__setattr__(self, "work_items", work_items)

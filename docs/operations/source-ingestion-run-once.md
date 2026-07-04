@@ -211,6 +211,18 @@ python scripts/generate_scheduled_source_ingestion_worker_proof.py `
 $env:LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF = "output/source-ingestion/scheduled-worker-proof.json"
 ```
 
+Run-once batch ceiling:
+
+- `maxItems` and `workItems` are capped at 100 for the internal run-once
+  source-ingestion foundation. The checked-in example manifest sets
+  `maxItems` to that service-owned ceiling.
+- Manifests above the ceiling are rejected as
+  `source_ingestion_batch_limit_exceeded` before Core is called or repository
+  mutation is attempted.
+- Larger ingestion requires a separately designed chunked or scheduled workflow
+  with capacity, retry, recovery, and operator-progress evidence. Do not raise
+  the run-once ceiling to simulate production-scale ingestion.
+
 Core response requirement:
 
 - The high-cash adapter consumes Core `HoldingsAsOf:v1`

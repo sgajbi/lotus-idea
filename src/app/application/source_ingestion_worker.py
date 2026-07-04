@@ -14,6 +14,8 @@ from app.application.source_ingestion import (
     HighCashSourceIngestionWorkItem,
     RunHighCashSourceIngestionBatchCommand,
     SOURCE_INGESTION_ACTOR,
+    SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
+    SourceIngestionBatchLimitExceeded,
 )
 
 
@@ -141,6 +143,10 @@ def _work_items_from_manifest(
 ) -> tuple[HighCashSourceIngestionWorkItem, ...]:
     if not isinstance(raw_work_items, Sequence) or isinstance(raw_work_items, (str, bytes)):
         raise ValueError("workItems must be a non-empty list")
+    if len(raw_work_items) > SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING:
+        raise SourceIngestionBatchLimitExceeded(
+            "workItems exceeds source_ingestion_run_once_batch_ceiling"
+        )
     parsed_items: list[HighCashSourceIngestionWorkItem] = []
     for index, raw_item in enumerate(raw_work_items):
         if not isinstance(raw_item, Mapping):

@@ -650,6 +650,10 @@ Recent issue-derived patterns to preserve:
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution
     and must not rely on worker-only cleanup semantics.
+27. Run-once source-ingestion manifests are intentionally small bounded
+    operator actions. `maxItems` and raw `workItems` must stay at or below the
+    code-owned 100-item ceiling; larger ingestion requires a separately
+    designed chunked or scheduled workflow with capacity evidence.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -780,7 +784,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     after both accepted and source-unavailable batch executions. Configuration
     blockers that never construct a runtime remain unchanged, and the route does
     not certify live Core ingestion or supported-feature readiness.
-20. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
+20. Source-ingestion run-once batch ceiling: GitHub issue `#313` is addressed
+    by enforcing a code-owned 100-item ceiling over both manifest `maxItems` and
+    raw `workItems`, returning `source_ingestion_batch_limit_exceeded` before
+    Core calls or repository mutation. Larger ingestion remains a future
+    chunked/scheduled workflow with capacity evidence, not a run-once manifest
+    escalation.
+21. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
     repo-native `make duplicate-implementation-inventory` command that reports
     exact duplicate function-body clusters across `src/app` and `scripts`
     without writing artifacts. The initial baseline
