@@ -229,9 +229,10 @@ Gateway/Workbench, downstream, or supported-feature blockers.
 `POST /api/v1/source-ingestion/run-once` exposes the same bounded
 source-ingestion batch foundation through the service boundary for operators.
 It requires durable repository posture plus configured manifest and Core
-source settings, blocks before mutation when those inputs are absent or
-invalid, closes owned Core HTTP runtime clients after accepted or
-source-unavailable execution, and returns aggregate decision counts only.
+source settings, caps `maxItems` and `workItems` at 100, blocks before mutation
+when those inputs are absent, invalid, or above the run-once ceiling, closes
+owned Core HTTP runtime clients after accepted or source-unavailable execution,
+and returns aggregate decision counts only.
 `GET /api/v1/outbox-delivery/readiness` now exposes the internal operator
 readiness posture for outbox delivery foundation state. It reports aggregate
 status counts, due delivery-ready backlog, durable repository posture, broker

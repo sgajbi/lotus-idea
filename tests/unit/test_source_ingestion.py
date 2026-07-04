@@ -10,6 +10,7 @@ from app.application.source_ingestion import (
     HighCashSourceIngestionWorkItem,
     IngestHighCashSourceSignalCommand,
     RunHighCashSourceIngestionBatchCommand,
+    SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
     default_high_cash_source_ingestion_key,
     ingest_high_cash_signal_from_core,
     run_high_cash_source_ingestion_batch,
@@ -414,6 +415,22 @@ def test_validates_run_once_batch_boundaries() -> None:
                 max_items=0,
             ),
             "max_items must be positive",
+        ),
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(valid_item,),
+                evaluated_at_utc=EVALUATED_AT,
+                max_items=SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
+            ),
+            "max_items exceeds source_ingestion_run_once_batch_ceiling",
+        ),
+        (
+            lambda: RunHighCashSourceIngestionBatchCommand(
+                work_items=(valid_item,) * (SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1),
+                evaluated_at_utc=EVALUATED_AT,
+                max_items=SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
+            ),
+            "work_items exceeds source_ingestion_run_once_batch_ceiling",
         ),
         (
             lambda: RunHighCashSourceIngestionBatchCommand(

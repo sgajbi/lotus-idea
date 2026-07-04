@@ -12,7 +12,10 @@ from typing import Any
 
 import pytest
 
-from app.application.source_ingestion import run_high_cash_source_ingestion_batch
+from app.application.source_ingestion import (
+    SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING,
+    run_high_cash_source_ingestion_batch,
+)
 from app.application.source_ingestion_worker import (
     MANIFEST_SCHEMA_VERSION,
     source_ingestion_worker_plan_from_manifest,
@@ -124,6 +127,10 @@ def test_rejects_unsupported_schema_version() -> None:
         ({"actorSubject": " "}, "optional text fields must be non-empty strings when supplied"),
         ({"evaluatedAtUtc": "2026-06-21T10:00:00"}, "evaluatedAtUtc must be timezone-aware"),
         ({"maxItems": 0}, "maxItems must be a positive integer"),
+        (
+            {"maxItems": SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1},
+            "max_items exceeds source_ingestion_run_once_batch_ceiling",
+        ),
     ],
 )
 def test_rejects_malformed_worker_manifest_fields(
@@ -138,6 +145,23 @@ def test_rejects_malformed_worker_manifest_fields(
     manifest.update(manifest_update)
 
     with pytest.raises(ValueError, match=re.escape(expected_error)):
+        source_ingestion_worker_plan_from_manifest(manifest)
+
+
+def test_rejects_worker_manifest_over_service_batch_ceiling() -> None:
+    manifest: dict[str, object] = {
+        "schemaVersion": MANIFEST_SCHEMA_VERSION,
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "workItems": [
+            {"portfolioId": f"portfolio-{index}", "asOfDate": "2026-06-21"}
+            for index in range(SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1)
+        ],
+    }
+
+    with pytest.raises(
+        ValueError,
+        match="workItems exceeds source_ingestion_run_once_batch_ceiling",
+    ):
         source_ingestion_worker_plan_from_manifest(manifest)
 
 

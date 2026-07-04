@@ -12,6 +12,7 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     TIMEOUT_SECONDS_ENV,
 )
+from app.application.source_ingestion import SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.infrastructure.downstream_client import DownstreamClientConfig
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
@@ -104,6 +105,41 @@ def test_source_ingestion_runtime_blocks_non_object_manifest(
 
     assert result == SourceIngestionRuntimeBlocker(
         "source_ingestion_manifest_invalid",
+        configured_manifest_available=True,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+
+
+def test_source_ingestion_runtime_blocks_manifest_over_batch_ceiling(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+                "maxItems": SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
+                "workItems": [
+                    {
+                        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+                        "asOfDate": "2026-06-21",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv(MANIFEST_ENV, str(manifest))
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "http://localhost:8100")
+
+    result = build_source_ingestion_runtime_from_environment()
+
+    assert result == SourceIngestionRuntimeBlocker(
+        "source_ingestion_batch_limit_exceeded",
         configured_manifest_available=True,
         core_base_url_configured=True,
         core_query_base_url_configured=True,
