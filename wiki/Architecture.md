@@ -402,6 +402,18 @@ runtime. The route still does not call providers, own prompts/provider
 payloads, execute `lotus-ai` runtime workflows, grant downstream authority, or
 promote a supported feature.
 
+Outbox delivery readiness, status-count, and run-once response DTOs live in
+`src/app/api/outbox_delivery_readiness_models.py`, while
+`src/app/api/outbox_delivery_readiness.py` keeps operator caller checks,
+idempotency validation, durable-write blocking, publisher cleanup,
+operation-event emission, route metadata, and response handling. This is an
+internal design-modularity boundary inside the same runtime deployable, not a
+broker-publication service split or separately scalable outbox delivery
+runtime. The route remains an internal operator foundation and still does not
+certify live broker publication, downstream consumer runtime, platform mesh
+event publication, Gateway/Workbench support, data-product certification, or
+supported-feature promotion.
+
 `GET /api/v1/ai-explanations/readiness` is the certified internal AI
 explanation readiness diagnostic. It returns guardrail availability,
 `not_certified` model-risk supportability, and certification blockers for

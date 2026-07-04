@@ -178,3 +178,45 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    supported-feature promotion or seed/automation change is justified by this
    internal modularity slice.
+
+## 2026-07-04: Outbox Delivery API Model Boundary
+
+Outbox delivery readiness, status-count, and run-once response DTOs now live in
+`src/app/api/outbox_delivery_readiness_models.py`.
+`src/app/api/outbox_delivery_readiness.py` imports those DTOs while keeping
+caller authorization, idempotency validation, durable-write blocking, publisher
+cleanup, operation-event emission, route metadata, and response handling in the
+existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate outbox delivery service,
+queue boundary, worker boundary, or independently scalable broker-publication
+path. Outbox delivery run-once remains an internal operator foundation because
+there is no workload, failure-isolation, ownership, security, or operability
+evidence for a runtime split.
+
+Private-banking and operating boundaries preserved:
+
+1. The route still requires operator caller context plus
+   `idea.outbox-delivery.*` capabilities.
+2. The route still requires `Idempotency-Key` for mutation, uses the configured
+   repository and publisher adapter, returns aggregate counts only, and emits
+   source-safe operation events.
+3. The route still does not certify live broker publication, downstream
+   consumer runtime, platform mesh event publication, Gateway/Workbench support,
+   data-product certification, or supported-feature promotion.
+
+Evidence:
+
+1. Code: `src/app/api/outbox_delivery_readiness.py`,
+   `src/app/api/outbox_delivery_readiness_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\integration\test_outbox_delivery_readiness_api.py tests\unit\test_outbox_delivery_readiness.py -q`
+   (`19 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/api/outbox_delivery_readiness.py` moved
+   from 625 to 494 lines; `src/app/api/outbox_delivery_readiness_models.py`
+   is 145 lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
