@@ -142,10 +142,14 @@ supported-feature promotion.
 The AI explanation endpoint exposes the Slice 09 internal fallback/verifier
 foundation over persisted candidate evidence. It requires
 `idea.ai-explanation.evaluate` plus `Idempotency-Key`, returns redacted
-evidence only, blocks unsupported claims and forbidden actions, replays
-same-key/same-request submissions without duplicate lineage writes, rejects
-same-key/different-request reuse with product-safe `409 idempotency_conflict`,
-never calls providers or executes `lotus-ai` runtime workflows, never certifies runtime AI lineage-store proof, never grants
+evidence only, accepts only the governed `lotus-ai:idea-explanation:v1` /
+`v1` / `lotus-ai:governed-verifier:v1` workflow-pack contract, rejects
+unregistered pack identities with product-safe `400 invalid_ai_workflow_pack`
+before candidate lookup or lineage persistence, blocks unsupported claims and
+forbidden actions, replays same-key/same-request submissions without duplicate
+lineage writes, rejects same-key/different-request reuse with product-safe
+`409 idempotency_conflict`, never calls providers or executes `lotus-ai`
+runtime workflows, never certifies runtime AI lineage-store proof, never grants
 downstream authority, and keeps `durableStorageBacked=false`,
 `lotusAiRuntimeExecuted=false`, and `supportedFeaturePromoted=false`.
 

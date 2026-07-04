@@ -21,6 +21,17 @@ from app.domain.ideas import (
 )
 
 
+@dataclass(frozen=True)
+class GovernedAIWorkflowPackContract:
+    request_workflow_pack_id: str
+    proof_workflow_pack_id: str
+    workflow_pack_version: str
+    evaluation_ref: str
+    allowed_purposes: frozenset["AIWorkflowPurpose"]
+    workflow_authority_owner: str
+    ai_capability_owner: str
+
+
 AI_FORBIDDEN_METADATA_KEYS = FORBIDDEN_ATTRIBUTE_KEYS.union(
     {
         "prompt",
@@ -95,6 +106,29 @@ class InvalidAIExplanationRequest(ValueError):
 class InvalidAIWorkflowOutput(ValueError):
     def __init__(self, message: str) -> None:
         super().__init__(message)
+
+
+class InvalidAIWorkflowPack(InvalidAIExplanationRequest):
+    def __init__(self) -> None:
+        super().__init__("AI workflow pack is not registered for idea explanation evaluation")
+
+
+GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK = GovernedAIWorkflowPackContract(
+    request_workflow_pack_id="lotus-ai:idea-explanation:v1",
+    proof_workflow_pack_id="idea_explanation.pack@v1",
+    workflow_pack_version="v1",
+    evaluation_ref="lotus-ai:governed-verifier:v1",
+    allowed_purposes=frozenset(
+        {
+            AIWorkflowPurpose.MISSING_EVIDENCE_CHECK,
+            AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
+            AIWorkflowPurpose.ADVISOR_RATIONALE_DRAFT,
+            AIWorkflowPurpose.MEETING_PREPARATION_DRAFT,
+        }
+    ),
+    workflow_authority_owner="lotus-idea",
+    ai_capability_owner="lotus-ai",
+)
 
 
 @dataclass(frozen=True)
@@ -204,6 +238,7 @@ class AIExplanationCommand:
         _require_text(self.request_id, "request_id")
         _require_text(self.actor_subject, "actor_subject")
         _require_aware_utc(self.requested_at_utc, "requested_at_utc")
+        require_governed_ai_workflow_pack(self.workflow_pack)
         object.__setattr__(
             self,
             "approved_metadata",
@@ -327,6 +362,7 @@ def build_ai_explanation_request(
     candidate: IdeaCandidate,
     command: AIExplanationCommand,
 ) -> AIExplanationRequest:
+    require_governed_ai_workflow_pack(command.workflow_pack)
     _ensure_purpose_allowed_for_candidate(candidate, command.workflow_pack.purpose)
     return AIExplanationRequest(
         request_id=command.request_id,
@@ -478,6 +514,21 @@ def _ensure_output_matches_request(
         raise InvalidAIWorkflowOutput("output workflow_pack_id does not match request")
     if output.workflow_pack_version != request.workflow_pack.workflow_pack_version:
         raise InvalidAIWorkflowOutput("output workflow_pack_version does not match request")
+
+
+def ai_workflow_pack_is_governed(workflow_pack: AIWorkflowPackRef) -> bool:
+    contract = GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK
+    return (
+        workflow_pack.workflow_pack_id == contract.request_workflow_pack_id
+        and workflow_pack.workflow_pack_version == contract.workflow_pack_version
+        and workflow_pack.evaluation_ref == contract.evaluation_ref
+        and workflow_pack.purpose in contract.allowed_purposes
+    )
+
+
+def require_governed_ai_workflow_pack(workflow_pack: AIWorkflowPackRef) -> None:
+    if not ai_workflow_pack_is_governed(workflow_pack):
+        raise InvalidAIWorkflowPack()
 
 
 def _safe_metadata(metadata: Mapping[str, str]) -> Mapping[str, str]:

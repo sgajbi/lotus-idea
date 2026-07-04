@@ -591,17 +591,24 @@ Recent issue-derived patterns to preserve:
 12. persisted AI explanation lineage writes need both API-level idempotency and
     domain request-id replay protection; same-key replay/conflict and
     distinct-key request-id conflict must remain separately tested,
-13. privileged operator run-once mutations need explicit operator run identity
+13. AI explanation evaluation must use the single governed workflow-pack
+    contract in `app.domain.ai_governance`: public request identity
+    `lotus-ai:idea-explanation:v1` + version `v1` + evaluator
+    `lotus-ai:governed-verifier:v1` maps deliberately to the proof identity
+    `idea_explanation.pack@v1`; arbitrary caller-supplied pack identities must
+    fail closed with product-safe `invalid_ai_workflow_pack` before candidate
+    lookup or lineage persistence,
+14. privileged operator run-once mutations need explicit operator run identity
    and idempotency before event claims or external side effects,
-14. release evidence artifacts must name their scope, target artifact or
+15. release evidence artifacts must name their scope, target artifact or
     dependency source, generator, path, and non-proof boundary before being cited
     as release proof,
-15. runtime dependency SBOM evidence must come from the resolved runtime
+16. runtime dependency SBOM evidence must come from the resolved runtime
     dependency closure in `requirements/runtime-resolved.lock.txt`, not from
     direct-only runtime requirements or an ambiguous CI environment; the
     supported-name `requirements/requirements.txt` exists only as a gated
     mirror for GitHub Dependency Graph support,
-16. Python dependency updates must move root pins and runtime lock evidence
+17. Python dependency updates must move root pins and runtime lock evidence
     through the governed `make dependency-refresh` path. Dependabot must not
     open a separate `/requirements` lock-only stream; lock refreshes should
     regenerate both `requirements/runtime-resolved.lock.txt` and

@@ -498,8 +498,8 @@
       "path": "/api/v1/idea-candidates/{candidateId}/ai-explanations/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Evaluate an internal AI explanation workflow result or deterministic fallback against a persisted idea candidate with redaction, source-claim verification, forbidden-action blocking, source-safe idempotent lineage recording, and bounded operation telemetry.",
-      "when_to_use": "Use as the RFC-0002 Slice 09 and Slice 10 API foundation when an internal caller has a persisted candidate, idea.ai-explanation.evaluate capability, an Idempotency-Key, and needs governed AI explanation evaluation without provider execution.",
+      "purpose": "Evaluate an internal AI explanation workflow result or deterministic fallback against a persisted idea candidate with governed workflow-pack identity, redaction, source-claim verification, forbidden-action blocking, source-safe idempotent lineage recording, and bounded operation telemetry.",
+      "when_to_use": "Use as the RFC-0002 Slice 09 and Slice 10 API foundation when an internal caller has a persisted candidate, idea.ai-explanation.evaluate capability, an Idempotency-Key, the governed lotus-ai:idea-explanation:v1 / v1 / lotus-ai:governed-verifier:v1 workflow-pack contract, and needs governed AI explanation evaluation without provider execution.",
       "when_not_to_use": "Do not use as lotus-ai runtime proof, AI provider execution proof, autonomous advice, suitability approval, downstream authority, Gateway contract, Workbench product proof, data-product certification proof, client-ready publication, or supported-feature promotion. Use the separate AI lineage store proof artifact for source-safe persistence evidence.",
       "request_examples": [
         "POST /api/v1/idea-candidates/idea_high_cash_8d57adbf52f7f5a7/ai-explanations/evaluate with X-Caller-Capabilities: idea.ai-explanation.evaluate and Idempotency-Key: ai-explanation-api-001",
@@ -515,7 +515,8 @@
         "403 returns product-safe Problem Details when the caller lacks idea.ai-explanation.evaluate capability.",
         "404 returns product-safe Problem Details when the candidate is not found.",
         "409 returns product-safe Problem Details when rationale or meeting-preparation drafting is requested before ready evidence and review-ready lifecycle, when an AI request id is replayed with changed lineage, or when Idempotency-Key is reused for a different request fingerprint.",
-        "400 returns product-safe Problem Details when request validation fails, Idempotency-Key is absent or blank, approved metadata contains forbidden keys, or workflow output is invalid."
+        "400 returns product-safe Problem Details when request validation fails, Idempotency-Key is absent or blank, approved metadata contains forbidden keys, workflow output is invalid, or workflowPackId/workflowPackVersion/evaluationRef is not the governed idea explanation contract.",
+        "400 invalid_ai_workflow_pack is returned before candidate lookup or lineage persistence and does not echo caller-supplied workflow text, candidate-sensitive details, prompts, or provider output."
       ],
       "test_evidence": [
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_returns_deterministic_fallback_without_runtime_claim",
@@ -523,10 +524,12 @@
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_blocks_unsupported_claims_and_forbidden_actions",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_replays_same_lineage_and_conflicts_changed_request",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_requires_idempotency_key",
+        "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_rejects_unregistered_workflow_pack_identity",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_requires_permission_and_existing_candidate",
         "tests/integration/test_ai_governance_api.py::test_ai_explanation_api_rejects_invalid_purpose_for_current_state_and_metadata",
         "tests/integration/test_api_operation_events.py::test_ai_explanation_api_emits_bounded_operation_event",
-        "tests/unit/test_ai_governance.py::test_ai_explanation_uses_candidate_projection_without_snapshot"
+        "tests/unit/test_ai_governance.py::test_ai_explanation_uses_candidate_projection_without_snapshot",
+        "tests/unit/test_ai_governance.py::test_ai_explanation_command_requires_governed_workflow_pack_contract"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

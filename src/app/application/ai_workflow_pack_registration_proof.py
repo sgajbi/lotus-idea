@@ -12,6 +12,7 @@ from app.application.source_safe_cross_repo_proof import (
     required_make_target_evidence_present,
     text_file_contains_all,
 )
+from app.domain import GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK
 
 
 AI_WORKFLOW_PACK_REGISTRATION_PROOF_ENV = "LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF"
@@ -119,9 +120,11 @@ def build_ai_workflow_pack_registration_proof_payload(
             "testsCoverIdeaPack": tests_cover_idea_pack,
         },
         "remainingCertificationBlockers": REMAINING_AI_WORKFLOW_PACK_REGISTRATION_BLOCKERS,
-        "workflowPackId": "idea_explanation.pack@v1",
-        "workflowAuthorityOwner": "lotus-idea",
-        "aiCapabilityOwner": "lotus-ai",
+        "workflowPackId": GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.proof_workflow_pack_id,
+        "workflowAuthorityOwner": (
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.workflow_authority_owner
+        ),
+        "aiCapabilityOwner": GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.ai_capability_owner,
         "workflowPackRegistrationContractCertified": proof_valid,
         "workflowPackRuntimeExecutionCertified": False,
         "lotusAiRuntimeExecuted": False,
@@ -145,11 +148,17 @@ def ai_workflow_pack_registration_proof_is_valid(payload: Mapping[str, Any]) -> 
         return False
     if payload.get("aiWorkflowPackRegistrationProofValid") is not True:
         return False
-    if payload.get("workflowPackId") != "idea_explanation.pack@v1":
+    if payload.get("workflowPackId") != (
+        GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.proof_workflow_pack_id
+    ):
         return False
-    if payload.get("workflowAuthorityOwner") != "lotus-idea":
+    if payload.get("workflowAuthorityOwner") != (
+        GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.workflow_authority_owner
+    ):
         return False
-    if payload.get("aiCapabilityOwner") != "lotus-ai":
+    if payload.get("aiCapabilityOwner") != (
+        GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.ai_capability_owner
+    ):
         return False
     if payload.get("workflowPackRegistrationContractCertified") is not True:
         return False

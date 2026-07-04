@@ -717,6 +717,31 @@ repository snapshots before adapter calls:
    certify downstream execution, route existence, suitability/rebalance/report
    authority, client-ready publication, or supported-feature promotion.
 
+This slice also hardens AI explanation workflow-pack identity after issue
+review showed the runtime API accepted arbitrary caller-supplied pack id,
+version, and evaluator references:
+
+1. `app.domain.ai_governance` now owns one governed idea-explanation workflow
+   pack contract. The public runtime request identity
+   `lotus-ai:idea-explanation:v1` / `v1` /
+   `lotus-ai:governed-verifier:v1` deliberately maps to the proof identity
+   `idea_explanation.pack@v1`.
+2. AI explanation command construction and request building fail closed for any
+   unregistered pack identity before candidate lookup or lineage persistence.
+   The API maps this to product-safe `400 invalid_ai_workflow_pack` without
+   echoing caller-supplied workflow text, candidate-sensitive details, prompts,
+   or provider output.
+3. The AI workflow-pack registration proof now reuses the same domain contract
+   values for proof identity, workflow authority owner, and AI capability owner
+   instead of duplicating string literals.
+4. Unit and integration tests prove canonical requests still pass while
+   noncanonical `workflowPackId`, `workflowPackVersion`, and `evaluationRef`
+   each fail independently.
+5. This is contract governance and design modularity inside the existing
+   `lotus-idea` runtime. It does not certify `lotus-ai` runtime execution,
+   provider calls, prompt/RAG infrastructure, Workbench support, client-ready
+   publication, or supported-feature promotion.
+
 This slice also applies the bounded durable-read pattern to downstream
 realization readiness counts after the same issue-review pattern showed
 operator diagnostics should not pay whole-store snapshot cost for narrow

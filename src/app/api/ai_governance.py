@@ -18,8 +18,10 @@ from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
+    problem_response_metadata,
 )
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
@@ -49,6 +51,7 @@ from app.domain import (
     AIWorkflowPackRef,
     AIWorkflowPurpose,
     InvalidAIExplanationRequest,
+    InvalidAIWorkflowPack,
     InvalidAIWorkflowOutput,
     RedactedIdeaEvidence,
     RedactedSourceRef,
@@ -529,6 +532,11 @@ async def evaluate_ai_explanation(
     try:
         _require_ai_explanation_caller(caller)
         validate_idempotency_key(idempotency_key)
+        command = request.to_command(
+            candidate_id=candidate_id,
+            caller=caller,
+            idempotency_key=idempotency_key,
+        )
         repository = get_idea_repository()
         durable_storage_backed = idea_repository_durable_storage_backed(repository)
         configuration_problem = durable_write_problem(repository)
@@ -540,11 +548,7 @@ async def evaluate_ai_explanation(
             )
             return configuration_problem
         result = evaluate_ai_explanation_to_repository(
-            request.to_command(
-                candidate_id=candidate_id,
-                caller=caller,
-                idempotency_key=idempotency_key,
-            ),
+            command,
             repository=repository,
         )
     except PermissionDeniedError:
@@ -568,6 +572,17 @@ async def evaluate_ai_explanation(
             code="invalid_ai_output",
             title="Invalid AI output",
             detail="The AI workflow output does not match the governed explanation request.",
+        )
+    except InvalidAIWorkflowPack:
+        _emit_ai_explanation_operation_event(
+            OperationOutcome.INVALID_REQUEST,
+            "invalid_ai_workflow_pack",
+        )
+        return problem_response(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_ai_workflow_pack",
+            title="Invalid AI workflow pack",
+            detail="Use the registered Lotus AI idea explanation workflow pack contract.",
         )
     except InvalidAIExplanationRequest as exc:
         return _invalid_ai_explanation_request_response(exc)
@@ -865,8 +880,33 @@ AI_EXPLANATION_ROUTE: RouteMetadata = {
                 }
             },
         },
-        **invalid_request_metadata(
-            detail=("Correct the AI explanation evaluation request or Idempotency-Key and retry."),
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            description="AI explanation request validation failed.",
+            responses=(
+                invalid_request_metadata(
+                    detail=(
+                        "Correct the AI explanation evaluation request or Idempotency-Key "
+                        "and retry."
+                    ),
+                ),
+                problem_response_metadata(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    code="invalid_ai_workflow_pack",
+                    title="Invalid AI workflow pack",
+                    detail=("Use the registered Lotus AI idea explanation workflow pack contract."),
+                    description="Workflow pack identity is not registered for idea explanations.",
+                ),
+                problem_response_metadata(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    code="invalid_ai_output",
+                    title="Invalid AI output",
+                    detail=(
+                        "The AI workflow output does not match the governed explanation request."
+                    ),
+                    description="AI workflow output did not match the governed request.",
+                ),
+            ),
         ),
         **permission_denied_metadata(
             detail="The caller is not permitted to evaluate idea AI explanations.",

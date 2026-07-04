@@ -24,12 +24,14 @@ from app.domain import (
     AIWorkflowPurpose,
     EvidenceFreshness,
     EvidenceSupportability,
+    GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK,
     InMemoryIdeaRepository,
     IdeaCandidate,
     IdeaEvidencePacket,
     IdeaLifecycleStatus,
     IdeaScore,
     InvalidAIExplanationRequest,
+    InvalidAIWorkflowPack,
     InvalidAIWorkflowOutput,
     LineageRef,
     OpportunityFamily,
@@ -127,11 +129,12 @@ def candidate(
 def workflow_pack(
     purpose: AIWorkflowPurpose = AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
 ) -> AIWorkflowPackRef:
+    contract = GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK
     return AIWorkflowPackRef(
-        workflow_pack_id="lotus-ai:idea-unsupported-claim-verifier",
-        workflow_pack_version="v1.0.0",
+        workflow_pack_id=contract.request_workflow_pack_id,
+        workflow_pack_version=contract.workflow_pack_version,
         purpose=purpose,
-        evaluation_ref="lotus-ai-eval:idea-verifier:v1",
+        evaluation_ref=contract.evaluation_ref,
     )
 
 
@@ -155,11 +158,12 @@ def output(
     claims: tuple[AIOutputClaim, ...] | None = None,
     proposed_actions: tuple[AIProposedAction, ...] | None = None,
 ) -> AIWorkflowOutput:
+    contract = GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK
     return AIWorkflowOutput(
         output_id="ai-output-001",
         request_id=request_id,
-        workflow_pack_id="lotus-ai:idea-unsupported-claim-verifier",
-        workflow_pack_version="v1.0.0",
+        workflow_pack_id=contract.request_workflow_pack_id,
+        workflow_pack_version=contract.workflow_pack_version,
         explanation_text="The evidence supports an internal advisor review of idle cash.",
         claims=claims
         or (
@@ -261,6 +265,46 @@ def test_missing_evidence_check_can_run_on_blocked_evidence() -> None:
     assert request.redacted_evidence.unsupported_reasons == (
         UnsupportedEvidenceReason.AI_UNAVAILABLE,
     )
+
+
+@pytest.mark.parametrize(
+    ("workflow_pack_id", "workflow_pack_version", "evaluation_ref"),
+    (
+        (
+            "lotus-ai:idea-unsupported-claim-verifier",
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.workflow_pack_version,
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.evaluation_ref,
+        ),
+        (
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.request_workflow_pack_id,
+            "v1.0.0",
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.evaluation_ref,
+        ),
+        (
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.request_workflow_pack_id,
+            GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.workflow_pack_version,
+            "lotus-ai-eval:idea-verifier:v1",
+        ),
+    ),
+)
+def test_ai_explanation_command_requires_governed_workflow_pack_contract(
+    workflow_pack_id: str,
+    workflow_pack_version: str,
+    evaluation_ref: str,
+) -> None:
+    with pytest.raises(InvalidAIWorkflowPack):
+        AIExplanationCommand(
+            request_id="ai-request-unsupported-pack",
+            actor_subject="advisor-001",
+            workflow_pack=AIWorkflowPackRef(
+                workflow_pack_id=workflow_pack_id,
+                workflow_pack_version=workflow_pack_version,
+                purpose=AIWorkflowPurpose.UNSUPPORTED_CLAIM_VERIFICATION,
+                evaluation_ref=evaluation_ref,
+            ),
+            approved_metadata={"audience": "internal_advisor_review"},
+            requested_at_utc=REQUESTED_AT,
+        )
 
 
 def test_ai_unavailable_returns_deterministic_fallback_without_authority() -> None:
@@ -390,9 +434,9 @@ def test_ai_domain_objects_validate_required_redaction_fields() -> None:
     with pytest.raises(ValueError, match="workflow_pack_id is required"):
         AIWorkflowPackRef(
             workflow_pack_id=" ",
-            workflow_pack_version="v1.0.0",
+            workflow_pack_version=GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.workflow_pack_version,
             purpose=AIWorkflowPurpose.MISSING_EVIDENCE_CHECK,
-            evaluation_ref="lotus-ai-eval:idea-verifier:v1",
+            evaluation_ref=GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK.evaluation_ref,
         )
 
     with pytest.raises(ValueError, match="product_id is required"):

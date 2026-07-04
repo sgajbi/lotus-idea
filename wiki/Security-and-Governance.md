@@ -14,7 +14,10 @@ Required posture:
 4. human review before conversion,
 5. no autonomous advice, compliance approval, mandate approval, execution, or
    client communication,
-6. AI through `lotus-ai` workflow packs only,
+6. AI through the governed `lotus-ai:idea-explanation:v1` workflow-pack
+   contract only, mapped to proof identity `idea_explanation.pack@v1` and
+   rejected with product-safe `invalid_ai_workflow_pack` when caller-supplied
+   identity is unregistered,
 7. endpoint certification and OpenAPI quality gates,
 8. proposed data-product declarations, repo-native data-mesh contract gate,
    blocked static trust telemetry, source-safe runtime trust telemetry preview
