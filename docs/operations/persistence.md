@@ -54,9 +54,12 @@ row-delta inserts and candidate-row updates inside the repository transaction
 instead of deleting and reinserting unrelated repository tables. This preserves
 independent candidate, review, conversion, report evidence, AI lineage, outbox,
 and downstream-submission rows when separate mutations are applied from the same
-starting snapshot. It is still not production storage certification, and future
-adapter work should continue moving hot precheck/replay paths toward
-database-native conditional reads and writes where that reduces contention.
+starting snapshot. Review, feedback, and conversion-intent replay/conflict
+prechecks now use a bounded idempotency-key lookup plus candidate-detail
+projection instead of whole-store snapshot hydration. It is still not production
+storage certification, and future adapter work should continue moving hot
+precheck/replay paths toward database-native conditional reads and writes where
+that reduces contention.
 `scripts/generate_durable_repository_proof.py` and
 `make durable-repository-proof-contract-gate` now provide a source-safe proof
 artifact for aggregate RFC implementation-readiness evidence. The artifact
@@ -274,6 +277,12 @@ flowchart LR
     duplicate downstream submission requests no longer hydrate candidate,
     outbox, conversion, report evidence-pack, or AI-lineage state before
     adapter execution.
+    Review, feedback, and conversion-intent idempotency prechecks use the same
+    bounded PostgreSQL posture: a direct `idea_idempotency_record` lookup by
+    key followed by the candidate-detail projection for the associated
+    candidate only. They avoid whole-store candidate, outbox,
+    downstream-submission, and unrelated workflow hydration before returning
+    replay or conflict decisions.
     Runtime trust telemetry preview and snapshot diagnostics also use a
     repository-side PostgreSQL aggregate projection over candidate and workflow
     tables, so ordinary operator reads avoid hydrating audit, outbox,

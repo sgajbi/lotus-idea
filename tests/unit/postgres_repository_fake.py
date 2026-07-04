@@ -13,6 +13,7 @@ from tests.unit.postgres_outbox_fake_helpers import (
 from tests.unit.postgres_repository_lookup_fake_helpers import (
     candidate_detail_rows,
     downstream_lookup_rows,
+    idempotency_lookup_rows,
 )
 from tests.unit.postgres_repository_mutation_fake_helpers import (
     row_for_insert,
@@ -104,6 +105,10 @@ class FakePostgresCursor:
         if normalized.startswith("/* lotus-idea downstream-lookup"):
             assert params is not None
             self._rows = downstream_lookup_rows(self.connection, normalized, params)
+            return
+        if normalized.startswith("/* lotus-idea idempotency-lookup */"):
+            assert params is not None
+            self._rows = idempotency_lookup_rows(self.connection, normalized, params)
             return
         if normalized.startswith("with selected"):
             assert params is not None

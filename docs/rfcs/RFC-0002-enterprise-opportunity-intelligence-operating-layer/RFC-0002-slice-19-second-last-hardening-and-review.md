@@ -664,11 +664,33 @@ whole repository snapshot just to find one candidate before domain evaluation:
    cover accepted review action lookup, feedback lookup, conversion-intent
    lookup, missing conversion candidate handling, and AI explanation lookup.
 4. This is bounded pre-mutation lookup hardening only. Existing repository
-   mutation methods still own idempotency, audit, lifecycle, conversion, and
-   AI-lineage persistence until later write-path refactors add narrower write
-   projections. It does not certify downstream execution, AI runtime
-   execution, suitability/rebalance/report authority, client-ready
-   publication, or supported-feature promotion.
+    mutation methods still own idempotency, audit, lifecycle, conversion, and
+    AI-lineage persistence until later write-path refactors add narrower write
+    projections. It does not certify downstream execution, AI runtime
+    execution, suitability/rebalance/report authority, client-ready
+    publication, or supported-feature promotion.
+
+This slice also bounds review, feedback, and conversion-intent idempotency
+prechecks after issue review showed replay/conflict handling still loaded whole
+repository snapshots:
+
+1. `src/app/infrastructure/postgres_idempotency_lookup.py` defines a bounded
+   `idea_idempotency_record` lookup by idempotency key; this is design
+   modularity inside the existing repository adapter, not a runtime service
+   split.
+2. `PostgresIdeaRepository.precheck_review_mutation(...)` and
+   `precheck_conversion_mutation(...)` now evaluate replay/conflict decisions
+   from that idempotency row and hydrate only the associated candidate through
+   the existing candidate-detail projection. Feedback uses the review precheck
+   path through the same repository method.
+3. PostgreSQL tests prove review replay, review conflict, conversion replay,
+   and conversion conflict prechecks use `WHERE idempotency_key = %s`, use
+   candidate-detail projection, and avoid broad candidate scans, outbox rows,
+   and downstream-submission rows.
+4. Accepted mutations still use the repository mutation path and keep existing
+   idempotency, audit, lifecycle, conversion, and outbox behavior. This does not
+   certify production storage, downstream authority, Workbench support,
+   data-product promotion, or supported-feature promotion.
 
 This slice also applies the bounded durable-read pattern to downstream
 realization lookup after issue review showed submission paths could still scan

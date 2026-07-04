@@ -88,6 +88,10 @@ from app.infrastructure.postgres_downstream_lookup import (
 from app.infrastructure.postgres_downstream_readiness import (
     load_downstream_realization_readiness_summary,
 )
+from app.infrastructure.postgres_idempotency_precheck import (
+    precheck_postgres_conversion_mutation,
+    precheck_postgres_review_mutation,
+)
 from app.infrastructure.postgres_mutation_retry import execute_postgres_mutation
 from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
@@ -224,8 +228,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         idempotency_key: str,
         payload: Mapping[str, Any],
     ) -> ReviewPersistenceResult | None:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.precheck_review_mutation(
+        return precheck_postgres_review_mutation(
+            self._connection,
             idempotency_key=idempotency_key,
             payload=payload,
         )
@@ -266,8 +270,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
         idempotency_key: str,
         payload: Mapping[str, Any],
     ) -> ConversionPersistenceResult | None:
-        repository = InMemoryIdeaRepository(self.snapshot())
-        return repository.precheck_conversion_mutation(
+        return precheck_postgres_conversion_mutation(
+            self._connection,
             idempotency_key=idempotency_key,
             payload=payload,
         )

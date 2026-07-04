@@ -237,7 +237,8 @@ Implemented first-wave internal scope:
     `tests/unit/test_postgres_repository.py` proves candidate persistence,
     idempotency replay, lifecycle history, audit events, review decisions,
     feedback, conversion intent/outcome, report evidence-pack requests, pending
-    outbox hydration, and rollback behavior with a fake Postgres cursor.
+    outbox hydration, bounded review/feedback/conversion replay-conflict
+    prechecks, and rollback behavior with a fake Postgres cursor.
     `tests/unit/test_postgres_outbox_readiness.py` proves the outbox readiness
     projection avoids whole-repository snapshot hydration.
 24. `src/app/infrastructure/postgres_codecs.py` now isolates PostgreSQL JSON
