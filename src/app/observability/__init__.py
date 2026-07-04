@@ -1,6 +1,8 @@
 from app.observability.logging import (
+    AGGREGATE_SOURCE_AUTHORITY,
     FORBIDDEN_OPERATION_FIELD_KEYS,
     OPERATION_METRIC_LABELS,
+    OPERATION_EVENT_SOURCE_AUTHORITIES,
     SENSITIVE_OPERATION_LOG_FIELD_KEYS,
     IdeaOperation,
     OperationEvent,
@@ -10,6 +12,7 @@ from app.observability.logging import (
     emit_request_diagnostic_event,
     emit_operation_event,
     emit_foundation_operation_event,
+    validate_operation_source_authority,
 )
 from app.observability.correlation_context import (
     generated_correlation_id,
@@ -21,6 +24,8 @@ from app.observability.correlation_context import (
 __all__ = [
     "FORBIDDEN_OPERATION_FIELD_KEYS",
     "OPERATION_METRIC_LABELS",
+    "AGGREGATE_SOURCE_AUTHORITY",
+    "OPERATION_EVENT_SOURCE_AUTHORITIES",
     "SENSITIVE_OPERATION_LOG_FIELD_KEYS",
     "IdeaOperation",
     "OperationEvent",
@@ -30,6 +35,7 @@ __all__ = [
     "emit_request_diagnostic_event",
     "emit_operation_event",
     "emit_foundation_operation_event",
+    "validate_operation_source_authority",
     "generated_correlation_id",
     "generated_trace_id",
     "is_product_safe_context_id",

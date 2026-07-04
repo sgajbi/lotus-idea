@@ -14,6 +14,7 @@ if str(SRC) not in sys.path:
 
 from app.observability import (  # noqa: E402
     FORBIDDEN_OPERATION_FIELD_KEYS,
+    OPERATION_EVENT_SOURCE_AUTHORITIES,
     OPERATION_METRIC_LABELS,
     IdeaOperation,
     OperationOutcome,
@@ -24,12 +25,6 @@ from app.observability import (  # noqa: E402
 CONTRACT_PATH = Path("contracts/observability/lotus-idea-operation-metrics.v1.json")
 EXPECTED_METRIC_NAME = "lotus_idea_operation_events_total"
 EXPECTED_METRIC_TYPE = "counter"
-ALLOWED_SOURCE_AUTHORITIES = {
-    "lotus-ai",
-    "lotus-core",
-    "lotus-idea",
-    "lotus-report",
-}
 
 
 def _load_contract(repository_root: Path, contract_path: Path) -> dict[str, Any]:
@@ -149,6 +144,13 @@ def _validate_metrics(payload: dict[str, Any]) -> list[str]:
                 + ", ".join(sorted(leaked_labels))
             )
 
+    source_authorities = metric.get("source_authorities")
+    if source_authorities != list(OPERATION_EVENT_SOURCE_AUTHORITIES):
+        errors.append(
+            "operation metric source_authorities must match code-owned "
+            "OPERATION_EVENT_SOURCE_AUTHORITIES in order"
+        )
+
     outcomes = metric.get("outcomes")
     expected_outcomes = sorted(outcome.value for outcome in OperationOutcome)
     if not isinstance(outcomes, list) or sorted(outcomes) != expected_outcomes:
@@ -179,7 +181,7 @@ def _validate_operations(operations: list[Any]) -> list[str]:
         if not operation.get("scope"):
             errors.append(f"{operation_name}: scope is required")
         source_authority = operation.get("source_authority")
-        if source_authority not in ALLOWED_SOURCE_AUTHORITIES:
+        if source_authority not in OPERATION_EVENT_SOURCE_AUTHORITIES:
             errors.append(f"{operation_name}: source_authority is not a governed Lotus authority")
         supportability_status = operation.get("supportability_status")
         if supportability_status not in supportability_values:

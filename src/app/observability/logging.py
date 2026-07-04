@@ -10,11 +10,16 @@ from typing import Literal
 
 from prometheus_client import Counter
 
+from app.domain import SourceSystem
 from app.observability.correlation_context import require_product_safe_context_id
 
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 SERVICE_NAME = "lotus-idea"
+AGGREGATE_SOURCE_AUTHORITY = "source-owned"
+OPERATION_EVENT_SOURCE_AUTHORITIES = tuple(
+    sorted({SERVICE_NAME, AGGREGATE_SOURCE_AUTHORITY, *(source.value for source in SourceSystem)})
+)
 REQUEST_DIAGNOSTIC_EVENTS = frozenset(
     {
         "request.validation_failed",
@@ -170,8 +175,7 @@ class OperationEvent:
     attributes: Mapping[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
-        if not self.source_authority.strip():
-            raise ValueError("source_authority is required")
+        validate_operation_source_authority(self.source_authority)
         if self.error_code is not None and not self.error_code.strip():
             raise ValueError("error_code cannot be blank")
         if self.correlation_id is not None:
@@ -246,6 +250,14 @@ def emit_foundation_operation_event(
             supported_feature_promoted=False,
         )
     )
+
+
+def validate_operation_source_authority(source_authority: str) -> str:
+    if not source_authority.strip():
+        raise ValueError("source_authority is required")
+    if source_authority not in OPERATION_EVENT_SOURCE_AUTHORITIES:
+        raise ValueError("source_authority is not a governed operation metric label")
+    return source_authority
 
 
 def _safe_log_context_value(value: str, field_name: str) -> str:

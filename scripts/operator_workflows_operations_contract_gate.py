@@ -11,7 +11,11 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from app.observability import OperationOutcome  # noqa: E402
+from app.observability import (  # noqa: E402
+    AGGREGATE_SOURCE_AUTHORITY,
+    OPERATION_EVENT_SOURCE_AUTHORITIES,
+    OperationOutcome,
+)
 
 try:
     from scripts.operations_contract_validators import (  # noqa: E402
@@ -74,7 +78,13 @@ def validate_operator_workflows_operations_contract(
 def validate_operator_workflows_operations_contract_payload(
     payload: dict[str, Any], *, repository_root: Path = ROOT
 ) -> list[str]:
-    return validate_operations_contract_payload(payload, repository_root=repository_root, validators=OPERATIONS_CONTRACT_VALIDATORS)
+    errors = validate_operations_contract_payload(
+        payload,
+        repository_root=repository_root,
+        validators=OPERATIONS_CONTRACT_VALIDATORS,
+    )
+    errors.extend(_validate_source_authority_policy(payload))
+    return sorted(errors)
 # fmt: on
 
 
@@ -219,6 +229,27 @@ def _validate_alert_candidates(payload: dict[str, Any]) -> list[str]:
         REQUIRED_ALERT_CANDIDATES,
         "alert candidates",
     )
+
+
+def _validate_source_authority_policy(payload: dict[str, Any]) -> list[str]:
+    policy = payload.get("source_authority_policy")
+    if not isinstance(policy, dict):
+        return ["operator workflows operations contract source_authority_policy must be an object"]
+    errors: list[str] = []
+    if policy.get("label_source") != (
+        "src/app/observability/logging.py::OPERATION_EVENT_SOURCE_AUTHORITIES"
+    ):
+        errors.append(
+            "operator workflows operations contract source authority label source drifted"
+        )
+    if policy.get("aggregate_label") != AGGREGATE_SOURCE_AUTHORITY:
+        errors.append("operator workflows operations contract aggregate source authority drifted")
+    if policy.get("governed_labels") != list(OPERATION_EVENT_SOURCE_AUTHORITIES):
+        errors.append(
+            "operator workflows operations contract governed source authority labels "
+            "must match code-owned OPERATION_EVENT_SOURCE_AUTHORITIES"
+        )
+    return errors
 
 
 def _validate_expected_ids(

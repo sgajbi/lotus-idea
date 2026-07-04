@@ -102,9 +102,20 @@ Metric labels are limited to:
 | `operation` | Governed operation vocabulary from the central helper |
 | `outcome` | Bounded result posture such as `accepted`, `blocked`, or `permission_denied` |
 | `supportability_status` | Foundation, blocked, or not-certified posture |
-| `source_authority` | Owning Lotus service or `lotus-idea` |
+| `source_authority` | Code-owned Lotus source-system label, `lotus-idea`, or aggregate `source-owned` |
 | `durable_storage_backed` | Whether the active repository provider is durable |
 | `supported_feature_promoted` | Whether supported-feature promotion exists |
+
+The governed `source_authority` vocabulary is owned by
+`OPERATION_EVENT_SOURCE_AUTHORITIES` in `src/app/observability/logging.py` and
+mirrored by the operation metric and operator workflow contracts:
+`lotus-advise`, `lotus-ai`, `lotus-archive`, `lotus-core`,
+`lotus-idea`, `lotus-manage`, `lotus-performance`, `lotus-render`,
+`lotus-report`, `lotus-risk`, and aggregate `source-owned`. Runtime operation
+events reject unknown labels such as client, portfolio, account, or ad hoc
+local service identifiers before logs or metrics are emitted. Signal evaluation
+uses the concrete source-system label when all source refs agree and
+`source-owned` only when an event aggregates multiple governed source systems.
 
 The operation helper rejects sensitive attributes such as client, portfolio, account, holding,
 transaction, request body, response body, raw entitlement failure, trace id, or correlation id
@@ -153,6 +164,7 @@ rules, and runbook are certified by
 | Dashboard controls | Source-ingestion, outbox, downstream realization, runtime trust, and implementation-proof readiness posture over implemented operation telemetry | Certified source-safe dashboard artifact |
 | Alert rules | Blocked readiness and run-once/submission posture over implemented operation telemetry | Certified source-safe alert artifact |
 | Source-of-truth paths | Operation metric contract, operator runbook, source-ingestion, outbox, downstream, runtime-trust, implementation-proof source modules, and RFC slices | No live source, external broker, downstream execution, Gateway/Workbench, or support-promotion proof |
+| Source-authority policy | Dashboard and alert artifacts may group by the governed `source_authority` label; any explicit matcher must use the code-owned vocabulary above | No client, portfolio, account, request, response, raw entitlement, or ad hoc source labels |
 
 This contract closes the non-AI dashboard/alert certification gap raised by
 GitHub issue `#282` without changing runtime modularity or feature support

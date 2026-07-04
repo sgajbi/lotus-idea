@@ -87,6 +87,16 @@ def test_operation_metric_contract_gate_blocks_metric_label_and_operation_drift(
     assert any("unsupported operations: unowned_operation" in error for error in errors)
 
 
+def test_operation_metric_contract_gate_blocks_source_authority_vocabulary_drift() -> None:
+    module = _load_gate()
+    payload = _current_payload(module)
+    payload["metrics"][0]["source_authorities"] = ["lotus-idea", "client-123"]
+
+    errors = module.validate_operation_metric_contract_payload(payload)
+
+    assert any("OPERATION_EVENT_SOURCE_AUTHORITIES" in error for error in errors)
+
+
 def test_operation_metric_contract_gate_blocks_bad_source_truth_and_authority() -> None:
     module = _load_gate()
     payload = _current_payload(module)

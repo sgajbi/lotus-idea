@@ -13,6 +13,7 @@ from app.application.source_safe_cross_repo_proof import (
     required_file_evidence_present,
     required_make_target_evidence_present,
 )
+from app.observability import OPERATION_EVENT_SOURCE_AUTHORITIES
 
 OPERATOR_WORKFLOWS_OPERATIONS_PROOF_SCHEMA_VERSION = (
     "lotus-idea.operator-workflows-operations-proof.v1"
@@ -78,6 +79,7 @@ FORBIDDEN_OBSERVABILITY_FRAGMENTS = (
     "trace_id",
     "PB_SG_GLOBAL_BAL_001",
 )
+SOURCE_AUTHORITY_MATCHER = re.compile(r'source_authority\s*=~?\s*\\?"([^"\\]+)\\?"')
 
 
 def build_operator_workflows_operations_proof_payload(
@@ -222,6 +224,8 @@ def _dashboard_artifact_certified(repository_root: Path) -> bool:
         return False
     if _contains_forbidden_observability_fragment(serialized):
         return False
+    if not _contains_only_governed_source_authorities(serialized):
+        return False
     metric_names = set(re.findall(r"lotus_[a-z0-9_]+", serialized))
     if metric_names != {EXPECTED_METRIC_NAME}:
         return False
@@ -238,6 +242,8 @@ def _alert_rules_artifact_certified(repository_root: Path) -> bool:
     )
     text = read_text(path)
     if not text or _contains_forbidden_observability_fragment(text):
+        return False
+    if not _contains_only_governed_source_authorities(text):
         return False
     for alert_id in EXPECTED_ALERT_IDS:
         if f"alert_id: {alert_id}" not in text:
@@ -299,3 +305,14 @@ def _operations_contract_certified(repository_root: Path) -> bool:
 def _contains_forbidden_observability_fragment(text: str) -> bool:
     lowered = text.lower()
     return any(fragment.lower() in lowered for fragment in FORBIDDEN_OBSERVABILITY_FRAGMENTS)
+
+
+def _contains_only_governed_source_authorities(text: str) -> bool:
+    governed = set(OPERATION_EVENT_SOURCE_AUTHORITIES)
+    for match in SOURCE_AUTHORITY_MATCHER.finditer(text):
+        raw_values = match.group(1).split("|")
+        for raw_value in raw_values:
+            source_authority = raw_value.strip()
+            if source_authority and source_authority not in governed:
+                return False
+    return True

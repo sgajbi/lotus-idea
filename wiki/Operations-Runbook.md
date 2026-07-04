@@ -572,6 +572,14 @@ The metric labels are intentionally low-cardinality: `operation`, `outcome`,
 `supported_feature_promoted`. They must not include portfolio, client, account,
 holding, transaction, request body, response body, raw entitlement failure,
 trace id, or correlation id values.
+The `source_authority` label is limited to the code-owned operation-event
+vocabulary: `lotus-advise`, `lotus-ai`, `lotus-archive`, `lotus-core`,
+`lotus-idea`, `lotus-manage`, `lotus-performance`, `lotus-render`,
+`lotus-report`, `lotus-risk`, and aggregate `source-owned`. Unknown labels are
+rejected before logs or metrics are emitted. Use `source-owned` only when an
+event aggregates multiple governed source systems; do not encode client,
+portfolio, account, holding, request, response, raw entitlement, or local ad
+hoc identifiers as source authority.
 Correlation and trace ids are allowed only as log context on request
 diagnostics and business operation events. Operators should use the
 `X-Correlation-Id` response header to find structured service logs with the
@@ -583,10 +591,10 @@ logs and response bodies.
 The machine-readable metric catalog lives at
 `contracts/observability/lotus-idea-operation-metrics.v1.json`, and
 `make operation-metric-contract-gate` keeps it aligned with the code-owned
-operation and outcome vocabulary. The catalog is current implementation
-evidence only; it is not dashboard certification, alert certification,
-data-mesh certification, Gateway/Workbench proof, or supported-feature
-promotion.
+operation, outcome, label, and source-authority vocabulary. The catalog is
+current implementation evidence only; it is not dashboard certification, alert
+certification, data-mesh certification, Gateway/Workbench proof, or
+supported-feature promotion.
 
 The non-AI operator workflow dashboard and alert pack lives at
 `contracts/observability/lotus-idea-operator-workflows-operations.v1.json`,
@@ -597,8 +605,10 @@ and `docs/runbooks/operator-workflows-operations.md`. Use
 `make operator-workflows-operations-proof-contract-gate` to certify source-safe
 dashboard/alert visibility over implemented source-ingestion, outbox,
 downstream-realization, runtime-trust, and implementation-proof readiness
-telemetry. This is not live source, external broker, downstream execution,
-Gateway/Workbench, data-mesh, or supported-feature certification.
+telemetry. The gates fail closed if the contract, dashboard, or alert artifacts
+drift away from the code-owned source-authority vocabulary. This is not live
+source, external broker, downstream execution, Gateway/Workbench, data-mesh, or
+supported-feature certification.
 
 Request validation, HTTP, and unhandled-error diagnostics use the central
 request diagnostic helper and log route templates rather than raw URL paths.

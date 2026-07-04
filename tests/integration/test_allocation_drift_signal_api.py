@@ -150,8 +150,8 @@ def test_allocation_drift_signal_api_requires_signal_permission() -> None:
 
 def evaluate_headers() -> dict[str, str]:
     return {
-        "X-Caller-Subject": "pm-001",
-        "X-Caller-Roles": "portfolio-manager",
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
     }
 
