@@ -151,7 +151,10 @@ and reports `durableStorageBacked` from that provider. Default local runtime is
 process-local and reports `false`; `demo`, `staging`, and `production` require
 `LOTUS_IDEA_DATABASE_URL`, degrade `/health/ready`, and return
 `durable_repository_not_configured` before mutating in-memory state when durable
-storage is absent. Runtime configured with `LOTUS_IDEA_DATABASE_URL` uses the
+storage is absent. When configured PostgreSQL cannot initialize, readiness and
+write-capable routes fail closed with `durable_repository_unavailable` instead
+of falling back to process-local mutation or leaking raw driver details.
+Runtime configured with a reachable `LOTUS_IDEA_DATABASE_URL` uses the
 PostgreSQL adapter and reports `true` for repository-backed routes. These
 endpoints do not retrieve live source data, certify a data product, expose a
 Gateway route, or promote a supported business feature.

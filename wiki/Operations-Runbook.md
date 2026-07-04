@@ -36,6 +36,10 @@ Runtime profile is explicit: `LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`,
 `production` require `LOTUS_IDEA_DATABASE_URL`. Missing durable storage in a
 production-like profile degrades `/health/ready` and makes write-capable routes
 return `durable_repository_not_configured` before any in-memory mutation.
+Configured but unavailable PostgreSQL also degrades `/health/ready` and makes
+write-capable routes return `durable_repository_unavailable` before mutation;
+operator responses must stay product-safe and must not echo DSNs, hostnames,
+credentials, or raw driver exception text.
 Internal high-cash source-ingestion orchestration now exists as an application
 foundation over the Core source port and repository port. It generates a
 source-ingestion idempotency key when one is not supplied and classifies

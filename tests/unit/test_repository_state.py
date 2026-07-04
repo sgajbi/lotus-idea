@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+import psycopg
 from psycopg.rows import dict_row
 
 from app.domain import InMemoryIdeaRepository
@@ -93,6 +94,31 @@ def test_repository_state_uses_postgres_repository_when_database_url_is_configur
             "row_factory": dict_row,
         }
     ]
+
+
+def test_repository_state_marks_configured_database_failure_as_unavailable(
+    monkeypatch: Any,
+) -> None:
+    def fake_connect(database_url: str, *, row_factory: object) -> FakeConnection:
+        raise psycopg.OperationalError("could not connect to db.internal with secret")
+
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(
+        repository_state.DATABASE_URL_ENV,
+        "postgresql://lotus_idea:secret@db.internal:5432/lotus_idea",
+    )
+    monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
+    repository_state.reset_idea_repository_for_tests(reload_from_environment=True)
+
+    repository = repository_state.get_idea_repository()
+    posture = repository_state.idea_repository_runtime_posture(repository)
+
+    assert repository.__class__.__name__ == "UnavailableIdeaRepository"
+    assert posture.runtime_profile.value == "production"
+    assert posture.durable_repository_configured is True
+    assert posture.durable_storage_backed is False
+    assert posture.write_ready is False
+    assert posture.configuration_blockers == ("durable_repository_unavailable",)
 
 
 def test_repository_state_reset_closes_configured_connection(monkeypatch: Any) -> None:

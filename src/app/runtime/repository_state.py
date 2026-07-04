@@ -10,6 +10,7 @@ from app.infrastructure.postgres_repository import PostgresConnection, PostgresI
 from app.ports.idea_repository import IdeaRepository
 from app.runtime import settings as runtime_settings
 from app.runtime.settings import (
+    DURABLE_REPOSITORY_UNAVAILABLE,
     LotusIdeaRuntimeSettings,
     RuntimeStoragePosture,
     load_runtime_settings,
@@ -19,6 +20,15 @@ from app.runtime.settings import (
 DATABASE_URL_ENV = runtime_settings.DATABASE_URL_ENV
 
 _IDEA_REPOSITORY: IdeaRepository | None = None
+_REPOSITORY_INITIALIZATION_BLOCKER: str | None = None
+
+
+class UnavailableIdeaRepository:
+    durable_storage_backed = False
+    _connection = None
+
+    def __getattr__(self, name: str) -> object:
+        raise RuntimeError("durable repository is unavailable")
 
 
 def get_idea_repository() -> IdeaRepository:
@@ -42,6 +52,7 @@ def idea_repository_runtime_posture(
     return runtime_storage_posture(
         settings=settings,
         durable_storage_backed=idea_repository_durable_storage_backed(active_repository),
+        durable_repository_initialization_blocker=_REPOSITORY_INITIALIZATION_BLOCKER,
     )
 
 
@@ -50,8 +61,9 @@ def reset_idea_repository_for_tests(
     *,
     reload_from_environment: bool = False,
 ) -> None:
-    global _IDEA_REPOSITORY
+    global _IDEA_REPOSITORY, _REPOSITORY_INITIALIZATION_BLOCKER
     _close_repository_if_supported(_IDEA_REPOSITORY)
+    _REPOSITORY_INITIALIZATION_BLOCKER = None
     if reload_from_environment:
         _IDEA_REPOSITORY = None
         return
@@ -59,10 +71,17 @@ def reset_idea_repository_for_tests(
 
 
 def _build_idea_repository() -> IdeaRepository:
+    global _REPOSITORY_INITIALIZATION_BLOCKER
     settings = load_runtime_settings()
     if settings.database_url is None:
+        _REPOSITORY_INITIALIZATION_BLOCKER = None
         return InMemoryIdeaRepository()
-    connection = psycopg.connect(settings.database_url, row_factory=dict_row)
+    try:
+        connection = psycopg.connect(settings.database_url, row_factory=dict_row)
+    except (OSError, ValueError, psycopg.Error):
+        _REPOSITORY_INITIALIZATION_BLOCKER = DURABLE_REPOSITORY_UNAVAILABLE
+        return cast(IdeaRepository, UnavailableIdeaRepository())
+    _REPOSITORY_INITIALIZATION_BLOCKER = None
     return PostgresIdeaRepository(cast(PostgresConnection, connection))
 
 
