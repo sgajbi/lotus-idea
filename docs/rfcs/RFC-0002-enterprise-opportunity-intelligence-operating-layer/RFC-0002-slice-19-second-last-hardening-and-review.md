@@ -841,6 +841,16 @@ route source authority instead of the caller-supplied mismatched authority.
 Missing refs still flow to the existing deterministic blocked evaluation
 semantics.
 
+GitHub issue `#318` hardens review and feedback mutation entitlements. Review
+actions and feedback now bind `ReviewActorContext` to trusted
+`X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`, `X-Caller-Portfolio-Ids`, and
+`X-Caller-Client-Ids` headers, require request `authorizedScope` to be a subset
+of those entitlements, and evaluate review/feedback governance against the
+persisted candidate access scope rather than caller-supplied request
+`accessScope`. Missing or mismatched entitlement headers fail closed with
+product-safe `403 permission_denied` responses and no raw portfolio/client
+values in the response.
+
 This slice also hardens outbox-delivery run-once operator identity after
 GitHub issue `#271` showed privileged run-once actions needed explicit
 API-level run identity before external side effects:

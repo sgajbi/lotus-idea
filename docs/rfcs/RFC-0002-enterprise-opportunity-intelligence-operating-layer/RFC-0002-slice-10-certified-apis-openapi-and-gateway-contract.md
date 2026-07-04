@@ -308,11 +308,13 @@ Details.
 The review-action endpoint is permissioned by `idea.review.record` plus one
 recognized review actor role. The feedback endpoint is permissioned by
 `idea.feedback.record` plus one recognized review actor role. Both endpoints
-require upstream-authorized tenant/book/portfolio/client scope in the request
-and continue to use request-carried authorized scope until their Gateway or
-Workbench mutation surfaces are implemented. Scope, permission, missing
-candidate, idempotency conflict, and invalid candidate-state failures return
-product-safe Problem Details.
+require trusted platform caller-context tenant/book/portfolio/client
+entitlement headers covering the persisted candidate scope. Request
+`authorizedScope` is retained as an audited caller claim but must stay within
+the trusted caller entitlements, and runtime governance evaluates the persisted
+candidate access scope rather than caller-supplied request `accessScope`.
+Scope, permission, missing candidate, idempotency conflict, and invalid
+candidate-state failures return product-safe Problem Details.
 
 The advisor review queue endpoint is permissioned by
 advisor role plus `idea.review.queue.read` capability. It requires a

@@ -60,6 +60,11 @@ projection instead of whole-store snapshot hydration. It is still not production
 storage certification, and future adapter work should continue moving hot
 precheck/replay paths toward database-native conditional reads and writes where
 that reduces contention.
+Review and feedback mutation governance now uses the persisted candidate access
+scope after bounded candidate lookup. Request `accessScope` remains request
+shape, but it is not the runtime authorization target; trusted caller
+entitlement headers and persisted candidate scope are the enforced source of
+truth.
 `scripts/generate_durable_repository_proof.py` and
 `make durable-repository-proof-contract-gate` now provide a source-safe proof
 artifact for aggregate RFC implementation-readiness evidence. The artifact

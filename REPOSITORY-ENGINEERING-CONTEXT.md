@@ -744,7 +744,16 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     lookup plus candidate-detail projection for the associated candidate only.
     Review, feedback, and conversion-intent replay/conflict decisions must not
     hydrate whole repository snapshots or unrelated outbox/downstream tables.
-12. Dirty aggregate proof rejection: GitHub issue `#306` is addressed by
+12. Review/feedback trusted entitlement scope: GitHub issue `#318` is addressed
+    by binding review-action and feedback mutation actor scope to trusted
+    `X-Caller-Tenant-Ids`, `X-Caller-Book-Ids`,
+    `X-Caller-Portfolio-Ids`, and `X-Caller-Client-Ids` headers, requiring
+    request `authorizedScope` to stay within those entitlements, and applying
+    domain review/feedback checks against the persisted candidate access scope
+    instead of caller-supplied request `accessScope`. Missing or mismatched
+    entitlement headers fail closed with product-safe permission denial and no
+    raw portfolio/client disclosure.
+13. Dirty aggregate proof rejection: GitHub issue `#306` is addressed by
     requiring aggregate proof provenance to carry `sourceTreeDirty=false`
     before `aggregate_proof_artifact_is_current()` can return true. Dirty or
     missing dirty-flag provenance now preserves blockers, suppresses the

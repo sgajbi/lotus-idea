@@ -510,6 +510,7 @@ def _high_cash_payload() -> dict[str, Any]:
             "cashflowProjectionRef": _source_ref("lotus-core:PortfolioCashflowProjection:v1"),
         },
         "entitlementAllowed": True,
+        "accessScope": _access_scope(),
     }
 
 
@@ -545,6 +546,10 @@ def _review_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-review",
         "Idempotency-Key": idempotency_key,
     }
@@ -555,6 +560,10 @@ def _feedback_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.feedback.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-feedback",
         "Idempotency-Key": idempotency_key,
     }

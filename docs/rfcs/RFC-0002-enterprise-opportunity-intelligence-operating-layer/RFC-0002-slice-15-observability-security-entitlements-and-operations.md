@@ -255,7 +255,11 @@ forwarding and unsupported-feature blocking proof in `lotus-gateway`. The
 advisor queue and candidate detail routes also forward platform
 entitlement-scope headers. `lotus-idea` enforces them fail-closed against queue
 query filters and candidate-detail access scope before returning candidate
-detail. `make
+detail. Review-action and feedback mutation routes now use the same trusted
+caller-context entitlement headers as the actor scope, require request
+`authorizedScope` to be inside those entitlements, and apply governance against
+the persisted candidate access scope instead of caller-supplied request
+`accessScope`. `make
 endpoint-certification-gate` requires the `lotus-idea` endpoint ledger to name
 the exact Gateway route without implying Workbench proof, data-product
 certification, client-ready publication, or supported-feature promotion.

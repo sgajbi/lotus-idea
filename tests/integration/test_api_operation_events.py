@@ -45,8 +45,8 @@ def source_ref(product_id: str, suffix: str = "") -> dict[str, str]:
     }
 
 
-def high_cash_payload(*, suffix: str = "") -> dict[str, Any]:
-    return {
+def high_cash_payload(*, suffix: str = "", scoped: bool = False) -> dict[str, Any]:
+    payload: dict[str, Any] = {
         "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "sourceReportedCashWeight": "0.18",
@@ -61,6 +61,9 @@ def high_cash_payload(*, suffix: str = "") -> dict[str, Any]:
         },
         "entitlementAllowed": True,
     }
+    if scoped:
+        payload["accessScope"] = access_scope()
+    return payload
 
 
 def mandate_restriction_payload() -> dict[str, Any]:
@@ -377,6 +380,10 @@ def review_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.review.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-operation-review-api",
         "Idempotency-Key": idempotency_key,
     }
@@ -387,6 +394,10 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.feedback.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-operation-feedback-api",
         "Idempotency-Key": idempotency_key,
     }
@@ -618,7 +629,7 @@ def capture_operation_events(
 def persist_candidate(client: TestClient, *, suffix: str, idempotency_key: str) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload(suffix=suffix),
+        json=high_cash_payload(suffix=suffix, scoped=True),
         headers=persist_headers(idempotency_key),
     )
     assert response.status_code == 200

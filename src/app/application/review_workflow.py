@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from app.application.candidate_lookup import candidate_record_by_id
@@ -8,9 +8,11 @@ from app.domain import (
     DEFAULT_REVIEW_ACTION_POLICY,
     FeedbackCommand,
     FeedbackResult,
+    ReviewAccessScope,
     ReviewActionPolicy,
     ReviewActionResult,
     ReviewDecisionCommand,
+    ReviewEntitlementDenied,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
     apply_review_action,
@@ -77,7 +79,14 @@ def apply_review_action_to_repository(
     if prechecked is not None:
         return ReviewWorkflowResult(review_result=None, persistence=prechecked)
 
-    review_result = apply_review_action(record.candidate, command.review, policy=policy)
+    review = replace(
+        command.review,
+        access_scope=_persisted_candidate_access_scope(
+            candidate_id=record.candidate.candidate_id,
+            access_scope=record.candidate.access_scope,
+        ),
+    )
+    review_result = apply_review_action(record.candidate, review, policy=policy)
     persistence = repository.record_review_action(
         review_result,
         idempotency_key=command.idempotency_key,
@@ -110,7 +119,14 @@ def record_feedback_to_repository(
     if prechecked is not None:
         return FeedbackWorkflowResult(feedback_result=None, persistence=prechecked)
 
-    feedback_result = record_feedback(record.candidate, command.feedback, policy=policy)
+    feedback = replace(
+        command.feedback,
+        access_scope=_persisted_candidate_access_scope(
+            candidate_id=record.candidate.candidate_id,
+            access_scope=record.candidate.access_scope,
+        ),
+    )
+    feedback_result = record_feedback(record.candidate, feedback, policy=policy)
     persistence = repository.record_feedback_event(
         feedback_result,
         idempotency_key=command.idempotency_key,
@@ -147,6 +163,15 @@ def _feedback_payload(command: RecordFeedbackToRepositoryCommand) -> dict[str, A
         "reason_codes": [reason.value for reason in feedback.reason_codes],
         "recorded_at_utc": feedback.recorded_at_utc.isoformat(),
     }
+
+
+def _persisted_candidate_access_scope(
+    candidate_id: str,
+    access_scope: ReviewAccessScope | None,
+) -> ReviewAccessScope:
+    if access_scope is None:
+        raise ReviewEntitlementDenied(candidate_id)
+    return access_scope
 
 
 def _require_text(value: str, field_name: str) -> None:

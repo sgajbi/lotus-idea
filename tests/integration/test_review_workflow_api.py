@@ -34,6 +34,7 @@ def high_cash_payload(*, cash_weight: str = "0.18") -> dict[str, Any]:
             "cashflowProjectionRef": source_ref("lotus-core:PortfolioCashflowProjection:v1"),
         },
         "entitlementAllowed": True,
+        "accessScope": access_scope(),
     }
 
 
@@ -52,6 +53,10 @@ def review_headers(
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": capabilities,
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-review-api",
         "Idempotency-Key": idempotency_key,
     }
@@ -62,6 +67,10 @@ def feedback_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.feedback.record",
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
+        "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-feedback-api",
         "Idempotency-Key": idempotency_key,
     }
