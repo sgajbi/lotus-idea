@@ -624,8 +624,11 @@ Recent issue-derived patterns to preserve:
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
 24. Docker runtime images should install the resolved runtime dependency lock
     before copying application source, then install the local service package
-    with `--no-deps` after `COPY src`; `make ci-contract-gate` must catch
-    source-before-dependency-install ordering and dependency reinstall drift.
+    with `--no-deps` after `COPY src`; `.dockerignore` must keep generated
+    coverage, SBOM, quality-report, and proof-output artifacts out of Docker
+    build context; `make ci-contract-gate` must catch source-before-dependency-
+    install ordering, dependency reinstall drift, and Docker-context
+    generated-artifact parity drift.
 25. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes
@@ -762,7 +765,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     release-evidence contract/tests to reject source-before-dependency-install
     ordering or dependency reinstall drift. Docker build, runtime smoke,
     container scan, and runtime SBOM evidence remain intact.
-18. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
+18. Docker build context parity: GitHub issue `#310` is addressed by aligning
+    `.dockerignore` with generated/local artifact policy for coverage XML,
+    release SBOM, generated quality reports, and proof output, while extending
+    `make ci-contract-gate` to reject Docker-context generated-artifact parity
+    drift. This does not rewrite the Dockerfile or require deleting local proof
+    artifacts before every Docker build.
+19. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
     repo-native `make duplicate-implementation-inventory` command that reports
     exact duplicate function-body clusters across `src/app` and `scripts`
     without writing artifacts. The initial baseline
@@ -797,14 +806,14 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     contract forbidden-text traversal in `scripts.contract_text_guards`, and
     centralize operations-contract payload, operation, and label validation in
     `scripts.operations_contract_validators`; the current measured baseline
-    ignores pass/ellipsis-only protocol stubs, scans 1,606 executable function
+    ignores pass/ellipsis-only protocol stubs, scans 1,607 executable function
     bodies, and reports 0 exact duplicate clusters. GitHub issue `#309`
     promotes the same deterministic scanner to a blocking
     `make duplicate-implementation-gate` with `--fail-on-duplicates`, wired into
     `make lint` while preserving `make duplicate-implementation-inventory` as
     the no-artifact report-only evidence command.
-    `make ci-contract-gate` protects the target wiring while strict duplicate
-    blocking remains unpromoted.
+    `make ci-contract-gate` protects the report-only/blocking target split,
+    strict flag, and `make lint` lane placement.
 
 Recently closed by PR `#273` and mainline validation:
 

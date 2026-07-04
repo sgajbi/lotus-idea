@@ -29,6 +29,7 @@ from security_tab_governance_contract import validate_security_tab_governance_fi
 
 MAKEFILE_PATH = ROOT / "Makefile"
 DOCKERFILE_PATH = ROOT / "Dockerfile"
+DOCKERIGNORE_PATH = ROOT / ".dockerignore"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 CI_TOOLING_LOCK_PATH = ROOT / "requirements" / "ci-tooling.lock.txt"
 WORKFLOWS_DIR = ROOT / ".github" / "workflows"
@@ -106,6 +107,17 @@ REQUIRED_CI_RELEASE_DEPS = (
     "release-sbom",
 )
 READINESS_TARGET = "Makefile implementation-proof-readiness-check target"
+REQUIRED_DOCKERIGNORE_LOCAL_ARTIFACTS = (
+    ".coverage",
+    ".coverage.*",
+    "coverage.xml",
+    "sbom.cdx.json",
+    "htmlcov",
+    "output",
+    "quality/architecture_boundary_report.json",
+    "quality/baseline_report.json",
+    "quality/baseline_report.md",
+)
 
 
 def _read(path: Path) -> str:
@@ -294,6 +306,19 @@ def _validate_support_targets(makefile: str) -> list[str]:
     return errors
 
 
+def validate_dockerignore(dockerignore: str) -> list[str]:
+    entries = {
+        line.strip().rstrip("/")
+        for line in dockerignore.splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    return [
+        f".dockerignore must exclude generated/local artifact `{artifact}`"
+        for artifact in REQUIRED_DOCKERIGNORE_LOCAL_ARTIFACTS
+        if artifact.rstrip("/") not in entries
+    ]
+
+
 def validate_makefile(makefile: str) -> list[str]:
     return [
         *_validate_required_makefile_targets(makefile),
@@ -410,6 +435,12 @@ def validate_ci_contract() -> list[str]:
         dockerfile = ""
     else:
         dockerfile = _read(DOCKERFILE_PATH)
+    dockerignore_errors: list[str] = []
+    if not DOCKERIGNORE_PATH.exists():
+        dockerignore_errors.append("Missing .dockerignore")
+        dockerignore = ""
+    else:
+        dockerignore = _read(DOCKERIGNORE_PATH)
     dependency_errors: list[str] = []
     if not PYPROJECT_PATH.exists():
         dependency_errors.append("Missing pyproject.toml")
@@ -425,6 +456,8 @@ def validate_ci_contract() -> list[str]:
         *validate_makefile(_read(MAKEFILE_PATH)),
         *dockerfile_errors,
         *validate_dockerfile_runtime(dockerfile),
+        *dockerignore_errors,
+        *validate_dockerignore(dockerignore),
         *dependency_errors,
         *validate_dependency_governance(pyproject, ci_tooling_lock),
         *validate_security_tab_governance_files(ROOT),

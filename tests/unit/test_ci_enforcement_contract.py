@@ -690,10 +690,30 @@ def test_ci_contract_gate_rejects_workflows_without_parseable_jobs() -> None:
 
 def test_generated_quality_reports_do_not_dirty_worktree() -> None:
     gitignore = _read(".gitignore")
+    dockerignore = _read(".dockerignore")
 
     assert "quality/architecture_boundary_report.json" in gitignore
     assert "quality/baseline_report.json" in gitignore
     assert "quality/baseline_report.md" in gitignore
+    assert "quality/architecture_boundary_report.json" in dockerignore
+    assert "quality/baseline_report.json" in dockerignore
+    assert "quality/baseline_report.md" in dockerignore
+    assert "coverage.xml" in dockerignore
+    assert "sbom.cdx.json" in dockerignore
+
+
+def test_ci_contract_gate_blocks_missing_dockerignore_generated_artifact() -> None:
+    module = _load_ci_contract_gate()
+    dockerignore = _read(".dockerignore").replace(
+        "quality/baseline_report.json\n",
+        "",
+    )
+
+    errors = module.validate_dockerignore(dockerignore)
+
+    assert (
+        ".dockerignore must exclude generated/local artifact `quality/baseline_report.json`"
+    ) in errors
 
 
 def _load_api_route_metadata_gate() -> ModuleType:
