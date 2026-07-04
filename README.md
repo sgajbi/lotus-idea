@@ -1,79 +1,109 @@
 # lotus-idea
 
-`lotus-idea` is the Lotus opportunity intelligence and idea lifecycle domain service for private-banking workflows. It turns source-owned Lotus evidence into governed opportunity candidates, review queues, feedback records, and conversion intent for downstream advisory, management, reporting, and Workbench flows.
+`lotus-idea` is the Lotus opportunity intelligence and idea lifecycle domain
+service for private-banking workflows. It turns source-owned evidence into
+reviewable opportunity candidates, evidence packs, scores, review queues,
+feedback records, conversion intent, and readiness posture.
 
-Service profile: `domain-service`; repository context: [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
+Service profile: `domain-service`
+
+Primary context:
+
+- [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
+- [docs/rfcs/README.md](docs/rfcs/README.md)
+- [wiki/Home.md](wiki/Home.md)
+
+Governing contract:
+[LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md](../lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md)
 
 ## Current Posture
 
-`lotus-idea` is in RFC-0002 foundation implementation with certified internal API foundations, persistence and migration support, operator readiness diagnostics, source-safe observability, and CI guardrails.
+`lotus-idea` is in RFC-0002 foundation implementation. Internal API,
+persistence, readiness, source-ingestion, outbox, AI-governance, downstream
+intent, Gateway/Workbench read-path, and data-mesh proof foundations exist, but
+no externally supported product feature is promoted.
 
-No external business feature is supported yet. Feature promotion still requires certified source-ingestion runtime, trust telemetry, data mesh, Gateway/Workbench, downstream realization, supported-feature registration, and evidence on `main`.
+The supported-feature registry remains foundation-only. Feature promotion
+requires implementation-backed source certification, Gateway/Workbench proof,
+contracts, OpenAPI evidence, tests, documentation, wiki source, CI evidence on
+`main`, and clean branch hygiene.
 
-Current implemented foundations include source-authority-preserving high-cash, concentration-risk, underperformance, allocation-drift mandate-review, bond-maturity / reinvestment, high-volatility / drawdown review, missing suitability context, missing risk-profile review, mandate/restriction review, low-income / liquidity-shortfall, and missing-benchmark review policies with Core, Risk, Performance, Manage, and Advise source boundaries. The concentration-risk foundation consumes Lotus Risk `ConcentrationRiskReport:v1` posture only for advisor-review candidates; `POST /api/v1/idea-signals/concentration-risk/evaluate` exposes the same bounded evaluation over caller-supplied Risk concentration evidence and does not calculate concentration, approve risk methodology, recommend trades, create rebalance actions, certify data mesh, prove Workbench behavior, authorize client publication, or promote a supported feature. The underperformance foundation consumes Lotus Performance `ReturnsSeriesBundle:v1` active-return and benchmark-context posture only for advisor-review candidates; `POST /api/v1/idea-signals/underperformance/evaluate` exposes the same bounded evaluation over caller-supplied Performance evidence and does not calculate returns, assign benchmarks, certify benchmark methodology, recommend trades, create rebalance actions, certify data mesh, prove Workbench behavior, authorize client publication, or promote a supported feature. The allocation-drift mandate-review foundation consumes source-owned Manage `PortfolioActionRegister:v1` posture only for portfolio-manager review candidates; `POST /api/v1/idea-signals/allocation-drift/evaluate` exposes the same bounded evaluation over caller-supplied Manage action-register and mandate-health source-ref posture and does not fetch Manage sources, calculate drift, approve mandate compliance, create rebalance actions, create orders, certify data mesh, prove Workbench behavior, authorize client publication, or promote a supported feature. The bond-maturity foundation evaluates caller-supplied Core maturity evidence only for advisor-review candidates; live Core source-adapter proof is blocked until Core exposes explicit source-owned maturity summary facts and fails closed as `core_maturity_summary_missing` when those facts are absent. The low-income foundation consumes Core cashflow evidence only for advisor-review candidates; `POST /api/v1/idea-signals/low-income/evaluate` exposes the same bounded evaluation over caller-supplied Core cashflow projection and cash movement evidence, and a source-safe Core cashflow live-proof artifact can clear only the low-income live Core cashflow source blocker. These foundations do not certify client income needs, reinvestment advice, product recommendation, funding advice, treasury instruction, risk profiling, suitability, mandate changes, restriction clearance, planning claims, benchmark assignment, benchmark methodology, maturity-schedule authority, data mesh, Workbench behavior, client publication, or supported-feature promotion.
-High-volatility / drawdown review consumes Risk-owned volatility and drawdown evidence through separate bounded proof contracts. `POST /api/v1/idea-signals/high-volatility/evaluate` exposes bounded caller-supplied Lotus Risk `RiskMetricsReport:v1` volatility evidence evaluation for advisor-review posture; `POST /api/v1/idea-signals/drawdown-review/evaluate` exposes bounded caller-supplied Lotus Risk `DrawdownAnalyticsReport:v1` maximum-drawdown evidence evaluation for advisor-review posture. These endpoints do not fetch Risk sources, calculate volatility or drawdown, approve Risk methodology, recommend trades, create rebalance actions, certify data mesh, prove Workbench behavior, authorize client publication, or promote a supported feature. Valid proof artifacts can clear only the live Risk volatility blocker and drawdown source blocker.
-The Manage adapter blocks store-wide supportability evidence from becoming a portfolio opportunity claim and requires Manage-provided lineage or fingerprint metadata before populating `SourceRef.content_hash`.
-Source-safe Manage mandate live proof can now clear only the portfolio-scoped Manage action-register source blocker plus the mandate performance-health and mandate risk-health source-ref blockers when live `lotus-manage:PortfolioActionRegister:v1` evidence proves current workflow decisions, source-authored lineage, source freshness, portfolio-scope confirmation, and current source refs for `lotus-performance:MandatePerformanceHealthContext:v1` and `lotus-risk:MandateRiskHealthContext:v1`; source-safe Core portfolio-state live proof can clear only the allocation-drift Core portfolio-state source-ref blocker when live `lotus-core:PortfolioStateSnapshot:v1` evidence proves current source freshness. Data-mesh, Workbench, client-publication, supported-feature, rebalance, action, and order-execution blockers remain.
-Source-safe Core benchmark assignment live proof can now clear only the underperformance review benchmark-assignment source-ref blocker when live `lotus-core:BenchmarkAssignment:v1` evidence proves current effective assignment posture; Performance source proof, data-mesh, Workbench, client-publication, supported-feature, benchmark methodology, benchmark composition, and benchmark return blockers remain.
-The missing-benchmark foundation consumes Core-owned benchmark-assignment posture only to create an advisor-review evidence-gap candidate when benchmark identity, effective assignment, active status, or assignment version is missing; `POST /api/v1/idea-signals/missing-benchmark/evaluate` exposes the same bounded evaluation over caller-supplied Core benchmark-assignment evidence. Source-safe missing-benchmark live Core proof can clear only the missing-benchmark live Core source blocker, and source-safe Performance benchmark-readiness proof can clear only the missing-benchmark Performance readiness blocker; neither proof nor the API assigns a benchmark, calculates benchmark returns, certifies benchmark methodology, proves data-mesh or Workbench behavior, authorizes client publication, or promotes a supported feature.
-The Advise adapter consumes policy-evaluation workflow posture only to create a compliance-review candidate for missing suitability context; `POST /api/v1/idea-signals/missing-suitability/evaluate` exposes the same bounded evaluation over caller-supplied Advise policy-evaluation evidence and does not approve suitability, policy, proposal, sign-off, client publication, or external communication.
-The missing risk-profile foundation consumes only explicit Advise-owned risk-profile diagnostic posture to create an advisor-review evidence-gap candidate; `POST /api/v1/idea-signals/missing-risk-profile/evaluate` exposes the same bounded evaluation over caller-supplied Advise evidence and does not approve risk profiling, suitability, policy, proposal, client publication, or external communication. A source-safe typed Advise risk-profile source-product proof can clear only `opportunity_archetype_typed_advise_risk_profile_source_product_missing`, and a separate source-safe live Advise proof can clear only `opportunity_archetype_advise_risk_profile_live_source_proof_missing`; neither proof certifies data mesh, Workbench behavior, client publication, or supported-feature promotion. Source-safe missing-suitability live Advise proof can clear only its corresponding opportunity-archetype live-source blocker. The mandate/restriction review foundation adds a source-safe `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over caller-supplied Core, Manage, or Advise restriction posture evidence; a source-safe typed Advise mandate/restriction source-product proof can clear only `opportunity_archetype_typed_restriction_source_product_missing`, and a separate source-safe Advise mandate/restriction live proof can clear only `opportunity_archetype_live_restriction_source_proof_missing` when the live Advise workflow source carries an explicit restriction diagnostic. It creates only compliance-review candidates and keeps Workbench, data-mesh, client-publication, supported-feature, mandate-state-change, restriction-clearance, approval, rebalance, action, and order-execution blockers intact.
-Other foundations cover candidate persistence, replay, lifecycle, review, feedback, queue readiness, AI diagnostics, conversion/report submission, Advise/Manage/Report proof consumption, outbox, runtime trust telemetry, data-mesh readiness, PostgreSQL/migration, Workbench proof, platform mesh proof, bounded downstream readiness counts, opt-in bounded downstream HTTP retry/backoff with idempotency-gated writes, and bounded Gateway/Workbench queue/detail reads. These are internal foundations only: client publication and supported-feature claims remain blocked.
+| Area | Current truth | Promotion blocker |
+| --- | --- | --- |
+| Opportunity policies | Bounded foundations exist for high cash, concentration risk, underperformance, allocation drift, bond maturity, volatility, drawdown, suitability gaps, risk-profile gaps, mandate/restriction review, income gaps, and missing benchmark review. | Live source certification, data-mesh proof, Workbench proof, and supported-feature registration remain blocked. |
+| Lifecycle and review | Candidate persistence, replay, review actions, feedback, queues, scoring, and audit-oriented state transitions are implemented as internal foundations. | Client publication and official advisory workflow ownership remain out of scope. |
+| Downstream intent | Conversion intent, report evidence-pack requests, outbox records, and Advise/Manage/Report route-proof consumption are bounded foundations. | Execution, report rendering, archive authority, and downstream materialization proof remain external. |
+| AI-adjacent support | Explanation readiness, lineage-store proof, workflow-pack registration/runtime proof consumption, and model-risk operations evidence are governed. | `lotus-idea` does not own AI infrastructure, provider calls, RAG runtime, or model operations. |
+| Data mesh | Proposed product and consumer contracts, mesh policy proof, platform onboarding proof consumption, and runtime trust telemetry exist. | Data-product certification and supported-feature promotion remain blocked. |
+
+The long-form implementation ledger is deliberately not in this README. Use
+[docs/rfcs/README.md](docs/rfcs/README.md),
+[docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md),
+and [quality/quality_scorecard.md](quality/quality_scorecard.md) for detailed
+slice evidence.
 
 ## Product Boundary
 
 `lotus-idea` owns:
 
-- idea detection policy, candidate lifecycle, scoring, ranking, review state,
-  and feedback,
-- governed idea evidence, rationale, source references, and replay posture,
+- opportunity detection policy over source-owned evidence,
+- idea candidate lifecycle, scoring, ranking, review workflow, and feedback,
+- evidence packs, rationale, source references, replay posture, and audit state,
 - conversion intent and outcome tracking for reviewed opportunities,
-- data-product declarations and readiness posture for idea candidates,
-- internal orchestration contracts for Advise, Manage, Report, Workbench,
-  Gateway, Render, Archive, and AI-adjacent workflows.
+- idea data-product declarations, trust telemetry, and readiness posture,
+- bounded orchestration contracts for Gateway, Workbench, Advise, Manage,
+  Report, Render, Archive, and AI-adjacent proof consumption.
 
 `lotus-idea` does not own:
 
-- portfolio accounting, holdings, transactions, product master, or client master
-  records,
-- official performance, risk, suitability, mandate, or compliance
-  calculations,
-- trade execution, order routing, report rendering, document archiving, or AI
-  provider infrastructure,
-- client-ready publication or supported product claims before explicit
-  promotion evidence exists.
+- portfolio accounting, holdings, transactions, client master, or product master,
+- official performance, risk, suitability, compliance, mandate, or tax decisions,
+- rebalance execution, order routing, trade approval, or portfolio actions,
+- report rendering, report archive authority, or client communication authority,
+- AI infrastructure, provider runtime, RAG platform, or model operations,
+- client-ready publication or supported product claims before promotion evidence.
 
-## Ecosystem Role
+## Architecture At A Glance
 
-Primary upstream source authorities:
+```mermaid
+flowchart LR
+    Sources["Source authorities<br/>Core / Performance / Risk / Advise / Manage / Report"]
+    Idea["lotus-idea<br/>policy, lifecycle, evidence, review, conversion intent"]
+    Store["Repository<br/>process-local or PostgreSQL"]
+    Gateway["lotus-gateway<br/>bounded read publication"]
+    Workbench["lotus-workbench<br/>bounded read proof"]
+    Downstream["Advise / Manage / Report / Render / Archive<br/>review-gated realization"]
 
-- `lotus-core`: portfolio, holding, instrument, mandate, client, and product
-  facts.
-- `lotus-performance`: returns, attribution, benchmark, and performance-health
-  evidence.
-- `lotus-risk`: risk measures, scenario results, risk flags, and mandate risk
-  posture.
-- `lotus-advise`: suitability, proposal, policy, and advisory journey context.
-- `lotus-manage`: model portfolio, rebalance, mandate, and action-register
-  context.
-- `lotus-report`: report-pack and commentary context when reviewed idea
-  evidence must be reportable.
-- `lotus-ai`: provider-neutral AI workflow, prompt governance, model evaluation,
-  RAG, and explanation assistance.
+    Sources -->|"source refs, freshness, evidence"| Idea
+    Idea -->|"idempotent state, audit, replay"| Store
+    Idea -->|"queue/detail read contracts"| Gateway
+    Gateway --> Workbench
+    Idea -->|"conversion/report intent, outbox posture"| Downstream
+```
 
-Primary downstream consumers:
+Runtime composition stays one service until workload, failure-isolation,
+ownership, and operability evidence justify a separately scalable process
+boundary. Current refactors are design modularity improvements inside the
+existing deployable service.
 
-- `lotus-gateway`: API composition and BFF publication.
-- `lotus-workbench`: advisor and portfolio-manager idea review surfaces.
-- `lotus-advise`: proposal and suitability workflow conversion.
-- `lotus-manage`: portfolio action, rebalance, and mandate review conversion.
-- `lotus-report`, `lotus-render`, and `lotus-archive`: report evidence,
-  rendering, and archive realization after review-gated publication.
+| Package | Responsibility |
+| --- | --- |
+| `src/app/api/` | FastAPI routes, DTOs, caller context, idempotency, route metadata, and API boundary helpers. |
+| `src/app/application/` | Use-case orchestration for signal evaluation, lifecycle, review, feedback, conversion, readiness, replay, and proof updates. |
+| `src/app/domain/` | Framework-free domain models, policies, scoring, lifecycle rules, persistence records, idempotency, audit, replay, and outbox state. |
+| `src/app/ports/` | Repository, source-service, downstream, and publisher protocols. |
+| `src/app/infrastructure/` | Source adapters, PostgreSQL repository, migrations, codecs, HTTP clients, and outbox publisher adapter. |
+| `src/app/middleware/` | Correlation, trusted hosts, CORS, request-size limits, JSON write controls, and security headers. |
+| `src/app/observability/` | Structured logging, metrics, tracing, correlation, and operation events. |
+| `contracts/` | Data-mesh, SLO, access, evidence-policy, downstream, trust telemetry, and readiness contracts. |
+| `docs/` and `wiki/` | RFCs, operator runbooks, architecture evidence, demo posture, and GitHub wiki source. |
 
 ## Data Mesh Posture
 
-`lotus-idea` is designed as a first-class data-mesh producer and consumer from
-day one. Repo-owned source truth starts in:
+`lotus-idea` is data-mesh-first, but certification is intentionally blocked
+until runtime behavior and source authority are proven.
+
+Authoritative contract files:
 
 - [contracts/domain-data-products/lotus-idea-products.v1.json](contracts/domain-data-products/lotus-idea-products.v1.json)
 - [contracts/domain-data-products/lotus-idea-consumers.v1.json](contracts/domain-data-products/lotus-idea-consumers.v1.json)
@@ -81,60 +111,25 @@ day one. Repo-owned source truth starts in:
 - [docs/operations/mesh-readiness.md](docs/operations/mesh-readiness.md)
 - [Lotus Data Mesh Standard](../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
 
-All products remain proposed and not certified until runtime behavior, telemetry, platform
-certification, full Gateway/Workbench product proof, and supported-feature promotion are complete. Repo-owned
-mesh policy proof validates SLO/access/evidence contracts only; optional platform onboarding proof
-validates catalog visibility only. Certification and support stay blocked.
-
-## Architecture At A Glance
-
-```mermaid
-flowchart LR
-    Core["Source authorities<br/>Core / Performance / Risk / Advise / Manage / Report"]
-    Idea["lotus-idea<br/>candidate policy, lifecycle, evidence, review, conversion intent"]
-    Store["Active repository<br/>process-local or PostgreSQL"]
-    Gateway["lotus-gateway<br/>bounded read-only publication"]
-    Workbench["lotus-workbench<br/>bounded read proof<br/>full support blocked"]
-    Downstream["Advise / Manage / Report / Render / Archive<br/>planned realization proof"]
-
-    Core -->|"source refs, freshness, evidence"| Idea
-    Idea -->|"idempotent records"| Store
-    Idea -->|"source-safe diagnostics"| Gateway
-    Gateway --> Workbench
-    Idea -->|"review-gated intent, submission posture, outcome tracking"| Downstream
-```
-
-- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified internal API foundations, shared DTO base model, shared signal DTOs, shared route metadata, review-workflow and conversion-governance mutation-operation support, and the route runtime dependency facade.
-- `src/app/application/`: use-case orchestration for signal evaluation, source ingestion,
-  candidate detail, evidence replay, review queues,
-  lifecycle, feedback, AI diagnostics, conversion, report evidence, downstream
-  realization submission foundations, readiness views, and public proof capability update helpers.
-- `src/app/domain/`: framework-free domain models, policies, scoring,
-  lifecycle, review, AI governance, conversion, report evidence, persistence
-  records, idempotency, replay, audit primitives, outbox records, downstream
-  submission posture records, claim/lease fencing, durable outbox retry
-  scheduling, retry/dead-letter semantics, and public domain API exports guarded by `make private-import-boundary-gate`.
-- `src/app/ports/`: source-owned service, outbox publisher, and repository
-  protocols.
-- `src/app/infrastructure/`: Core, Performance, Risk, and Manage source adapters,
-  migration helpers, outbox publisher adapter, public PostgreSQL codec APIs, and PostgreSQL
-  repository adapter.
-- `src/app/middleware/`: HTTP boundary controls for correlation, trusted hosts, CORS allowlisting, request-size limits, JSON writes, and security headers.
-- `src/app/observability/`: structured logging, correlation, metrics, tracing,
-  and bounded operation events.
-- `src/app/security/`: caller context and fail-closed authorization policy.
-- `migrations/`: versioned SQL migration and rollback contracts.
-- `contracts/`: data-mesh, downstream realization, trust telemetry, SLO,
-  access, and evidence-policy contracts.
-- `docs/`: RFCs, standards, operations, architecture decisions, and runbooks.
-- `wiki/`: authored GitHub wiki source.
+Repo-owned mesh policy proof validates SLO, access, evidence, and readiness
+contracts only. Platform onboarding proof validates catalog visibility only.
+Neither proof certifies supported features, Workbench behavior, client
+publication, or external data-product activation by itself.
 
 ## Quick Start
 
+Install dependencies:
+
 ```powershell
 make install
+```
+
+Run fast local checks:
+
+```powershell
 make lint
-make check
+make typecheck
+make test-unit
 ```
 
 Run the service locally:
@@ -151,161 +146,161 @@ make migrate
 uvicorn app.main:app --reload --port 8330
 ```
 
-Run the Docker entrypoint from a clean checkout:
+Run the Docker profile:
 
 ```powershell
 docker compose up --build
 ```
 
-Compose uses `.env.example` defaults and optional ignored `.env` overrides; the runtime image installs the resolved runtime dependency lock before copying `src`, installs the local service package afterward with `--no-deps`, runs as non-root `lotus`, preserves service and source-ingestion worker entrypoints, records governed base/scanner image references plus resolved immutable digests in CI release evidence, runs a bounded container startup smoke proof over `/health`, `/health/live`, and reachable default-profile `/health/ready`, and ties a runtime Python dependency SBOM from the resolved runtime dependency closure to the built service image reference/id. `requirements/requirements.txt` mirrors the resolved runtime lock only for GitHub Dependency Graph support. This remains runtime-parity evidence only, not production, full container-image SBOM, registry attestation, Workbench, data-mesh, client-publication, or supported-feature proof.
-
-## Common Commands
-
-| Command | Purpose |
-| --- | --- |
-| `make install` | Create `.venv` and install runtime plus dev dependencies constrained by the resolved runtime lock. |
-| `make lint` | Run formatting, linting, and fast clean governance gates without generating ignored proof artifacts. |
-| `make typecheck` | Run `mypy` over the service. |
-| `make test-unit` | Run unit tests; override `UNIT_TESTS` for a focused path. |
-| `make test-integration` | Run integration tests; override `INTEGRATION_TESTS` for a focused path. |
-| `make test-e2e` | Run deterministic e2e tests, including the critical internal idea workflow; override `E2E_TESTS` for a focused path. |
-| `make openapi-gate` | Validate OpenAPI quality. |
-| `make data-mesh-contract-gate` | Validate proposed data-mesh contract posture. |
-| `make mesh-policy-proof-contract-gate` | Validate the repo-owned mesh SLO, access, and evidence policy proof without certifying platform mesh readiness or supported features. |
-| `make opportunity-archetype-contract-gate` | Validate the governed opportunity archetype and scenario contract while preserving not-certified demo, client-publication, data-mesh, and supported-feature boundaries. |
-| `make downstream-realization-contract-gate` | Validate planned downstream realization contract posture. |
-| `make outbox-event-contract-gate`, `make outbox-consumer-contract-gate` | Validate repo-owned outbox event and downstream consumer contracts, source-safe payload policy, source-authority boundaries, and remaining proof blockers. |
-| `make migration-contract-gate` | Validate migration contract structure. |
-| `make migration-execution-gate` | Dry-run apply and rollback migration execution. |
-| `make durable-repository-proof-contract-gate` | Validate the source-safe durable PostgreSQL repository proof contract without connecting to a database. |
-| `make workbench-read-path-proof-contract-gate` | Validate the bounded Workbench queue/detail read-path proof contract without promoting support. |
-| `make gateway-workbench-operational-proof-contract-gate` | Validate the bounded Gateway/Workbench operational proof that consumes the Workbench read-path proof and clears only the generic source-ingestion/outbox Gateway/Workbench blocker. |
-| `make gateway-workbench-discovery-proof-contract-gate` | Validate the bounded Gateway/Workbench discovery proof that consumes platform catalog/onboarding and read-path evidence while keeping data-mesh certification and support blocked. |
-| `make outbox-broker-proof-contract-gate` | Validate the bounded outbox broker runtime proof contract without certifying external publication, platform mesh event publication, or downstream delivery. |
-| `make outbox-consumer-runtime-proof-contract-gate` | Validate the bounded downstream consumer runtime proof contract without certifying platform mesh event publication, Gateway/Workbench behavior, downstream delivery, or supported-feature promotion. |
-| `make outbox-platform-mesh-event-publication-proof-contract-gate` | Validate the bounded source-safe outbox event contract plus platform source-manifest/catalog onboarding proof without certifying external broker publication, downstream delivery, Gateway/Workbench behavior, or supported-feature promotion. |
-| `make platform-mesh-onboarding-proof-contract-gate` | Validate sibling `lotus-platform` source-manifest/catalog onboarding proof without certifying mesh readiness or supported features. |
-| `make ai-lineage-store-proof-contract-gate` | Validate the source-safe AI lineage store proof artifact without, by itself, certifying `lotus-ai` runtime execution, Workbench, or supported-feature promotion. |
-| `make ai-workflow-pack-registration-proof-contract-gate` | Validate the bounded sibling `lotus-ai` workflow-pack registration proof without certifying workflow execution, provider calls, model-risk operations, Workbench, or supported-feature promotion. |
-| `make ai-workflow-pack-runtime-execution-proof-contract-gate` | Validate the bounded sibling `lotus-ai` deterministic runtime execution proof without certifying live provider execution, model-risk operations, Workbench, client-ready publication, or supported-feature promotion. |
-| `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate the run-once manifest, scheduled-worker deploy contract, source-safe check-only output, live-proof artifact contract, and aggregate block diagnostics without calling Core. |
-| `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate` | Validate source-safe Lotus Risk concentration, high-volatility, and drawdown live-proof artifact contracts that can clear only their named opportunity-archetype live Risk blockers when valid artifacts are supplied. |
-| `make performance-underperformance-live-proof-contract-gate`, `make missing-benchmark-performance-readiness-proof-contract-gate` | Validate source-safe Lotus Performance underperformance and missing-benchmark benchmark-readiness proof artifact contracts that clear only their named opportunity-archetype blockers when valid evidence is supplied. |
-| `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make missing-benchmark-live-proof-contract-gate` | Validate source-safe Lotus Core benchmark assignment, portfolio-state, and missing-benchmark live-proof artifact contracts that clear only their named opportunity-archetype blockers when valid evidence is supplied. |
-| `make low-income-core-cashflow-live-proof-contract-gate` | Validate the source-safe Lotus Core cashflow live-proof artifact contract that can clear only the low-income / liquidity-shortfall live Core cashflow source blocker when valid evidence is supplied. |
-| `make manage-mandate-live-proof-contract-gate` | Validate the source-safe Lotus Manage mandate live-proof artifact contract that can clear only the portfolio-scoped Manage source blocker and the source-owned mandate performance/risk health source-ref blockers while preserving Core portfolio-state, data-mesh, Workbench, client-publication, supported-feature, rebalance, action, and order-execution blockers. |
-| `make mandate-restriction-source-product-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate` | Validate the source-safe typed Lotus Advise mandate/restriction source-product proof and live-proof contracts; each clears only its named mandate/restriction blocker while product-readiness blockers remain. |
-| `make missing-suitability-live-proof-contract-gate` | Validate the source-safe Lotus Advise policy-evaluation live-proof artifact contract that can clear only the missing-suitability live Advise source blocker when valid evidence is supplied. |
-| `make missing-risk-profile-source-product-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate` | Validate the source-safe typed Lotus Advise risk-profile source-product proof and live diagnostic proof contracts; each clears only its named missing risk-profile blocker while product-readiness blockers remain. |
-| `make implementation-proof-readiness-check` | Generate scheduled-worker deploy, durable repository, runtime telemetry, Workbench read-path, Gateway/Workbench operational, Gateway/Workbench discovery, outbox broker, outbox consumer runtime, outbox platform mesh event publication, Advise proposal route, Manage action route, Report intake route, Report materialization, mesh policy, platform mesh onboarding, AI lineage store, AI workflow-pack registration/runtime execution, AI model-risk operations proof, opportunity archetype scenario readiness, and source-safe RFC proof-readiness evidence. This is an explicit release/review evidence command and part of `make ci-release`; it is intentionally not part of `make lint` because it writes ignored `output/` proof artifacts. Cross-repo Advise, Manage, Report, platform, and `lotus-ai` proof artifacts default to sibling checkouts and can be overridden through `LOTUS_IDEA_ADVISE_PROPOSAL_ROUTE_PROOF`, `LOTUS_IDEA_MANAGE_ACTION_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_INTAKE_ROUTE_PROOF`, `LOTUS_IDEA_REPORT_MATERIALIZATION_PROOF`, `LOTUS_IDEA_OUTBOX_PLATFORM_MESH_EVENT_PUBLICATION_PROOF`, `LOTUS_IDEA_GATEWAY_WORKBENCH_OPERATIONAL_PROOF`, `LOTUS_IDEA_GATEWAY_WORKBENCH_DISCOVERY_PROOF`, `LOTUS_IDEA_PLATFORM_MESH_ONBOARDING_PROOF`, `LOTUS_IDEA_AI_WORKFLOW_PACK_REGISTRATION_PROOF`, and `LOTUS_IDEA_AI_WORKFLOW_PACK_RUNTIME_EXECUTION_PROOF`; `LOTUS_IDEA_MESH_POLICY_PROOF`, `LOTUS_IDEA_RISK_CONCENTRATION_LIVE_PROOF`, `LOTUS_IDEA_HIGH_VOLATILITY_LIVE_PROOF`, `LOTUS_IDEA_RISK_DRAWDOWN_LIVE_PROOF`, `LOTUS_IDEA_PERFORMANCE_UNDERPERFORMANCE_LIVE_PROOF`, `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF`, `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF`, `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF`, `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF`, `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF`, `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF`, `LOTUS_IDEA_MANDATE_RESTRICTION_LIVE_PROOF`, `LOTUS_IDEA_MANDATE_RESTRICTION_SOURCE_PRODUCT_PROOF`, `LOTUS_IDEA_MISSING_SUITABILITY_LIVE_PROOF`, `LOTUS_IDEA_MISSING_RISK_PROFILE_SOURCE_PRODUCT_PROOF`, and `LOTUS_IDEA_MISSING_RISK_PROFILE_LIVE_PROOF` can override repo-owned or source-specific proof paths without promoting support. Missing sibling evidence leaves cross-repo proof invalid and blockers intact. |
-| `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Generate source-safe runtime trust telemetry preview evidence without writing an ignored proof artifact, or snapshot evidence under ignored `output/` as release/review evidence through `make ci-release`, not `make lint`. |
-| `make runtime-trust-telemetry-proof-contract-gate` | Validate the source-safe runtime trust telemetry proof contract used by aggregate readiness. |
-| `make report-intake-route-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence intake route proof contract without certifying materialization or publication. |
-| `make report-materialization-proof-contract-gate` | Validate the source-safe `lotus-report` idea evidence materialization proof contract without certifying client publication or supported features. |
-| `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make api-camel-model-boundary-gate`, `make api-signal-model-boundary-gate`, `make api-temporal-validation-boundary-gate`, `make openapi-problem-details-example-gate`, `make caller-context-contract-gate`, `make signal-api-contract-gate` | Block direct API route or app-entrypoint imports from `app.errors`, route-local idempotency validator clones, route-local camel-case DTO base-model clones, signal route-to-route DTO coupling, route-local timestamp-awareness checks, missing public `ProblemDetails` OpenAPI examples, untrusted production-like caller-context header use, and duplicated caller-supplied signal API caller-context headers, scope-unaware permission checks, source-authority, 400/403 examples, and operation-event mechanics. |
-| `make operation-metric-contract-gate` | Validate the code-synchronized operation metric catalog without claiming dashboard, alert, mesh, or feature support. |
-| `make ai-model-risk-ops-contract-gate` | Validate the AI model-risk operations contract against certified dashboard and alert artifact references. |
-| `make ai-model-risk-operations-proof-contract-gate` | Certify the source-safe Grafana dashboard, Prometheus alert rules, and runbook over implemented AI explanation telemetry. |
-| `make postgres-integration-gate` | Prove the PostgreSQL runtime repository path. |
-| `make container-runtime-smoke` | Start the built `backend-service:ci-test` image, probe `/health`, `/health/live`, and reachable default-profile `/health/ready`, print container logs on failure, and always remove the smoke container. |
-| `make check`, `make ci` | Run the local PR-grade and broader CI-equivalent suites. |
-| `make ci-release` | Run `make ci` plus implementation-proof artifact generation, runtime trust telemetry snapshot generation, PostgreSQL runtime proof, Docker build, container smoke, container image scan, and SBOM evidence. |
-| `make clean` | Remove ignored generated test, coverage, build, and Python cache artifacts without touching `.venv`, `.git`, or dependency caches. |
+Compose is runtime-parity evidence for local validation. It is not production
+deployment evidence, registry attestation, full container-image SBOM proof,
+Workbench proof, data-product certification, client publication, or
+supported-feature promotion.
 
 ## Validation And CI Lanes
 
 ```mermaid
 flowchart LR
-    Feature["Feature Lane<br/>lint, typecheck, unit, fast gates"]
+    Feature["Feature Lane<br/>lint, typecheck, unit tests, fast gates"]
     PR["PR Merge Gate<br/>integration, coverage, Docker, Postgres proof"]
-    Main["Main Releasability<br/>post-merge release truth"]
-    Publish["Wiki and evidence publication<br/>after merge to main"]
+    Main["Main Releasability<br/>release truth after merge"]
+    Wiki["Wiki publication<br/>after source merge"]
 
-    Feature --> PR --> Main --> Publish
+    Feature --> PR --> Main --> Wiki
 ```
 
-Run `make lint`, `make typecheck`, and `make test-unit` for feature-lane
-feedback; run `make check`, `make postgres-integration-gate`,
-`make security-audit`, `make docker-build`, and `make container-runtime-smoke`
-for PR-grade runtime proof.
-Governance-focused changes should also run `make documentation-contract-gate`, `make implementation-truth-gate`, `make quality-scorecard-gate`, `make opportunity-archetype-contract-gate`, `make downstream-realization-contract-gate`, and `make supported-features-gate`; the supported-feature registry treats `features[]` as implemented-only support truth, planned posture stays in `planned_capabilities[]`, and implementation-proof readiness counts only implemented supported-feature entries.
+Common gates:
+
+| Command | Use it for |
+| --- | --- |
+| `make lint` | Formatting, linting, hygiene, documentation, quality, implementation-truth, architecture, API-boundary, observability, and contract fast gates. |
+| `make typecheck` | `mypy` over the service. |
+| `make test-unit` | Unit tests; override `UNIT_TESTS` for focused work. |
+| `make test-integration` | Integration tests; override `INTEGRATION_TESTS` for focused work. |
+| `make test-e2e` | Deterministic end-to-end tests; override `E2E_TESTS` for focused work. |
+| `make documentation-contract-gate` | README, repo context, docs, wiki, demo, and evidence-surface contract truth. |
+| `make implementation-truth-gate` | Blocks overclaims about support, certification, live source proof, Workbench, and client readiness. |
+| `make quality-scorecard-gate` | Keeps quality posture aligned with implementation truth. |
+| `make supported-features-gate` | Ensures supported-feature registry entries are implementation-backed only. |
+| `make endpoint-certification-gate` | Validates endpoint certification evidence and OpenAPI caller-context truth. |
+| `make check` | Local PR-grade lane for routine feature work. |
+| `make ci-release` | Broad release evidence including implementation proof, Postgres, Docker, smoke, scan, and SBOM evidence. |
+
+For README, wiki, RFC, context, contract, CI, or supported-feature edits, run
+stranded-truth reconciliation first:
+
+```powershell
+git fetch origin --prune
+git branch -r --no-merged origin/main
+```
+
+Classify unmerged durable-truth branches as `must-merge`, `cherry-pick`,
+`superseded`, `delete`, or `active` before claiming closure.
 
 ## Runtime And Operations
 
-`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test` allow process-local writes and caller-header simulation; production-like profiles require `LOTUS_IDEA_DATABASE_URL` and accept privileged `X-Caller-*` headers only with `X-Lotus-Trusted-Caller-Context` matching `LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`.
-That marker is bounded trusted-ingress provenance only, not identity-provider, signed-assertion, Workbench entitlement, client-publication, or supported-feature proof. HTTP boundary env vars govern host, origin, and request-size limits with product-safe rejections.
+`LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. Only `local` and `test`
+allow process-local writes and caller-header simulation. Production-like
+profiles require `LOTUS_IDEA_DATABASE_URL` and fail closed when durable writes,
+trusted caller provenance, or source authority are not configured.
 
-Operational entrypoints:
+Operator entrypoints:
 
-- local diagnostics: `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
-- source ingestion readiness/run-once: `/api/v1/source-ingestion/readiness`, `/api/v1/source-ingestion/run-once`
-- outbox delivery readiness/run-once: `/api/v1/outbox-delivery/readiness`, `/api/v1/outbox-delivery/run-once`
-- advisor queue readiness: `/api/v1/review-queues/advisor/readiness`
-- AI explanation readiness: `/api/v1/ai-explanations/readiness`
-- downstream realization readiness: `/api/v1/downstream-realization/readiness`
-- implementation proof readiness: `/api/v1/implementation-proof/readiness`
-- data-mesh readiness: `/api/v1/data-mesh/readiness`
-- runtime trust telemetry preview: `/api/v1/data-mesh/trust-telemetry/runtime-preview`
-- runtime trust telemetry snapshot: `/api/v1/data-mesh/trust-telemetry/runtime-snapshot` and `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`
+- `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
+- `/api/v1/source-ingestion/readiness` and `/api/v1/source-ingestion/run-once`
+- `/api/v1/outbox-delivery/readiness` and `/api/v1/outbox-delivery/run-once`
+- `/api/v1/review-queues/advisor/readiness`
+- `/api/v1/ai-explanations/readiness`
+- `/api/v1/downstream-realization/readiness`
+- `/api/v1/implementation-proof/readiness`
+- `/api/v1/data-mesh/readiness`
+- `/api/v1/data-mesh/trust-telemetry/runtime-preview`
+- `/api/v1/data-mesh/trust-telemetry/runtime-snapshot`
 
-Operator details live in [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md), [docs/operations/observability.md](docs/operations/observability.md), [docs/operations/persistence.md](docs/operations/persistence.md), and [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
+Operator details live in
+[docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
+[docs/operations/observability.md](docs/operations/observability.md),
+[docs/operations/persistence.md](docs/operations/persistence.md), and
+[wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
+
+## Ecosystem Boundaries
+
+Upstream authorities:
+
+- `lotus-core`: portfolio state, holdings, instruments, benchmark assignments,
+  clients, products, cashflow, maturity, and mandate facts.
+- `lotus-performance`: returns, attribution, active-return posture, benchmark
+  context, and performance-health evidence.
+- `lotus-risk`: risk metrics, concentration, volatility, drawdown, scenario,
+  and mandate-risk posture.
+- `lotus-advise`: suitability, policy evaluation, proposal, risk-profile, and
+  advisory journey context.
+- `lotus-manage`: model portfolio, rebalance workflow, mandate, restriction,
+  and action-register context.
+- `lotus-report`: report-pack and commentary context after review-gated intent.
+- `lotus-ai`: provider-neutral AI workflow, prompt governance, model evaluation,
+  RAG, and explanation assistance.
+
+Downstream consumers:
+
+- `lotus-gateway` publishes bounded read paths only after exact route evidence.
+- `lotus-workbench` consumes bounded queue/detail proof; full panel proof remains
+  blocked until backend truth is certified.
+- `lotus-advise`, `lotus-manage`, and `lotus-report` consume review-gated
+  conversion or report intent, not portfolio, suitability, rebalance, or report
+  authority.
+- `lotus-render` and `lotus-archive` remain downstream realization authorities,
+  not `lotus-idea` responsibilities.
 
 ## Governance
 
-Day-one governing standard: `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`
+Local gates keep claims grounded:
 
-Local controls keep implementation claims grounded:
-
-- `make implementation-truth-gate` blocks unqualified support, certification, live-source, Gateway/Workbench, and client-ready claims.
-- `make documentation-contract-gate` protects the README, repo context, docs, quality pages, evidence guide, and wiki pages.
-- `make source-observability-contract-gate` prevents raw logs, raw `print()`, direct Python logging, and unsafe observability bypasses.
-- `make api-route-metadata-gate` prevents duplicate route metadata type definitions outside `app.api.route_metadata`.
-- `make api-idempotency-boundary-gate` prevents route-local `Idempotency-Key` validator clones outside `app.api.idempotency`.
-- `make api-camel-model-boundary-gate` prevents route-local camel-case DTO base-model clones outside `app.api.base_model`, `make api-signal-model-boundary-gate` prevents shared signal DTO imports from concrete signal route modules instead of `app.api.signal_models`, `make signal-api-contract-gate` keeps caller-supplied signal caller-context and entitlement-scope headers behind `app.api.caller_headers.CallerContextHeaders`, and `make api-temporal-validation-boundary-gate` keeps API timestamp-awareness and UTC checks behind `app.api.temporal_validation`.
-- Review-action and feedback routes share `app.api.review_workflow_operations` for caller parsing, mutating capability checks, trusted entitlement-scope validation, idempotency validation, durable-write guards, operation-event mapping, and product-safe persistence problem mapping. Conversion-intent and conversion-outcome routes share `app.api.conversion_governance_operations` for the equivalent conversion mutation setup and product-safe persistence mapping. Both are design modularity inside one deployable service, not runtime service splits.
-- `make signal-api-contract-gate` prevents copied signal evaluation policy, scope-unaware permission checks, source-authority, operation-event, error-model code, and weak 400/403 `ProblemDetails` OpenAPI examples.
-- `make operation-metric-contract-gate` keeps the operation metric catalog
-  synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,
-  Gateway/Workbench, or supported-feature overclaims.
-- `make ai-model-risk-ops-contract-gate` keeps the AI model-risk operations
-  contract aligned to implemented AI explanation/readiness telemetry and
-  certified dashboard/alert artifact references.
-- AI model-risk and non-AI operator workflow proof gates keep dashboard, alert
-  rule, and runbook evidence tied only to implemented, bounded operation
-  telemetry while preserving `lotus-ai`, live-source, external-broker,
-  downstream-execution, Workbench, data-mesh, and support-promotion blockers.
-- `make ai-lineage-store-proof-contract-gate` keeps the AI lineage store proof
-  artifact source-safe and prevents durable persistence evidence from becoming
-  a false `lotus-ai` runtime, Workbench, client-demo, or supported-feature
-  claim.
-- `make ai-workflow-pack-registration-proof-contract-gate` keeps sibling `lotus-ai`
-  registration evidence source-safe and blocks false runtime, provider, model-risk,
-  Workbench, client-demo, or supported-feature claims.
-- `make ai-workflow-pack-runtime-execution-proof-contract-gate` keeps sibling `lotus-ai`
-  deterministic runtime execution evidence source-safe and blocks false live provider,
-  model-risk operations, Workbench, client-demo, or supported-feature claims.
-- `make no-sensitive-content-guard` keeps local evidence and output artifacts
-  free of sensitive marker names.
-- `make durable-repository-proof-contract-gate` keeps the aggregate
-  proof-readiness storage evidence source-safe and explicit about remaining production, mesh, live-source, Workbench, and supported-feature blockers.
-- `make gateway-workbench-operational-proof-contract-gate` keeps the bounded
-  Gateway/Workbench operational artifact tied to the Workbench read-path proof and prevents it from becoming full panel, browser, canonical demo, mesh discovery, or supported-feature proof.
-- `make gateway-workbench-discovery-proof-contract-gate` keeps the bounded
-  Gateway/Workbench discovery artifact tied to platform catalog/onboarding and read-path evidence while preventing data-mesh certification, product activation, or supported-feature promotion.
-- `make report-intake-route-proof-contract-gate` keeps the bounded
-  `lotus-report` route proof source-safe and prevents it from becoming a
-  false report/render/archive, client-publication, or supported-feature claim.
-- `make report-materialization-proof-contract-gate` keeps the bounded `lotus-report` materialization proof source-safe and prevents Report/Render/Archive evidence from becoming a false client-publication or supported-feature claim.
-- `make repository-hygiene-gate` blocks generated cache, build, dependency,
-  environment, and database artifacts.
-- `make clean` removes ignored local byproducts through the governed cleanup
-  utility that the CI contract gate protects.
-- `make maintainability-gate` blocks oversized source, test, and script files
-  or functions beyond measured thresholds.
+- `make implementation-truth-gate` blocks unqualified support, certification,
+  live-source, Gateway/Workbench, and client-ready claims.
+- `make documentation-contract-gate` protects this README, repo context, docs,
+  demo pages, evidence guide, and wiki source.
+- `make source-observability-contract-gate` blocks unsafe logging and raw output
+  bypasses.
+- `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`,
+  `make api-idempotency-boundary-gate`, `make api-camel-model-boundary-gate`,
+  `make api-signal-model-boundary-gate`, and
+  `make api-temporal-validation-boundary-gate` keep API concerns behind shared
+  boundaries.
+- `make operation-metric-contract-gate` keeps operation metric vocabulary tied
+  to implemented telemetry.
+- `make ai-model-risk-ops-contract-gate` and
+  `make ai-model-risk-operations-proof-contract-gate` keep AI-adjacent evidence
+  bounded to implemented readiness and model-risk telemetry.
+- `make maintainability-gate`, `make duplicate-implementation-gate`, and
+  `make private-import-boundary-gate` protect modularity and code ownership.
+- `make no-sensitive-content-guard` protects generated local evidence.
+- Modernization rule: remove stale compatibility paths, legacy vocabulary, and
+  duplicate local patterns unless a current contract explicitly requires them.
 
 ## Documentation Map
 
-Product and operator overview: [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md), [wiki/API-Surface.md](wiki/API-Surface.md), [wiki/Integrations.md](wiki/Integrations.md), and [wiki/Troubleshooting.md](wiki/Troubleshooting.md). Governance and release posture: [wiki/Validation-and-CI.md](wiki/Validation-and-CI.md), [wiki/Supported-Features.md](wiki/Supported-Features.md), [docs/operations/supported-feature-promotion.md](docs/operations/supported-feature-promotion.md), and [docs/standards/enterprise-readiness.md](docs/standards/enterprise-readiness.md).
-Implementation evidence: [docs/rfcs/README.md](docs/rfcs/README.md), [docs/operations/api-certification.md](docs/operations/api-certification.md), [docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md](docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md), and [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md). Client-demo process, client-facing brief, and template: [wiki/Demo-Readiness.md](wiki/Demo-Readiness.md) and [docs/demo/README.md](docs/demo/README.md).
+Start here:
 
-Repo-local `wiki/` is the authored source of truth. The GitHub wiki is a publication target and should be updated through the platform wiki sync flow after merge to `main`.
+- [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md):
+  repository role, current truth, engineering patterns, commands, issue-learning
+  loop, and promotion rules.
+- [docs/rfcs/README.md](docs/rfcs/README.md): RFC index and slice status.
+- [docs/operations/api-certification.md](docs/operations/api-certification.md):
+  endpoint certification baseline and ledger rules.
+- [docs/operations/supported-feature-promotion.md](docs/operations/supported-feature-promotion.md):
+  support-promotion process.
+- [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md):
+  modularity and issue-pattern hardening ledger.
+- [quality/quality_scorecard.md](quality/quality_scorecard.md): bank-buyable
+  quality posture.
+- [quality/refactor_decisions.md](quality/refactor_decisions.md): design
+  modularity and runtime modularity decisions.
+- [wiki/Overview.md](wiki/Overview.md), [wiki/Architecture.md](wiki/Architecture.md),
+  [wiki/API-Surface.md](wiki/API-Surface.md), [wiki/Integrations.md](wiki/Integrations.md),
+  [wiki/Validation-and-CI.md](wiki/Validation-and-CI.md), and
+  [wiki/Supported-Features.md](wiki/Supported-Features.md): authored wiki source.
+
+Repo-local `wiki/` is the authored GitHub wiki source. The separate GitHub wiki
+repository is a publication target only and should be updated through the
+platform wiki sync flow after the source branch merges to `main`.
