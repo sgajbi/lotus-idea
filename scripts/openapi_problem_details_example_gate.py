@@ -10,6 +10,8 @@ if str(ROOT / "src") not in sys.path:
 
 from app.main import app  # noqa: E402
 
+PROBLEM_DETAIL_MEDIA_TYPES = ("application/json", "application/problem+json")
+
 
 def _problem_details_schema(schema: dict[str, Any]) -> bool:
     ref = schema.get("$ref")
@@ -26,16 +28,19 @@ def validate_problem_details_examples() -> list[str]:
     for path, methods in sorted(openapi["paths"].items()):
         for method, operation in sorted(methods.items()):
             for status_code, response in sorted(operation.get("responses", {}).items()):
-                content = response.get("content", {}).get("application/json", {})
-                schema = content.get("schema", {})
+                response_content = response.get("content", {})
+                json_content = response_content.get("application/json", {})
+                schema = json_content.get("schema", {})
                 if not isinstance(schema, dict) or not _problem_details_schema(schema):
                     continue
-                if "example" in content or "examples" in content:
-                    continue
-                errors.append(
-                    f"{method.upper()} {path} {status_code}: ProblemDetails response "
-                    "must include an OpenAPI example"
-                )
+                for media_type in PROBLEM_DETAIL_MEDIA_TYPES:
+                    content = response_content.get(media_type, {})
+                    if "example" in content or "examples" in content:
+                        continue
+                    errors.append(
+                        f"{method.upper()} {path} {status_code} {media_type}: "
+                        "ProblemDetails response must include an OpenAPI example"
+                    )
     return errors
 
 

@@ -229,7 +229,10 @@ submission routes and durable-write routes rely on named OpenAPI examples so
 generated API truth preserves `downstream_realization_not_configured`,
 `durable_repository_not_configured`, `durable_repository_unavailable`,
 `unsupported_downstream_realization_target`, and `idempotency_conflict` without
-last-write-wins response overwrites.
+last-write-wins response overwrites. Shared `ProblemDetails` metadata must
+publish examples under both `application/json` and `application/problem+json`;
+`make openapi-problem-details-example-gate` enforces both media types so legacy
+route-local metadata cannot silently understate RFC-7807 error contracts.
 
 Use public domain and infrastructure APIs:
 
@@ -834,6 +837,17 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     missing dirty-flag provenance now preserves blockers, suppresses the
     artifact evidence ref, and remains diagnostic-only until regenerated from
     clean source.
+14. PostgreSQL readiness degradation: GitHub issue `#307` is addressed by
+    returning product-safe `503 degraded` readiness with
+    `durable_repository_unavailable` when a production-like runtime has a
+    configured PostgreSQL URL that cannot initialize. Readiness must not leak
+    DSNs, hostnames, credentials, driver errors, or raw connection details.
+15. Downstream submission OpenAPI ProblemDetails truth: GitHub issue `#308` is
+    addressed by publishing downstream submission 404/409/503 runtime
+    `ProblemDetails` codes under both `application/json` and
+    `application/problem+json`, using shared merged metadata for multi-code
+    statuses, and extending the OpenAPI ProblemDetails gate so signal and
+    workflow routes cannot reintroduce media-type drift.
 12. Resilience retry control: GitHub issue `#286` is addressed by fixed central
    jitter in `DownstreamJsonClient` computed backoff delays, deterministic
    jitter injection in tests, and no change to retry attempts, retryable status

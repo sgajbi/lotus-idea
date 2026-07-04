@@ -25,6 +25,15 @@ def _problem_details_example(
     }
 
 
+def _problem_details_content(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    content = dict(payload)
+    content["schema"] = {"$ref": "#/components/schemas/ProblemDetails"}
+    return {
+        "application/json": dict(content),
+        "application/problem+json": dict(content),
+    }
+
+
 def problem_response_metadata(
     *,
     status_code: int,
@@ -37,8 +46,8 @@ def problem_response_metadata(
         status_code: {
             "model": ProblemDetails,
             "description": description,
-            "content": {
-                "application/json": {
+            "content": _problem_details_content(
+                {
                     "example": _problem_details_example(
                         status_code=status_code,
                         code=code,
@@ -46,7 +55,7 @@ def problem_response_metadata(
                         detail=detail,
                     )
                 }
-            },
+            ),
         }
     }
 
@@ -78,7 +87,7 @@ def merged_problem_response_metadata(
         status_code: {
             "model": ProblemDetails,
             "description": description,
-            "content": {"application/json": {"examples": examples}},
+            "content": _problem_details_content({"examples": examples}),
         }
     }
 
