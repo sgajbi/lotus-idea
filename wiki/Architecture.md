@@ -349,6 +349,11 @@ bounded foundation API rather than a production queue-store claim.
 `lotus-gateway` publishes this as a
 bounded read-only route at `GET /api/v1/ideas/review-queues/advisor`, forwards
 the caller entitlement-scope headers, and does not generate or rank ideas.
+Advisor queue and readiness response DTOs live in
+`src/app/api/review_queue_models.py`; `src/app/api/review_queues.py` retains
+authorization, entitlement narrowing, repository access, operation events, and
+route metadata. This is an internal design boundary, not a separate queue
+service or Workbench product boundary.
 
 `GET /api/v1/review-queues/advisor/readiness` is the certified internal
 operator diagnostic for queue supportability. Durable PostgreSQL providers use

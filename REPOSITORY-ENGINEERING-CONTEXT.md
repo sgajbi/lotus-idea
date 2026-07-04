@@ -201,17 +201,20 @@ Use shared API helpers instead of route-local clones:
    evidence, lifecycle, review, feedback, conversion, report evidence-pack,
    and audit-summary response DTOs behind the existing
    `app.api.candidate_detail` route surface,
-14. `app.api.signal_api_support` for caller context, scope checks, source-ref
+14. `app.api.review_queue_models` for advisor review queue and review queue
+   readiness response DTOs behind the existing `app.api.review_queues` route
+   surface,
+15. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-15. `app.api.review_workflow_operations` for review-action and feedback route
+16. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-16. `app.api.conversion_governance_operations` for conversion-intent and
+17. `app.api.conversion_governance_operations` for conversion-intent and
    conversion-outcome route caller parsing, mutating capability checks,
    idempotency validation, durable-write guards, operation-event mapping, and
    product-safe persistence problem mapping,
-16. `app.api.temporal_validation` for API timestamp awareness and UTC query
+18. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
 When route behavior is moved into API-internal operation helper modules, tests
