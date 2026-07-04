@@ -30,7 +30,10 @@ from app.domain import (
     SourceSystem,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
-from app.ports.idea_repository import ReviewQueueRepositoryPage
+from app.ports.idea_repository import (
+    ReviewQueueReadinessRepositorySummary,
+    ReviewQueueRepositoryPage,
+)
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -520,43 +523,49 @@ def test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers() 
 
 
 def test_build_review_queue_readiness_snapshot_clears_repository_side_pagination_blocker() -> None:
-    repository = InMemoryIdeaRepository()
-    persist_high_cash_candidate(repository)
-
-    class RepositorySidePageRepository:
-        def __init__(self, wrapped: InMemoryIdeaRepository) -> None:
-            self.wrapped = wrapped
+    class RepositorySideReadinessRepository:
+        def __init__(self) -> None:
+            self.readiness_summary_count = 0
 
         def snapshot(self) -> IdeaRepositorySnapshot:
-            return self.wrapped.snapshot()
+            raise AssertionError("readiness projection should not hydrate the full snapshot")
 
-        def review_queue_candidate_page(
+        def review_queue_readiness_summary(
             self,
             *,
             access_scope_filter: QueueAccessScopeFilter | None,
-            limit: int,
-            offset: int,
-        ) -> ReviewQueueRepositoryPage:
-            del access_scope_filter, limit, offset
-            return ReviewQueueRepositoryPage(
-                candidate_records=(),
-                total_reviewable_item_count=0,
-                total_excluded_candidate_count=0,
+        ) -> ReviewQueueReadinessRepositorySummary:
+            assert access_scope_filter is None
+            self.readiness_summary_count += 1
+            return ReviewQueueReadinessRepositorySummary(
+                candidate_snapshot_count=2,
+                reviewable_item_count=1,
+                excluded_candidate_count=1,
+                exclusion_counts={reason.value: 0 for reason in QueueExclusionReason}
+                | {QueueExclusionReason.EXPIRED.value: 1},
+                scored_candidate_count=2,
+                unscored_candidate_count=0,
             )
 
+    repository = RepositorySideReadinessRepository()
     snapshot = build_review_queue_readiness_snapshot(
         BuildReviewQueueFromRepositoryCommand(evaluated_at_utc=EVALUATED_AT),
-        repository=RepositorySidePageRepository(repository),
+        repository=repository,
         durable_storage_backed=True,
     )
 
+    assert repository.readiness_summary_count == 1
     assert snapshot.repository_side_pagination_certified is True
+    assert snapshot.candidate_snapshot_count == 2
+    assert snapshot.reviewable_item_count == 1
+    assert snapshot.excluded_candidate_count == 1
+    assert snapshot.exclusion_counts["expired"] == 1
     assert "repository_side_queue_pagination_not_certified" not in snapshot.certification_blockers
     assert "workbench_product_proof_missing" in snapshot.certification_blockers
     assert "data_product_certification_missing" in snapshot.certification_blockers
 
 
-def test_build_review_queue_readiness_snapshot_reads_repository_once() -> None:
+def test_build_review_queue_readiness_snapshot_falls_back_to_snapshot_once() -> None:
     repository = InMemoryIdeaRepository()
     persist_high_cash_candidate(repository)
 

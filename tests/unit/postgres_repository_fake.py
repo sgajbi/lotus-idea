@@ -27,6 +27,7 @@ from tests.unit.postgres_repository_runtime_trust_helpers import (
 from tests.unit.postgres_review_queue_fake_helpers import (
     review_queue_count_rows,
     review_queue_page_rows,
+    review_queue_readiness_summary_rows,
 )
 
 
@@ -45,6 +46,10 @@ class FakePostgresCursor:
         if normalized.startswith("/* lotus-idea review-queue-page */"):
             assert params is not None
             self._rows = review_queue_page_rows(self.connection, normalized, params)
+            return
+        if normalized.startswith("/* lotus-idea review-queue-readiness-summary */"):
+            assert params is not None
+            self._rows = review_queue_readiness_summary_rows(self.connection, normalized, params)
             return
         if normalized.startswith("/* lotus-idea outbox-delivery-ready-events */"):
             assert params is not None

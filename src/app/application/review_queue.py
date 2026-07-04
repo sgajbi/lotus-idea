@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from datetime import datetime
 from types import MappingProxyType
-from typing import Mapping
+from typing import Mapping, cast
 
 from app.domain import (
     DEFAULT_SCORING_POLICY,
@@ -19,6 +19,8 @@ from app.domain import (
 )
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
+    ReviewQueueReadinessProjectionRepository,
+    ReviewQueueReadinessRepositorySummary,
     ReviewQueueProjectionRepository,
     ReviewQueueRepositoryPage,
 )
@@ -141,12 +143,25 @@ def build_review_queue_readiness_snapshot(
     durable_storage_backed: bool,
     policy: IdeaScoringPolicy = DEFAULT_SCORING_POLICY,
 ) -> ReviewQueueReadinessSnapshot:
-    snapshot = repository.snapshot()
-    queue = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
     repository_side_pagination_certified = durable_storage_backed and isinstance(
         repository,
-        ReviewQueueProjectionRepository,
+        ReviewQueueReadinessProjectionRepository,
     )
+    if repository_side_pagination_certified and not command.snoozes:
+        readiness_repository = cast(ReviewQueueReadinessProjectionRepository, repository)
+        readiness_summary = readiness_repository.review_queue_readiness_summary(
+            access_scope_filter=command.access_scope_filter,
+        )
+        return _review_queue_readiness_snapshot_from_summary(
+            command=command,
+            readiness_summary=readiness_summary,
+            durable_storage_backed=durable_storage_backed,
+            repository_side_pagination_certified=repository_side_pagination_certified,
+            policy=policy,
+        )
+
+    snapshot = repository.snapshot()
+    queue = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
     exclusion_counts = {
         reason.value: sum(1 for exclusion in queue.exclusions if exclusion.reason is reason)
         for reason in QueueExclusionReason
@@ -167,6 +182,38 @@ def build_review_queue_readiness_snapshot(
         exclusion_counts=exclusion_counts,
         scored_candidate_count=sum(1 for candidate in candidates if candidate.score is not None),
         unscored_candidate_count=sum(1 for candidate in candidates if candidate.score is None),
+        durable_storage_backed=durable_storage_backed,
+        repository_side_pagination_certified=repository_side_pagination_certified,
+        readiness_status=("ready" if not certification_blockers else "blocked"),
+        supportability_status="not_certified",
+        certification_blockers=certification_blockers,
+        supported_feature_promoted=False,
+    )
+
+
+def _review_queue_readiness_snapshot_from_summary(
+    *,
+    command: BuildReviewQueueFromRepositoryCommand,
+    readiness_summary: ReviewQueueReadinessRepositorySummary,
+    durable_storage_backed: bool,
+    repository_side_pagination_certified: bool,
+    policy: IdeaScoringPolicy,
+) -> ReviewQueueReadinessSnapshot:
+    certification_blockers = _review_queue_certification_blockers(
+        durable_storage_backed=durable_storage_backed,
+        repository_side_pagination_certified=repository_side_pagination_certified,
+    )
+    return ReviewQueueReadinessSnapshot(
+        repository="lotus-idea",
+        policy_version=policy.policy_version,
+        evaluated_at_utc=command.evaluated_at_utc,
+        queue_projection_available=True,
+        candidate_snapshot_count=readiness_summary.candidate_snapshot_count,
+        reviewable_item_count=readiness_summary.reviewable_item_count,
+        excluded_candidate_count=readiness_summary.excluded_candidate_count,
+        exclusion_counts=readiness_summary.exclusion_counts,
+        scored_candidate_count=readiness_summary.scored_candidate_count,
+        unscored_candidate_count=readiness_summary.unscored_candidate_count,
         durable_storage_backed=durable_storage_backed,
         repository_side_pagination_certified=repository_side_pagination_certified,
         readiness_status=("ready" if not certification_blockers else "blocked"),

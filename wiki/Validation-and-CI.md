@@ -555,12 +555,15 @@ Persistence adapter validation:
    domain batch path source-safely, enforces operator capability, and emits a
    bounded `source_ingestion_run_once` event.
 19. `tests/unit/test_review_queue_application.py`,
+   `tests/unit/test_postgres_review_queue.py`,
    `tests/integration/test_review_queue_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the advisor queue
    readiness diagnostic for aggregate queue posture, permission-denied
    behavior, timestamp validation, product-safe payloads, and bounded
    `not_certified` operation events without exposing candidate identifiers or
-   access-scope identifiers.
+   access-scope identifiers. The PostgreSQL test proves the durable readiness
+   aggregate reads only candidate records and avoids unrelated state-family
+   hydration.
 20. `tests/unit/test_ai_explanation_readiness.py`,
    `tests/integration/test_ai_governance_api.py`, and
    `tests/integration/test_api_operation_events.py` prove the AI explanation
@@ -876,10 +879,10 @@ supported-feature promotion.
 
 The internal advisor-queue-readiness endpoint is covered by OpenAPI, endpoint
 certification, unit tests, and integration tests. Its passing checks certify
-the diagnostic route and durable PostgreSQL repository-side page projection
-only; they do not certify Gateway/Workbench support, data-product promotion,
-PM/compliance queue support, client-ready publication, or supported-feature
-promotion.
+the diagnostic route, durable PostgreSQL repository-side page projection, and
+durable PostgreSQL readiness aggregate projection only; they do not certify
+Gateway/Workbench support, data-product promotion, PM/compliance queue support,
+client-ready publication, or supported-feature promotion.
 
 The internal outbox-delivery-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks

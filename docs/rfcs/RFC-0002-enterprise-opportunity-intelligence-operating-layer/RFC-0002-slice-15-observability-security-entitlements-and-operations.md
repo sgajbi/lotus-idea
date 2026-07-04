@@ -1,6 +1,6 @@
 # RFC-0002 Slice 15: Observability, Security, Entitlements, And Operations
 
-Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once with durable retry scheduling and PostgreSQL repository-side readiness projection, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics
+Status: Partially Implemented - bounded operation events plus evidence replay, source-ingestion, scheduled-worker proof, outbox delivery readiness/run-once with durable retry scheduling and PostgreSQL repository-side readiness projection, outbox broker proof, downstream realization, AI explanation, implementation-proof, and advisor queue readiness diagnostics with bounded PostgreSQL aggregate projection
 
 ## Outcome
 
@@ -71,10 +71,12 @@ foundation:
     run-once, and operation-event behavior without exposing portfolio ids, raw
     idempotency keys, source payloads, or candidate ids.
 18. `src/app/application/review_queue.py` adds an advisor queue readiness
-    snapshot over the existing deterministic queue projection and repository
-    snapshot, reporting aggregate counts, exclusion counts, durable-storage
-    posture, `not_certified` supportability, and certification blockers without
-    exposing candidate identifiers or access-scope identifiers.
+    snapshot over deterministic queue policy. Durable repositories can provide
+    aggregate counts, exclusion counts, durable-storage posture,
+    `not_certified` supportability, and certification blockers through a
+    repository-side readiness summary projection; process-local and snooze-aware
+    evaluations retain the domain snapshot fallback. The diagnostic does not
+    expose candidate identifiers or access-scope identifiers.
 19. `GET /api/v1/review-queues/advisor/readiness` exposes that snapshot to
     operators with `idea.review.queue.readiness.read`, returns
     `supportedFeaturePromoted=false`, and emits bounded
@@ -82,9 +84,9 @@ foundation:
 20. `tests/unit/test_review_queue_application.py`,
     `tests/integration/test_review_queue_api.py`, and
     `tests/integration/test_api_operation_events.py` prove aggregate readiness
-    counts, non-storage blockers, permission-denied behavior, timestamp
-    validation, product-safe payloads, and operation-event behavior for the
-    advisor queue readiness diagnostic.
+    counts, bounded PostgreSQL aggregate query shape, non-storage blockers,
+    permission-denied behavior, timestamp validation, product-safe payloads, and
+    operation-event behavior for the advisor queue readiness diagnostic.
 20. `GET /api/v1/ai-explanations/readiness` exposes a source-safe model-risk
     operator diagnostic for AI explanation guardrail availability and
     certification blockers. It requires both the `operator` role and

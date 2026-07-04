@@ -591,7 +591,14 @@ whole-store snapshot:
    lineage tables, and now prove scoped count/page reads retain eligibility
    filters, all indexed scope predicates, stable ordering, count, and
    `LIMIT`/`OFFSET` bounds.
-6. This is production-scale internal read-path hardening only. It does not
+6. After GitHub issue `#316`, advisor queue readiness has a separate
+   `ReviewQueueReadinessProjectionRepository` aggregate contract so durable
+   PostgreSQL providers compute readiness counts over `idea_candidate_record`
+   without hydrating whole repository snapshots or unrelated state families.
+   The application keeps the deterministic snapshot fallback for process-local
+   repositories and snooze-aware evaluations. This is design modularity inside
+   the existing service, not a separate runtime queue-readiness process.
+7. This is production-scale internal read-path hardening only. It does not
    certify Workbench support, data-product promotion, PM/compliance queue
    support, client-ready publication, or supported-feature promotion.
 
