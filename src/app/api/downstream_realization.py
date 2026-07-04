@@ -8,13 +8,14 @@ from app.api.base_model import CamelModel
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_not_configured_metadata,
+    durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
 from app.api.idempotency import validate_idempotency_key
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
     service_unavailable_metadata,
@@ -53,6 +54,61 @@ _SUBMISSION_ERROR_CODES_BY_STATUS = {
     DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT: "idempotency_conflict",
     DownstreamRealizationStatus.NOT_CONFIGURED: "downstream_realization_not_configured",
 }
+_DOWNSTREAM_RESOURCE_NOT_FOUND_METADATA = not_found_metadata(
+    code="downstream_realization_resource_not_found",
+    title="Downstream realization resource not found",
+    detail="The requested idea downstream realization resource was not found.",
+    description="Requested downstream realization resource was not found.",
+)
+_IDEMPOTENCY_CONFLICT_METADATA = conflict_metadata(
+    code="idempotency_conflict",
+    title="Idempotency conflict",
+    detail=(
+        "The supplied Idempotency-Key was already used for a different downstream "
+        "realization submission target."
+    ),
+    description="Idempotency-Key conflicts with a different downstream submission target.",
+)
+_UNSUPPORTED_DOWNSTREAM_REALIZATION_TARGET_METADATA = conflict_metadata(
+    code="unsupported_downstream_realization_target",
+    title="Unsupported downstream realization target",
+    detail=(
+        "The requested conversion target cannot be submitted through this downstream "
+        "realization route."
+    ),
+    description="Conversion intent target is not supported by this submission route.",
+)
+_DOWNSTREAM_NOT_CONFIGURED_METADATA = service_unavailable_metadata(
+    code="downstream_realization_not_configured",
+    title="Downstream realization not configured",
+    detail=(
+        "The service is not configured to submit this downstream realization request. "
+        "Configure the owning downstream service adapter before retrying."
+    ),
+    description="Downstream realization adapters are not configured.",
+)
+
+
+def _conversion_submission_conflict_metadata() -> dict[int | str, dict[str, object]]:
+    return merged_problem_response_metadata(
+        status_code=status.HTTP_409_CONFLICT,
+        description="Downstream submission conflict.",
+        responses=(
+            _UNSUPPORTED_DOWNSTREAM_REALIZATION_TARGET_METADATA,
+            _IDEMPOTENCY_CONFLICT_METADATA,
+        ),
+    )
+
+
+def _downstream_submission_service_unavailable_metadata() -> dict[int | str, dict[str, object]]:
+    return merged_problem_response_metadata(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        description="Downstream submission is not currently write-ready.",
+        responses=(
+            _DOWNSTREAM_NOT_CONFIGURED_METADATA,
+            durable_repository_write_unavailable_metadata(),
+        ),
+    )
 
 
 class DownstreamSubmissionResultResponse(CamelModel):
@@ -444,28 +500,9 @@ CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
             detail="The caller is not permitted to submit idea conversion intents downstream.",
             description="Caller lacks submission permission.",
         ),
-        **not_found_metadata(
-            code="conversion_intent_not_found",
-            title="Conversion intent not found",
-            detail="No conversion intent exists for the requested conversionIntentId.",
-            description="Conversion intent was not found.",
-        ),
-        **conflict_metadata(
-            code="unsupported_downstream_target",
-            title="Unsupported downstream target",
-            detail=(
-                "The conversion intent target is not supported by the requested "
-                "downstream submission route."
-            ),
-            description="Conversion intent target is not supported by this submission route.",
-        ),
-        **service_unavailable_metadata(
-            code="downstream_realization_unavailable",
-            title="Downstream realization unavailable",
-            detail="The downstream realization adapter foundation is not configured.",
-            description="Downstream realization adapters are not configured.",
-        ),
-        **durable_repository_not_configured_metadata(),
+        **_DOWNSTREAM_RESOURCE_NOT_FOUND_METADATA,
+        **_conversion_submission_conflict_metadata(),
+        **_downstream_submission_service_unavailable_metadata(),
     },
 }
 
@@ -514,19 +551,9 @@ REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
             detail="The caller is not permitted to submit report evidence packs downstream.",
             description="Caller lacks submission permission.",
         ),
-        **not_found_metadata(
-            code="report_evidence_pack_not_found",
-            title="Report evidence pack not found",
-            detail="No report evidence pack exists for the requested reportEvidencePackId.",
-            description="Report evidence-pack was not found.",
-        ),
-        **service_unavailable_metadata(
-            code="downstream_realization_unavailable",
-            title="Downstream realization unavailable",
-            detail="The downstream realization adapter foundation is not configured.",
-            description="Downstream realization adapters are not configured.",
-        ),
-        **durable_repository_not_configured_metadata(),
+        **_DOWNSTREAM_RESOURCE_NOT_FOUND_METADATA,
+        **_IDEMPOTENCY_CONFLICT_METADATA,
+        **_downstream_submission_service_unavailable_metadata(),
     },
 }
 

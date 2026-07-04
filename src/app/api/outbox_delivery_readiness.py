@@ -11,7 +11,7 @@ from app.api.base_model import CamelModel
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.durable_write_guard import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_not_configured_metadata,
+    durable_repository_write_unavailable_metadata,
     durable_write_problem,
 )
 from app.api.idempotency import IDEMPOTENCY_KEY_REQUIRED_MESSAGE, validate_idempotency_key
@@ -583,7 +583,7 @@ OUTBOX_DELIVERY_RUN_ONCE_ROUTE: RouteMetadata = {
             detail="The idempotency key was already used with a different request payload.",
             description="Idempotency key was already bound to a different safe request payload.",
         ),
-        **durable_repository_not_configured_metadata(),
+        **durable_repository_write_unavailable_metadata(),
     },
 }
 

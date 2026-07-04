@@ -175,6 +175,15 @@ Use shared API helpers instead of route-local clones:
 7. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
+When one HTTP status can return multiple stable `ProblemDetails` codes, use
+`app.api.problem_details.merged_problem_response_metadata` instead of spreading
+multiple response-metadata dictionaries with the same status key. Downstream
+submission routes and durable-write routes rely on named OpenAPI examples so
+generated API truth preserves `downstream_realization_not_configured`,
+`durable_repository_not_configured`, `durable_repository_unavailable`,
+`unsupported_downstream_realization_target`, and `idempotency_conflict` without
+last-write-wins response overwrites.
+
 Use public domain and infrastructure APIs:
 
 1. import cross-module domain objects through `app.domain`,

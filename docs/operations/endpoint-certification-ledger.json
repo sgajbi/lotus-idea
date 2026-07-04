@@ -653,9 +653,9 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
-        "404 returns product-safe Problem Details when the conversion intent is not found.",
-        "409 returns product-safe Problem Details when the conversion intent target requires the report evidence-pack submission route or when the Idempotency-Key is reused for a different request fingerprint.",
-        "503 returns product-safe Problem Details when downstream realization adapters are not configured.",
+        "404 returns product-safe Problem Details with downstream_realization_resource_not_found when the conversion intent is not found.",
+        "409 returns product-safe Problem Details with unsupported_downstream_realization_target when the conversion intent target requires the report evidence-pack submission route or idempotency_conflict when the Idempotency-Key is reused for a different request fingerprint.",
+        "503 returns product-safe Problem Details with downstream_realization_not_configured, durable_repository_not_configured, or durable_repository_unavailable as applicable.",
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
@@ -667,7 +667,8 @@
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_report_target_on_conversion_route",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event",
         "tests/unit/test_downstream_realization_lookup.py::test_downstream_conversion_submission_uses_lookup_without_snapshot",
-        "tests/unit/test_postgres_downstream_lookup.py::test_postgres_conversion_intent_lookup_uses_direct_table_query"
+        "tests/unit/test_postgres_downstream_lookup.py::test_postgres_conversion_intent_lookup_uses_direct_table_query",
+        "tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
@@ -746,9 +747,9 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.downstream-realization.submit capability.",
-        "404 returns product-safe Problem Details when the report evidence-pack request is not found.",
+        "404 returns product-safe Problem Details with downstream_realization_resource_not_found when the report evidence-pack request is not found.",
         "409 returns product-safe Problem Details when the Idempotency-Key is reused for a different request fingerprint.",
-        "503 returns product-safe Problem Details when the Report downstream realization adapter is not configured.",
+        "503 returns product-safe Problem Details with downstream_realization_not_configured, durable_repository_not_configured, or durable_repository_unavailable as applicable.",
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
@@ -759,7 +760,8 @@
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_requires_submission_capability",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_emits_not_certified_operation_event",
         "tests/unit/test_downstream_realization_lookup.py::test_downstream_report_pack_submission_uses_lookup_without_snapshot",
-        "tests/unit/test_postgres_downstream_lookup.py::test_postgres_report_pack_lookup_uses_direct_table_query"
+        "tests/unit/test_postgres_downstream_lookup.py::test_postgres_report_pack_lookup_uses_direct_table_query",
+        "tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },
