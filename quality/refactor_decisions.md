@@ -139,3 +139,42 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    supported-feature promotion or seed/automation change is justified by this
    internal modularity slice.
+
+## 2026-07-04: AI Governance API Model Boundary
+
+AI explanation request and response DTOs now live in
+`src/app/api/ai_governance_models.py`. `src/app/api/ai_governance.py` imports
+and re-exports those DTOs while keeping authorization, idempotency,
+durable-write checks, route metadata, operation events, and response handling
+in the existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate AI governance service,
+queue boundary, worker boundary, or independently scalable AI execution path.
+AI explanation governance remains local because lotus-idea evaluates
+deterministic evidence and fallback posture for persisted idea candidates; it
+does not execute AI runtime workflows.
+
+Private-banking and AI boundaries preserved:
+
+1. The route still requires explicit AI explanation capabilities and
+   `Idempotency-Key` for mutation.
+2. The route still does not call AI providers, own prompts/provider payloads,
+   execute lotus-ai runtime workflows, grant downstream authority, or promote a
+   supported feature.
+3. Source-authority, entitlement, model-risk, audit, and human-review posture
+   remain enforced by the existing API/application/domain contracts.
+
+Evidence:
+
+1. Code: `src/app/api/ai_governance.py`,
+   `src/app/api/ai_governance_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_ai_governance.py tests\unit\test_ai_governance_api_contract.py tests\unit\test_ai_explanation_readiness.py -q`
+   (`23 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/api/ai_governance.py` moved from 955 to
+   567 lines; `src/app/api/ai_governance_models.py` is 444 lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   supported-feature promotion or seed/automation change is justified by this
+   internal modularity slice.
