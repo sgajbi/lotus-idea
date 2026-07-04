@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi.testclient import TestClient
+import psycopg
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import InMemoryIdeaRepository
@@ -266,6 +267,54 @@ def test_high_cash_persist_api_fails_closed_when_durable_repository_is_required(
         ),
     }
     assert len(repository.snapshot().candidate_records) == 0
+
+
+def test_high_cash_persist_api_fails_closed_when_durable_repository_unavailable(
+    monkeypatch: Any,
+) -> None:
+    def fake_connect(database_url: str, *, row_factory: object) -> object:
+        raise psycopg.OperationalError(
+            "could not connect to db.internal.example with password secret"
+        )
+
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+    monkeypatch.setenv(
+        DATABASE_URL_ENV,
+        "postgresql://lotus_idea:secret@db.internal.example:5432/lotus_idea",
+    )
+    monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    client = TestClient(app, raise_server_exceptions=False)
+
+    try:
+        response = client.post(
+            "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+            json=high_cash_payload(),
+            headers={
+                **persistence_headers("persist-high-cash-api-prod-unavailable-db-001"),
+                TRUSTED_CALLER_CONTEXT_HEADER: "gateway-secret",
+            },
+        )
+        repository = get_idea_repository()
+    finally:
+        reset_idea_repository_for_tests()
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 503,
+        "code": "durable_repository_unavailable",
+        "title": "Durable repository unavailable",
+        "detail": (
+            "The configured durable repository is unavailable. Check database "
+            "connectivity and configuration before running write-capable idea operations."
+        ),
+    }
+    assert repository.__class__.__name__ == "UnavailableIdeaRepository"
+    assert "secret" not in response.text
+    assert "db.internal" not in response.text
+    assert "could not connect" not in response.text
 
 
 def test_high_cash_persist_api_replays_same_idempotency_payload() -> None:

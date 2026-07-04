@@ -3,6 +3,7 @@ import logging
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+import psycopg
 from _pytest.logging import LogCaptureFixture
 from pytest import MonkeyPatch
 from app.main import app, create_app
@@ -226,3 +227,41 @@ def test_readiness_degrades_when_production_profile_lacks_durable_repository(
         "durableWriteRepositoryRequired": True,
         "configurationBlockers": ["durable_repository_not_configured"],
     }
+
+
+def test_readiness_degrades_when_configured_postgres_cannot_initialize(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    def fake_connect(database_url: str, *, row_factory: object) -> object:
+        raise psycopg.OperationalError(
+            "could not connect to db.internal.example with password secret"
+        )
+
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(
+        DATABASE_URL_ENV,
+        "postgresql://lotus_idea:secret@db.internal.example:5432/lotus_idea",
+    )
+    monkeypatch.setattr("app.runtime.repository_state.psycopg.connect", fake_connect)
+    reset_idea_repository_for_tests(reload_from_environment=True)
+    client = TestClient(create_app(), raise_server_exceptions=False)
+
+    try:
+        response = client.get("/health/ready")
+    finally:
+        reset_idea_repository_for_tests()
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "degraded",
+        "runtimeProfile": "production",
+        "durableRepositoryConfigured": True,
+        "durableStorageBacked": False,
+        "processLocalRepositoryAllowed": False,
+        "durableWriteRepositoryRequired": True,
+        "configurationBlockers": ["durable_repository_unavailable"],
+    }
+    serialized = response.text
+    assert "secret" not in serialized
+    assert "db.internal" not in serialized
+    assert "could not connect" not in serialized

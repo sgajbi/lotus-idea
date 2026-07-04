@@ -8,6 +8,7 @@ DATABASE_URL_ENV = "LOTUS_IDEA_DATABASE_URL"
 RUNTIME_PROFILE_ENV = "LOTUS_IDEA_RUNTIME_PROFILE"
 
 DURABLE_REPOSITORY_NOT_CONFIGURED = "durable_repository_not_configured"
+DURABLE_REPOSITORY_UNAVAILABLE = "durable_repository_unavailable"
 INVALID_RUNTIME_PROFILE = "invalid_runtime_profile"
 
 
@@ -70,18 +71,22 @@ def runtime_storage_posture(
     *,
     settings: LotusIdeaRuntimeSettings | None = None,
     durable_storage_backed: bool = False,
+    durable_repository_initialization_blocker: str | None = None,
 ) -> RuntimeStoragePosture:
     active_settings = settings or load_runtime_settings()
     blockers: list[str] = []
+    if durable_repository_initialization_blocker:
+        blockers.append(durable_repository_initialization_blocker)
     if (
-        active_settings.durable_write_repository_required
-        and not active_settings.durable_repository_configured
+        durable_repository_initialization_blocker is None
+        and active_settings.durable_write_repository_required
+        and active_settings.durable_repository_configured
+        and not durable_storage_backed
     ):
         blockers.append(DURABLE_REPOSITORY_NOT_CONFIGURED)
     if (
         active_settings.durable_write_repository_required
-        and active_settings.durable_repository_configured
-        and not durable_storage_backed
+        and not active_settings.durable_repository_configured
     ):
         blockers.append(DURABLE_REPOSITORY_NOT_CONFIGURED)
     return RuntimeStoragePosture(

@@ -95,6 +95,11 @@ process-local repository writes for development and automated tests. `demo`,
 `staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`; without it,
 `/health/ready` returns degraded runtime posture and write-capable routes fail
 closed with `durable_repository_not_configured` before mutating in-memory state.
+When `LOTUS_IDEA_DATABASE_URL` is configured but the PostgreSQL repository
+cannot initialize, `/health/ready` returns degraded posture with
+`durable_repository_unavailable`, and write-capable routes fail closed with the
+same product-safe 503 code before mutation. Readiness and API responses must not
+echo DSNs, hostnames, credentials, or raw driver exception text.
 
 `local` and `test` also allow test clients and local tools to simulate caller
 identity, roles, capabilities, and entitlement scope through `X-Caller-*`
@@ -153,6 +158,10 @@ flowchart TD
    If readiness is degraded with `durable_repository_not_configured`, either
    configure `LOTUS_IDEA_DATABASE_URL` for the production-like profile or switch
    the runtime profile explicitly to `local`/`test` for non-production work.
+   If readiness is degraded with `durable_repository_unavailable`, verify the
+   configured PostgreSQL DSN, credentials, network path, and database
+   availability from the deployment environment; do not paste DSNs, passwords,
+   hostnames, or raw driver messages into tickets or proof artifacts.
 3. Run broad local parity check (`make ci`) before hotfix PR. Run
    `make ci-release` instead when the fix could affect Docker, PostgreSQL
    runtime behavior, image scan, container smoke, SBOM, or release-lane proof.

@@ -14,12 +14,13 @@ worked around by weakening blockers or promoting unsupported claims.
 | Symptom | First command or endpoint | What to inspect |
 | --- | --- | --- |
 | Service is not reachable | `GET /health/live` | Process startup, port `8330`, container logs, dependency install. |
-| Readiness is degraded | `GET /health/ready` | Intentional drain state, runtime startup errors, deployment routing, or missing durable repository configuration for `demo`, `staging`, or `production`. |
+| Readiness is degraded | `GET /health/ready` | Intentional drain state, runtime startup errors, deployment routing, missing durable repository configuration, or unavailable configured PostgreSQL for `demo`, `staging`, or `production`. |
 | OpenAPI or Swagger looks stale | `make openapi-gate` and `make endpoint-certification-gate` | Route metadata, examples, endpoint ledger synchronization, problem responses. |
 | Wiki page is missing or live wiki looks stale | `Sync-RepoWikis.ps1 -CheckOnly -Repository lotus-idea` | Repo-local `wiki/` versus published `lotus-idea.wiki.git`; publish after merge if source changed. |
 | API returns `403` | Caller-context headers and required `idea.*` capability | Do not bypass fail-closed entitlement behavior; fix caller identity or documented capability. |
 | Mutating API returns conflict | `Idempotency-Key` and request payload fingerprint | Same key with different payload is a governed conflict, not a retry bug. |
 | Mutating API returns `durable_repository_not_configured` | `LOTUS_IDEA_RUNTIME_PROFILE` and `LOTUS_IDEA_DATABASE_URL` | Production-like profiles require PostgreSQL-backed writes; configure the database URL or use explicit `local`/`test` profile only for non-production work. |
+| Mutating API returns `durable_repository_unavailable` | PostgreSQL connectivity and configuration | Verify the configured database, credentials, network path, and deployment secret wiring without pasting DSNs, passwords, hostnames, or raw driver errors into tickets or proof artifacts. |
 | Candidate or workflow record is missing | `GET /api/v1/idea-candidates/{candidateId}` or workflow-specific endpoint | Confirm candidate persistence, active repository provider, and tenant/book/portfolio/client scope. |
 | Source-ingestion readiness is blocked | `GET /api/v1/source-ingestion/readiness` | Manifest, durable repository posture, Core source configuration, live proof artifact, scheduled-worker proof. |
 | Outbox delivery is blocked | `GET /api/v1/outbox-delivery/readiness` | Broker configuration, publisher adapter, durable repository posture, consumer runtime proof, platform mesh event proof. |

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.api.problem_details import problem_details_response, service_unavailable_metadata
 from app.api.runtime_dependencies import (
     DURABLE_REPOSITORY_NOT_CONFIGURED as DURABLE_REPOSITORY_NOT_CONFIGURED,
+    DURABLE_REPOSITORY_UNAVAILABLE as DURABLE_REPOSITORY_UNAVAILABLE,
     RuntimeStoragePosture as RuntimeStoragePosture,
     idea_repository_runtime_posture,
 )
@@ -16,12 +17,18 @@ DURABLE_REPOSITORY_REQUIRED_DETAIL = (
     "This runtime profile requires LOTUS_IDEA_DATABASE_URL before write-capable "
     "idea operations can run."
 )
+DURABLE_REPOSITORY_UNAVAILABLE_DETAIL = (
+    "The configured durable repository is unavailable. Check database connectivity "
+    "and configuration before running write-capable idea operations."
+)
 
 
 def durable_write_problem(repository: object | None = None) -> JSONResponse | None:
     posture = idea_repository_runtime_posture(repository)
     if posture.write_ready:
         return None
+    if DURABLE_REPOSITORY_UNAVAILABLE in posture.configuration_blockers:
+        return durable_repository_unavailable_problem()
     return durable_repository_not_configured_problem()
 
 
@@ -31,6 +38,15 @@ def durable_repository_not_configured_problem() -> JSONResponse:
         code=DURABLE_REPOSITORY_NOT_CONFIGURED,
         title="Durable repository not configured",
         detail=DURABLE_REPOSITORY_REQUIRED_DETAIL,
+    )
+
+
+def durable_repository_unavailable_problem() -> JSONResponse:
+    return problem_details_response(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        code=DURABLE_REPOSITORY_UNAVAILABLE,
+        title="Durable repository unavailable",
+        detail=DURABLE_REPOSITORY_UNAVAILABLE_DETAIL,
     )
 
 

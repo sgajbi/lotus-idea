@@ -5,6 +5,7 @@ import pytest
 from app.runtime.settings import (
     DATABASE_URL_ENV,
     DURABLE_REPOSITORY_NOT_CONFIGURED,
+    DURABLE_REPOSITORY_UNAVAILABLE,
     RUNTIME_PROFILE_ENV,
     LotusIdeaRuntimeSettings,
     RuntimeConfigurationError,
@@ -44,4 +45,20 @@ def test_runtime_storage_posture_requires_backed_repository_when_database_config
     posture = runtime_storage_posture(settings=settings, durable_storage_backed=False)
 
     assert posture.configuration_blockers == (DURABLE_REPOSITORY_NOT_CONFIGURED,)
+    assert posture.write_ready is False
+
+
+def test_runtime_storage_posture_treats_repository_initialization_failure_as_blocker() -> None:
+    settings = LotusIdeaRuntimeSettings(
+        runtime_profile=RuntimeProfile.LOCAL,
+        database_url="postgresql://lotus-idea.example/idea",
+    )
+
+    posture = runtime_storage_posture(
+        settings=settings,
+        durable_storage_backed=False,
+        durable_repository_initialization_blocker=DURABLE_REPOSITORY_UNAVAILABLE,
+    )
+
+    assert posture.configuration_blockers == (DURABLE_REPOSITORY_UNAVAILABLE,)
     assert posture.write_ready is False

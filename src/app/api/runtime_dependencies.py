@@ -18,6 +18,7 @@ from app.runtime.repository_state import (
 )
 from app.runtime.settings import (
     DURABLE_REPOSITORY_NOT_CONFIGURED,
+    DURABLE_REPOSITORY_UNAVAILABLE,
     RuntimeStoragePosture,
     load_runtime_settings,
 )
@@ -30,6 +31,7 @@ from app.runtime.source_ingestion_state import (
 __all__ = [
     "DownstreamRealizationClientsUnavailableError",
     "DURABLE_REPOSITORY_NOT_CONFIGURED",
+    "DURABLE_REPOSITORY_UNAVAILABLE",
     "RuntimeStoragePosture",
     "SourceIngestionRuntime",
     "SourceIngestionRuntimeBlocker",
