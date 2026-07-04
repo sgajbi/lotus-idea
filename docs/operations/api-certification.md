@@ -15,11 +15,13 @@ workflow/operator `ProblemDetails` response metadata unless a route-family
 support module owns a stricter contract. This keeps 400/403/404/409 examples
 concrete, product-safe, and consistent without duplicating RFC-7807 shapes in
 each route; 503 operator/dependency failures should use the same helper family
-so unavailable-readiness states are also example-backed. `make
-openapi-problem-details-example-gate` blocks public ProblemDetails responses
-that lack OpenAPI examples. Caller-supplied signal routes remain governed by
-`app.api.signal_api_support`, which owns their permission, source-authority,
-operation-event, and 400/403 OpenAPI metadata as one contract.
+so unavailable-readiness states are also example-backed. Generated OpenAPI must
+publish those examples under both `application/json` and
+`application/problem+json`; `make openapi-problem-details-example-gate` blocks
+public ProblemDetails responses that lack either media-type example.
+Caller-supplied signal routes remain governed by `app.api.signal_api_support`,
+which owns their permission, source-authority, operation-event, and 400/403
+OpenAPI metadata as one contract.
 
 Protected business/operator endpoints publish caller-context requirements in
 generated OpenAPI through the `LotusCallerContext` security scheme and the

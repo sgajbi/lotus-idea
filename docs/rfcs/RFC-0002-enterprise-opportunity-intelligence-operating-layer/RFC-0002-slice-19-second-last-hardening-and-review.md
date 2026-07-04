@@ -257,18 +257,26 @@ This slice also hardens workflow/operator API error-model polish:
 
 1. `src/app/api/problem_details.py` centralizes product-safe RFC-7807
    OpenAPI response metadata and common permission/request failure helpers for
-   workflow and operator route modules.
+   workflow and operator route modules. GitHub issue `#308` extends this
+   contract so generated OpenAPI publishes `ProblemDetails` examples under
+   both `application/json` and `application/problem+json`.
 2. `src/app/api/candidate_lifecycle.py`, `src/app/api/review_workflow.py`,
    `src/app/api/conversion_governance.py`, and
    `src/app/api/report_evidence.py` now compose concrete 400/403/404/409
    `ProblemDetails` examples from the shared helper while preserving their
    route-specific error codes, descriptions, and idempotency/state semantics.
-3. `tests/unit/test_api_problem_details.py` proves the shared helper shape and
-   verifies OpenAPI examples for lifecycle, review, feedback, conversion, and
-   report evidence-pack workflow routes.
-4. `src/app/api/README.md`, `docs/operations/api-certification.md`, RFC-0002
+3. `src/app/api/signal_api_support.py` and the high-cash persist route no
+   longer carry route-local `ProblemDetails` OpenAPI dictionaries; they compose
+   shared metadata helpers so signal-family 400/403 and persist 400/403/409
+   responses stay aligned with the media-type contract.
+4. `tests/unit/test_api_problem_details.py` proves the shared helper shape and
+   verifies OpenAPI examples for lifecycle, review, feedback, conversion,
+   downstream submission, signal, and report evidence-pack workflow routes.
+   `scripts/openapi_problem_details_example_gate.py` blocks future public
+   `ProblemDetails` responses that omit examples for either media type.
+5. `src/app/api/README.md`, `docs/operations/api-certification.md`, RFC-0002
    Slice 10 evidence, and `wiki/API-Surface.md` now describe the pattern.
-5. This is API contract and design-modularity hardening only. It does not add a
+6. This is API contract and design-modularity hardening only. It does not add a
    runtime microservice boundary, Gateway/Workbench mutation support, client
    publication, data-mesh certification, or supported-feature promotion.
 

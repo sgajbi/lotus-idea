@@ -269,8 +269,9 @@ instead of silently pretending to submit work.
 Generated OpenAPI for downstream submission routes must publish the same stable
 problem-detail codes the runtime can return. The `503` response uses named
 examples so adapter-not-configured and durable repository write-readiness
-failures are visible without exposing downstream URLs, DSNs, hostnames, raw
-adapter errors, request payloads, response payloads, or idempotency keys.
+failures are visible under both `application/json` and
+`application/problem+json` without exposing downstream URLs, DSNs, hostnames,
+raw adapter errors, request payloads, response payloads, or idempotency keys.
 
 | Adapter | Base URL env var | Submit path env var |
 | --- | --- | --- |

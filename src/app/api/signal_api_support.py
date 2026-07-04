@@ -10,7 +10,11 @@ from fastapi.responses import JSONResponse
 from app.api.route_metadata import RouteMetadata as RouteMetadata
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.domain import SignalEvaluationResult, SourceSystem
-from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
+from app.api.problem_details import (
+    invalid_request_metadata,
+    permission_denied_metadata,
+    problem_details_response as problem_response,
+)
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import (
     CallerContext,
@@ -97,36 +101,13 @@ def signal_source_ref_contract_problem_or_none(
 
 def signal_problem_responses() -> dict[int | str, dict[str, Any]]:
     return {
-        status.HTTP_400_BAD_REQUEST: {
-            "model": ProblemDetails,
-            "description": "Request validation failed.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": status.HTTP_400_BAD_REQUEST,
-                        "code": "invalid_request",
-                        "title": "Invalid request",
-                        "detail": "Request validation failed. Correct the request fields and retry.",
-                    }
-                }
-            },
-        },
-        status.HTTP_403_FORBIDDEN: {
-            "model": ProblemDetails,
-            "description": "Caller lacks the required signal-evaluation role or capability.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": status.HTTP_403_FORBIDDEN,
-                        "code": "permission_denied",
-                        "title": "Permission denied",
-                        "detail": "The caller is not permitted to evaluate idea signals.",
-                    }
-                }
-            },
-        },
+        **invalid_request_metadata(
+            detail="Request validation failed. Correct the request fields and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to evaluate idea signals.",
+            description="Caller lacks the required signal-evaluation role or capability.",
+        ),
     }
 
 

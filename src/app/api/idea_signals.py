@@ -46,7 +46,12 @@ from app.domain import (
     SignalEvaluationResult,
     SourceSystem,
 )
-from app.api.problem_details import ProblemDetails, problem_details_response as problem_response
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    permission_denied_metadata,
+    problem_details_response as problem_response,
+)
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
     CapabilityPolicy,
@@ -466,51 +471,19 @@ HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
                 }
             },
         },
-        400: {
-            "model": ProblemDetails,
-            "description": "Request validation failed.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": 400,
-                        "code": "invalid_request",
-                        "title": "Invalid request",
-                        "detail": "Request validation failed. Correct the request fields and retry.",
-                    }
-                }
-            },
-        },
-        403: {
-            "model": ProblemDetails,
-            "description": "Caller lacks the required candidate-persistence capability.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": 403,
-                        "code": "permission_denied",
-                        "title": "Permission denied",
-                        "detail": "The caller is not permitted to persist idea candidates.",
-                    }
-                }
-            },
-        },
-        409: {
-            "model": ProblemDetails,
-            "description": "The idempotency key was already used with a different request payload.",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "type": "about:blank",
-                        "status": 409,
-                        "code": "idempotency_conflict",
-                        "title": "Idempotency conflict",
-                        "detail": "The idempotency key was already used with a different request payload.",
-                    }
-                }
-            },
-        },
+        **invalid_request_metadata(
+            detail="Request validation failed. Correct the request fields and retry.",
+        ),
+        **permission_denied_metadata(
+            detail="The caller is not permitted to persist idea candidates.",
+            description="Caller lacks the required candidate-persistence capability.",
+        ),
+        **conflict_metadata(
+            code="idempotency_conflict",
+            title="Idempotency conflict",
+            detail="The idempotency key was already used with a different request payload.",
+            description="The idempotency key was already used with a different request payload.",
+        ),
         **durable_repository_write_unavailable_metadata(),
     },
 }
