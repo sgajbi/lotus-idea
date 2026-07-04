@@ -466,3 +466,52 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
+
+## 2026-07-04: Review Queue API Model Boundary
+
+Advisor queue and review queue readiness response DTOs now live in
+`src/app/api/review_queue_models.py`. `src/app/api/review_queues.py` imports
+and explicitly re-exports those DTOs while keeping caller authorization,
+entitlement-scope narrowing, repository selection, readiness snapshot
+construction, operation-event emission, route metadata, and product-safe
+response handling in the existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate queue service, PM or
+compliance queue runtime, Workbench boundary, data-product publication path, or
+independently scalable read model. Advisor review queues remain bounded
+internal API and readiness foundations until workload, failure-isolation,
+ownership, security, or operability evidence justifies a runtime split.
+
+Private-banking, source-safety, and modernization boundaries preserved:
+
+1. The advisor queue route still requires advisor role plus
+   `idea.review.queue.read` capability and applies caller entitlement scope
+   fail-closed.
+2. The readiness route still requires operator role plus
+   `idea.review.queue.readiness.read` capability.
+3. The queue response still returns ranked idea candidates, page metadata, and
+   exclusions only; it does not expose source routes, source content hashes,
+   raw evidence, portfolio accounting, suitability/compliance approval,
+   execution authority, or report rendering/archive authority.
+4. The routes still do not prove Workbench product support, data-product
+   certification, client-ready publication, PM/compliance queue support, or
+   supported-feature promotion.
+5. The slice does not add compatibility shims, legacy route aliases, or new
+   runtime process boundaries; it reduces design-time complexity inside the
+   current module boundary.
+
+Evidence:
+
+1. Code: `src/app/api/review_queues.py`,
+   `src/app/api/review_queue_models.py`,
+   `tests/unit/test_review_queue_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_review_queue_models.py tests\unit\test_review_queue_application.py tests\integration\test_review_queue_api.py`
+   (`37 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/api/review_queues.py` moved from 606 to
+   484 lines; `src/app/api/review_queue_models.py` is 174 lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
