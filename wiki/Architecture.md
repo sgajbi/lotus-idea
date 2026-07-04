@@ -414,6 +414,18 @@ certify live broker publication, downstream consumer runtime, platform mesh
 event publication, Gateway/Workbench support, data-product certification, or
 supported-feature promotion.
 
+Runtime trust telemetry preview, product posture, snapshot, freshness, lineage,
+blocking, and evidence response DTOs live in
+`src/app/api/runtime_trust_telemetry_models.py`, while
+`src/app/api/runtime_trust_telemetry.py` keeps operator caller checks, timezone
+query validation, aggregate preview/snapshot construction, operation-event
+emission, route metadata, and response handling. This is an internal
+design-modularity boundary inside the same runtime deployable, not a telemetry
+service split, platform mesh certification process, or separately scalable
+mesh-publication runtime. The route remains source-safe internal readiness
+evidence and still does not certify data products, platform mesh,
+Gateway/Workbench support, client publication, or supported-feature promotion.
+
 `GET /api/v1/ai-explanations/readiness` is the certified internal AI
 explanation readiness diagnostic. It returns guardrail availability,
 `not_certified` model-risk supportability, and certification blockers for

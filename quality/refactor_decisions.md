@@ -220,3 +220,46 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
+
+## 2026-07-04: Runtime Trust Telemetry API Model Boundary
+
+Runtime trust telemetry preview, product posture, snapshot, freshness, lineage,
+blocking, and evidence response DTOs now live in
+`src/app/api/runtime_trust_telemetry_models.py`.
+`src/app/api/runtime_trust_telemetry.py` imports those DTOs while keeping
+operator caller checks, timezone query validation, aggregate preview/snapshot
+construction, operation-event emission, route metadata, and response handling
+in the existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate telemetry service, worker
+boundary, data-product certification process, or independently scalable mesh
+publication path. Runtime trust telemetry remains an internal operator and
+data-mesh readiness surface because there is no workload, failure-isolation,
+ownership, security, or operability evidence for a runtime split.
+
+Private-banking and data-mesh boundaries preserved:
+
+1. The route still requires operator caller context plus
+   `idea.mesh.trust-telemetry.*` capabilities.
+2. The route still returns source-safe aggregate posture and contract-shaped
+   telemetry without candidate identifiers, source routes, portfolio/account
+   holdings, client identifiers, or official performance/risk facts.
+3. The route still does not certify data products, platform mesh, live source
+   ingestion, Gateway/Workbench support, client publication, or
+   supported-feature promotion.
+
+Evidence:
+
+1. Code: `src/app/api/runtime_trust_telemetry.py`,
+   `src/app/api/runtime_trust_telemetry_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\integration\test_runtime_trust_telemetry_api.py tests\unit\test_runtime_trust_telemetry.py -q`
+   (`16 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/api/runtime_trust_telemetry.py` moved
+   from 584 to 416 lines; `src/app/api/runtime_trust_telemetry_models.py` is
+   187 lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
