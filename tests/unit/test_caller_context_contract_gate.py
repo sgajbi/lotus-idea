@@ -134,3 +134,49 @@ def test_caller_context_contract_gate_accepts_route_local_trusted_forwarding(
     )
 
     assert module.validate_caller_context_contract(tmp_path) == []
+
+
+def test_caller_context_contract_gate_blocks_role_or_capability_route_policy(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/review_queues.py"),
+        "from app.security.caller_context import CapabilityPolicy, require_capability\n\n"
+        "_READ_ADVISOR_QUEUE_POLICY = CapabilityPolicy.for_roles(\n"
+        "    required_capability='idea.review.queue.read',\n"
+        "    allowed_roles=('advisor',),\n"
+        ")\n\n"
+        "def get_queue(caller):\n"
+        "    return require_capability(caller, _READ_ADVISOR_QUEUE_POLICY)\n",
+    )
+
+    errors = module.validate_caller_context_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/review_queues.py:9: `_READ_ADVISOR_QUEUE_POLICY` names both "
+        "allowed_roles and an idea.* capability, so route authorization must use "
+        "`require_role_and_capability`"
+    ]
+
+
+def test_caller_context_contract_gate_accepts_strict_role_and_capability_route_policy(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_minimum_caller_headers(tmp_path)
+    _write_module(
+        tmp_path,
+        Path("src/app/api/review_queues.py"),
+        "from app.security.caller_context import CapabilityPolicy, require_role_and_capability\n\n"
+        "_READ_ADVISOR_QUEUE_POLICY = CapabilityPolicy.for_roles(\n"
+        "    required_capability='idea.review.queue.read',\n"
+        "    allowed_roles=('advisor',),\n"
+        ")\n\n"
+        "def get_queue(caller):\n"
+        "    return require_role_and_capability(caller, _READ_ADVISOR_QUEUE_POLICY)\n",
+    )
+
+    assert module.validate_caller_context_contract(tmp_path) == []

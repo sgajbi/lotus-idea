@@ -74,7 +74,7 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         method="GET",
         path="/api/v1/idea-candidates/{candidateId}",
         required_capabilities=("idea.candidate.detail.read",),
-        alternative_roles=("advisor", "operator"),
+        required_roles=("advisor", "operator"),
     ),
     CallerContextOpenApiRequirement(
         method="POST",
@@ -132,7 +132,7 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         method="GET",
         path="/api/v1/review-queues/advisor",
         required_capabilities=("idea.review.queue.read",),
-        alternative_roles=("advisor",),
+        required_roles=("advisor",),
     ),
     _operator_requirement(
         "GET", "/api/v1/review-queues/advisor/readiness", "idea.review.queue.readiness.read"

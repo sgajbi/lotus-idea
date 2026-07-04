@@ -377,6 +377,28 @@ def test_candidate_detail_api_requires_permission_and_existing_candidate() -> No
     }
 
 
+def test_candidate_detail_api_rejects_advisor_role_without_detail_capability() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/idea-candidates/missing-candidate",
+        headers={
+            "X-Caller-Subject": "advisor-001",
+            "X-Caller-Roles": "advisor",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to read idea candidate detail.",
+    }
+
+
 def test_candidate_detail_api_applies_caller_entitlement_scope_fail_closed() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)

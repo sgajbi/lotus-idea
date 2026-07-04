@@ -122,9 +122,9 @@ client-communication authority, and keep `supportedFeaturePromoted=false`.
 
 The advisor review queue endpoint exposes the Slice 07 deterministic queue
 projection over persisted candidate snapshots. It requires
-`idea.review.queue.read` capability or advisor role, returns ranked items plus
-exclusions, accepts optional tenant/book/portfolio/client query filters for
-scope-aware projection, and keeps `supportedFeaturePromoted=false`.
+advisor role plus `idea.review.queue.read` capability, returns ranked items
+plus exclusions, accepts optional tenant/book/portfolio/client query filters
+for scope-aware projection, and keeps `supportedFeaturePromoted=false`.
 `durableStorageBacked` follows the active repository provider.
 
 `lotus-gateway` now publishes the first bounded read-only idea routes on main:
@@ -315,7 +315,7 @@ candidate, idempotency conflict, and invalid candidate-state failures return
 product-safe Problem Details.
 
 The advisor review queue endpoint is permissioned by
-`idea.review.queue.read` capability or advisor role. It requires a
+advisor role plus `idea.review.queue.read` capability. It requires a
 timezone-aware `evaluatedAtUtc` query parameter, accepts optional
 tenant/book/portfolio/client scope filters, applies platform caller-context
 entitlement scope headers automatically when present, rejects query scopes
@@ -324,7 +324,7 @@ the effective scope with `access_scope_mismatch`, and returns product-safe
 Problem Details for permission or validation failures.
 
 The candidate detail endpoint is permissioned by
-`idea.candidate.detail.read` capability or advisor/operator role. It returns
+advisor/operator role plus `idea.candidate.detail.read` capability. It returns
 source-safe details for an existing candidate only when any provided platform
 caller-context entitlement scope matches the persisted candidate scope, and
 returns product-safe Problem Details for permission, validation, out-of-scope,

@@ -42,7 +42,6 @@ from app.observability import (
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
-    require_capability,
     require_role_and_capability,
 )
 
@@ -271,7 +270,7 @@ async def get_advisor_review_queue(
             detail="Caller entitlement scope headers cannot contain blank values.",
         )
     try:
-        require_capability(caller, _READ_ADVISOR_QUEUE_POLICY)
+        require_role_and_capability(caller, _READ_ADVISOR_QUEUE_POLICY)
     except PermissionDeniedError:
         _emit_review_queue_operation_event(
             OperationOutcome.PERMISSION_DENIED,

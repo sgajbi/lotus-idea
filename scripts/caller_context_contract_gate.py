@@ -5,9 +5,13 @@ import sys
 from pathlib import Path
 
 try:
-    from scripts.ast_gate_helpers import call_name
+    from scripts.ast_gate_helpers import call_name, keyword_string_value, keyword_string_values
 except ModuleNotFoundError:
-    from ast_gate_helpers import call_name  # type: ignore[import-not-found,no-redef]
+    from ast_gate_helpers import (  # type: ignore[import-not-found,no-redef]
+        call_name,
+        keyword_string_value,
+        keyword_string_values,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +48,27 @@ def _header_alias(node: ast.AST) -> str | None:
         if isinstance(keyword.value, ast.Name) and keyword.value.id == TRUSTED_HEADER_NAME:
             return TRUSTED_HEADER_VALUE
     return None
+
+
+def _assigned_policy_names_requiring_strict_route_auth(tree: ast.AST) -> dict[str, int]:
+    policies: dict[str, int] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not isinstance(node.value, ast.Call):
+            continue
+        if call_name(node.value.func) != "CapabilityPolicy.for_roles":
+            continue
+        required_capability = keyword_string_value(node.value, "required_capability")
+        allowed_roles = keyword_string_values(node.value, "allowed_roles")
+        if not required_capability or not required_capability.startswith("idea."):
+            continue
+        if not allowed_roles:
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                policies[target.id] = node.lineno
+    return policies
 
 
 def _function_header_aliases(node: ast.FunctionDef | ast.AsyncFunctionDef) -> set[str]:
@@ -109,6 +134,7 @@ def _validate_api_module(path: Path, root: Path) -> list[str]:
     relative_path = _relative(path, root)
     tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     errors: list[str] = []
+    strict_policy_names = _assigned_policy_names_requiring_strict_route_auth(tree)
 
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -124,6 +150,15 @@ def _validate_api_module(path: Path, root: Path) -> list[str]:
                 errors.append(
                     f"{relative_path}:{node.lineno}: route-local caller_context_from_headers "
                     "calls must forward trusted_caller_context"
+                )
+
+        if isinstance(node, ast.Call) and call_name(node.func) == "require_capability":
+            policy_arg = node.args[1] if len(node.args) > 1 else None
+            if isinstance(policy_arg, ast.Name) and policy_arg.id in strict_policy_names:
+                errors.append(
+                    f"{relative_path}:{node.lineno}: `{policy_arg.id}` names both "
+                    "allowed_roles and an idea.* capability, so route authorization must "
+                    "use `require_role_and_capability`"
                 )
 
     return errors

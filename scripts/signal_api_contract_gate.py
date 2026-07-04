@@ -5,9 +5,13 @@ import sys
 from pathlib import Path
 
 try:
-    from scripts.ast_gate_helpers import call_name
+    from scripts.ast_gate_helpers import call_name, keyword_string_value, keyword_string_values
 except ModuleNotFoundError:
-    from ast_gate_helpers import call_name  # type: ignore[import-not-found,no-redef]
+    from ast_gate_helpers import (  # type: ignore[import-not-found,no-redef]
+        call_name,
+        keyword_string_value,
+        keyword_string_values,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -48,29 +52,6 @@ def _relative(path: Path, root: Path) -> str:
         return path.relative_to(root).as_posix()
     except ValueError:
         return path.as_posix()
-
-
-def _keyword_value(node: ast.Call, keyword_name: str) -> str | None:
-    for keyword in node.keywords:
-        if keyword.arg == keyword_name and isinstance(keyword.value, ast.Constant):
-            if isinstance(keyword.value.value, str):
-                return keyword.value.value
-    return None
-
-
-def _keyword_string_values(node: ast.Call, keyword_name: str) -> tuple[str, ...]:
-    for keyword in node.keywords:
-        if keyword.arg != keyword_name:
-            continue
-        if isinstance(keyword.value, (ast.Tuple, ast.List, ast.Set)):
-            values: list[str] = []
-            for item in keyword.value.elts:
-                if isinstance(item, ast.Constant) and isinstance(item.value, str):
-                    values.append(item.value)
-                else:
-                    return ()
-            return tuple(values)
-    return ()
 
 
 def _route_dict_value(node: ast.Dict, key_name: str) -> ast.AST | None:
@@ -116,14 +97,14 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
             )
 
         if isinstance(node, ast.Call) and call_name(node.func) == "CapabilityPolicy.for_roles":
-            if _keyword_value(node, "required_capability") == "idea.signal.evaluate":
+            if keyword_string_value(node, "required_capability") == "idea.signal.evaluate":
                 errors.append(
                     f"{relative_path}:{node.lineno}: signal evaluation permission policy "
                     "must be centralized in signal_api_support"
                 )
 
         if isinstance(node, ast.Call) and call_name(node.func) == "Header":
-            alias = _keyword_value(node, "alias")
+            alias = keyword_string_value(node, "alias")
             if alias in CALLER_HEADER_ALIASES:
                 errors.append(
                     f"{relative_path}:{node.lineno}: signal API caller context headers "
@@ -189,9 +170,9 @@ def _validate_signal_api_support(path: Path, root: Path) -> list[str]:
             f"{relative_path}: shared signal API support must define "
             "`SIGNAL_EVALUATION_POLICY` with `CapabilityPolicy.for_roles`"
         )
-    elif _keyword_value(
+    elif keyword_string_value(
         signal_policy, "required_capability"
-    ) != "idea.signal.evaluate" or _keyword_string_values(signal_policy, "allowed_roles") != (
+    ) != "idea.signal.evaluate" or keyword_string_values(signal_policy, "allowed_roles") != (
         "advisor",
     ):
         errors.append(

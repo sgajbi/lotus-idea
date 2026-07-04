@@ -369,11 +369,16 @@ provenance marker for service-to-service propagation; it is not an
 identity-provider integration, signed assertion, Workbench entitlement proof,
 client-publication proof, or supported-feature promotion.
 
-Caller-supplied opportunity signal routes are stricter than generic role-or-
-capability read policies: `app.api.signal_api_support` requires both advisor
-role and `idea.signal.evaluate` capability before evaluating source-owned
-evidence. `make signal-api-contract-gate` blocks route-local signal permission
-policies and regression to capability-or-role authorization.
+Caller-supplied opportunity signal routes and advisor-facing candidate detail /
+review queue reads require both the product role and the explicit `idea.*`
+capability published for the route. `app.api.signal_api_support` requires
+advisor role plus `idea.signal.evaluate` before evaluating source-owned
+evidence, and `src/app/api/candidate_detail.py` and
+`src/app/api/review_queues.py` require advisor/operator role plus the read
+capability before returning source-safe candidate or queue data. The signal API
+contract gate blocks route-local signal permission policies, and the caller
+context contract gate blocks route policies that name both `allowed_roles` and
+an `idea.*` capability but authorize through role-or-capability semantics.
 
 `make github-security-posture-check` is the operator-run live posture check for
 GitHub Security settings. Treat GitHub Security state as mutable external
@@ -668,6 +673,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
    role/wrong capability/scoped-denial tests, and extending
    `make signal-api-contract-gate` so future signal-route slices cannot
    reintroduce role-or-capability authorization.
+   The same least-privilege pattern is now applied to adjacent advisor-facing
+   candidate detail and review queue reads: both routes require the published
+   `idea.*` read capability plus the allowed product role, regression tests
+   reject advisor role-only requests with product-safe 403 responses, and
+   `make caller-context-contract-gate` blocks future API modules from pairing
+   `allowed_roles` with an `idea.*` capability and the weaker
+   `require_capability` helper.
 9. OpenAPI caller-context publication: GitHub issue `#302` is addressed by
    adding `app.api.caller_context_openapi` as the centralized generated-OpenAPI
    contract for protected caller-context requirements, publishing
