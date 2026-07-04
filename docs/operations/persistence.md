@@ -60,10 +60,13 @@ database-native conditional reads and writes where that reduces contention.
 `scripts/generate_durable_repository_proof.py` and
 `make durable-repository-proof-contract-gate` now provide a source-safe proof
 artifact for aggregate RFC implementation-readiness evidence. The artifact
-cites migration contracts, the PostgreSQL adapter, and the GitHub PostgreSQL
-runtime proof lane; it does not connect to a database, replace
-`make postgres-integration-gate`, or make runtime endpoints report durable
-storage unless `LOTUS_IDEA_DATABASE_URL` is actually configured.
+cites migration contracts, the PostgreSQL adapter, the bounded PostgreSQL
+advisor review-queue projection, and the GitHub PostgreSQL runtime proof lane;
+it can clear the aggregate durable-repository and repository-side
+queue-pagination proof blockers. It does not connect to a database, replace
+`make postgres-integration-gate`, certify production storage, or make runtime
+endpoints report durable storage unless `LOTUS_IDEA_DATABASE_URL` is actually
+configured.
 `GET /api/v1/outbox-delivery/readiness` now exposes the outbox delivery
 foundation as a certified internal operator diagnostic. It reports aggregate
 outbox status counts, delivery-ready backlog, retry-deferred failed rows that

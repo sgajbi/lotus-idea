@@ -10,6 +10,7 @@ from typing import Mapping, cast
 import pytest
 
 from app.application.durable_repository_proof import (
+    DURABLE_REPOSITORY_BLOCKERS_CLEARED,
     DURABLE_REPOSITORY_PROOF_SCHEMA_VERSION,
     REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS,
     build_durable_repository_proof_payload,
@@ -31,8 +32,11 @@ def test_builds_source_safe_durable_repository_proof() -> None:
     assert proof["proofType"] == "postgres_runtime_repository_contract"
     assert proof["proofScope"] == "repo_native_ci_runtime_proof"
     assert proof["durableRepositoryProofValid"] is True
-    assert tuple(proof["aggregateBlockersCleared"]) == ("durable_repository_not_configured",)
+    assert tuple(proof["aggregateBlockersCleared"]) == DURABLE_REPOSITORY_BLOCKERS_CLEARED
     assert tuple(proof["evidenceRefs"]) == REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS
+    assert "src/app/infrastructure/postgres_review_queue.py" in proof["evidenceRefs"]
+    assert "tests/unit/test_postgres_review_queue.py" in proof["evidenceRefs"]
+    assert "tests/unit/test_review_queue_application.py" in proof["evidenceRefs"]
     assert proof["productionStorageCertified"] is False
     assert proof["supportedFeaturePromoted"] is False
     assert proof["proofClosed"] is False

@@ -18,13 +18,20 @@ _required_make_target_evidence_present = required_make_target_evidence_present
 
 DURABLE_REPOSITORY_PROOF_ENV = "LOTUS_IDEA_DURABLE_REPOSITORY_PROOF"
 DURABLE_REPOSITORY_PROOF_SCHEMA_VERSION = "lotus-idea.durable-repository-proof.v1"
+DURABLE_REPOSITORY_BLOCKERS_CLEARED = (
+    "durable_repository_not_configured",
+    "repository_side_queue_pagination_not_certified",
+)
 
 REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS = (
     "migrations/001_idea_repository_foundation.sql",
     "migrations/001_idea_repository_foundation.rollback.sql",
     "src/app/infrastructure/postgres_repository.py",
+    "src/app/infrastructure/postgres_review_queue.py",
     "src/app/infrastructure/postgres_codecs.py",
     "src/app/runtime/repository_state.py",
+    "tests/unit/test_postgres_review_queue.py",
+    "tests/unit/test_review_queue_application.py",
     "tests/integration/test_postgres_runtime_integration.py",
     "make migration-contract-gate",
     "make migration-execution-gate",
@@ -70,7 +77,7 @@ def build_durable_repository_proof_payload(
         "proofType": "postgres_runtime_repository_contract",
         "proofScope": "repo_native_ci_runtime_proof",
         "durableRepositoryProofValid": proof_valid,
-        "aggregateBlockersCleared": ("durable_repository_not_configured",),
+        "aggregateBlockersCleared": DURABLE_REPOSITORY_BLOCKERS_CLEARED,
         "evidenceRefs": evidence_refs,
         "proofChecks": {
             "timezoneAwareGeneratedAtUtc": generated_at_utc.tzinfo is not None
@@ -106,7 +113,7 @@ def durable_repository_proof_is_valid(payload: Mapping[str, Any]) -> bool:
     if not _is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
     blockers_cleared = payload.get("aggregateBlockersCleared")
-    if tuple(blockers_cleared or ()) != ("durable_repository_not_configured",):
+    if tuple(blockers_cleared or ()) != DURABLE_REPOSITORY_BLOCKERS_CLEARED:
         return False
     evidence_refs = payload.get("evidenceRefs")
     if tuple(evidence_refs or ()) != REQUIRED_DURABLE_REPOSITORY_EVIDENCE_REFS:

@@ -329,7 +329,18 @@ def test_generate_implementation_proof_readiness_uses_explicit_durable_repositor
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert "durable_repository_not_configured" not in payload["overallBlockers"]
+    assert "repository_side_queue_pagination_not_certified" not in payload["overallBlockers"]
     assert "live_core_source_proof_missing" in payload["overallBlockers"]
+    advisor_queue = next(
+        capability
+        for capability in payload["capabilities"]
+        if capability["capabilityId"] == "advisor-review-queue"
+    )
+    assert "durable_repository_not_configured" not in advisor_queue["blockers"]
+    assert "repository_side_queue_pagination_not_certified" not in advisor_queue["blockers"]
+    assert "workbench_product_proof_missing" in advisor_queue["blockers"]
+    assert "data_product_certification_missing" in advisor_queue["blockers"]
+    assert "certified_runtime_trust_telemetry_missing" in advisor_queue["blockers"]
     assert payload["readinessStatus"] == "blocked"
     assert payload["supportedFeaturePromoted"] is False
 

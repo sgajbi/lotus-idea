@@ -20,7 +20,10 @@ from app.application.downstream_route_contract_proof import (
     advise_proposal_route_proof_is_valid,
     manage_action_route_proof_is_valid,
 )
-from app.application.durable_repository_proof import durable_repository_proof_is_valid
+from app.application.durable_repository_proof import (
+    DURABLE_REPOSITORY_BLOCKERS_CLEARED,
+    durable_repository_proof_is_valid,
+)
 from app.application.gateway_workbench_discovery_proof import (
     GATEWAY_WORKBENCH_DISCOVERY_BLOCKERS_CLEARED,
     gateway_workbench_discovery_proof_is_valid,
@@ -596,7 +599,7 @@ def _apply_durable_repository_proof(
     capability: ImplementationProofCapabilityReadiness,
     durable_repository_proof_ref: str | None,
 ) -> ImplementationProofCapabilityReadiness:
-    if "durable_repository_not_configured" not in capability.blockers:
+    if not set(capability.blockers).intersection(DURABLE_REPOSITORY_BLOCKERS_CLEARED):
         return capability
     evidence_refs = capability.evidence_refs
     if durable_repository_proof_ref:
@@ -610,7 +613,7 @@ def _apply_durable_repository_proof(
         blockers=tuple(
             blocker
             for blocker in capability.blockers
-            if blocker != "durable_repository_not_configured"
+            if blocker not in DURABLE_REPOSITORY_BLOCKERS_CLEARED
         ),
         supported_feature_promoted=capability.supported_feature_promoted,
     )
