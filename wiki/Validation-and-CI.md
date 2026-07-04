@@ -244,10 +244,13 @@ runtime dependency closure to reinstall. `make ci-contract-gate` blocks
 source-before-dependency-install ordering and dependency reinstall drift while
 leaving Docker build, runtime smoke, image scan, and SBOM evidence intact.
 
-Duplicate implementation inventory is report-only. `make duplicate-implementation-inventory`
+Duplicate implementation enforcement is split by command. `make duplicate-implementation-inventory`
 scans exact function-body duplicates across `src/app` and `scripts`, writes no artifacts, and
-reports `thresholdEnforced: false`. The initial six-line baseline scanned 1,750 functions and
-reported 31 exact duplicate clusters, including the known proof source-safety helper families. The
+reports `thresholdEnforced: false` for review evidence. `make duplicate-implementation-gate` runs
+the same scanner with `--fail-on-duplicates`, reports `thresholdEnforced: true`, and is wired into
+`make lint` as the zero-cluster regression blocker. The initial six-line baseline scanned 1,750
+functions and reported 31 exact duplicate clusters, including the known proof source-safety helper
+families. The
 first proof-helper consolidations moved source-safety traversal into
 `scripts/proof_source_safety.py` and live-proof generator timeout/output plumbing plus
 generated-at UTC parsing into `scripts/proof_generator_io.py`, and shared proof timestamp
@@ -268,8 +271,9 @@ loading into `app.runtime.proof_artifact_files`, and source-product proof payloa
 normalization into `app.application.source_product_proof_values`, and outbox contract
 forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
 operation, and label validation into `scripts.operations_contract_validators`; the current
-measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,582 executable function
-bodies, and reports 0 exact duplicate clusters.
+measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,606 executable function
+bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the report-only and
+blocking target split, strict `--fail-on-duplicates` enforcement, and `make lint` lane placement.
 `make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
 yet.
 

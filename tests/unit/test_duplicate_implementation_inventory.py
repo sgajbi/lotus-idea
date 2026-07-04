@@ -61,6 +61,28 @@ def calculate(value):
     assert validate_duplicate_inventory(tmp_path, min_function_lines=3) == []
 
 
+def test_duplicate_inventory_blocking_mode_reports_enforced_threshold(tmp_path: Path) -> None:
+    duplicate_body = """
+def calculate(value):
+    total = 0
+    for item in value:
+        total += item
+    return total
+"""
+    _write(tmp_path / "src" / "app" / "first.py", duplicate_body)
+    _write(tmp_path / "src" / "app" / "second.py", duplicate_body)
+
+    inventory = build_duplicate_inventory(
+        tmp_path,
+        min_function_lines=3,
+        threshold_enforced=True,
+    )
+
+    assert inventory["mode"] == "blocking"
+    assert inventory["thresholdEnforced"] is True
+    assert inventory["duplicateClusterCount"] == 1
+
+
 def test_duplicate_inventory_ignores_non_implementation_protocol_stubs(
     tmp_path: Path,
 ) -> None:

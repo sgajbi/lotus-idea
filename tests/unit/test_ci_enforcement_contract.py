@@ -29,6 +29,9 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "maintainability-gate:" in makefile
     assert "$(MAKE) maintainability-gate" in makefile
     assert "duplicate-implementation-inventory:" in makefile
+    assert "duplicate-implementation-gate:" in makefile
+    assert "$(MAKE) duplicate-implementation-gate" in makefile
+    assert "scripts/duplicate_implementation_inventory.py --fail-on-duplicates" in makefile
     assert "scripts/duplicate_implementation_inventory.py" in makefile
     assert "private-import-boundary-gate:" in makefile
     assert "$(MAKE) private-import-boundary-gate" in makefile
@@ -362,6 +365,45 @@ def test_ci_contract_gate_blocks_missing_private_import_boundary_gate() -> None:
     errors = module.validate_makefile(makefile)
 
     assert "Makefile lint target must call `$(MAKE) private-import-boundary-gate`" in errors
+
+
+def test_ci_contract_gate_blocks_report_only_duplicate_gate() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(VENV_PYTHON) scripts/duplicate_implementation_inventory.py --fail-on-duplicates",
+            "$(VENV_PYTHON) scripts/duplicate_implementation_inventory.py",
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile duplicate-implementation-gate target must run "
+        "`$(VENV_PYTHON) scripts/duplicate_implementation_inventory.py --fail-on-duplicates`"
+    ) in errors
+
+
+def test_ci_contract_gate_blocks_lint_report_only_duplicate_inventory() -> None:
+    module = _load_ci_contract_gate()
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "$(MAKE) duplicate-implementation-gate",
+            "$(MAKE) duplicate-implementation-inventory",
+            1,
+        )
+    )
+
+    errors = module.validate_makefile(makefile)
+
+    assert (
+        "Makefile lint target must call blocking `$(MAKE) duplicate-implementation-gate`, "
+        "not report-only `$(MAKE) duplicate-implementation-inventory`"
+    ) in errors
 
 
 def test_ci_contract_gate_blocks_missing_source_observability_gate() -> None:
