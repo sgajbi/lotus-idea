@@ -36,6 +36,32 @@ def test_ci_contract_gate_blocks_missing_feature_signal_evidence(tmp_path: Path)
     assert "feature-lane.yml missing `scripts/ci_signal_evidence.py`" in errors
 
 
+def test_ci_contract_gate_blocks_unquoted_ci_signal_evidence_api_path(
+    tmp_path: Path,
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = _copy_workflows(tmp_path, module)
+    feature_lane = workflow_dir / "feature-lane.yml"
+    feature_lane.write_text(
+        feature_lane.read_text(encoding="utf-8").replace(
+            'gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"',
+            "gh api repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs",
+        ),
+        encoding="utf-8",
+    )
+
+    errors = module.validate_workflows(workflow_dir)
+
+    assert (
+        "feature-lane.yml missing "
+        '`gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs"`'
+    ) in errors
+    assert (
+        "feature-lane.yml must not contain "
+        "`gh api repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs`"
+    ) in errors
+
+
 def test_ci_contract_gate_blocks_missing_main_release_evidence_reference(
     tmp_path: Path,
 ) -> None:

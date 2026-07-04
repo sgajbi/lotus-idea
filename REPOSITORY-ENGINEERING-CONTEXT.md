@@ -617,34 +617,38 @@ Recent issue-derived patterns to preserve:
     `open-pull-requests-limit: 0` while RFC implementation is active; security
     alerts and security-update posture remain governed through the GitHub
     Security tab and `make github-security-posture-check`,
-17. Docker build and scan evidence must be paired with bounded packaged-runtime
+18. GitHub Actions shell commands that interpolate runtime environment values
+    such as `${GITHUB_REPOSITORY}` or `${GITHUB_RUN_ID}` must quote the whole
+    composed argument so workflow lint remains clean and CI signal evidence
+    jobs do not accumulate avoidable ShellCheck annotations.
+19. Docker build and scan evidence must be paired with bounded packaged-runtime
     startup and health-surface smoke proof before claiming release image
     confidence,
-18. generated proof and quality evidence must be reproducible from current
+20. generated proof and quality evidence must be reproducible from current
     gate rules or be documented as on-demand evidence rather than current proof,
-19. ignored report-only artifacts must not be cited as durable current-state
+21. ignored report-only artifacts must not be cited as durable current-state
     proof unless a deterministic committed-artifact drift gate exists,
-20. documentation should record the durable rule, not only the one-off fix,
-21. supportability, readiness, health-state, and data-quality vocabulary must
+22. documentation should record the durable rule, not only the one-off fix,
+23. supportability, readiness, health-state, and data-quality vocabulary must
     not be treated as freshness-current evidence unless a source-owned freshness
     field explicitly uses governed freshness vocabulary.
-22. dashboard and alert certification should be pattern-backed with a
+24. dashboard and alert certification should be pattern-backed with a
     machine-readable contract, concrete Grafana/Prometheus/runbook artifacts,
     proof gates, drift tests, and explicit non-proof boundaries; do not rely on
     a metric catalog alone for operator visibility claims.
-23. mutating workflow idempotency must be true in both runtime behavior and
+25. mutating workflow idempotency must be true in both runtime behavior and
     OpenAPI contract truth. Routes that require `Idempotency-Key` should use the
     shared `app.api.idempotency` route list and validation helpers, and
     `make api-idempotency-boundary-gate` must fail optional or defaulted
     `Idempotency-Key` OpenAPI headers for certified idempotent mutations.
-24. Docker runtime images should install the resolved runtime dependency lock
+26. Docker runtime images should install the resolved runtime dependency lock
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `.dockerignore` must keep generated
     coverage, SBOM, quality-report, and proof-output artifacts out of Docker
     build context; `make ci-contract-gate` must catch source-before-dependency-
     install ordering, dependency reinstall drift, and Docker-context
     generated-artifact parity drift.
-25. duplicate-implementation controls now split report-only evidence from
+27. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes
     no artifacts, and reports the inventory for review. `make
@@ -661,7 +665,7 @@ Recent issue-derived patterns to preserve:
     resolution in `scripts/proof_generator_io.py`, removing known
     duplicate function-body clusters while preserving family-specific proof
     policy and generator argument behavior.
-26. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
+28. Route-owned runtimes must consume their own cleanup hooks. Source-ingestion
     run-once builds Core HTTP clients through `SourceIngestionRuntime`; the API
     path must close the runtime after accepted or source-unavailable execution
     and must not rely on worker-only cleanup semantics. The same pattern applies
@@ -671,11 +675,11 @@ Recent issue-derived patterns to preserve:
     not product outcomes: route-owned `close()` failures must be bounded to
     source-safe suppressed operation events and must not replace already
     computed completed, replayed, conflict, or blocked run-once responses.
-27. Run-once source-ingestion manifests are intentionally small bounded
+29. Run-once source-ingestion manifests are intentionally small bounded
     operator actions. `maxItems` and raw `workItems` must stay at or below the
     code-owned 100-item ceiling; larger ingestion requires a separately
     designed chunked or scheduled workflow with capacity evidence.
-28. Operation metric source-authority vocabulary must be code-owned. Runtime
+30. Operation metric source-authority vocabulary must be code-owned. Runtime
     `OperationEvent`, operation metric contracts, operator workflow contracts,
     dashboards, and alert proof gates must consume the same governed
     `OPERATION_EVENT_SOURCE_AUTHORITIES` set instead of duplicating partial

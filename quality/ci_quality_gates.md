@@ -287,7 +287,9 @@ bypassing local governance.
 CI timing and signal-quality evidence is report-only. Feature Lane, PR Merge Gate, and Main
 Releasability have an `if: always()` CI Signal Evidence job that reads GitHub's run-job metadata
 through `actions: read`, generates source-safe `ci-signal-evidence.json` with
-`scripts/ci_signal_evidence.py`, and uploads lane-specific artifacts. Main Releasability's
+`scripts/ci_signal_evidence.py`, and uploads lane-specific artifacts. The `gh api` call must
+quote the composed `repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs` argument so
+workflow lint stays free of ShellCheck word-splitting annotations. Main Releasability's
 `release-evidence.json` references the `main-releasability-ci-signal-evidence` artifact and
 `ci-signal-evidence.json` path. The artifact reports workflow feedback time from the first job
 start to the last job completion as `workflowWallClockSeconds` and `criticalPathSeconds`, while

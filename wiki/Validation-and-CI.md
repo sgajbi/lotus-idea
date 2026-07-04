@@ -205,7 +205,10 @@ CI timing and signal-quality evidence is retained as report-only release
 support evidence. Feature Lane, PR Merge Gate, and Main Releasability run an
 `if: always()` CI Signal Evidence job that reads GitHub job timing metadata with
 `actions: read`, writes source-safe `ci-signal-evidence.json`, and uploads a
-lane-specific artifact. Main Releasability release evidence references
+lane-specific artifact. The job must quote the composed
+`repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs` argument passed
+to `gh api` so workflow lint stays free of ShellCheck word-splitting
+annotations. Main Releasability release evidence references
 `main-releasability-ci-signal-evidence` and `ci-signal-evidence.json`.
 The artifact distinguishes workflow feedback time from longest individual job
 duration: `workflowWallClockSeconds` and `criticalPathSeconds` measure first
