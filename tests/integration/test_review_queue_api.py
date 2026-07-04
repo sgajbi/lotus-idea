@@ -388,6 +388,28 @@ def test_advisor_review_queue_api_requires_read_permission() -> None:
     }
 
 
+def test_advisor_review_queue_api_rejects_advisor_role_without_read_capability() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z",
+        headers={
+            "X-Caller-Subject": "advisor-001",
+            "X-Caller-Roles": "advisor",
+        },
+    )
+
+    assert response.status_code == 403
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 403,
+        "code": "permission_denied",
+        "title": "Permission denied",
+        "detail": "The caller is not permitted to read advisor idea review queues.",
+    }
+
+
 def test_advisor_review_queue_api_rejects_naive_evaluation_time_safely() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)

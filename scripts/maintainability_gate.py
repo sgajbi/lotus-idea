@@ -6,9 +6,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
-    from scripts.ast_function_helpers import is_non_implementation_stub
+    from scripts.ast_function_helpers import (
+        is_non_implementation_stub as _is_non_implementation_stub,
+    )
 except ModuleNotFoundError:  # pragma: no cover - direct script execution path
-    from ast_function_helpers import is_non_implementation_stub
+    from ast_function_helpers import (  # type: ignore[import-not-found,no-redef]
+        is_non_implementation_stub as _is_non_implementation_stub,
+    )
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -39,7 +43,7 @@ def _function_rows(path: Path) -> list[tuple[str, int, int]]:
     rows: list[tuple[str, int, int]] = []
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            if is_non_implementation_stub(node):
+            if _is_non_implementation_stub(node):
                 continue
             end_line = getattr(node, "end_lineno", node.lineno)
             rows.append((node.name, node.lineno, end_line - node.lineno + 1))

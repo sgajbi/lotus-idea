@@ -310,8 +310,10 @@ Persistence adapter validation:
    profiles reject self-asserted `X-Caller-*` authorization headers without
    trusted-ingress provenance, while valid
    `X-Lotus-Trusted-Caller-Context` propagation still authorizes through the
-   existing role/capability policies. `make caller-context-contract-gate`
-   blocks future route-local parser drift.
+   existing role plus capability policies. `make caller-context-contract-gate`
+   blocks future route-local parser drift and rejects API route policies that
+   pair `allowed_roles` with an `idea.*` capability but authorize through
+   role-or-capability semantics.
 4. `tests/integration/test_high_cash_signal_api.py` pins route-level
    `durableStorageBacked` derivation with an injected durable repository so
    future changes cannot hardcode repository-backed API posture to `false`.
@@ -704,6 +706,13 @@ Signal routes must use shared signal API support, and that support must require
 both advisor role and `idea.signal.evaluate` capability before source-owned
 evidence evaluation, so future slices do not reintroduce copy-pasted policy,
 role-only authorization, or inconsistent problem-detail behavior.
+
+The caller-context contract gate also covers adjacent protected API modules:
+when a route policy declares both `allowed_roles` and an `idea.*` capability,
+the route must use `require_role_and_capability`. This preserves the same
+least-privilege posture for advisor queue and candidate detail reads instead
+of letting broad role membership substitute for a published operation
+capability.
 
 The API idempotency boundary gate blocks route-local `Idempotency-Key`
 validator clones and verifies generated OpenAPI for certified idempotent

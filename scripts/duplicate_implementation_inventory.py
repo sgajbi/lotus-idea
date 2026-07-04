@@ -10,9 +10,13 @@ from pathlib import Path
 from typing import Any
 
 try:
-    from scripts.ast_function_helpers import is_non_implementation_stub
+    from scripts.ast_function_helpers import (
+        is_non_implementation_stub as _is_non_implementation_stub,
+    )
 except ModuleNotFoundError:  # pragma: no cover - direct script execution path
-    from ast_function_helpers import is_non_implementation_stub
+    from ast_function_helpers import (  # type: ignore[import-not-found,no-redef]
+        is_non_implementation_stub as _is_non_implementation_stub,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,7 +109,7 @@ def _function_records(
                 line_count = end_line - node.lineno + 1
                 if line_count < min_function_lines:
                     continue
-                if is_non_implementation_stub(node):
+                if _is_non_implementation_stub(node):
                     continue
                 records.append(
                     FunctionRecord(

@@ -38,7 +38,7 @@ from app.observability import IdeaOperation, OperationOutcome, emit_foundation_o
 from app.security.caller_context import (
     CapabilityPolicy,
     PermissionDeniedError,
-    require_capability,
+    require_role_and_capability,
 )
 
 _READ_CANDIDATE_DETAIL_POLICY = CapabilityPolicy.for_roles(
@@ -401,7 +401,7 @@ async def get_idea_candidate_detail(
             detail="Caller entitlement scope headers cannot contain blank values.",
         )
     try:
-        require_capability(caller, _READ_CANDIDATE_DETAIL_POLICY)
+        require_role_and_capability(caller, _READ_CANDIDATE_DETAIL_POLICY)
         result = get_candidate_detail(
             GetCandidateDetailCommand(
                 candidate_id=candidate_id,
