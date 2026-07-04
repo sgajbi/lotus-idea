@@ -132,9 +132,10 @@ Prove the complete supported opportunity journey end to end.
     `make durable-repository-proof-contract-gate` now define and enforce a
     source-safe durable repository proof artifact. The aggregate
     implementation-readiness generator can consume that artifact to clear only
-    the stale aggregate `durable_repository_not_configured` proof blocker while
-    preserving live Core, production storage, data-mesh, Gateway/Workbench,
-    downstream, and supported-feature blockers.
+    the stale aggregate `durable_repository_not_configured` and
+    `repository_side_queue_pagination_not_certified` proof blockers while
+    preserving live Core, production storage, runtime trust telemetry,
+    data-mesh, Gateway/Workbench, downstream, and supported-feature blockers.
 15. `src/app/application/runtime_trust_telemetry_proof.py`,
     `scripts/generate_runtime_trust_telemetry_proof.py`, and
     `make runtime-trust-telemetry-proof-contract-gate` now define and enforce a

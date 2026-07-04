@@ -439,15 +439,20 @@ supported-feature blockers.
 Durable repository proof is captured by
 `scripts/generate_durable_repository_proof.py`. A valid artifact referenced
 through `LOTUS_IDEA_DURABLE_REPOSITORY_PROOF` or passed with
-`--durable-repository-proof` clears only the aggregate
-`durable_repository_not_configured` blocker inside generated
-implementation-proof readiness evidence and the operator API readiness
-snapshot. It does not configure the running service, connect to PostgreSQL,
-certify production storage, prove deploy migrations, certify live Core
-ingestion, certify runtime trust telemetry, prove Gateway or Workbench
-behavior, or promote a supported feature. Runtime readiness endpoints continue
-to report missing durable repository posture when `LOTUS_IDEA_DATABASE_URL` is
-absent.
+`--durable-repository-proof` clears only these aggregate blockers inside
+generated implementation-proof readiness evidence and the operator API
+readiness snapshot:
+
+1. `durable_repository_not_configured`,
+2. `repository_side_queue_pagination_not_certified`.
+
+The second blocker is cleared only because the proof contract cites the
+PostgreSQL review-queue projection implementation and tests. The proof does not
+configure the running service, connect to PostgreSQL, certify production
+storage, prove deploy migrations, certify live Core ingestion, certify runtime
+trust telemetry, prove Gateway or Workbench behavior, or promote a supported
+feature. Runtime readiness endpoints continue to report missing durable
+repository posture when `LOTUS_IDEA_DATABASE_URL` is absent.
 
 Runtime trust telemetry proof is captured by
 `scripts/generate_runtime_trust_telemetry_proof.py`. A valid artifact

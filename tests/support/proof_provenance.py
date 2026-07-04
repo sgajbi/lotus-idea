@@ -7,6 +7,7 @@ from typing import Any
 
 from app.application.proof_provenance import (
     AGGREGATE_PROOF_PROVENANCE_KEY,
+    bind_aggregate_proof_provenance,
     current_source_revision,
 )
 
@@ -18,6 +19,7 @@ def bound_aggregate_proof(
     proof_ref: str,
     *,
     repository_root: Path = ROOT,
+    source_tree_dirty: bool = False,
 ) -> dict[str, Any]:
     generated_at_utc = _parse_generated_at_utc(payload.get("generatedAtUtc"))
     bound_payload = dict(payload)
@@ -27,8 +29,25 @@ def bound_aggregate_proof(
         "proofGeneratedAtUtc": _format_utc(generated_at_utc),
         "artifactSha256": "0" * 64,
         "sourceRevision": current_source_revision(repository_root),
-        "sourceTreeDirty": True,
+        "sourceTreeDirty": source_tree_dirty,
     }
+    return bound_payload
+
+
+def bind_clean_aggregate_proof_provenance(
+    payload: Mapping[str, Any],
+    *,
+    artifact_path: Path,
+    proof_ref: str,
+    repository_root: Path,
+) -> dict[str, Any]:
+    bound_payload = bind_aggregate_proof_provenance(
+        payload,
+        artifact_path=artifact_path,
+        proof_ref=proof_ref,
+        repository_root=repository_root,
+    )
+    bound_payload[AGGREGATE_PROOF_PROVENANCE_KEY]["sourceTreeDirty"] = False
     return bound_payload
 
 

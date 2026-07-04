@@ -451,6 +451,7 @@ def test_implementation_proof_readiness_uses_durable_repository_proof_without_su
     )
 
     assert "durable_repository_not_configured" not in snapshot.overall_blockers
+    assert "repository_side_queue_pagination_not_certified" not in snapshot.overall_blockers
     assert "live_core_source_proof_missing" in snapshot.overall_blockers
     assert "platform_mesh_certification_missing" in snapshot.overall_blockers
     assert "workbench_panel_missing" in snapshot.overall_blockers
@@ -458,13 +459,13 @@ def test_implementation_proof_readiness_uses_durable_repository_proof_without_su
     assert snapshot.readiness_status == "blocked"
     assert snapshot.supportability_status == "not_certified"
     assert snapshot.supported_features_promoted is False
-    source_ingestion = next(
+    review_queue = next(
         capability
         for capability in snapshot.capabilities
-        if capability.capability_id == "source-ingestion"
+        if capability.capability_id == "advisor-review-queue"
     )
-    assert "durable_repository_not_configured" not in source_ingestion.blockers
-    assert "output/persistence/durable-repository-proof.json" in source_ingestion.evidence_refs
+    assert "repository_side_queue_pagination_not_certified" not in review_queue.blockers
+    assert "output/persistence/durable-repository-proof.json" in review_queue.evidence_refs
 
 
 def test_implementation_proof_readiness_lists_valid_source_ingestion_proof_refs_without_promotion(
