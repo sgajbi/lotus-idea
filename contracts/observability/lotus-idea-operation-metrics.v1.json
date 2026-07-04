@@ -27,6 +27,19 @@
         "durable_storage_backed",
         "supported_feature_promoted"
       ],
+      "source_authorities": [
+        "lotus-advise",
+        "lotus-ai",
+        "lotus-archive",
+        "lotus-core",
+        "lotus-idea",
+        "lotus-manage",
+        "lotus-performance",
+        "lotus-render",
+        "lotus-report",
+        "lotus-risk",
+        "source-owned"
+      ],
       "outcomes": [
         "accepted",
         "fallback",

@@ -774,6 +774,17 @@ repository mutation when a manifest exceeds that ceiling. Larger ingestion
 remains a future chunked or scheduled workflow with capacity evidence, not a
 run-once manifest escalation.
 
+GitHub issue `#311` hardens operation metric source-authority vocabulary.
+`OperationEvent` now rejects ungoverned `source_authority` labels before logs
+or metrics are emitted, while allowing every code-owned `SourceSystem` value,
+`lotus-idea`, and the aggregate `source-owned` label for mixed governed source
+refs. The operation metric contract, operator workflow operations contract, and
+dashboard/alert proof validators now consume the same runtime-owned vocabulary
+instead of retaining partial hardcoded allowlists. This preserves source-safe
+operator telemetry for `lotus-risk`, `lotus-performance`, `lotus-advise`,
+`lotus-manage`, and other governed source labels without permitting client,
+portfolio, account, request, response, raw entitlement, or local ad hoc labels.
+
 This slice also hardens outbox-delivery run-once operator identity after
 GitHub issue `#271` showed privileged run-once actions needed explicit
 API-level run identity before external side effects:

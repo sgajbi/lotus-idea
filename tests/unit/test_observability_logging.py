@@ -6,6 +6,7 @@ from _pytest.logging import LogCaptureFixture
 
 from app.observability import (
     FORBIDDEN_OPERATION_FIELD_KEYS,
+    OPERATION_EVENT_SOURCE_AUTHORITIES,
     OPERATION_METRIC_LABELS,
     SENSITIVE_OPERATION_LOG_FIELD_KEYS,
     IdeaOperation,
@@ -17,6 +18,7 @@ from app.observability import (
     emit_operation_event,
     emit_request_diagnostic_event,
 )
+from app.domain import SourceSystem
 from app.observability.correlation_context import (
     generated_correlation_id,
     generated_trace_id,
@@ -112,6 +114,52 @@ def test_operation_event_metric_labels_are_bounded_and_product_safe() -> None:
         "supported_feature_promoted": "false",
     }
     assert FORBIDDEN_OPERATION_FIELD_KEYS.isdisjoint(labels)
+
+
+def test_operation_source_authority_vocabulary_matches_domain_sources() -> None:
+    assert OPERATION_EVENT_SOURCE_AUTHORITIES == (
+        "lotus-advise",
+        "lotus-ai",
+        "lotus-archive",
+        "lotus-core",
+        "lotus-idea",
+        "lotus-manage",
+        "lotus-performance",
+        "lotus-render",
+        "lotus-report",
+        "lotus-risk",
+        "source-owned",
+    )
+    assert {source.value for source in SourceSystem}.issubset(OPERATION_EVENT_SOURCE_AUTHORITIES)
+
+
+@pytest.mark.parametrize(
+    "source_authority",
+    [
+        "lotus-risk",
+        "lotus-performance",
+        "lotus-advise",
+        "lotus-manage",
+        "source-owned",
+    ],
+)
+def test_operation_event_allows_governed_source_authorities(source_authority: str) -> None:
+    event = OperationEvent(
+        operation=IdeaOperation.SIGNAL_EVALUATION,
+        outcome=OperationOutcome.ACCEPTED,
+        source_authority=source_authority,
+    )
+
+    assert event.metric_labels()["source_authority"] == source_authority
+
+
+def test_operation_event_rejects_unknown_source_authority() -> None:
+    with pytest.raises(ValueError, match="governed operation metric label"):
+        OperationEvent(
+            operation=IdeaOperation.SIGNAL_EVALUATION,
+            outcome=OperationOutcome.ACCEPTED,
+            source_authority="client-123",
+        )
 
 
 def test_operation_event_rejects_sensitive_attributes() -> None:

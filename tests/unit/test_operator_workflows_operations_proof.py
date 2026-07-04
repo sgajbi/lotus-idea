@@ -232,6 +232,16 @@ def test_dashboard_artifact_certification_rejects_unexpected_metric(tmp_path: Pa
     assert _dashboard_artifact_certified(tmp_path) is False
 
 
+def test_dashboard_artifact_certification_rejects_unknown_source_authority(tmp_path: Path) -> None:
+    payload = _valid_dashboard_payload()
+    panels = cast(list[dict[str, object]], payload["panels"])
+    targets = cast(list[dict[str, str]], panels[0]["targets"])
+    targets[0]["expr"] = f'{EXPECTED_METRIC_NAME}{{source_authority="client-123"}}'
+    _write_dashboard_payload(tmp_path, payload)
+
+    assert _dashboard_artifact_certified(tmp_path) is False
+
+
 def test_dashboard_artifact_certification_rejects_missing_operation(tmp_path: Path) -> None:
     payload = _valid_dashboard_payload()
     payload.pop("annotations")
@@ -274,6 +284,27 @@ def test_alert_rules_artifact_certification_rejects_missing_alert_id(tmp_path: P
         )
         + "\n"
         + "\n".join(EXPECTED_DASHBOARD_OPERATIONS),
+        encoding="utf-8",
+    )
+
+    assert _alert_rules_artifact_certified(tmp_path) is False
+
+
+def test_alert_rules_artifact_certification_rejects_unknown_source_authority(
+    tmp_path: Path,
+) -> None:
+    path = (
+        tmp_path / "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml"
+    )
+    path.parent.mkdir(parents=True)
+    path.write_text(
+        "\n".join(
+            f"alert_id: {alert_id}\ndocs/runbooks/operator-workflows-operations.md#{alert_id}"
+            for alert_id in EXPECTED_ALERT_IDS
+        )
+        + "\n"
+        + "\n".join(EXPECTED_DASHBOARD_OPERATIONS)
+        + f'\n{EXPECTED_METRIC_NAME}{{source_authority="client-123"}}',
         encoding="utf-8",
     )
 

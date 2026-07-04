@@ -126,6 +126,15 @@ high-cash / idle-liquidity path around Core-owned cash and holdings products,
 and records later first-wave Performance, Risk, Advise, Manage, Report, and AI
 dependencies without certifying runtime behavior.
 
+Operation telemetry uses the same governed source-authority vocabulary as the
+domain source-system model: `lotus-core`, `lotus-performance`, `lotus-risk`,
+`lotus-advise`, `lotus-manage`, `lotus-report`, `lotus-render`,
+`lotus-archive`, `lotus-ai`, plus local `lotus-idea` and aggregate
+`source-owned`. Runtime `OperationEvent` validation, operation metric
+contracts, operator workflow contracts, and dashboard/alert proof gates all
+consume this code-owned vocabulary so observability cannot drift into partial
+allowlists or source-sensitive labels.
+
 ## Source-Port Foundation
 
 RFC-0002 Slice 05 now includes the first Core source-port foundation.

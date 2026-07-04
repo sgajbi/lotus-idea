@@ -25,6 +25,24 @@
     "rfc_slice_15": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-15-observability-security-entitlements-and-operations.md",
     "rfc_slice_17": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-17-implementation-proof-and-live-validation.md"
   },
+  "source_authority_policy": {
+    "label_source": "src/app/observability/logging.py::OPERATION_EVENT_SOURCE_AUTHORITIES",
+    "aggregate_label": "source-owned",
+    "governed_labels": [
+      "lotus-advise",
+      "lotus-ai",
+      "lotus-archive",
+      "lotus-core",
+      "lotus-idea",
+      "lotus-manage",
+      "lotus-performance",
+      "lotus-render",
+      "lotus-report",
+      "lotus-risk",
+      "source-owned"
+    ],
+    "operator_policy": "Dashboards and alerts may group by source_authority, but any explicit source_authority match must use only governed labels and must never encode client, portfolio, account, holding, request, response, or entitlement payload identity."
+  },
   "operator_dashboard_controls": [
     {
       "control_id": "source-ingestion-readiness-and-run-once-posture",

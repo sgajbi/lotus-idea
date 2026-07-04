@@ -15,6 +15,16 @@ source ingestion, external broker publication, downstream execution outcomes,
 data-mesh certification, Gateway or Workbench behavior, client-ready use, or
 supported-feature promotion.
 
+The `source_authority` metric label is governed by
+`OPERATION_EVENT_SOURCE_AUTHORITIES` in `src/app/observability/logging.py`.
+Allowed labels are `lotus-advise`, `lotus-ai`, `lotus-archive`,
+`lotus-core`, `lotus-idea`, `lotus-manage`, `lotus-performance`,
+`lotus-render`, `lotus-report`, `lotus-risk`, and aggregate
+`source-owned`. Dashboards and alerts may group by this label, but any
+explicit matcher must use only those labels. Never encode client, account,
+portfolio, holding, request, response, raw entitlement, or local ad hoc
+identifiers as source authority.
+
 ## Dashboard Panels
 
 | Panel | Operator Question | Expected Use |
@@ -98,3 +108,8 @@ Certification evidence must include:
 5. `scripts/operator_workflows_operations_proof_contract_gate.py`,
 6. `make operator-workflows-ops-contract-gate`,
 7. `make operator-workflows-operations-proof-contract-gate`.
+
+Both gates must pass after any operation metric, dashboard, alert, or
+source-authority vocabulary change. The gates fail closed if the contract,
+dashboard, or alert artifacts drift away from the code-owned source-authority
+vocabulary.

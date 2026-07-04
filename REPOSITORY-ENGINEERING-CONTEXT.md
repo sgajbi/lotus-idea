@@ -654,6 +654,11 @@ Recent issue-derived patterns to preserve:
     operator actions. `maxItems` and raw `workItems` must stay at or below the
     code-owned 100-item ceiling; larger ingestion requires a separately
     designed chunked or scheduled workflow with capacity evidence.
+28. Operation metric source-authority vocabulary must be code-owned. Runtime
+    `OperationEvent`, operation metric contracts, operator workflow contracts,
+    dashboards, and alert proof gates must consume the same governed
+    `OPERATION_EVENT_SOURCE_AUTHORITIES` set instead of duplicating partial
+    allowlists.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:
@@ -833,6 +838,15 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     the no-artifact report-only evidence command.
     `make ci-contract-gate` protects the report-only/blocking target split,
     strict flag, and `make lint` lane placement.
+22. Operation metric source-authority vocabulary drift: GitHub issue `#311` is
+    addressed by moving the operation-event source-authority set into
+    `src/app/observability/logging.py`, accepting every code-owned
+    `SourceSystem` label plus `lotus-idea` and aggregate `source-owned`, and
+    rejecting ungoverned labels before logs or metrics are emitted. The
+    operation metric contract, operator workflow operations contract, and
+    dashboard/alert proof checks now validate against the same runtime-owned
+    vocabulary so future observability changes cannot reintroduce partial
+    hardcoded allowlists.
 
 Recently closed by PR `#273` and mainline validation:
 

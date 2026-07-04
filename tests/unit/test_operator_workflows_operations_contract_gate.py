@@ -105,6 +105,22 @@ def test_operator_workflows_operations_contract_gate_blocks_bad_source_truth() -
     assert any("contract_gate path must stay relative" in error for error in errors)
 
 
+def test_operator_workflows_operations_contract_gate_blocks_source_authority_policy_drift() -> None:
+    module = _load_gate()
+    payload = _current_payload(module)
+    payload["source_authority_policy"] = {
+        "label_source": "local",
+        "aggregate_label": "portfolio-owned",
+        "governed_labels": ["lotus-idea", "client-123"],
+    }
+
+    errors = module.validate_operator_workflows_operations_contract_payload(payload)
+
+    assert any("source authority label source drifted" in error for error in errors)
+    assert any("aggregate source authority drifted" in error for error in errors)
+    assert any("OPERATION_EVENT_SOURCE_AUTHORITIES" in error for error in errors)
+
+
 def test_operator_workflows_operations_contract_loader_rejects_non_object_file(
     tmp_path: Path,
 ) -> None:
