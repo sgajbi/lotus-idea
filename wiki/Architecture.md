@@ -447,6 +447,16 @@ conversion runtime. The routes record governed intent/outcome posture and do
 not grant Advise, Manage, Report, suitability, execution, render, archive, or
 client-communication authority.
 
+Review-action and feedback request/response DTOs live in
+`src/app/api/review_workflow_models.py`, while
+`src/app/api/review_workflow.py` keeps caller checks, entitlement-scope
+validation, idempotency, review workflow persistence, operation-event emission,
+route metadata, and response handling. This is an internal design-modularity
+boundary inside the same runtime deployable, not a separate review service,
+compliance approval runtime, or independently scalable human-review runtime.
+The routes record idea review/feedback posture and do not approve suitability,
+compliance, mandates, execution, reporting, or client communication.
+
 `GET /api/v1/ai-explanations/readiness` is the certified internal AI
 explanation readiness diagnostic. It returns guardrail availability,
 `not_certified` model-risk supportability, and certification blockers for

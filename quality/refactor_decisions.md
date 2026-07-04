@@ -221,6 +221,42 @@ Evidence:
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
 
+## 2026-07-04: Review Workflow API Model Boundary
+
+Review-action and feedback request/response DTOs now live in
+`src/app/api/review_workflow_models.py`.
+`src/app/api/review_workflow.py` imports and explicitly re-exports those DTOs
+while keeping caller checks, entitlement-scope validation, idempotency,
+review workflow persistence, operation-event emission, route metadata, and
+response handling in the existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate review service, worker
+boundary, compliance approval runtime, or independently scalable human-review
+runtime. Review workflow remains an internal human-review foundation.
+
+Private-banking and authority boundaries preserved:
+
+1. The route still requires explicit review/feedback capabilities, actor role,
+   trusted entitlement-scope subset validation, and `Idempotency-Key`.
+2. The route still records idea review and feedback posture only; it does not
+   approve suitability, compliance, mandates, execution, reporting, or client
+   communication.
+3. The route still does not certify Gateway/Workbench support, data-product
+   publication, or supported-feature promotion.
+
+Evidence:
+
+1. Code: `src/app/api/review_workflow.py`,
+   `src/app/api/review_workflow_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_review_workflow_api_operations.py tests\unit\test_api_request_validation.py tests\integration\test_api_operation_events.py -q`
+   (`26 passed`), plus targeted ruff and mypy over the changed modules.
+3. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
+
 ## 2026-07-04: Conversion Governance API Model Boundary
 
 Conversion-intent and conversion-outcome request/response DTOs now live in

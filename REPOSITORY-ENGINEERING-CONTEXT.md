@@ -149,10 +149,10 @@ runtime modularity:
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
 3. `src/app/api/`: FastAPI routes, shared DTO modules for signal, idea-signal,
-   conversion, AI, outbox operator, and runtime trust telemetry surfaces,
-   shared route metadata, caller-context binding, idempotency header
-   validation, product-safe problem details, signal API support, and
-   API-internal mutation-operation helpers.
+   review workflow, conversion, AI, outbox operator, and runtime trust
+   telemetry surfaces, shared route metadata, caller-context binding,
+   idempotency header validation, product-safe problem details, signal API
+   support, and API-internal mutation-operation helpers.
 4. `src/app/ports/`: repository, source, publisher, and downstream realization
    interfaces.
 5. `src/app/infrastructure/`: HTTP source adapters, PostgreSQL repository,
@@ -180,28 +180,31 @@ Use shared API helpers instead of route-local clones:
 6. `app.api.idea_signal_models` for high-cash and mandate-restriction
    idea-signal request/response DTOs behind the existing
    `app.api.idea_signals` route surface,
-7. `app.api.conversion_governance_models` for conversion-intent and
+7. `app.api.review_workflow_models` for review-action and feedback
+   request/response DTOs behind the existing `app.api.review_workflow` route
+   surface,
+8. `app.api.conversion_governance_models` for conversion-intent and
    conversion-outcome request/response DTOs behind the existing
    `app.api.conversion_governance` route surface,
-8. `app.api.ai_governance_models` for AI explanation request/response DTOs
+9. `app.api.ai_governance_models` for AI explanation request/response DTOs
    behind the existing `app.api.ai_governance` import surface,
-9. `app.api.outbox_delivery_readiness_models` for outbox delivery readiness
+10. `app.api.outbox_delivery_readiness_models` for outbox delivery readiness
    and run-once response DTOs behind the existing
    `app.api.outbox_delivery_readiness` route surface,
-10. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
+11. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
    preview/snapshot response DTOs behind the existing
    `app.api.runtime_trust_telemetry` route surface,
-11. `app.api.signal_api_support` for caller context, scope checks, source-ref
+12. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-12. `app.api.review_workflow_operations` for review-action and feedback route
+13. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-13. `app.api.conversion_governance_operations` for conversion-intent and
+14. `app.api.conversion_governance_operations` for conversion-intent and
    conversion-outcome route caller parsing, mutating capability checks,
    idempotency validation, durable-write guards, operation-event mapping, and
    product-safe persistence problem mapping,
-14. `app.api.temporal_validation` for API timestamp awareness and UTC query
+15. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
 When route behavior is moved into API-internal operation helper modules, tests
