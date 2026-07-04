@@ -378,3 +378,43 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
+
+## 2026-07-04: Candidate Detail API Model Boundary
+
+Source-safe candidate-detail response DTOs now live in
+`src/app/api/candidate_detail_models.py`. `src/app/api/candidate_detail.py`
+imports and explicitly re-exports those DTOs while keeping caller authorization,
+entitlement-scope filtering, candidate lookup, operation-event emission, route
+metadata, and product-safe response handling in the existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate candidate-detail service,
+Gateway boundary, Workbench boundary, data-product publication path, or
+independently scalable read model. Candidate detail remains a bounded internal
+read-only API foundation.
+
+Private-banking and source-safety boundaries preserved:
+
+1. The route still requires explicit `idea.candidate.detail.read` capability and
+   caller entitlement scope is applied fail-closed before returning detail.
+2. The response model still redacts source routes and source content hashes from
+   source refs while exposing source authority, product id, version, as-of date,
+   generated-at timestamp, data-quality status, and freshness posture.
+3. The route still does not provide portfolio accounting, official risk or
+   performance facts, suitability/compliance approval, execution authority,
+   report rendering/archive authority, client communication, Workbench product
+   proof, data-product certification, or supported-feature promotion.
+
+Evidence:
+
+1. Code: `src/app/api/candidate_detail.py`,
+   `src/app/api/candidate_detail_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_candidate_detail_models.py tests\unit\test_candidate_detail_application.py tests\integration\test_candidate_detail_api.py tests\integration\test_api_operation_events.py::test_candidate_detail_api_emits_bounded_operation_event -q`
+   (`12 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/api/candidate_detail.py` moved from 624 to
+   289 lines; `src/app/api/candidate_detail_models.py` is 349 lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.

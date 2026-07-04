@@ -114,6 +114,13 @@ instead of hydrating audit, outbox, downstream-submission, lifecycle-history,
 idempotency, or AI-lineage state. Process-local providers can still use the
 snapshot fallback.
 
+Candidate-detail response DTOs live in `app.api.candidate_detail_models` behind
+the existing `app.api.candidate_detail` route surface. This is design
+modularity only: the route still performs caller authorization,
+entitlement-scope filtering, product-safe error handling, and bounded
+operation-event emission in the same API process. The response model remains
+source-safe and does not expose raw source routes or source content hashes.
+
 `make runtime-trust-telemetry-snapshot-check` writes the same contract-shaped
 runtime snapshot to
 `output/trust-telemetry/runtime/idea-candidate.telemetry.v1.json`. The snapshot
