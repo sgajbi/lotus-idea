@@ -104,7 +104,7 @@ flowchart LR
     Idea -->|"review-gated intent, submission posture, outcome tracking"| Downstream
 ```
 
-- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified internal API foundations, shared DTO base model, shared signal DTOs, shared route metadata, review-workflow mutation-operation support, and the route runtime dependency facade.
+- `src/app/api/`: FastAPI routes, DTO mapping, caller headers, certified internal API foundations, shared DTO base model, shared signal DTOs, shared route metadata, review-workflow and conversion-governance mutation-operation support, and the route runtime dependency facade.
 - `src/app/application/`: use-case orchestration for signal evaluation, source ingestion,
   candidate detail, evidence replay, review queues,
   lifecycle, feedback, AI diagnostics, conversion, report evidence, downstream
@@ -262,7 +262,7 @@ Local controls keep implementation claims grounded:
 - `make api-route-metadata-gate` prevents duplicate route metadata type definitions outside `app.api.route_metadata`.
 - `make api-idempotency-boundary-gate` prevents route-local `Idempotency-Key` validator clones outside `app.api.idempotency`.
 - `make api-camel-model-boundary-gate` prevents route-local camel-case DTO base-model clones outside `app.api.base_model`, `make api-signal-model-boundary-gate` prevents shared signal DTO imports from concrete signal route modules instead of `app.api.signal_models`, `make signal-api-contract-gate` keeps caller-supplied signal caller-context and entitlement-scope headers behind `app.api.caller_headers.CallerContextHeaders`, and `make api-temporal-validation-boundary-gate` keeps API timestamp-awareness and UTC checks behind `app.api.temporal_validation`.
-- Review-action and feedback routes share `app.api.review_workflow_operations` for caller parsing, mutating capability checks, trusted entitlement-scope validation, idempotency validation, durable-write guards, operation-event mapping, and product-safe persistence problem mapping. This is design modularity inside one deployable service, not a runtime service split.
+- Review-action and feedback routes share `app.api.review_workflow_operations` for caller parsing, mutating capability checks, trusted entitlement-scope validation, idempotency validation, durable-write guards, operation-event mapping, and product-safe persistence problem mapping. Conversion-intent and conversion-outcome routes share `app.api.conversion_governance_operations` for the equivalent conversion mutation setup and product-safe persistence mapping. Both are design modularity inside one deployable service, not runtime service splits.
 - `make signal-api-contract-gate` prevents copied signal evaluation policy, scope-unaware permission checks, source-authority, operation-event, error-model code, and weak 400/403 `ProblemDetails` OpenAPI examples.
 - `make operation-metric-contract-gate` keeps the operation metric catalog
   synchronized with code-owned vocabulary and blocks dashboard, alert, mesh,

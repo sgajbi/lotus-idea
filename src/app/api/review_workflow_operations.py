@@ -18,15 +18,33 @@ from app.api.runtime_dependencies import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
 )
+from app.api.operation_events import (
+    emit_api_foundation_operation_event as emit_review_workflow_operation_event,
+)
 from app.domain import (
     ReviewActorContext,
     ReviewActorRole,
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
 )
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.observability import IdeaOperation, OperationOutcome
 from app.ports.idea_repository import ReviewWorkflowRepository
 from app.security.caller_context import CallerContext, CallerEntitlementScope, PermissionDeniedError
+
+__all__ = [
+    "AuthorizedReviewScope",
+    "ReviewWorkflowCallerHeaders",
+    "ReviewWorkflowMutationContext",
+    "build_review_actor_context",
+    "emit_review_workflow_operation_event",
+    "error_code_from_review_decision",
+    "operation_outcome_from_review_decision",
+    "permission_denied",
+    "prepare_review_workflow_mutation",
+    "problem_for_review_persistence",
+    "require_body_scope_claim_within_caller_entitlements",
+    "require_mutating_review_workflow_caller",
+]
 
 
 class AuthorizedReviewScope(Protocol):
@@ -158,21 +176,6 @@ def problem_for_review_persistence(
 
 def permission_denied(detail: str) -> JSONResponse:
     return permission_denied_problem(detail)
-
-
-def emit_review_workflow_operation_event(
-    operation: IdeaOperation,
-    outcome: OperationOutcome,
-    error_code: str | None = None,
-    durable_storage_backed: bool = False,
-) -> None:
-    emit_foundation_operation_event(
-        operation,
-        outcome,
-        source_authority="lotus-idea",
-        error_code=error_code,
-        durable_storage_backed=durable_storage_backed,
-    )
 
 
 def operation_outcome_from_review_decision(

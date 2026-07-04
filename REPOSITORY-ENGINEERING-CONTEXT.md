@@ -149,8 +149,8 @@ runtime modularity:
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
 3. `src/app/api/`: FastAPI routes, DTOs, shared route metadata, caller-context
-   binding, idempotency header validation, product-safe problem details, and
-   signal API support.
+   binding, idempotency header validation, product-safe problem details,
+   signal API support, and API-internal mutation-operation helpers.
 4. `src/app/ports/`: repository, source, publisher, and downstream realization
    interfaces.
 5. `src/app/infrastructure/`: HTTP source adapters, PostgreSQL repository,
@@ -181,7 +181,11 @@ Use shared API helpers instead of route-local clones:
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-8. `app.api.temporal_validation` for API timestamp awareness and UTC query
+8. `app.api.conversion_governance_operations` for conversion-intent and
+   conversion-outcome route caller parsing, mutating capability checks,
+   idempotency validation, durable-write guards, operation-event mapping, and
+   product-safe persistence problem mapping,
+9. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
 When one HTTP status can return multiple stable `ProblemDetails` codes, use
@@ -227,6 +231,12 @@ in `app.api.review_workflow_operations` as design modularity inside the
 existing `lotus-idea` process. Do not split this into a separate runtime
 service, worker, or queue boundary without measured workload, failure-isolation,
 ownership, security, or operability evidence.
+Conversion-intent and conversion-outcome API route orchestration follows the
+same pattern in `app.api.conversion_governance_operations`. This helper is an
+internal API boundary only; conversion posture remains local, review-gated, and
+source-authority preserving. It must not become a separate runtime boundary
+unless measured workload, failure-isolation, ownership, security, or
+operability evidence justifies the added distributed-systems cost.
 
 For PostgreSQL-backed mutations, candidate-row updates use an optimistic
 `updated_at_utc` compare-and-set guard and reject stale same-candidate snapshot
