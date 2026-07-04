@@ -436,6 +436,17 @@ independently scalable signal evaluation path. The endpoints continue to
 consume caller-supplied source-owned evidence and do not calculate official
 portfolio, suitability, risk, performance, execution, or report facts.
 
+Conversion-intent and conversion-outcome request/response DTOs live in
+`src/app/api/conversion_governance_models.py`, while
+`src/app/api/conversion_governance.py` keeps caller checks, idempotency,
+conversion workflow persistence, operation-event emission, route metadata, and
+response handling. This is an internal design-modularity boundary inside the
+same runtime deployable, not a separate conversion service, downstream
+execution boundary, report materialization boundary, or independently scalable
+conversion runtime. The routes record governed intent/outcome posture and do
+not grant Advise, Manage, Report, suitability, execution, render, archive, or
+client-communication authority.
+
 `GET /api/v1/ai-explanations/readiness` is the certified internal AI
 explanation readiness diagnostic. It returns guardrail availability,
 `not_certified` model-risk supportability, and certification blockers for
