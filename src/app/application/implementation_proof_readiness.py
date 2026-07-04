@@ -544,4 +544,8 @@ def _supported_feature_count(path: Path) -> int:
     features = payload.get("features", ())
     if not isinstance(features, list):
         raise ValueError("supported features must be a list")
-    return len(features)
+    return sum(
+        1
+        for feature in features
+        if isinstance(feature, dict) and feature.get("status") == "implemented"
+    )

@@ -228,7 +228,7 @@ Run `make lint`, `make typecheck`, and `make test-unit` for feature-lane
 feedback; run `make check`, `make postgres-integration-gate`,
 `make security-audit`, `make docker-build`, and `make container-runtime-smoke`
 for PR-grade runtime proof.
-Governance-focused changes should also run `make documentation-contract-gate`, `make implementation-truth-gate`, `make quality-scorecard-gate`, `make opportunity-archetype-contract-gate`, `make downstream-realization-contract-gate`, and `make supported-features-gate`.
+Governance-focused changes should also run `make documentation-contract-gate`, `make implementation-truth-gate`, `make quality-scorecard-gate`, `make opportunity-archetype-contract-gate`, `make downstream-realization-contract-gate`, and `make supported-features-gate`; the supported-feature registry treats `features[]` as implemented-only support truth, planned posture stays in `planned_capabilities[]`, and implementation-proof readiness counts only implemented supported-feature entries.
 
 ## Runtime And Operations
 

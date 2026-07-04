@@ -80,73 +80,7 @@
       "additionalProperties": false
     },
     "feature": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/plannedFeature"
-        },
-        {
-          "$ref": "#/$defs/implementedFeature"
-        },
-        {
-          "$ref": "#/$defs/notApplicableFeature"
-        }
-      ]
-    },
-    "plannedFeature": {
-      "type": "object",
-      "required": [
-        "id",
-        "name",
-        "status",
-        "governing_rfc"
-      ],
-      "properties": {
-        "id": {
-          "$ref": "#/$defs/kebabId"
-        },
-        "name": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "status": {
-          "const": "planned"
-        },
-        "governing_rfc": {
-          "$ref": "#/$defs/pathRef"
-        }
-      },
-      "additionalProperties": false
-    },
-    "notApplicableFeature": {
-      "type": "object",
-      "required": [
-        "id",
-        "name",
-        "status",
-        "governing_rfc",
-        "not_applicable_reason",
-        "last_reviewed_utc"
-      ],
-      "properties": {
-        "id": {
-          "$ref": "#/$defs/kebabId"
-        },
-        "name": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "status": {
-          "const": "not_applicable"
-        },
-        "governing_rfc": {
-          "$ref": "#/$defs/pathRef"
-        },
-        "not_applicable_reason": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "last_reviewed_utc": {
-          "$ref": "#/$defs/utcTimestamp"
-        }
-      },
-      "additionalProperties": false
+      "$ref": "#/$defs/implementedFeature"
     },
     "implementedFeature": {
       "type": "object",

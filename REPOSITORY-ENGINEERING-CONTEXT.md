@@ -967,6 +967,10 @@ Every RFC slice that exposes behavior must update, as applicable:
 ## Supported-Feature Promotion Rule
 
 The supported-feature registry is source truth for support posture.
+`features[]` is reserved for implemented supported-feature entries only.
+Planned capability posture belongs under `planned_capabilities[]`; planned or
+not-applicable records under `features[]` must not clear implementation-proof
+readiness blockers or imply support.
 
 Do not promote a feature unless the implementation has:
 

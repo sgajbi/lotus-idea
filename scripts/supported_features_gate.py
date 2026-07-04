@@ -15,7 +15,8 @@ ENDPOINT_CERTIFICATION_LEDGER_PATH = (
     ROOT / "docs" / "operations" / "endpoint-certification-ledger.json"
 )
 
-ALLOWED_STATUSES = {"planned", "implemented", "not_applicable"}
+IMPLEMENTED_FEATURE_STATUS = "implemented"
+NON_IMPLEMENTED_FEATURE_STATUSES = {"planned", "not_applicable"}
 CURRENT_POLICY = "Only implementation-backed behavior may be promoted to supported."
 FEATURE_ID_PATTERN = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 UTC_TIMESTAMP_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
@@ -26,15 +27,6 @@ PLACEHOLDER_PATTERN = re.compile(
 )
 
 PLANNED_CAPABILITY_REQUIRED_FIELDS = ("id", "name", "governing_rfc", "status")
-PLANNED_FEATURE_REQUIRED_FIELDS = ("id", "name", "governing_rfc", "status")
-NOT_APPLICABLE_FEATURE_REQUIRED_FIELDS = (
-    "id",
-    "name",
-    "governing_rfc",
-    "status",
-    "not_applicable_reason",
-    "last_reviewed_utc",
-)
 IMPLEMENTED_FEATURE_REQUIRED_FIELDS = (
     "id",
     "name",
@@ -333,55 +325,18 @@ def _validate_feature_entry(
 ) -> None:
     context = f"features[{index}]"
     status = feature.get("status")
-    if status not in ALLOWED_STATUSES:
+    if status in NON_IMPLEMENTED_FEATURE_STATUSES:
+        errors.append(
+            f"{context}.status {status!r} is not allowed under features[]; "
+            "features[] is reserved for implemented supported-feature entries"
+        )
+        return
+    if status != IMPLEMENTED_FEATURE_STATUS:
         errors.append(f"{context} invalid status {status!r}")
         return
 
     if not FEATURE_ID_PATTERN.match(str(feature.get("id", ""))):
         errors.append(f"{context}.id must be stable kebab-case")
-
-    if status == "planned":
-        missing = [field for field in PLANNED_FEATURE_REQUIRED_FIELDS if field not in feature]
-        if missing:
-            errors.append(f"{context} planned feature missing fields: {', '.join(sorted(missing))}")
-            return
-        for field in ("name",):
-            if not _non_empty_string(feature.get(field)):
-                errors.append(f"{context}.{field} is required")
-        _validate_path_ref(
-            errors=errors,
-            context=f"{context}.governing_rfc",
-            ref=feature.get("governing_rfc"),
-        )
-        if "promotion_evidence" in feature:
-            errors.append(f"{context}.promotion_evidence is allowed only for implemented features")
-        return
-
-    if status == "not_applicable":
-        missing = [
-            field for field in NOT_APPLICABLE_FEATURE_REQUIRED_FIELDS if field not in feature
-        ]
-        if missing:
-            errors.append(
-                f"{context} not-applicable feature missing fields: {', '.join(sorted(missing))}"
-            )
-            return
-        for field in ("name", "not_applicable_reason"):
-            if not _non_empty_string(feature.get(field)):
-                errors.append(f"{context}.{field} is required")
-        _validate_path_ref(
-            errors=errors,
-            context=f"{context}.governing_rfc",
-            ref=feature.get("governing_rfc"),
-        )
-        _validate_utc_timestamp(
-            errors,
-            f"{context}.last_reviewed_utc",
-            feature.get("last_reviewed_utc"),
-        )
-        if "promotion_evidence" in feature:
-            errors.append(f"{context}.promotion_evidence is allowed only for implemented features")
-        return
 
     missing = [field for field in IMPLEMENTED_FEATURE_REQUIRED_FIELDS if field not in feature]
     if missing:
