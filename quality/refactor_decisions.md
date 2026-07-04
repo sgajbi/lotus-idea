@@ -101,3 +101,41 @@ Evidence:
    (`46 passed`), plus targeted ruff and mypy over the changed modules.
 3. Maintainability impact: `src/app/domain/persistence.py` moved from 1185 to
    1004 lines; `src/app/domain/persistence_models.py` is 215 lines.
+
+## 2026-07-04: Signal Evaluation Model Boundary
+
+Immutable signal-family inputs, policies, outcomes, and result contracts now
+live in `src/app/domain/signal_evaluation_models.py`.
+`src/app/domain/signal_evaluation.py` imports and re-exports those types while
+keeping deterministic evaluator algorithms and existing public imports stable.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate service, queue boundary,
+worker boundary, or independently scalable evaluator. Signal evaluation remains
+local because lotus-idea consumes caller/source-owned evidence, produces local
+candidate posture, and has no workload, failure-isolation, ownership, or
+operability evidence for a runtime split.
+
+Private-banking boundary preserved:
+
+1. Signal policies consume source-owned posture and deterministic thresholds.
+2. No portfolio accounting, official performance, risk, benchmark assignment,
+   suitability, compliance, rebalance execution, report rendering, archive
+   authority, or AI infrastructure authority moves into lotus-idea.
+3. Source-authority validation and caller entitlement checks remain enforced by
+   the API/application boundary before candidate creation.
+
+Evidence:
+
+1. Code: `src/app/domain/signal_evaluation.py`,
+   `src/app/domain/signal_evaluation_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_high_cash_signal_evaluation.py tests\unit\test_concentration_risk_signal_evaluation.py tests\unit\test_underperformance_signal_evaluation.py tests\unit\test_mandate_health_signal_evaluation.py tests\unit\test_high_volatility_signal_evaluation.py tests\unit\test_drawdown_review_signal_evaluation.py tests\unit\test_api_signal_models.py -q`
+   (`90 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/domain/signal_evaluation.py` moved from
+   1113 to 954 lines; `src/app/domain/signal_evaluation_models.py` is 230
+   lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   supported-feature promotion or seed/automation change is justified by this
+   internal modularity slice.
