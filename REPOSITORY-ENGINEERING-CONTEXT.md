@@ -177,7 +177,11 @@ Use shared API helpers instead of route-local clones:
 5. `app.api.signal_models` for shared signal-family DTOs,
 6. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-7. `app.api.temporal_validation` for API timestamp awareness and UTC query
+7. `app.api.review_workflow_operations` for review-action and feedback route
+   caller parsing, mutating capability checks, trusted entitlement-scope subset
+   validation, idempotency validation, durable-write guards, operation-event
+   mapping, and product-safe persistence problem mapping,
+8. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
 When one HTTP status can return multiple stable `ProblemDetails` codes, use
@@ -218,6 +222,11 @@ legacy.
 For mutation workflows, preserve idempotency, audit, operation events, source
 authority, and supportability posture. Do not bypass repository mutation
 methods just to optimize a write path.
+Review-action and feedback API route orchestration is intentionally centralized
+in `app.api.review_workflow_operations` as design modularity inside the
+existing `lotus-idea` process. Do not split this into a separate runtime
+service, worker, or queue boundary without measured workload, failure-isolation,
+ownership, security, or operability evidence.
 
 For PostgreSQL-backed mutations, candidate-row updates use an optimistic
 `updated_at_utc` compare-and-set guard and reject stale same-candidate snapshot
@@ -1068,6 +1077,8 @@ Repository-local anchors:
 4. `docs/operations/implementation-proof-readiness.md`
 5. `docs/operations/downstream-realization-readiness.md`
 6. `docs/runbooks/service-operations.md`
-7. `quality/quality_scorecard.md`
-8. `supported-features/supported-features.json`
-9. `wiki/Home.md`
+7. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`
+8. `docs/architecture/CODEBASE-REVIEW-LEDGER.md`
+9. `quality/quality_scorecard.md`
+10. `supported-features/supported-features.json`
+11. `wiki/Home.md`

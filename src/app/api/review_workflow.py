@@ -8,28 +8,28 @@ from pydantic import Field, field_validator
 
 from app.api.access_scope_models import ReviewAccessScopeRequest
 from app.api.base_model import CamelModel
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
-from app.api.durable_write_guard import (
-    DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_write_unavailable_metadata,
-    durable_write_problem,
-)
-from app.api.idempotency import validate_idempotency_key
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
+from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
     not_found_metadata,
     permission_denied_metadata,
-    permission_denied_problem,
 )
 from app.api.persistence_summary import persistence_summary_payload
+from app.api.review_workflow_operations import (
+    ReviewWorkflowCallerHeaders,
+    build_review_actor_context as _caller_entitlement_actor_context,
+    emit_review_workflow_operation_event as _emit_review_operation_event,
+    error_code_from_review_decision,
+    operation_outcome_from_review_decision as _operation_outcome_from_review_decision,
+    permission_denied as _permission_denied,
+    prepare_review_workflow_mutation,
+    problem_for_review_persistence as _problem_for_review_persistence,
+)
 from app.api.request_validation import require_non_empty_reason_codes
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
-from app.api.runtime_dependencies import (
-    get_idea_repository,
-    idea_repository_durable_storage_backed,
-)
 from app.application.review_workflow import (
     ApplyReviewActionToRepositoryCommand,
     RecordFeedbackToRepositoryCommand,
@@ -53,7 +53,7 @@ from app.domain import (
     SuppressionReason,
 )
 from app.api.problem_details import problem_details_response as problem_response
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import CallerContext, CallerEntitlementScope, PermissionDeniedError
 
 _REVIEW_ACTION_CAPABILITY = "idea.review.record"
@@ -299,44 +299,32 @@ async def record_review_action(
     ),
 ) -> ReviewActionResponse | JSONResponse:
     try:
-        caller = caller_context_from_headers(
-            subject=x_caller_subject,
-            roles=x_caller_roles,
-            capabilities=x_caller_capabilities,
-            tenant_ids=x_caller_tenant_ids,
-            book_ids=x_caller_book_ids,
-            portfolio_ids=x_caller_portfolio_ids,
-            client_ids=x_caller_client_ids,
-            trusted_caller_context=x_lotus_trusted_caller_context,
-        )
-        role = _require_mutating_caller(
-            caller,
-            capability=_REVIEW_ACTION_CAPABILITY,
-        )
-        _require_body_scope_claim_within_caller_entitlements(
-            caller=caller,
+        context = prepare_review_workflow_mutation(
+            headers=ReviewWorkflowCallerHeaders(
+                subject=x_caller_subject,
+                roles=x_caller_roles,
+                capabilities=x_caller_capabilities,
+                tenant_ids=x_caller_tenant_ids,
+                book_ids=x_caller_book_ids,
+                portfolio_ids=x_caller_portfolio_ids,
+                client_ids=x_caller_client_ids,
+                trusted_caller_context=x_lotus_trusted_caller_context,
+            ),
             authorized_scope=request.authorized_scope,
+            capability=_REVIEW_ACTION_CAPABILITY,
+            idempotency_key=idempotency_key,
+            operation=IdeaOperation.REVIEW_ACTION,
         )
-        validate_idempotency_key(idempotency_key)
-        repository = get_idea_repository()
-        durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
-        if configuration_problem is not None:
-            _emit_review_operation_event(
-                IdeaOperation.REVIEW_ACTION,
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed,
-            )
-            return configuration_problem
+        if isinstance(context, JSONResponse):
+            return context
         result = apply_review_action_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
-                caller=caller,
-                role=role,
+                caller=context.caller,
+                role=context.role,
                 idempotency_key=idempotency_key,
             ),
-            repository=repository,
+            repository=context.repository,
         )
     except PermissionDeniedError:
         _emit_review_operation_event(
@@ -383,13 +371,13 @@ async def record_review_action(
             IdeaOperation.REVIEW_ACTION,
             _operation_outcome_from_review_decision(result.persistence.decision),
             _error_code_from_review_decision(result.persistence.decision),
-            durable_storage_backed,
+            context.durable_storage_backed,
         )
         return problem
     _emit_review_operation_event(
         IdeaOperation.REVIEW_ACTION,
         _operation_outcome_from_review_decision(result.persistence.decision),
-        durable_storage_backed=durable_storage_backed,
+        durable_storage_backed=context.durable_storage_backed,
     )
     return ReviewActionResponse(
         reviewDecision=(
@@ -398,7 +386,7 @@ async def record_review_action(
             else None
         ),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=durable_storage_backed,
+        durableStorageBacked=context.durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -420,44 +408,32 @@ async def record_feedback(
     ),
 ) -> FeedbackResponse | JSONResponse:
     try:
-        caller = caller_context_from_headers(
-            subject=x_caller_subject,
-            roles=x_caller_roles,
-            capabilities=x_caller_capabilities,
-            tenant_ids=x_caller_tenant_ids,
-            book_ids=x_caller_book_ids,
-            portfolio_ids=x_caller_portfolio_ids,
-            client_ids=x_caller_client_ids,
-            trusted_caller_context=x_lotus_trusted_caller_context,
-        )
-        role = _require_mutating_caller(
-            caller,
-            capability=_FEEDBACK_CAPABILITY,
-        )
-        _require_body_scope_claim_within_caller_entitlements(
-            caller=caller,
+        context = prepare_review_workflow_mutation(
+            headers=ReviewWorkflowCallerHeaders(
+                subject=x_caller_subject,
+                roles=x_caller_roles,
+                capabilities=x_caller_capabilities,
+                tenant_ids=x_caller_tenant_ids,
+                book_ids=x_caller_book_ids,
+                portfolio_ids=x_caller_portfolio_ids,
+                client_ids=x_caller_client_ids,
+                trusted_caller_context=x_lotus_trusted_caller_context,
+            ),
             authorized_scope=request.authorized_scope,
+            capability=_FEEDBACK_CAPABILITY,
+            idempotency_key=idempotency_key,
+            operation=IdeaOperation.FEEDBACK_RECORD,
         )
-        validate_idempotency_key(idempotency_key)
-        repository = get_idea_repository()
-        durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
-        if configuration_problem is not None:
-            _emit_review_operation_event(
-                IdeaOperation.FEEDBACK_RECORD,
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed,
-            )
-            return configuration_problem
+        if isinstance(context, JSONResponse):
+            return context
         result = record_feedback_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
-                caller=caller,
-                role=role,
+                caller=context.caller,
+                role=context.role,
                 idempotency_key=idempotency_key,
             ),
-            repository=repository,
+            repository=context.repository,
         )
     except PermissionDeniedError:
         _emit_review_operation_event(
@@ -494,13 +470,13 @@ async def record_feedback(
             IdeaOperation.FEEDBACK_RECORD,
             _operation_outcome_from_review_decision(result.persistence.decision),
             _error_code_from_review_decision(result.persistence.decision),
-            durable_storage_backed,
+            context.durable_storage_backed,
         )
         return problem
     _emit_review_operation_event(
         IdeaOperation.FEEDBACK_RECORD,
         _operation_outcome_from_review_decision(result.persistence.decision),
-        durable_storage_backed=durable_storage_backed,
+        durable_storage_backed=context.durable_storage_backed,
     )
     return FeedbackResponse(
         feedbackEvent=(
@@ -509,114 +485,19 @@ async def record_feedback(
             else None
         ),
         persistence=ReviewPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=durable_storage_backed,
+        durableStorageBacked=context.durable_storage_backed,
         supportedFeaturePromoted=False,
     )
-
-
-def _require_mutating_caller(
-    caller: CallerContext,
-    *,
-    capability: str,
-) -> ReviewActorRole:
-    if not caller.has_capability(capability):
-        raise PermissionDeniedError(capability)
-    matching_roles = [role for role in ReviewActorRole if caller.has_role(role.value)]
-    if len(matching_roles) != 1:
-        raise PermissionDeniedError("idea.review.actor_role")
-    return matching_roles[0]
-
-
-def _caller_entitlement_actor_context(
-    *,
-    caller: CallerContext,
-    role: ReviewActorRole,
-) -> ReviewActorContext:
-    scope = caller.entitlement_scope
-    if scope.is_empty:
-        raise PermissionDeniedError("idea.review.entitlement_scope")
-    return ReviewActorContext(
-        actor_subject=caller.subject,
-        role=role,
-        tenant_ids=frozenset(scope.tenant_ids),
-        book_ids=frozenset(scope.book_ids),
-        portfolio_ids=frozenset(scope.portfolio_ids),
-        client_ids=frozenset(scope.client_ids),
-    )
-
-
-def _require_body_scope_claim_within_caller_entitlements(
-    *,
-    caller: CallerContext,
-    authorized_scope: ReviewActorScopeRequest,
-) -> None:
-    if not authorized_scope.is_subset_of_entitlement_scope(caller.entitlement_scope):
-        raise PermissionDeniedError("idea.review.entitlement_scope")
 
 
 def _values_are_subset(values: tuple[str, ...], allowed_values: tuple[str, ...]) -> bool:
     return bool(allowed_values) and set(values).issubset(allowed_values)
 
 
-def _problem_for_review_persistence(
-    result: ReviewPersistenceResult,
-) -> JSONResponse | None:
-    if result.decision is ReviewPersistenceDecision.NOT_FOUND:
-        return problem_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            code="candidate_not_found",
-            title="Candidate not found",
-            detail="The idea candidate was not found.",
-        )
-    if result.decision is ReviewPersistenceDecision.CONFLICT:
-        return problem_response(
-            status_code=status.HTTP_409_CONFLICT,
-            code="idempotency_conflict",
-            title="Idempotency conflict",
-            detail="The idempotency key was already used with a different request payload.",
-        )
-    return None
-
-
-def _permission_denied(detail: str) -> JSONResponse:
-    return permission_denied_problem(detail)
-
-
-def _emit_review_operation_event(
-    operation: IdeaOperation,
-    outcome: OperationOutcome,
-    error_code: str | None = None,
-    durable_storage_backed: bool = False,
-) -> None:
-    emit_foundation_operation_event(
-        operation,
-        outcome,
-        source_authority="lotus-idea",
-        error_code=error_code,
-        durable_storage_backed=durable_storage_backed,
-    )
-
-
-def _operation_outcome_from_review_decision(
-    decision: ReviewPersistenceDecision,
-) -> OperationOutcome:
-    if decision is ReviewPersistenceDecision.ACCEPTED:
-        return OperationOutcome.ACCEPTED
-    if decision is ReviewPersistenceDecision.REPLAYED:
-        return OperationOutcome.REPLAYED
-    if decision is ReviewPersistenceDecision.NOT_FOUND:
-        return OperationOutcome.NOT_FOUND
-    return OperationOutcome.CONFLICT
-
-
 def _error_code_from_review_decision(
     decision: ReviewPersistenceDecision,
 ) -> str | None:
-    if decision is ReviewPersistenceDecision.NOT_FOUND:
-        return "candidate_not_found"
-    if decision is ReviewPersistenceDecision.CONFLICT:
-        return "idempotency_conflict"
-    return None
+    return error_code_from_review_decision(decision)
 
 
 REVIEW_ACTION_ROUTE: RouteMetadata = {
