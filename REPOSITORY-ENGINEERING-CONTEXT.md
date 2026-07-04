@@ -206,11 +206,14 @@ For durable reads, prefer bounded projections over whole repository snapshots:
 3. downstream conversion/report lookup projection,
 4. downstream realization readiness-count projection,
 5. outbox delivery readiness projection,
-6. runtime trust telemetry aggregate projection.
+6. runtime trust telemetry aggregate projection,
+7. advisor queue readiness aggregate projection.
 
-When adding another read path, first ask whether the query needs a bounded
-projection contract. Avoid `snapshot()` for narrow PostgreSQL reads unless the
-provider is process-local or the flow is still explicitly legacy.
+When adding another read path or aggregate diagnostic, first ask whether the
+query needs a bounded projection contract. Avoid `snapshot()` for narrow
+PostgreSQL reads unless the provider is process-local, the request needs
+in-memory-only policy state such as snoozes, or the flow is still explicitly
+legacy.
 
 For mutation workflows, preserve idempotency, audit, operation events, source
 authority, and supportability posture. Do not bypass repository mutation
@@ -558,7 +561,7 @@ When fixing a GitHub issue, inspect adjacent code for the same pattern.
 Recent issue-derived patterns to preserve:
 
 1. bounded PostgreSQL projections should replace whole-store snapshots for
-   narrow read paths,
+   narrow read paths and aggregate readiness diagnostics,
 2. inbound JSON body limits must be enforced on the actual ASGI body stream,
    not only `Content-Length`,
 3. outbound HTTP retry/backoff must be centralized and idempotency-gated,

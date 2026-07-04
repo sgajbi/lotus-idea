@@ -92,12 +92,14 @@ from app.infrastructure.postgres_mutation_retry import execute_postgres_mutation
 from app.infrastructure.postgres_review_queue import (
     candidate_record_from_row,
     load_review_queue_candidate_page,
+    load_review_queue_readiness_summary,
 )
 from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.ports.idea_repository import ReviewQueueRepositoryPage
+from app.ports.idea_repository import ReviewQueueReadinessRepositorySummary
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
 
@@ -122,6 +124,16 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
     ) -> ReviewQueueRepositoryPage:
         return load_review_queue_candidate_page(
             self._connection, access_scope_filter=access_scope_filter, limit=limit, offset=offset
+        )
+
+    def review_queue_readiness_summary(
+        self,
+        *,
+        access_scope_filter: QueueAccessScopeFilter | None,
+    ) -> ReviewQueueReadinessRepositorySummary:
+        return load_review_queue_readiness_summary(
+            self._connection,
+            access_scope_filter=access_scope_filter,
         )
 
     def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:

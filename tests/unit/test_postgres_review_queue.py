@@ -6,12 +6,20 @@ from typing import Any
 
 import pytest
 
-from app.domain import IdeaCandidate, QueueAccessScopeFilter, ReviewAccessScope
+from app.domain import (
+    EvidenceSupportability,
+    IdeaCandidate,
+    IdeaLifecycleStatus,
+    QueueAccessScopeFilter,
+    ReviewAccessScope,
+    UnsupportedEvidenceReason,
+)
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.infrastructure.postgres_review_queue import (
     REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS,
     _review_queue_candidate_predicates,
     load_review_queue_candidate_page,
+    load_review_queue_readiness_summary,
 )
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
@@ -122,6 +130,73 @@ def test_postgres_review_queue_scope_filters_cover_all_indexed_fields_and_stable
         assert f"candidate_json->'access_scope'->>'{field_name}'" in executed_sql
     assert "order by queue_score desc, queue_created_at_utc, candidate_id" in executed_sql
     assert "limit %s offset %s" in executed_sql
+
+
+def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregate() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    reviewable = queue_candidate(index=1, candidate_scope=access_scope())
+    duplicate = replace(
+        queue_candidate(index=2, candidate_scope=access_scope()),
+        source_signal_ids=reviewable.source_signal_ids,
+    )
+    expired = replace(
+        queue_candidate(index=3, candidate_scope=access_scope()),
+        lifecycle_status=IdeaLifecycleStatus.EXPIRED,
+    )
+    blocked = queue_candidate(index=4, candidate_scope=access_scope())
+    blocked = replace(
+        blocked,
+        evidence_packet=replace(
+            blocked.evidence_packet,
+            supportability=EvidenceSupportability.BLOCKED,
+            unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
+        ),
+    )
+    unscored = replace(queue_candidate(index=5, candidate_scope=access_scope()), score=None)
+    out_of_scope = queue_candidate(
+        index=6,
+        candidate_scope=ReviewAccessScope(
+            tenant_id="tenant-001",
+            book_id="book-001",
+            portfolio_id="portfolio-out-of-scope",
+            client_id="client-001",
+        ),
+    )
+    for candidate in (reviewable, duplicate, expired, blocked, unscored, out_of_scope):
+        repository.persist_candidate(
+            candidate,
+            idempotency_key=f"signal-ingestion:high-cash:{candidate.candidate_id}",
+            payload={"candidateId": candidate.candidate_id},
+            actor_subject="signal-ingestion-worker",
+            occurred_at_utc=EVALUATED_AT,
+        )
+    connection.executed_sql.clear()
+
+    summary = load_review_queue_readiness_summary(
+        connection,
+        access_scope_filter=QueueAccessScopeFilter(portfolio_id="portfolio-001"),
+    )
+
+    assert summary.candidate_snapshot_count == 6
+    assert summary.reviewable_item_count == 1
+    assert summary.excluded_candidate_count == 5
+    assert summary.exclusion_counts["duplicate"] == 1
+    assert summary.exclusion_counts["expired"] == 1
+    assert summary.exclusion_counts["unsupported_evidence"] == 1
+    assert summary.exclusion_counts["unscored"] == 1
+    assert summary.exclusion_counts["access_scope_mismatch"] == 1
+    assert summary.scored_candidate_count == 5
+    assert summary.unscored_candidate_count == 1
+    executed_sql = " ".join(connection.executed_sql)
+    assert "/* lotus-idea review-queue-readiness-summary */" in executed_sql
+    assert "idea_candidate_record" in executed_sql
+    assert "idea_outbox_event" not in executed_sql
+    assert "idea_downstream_submission" not in executed_sql
+    assert "idea_report_evidence_pack_request" not in executed_sql
+    assert "idea_ai_explanation_lineage" not in executed_sql
+    assert "idea_audit_event" not in executed_sql
+    assert "idea_idempotency_record" not in executed_sql
 
 
 def test_review_queue_candidate_page_rejects_unsafe_page_controls() -> None:

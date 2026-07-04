@@ -45,6 +45,16 @@ class ReviewQueueRepositoryPage:
 
 
 @dataclass(frozen=True)
+class ReviewQueueReadinessRepositorySummary:
+    candidate_snapshot_count: int
+    reviewable_item_count: int
+    excluded_candidate_count: int
+    exclusion_counts: Mapping[str, int]
+    scored_candidate_count: int
+    unscored_candidate_count: int
+
+
+@dataclass(frozen=True)
 class OutboxDeliveryReadinessRepositorySummary:
     pending_count: int
     leased_count: int
@@ -102,6 +112,15 @@ class ReviewQueueProjectionRepository(Protocol):
         limit: int,
         offset: int,
     ) -> ReviewQueueRepositoryPage: ...
+
+
+@runtime_checkable
+class ReviewQueueReadinessProjectionRepository(Protocol):
+    def review_queue_readiness_summary(
+        self,
+        *,
+        access_scope_filter: QueueAccessScopeFilter | None,
+    ) -> ReviewQueueReadinessRepositorySummary: ...
 
 
 @runtime_checkable

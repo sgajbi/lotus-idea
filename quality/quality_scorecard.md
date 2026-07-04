@@ -41,6 +41,15 @@ non-promoted boundary: no Risk source fetch, volatility or drawdown
 calculation, Risk methodology approval, client publication, data-product
 certification, Workbench proof, or supported-feature promotion.
 
+Current slice note: advisor queue readiness now has an internal repository
+aggregate projection contract and a PostgreSQL implementation over
+`idea_candidate_record`, avoiding whole-store snapshot hydration for durable
+readiness counts when snoozes are absent. The design modularity stays inside
+the existing repository/application boundary; no separate queue-readiness
+runtime service is introduced because there is no workload, failure-isolation,
+ownership, or operability evidence for a distributed split. The endpoint
+remains diagnostic and non-promoted.
+
 Current slice note: `make opportunity-archetype-contract-gate` now enforces
 API evidence parity for every implemented caller-supplied signal API recorded
 in the opportunity archetype contract. The gate requires API module, route, and

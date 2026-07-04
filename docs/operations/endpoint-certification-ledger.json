@@ -827,9 +827,9 @@
       "path": "/api/v1/review-queues/advisor/readiness",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Return source-safe operator readiness for the deterministic advisor review queue projection, including aggregate queue counts, exclusion counts, durable-storage posture, repository-side pagination posture, and certification blockers.",
+      "purpose": "Return source-safe operator readiness for the deterministic advisor review queue projection, including aggregate queue counts, exclusion counts, durable-storage posture, repository-side readiness aggregation posture, and certification blockers.",
       "when_to_use": "Use as the RFC-0002 Slice 07 and Slice 15 operator diagnostic when an internal platform operator has idea.review.queue.readiness.read capability and needs to validate queue projection supportability before Workbench, mesh, or supported-feature promotion.",
-      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion. Repository-side pagination is certified only for durable PostgreSQL providers that expose the bounded page projection.",
+      "when_not_to_use": "Do not use as candidate detail, raw queue evidence export, candidate identifier discovery, access-scope inspection, Gateway contract, Workbench product proof, data-product certification proof, PM/compliance queue support, client-ready publication, or supported-feature promotion. Repository-side readiness aggregation is certified only for durable PostgreSQL providers that expose the bounded aggregate projection; snooze-aware and process-local evaluations retain the domain snapshot fallback.",
       "request_examples": [
         "GET /api/v1/review-queues/advisor/readiness?evaluatedAtUtc=2026-06-21T10:10:00Z with X-Caller-Roles: operator and X-Caller-Capabilities: idea.review.queue.readiness.read"
       ],
@@ -844,7 +844,9 @@
       "test_evidence": [
         "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_reports_aggregate_queue_posture",
         "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_preserves_non_storage_blockers",
-        "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_reads_repository_once",
+        "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_clears_repository_side_pagination_blocker",
+        "tests/unit/test_review_queue_application.py::test_build_review_queue_readiness_snapshot_falls_back_to_snapshot_once",
+        "tests/unit/test_postgres_review_queue.py::test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregate",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture",
         "tests/integration/test_review_queue_api.py::test_advisor_review_queue_readiness_api_requires_operator_permission",
         "tests/integration/test_review_queue_api.py::test_production_profile_rejects_self_asserted_caller_context_headers",

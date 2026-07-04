@@ -1,6 +1,6 @@
 # RFC-0002 Slice 07: Scoring, Ranking, Suppression, And Queue Policy
 
-Status: Partially implemented - deterministic scoring plus certified scope-aware advisor queue API and readiness diagnostic foundations only
+Status: Partially implemented - deterministic scoring plus certified scope-aware advisor queue API, readiness diagnostic foundation, and bounded PostgreSQL readiness aggregate projection only
 
 ## Outcome
 
@@ -70,19 +70,23 @@ Implemented on the Slice 07 foundation branch:
     candidates so explicit queue scope filters are evaluated against durable
     candidate truth.
 13. `src/app/application/review_queue.py` now exposes
-    `build_review_queue_readiness_snapshot`, which reuses the same repository
-    snapshot and deterministic queue projection path to produce source-safe
+    `build_review_queue_readiness_snapshot`, which produces source-safe
     aggregate queue counts, exclusion counts, durable-storage posture, and
     certification blockers without creating a parallel queue implementation.
+    Durable repositories can satisfy the diagnostic through the
+    `ReviewQueueReadinessProjectionRepository` aggregate contract; process-local
+    and snooze-aware evaluations retain the deterministic snapshot fallback.
 14. `GET /api/v1/review-queues/advisor/readiness` exposes that posture as a
     certified internal operator diagnostic requiring
     `idea.review.queue.readiness.read` plus the `operator` role. It returns
     `supportabilityStatus=not_certified`, `supportedFeaturePromoted=false`, and
     no candidate identifiers or access-scope identifiers.
-15. `tests/unit/test_review_queue_application.py` and
+15. `tests/unit/test_review_queue_application.py`,
+    `tests/unit/test_postgres_review_queue.py`, and
     `tests/integration/test_review_queue_api.py` prove aggregate readiness
-    counts, non-storage blockers, product-safe payloads, permission-denied
-    behavior, and timezone validation for the queue readiness diagnostic.
+    counts, PostgreSQL bounded aggregate query shape, non-storage blockers,
+    product-safe payloads, permission-denied behavior, and timezone validation
+    for the queue readiness diagnostic.
 16. `src/app/security/caller_context.py` and `src/app/api/caller_headers.py`
     now carry platform caller-context entitlement scope headers for tenant,
     book, portfolio, and client identifiers.

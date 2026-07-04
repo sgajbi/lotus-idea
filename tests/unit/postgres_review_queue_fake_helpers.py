@@ -3,6 +3,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Protocol, Sequence
 
+from app.domain import QueueExclusionReason
+
 
 class FakeReviewQueueConnection(Protocol):
     rows: dict[str, list[dict[str, Any]]]
@@ -33,6 +35,70 @@ def review_queue_page_rows(
     offset = int(params[-1])
     rows = _review_queue_ordered_rows(connection, query, params[:-2])
     return [dict(row) for row in rows[offset : offset + limit]]
+
+
+def review_queue_readiness_summary_rows(
+    connection: FakeReviewQueueConnection,
+    query: str,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    scope_fields = tuple(
+        field_name
+        for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
+        if f"->>'{field_name}'" in query
+    )
+    scope_values = {
+        field_name: set(values)
+        for field_name, values in zip(scope_fields, params[: len(scope_fields)], strict=True)
+    }
+    offset = len(scope_fields)
+    suppressed_posture = params[offset]
+    expired_status = params[offset + 1]
+    closed_status = params[offset + 2]
+    rejected_status = params[offset + 3]
+    blocked_supportability = params[offset + 4]
+    lifecycle_statuses = set(params[offset + 5])
+    exclusion_counts = {reason.value: 0 for reason in QueueExclusionReason}
+    eligible_rows: list[dict[str, Any]] = []
+    scored_candidate_count = 0
+    unscored_candidate_count = 0
+    for row in connection.rows["idea_candidate_record"]:
+        candidate_json = row["candidate_json"]
+        if candidate_json.get("score") is None:
+            unscored_candidate_count += 1
+        else:
+            scored_candidate_count += 1
+        exclusion_reason = _review_queue_row_exclusion_reason(
+            row,
+            lifecycle_statuses=lifecycle_statuses,
+            suppressed_posture=suppressed_posture,
+            expired_status=expired_status,
+            closed_status=closed_status,
+            rejected_status=rejected_status,
+            blocked_supportability=blocked_supportability,
+            scope_values=scope_values,
+        )
+        if exclusion_reason is None:
+            eligible_rows.append(row)
+        else:
+            exclusion_counts[exclusion_reason] += 1
+
+    winners_by_signal: dict[str, dict[str, Any]] = {}
+    for row in sorted(eligible_rows, key=_review_queue_source_signal_sort_key):
+        signal_key = _source_signal_key(row)
+        winners_by_signal.setdefault(signal_key, row)
+    duplicate_count = len(eligible_rows) - len(winners_by_signal)
+    exclusion_counts[QueueExclusionReason.DUPLICATE.value] = duplicate_count
+    return [
+        {
+            "candidate_snapshot_count": len(connection.rows["idea_candidate_record"]),
+            "reviewable_item_count": len(winners_by_signal),
+            "excluded_candidate_count": sum(exclusion_counts.values()),
+            "scored_candidate_count": scored_candidate_count,
+            "unscored_candidate_count": unscored_candidate_count,
+            **exclusion_counts,
+        }
+    ]
 
 
 def _review_queue_ordered_rows(
@@ -67,6 +133,43 @@ def _review_queue_ordered_rows(
         signal_key = _source_signal_key(row)
         winners_by_signal.setdefault(signal_key, row)
     return sorted(winners_by_signal.values(), key=_review_queue_sort_key)
+
+
+def _review_queue_row_exclusion_reason(
+    row: dict[str, Any],
+    *,
+    lifecycle_statuses: set[str],
+    suppressed_posture: str,
+    expired_status: str,
+    closed_status: str,
+    rejected_status: str,
+    blocked_supportability: str,
+    scope_values: dict[str, set[str]],
+) -> str | None:
+    candidate_json = row["candidate_json"]
+    access_scope = candidate_json.get("access_scope")
+    if scope_values and access_scope is None:
+        return QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value
+    for field_name, expected_values in scope_values.items():
+        if access_scope is None or access_scope.get(field_name) not in expected_values:
+            return QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value
+    if row["review_posture"] == suppressed_posture:
+        return QueueExclusionReason.SUPPRESSED.value
+    if candidate_json.get("suppression_reason") is not None:
+        return QueueExclusionReason.SUPPRESSED.value
+    if row["lifecycle_status"] == expired_status:
+        return QueueExclusionReason.EXPIRED.value
+    if row["lifecycle_status"] == closed_status:
+        return QueueExclusionReason.CLOSED.value
+    if row["lifecycle_status"] == rejected_status:
+        return QueueExclusionReason.REJECTED.value
+    if candidate_json["evidence_packet"]["supportability"] == blocked_supportability:
+        return QueueExclusionReason.UNSUPPORTED_EVIDENCE.value
+    if candidate_json.get("score") is None:
+        return QueueExclusionReason.UNSCORED.value
+    if row["lifecycle_status"] not in lifecycle_statuses:
+        return QueueExclusionReason.NON_REVIEWABLE_STATUS.value
+    return None
 
 
 def _review_queue_row_is_eligible(
