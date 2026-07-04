@@ -4,6 +4,7 @@ REQUIRED_LINT_TARGETS = (
     "ci-contract-gate",
     "repository-hygiene-gate",
     "maintainability-gate",
+    "duplicate-implementation-gate",
     "private-import-boundary-gate",
     "documentation-contract-gate",
     "quality-scorecard-gate",
@@ -194,9 +195,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "ai-model-risk-operations-proof-contract-gate": (
         "scripts/ai_model_risk_operations_proof_contract_gate.py"
     ),
-    "operator-workflows-ops-contract-gate": (
-        "scripts/operator_workflows_operations_contract_gate.py"
-    ),
+    "operator-workflows-ops-contract-gate": "scripts/operator_workflows_operations_contract_gate.py",
     "operator-workflows-operations-proof-contract-gate": (
         "scripts/operator_workflows_operations_proof_contract_gate.py"
     ),

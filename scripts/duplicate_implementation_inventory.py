@@ -38,6 +38,7 @@ def build_duplicate_inventory(
     *,
     scopes: tuple[str, ...] = DEFAULT_SCOPES,
     min_function_lines: int = DEFAULT_MIN_FUNCTION_LINES,
+    threshold_enforced: bool = False,
 ) -> dict[str, Any]:
     records = _function_records(root, scopes=scopes, min_function_lines=min_function_lines)
     clusters_by_fingerprint: dict[str, list[FunctionRecord]] = {}
@@ -54,8 +55,8 @@ def build_duplicate_inventory(
     )
     return {
         "schemaVersion": "lotus-idea.duplicate-implementation-inventory.v1",
-        "mode": "report_only",
-        "thresholdEnforced": False,
+        "mode": "blocking" if threshold_enforced else "report_only",
+        "thresholdEnforced": threshold_enforced,
         "scopes": list(scopes),
         "minFunctionLines": min_function_lines,
         "functionCount": len(records),
@@ -75,6 +76,7 @@ def validate_duplicate_inventory(
         root,
         scopes=scopes,
         min_function_lines=min_function_lines,
+        threshold_enforced=fail_on_duplicates,
     )
     if not fail_on_duplicates:
         return []
@@ -170,7 +172,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    inventory = build_duplicate_inventory(min_function_lines=args.min_function_lines)
+    inventory = build_duplicate_inventory(
+        min_function_lines=args.min_function_lines,
+        threshold_enforced=args.fail_on_duplicates,
+    )
     print(json.dumps(inventory, indent=2, sort_keys=True))
     errors = validate_duplicate_inventory(
         fail_on_duplicates=args.fail_on_duplicates,

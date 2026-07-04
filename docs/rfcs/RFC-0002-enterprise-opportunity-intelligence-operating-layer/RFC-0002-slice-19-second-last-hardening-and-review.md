@@ -484,15 +484,17 @@ showed workflow duration and failure signal existed only in GitHub UI/API:
    thresholds, weaken existing CI gates, certify production capacity, or promote
    supported features.
 
-This slice also adds report-only duplicate implementation inventory after
-GitHub issue `#296` showed repeated proof-helper bodies were invisible to the
-existing file/function-size maintainability gate:
+This slice also adds duplicate implementation inventory and promotes the stable
+zero-cluster baseline to blocking enforcement after GitHub issues `#296` and
+`#309` showed repeated proof-helper bodies were invisible to the existing
+file/function-size maintainability gate:
 
 1. `make duplicate-implementation-inventory` runs
    `scripts/duplicate_implementation_inventory.py` to scan exact function-body
-   duplicates across `src/app` and `scripts`.
-2. The inventory writes no artifacts, reports `thresholdEnforced: false`, and
-   supports an explicit `--fail-on-duplicates` mode for calibration tests only.
+   duplicates across `src/app` and `scripts` in report-only mode.
+2. `make duplicate-implementation-gate` runs the same scanner with
+   `--fail-on-duplicates`, reports `thresholdEnforced: true`, and is wired into
+   `make lint` as the current zero-cluster regression blocker.
 3. The initial six-line baseline scanned 1,750 functions and reported 31 exact
    duplicate clusters, including the known proof source-safety helper families.
 4. The first follow-through refactors move proof source-safety traversal into
@@ -526,12 +528,12 @@ existing file/function-size maintainability gate:
    proof gate, generator, contract gate, and API route retains family-specific
    policy/argument behavior, direct script execution remains supported, and the
    current measured baseline ignores pass/ellipsis-only protocol stubs, scans
-   1,582 executable function bodies, and reports 0 exact duplicate clusters.
-5. `scripts/ci_contract_gate.py` protects the Makefile target and script wiring
-   without adding duplicate thresholds to `make lint`.
-6. This is measured maintainability evidence only. It does not block all
-   repetition, refactor every proof family, or promote an LLM-based quality
-   gate.
+   1,606 executable function bodies, and reports 0 exact duplicate clusters.
+5. `scripts/ci_contract_gate.py` protects the report-only/blocking target split,
+   strict flag, and `make lint` lane placement.
+6. This is exact first-party implementation-body enforcement only. It does not
+   block near-duplicates, generated-pattern similarity, protocol stubs,
+   intentional tiny helpers, every repetition, or an LLM-based quality gate.
 
 This slice also hardens Manage source-ref freshness vocabulary after issue
 review showed a repeatable source-authority drift pattern:

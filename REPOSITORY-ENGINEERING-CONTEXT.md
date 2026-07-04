@@ -626,12 +626,14 @@ Recent issue-derived patterns to preserve:
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `make ci-contract-gate` must catch
     source-before-dependency-install ordering and dependency reinstall drift.
-25. duplicate-implementation controls start as measured report-only inventory,
-    not a noisy merge blocker. `make duplicate-implementation-inventory`
-    scans exact first-party function-body duplicates across `src/app` and
-    `scripts`, identifies known proof-helper clusters, writes no artifacts, and
-    should be used to guide shared-helper consolidation before any strict
-    threshold is promoted. The first follow-through consolidations moved repeated
+25. duplicate-implementation controls now split report-only evidence from
+    blocking enforcement. `make duplicate-implementation-inventory` scans exact
+    first-party function-body duplicates across `src/app` and `scripts`, writes
+    no artifacts, and reports the inventory for review. `make
+    duplicate-implementation-gate` runs the same scanner with
+    `--fail-on-duplicates`, is wired into `make lint`, and blocks exact
+    duplicate implementation clusters above the current zero-cluster baseline.
+    The first follow-through consolidations moved repeated
     proof source-safety traversal into `scripts/proof_source_safety.py` and
     live-proof generator timeout/output plumbing and generated-at UTC parsing into
     `scripts/proof_generator_io.py`, and centralized proof timestamp,
@@ -763,7 +765,7 @@ repeated defect patterns are fixed once and pinned with tests or gates:
 18. Duplicate implementation inventory: GitHub issue `#296` is addressed by a
     repo-native `make duplicate-implementation-inventory` command that reports
     exact duplicate function-body clusters across `src/app` and `scripts`
-    without writing artifacts or enforcing thresholds. The initial baseline
+    without writing artifacts. The initial baseline
     scanned 1,750 functions at the six-line threshold and reported 31 exact
     clusters, including the known proof source-safety validation helper
     families. The first follow-through refactors centralize proof source-safety
@@ -795,8 +797,12 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     contract forbidden-text traversal in `scripts.contract_text_guards`, and
     centralize operations-contract payload, operation, and label validation in
     `scripts.operations_contract_validators`; the current measured baseline
-    ignores pass/ellipsis-only protocol stubs, scans 1,582 executable function
-    bodies, and reports 0 exact duplicate clusters.
+    ignores pass/ellipsis-only protocol stubs, scans 1,606 executable function
+    bodies, and reports 0 exact duplicate clusters. GitHub issue `#309`
+    promotes the same deterministic scanner to a blocking
+    `make duplicate-implementation-gate` with `--fail-on-duplicates`, wired into
+    `make lint` while preserving `make duplicate-implementation-inventory` as
+    the no-artifact report-only evidence command.
     `make ci-contract-gate` protects the target wiring while strict duplicate
     blocking remains unpromoted.
 

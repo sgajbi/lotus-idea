@@ -215,10 +215,13 @@ source-before-dependency-install ordering and package installs that would
 reinstall dependencies after a source-only change. Docker build, runtime smoke,
 image scan, and SBOM evidence remain blocking release-lane proof.
 
-Duplicate implementation measurement is report-only. `make duplicate-implementation-inventory`
-scans exact function-body duplicates across `src/app` and `scripts`, writes no artifacts, and
-defaults to `thresholdEnforced: false`. The initial six-line baseline scanned 1,750 functions and
-reported 31 exact duplicate clusters, including the known proof source-safety helper families. The
+Duplicate implementation enforcement is split into a report command and a blocking gate. `make
+duplicate-implementation-inventory` scans exact function-body duplicates across `src/app` and
+`scripts`, writes no artifacts, and reports `thresholdEnforced: false` for review evidence. `make
+duplicate-implementation-gate` runs the same scanner with `--fail-on-duplicates`, reports
+`thresholdEnforced: true`, and is wired into `make lint` as the zero-cluster regression blocker. The
+initial six-line baseline scanned 1,750 functions and reported 31 exact duplicate clusters,
+including the known proof source-safety helper families. The
 first proof-helper consolidations moved source-safety traversal into
 `scripts/proof_source_safety.py` and live-proof generator timeout/output plumbing plus
 generated-at UTC parsing into `scripts/proof_generator_io.py`, and shared proof timestamp
@@ -239,10 +242,11 @@ loading into `app.runtime.proof_artifact_files`, and source-product proof payloa
 normalization into `app.application.source_product_proof_values`, and outbox contract
 forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
 operation, and label validation into `scripts.operations_contract_validators`; the current
-measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,582 executable function
-bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the target wiring,
-but duplicate thresholds remain unpromoted until the signal is calibrated and shared-helper
-ownership is clear.
+measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,606 executable function
+bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the report-only and
+blocking target split, the strict `--fail-on-duplicates` flag, and the `make lint` lane placement.
+Intentional exceptions must be implemented as measured scanner policy with tests, not by removing
+the blocking gate.
 
 Focused test runs must stay on the Makefile surface instead of bypassing repository governance:
 

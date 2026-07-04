@@ -191,6 +191,31 @@ def _validate_aggregate_makefile_targets(makefile: str) -> list[str]:
     return errors
 
 
+def _validate_duplicate_implementation_targets(makefile: str) -> list[str]:
+    errors: list[str] = []
+    inventory_block = _target_block(makefile, "duplicate-implementation-inventory")
+    if "--fail-on-duplicates" in inventory_block:
+        errors.append(
+            "Makefile duplicate-implementation-inventory target must remain report-only; "
+            "use `duplicate-implementation-gate` for blocking enforcement"
+        )
+    gate_block = _target_block(makefile, "duplicate-implementation-gate")
+    expected_gate_command = (
+        "$(VENV_PYTHON) scripts/duplicate_implementation_inventory.py --fail-on-duplicates"
+    )
+    if expected_gate_command not in gate_block:
+        errors.append(
+            f"Makefile duplicate-implementation-gate target must run `{expected_gate_command}`"
+        )
+    lint_block = _target_block(makefile, "lint")
+    if "$(MAKE) duplicate-implementation-inventory" in lint_block:
+        errors.append(
+            "Makefile lint target must call blocking `$(MAKE) duplicate-implementation-gate`, "
+            "not report-only `$(MAKE) duplicate-implementation-inventory`"
+        )
+    return errors
+
+
 def _validate_test_targets(makefile: str) -> list[str]:
     errors: list[str] = []
     for target, expected_command in TEST_TARGET_EXPECTATIONS.items():
@@ -273,6 +298,7 @@ def validate_makefile(makefile: str) -> list[str]:
     return [
         *_validate_required_makefile_targets(makefile),
         *_validate_aggregate_makefile_targets(makefile),
+        *_validate_duplicate_implementation_targets(makefile),
         *_validate_test_targets(makefile),
         *_validate_install_target(makefile),
         *_validate_security_audit_target(makefile),
