@@ -221,6 +221,49 @@ Evidence:
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
 
+## 2026-07-04: Idea Signal API Model Boundary
+
+High-cash and mandate-restriction request/response DTOs now live in
+`src/app/api/idea_signal_models.py`.
+`src/app/api/idea_signals.py` imports those DTOs while keeping caller checks,
+source-ref authority validation, candidate persistence orchestration,
+operation-event emission, route metadata, and response handling in the
+existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate idea-signal service,
+worker boundary, source-ingestion runtime, or independently scalable signal
+evaluation path. The endpoints remain bounded API foundations that consume
+caller-supplied, source-owned evidence.
+
+Private-banking and source-authority boundaries preserved:
+
+1. The route still requires explicit caller capabilities and validates
+   source-ref contracts against owning source authorities.
+2. The route still does not calculate official portfolio cash, holdings,
+   suitability, risk, performance, execution, or report facts.
+3. The route still does not certify live source ingestion, Gateway/Workbench
+   support, client publication, or supported-feature promotion.
+
+Test-harness learning:
+
+1. API operation-event tests now patch review/conversion helper emitter aliases
+   after route/helper extraction so integration tests follow the real operation
+   boundary instead of stale route-local emitter names.
+
+Evidence:
+
+1. Code: `src/app/api/idea_signals.py`,
+   `src/app/api/idea_signal_models.py`,
+   `tests/integration/test_api_operation_events.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\integration\test_api_operation_events.py tests\unit\test_api_signal_models.py -q`
+   (`24 passed`), plus targeted ruff and mypy over the changed modules.
+3. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
+
 ## 2026-07-04: Runtime Trust Telemetry API Model Boundary
 
 Runtime trust telemetry preview, product posture, snapshot, freshness, lineage,

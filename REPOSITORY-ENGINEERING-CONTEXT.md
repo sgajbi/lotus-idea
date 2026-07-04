@@ -148,10 +148,11 @@ runtime modularity:
 2. `src/app/application/`: use-case orchestration, proof-readiness builders,
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
-3. `src/app/api/`: FastAPI routes, shared DTO modules for signal, AI, outbox
-   operator, and runtime trust telemetry surfaces, shared route metadata,
-   caller-context binding, idempotency header validation, product-safe problem
-   details, signal API support, and API-internal mutation-operation helpers.
+3. `src/app/api/`: FastAPI routes, shared DTO modules for signal, idea-signal,
+   AI, outbox operator, and runtime trust telemetry surfaces, shared route
+   metadata, caller-context binding, idempotency header validation,
+   product-safe problem details, signal API support, and API-internal
+   mutation-operation helpers.
 4. `src/app/ports/`: repository, source, publisher, and downstream realization
    interfaces.
 5. `src/app/infrastructure/`: HTTP source adapters, PostgreSQL repository,
@@ -176,26 +177,34 @@ Use shared API helpers instead of route-local clones:
 3. `app.api.idempotency` for mutating route `Idempotency-Key` validation,
 4. `app.api.base_model.CamelModel` for camel-case API DTOs,
 5. `app.api.signal_models` for shared signal-family DTOs,
-6. `app.api.ai_governance_models` for AI explanation request/response DTOs
+6. `app.api.idea_signal_models` for high-cash and mandate-restriction
+   idea-signal request/response DTOs behind the existing
+   `app.api.idea_signals` route surface,
+7. `app.api.ai_governance_models` for AI explanation request/response DTOs
    behind the existing `app.api.ai_governance` import surface,
-7. `app.api.outbox_delivery_readiness_models` for outbox delivery readiness
+8. `app.api.outbox_delivery_readiness_models` for outbox delivery readiness
    and run-once response DTOs behind the existing
    `app.api.outbox_delivery_readiness` route surface,
-8. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
+9. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
    preview/snapshot response DTOs behind the existing
    `app.api.runtime_trust_telemetry` route surface,
-9. `app.api.signal_api_support` for caller context, scope checks, source-ref
+10. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-10. `app.api.review_workflow_operations` for review-action and feedback route
+11. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-11. `app.api.conversion_governance_operations` for conversion-intent and
+12. `app.api.conversion_governance_operations` for conversion-intent and
    conversion-outcome route caller parsing, mutating capability checks,
    idempotency validation, durable-write guards, operation-event mapping, and
    product-safe persistence problem mapping,
-12. `app.api.temporal_validation` for API timestamp awareness and UTC query
+13. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
+
+When route behavior is moved into API-internal operation helper modules, tests
+that capture operation events must patch the helper emitter aliases as well as
+legacy route-local emitter names. Do not silently rely on route modules owning
+the emitter after review/conversion/outbox helper extraction.
 
 When one HTTP status can return multiple stable `ProblemDetails` codes, use
 `app.api.problem_details.merged_problem_response_metadata` instead of spreading

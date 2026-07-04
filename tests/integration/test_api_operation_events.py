@@ -623,6 +623,13 @@ def capture_operation_events(
             monkeypatch.setattr(module, "emit_foundation_operation_event", capture_foundation_event)
         if hasattr(module, "emit_operation_event"):
             monkeypatch.setattr(module, "emit_operation_event", capture_operation_event)
+        for foundation_alias in (
+            "_emit_review_operation_event",
+            "emit_conversion_operation_event",
+            "emit_review_workflow_operation_event",
+        ):
+            if hasattr(module, foundation_alias):
+                monkeypatch.setattr(module, foundation_alias, capture_foundation_event)
     return events
 
 
