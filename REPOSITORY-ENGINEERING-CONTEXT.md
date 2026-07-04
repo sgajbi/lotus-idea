@@ -149,8 +149,8 @@ runtime modularity:
    source ingestion, downstream submission, outbox delivery, AI explanation,
    and readiness diagnostics.
 3. `src/app/api/`: FastAPI routes, shared DTO modules for signal, idea-signal,
-   review workflow, conversion, AI, outbox operator, and runtime trust
-   telemetry surfaces, shared route metadata, caller-context binding,
+   review workflow, conversion, candidate detail, AI, outbox operator, and
+   runtime trust telemetry surfaces, shared route metadata, caller-context binding,
    idempotency header validation, product-safe problem details, signal API
    support, and API-internal mutation-operation helpers.
 4. `src/app/ports/`: repository, source, publisher, and downstream realization
@@ -194,17 +194,21 @@ Use shared API helpers instead of route-local clones:
 11. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
    preview/snapshot response DTOs behind the existing
    `app.api.runtime_trust_telemetry` route surface,
-12. `app.api.signal_api_support` for caller context, scope checks, source-ref
+12. `app.api.candidate_detail_models` for source-safe candidate-detail,
+   evidence, lifecycle, review, feedback, conversion, report evidence-pack,
+   and audit-summary response DTOs behind the existing
+   `app.api.candidate_detail` route surface,
+13. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-13. `app.api.review_workflow_operations` for review-action and feedback route
+14. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-14. `app.api.conversion_governance_operations` for conversion-intent and
+15. `app.api.conversion_governance_operations` for conversion-intent and
    conversion-outcome route caller parsing, mutating capability checks,
    idempotency validation, durable-write guards, operation-event mapping, and
    product-safe persistence problem mapping,
-15. `app.api.temporal_validation` for API timestamp awareness and UTC query
+16. `app.api.temporal_validation` for API timestamp awareness and UTC query
    validation.
 
 When route behavior is moved into API-internal operation helper modules, tests
