@@ -38,12 +38,14 @@ def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[s
     with tempfile.TemporaryDirectory() as directory:
         artifact_path = Path(directory) / "proof.json"
         artifact_path.write_text(json.dumps(payload), encoding="utf-8")
-        return bind_aggregate_proof_provenance(
+        bound = bind_aggregate_proof_provenance(
             payload,
             artifact_path=artifact_path,
             proof_ref=proof_ref,
             repository_root=ROOT,
         )
+        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
+        return bound
 
 
 def test_gateway_workbench_discovery_proof_application_is_noop_for_other_capability() -> None:

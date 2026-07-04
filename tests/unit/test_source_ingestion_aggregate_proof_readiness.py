@@ -150,12 +150,14 @@ def _bound_source_ingestion_proof(
     with tempfile.TemporaryDirectory() as directory:
         artifact_path = Path(directory) / "source-ingestion-live-proof.json"
         artifact_path.write_text(json.dumps(payload), encoding="utf-8")
-        return bind_aggregate_proof_provenance(
+        bound = bind_aggregate_proof_provenance(
             payload,
             artifact_path=artifact_path,
             proof_ref=proof_ref,
             repository_root=ROOT,
         )
+        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
+        return bound
 
 
 def _wrong_source_revision_proof() -> dict[str, Any]:

@@ -6,6 +6,8 @@ from pathlib import Path
 import tempfile
 from typing import Any
 
+import pytest
+
 import scripts.generate_implementation_proof_readiness as proof_report
 
 from app.application.implementation_proof_readiness import (
@@ -88,7 +90,18 @@ def test_implementation_proof_readiness_uses_operator_workflows_operations_proof
 
 def test_generate_implementation_proof_readiness_uses_explicit_operator_workflows_operations_proof(
     tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    def bind_clean_aggregate_proof_provenance(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        bound = bind_aggregate_proof_provenance(*args, **kwargs)
+        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
+        return bound
+
+    monkeypatch.setattr(
+        proof_report,
+        "bind_aggregate_proof_provenance",
+        bind_clean_aggregate_proof_provenance,
+    )
     operator_proof = tmp_path / "operator-workflows-operations-proof.json"
     operator_proof.write_text(
         json.dumps(
@@ -131,9 +144,11 @@ def _bound_aggregate_proof(payload: dict[str, object], proof_ref: str) -> dict[s
     with tempfile.TemporaryDirectory() as directory:
         artifact_path = Path(directory) / "proof.json"
         artifact_path.write_text(json.dumps(payload), encoding="utf-8")
-        return bind_aggregate_proof_provenance(
+        bound = bind_aggregate_proof_provenance(
             payload,
             artifact_path=artifact_path,
             repository_root=ROOT,
             proof_ref=proof_ref,
         )
+        bound["aggregateProofProvenance"]["sourceTreeDirty"] = False
+        return bound

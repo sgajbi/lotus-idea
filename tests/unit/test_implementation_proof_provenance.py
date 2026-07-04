@@ -97,6 +97,41 @@ def test_implementation_proof_readiness_preserves_blocker_for_source_revision_mi
     assert "durable_repository_not_configured" in snapshot.overall_blockers
 
 
+def test_implementation_proof_readiness_preserves_blocker_for_dirty_source_proof(
+    tmp_path: Path,
+) -> None:
+    proof_ref = "durable repository proof artifact"
+    proof_path = tmp_path / "durable-repository-proof.json"
+    raw_proof = build_durable_repository_proof_payload(
+        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository_root=ROOT,
+    )
+    proof_path.write_text(json.dumps(raw_proof), encoding="utf-8")
+    bound_proof = bind_aggregate_proof_provenance(
+        raw_proof,
+        artifact_path=proof_path,
+        proof_ref=proof_ref,
+        repository_root=ROOT,
+    )
+    bound_proof["aggregateProofProvenance"]["sourceTreeDirty"] = True
+
+    snapshot = build_implementation_proof_readiness_snapshot(
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
+        repository=InMemoryIdeaRepository(),
+        durable_storage_backed=False,
+        durable_repository_proof=bound_proof,
+        durable_repository_proof_ref=proof_ref,
+    )
+
+    assert "durable_repository_not_configured" in snapshot.overall_blockers
+    source_ingestion = next(
+        capability
+        for capability in snapshot.capabilities
+        if capability.capability_id == "source-ingestion"
+    )
+    assert proof_ref not in source_ingestion.evidence_refs
+
+
 def test_current_source_revision_prefers_configured_ci_revision(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -112,6 +147,7 @@ def _valid_provenance(
     proof_generated_at_utc: str = "2026-06-21T10:00:00Z",
     artifact_sha256: str = "a" * 64,
     source_revision: str = "expected-source-revision",
+    source_tree_dirty: object = False,
 ) -> dict[str, object]:
     return {
         "repository": repository,
@@ -119,7 +155,7 @@ def _valid_provenance(
         "proofGeneratedAtUtc": proof_generated_at_utc,
         "artifactSha256": artifact_sha256,
         "sourceRevision": source_revision,
-        "sourceTreeDirty": False,
+        "sourceTreeDirty": source_tree_dirty,
     }
 
 
@@ -241,6 +277,28 @@ def _valid_provenance(
             "durable repository proof artifact",
             datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
             id="unavailable-source-revision",
+        ),
+        pytest.param(
+            {
+                "generatedAtUtc": "2026-06-21T10:00:00Z",
+                "aggregateProofProvenance": _valid_provenance(source_tree_dirty=True),
+            },
+            "durable repository proof artifact",
+            datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+            id="dirty-source-tree",
+        ),
+        pytest.param(
+            {
+                "generatedAtUtc": "2026-06-21T10:00:00Z",
+                "aggregateProofProvenance": {
+                    key: value
+                    for key, value in _valid_provenance().items()
+                    if key != "sourceTreeDirty"
+                },
+            },
+            "durable repository proof artifact",
+            datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+            id="missing-source-tree-dirty",
         ),
     ],
 )
