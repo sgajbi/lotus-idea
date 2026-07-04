@@ -283,6 +283,17 @@ persistence problem mapping. This is an internal design-modularity boundary
 inside the existing lotus-idea API process; it is not a separate runtime
 service, queue, or independently scalable deployment.
 
+`POST /api/v1/idea-candidates/{candidateId}/conversion-intents` and
+`POST /api/v1/conversion-intents/{conversionIntentId}/outcomes` use the same
+internal design-modularity pattern through
+`app.api.conversion_governance_operations`. That helper centralizes conversion
+caller parsing, mutating capability checks, idempotency validation,
+durable-write blocking, operation-event mapping, and product-safe persistence
+problem mapping while preserving the route-owned OpenAPI contract and DTOs.
+It is not a runtime service split. Conversion remains a review-gated local
+intent/outcome posture and does not grant downstream execution, suitability,
+compliance, rebalance, render/archive, or client-communication authority.
+
 `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` is the
 certified internal lifecycle transition API foundation. It requires
 `idea.candidate.lifecycle.transition` plus `Idempotency-Key`, applies the

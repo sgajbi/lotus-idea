@@ -7,28 +7,27 @@ from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
-from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
-from app.api.durable_write_guard import (
-    DURABLE_REPOSITORY_NOT_CONFIGURED,
-    durable_repository_write_unavailable_metadata,
-    durable_write_problem,
+from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER
+from app.api.conversion_governance_operations import (
+    ConversionCallerHeaders,
+    emit_conversion_operation_event,
+    error_code_from_conversion_decision,
+    operation_outcome_from_conversion_decision,
+    permission_denied,
+    prepare_conversion_mutation,
+    problem_for_conversion_persistence,
 )
-from app.api.idempotency import validate_idempotency_key
+from app.api.durable_write_guard import durable_repository_write_unavailable_metadata
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
     not_found_metadata,
     permission_denied_metadata,
-    permission_denied_problem,
 )
 from app.api.persistence_summary import persistence_summary_payload
 from app.api.request_validation import require_non_empty_reason_codes
 from app.api.route_metadata import RouteMetadata
 from app.api.temporal_validation import require_timezone_aware
-from app.api.runtime_dependencies import (
-    get_idea_repository,
-    idea_repository_durable_storage_backed,
-)
 from app.application.conversion_workflow import (
     RecordConversionOutcomeToRepositoryCommand,
     RequestConversionIntentToRepositoryCommand,
@@ -50,7 +49,7 @@ from app.domain import (
     SourceSystem,
 )
 from app.api.problem_details import problem_details_response as problem_response
-from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
+from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import CallerContext, PermissionDeniedError
 
 _CONVERSION_INTENT_CAPABILITY = "idea.conversion.intent.record"
@@ -259,43 +258,37 @@ async def record_conversion_intent(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> ConversionIntentApiResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
-        _require_conversion_caller(caller, capability=_CONVERSION_INTENT_CAPABILITY)
-        validate_idempotency_key(idempotency_key)
-        repository = get_idea_repository()
-        durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
-        if configuration_problem is not None:
-            _emit_conversion_operation_event(
-                IdeaOperation.CONVERSION_INTENT,
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed,
-            )
-            return configuration_problem
+        context = prepare_conversion_mutation(
+            headers=ConversionCallerHeaders(
+                subject=x_caller_subject,
+                roles=x_caller_roles,
+                capabilities=x_caller_capabilities,
+                trusted_caller_context=x_lotus_trusted_caller_context,
+            ),
+            capability=_CONVERSION_INTENT_CAPABILITY,
+            idempotency_key=idempotency_key,
+            operation=IdeaOperation.CONVERSION_INTENT,
+        )
+        if isinstance(context, JSONResponse):
+            return context
         result = request_conversion_intent_to_repository(
             request.to_command(
                 candidate_id=candidate_id,
-                caller=caller,
+                caller=context.caller,
                 idempotency_key=idempotency_key,
             ),
-            repository=repository,
+            repository=context.repository,
         )
     except PermissionDeniedError:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
         )
-        return _permission_denied("The caller is not permitted to record idea conversion intents.")
+        return permission_denied("The caller is not permitted to record idea conversion intents.")
     except InvalidConversionIntent:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             OperationOutcome.INVALID_STATE,
             "conversion_intent_conflict",
@@ -307,7 +300,7 @@ async def record_conversion_intent(
             detail="The conversion intent is not valid for the current idea candidate state.",
         )
     except ValueError:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
@@ -319,19 +312,19 @@ async def record_conversion_intent(
             detail="Correct the conversion intent request and retry.",
         )
 
-    problem = _problem_for_conversion_persistence(result.persistence)
+    problem = problem_for_conversion_persistence(result.persistence)
     if problem is not None:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_INTENT,
-            _operation_outcome_from_conversion_decision(result.persistence.decision),
-            _error_code_from_conversion_decision(result.persistence.decision),
-            durable_storage_backed,
+            operation_outcome_from_conversion_decision(result.persistence.decision),
+            error_code_from_conversion_decision(result.persistence.decision),
+            context.durable_storage_backed,
         )
         return problem
-    _emit_conversion_operation_event(
+    emit_conversion_operation_event(
         IdeaOperation.CONVERSION_INTENT,
-        _operation_outcome_from_conversion_decision(result.persistence.decision),
-        durable_storage_backed=durable_storage_backed,
+        operation_outcome_from_conversion_decision(result.persistence.decision),
+        durable_storage_backed=context.durable_storage_backed,
     )
     return ConversionIntentApiResponse(
         conversionIntent=(
@@ -340,7 +333,7 @@ async def record_conversion_intent(
             else None
         ),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=durable_storage_backed,
+        durableStorageBacked=context.durable_storage_backed,
         supportedFeaturePromoted=False,
     )
 
@@ -357,43 +350,37 @@ async def record_conversion_outcome(
         alias=TRUSTED_CALLER_CONTEXT_HEADER,
     ),
 ) -> ConversionOutcomeApiResponse | JSONResponse:
-    caller = caller_context_from_headers(
-        subject=x_caller_subject,
-        roles=x_caller_roles,
-        capabilities=x_caller_capabilities,
-        trusted_caller_context=x_lotus_trusted_caller_context,
-    )
     try:
-        _require_conversion_caller(caller, capability=_CONVERSION_OUTCOME_CAPABILITY)
-        validate_idempotency_key(idempotency_key)
-        repository = get_idea_repository()
-        durable_storage_backed = idea_repository_durable_storage_backed(repository)
-        configuration_problem = durable_write_problem(repository)
-        if configuration_problem is not None:
-            _emit_conversion_operation_event(
-                IdeaOperation.CONVERSION_OUTCOME,
-                OperationOutcome.BLOCKED,
-                DURABLE_REPOSITORY_NOT_CONFIGURED,
-                durable_storage_backed,
-            )
-            return configuration_problem
+        context = prepare_conversion_mutation(
+            headers=ConversionCallerHeaders(
+                subject=x_caller_subject,
+                roles=x_caller_roles,
+                capabilities=x_caller_capabilities,
+                trusted_caller_context=x_lotus_trusted_caller_context,
+            ),
+            capability=_CONVERSION_OUTCOME_CAPABILITY,
+            idempotency_key=idempotency_key,
+            operation=IdeaOperation.CONVERSION_OUTCOME,
+        )
+        if isinstance(context, JSONResponse):
+            return context
         result = record_conversion_outcome_to_repository(
             request.to_command(
                 conversion_intent_id=conversion_intent_id,
-                caller=caller,
+                caller=context.caller,
                 idempotency_key=idempotency_key,
             ),
-            repository=repository,
+            repository=context.repository,
         )
     except PermissionDeniedError:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             OperationOutcome.PERMISSION_DENIED,
             "permission_denied",
         )
-        return _permission_denied("The caller is not permitted to record idea conversion outcomes.")
+        return permission_denied("The caller is not permitted to record idea conversion outcomes.")
     except InvalidConversionOutcome:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             OperationOutcome.INVALID_STATE,
             "conversion_outcome_conflict",
@@ -405,7 +392,7 @@ async def record_conversion_outcome(
             detail="The conversion outcome is not valid for the recorded conversion intent.",
         )
     except ValueError:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
             OperationOutcome.INVALID_REQUEST,
             "invalid_request",
@@ -417,19 +404,19 @@ async def record_conversion_outcome(
             detail="Correct the conversion outcome request and retry.",
         )
 
-    problem = _problem_for_conversion_persistence(result.persistence)
+    problem = problem_for_conversion_persistence(result.persistence)
     if problem is not None:
-        _emit_conversion_operation_event(
+        emit_conversion_operation_event(
             IdeaOperation.CONVERSION_OUTCOME,
-            _operation_outcome_from_conversion_decision(result.persistence.decision),
-            _error_code_from_conversion_decision(result.persistence.decision),
-            durable_storage_backed,
+            operation_outcome_from_conversion_decision(result.persistence.decision),
+            error_code_from_conversion_decision(result.persistence.decision),
+            context.durable_storage_backed,
         )
         return problem
-    _emit_conversion_operation_event(
+    emit_conversion_operation_event(
         IdeaOperation.CONVERSION_OUTCOME,
-        _operation_outcome_from_conversion_decision(result.persistence.decision),
-        durable_storage_backed=durable_storage_backed,
+        operation_outcome_from_conversion_decision(result.persistence.decision),
+        durable_storage_backed=context.durable_storage_backed,
     )
     return ConversionOutcomeApiResponse(
         conversionOutcome=(
@@ -438,78 +425,9 @@ async def record_conversion_outcome(
             else None
         ),
         persistence=ConversionPersistenceSummaryResponse.from_result(result.persistence),
-        durableStorageBacked=durable_storage_backed,
+        durableStorageBacked=context.durable_storage_backed,
         supportedFeaturePromoted=False,
     )
-
-
-def _require_conversion_caller(caller: CallerContext, *, capability: str) -> None:
-    if not caller.has_capability(capability):
-        raise PermissionDeniedError(capability)
-
-
-def _problem_for_conversion_persistence(
-    result: ConversionPersistenceResult,
-) -> JSONResponse | None:
-    if result.decision is ConversionPersistenceDecision.NOT_FOUND:
-        return problem_response(
-            status_code=status.HTTP_404_NOT_FOUND,
-            code="conversion_resource_not_found",
-            title="Conversion resource not found",
-            detail="The requested idea conversion resource was not found.",
-        )
-    if result.decision is ConversionPersistenceDecision.CONFLICT:
-        return problem_response(
-            status_code=status.HTTP_409_CONFLICT,
-            code="idempotency_conflict",
-            title="Idempotency conflict",
-            detail="The idempotency key was already used with a different request payload.",
-        )
-    return None
-
-
-def _permission_denied(detail: str) -> JSONResponse:
-    return permission_denied_problem(detail)
-
-
-def _emit_conversion_operation_event(
-    operation: IdeaOperation,
-    outcome: OperationOutcome,
-    error_code: str | None = None,
-    durable_storage_backed: bool = False,
-) -> None:
-    emit_operation_event(
-        OperationEvent(
-            operation=operation,
-            outcome=outcome,
-            source_authority="lotus-idea",
-            error_code=error_code,
-            durable_storage_backed=durable_storage_backed,
-            supported_feature_promoted=False,
-        )
-    )
-
-
-def _operation_outcome_from_conversion_decision(
-    decision: ConversionPersistenceDecision,
-) -> OperationOutcome:
-    if decision is ConversionPersistenceDecision.ACCEPTED:
-        return OperationOutcome.ACCEPTED
-    if decision is ConversionPersistenceDecision.REPLAYED:
-        return OperationOutcome.REPLAYED
-    if decision is ConversionPersistenceDecision.NOT_FOUND:
-        return OperationOutcome.NOT_FOUND
-    return OperationOutcome.CONFLICT
-
-
-def _error_code_from_conversion_decision(
-    decision: ConversionPersistenceDecision,
-) -> str | None:
-    if decision is ConversionPersistenceDecision.NOT_FOUND:
-        return "conversion_resource_not_found"
-    if decision is ConversionPersistenceDecision.CONFLICT:
-        return "idempotency_conflict"
-    return None
 
 
 CONVERSION_INTENT_ROUTE: RouteMetadata = {

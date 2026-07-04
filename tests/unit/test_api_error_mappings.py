@@ -1,33 +1,33 @@
 from __future__ import annotations
 
-from app.api.conversion_governance import _error_code_from_conversion_decision
-from app.api.review_workflow import _error_code_from_review_decision
+from app.api.conversion_governance_operations import error_code_from_conversion_decision
+from app.api.review_workflow_operations import error_code_from_review_decision
 from app.api.telemetry_buckets import bounded_count_bucket
 from app.domain.persistence import ConversionPersistenceDecision, ReviewPersistenceDecision
 
 
 def test_review_api_error_mapping_is_bounded_and_source_safe() -> None:
     assert (
-        _error_code_from_review_decision(ReviewPersistenceDecision.NOT_FOUND)
+        error_code_from_review_decision(ReviewPersistenceDecision.NOT_FOUND)
         == "candidate_not_found"
     )
     assert (
-        _error_code_from_review_decision(ReviewPersistenceDecision.CONFLICT)
+        error_code_from_review_decision(ReviewPersistenceDecision.CONFLICT)
         == "idempotency_conflict"
     )
-    assert _error_code_from_review_decision(ReviewPersistenceDecision.ACCEPTED) is None
+    assert error_code_from_review_decision(ReviewPersistenceDecision.ACCEPTED) is None
 
 
 def test_conversion_api_error_mapping_is_bounded_and_source_safe() -> None:
     assert (
-        _error_code_from_conversion_decision(ConversionPersistenceDecision.NOT_FOUND)
+        error_code_from_conversion_decision(ConversionPersistenceDecision.NOT_FOUND)
         == "conversion_resource_not_found"
     )
     assert (
-        _error_code_from_conversion_decision(ConversionPersistenceDecision.CONFLICT)
+        error_code_from_conversion_decision(ConversionPersistenceDecision.CONFLICT)
         == "idempotency_conflict"
     )
-    assert _error_code_from_conversion_decision(ConversionPersistenceDecision.ACCEPTED) is None
+    assert error_code_from_conversion_decision(ConversionPersistenceDecision.ACCEPTED) is None
 
 
 def test_outbox_delivery_operation_count_buckets_are_bounded() -> None:

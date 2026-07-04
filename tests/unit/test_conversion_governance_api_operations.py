@@ -5,43 +5,29 @@ from typing import Any
 import pytest
 from fastapi.responses import JSONResponse
 
-import app.api.review_workflow_operations as operations
+import app.api.conversion_governance_operations as operations
 from app.domain import (
+    ConversionPersistenceDecision,
+    ConversionPersistenceResult,
     InMemoryIdeaRepository,
-    ReviewActorRole,
-    ReviewPersistenceDecision,
-    ReviewPersistenceResult,
 )
 from app.observability import IdeaOperation, OperationOutcome
-from app.security.caller_context import CallerEntitlementScope, PermissionDeniedError
-
-
-class BodyAuthorizedScope:
-    def __init__(self, *, portfolio_ids: tuple[str, ...] = ("PB_SG_GLOBAL_BAL_001",)) -> None:
-        self._portfolio_ids = portfolio_ids
-
-    def is_subset_of_entitlement_scope(self, scope: CallerEntitlementScope) -> bool:
-        return set(self._portfolio_ids).issubset(scope.portfolio_ids)
+from app.security.caller_context import PermissionDeniedError
 
 
 def caller_headers(
     *,
-    capability: str = "idea.review.record",
-    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
-) -> operations.ReviewWorkflowCallerHeaders:
-    return operations.ReviewWorkflowCallerHeaders(
+    capability: str = "idea.conversion.intent.record",
+) -> operations.ConversionCallerHeaders:
+    return operations.ConversionCallerHeaders(
         subject="advisor-001",
-        roles="advisor",
+        roles=None,
         capabilities=capability,
-        tenant_ids="tenant-private-bank-sg",
-        book_ids="book-advisor-001",
-        portfolio_ids=portfolio_ids,
-        client_ids="client-001",
         trusted_caller_context=None,
     )
 
 
-def test_prepare_review_workflow_mutation_builds_context_without_runtime_split(
+def test_prepare_conversion_mutation_builds_context_without_runtime_split(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     repository = InMemoryIdeaRepository()
@@ -53,33 +39,30 @@ def test_prepare_review_workflow_mutation_builds_context_without_runtime_split(
     )
     monkeypatch.setattr(operations, "durable_write_problem", lambda _: None)
 
-    context = operations.prepare_review_workflow_mutation(
+    context = operations.prepare_conversion_mutation(
         headers=caller_headers(),
-        authorized_scope=BodyAuthorizedScope(),
-        capability="idea.review.record",
-        idempotency_key="review-workflow-api-ops-001",
-        operation=IdeaOperation.REVIEW_ACTION,
+        capability="idea.conversion.intent.record",
+        idempotency_key="conversion-api-ops-001",
+        operation=IdeaOperation.CONVERSION_INTENT,
     )
 
     assert not isinstance(context, JSONResponse)
     assert context.caller.subject == "advisor-001"
-    assert context.role is ReviewActorRole.ADVISOR
     assert context.repository is repository
     assert context.durable_storage_backed is True
 
 
-def test_prepare_review_workflow_mutation_rejects_scope_claim_outside_entitlements() -> None:
+def test_prepare_conversion_mutation_rejects_missing_capability() -> None:
     with pytest.raises(PermissionDeniedError, match="Permission denied"):
-        operations.prepare_review_workflow_mutation(
-            headers=caller_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001"),
-            authorized_scope=BodyAuthorizedScope(portfolio_ids=("PB_SG_DIFFERENT_999",)),
-            capability="idea.review.record",
-            idempotency_key="review-workflow-api-ops-denied-001",
-            operation=IdeaOperation.REVIEW_ACTION,
+        operations.prepare_conversion_mutation(
+            headers=caller_headers(capability="idea.review.record"),
+            capability="idea.conversion.intent.record",
+            idempotency_key="conversion-api-ops-denied-001",
+            operation=IdeaOperation.CONVERSION_INTENT,
         )
 
 
-def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_problem(
+def test_prepare_conversion_mutation_returns_product_safe_durable_write_problem(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     emitted_events: list[dict[str, Any]] = []
@@ -92,7 +75,7 @@ def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_pro
     monkeypatch.setattr(operations, "durable_write_problem", lambda _: problem)
     monkeypatch.setattr(
         operations,
-        "emit_review_workflow_operation_event",
+        "emit_conversion_operation_event",
         lambda operation, outcome, error_code=None, durable_storage_backed=False: (
             emitted_events.append(
                 {
@@ -106,18 +89,17 @@ def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_pro
         ),
     )
 
-    response = operations.prepare_review_workflow_mutation(
+    response = operations.prepare_conversion_mutation(
         headers=caller_headers(),
-        authorized_scope=BodyAuthorizedScope(),
-        capability="idea.review.record",
-        idempotency_key="review-workflow-api-ops-durable-001",
-        operation=IdeaOperation.REVIEW_ACTION,
+        capability="idea.conversion.intent.record",
+        idempotency_key="conversion-api-ops-durable-001",
+        operation=IdeaOperation.CONVERSION_INTENT,
     )
 
     assert response is problem
     assert emitted_events == [
         {
-            "operation": IdeaOperation.REVIEW_ACTION,
+            "operation": IdeaOperation.CONVERSION_INTENT,
             "outcome": OperationOutcome.BLOCKED,
             "source_authority": "lotus-idea",
             "error_code": "durable_repository_not_configured",
@@ -129,17 +111,17 @@ def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_pro
 @pytest.mark.parametrize(
     ("decision", "expected_status", "expected_code"),
     (
-        (ReviewPersistenceDecision.NOT_FOUND, 404, "candidate_not_found"),
-        (ReviewPersistenceDecision.CONFLICT, 409, "idempotency_conflict"),
+        (ConversionPersistenceDecision.NOT_FOUND, 404, "conversion_resource_not_found"),
+        (ConversionPersistenceDecision.CONFLICT, 409, "idempotency_conflict"),
     ),
 )
-def test_problem_for_review_persistence_maps_product_safe_problem_details(
-    decision: ReviewPersistenceDecision,
+def test_problem_for_conversion_persistence_maps_product_safe_problem_details(
+    decision: ConversionPersistenceDecision,
     expected_status: int,
     expected_code: str,
 ) -> None:
-    response = operations.problem_for_review_persistence(
-        ReviewPersistenceResult(decision=decision, record=None)
+    response = operations.problem_for_conversion_persistence(
+        ConversionPersistenceResult(decision=decision, record=None)
     )
 
     assert response is not None
