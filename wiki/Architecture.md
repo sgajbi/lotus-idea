@@ -426,6 +426,16 @@ mesh-publication runtime. The route remains source-safe internal readiness
 evidence and still does not certify data products, platform mesh,
 Gateway/Workbench support, client publication, or supported-feature promotion.
 
+High-cash and mandate-restriction idea-signal request/response DTOs live in
+`src/app/api/idea_signal_models.py`, while `src/app/api/idea_signals.py` keeps
+caller checks, source-ref authority validation, candidate persistence
+orchestration, operation-event emission, route metadata, and response handling.
+This is an internal design-modularity boundary inside the same runtime
+deployable, not a separate idea-signal service, source-ingestion runtime, or
+independently scalable signal evaluation path. The endpoints continue to
+consume caller-supplied source-owned evidence and do not calculate official
+portfolio, suitability, risk, performance, execution, or report facts.
+
 `GET /api/v1/ai-explanations/readiness` is the certified internal AI
 explanation readiness diagnostic. It returns guardrail availability,
 `not_certified` model-risk supportability, and certification blockers for
