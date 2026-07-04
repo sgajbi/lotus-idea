@@ -275,6 +275,13 @@ role, upstream-authorized tenant/book/portfolio/client scope, and
 repository provider and return product-safe conflict, not-found, and permission
 posture without granting downstream suitability, compliance, mandate, execution,
 or client-communication authority.
+The shared route orchestration for these mutations lives in
+`app.api.review_workflow_operations`, which centralizes caller parsing,
+mutating capability checks, trusted entitlement-scope validation, idempotency
+validation, durable-write blocking, operation-event mapping, and product-safe
+persistence problem mapping. This is an internal design-modularity boundary
+inside the existing lotus-idea API process; it is not a separate runtime
+service, queue, or independently scalable deployment.
 
 `POST /api/v1/idea-candidates/{candidateId}/lifecycle-transitions` is the
 certified internal lifecycle transition API foundation. It requires
@@ -519,3 +526,7 @@ ADRs live in `docs/architecture/adr/`:
 2. `ADR-0002-scaffold-and-repository-foundation.md`
 3. `ADR-0003-source-authority-and-data-mesh-boundaries.md`
 4. `ADR-0004-ai-assisted-human-governed-decision-support.md`
+
+Codebase review and modularity evidence lives in
+`docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md` and
+`docs/architecture/CODEBASE-REVIEW-LEDGER.md`.

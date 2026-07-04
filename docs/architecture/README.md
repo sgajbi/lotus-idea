@@ -13,3 +13,13 @@ The initial architecture posture is:
 5. implementation only through governed RFC slices.
 
 Architecture decisions live under `docs/architecture/adr/`.
+
+Codebase cleanup and modularity evidence lives in:
+
+1. `docs/architecture/CODEBASE-REVIEW-PLAYBOOK.md`
+2. `docs/architecture/CODEBASE-REVIEW-LEDGER.md`
+
+Those files distinguish design modularity from runtime modularity. Use them to
+record bounded internal-module refactors and keep separate deployable boundary
+decisions tied to measured workload, failure-isolation, ownership, security, or
+operability evidence.

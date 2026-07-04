@@ -1,0 +1,139 @@
+from __future__ import annotations
+
+from typing import Any
+
+import pytest
+from fastapi.responses import JSONResponse
+
+import app.api.review_workflow_operations as operations
+from app.domain import (
+    InMemoryIdeaRepository,
+    ReviewActorRole,
+    ReviewPersistenceDecision,
+    ReviewPersistenceResult,
+)
+from app.observability import IdeaOperation, OperationOutcome
+from app.security.caller_context import CallerEntitlementScope, PermissionDeniedError
+
+
+class BodyAuthorizedScope:
+    def __init__(self, *, portfolio_ids: tuple[str, ...] = ("PB_SG_GLOBAL_BAL_001",)) -> None:
+        self._portfolio_ids = portfolio_ids
+
+    def is_subset_of_entitlement_scope(self, scope: CallerEntitlementScope) -> bool:
+        return set(self._portfolio_ids).issubset(scope.portfolio_ids)
+
+
+def caller_headers(
+    *,
+    capability: str = "idea.review.record",
+    portfolio_ids: str = "PB_SG_GLOBAL_BAL_001",
+) -> operations.ReviewWorkflowCallerHeaders:
+    return operations.ReviewWorkflowCallerHeaders(
+        subject="advisor-001",
+        roles="advisor",
+        capabilities=capability,
+        tenant_ids="tenant-private-bank-sg",
+        book_ids="book-advisor-001",
+        portfolio_ids=portfolio_ids,
+        client_ids="client-001",
+        trusted_caller_context=None,
+    )
+
+
+def test_prepare_review_workflow_mutation_builds_context_without_runtime_split(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = InMemoryIdeaRepository()
+    monkeypatch.setattr(operations, "get_idea_repository", lambda: repository)
+    monkeypatch.setattr(
+        operations,
+        "idea_repository_durable_storage_backed",
+        lambda candidate_repository: candidate_repository is repository,
+    )
+    monkeypatch.setattr(operations, "durable_write_problem", lambda _: None)
+
+    context = operations.prepare_review_workflow_mutation(
+        headers=caller_headers(),
+        authorized_scope=BodyAuthorizedScope(),
+        capability="idea.review.record",
+        idempotency_key="review-workflow-api-ops-001",
+        operation=IdeaOperation.REVIEW_ACTION,
+    )
+
+    assert not isinstance(context, JSONResponse)
+    assert context.caller.subject == "advisor-001"
+    assert context.role is ReviewActorRole.ADVISOR
+    assert context.repository is repository
+    assert context.durable_storage_backed is True
+
+
+def test_prepare_review_workflow_mutation_rejects_scope_claim_outside_entitlements() -> None:
+    with pytest.raises(PermissionDeniedError, match="Permission denied"):
+        operations.prepare_review_workflow_mutation(
+            headers=caller_headers(portfolio_ids="PB_SG_GLOBAL_BAL_001"),
+            authorized_scope=BodyAuthorizedScope(portfolio_ids=("PB_SG_DIFFERENT_999",)),
+            capability="idea.review.record",
+            idempotency_key="review-workflow-api-ops-denied-001",
+            operation=IdeaOperation.REVIEW_ACTION,
+        )
+
+
+def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_problem(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    emitted_events: list[dict[str, Any]] = []
+    problem = JSONResponse(
+        status_code=503,
+        content={"code": "durable_repository_not_configured"},
+    )
+    monkeypatch.setattr(operations, "get_idea_repository", InMemoryIdeaRepository)
+    monkeypatch.setattr(operations, "idea_repository_durable_storage_backed", lambda _: False)
+    monkeypatch.setattr(operations, "durable_write_problem", lambda _: problem)
+    monkeypatch.setattr(
+        operations,
+        "emit_foundation_operation_event",
+        lambda operation, outcome, **kwargs: emitted_events.append(
+            {"operation": operation, "outcome": outcome, **kwargs}
+        ),
+    )
+
+    response = operations.prepare_review_workflow_mutation(
+        headers=caller_headers(),
+        authorized_scope=BodyAuthorizedScope(),
+        capability="idea.review.record",
+        idempotency_key="review-workflow-api-ops-durable-001",
+        operation=IdeaOperation.REVIEW_ACTION,
+    )
+
+    assert response is problem
+    assert emitted_events == [
+        {
+            "operation": IdeaOperation.REVIEW_ACTION,
+            "outcome": OperationOutcome.BLOCKED,
+            "source_authority": "lotus-idea",
+            "error_code": "durable_repository_not_configured",
+            "durable_storage_backed": False,
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    ("decision", "expected_status", "expected_code"),
+    (
+        (ReviewPersistenceDecision.NOT_FOUND, 404, "candidate_not_found"),
+        (ReviewPersistenceDecision.CONFLICT, 409, "idempotency_conflict"),
+    ),
+)
+def test_problem_for_review_persistence_maps_product_safe_problem_details(
+    decision: ReviewPersistenceDecision,
+    expected_status: int,
+    expected_code: str,
+) -> None:
+    response = operations.problem_for_review_persistence(
+        ReviewPersistenceResult(decision=decision, record=None)
+    )
+
+    assert response is not None
+    assert response.status_code == expected_status
+    assert expected_code.encode() in response.body
