@@ -191,20 +191,23 @@ Use shared API helpers instead of route-local clones:
 10. `app.api.outbox_delivery_readiness_models` for outbox delivery readiness
    and run-once response DTOs behind the existing
    `app.api.outbox_delivery_readiness` route surface,
-11. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
+11. `app.api.source_ingestion_readiness_models` for source-ingestion readiness
+   and run-once response DTOs behind the existing
+   `app.api.source_ingestion_readiness` route surface,
+12. `app.api.runtime_trust_telemetry_models` for runtime trust telemetry
    preview/snapshot response DTOs behind the existing
    `app.api.runtime_trust_telemetry` route surface,
-12. `app.api.candidate_detail_models` for source-safe candidate-detail,
+13. `app.api.candidate_detail_models` for source-safe candidate-detail,
    evidence, lifecycle, review, feedback, conversion, report evidence-pack,
    and audit-summary response DTOs behind the existing
    `app.api.candidate_detail` route surface,
-13. `app.api.signal_api_support` for caller context, scope checks, source-ref
+14. `app.api.signal_api_support` for caller context, scope checks, source-ref
    rendering, and signal outcome mapping,
-14. `app.api.review_workflow_operations` for review-action and feedback route
+15. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event
    mapping, and product-safe persistence problem mapping,
-15. `app.api.conversion_governance_operations` for conversion-intent and
+16. `app.api.conversion_governance_operations` for conversion-intent and
    conversion-outcome route caller parsing, mutating capability checks,
    idempotency validation, durable-write guards, operation-event mapping, and
    product-safe persistence problem mapping,

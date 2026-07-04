@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, Header, status
 from fastapi.responses import JSONResponse
-from pydantic import Field
 
-from app.api.base_model import CamelModel
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, caller_context_from_headers
 from app.api.problem_details import permission_denied_metadata
 from app.api.route_metadata import RouteMetadata
@@ -18,15 +16,16 @@ from app.api.runtime_dependencies import (
     build_source_ingestion_runtime_from_environment as _build_source_ingestion_runtime_from_environment,
 )
 from app.api.telemetry_buckets import bounded_count_bucket
+from app.api.source_ingestion_readiness_models import (
+    SourceIngestionReadinessResponse,
+    SourceIngestionRunOnceResponse,
+)
 from app.application.source_ingestion import (
     HighCashSourceIngestionBatchResult,
     HighCashSourceIngestionDecision,
     run_high_cash_source_ingestion_batch,
 )
-from app.application.source_ingestion_readiness import (
-    SourceIngestionReadinessSnapshot,
-    build_source_ingestion_readiness_snapshot,
-)
+from app.application.source_ingestion_readiness import build_source_ingestion_readiness_snapshot
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -41,6 +40,14 @@ from app.security.caller_context import (
     require_role_and_capability,
 )
 
+__all__ = (
+    "SourceIngestionReadinessResponse",
+    "SourceIngestionRunOnceResponse",
+    "get_source_ingestion_readiness",
+    "post_source_ingestion_run_once",
+    "register_source_ingestion_readiness_routes",
+)
+
 _READ_SOURCE_INGESTION_READINESS_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.source-ingestion.readiness.read",
     allowed_roles=("operator",),
@@ -49,149 +56,6 @@ _RUN_SOURCE_INGESTION_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.source-ingestion.run",
     allowed_roles=("operator",),
 )
-
-
-class SourceIngestionReadinessResponse(CamelModel):
-    repository: str
-    source_authority: str = Field(..., alias="sourceAuthority")
-    opportunity_family: str = Field(..., alias="opportunityFamily")
-    manifest_schema_version: str = Field(..., alias="manifestSchemaVersion")
-    example_manifest_path: str = Field(..., alias="exampleManifestPath")
-    example_manifest_available: bool = Field(..., alias="exampleManifestAvailable")
-    configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
-    configured_live_proof_available: bool = Field(..., alias="configuredLiveProofAvailable")
-    live_core_source_proof_valid: bool = Field(..., alias="liveCoreSourceProofValid")
-    configured_scheduled_worker_proof_available: bool = Field(
-        ..., alias="configuredScheduledWorkerProofAvailable"
-    )
-    scheduled_worker_deploy_proof_valid: bool = Field(..., alias="scheduledWorkerDeployProofValid")
-    core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
-    core_query_base_url_configured: bool = Field(..., alias="coreQueryBaseUrlConfigured")
-    core_query_control_plane_base_url_configured: bool = Field(
-        ..., alias="coreQueryControlPlaneBaseUrlConfigured"
-    )
-    durable_repository_configured: bool = Field(..., alias="durableRepositoryConfigured")
-    run_once_configuration_status: str = Field(..., alias="runOnceConfigurationStatus")
-    run_once_configured: bool = Field(..., alias="runOnceConfigured")
-    certification_status: str = Field(..., alias="certificationStatus")
-    live_source_certified: bool = Field(..., alias="liveSourceCertified")
-    configuration_blockers: tuple[str, ...] = Field(..., alias="configurationBlockers")
-    certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
-    supported_feature_promoted: bool = Field(..., alias="supportedFeaturePromoted")
-
-    @classmethod
-    def from_domain(
-        cls,
-        snapshot: SourceIngestionReadinessSnapshot,
-    ) -> "SourceIngestionReadinessResponse":
-        return cls(
-            repository=snapshot.repository,
-            sourceAuthority=snapshot.source_authority,
-            opportunityFamily=snapshot.opportunity_family,
-            manifestSchemaVersion=snapshot.manifest_schema_version,
-            exampleManifestPath=snapshot.example_manifest_path,
-            exampleManifestAvailable=snapshot.example_manifest_available,
-            configuredManifestAvailable=snapshot.configured_manifest_available,
-            configuredLiveProofAvailable=snapshot.configured_live_proof_available,
-            liveCoreSourceProofValid=snapshot.live_core_source_proof_valid,
-            configuredScheduledWorkerProofAvailable=(
-                snapshot.configured_scheduled_worker_proof_available
-            ),
-            scheduledWorkerDeployProofValid=snapshot.scheduled_worker_deploy_proof_valid,
-            coreBaseUrlConfigured=snapshot.core_base_url_configured,
-            coreQueryBaseUrlConfigured=snapshot.core_query_base_url_configured,
-            coreQueryControlPlaneBaseUrlConfigured=(
-                snapshot.core_query_control_plane_base_url_configured
-            ),
-            durableRepositoryConfigured=snapshot.durable_repository_configured,
-            runOnceConfigurationStatus=snapshot.run_once_configuration_status,
-            runOnceConfigured=snapshot.run_once_configured,
-            certificationStatus=snapshot.certification_status,
-            liveSourceCertified=snapshot.live_source_certified,
-            configurationBlockers=snapshot.configuration_blockers,
-            certificationBlockers=snapshot.certification_blockers,
-            supportedFeaturePromoted=snapshot.supported_feature_promoted,
-        )
-
-
-class SourceIngestionRunOnceResponse(CamelModel):
-    repository: str
-    run_status: str = Field(..., alias="runStatus")
-    supportability_status: str = Field(..., alias="supportabilityStatus")
-    source_authority: str = Field(..., alias="sourceAuthority")
-    opportunity_family: str = Field(..., alias="opportunityFamily")
-    durable_storage_backed: bool = Field(..., alias="durableStorageBacked")
-    configured_manifest_available: bool = Field(..., alias="configuredManifestAvailable")
-    core_base_url_configured: bool = Field(..., alias="coreBaseUrlConfigured")
-    core_query_base_url_configured: bool = Field(..., alias="coreQueryBaseUrlConfigured")
-    core_query_control_plane_base_url_configured: bool = Field(
-        ..., alias="coreQueryControlPlaneBaseUrlConfigured"
-    )
-    total_count: int = Field(..., alias="totalCount")
-    decision_counts: dict[str, int] = Field(..., alias="decisionCounts")
-    configuration_blockers: tuple[str, ...] = Field(..., alias="configurationBlockers")
-    certification_blockers: tuple[str, ...] = Field(..., alias="certificationBlockers")
-    live_source_certified: bool = Field(False, alias="liveSourceCertified")
-    supported_feature_promoted: bool = Field(False, alias="supportedFeaturePromoted")
-
-    @classmethod
-    def blocked(
-        cls,
-        *,
-        blocker: str,
-        durable_storage_backed: bool,
-        configured_manifest_available: bool = False,
-        core_base_url_configured: bool = False,
-        core_query_base_url_configured: bool = False,
-        core_query_control_plane_base_url_configured: bool = False,
-    ) -> "SourceIngestionRunOnceResponse":
-        return cls(
-            repository="lotus-idea",
-            runStatus="blocked",
-            supportabilityStatus="not_certified",
-            sourceAuthority="lotus-core",
-            opportunityFamily="high_cash",
-            durableStorageBacked=durable_storage_backed,
-            configuredManifestAvailable=configured_manifest_available,
-            coreBaseUrlConfigured=core_base_url_configured,
-            coreQueryBaseUrlConfigured=core_query_base_url_configured,
-            coreQueryControlPlaneBaseUrlConfigured=core_query_control_plane_base_url_configured,
-            totalCount=0,
-            decisionCounts=_empty_decision_counts(),
-            configurationBlockers=(blocker,),
-            certificationBlockers=_source_ingestion_certification_blockers(),
-            liveSourceCertified=False,
-            supportedFeaturePromoted=False,
-        )
-
-    @classmethod
-    def from_domain(
-        cls,
-        result: HighCashSourceIngestionBatchResult,
-        *,
-        runtime: SourceIngestionRuntime,
-        durable_storage_backed: bool,
-    ) -> "SourceIngestionRunOnceResponse":
-        return cls(
-            repository="lotus-idea",
-            runStatus="completed",
-            supportabilityStatus="not_certified",
-            sourceAuthority=result.source_authority,
-            opportunityFamily="high_cash",
-            durableStorageBacked=durable_storage_backed,
-            configuredManifestAvailable=runtime.configured_manifest_available,
-            coreBaseUrlConfigured=runtime.core_base_url_configured,
-            coreQueryBaseUrlConfigured=runtime.core_query_base_url_configured,
-            coreQueryControlPlaneBaseUrlConfigured=(
-                runtime.core_query_control_plane_base_url_configured
-            ),
-            totalCount=result.total_count,
-            decisionCounts=result.decision_counts(),
-            configurationBlockers=(),
-            certificationBlockers=_source_ingestion_certification_blockers(),
-            liveSourceCertified=False,
-            supportedFeaturePromoted=False,
-        )
 
 
 async def get_source_ingestion_readiness(
@@ -390,15 +254,6 @@ def _source_ingestion_operation_outcome(
     if result.count(HighCashSourceIngestionDecision.BLOCKED) == result.total_count:
         return OperationOutcome.BLOCKED
     return OperationOutcome.ACCEPTED
-
-
-def _empty_decision_counts() -> dict[str, int]:
-    return {decision.value: 0 for decision in HighCashSourceIngestionDecision}
-
-
-def _source_ingestion_certification_blockers() -> tuple[str, ...]:
-    snapshot = build_source_ingestion_readiness_snapshot()
-    return (*snapshot.certification_blockers, "supported_feature_promotion_missing")
 
 
 SOURCE_INGESTION_READINESS_ROUTE: RouteMetadata = {

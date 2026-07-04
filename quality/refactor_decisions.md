@@ -418,3 +418,51 @@ Evidence:
    review ledger, refactor decision log, and wiki source were updated. No
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
+
+## 2026-07-04: Source-Ingestion Readiness API Model Boundary
+
+Source-ingestion readiness and aggregate run-once response DTOs now live in
+`src/app/api/source_ingestion_readiness_models.py`.
+`src/app/api/source_ingestion_readiness.py` imports and explicitly re-exports
+those DTOs while keeping operator caller authorization, durable-repository
+gating, runtime composition, Core runtime cleanup, operation-event emission,
+route metadata, and product-safe response handling in the existing route
+module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate source-ingestion service,
+new worker boundary, data-product publication path, Gateway/Workbench product
+surface, or independently scalable ingestion runtime. Source ingestion remains
+a bounded internal operator proof foundation until workload,
+failure-isolation, ownership, security, or operability evidence justifies a
+runtime split.
+
+Private-banking, source-authority, and modernization boundaries preserved:
+
+1. The routes still require operator caller context with explicit
+   `idea.source-ingestion.*` capabilities.
+2. The run-once response still returns aggregate decision counts only and does
+   not expose portfolio identifiers, candidate identifiers, idempotency keys,
+   raw Core payloads, source routes, or source content hashes.
+3. The routes still do not certify live Core source ingestion, data-product
+   readiness, Gateway/Workbench support, client publication, downstream
+   execution, or supported-feature promotion.
+4. The slice does not add compatibility shims, legacy route aliases, or new
+   runtime process boundaries; it reduces design-time complexity inside the
+   current module boundary.
+
+Evidence:
+
+1. Code: `src/app/api/source_ingestion_readiness.py`,
+   `src/app/api/source_ingestion_readiness_models.py`,
+   `tests/unit/test_source_ingestion_readiness_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_source_ingestion_readiness_models.py tests\unit\test_source_ingestion_readiness.py tests\integration\test_source_ingestion_readiness_api.py`
+   (`28 passed`), plus targeted ruff and mypy over the changed modules.
+3. Maintainability impact: `src/app/api/source_ingestion_readiness.py` moved
+   from 546 to 384 lines; `src/app/api/source_ingestion_readiness_models.py`
+   is 162 lines.
+4. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
