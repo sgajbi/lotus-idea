@@ -393,7 +393,78 @@ def test_outbox_delivery_run_once_api_replays_same_operator_run_without_mutating
     assert replay.json()["attemptedCount"] == 0
     assert replay.json()["operatorRunReference"] == first.json()["operatorRunReference"]
     assert len(publisher.events) == 1
+    assert publisher.close_count == 2
     assert "outbox-run:api-replay:001" not in replay.text
+
+
+def test_outbox_delivery_run_once_api_preserves_results_when_publisher_close_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    event = pending_event("idea.candidate.persisted.v1")
+    reset_idea_repository_for_tests(repository=repository_with_events(event))
+    publisher = AcceptingPublisher(
+        close_error=RuntimeError("raw broker close failure idea_high_cash_001")
+    )
+    monkeypatch.setattr(
+        outbox_delivery_readiness_api,
+        "_build_outbox_publisher_from_environment",
+        lambda: publisher,
+    )
+    events: list[tuple[str, str, str | None, dict[str, str]]] = []
+
+    def capture(event: Any) -> None:
+        events.append(
+            (
+                event.operation.value,
+                event.outcome.value,
+                event.error_code,
+                dict(event.attributes),
+            )
+        )
+
+    monkeypatch.setattr(outbox_delivery_readiness_api, "emit_operation_event", capture)
+    client = TestClient(app)
+    headers = outbox_delivery_run_headers(idempotency_key="outbox-run:close-failure:001")
+
+    completed = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 10},
+        headers=headers,
+    )
+    replayed = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 10},
+        headers=headers,
+    )
+    conflict = client.post(
+        "/api/v1/outbox-delivery/run-once",
+        params={"limit": 20},
+        headers=headers,
+    )
+
+    assert completed.status_code == 200
+    assert completed.json()["runStatus"] == "completed"
+    assert replayed.status_code == 200
+    assert replayed.json()["runStatus"] == "replayed"
+    assert conflict.status_code == 409
+    assert conflict.json()["code"] == "idempotency_conflict"
+    assert publisher.close_count == 3
+    assert len(publisher.events) == 1
+    assert "raw broker close failure" not in completed.text
+    assert "raw broker close failure" not in replayed.text
+    assert "raw broker close failure" not in conflict.text
+    cleanup_events = [
+        event
+        for event in events
+        if event[1] == "suppressed" and event[2] == "publisher_cleanup_failed"
+    ]
+    assert len(cleanup_events) == 3
+    assert all(event[3]["cleanup_phase"] == "publisher_close" for event in cleanup_events)
+    assert [event[1] for event in events if event[1] != "suppressed"] == [
+        "accepted",
+        "replayed",
+        "conflict",
+    ]
 
 
 def test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different_parameters(
@@ -426,6 +497,7 @@ def test_outbox_delivery_run_once_api_conflicts_same_operator_run_with_different
     assert conflict.status_code == 409
     assert conflict.json()["code"] == "idempotency_conflict"
     assert len(publisher.events) == 1
+    assert publisher.close_count == 2
     assert "outbox-run:api-conflict:001" not in conflict.text
 
 
@@ -481,9 +553,10 @@ def test_outbox_delivery_run_once_api_emits_not_certified_operation_event(
 
 
 class AcceptingPublisher:
-    def __init__(self) -> None:
+    def __init__(self, close_error: Exception | None = None) -> None:
         self.events: list[OutboxEventRecord] = []
         self.close_count = 0
+        self.close_error = close_error
 
     def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
         self.events.append(event)
@@ -491,6 +564,8 @@ class AcceptingPublisher:
 
     def close(self) -> None:
         self.close_count += 1
+        if self.close_error is not None:
+            raise self.close_error
 
 
 def pending_event(event_type: str) -> OutboxEventRecord:

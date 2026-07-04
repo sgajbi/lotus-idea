@@ -28,14 +28,18 @@ profile, and `make source-ingestion-scheduled-worker-check` also exist for
 deploy-contract proof. `POST /api/v1/source-ingestion/run-once` adds a certified internal
 operator action over the same batch foundation, but it requires durable
 repository posture plus configured manifest and Core settings, returns
-aggregate decision counts only, and remains `not_certified`. Accepted internal mutations now create source-safe outbox records with
+aggregate decision counts only, isolates route-owned runtime cleanup failures
+into source-safe suppressed operation events, and remains `not_certified`.
+Accepted internal mutations now create source-safe outbox records with
 lease-fenced delivery state, durable retry scheduling, retryable failed status,
 published status, and dead-letter status through the repository port. Certified
 internal outbox delivery readiness and run-once operator endpoints now report aggregate
 backlog/status, due retry, retry-deferred, leased, and expired-lease posture and can execute one bounded
 configured-publisher pass that claims rows before broker publication without exposing event identifiers,
 aggregate identifiers, raw idempotency keys, source payloads, broker payloads,
-or downstream claims. That is recoverability foundation only; no certified live
+or downstream claims; route-owned publisher cleanup failures are suppressed into
+source-safe diagnostics without masking completed, replayed, conflict, or
+bounded blocked responses. That is recoverability foundation only; no certified live
 broker runtime, Gateway event, platform mesh event publication, downstream
 delivery, or supported event publication exists. `lotus-gateway` now publishes bounded
 read-only advisor queue and candidate detail routes with caller

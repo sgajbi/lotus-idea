@@ -52,6 +52,8 @@ from app.observability import (
     OperationSupportability,
     emit_operation_event,
 )
+from app.ports.idea_repository import OutboxDeliveryRepository
+from app.ports.outbox_publisher import OutboxEventPublisher
 from app.security.caller_context import (
     CallerContext,
     CapabilityPolicy,
@@ -344,18 +346,17 @@ async def post_outbox_delivery_run_once(
             operator_run_reference=operator_run_reference,
         )
 
-    try:
-        summary = run_outbox_delivery_once(
-            repository,
-            publisher_result,
-            limit=limit,
-            max_retry_count=max_retry_count,
-            idempotency_key=validated_idempotency_key,
-            request_payload=run_request_payload,
-            delivered_at_utc=delivered_at_utc,
-        )
-    finally:
-        _close_outbox_publisher_if_supported(publisher_result)
+    summary = _run_outbox_delivery_once_with_cleanup(
+        repository,
+        publisher_result,
+        limit=limit,
+        max_retry_count=max_retry_count,
+        idempotency_key=validated_idempotency_key,
+        request_payload=run_request_payload,
+        delivered_at_utc=delivered_at_utc,
+        durable_storage_backed=durable_storage_backed,
+        operator_run_reference=operator_run_reference,
+    )
     if summary.run_status is OutboxDeliveryRunStatus.CONFLICT:
         _emit_outbox_delivery_run_event(
             OperationOutcome.CONFLICT,
@@ -384,10 +385,58 @@ def _require_outbox_delivery_readiness_caller(caller: CallerContext) -> None:
     require_role_and_capability(caller, _READ_OUTBOX_DELIVERY_READINESS_POLICY)
 
 
-def _close_outbox_publisher_if_supported(publisher: object) -> None:
+def _run_outbox_delivery_once_with_cleanup(
+    repository: OutboxDeliveryRepository,
+    publisher: OutboxEventPublisher,
+    *,
+    limit: int,
+    max_retry_count: int,
+    idempotency_key: str,
+    request_payload: Mapping[str, Any],
+    delivered_at_utc: datetime | None,
+    durable_storage_backed: bool,
+    operator_run_reference: str,
+) -> OutboxDeliveryRunSummary:
+    summary: OutboxDeliveryRunSummary | None = None
+    try:
+        summary = run_outbox_delivery_once(
+            repository,
+            publisher,
+            limit=limit,
+            max_retry_count=max_retry_count,
+            idempotency_key=idempotency_key,
+            request_payload=request_payload,
+            delivered_at_utc=delivered_at_utc,
+        )
+        return summary
+    finally:
+        _close_outbox_publisher_if_supported(
+            publisher,
+            durable_storage_backed=durable_storage_backed,
+            operator_run_reference=(
+                summary.operator_run_reference if summary is not None else operator_run_reference
+            ),
+        )
+
+
+def _close_outbox_publisher_if_supported(
+    publisher: object,
+    *,
+    durable_storage_backed: bool,
+    operator_run_reference: str | None,
+) -> None:
     close = getattr(publisher, "close", None)
     if callable(close):
-        close()
+        try:
+            close()
+        except Exception:
+            _emit_outbox_delivery_run_event(
+                OperationOutcome.SUPPRESSED,
+                "publisher_cleanup_failed",
+                durable_storage_backed=durable_storage_backed,
+                operator_run_reference=operator_run_reference,
+                cleanup_phase="publisher_close",
+            )
 
 
 def _outbox_delivery_run_permission_denied_response_args() -> dict[str, Any]:
@@ -443,12 +492,15 @@ def _emit_outbox_delivery_run_event(
     durable_storage_backed: bool = False,
     attempted_count: int | None = None,
     operator_run_reference: str | None = None,
+    cleanup_phase: str | None = None,
 ) -> None:
     attributes: dict[str, str] = {}
     if attempted_count is not None:
         attributes["attempted_count_bucket"] = bounded_count_bucket(attempted_count)
     if operator_run_reference is not None:
         attributes["operator_run_reference"] = operator_run_reference
+    if cleanup_phase is not None:
+        attributes["cleanup_phase"] = cleanup_phase
     emit_operation_event(
         OperationEvent(
             operation=IdeaOperation.OUTBOX_DELIVERY_RUN_ONCE,

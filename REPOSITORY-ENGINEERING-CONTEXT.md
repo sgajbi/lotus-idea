@@ -652,7 +652,10 @@ Recent issue-derived patterns to preserve:
     and must not rely on worker-only cleanup semantics. The same pattern applies
     to route-owned publisher adapters: outbox-delivery run-once must close the
     broker publisher it constructs after accepted, replayed, failed, or
-    conflicting execution paths.
+    conflicting execution paths. Cleanup failures are supportability signals,
+    not product outcomes: route-owned `close()` failures must be bounded to
+    source-safe suppressed operation events and must not replace already
+    computed completed, replayed, conflict, or blocked run-once responses.
 27. Run-once source-ingestion manifests are intentionally small bounded
     operator actions. `maxItems` and raw `workItems` must stay at or below the
     code-owned 100-item ceiling; larger ingestion requires a separately
@@ -795,7 +798,12 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     The same issue-derived pattern is applied to outbox delivery: the
     outbox-delivery run-once API now closes its route-owned broker publisher
     after execution begins, preventing HTTP client resource leakage without
-    certifying live broker publication.
+    certifying live broker publication. GitHub issue `#314` extends the pattern
+    by making cleanup best-effort and observable: source-ingestion runtime close
+    failures emit `runtime_cleanup_failed`, outbox publisher close failures emit
+    `publisher_cleanup_failed`, and both use `suppressed` operation events
+    without masking completed, replayed, conflict, or bounded blocked product
+    responses.
 20. Source-ingestion run-once batch ceiling: GitHub issue `#313` is addressed
     by enforcing a code-owned 100-item ceiling over both manifest `maxItems` and
     raw `workItems`, returning `source_ingestion_batch_limit_exceeded` before

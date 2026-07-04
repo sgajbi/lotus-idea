@@ -222,7 +222,9 @@ broker configuration is missing or invalid. Same-key/same-request retries
 return replay posture without mutation, and same-key/different-request reuse
 returns product-safe conflict. The run-once route closes its route-owned broker
 publisher after execution begins so repeated operator runs do not leak HTTP
-client resources. Neither endpoint exposes event identifiers, aggregate
+client resources; publisher cleanup failures emit source-safe `suppressed`
+operation events and do not mask completed, replayed, conflict, or bounded
+blocked responses. Neither endpoint exposes event identifiers, aggregate
 identifiers, raw idempotency keys, broker payloads, source payloads, or
 downstream claims. Both remain `not_certified` until platform mesh event
 publication proof, Gateway/Workbench proof, downstream delivery evidence, and
@@ -462,6 +464,11 @@ outbox publication. Valid upstream `Retry-After` values remain capped by the
 configured maximum backoff but are not jittered.
 Runtime-cached realization clients close on application shutdown and test reset;
 source-ingestion runtime objects expose `close()` for deterministic cleanup.
+Source-ingestion runtime and outbox publisher cleanup failures are isolated into
+source-safe `suppressed` operation events (`runtime_cleanup_failed` or
+`publisher_cleanup_failed`) with bounded `cleanup_phase` values, so cleanup
+cannot replace an already computed completed, replayed, conflict, or bounded
+blocked operator response.
 These controls improve operability and capacity posture only. They do not
 certify live Core source ingestion, external broker publication, downstream
 execution, Gateway/Workbench behavior, client publication, or supported-feature

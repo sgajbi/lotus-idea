@@ -578,8 +578,9 @@ Persistence adapter validation:
    behavior, configured-publisher delivery path, operator plus capability
    enforcement, PostgreSQL repository-side readiness projection without
    whole-snapshot hydration, route-owned broker publisher cleanup after
-   run-once execution, product-safe payloads, UTC request validation, and bounded
-   `not_certified` operation events without exposing event identifiers, raw
+   run-once execution, source-safe publisher-cleanup failure isolation,
+   product-safe payloads, UTC request validation, and bounded `not_certified`
+   operation events without exposing event identifiers, raw
    idempotency keys, source payloads, broker payloads, or downstream contract
    details.
 22. Runtime API database wiring is opt-in and still requires deploy migration
