@@ -221,6 +221,42 @@ Evidence:
    README, supported-feature, seed, automation, or platform skill change is
    justified by this internal modularity slice.
 
+## 2026-07-04: Conversion Governance API Model Boundary
+
+Conversion-intent and conversion-outcome request/response DTOs now live in
+`src/app/api/conversion_governance_models.py`.
+`src/app/api/conversion_governance.py` imports those DTOs while keeping caller
+checks, idempotency validation, conversion workflow persistence, operation-event
+emission, route metadata, and response handling in the existing route module.
+
+This is a design-modularity refactor inside the existing lotus-idea deployable.
+It does not introduce runtime modularity, a separate conversion service, worker
+boundary, downstream execution boundary, report materialization boundary, or
+independently scalable conversion runtime. Conversion governance remains an
+internal lifecycle-intent/outcome foundation.
+
+Private-banking and authority boundaries preserved:
+
+1. The route still requires explicit conversion capabilities and
+   `Idempotency-Key` for mutations.
+2. The route still records only governed conversion intent/outcome posture; it
+   does not grant Advise, Manage, Report, suitability, execution, render,
+   archive, or client-communication authority.
+3. The route still does not certify downstream execution, Gateway/Workbench
+   support, data-product publication, or supported-feature promotion.
+
+Evidence:
+
+1. Code: `src/app/api/conversion_governance.py`,
+   `src/app/api/conversion_governance_models.py`.
+2. Focused validation passed:
+   `.venv\Scripts\python.exe -m pytest tests\unit\test_conversion_governance.py tests\unit\test_conversion_governance_api_operations.py tests\unit\test_api_request_validation.py tests\integration\test_api_operation_events.py -q`
+   (`37 passed`), plus targeted ruff and mypy over the changed modules.
+3. Documentation/context decision: repository context, quality scorecard,
+   review ledger, refactor decision log, and wiki source were updated. No
+   README, supported-feature, seed, automation, or platform skill change is
+   justified by this internal modularity slice.
+
 ## 2026-07-04: Idea Signal API Model Boundary
 
 High-cash and mandate-restriction request/response DTOs now live in
