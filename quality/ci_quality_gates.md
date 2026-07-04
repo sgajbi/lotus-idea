@@ -215,6 +215,13 @@ source-before-dependency-install ordering and package installs that would
 reinstall dependencies after a source-only change. Docker build, runtime smoke,
 image scan, and SBOM evidence remain blocking release-lane proof.
 
+Docker build context hygiene follows the same generated-artifact policy as
+repository hygiene and `make clean`. `.dockerignore` excludes coverage data,
+`coverage.xml`, `sbom.cdx.json`, `output`, and generated quality reports so
+local validation byproducts do not become remote-builder inputs. `make
+ci-contract-gate` rejects Docker-context generated-artifact parity drift while
+preserving the Dockerfile's selective runtime inputs.
+
 Duplicate implementation enforcement is split into a report command and a blocking gate. `make
 duplicate-implementation-inventory` scans exact function-body duplicates across `src/app` and
 `scripts`, writes no artifacts, and reports `thresholdEnforced: false` for review evidence. `make
@@ -242,7 +249,7 @@ loading into `app.runtime.proof_artifact_files`, and source-product proof payloa
 normalization into `app.application.source_product_proof_values`, and outbox contract
 forbidden-text traversal into `scripts.contract_text_guards`, and operations-contract payload,
 operation, and label validation into `scripts.operations_contract_validators`; the current
-measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,606 executable function
+measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,607 executable function
 bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the report-only and
 blocking target split, the strict `--fail-on-duplicates` flag, and the `make lint` lane placement.
 Intentional exceptions must be implemented as measured scanner policy with tests, not by removing

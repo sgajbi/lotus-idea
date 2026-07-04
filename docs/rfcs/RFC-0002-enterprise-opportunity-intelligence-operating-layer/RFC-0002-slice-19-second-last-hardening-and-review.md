@@ -118,6 +118,12 @@ This slice also hardens generated-artifact cleanup:
    quality scorecard, and wiki source now describe the cleanup path without
    promoting any product capability.
 
+GitHub issue `#310` extends that generated-artifact policy to Docker build
+context hygiene. `.dockerignore` excludes coverage data, `coverage.xml`,
+`sbom.cdx.json`, `output`, and generated quality reports, and
+`scripts/ci_contract_gate.py` rejects Docker-context parity drift so local
+validation byproducts cannot silently become builder inputs.
+
 This slice also hardens no-sensitive-content evidence guarding:
 
 1. `scripts/no_sensitive_content_guard.py` now exposes a testable
@@ -528,7 +534,7 @@ file/function-size maintainability gate:
    proof gate, generator, contract gate, and API route retains family-specific
    policy/argument behavior, direct script execution remains supported, and the
    current measured baseline ignores pass/ellipsis-only protocol stubs, scans
-   1,606 executable function bodies, and reports 0 exact duplicate clusters.
+   1,607 executable function bodies, and reports 0 exact duplicate clusters.
 5. `scripts/ci_contract_gate.py` protects the report-only/blocking target split,
    strict flag, and `make lint` lane placement.
 6. This is exact first-party implementation-body enforcement only. It does not

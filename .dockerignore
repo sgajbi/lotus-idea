@@ -6,8 +6,13 @@
 .mypy_cache
 .coverage
 .coverage.*
+coverage.xml
+sbom.cdx.json
 htmlcov
 output
+quality/architecture_boundary_report.json
+quality/baseline_report.json
+quality/baseline_report.md
 node_modules
 docs
 tests
