@@ -119,8 +119,9 @@ identity to safe request parameters and caller subject, replays same-key /
 same-request retries without mutation, rejects same-key / different-request
 reuse with product-safe conflict, fails closed without valid broker
 configuration, returns aggregate counts plus a source-safe
-`operatorRunReference` only, and remains `not_certified` until live broker
-runtime, downstream delivery evidence, certified external broker publication,
+`operatorRunReference` only, closes the route-owned broker publisher after
+execution begins, and remains `not_certified` until live broker runtime,
+downstream delivery evidence, certified external broker publication,
 Gateway/Workbench proof, and supported-feature promotion exist.
 `POST /api/v1/idea-candidates/{candidateId}/evidence-replay` now exposes the
 same evidence-hash replay posture as a certified internal operator API over the
@@ -248,9 +249,11 @@ flowchart LR
     `LOTUS_IDEA_OUTBOX_BROKER_MAX_CONNECTIONS`,
     `LOTUS_IDEA_OUTBOX_BROKER_MAX_KEEPALIVE_CONNECTIONS`, and
     `LOTUS_IDEA_OUTBOX_BROKER_POOL_TIMEOUT_SECONDS`; invalid values fail
-    closed before publication is attempted. This is internal recoverability and
-    adapter foundation only; certified live broker runtime, downstream
-    consumers, and event-publication support remain unimplemented.
+    closed before publication is attempted. The outbox-delivery run-once API
+    closes the route-owned broker publisher after execution begins so repeated
+    operator runs do not leak HTTP client resources. This is internal
+    recoverability and adapter foundation only; certified live broker runtime,
+    downstream consumers, and event-publication support remain unimplemented.
 16. `src/app/application/outbox_delivery_readiness.py` and
     `GET /api/v1/outbox-delivery/readiness` expose source-safe outbox
     delivery readiness for operators. The diagnostic reports aggregate status

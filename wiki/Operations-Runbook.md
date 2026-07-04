@@ -220,9 +220,11 @@ id, and expiry before broker publication, completes or fails only when the same
 attempt still owns the lease, and fails closed leaving records untouched when
 broker configuration is missing or invalid. Same-key/same-request retries
 return replay posture without mutation, and same-key/different-request reuse
-returns product-safe conflict. Neither endpoint exposes event identifiers,
-aggregate identifiers, raw idempotency keys, broker payloads, source payloads,
-or downstream claims. Both remain `not_certified` until platform mesh event
+returns product-safe conflict. The run-once route closes its route-owned broker
+publisher after execution begins so repeated operator runs do not leak HTTP
+client resources. Neither endpoint exposes event identifiers, aggregate
+identifiers, raw idempotency keys, broker payloads, source payloads, or
+downstream claims. Both remain `not_certified` until platform mesh event
 publication proof, Gateway/Workbench proof, downstream delivery evidence, and
 supported-feature evidence exist.
 The declared downstream consumer contract lives at

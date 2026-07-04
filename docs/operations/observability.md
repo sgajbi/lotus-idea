@@ -243,4 +243,7 @@ include the source-safe `operator_run_reference` log attribute derived from the
 key and the aggregate `attempted_count_bucket`; neither value is a Prometheus
 label. Same-key/same-request retries emit replay posture without mutation, and
 same-key/different-request reuse emits conflict posture without exposing raw
-idempotency keys, event ids, broker payloads, or downstream payloads.
+idempotency keys, event ids, broker payloads, or downstream payloads. The route
+also closes its owned broker publisher after execution begins, so repeated
+operator runs do not leave HTTP client resources open; this is internal
+resource-lifecycle evidence, not external broker publication certification.

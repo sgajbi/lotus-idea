@@ -296,6 +296,7 @@ def test_outbox_delivery_run_once_api_publishes_with_configured_publisher(
     assert len(publisher.events) == 1
     assert publisher.events[0].event_id == event.event_id
     assert publisher.events[0].status is OutboxEventStatus.LEASED
+    assert publisher.close_count == 1
     assert (
         resettable_repository_snapshot().outbox_events[event.event_id].status
         is OutboxEventStatus.PUBLISHED
@@ -482,10 +483,14 @@ def test_outbox_delivery_run_once_api_emits_not_certified_operation_event(
 class AcceptingPublisher:
     def __init__(self) -> None:
         self.events: list[OutboxEventRecord] = []
+        self.close_count = 0
 
     def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
         self.events.append(event)
         return OutboxPublishOutcome.accepted_by_publisher()
+
+    def close(self) -> None:
+        self.close_count += 1
 
 
 def pending_event(event_type: str) -> OutboxEventRecord:

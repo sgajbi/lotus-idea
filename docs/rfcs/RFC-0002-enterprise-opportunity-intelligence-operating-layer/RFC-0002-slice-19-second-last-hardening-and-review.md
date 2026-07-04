@@ -766,6 +766,15 @@ never construct a runtime remain unchanged. This is resource lifecycle proof
 only; it does not certify live Core ingestion, data-mesh promotion,
 Gateway/Workbench support, or supported-feature readiness.
 
+The same resource-lifecycle pattern is applied to the sibling
+outbox-delivery run-once operator action. `POST /api/v1/outbox-delivery/run-once`
+now closes its route-owned broker publisher after execution begins, including
+accepted, replayed, failed, and idempotency-conflict outcomes. This prevents
+HTTP client resource leakage during repeated operator runs while preserving the
+existing `not_certified` posture for live broker publication, downstream
+consumer proof, platform mesh event publication, Gateway/Workbench support, and
+supported-feature promotion.
+
 GitHub issue `#313` adds the matching run-once capacity guard. The
 source-ingestion command and manifest parser enforce a code-owned 100-item
 ceiling over both `maxItems` and raw `workItems`; the API returns the
