@@ -1,6 +1,6 @@
 # RFC-0002 Slice 17: Implementation Proof And Live Validation
 
-Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available; full live opportunity-journey proof remains pending
+Status: Partially implemented - aggregate proof-readiness diagnostic, bounded live source-ingestion proof artifact contract, scheduled-worker deploy-contract proof, durable repository proof artifact, runtime telemetry proof artifact, Workbench read-path proof artifact, Gateway/Workbench operational proof artifact, Gateway/Workbench discovery proof artifact, Advise proposal route proof artifact, Manage action route proof artifact, Manage mandate live proof artifact, Core portfolio-state live proof artifact, Report intake route proof artifact, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, mesh policy proof artifact, platform mesh onboarding proof artifact, AI lineage store proof artifact, AI workflow-pack registration proof artifact, AI workflow-pack runtime execution proof artifact, high-volatility and drawdown live Risk proof artifact contracts, low-income Core cashflow live proof artifact contract, bond-maturity policy foundation, and opportunity archetype scenario readiness with source/policy foundations available. Slice evidence now includes live canonical Risk concentration, Performance underperformance, and Performance benchmark-readiness source proofs for `PB_SG_GLOBAL_BAL_001`; full live opportunity-journey proof, data-mesh certification, Workbench product proof, client-publication approval, and supported-feature promotion remain pending.
 
 ## Outcome
 
@@ -349,7 +349,21 @@ Prove the complete supported opportunity journey end to end.
     client-publication, and supported-feature blockers. The proof does not
     assign benchmarks, calculate performance or benchmark returns, or certify
     benchmark methodology.
-35. `src/app/application/low_income_core_cashflow_live_proof.py`,
+35. Live canonical proof run on 2026-07-05 against `PB_SG_GLOBAL_BAL_001` and
+    as-of date `2026-04-10` generated source-safe artifacts under ignored
+    `output/opportunity/` for Risk concentration, Performance
+    underperformance, and missing-benchmark Performance readiness. The
+    artifacts reported `sourceEvidenceCurrent: true`, cleared only
+    `opportunity_archetype_live_risk_source_proof_missing`,
+    `opportunity_archetype_live_performance_source_proof_missing`, and
+    `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`,
+    and were consumed by `make implementation-proof-readiness-check` with
+    `IMPLEMENTATION_PROOF_EVALUATED_AT_UTC=2026-07-05T06:48:16Z`.
+    Remaining blockers still include Core live source proof, benchmark
+    assignment, Manage/performance/risk health source refs, data-mesh
+    certification, Workbench product proof, client publication, and
+    supported-feature promotion.
+36. `src/app/application/low_income_core_cashflow_live_proof.py`,
     `scripts/generate_low_income_core_cashflow_live_proof.py`, and
     `make low-income-core-cashflow-live-proof-contract-gate` now define and
     enforce a source-safe Lotus Core cashflow live-proof artifact. Aggregate

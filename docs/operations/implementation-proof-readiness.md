@@ -743,6 +743,19 @@ High-volatility / drawdown review remains blocked on data-mesh, Workbench,
 publication, and supported-feature evidence unless those separate proofs are supplied. Client-demo,
 data-mesh, Workbench, publication, and supported-feature blockers remain.
 
+Live canonical proof evidence from 2026-07-05 shows the aggregate consumer can
+clear Risk concentration, Performance underperformance, and missing-benchmark
+Performance readiness source blockers for `PB_SG_GLOBAL_BAL_001` when the
+artifacts are generated from current source services and the aggregate
+`IMPLEMENTATION_PROOF_EVALUATED_AT_UTC` matches the proof window. The run
+cleared only:
+
+| Proof artifact | Cleared blocker | Remaining boundary |
+| --- | --- | --- |
+| `output/opportunity/risk-concentration-live-proof.json` | `opportunity_archetype_live_risk_source_proof_missing` | Data-mesh certification, Workbench product proof, client publication, supported-feature promotion |
+| `output/opportunity/performance-underperformance-live-proof.json` | `opportunity_archetype_live_performance_source_proof_missing` | Benchmark assignment, data-mesh certification, Workbench product proof, client publication, supported-feature promotion |
+| `output/opportunity/missing-benchmark-performance-readiness-proof.json` | `opportunity_archetype_performance_benchmark_readiness_source_ref_missing` | Core missing-benchmark live proof, benchmark assignment, benchmark methodology, data-mesh certification, Workbench product proof, client publication, supported-feature promotion |
+
 ## Example
 
 ```powershell
