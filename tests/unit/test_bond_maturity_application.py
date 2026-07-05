@@ -55,7 +55,7 @@ def test_evaluate_bond_maturity_signal_command_maps_source_input() -> None:
             source_reported_next_maturity_date=date(2026, 7, 10),
             source_reported_maturing_position_count=2,
             holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
-            maturity_fact_ref=_source_ref("lotus-core:HoldingsAsOf:v1", suffix=":maturity"),
+            maturity_fact_ref=_source_ref("lotus-core:PortfolioMaturitySummary:v1"),
             evaluated_at_utc=EVALUATED_AT,
         )
     )
@@ -71,7 +71,7 @@ def test_evaluate_bond_maturity_signal_from_core_uses_source_evidence() -> None:
             source_reported_next_maturity_date=date(2026, 7, 10),
             source_reported_maturing_position_count=2,
             holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
-            maturity_fact_ref=_source_ref("lotus-core:HoldingsAsOf:v1", suffix=":maturity"),
+            maturity_fact_ref=_source_ref("lotus-core:PortfolioMaturitySummary:v1"),
             maturity_diagnostic="core_maturity_evidence_ready",
         )
     )
@@ -123,6 +123,7 @@ def _command() -> EvaluateBondMaturityFromCoreCommand:
 def _source_ref(product_id: str, *, suffix: str = "") -> SourceRef:
     route_by_product = {
         "lotus-core:HoldingsAsOf:v1": "/portfolios/{portfolio_id}/positions",
+        "lotus-core:PortfolioMaturitySummary:v1": "/portfolios/{portfolio_id}/maturity-summary",
     }
     return SourceRef(
         product_id=product_id,

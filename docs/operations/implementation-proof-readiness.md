@@ -169,7 +169,7 @@ supported-feature promotion.
 | `LOTUS_IDEA_MISSING_BENCHMARK_PERFORMANCE_READINESS_PROOF` | Passes a validated source-safe Lotus Performance benchmark-readiness proof artifact into missing-benchmark opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_performance_benchmark_readiness_source_ref_missing`; it does not assign benchmarks, calculate performance or benchmark returns, certify benchmark methodology, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_CORE_BENCHMARK_ASSIGNMENT_LIVE_PROOF` | Passes a validated source-safe Lotus Core benchmark assignment live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_benchmark_assignment_source_ref_missing`; it does not certify Performance source evidence, benchmark methodology, benchmark composition, benchmark return calculation, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_CORE_PORTFOLIO_STATE_LIVE_PROOF` | Passes a validated source-safe Lotus Core portfolio-state live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_core_portfolio_state_source_ref_missing`; it does not certify Manage action-register proof, mandate performance health, mandate risk health, rebalance authority, action authority, order execution, data mesh, Workbench, client publication, or supported-feature promotion. |
-| `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes a validated source-safe Lotus Core maturity-summary live-proof artifact into opportunity-archetype readiness after Core supplies explicit source-owned maturity facts. Until then the live adapter fails closed with `core_maturity_summary_missing`. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it does not recommend reinvestment products, forecast cashflows, certify suitability or risk, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
+| `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` | Passes a validated source-safe Lotus Core maturity-summary live-proof artifact into opportunity-archetype readiness. The live adapter consumes Core-owned `PortfolioMaturitySummary:v1` and fails closed when explicit maturity facts or upstream holdings lineage are missing. A valid artifact clears only `opportunity_archetype_maturity_live_core_source_proof_missing`; it does not recommend reinvestment products, forecast cashflows, certify suitability or risk, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_MISSING_BENCHMARK_LIVE_PROOF` | Passes a validated source-safe Lotus Core missing-benchmark live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_missing_benchmark_live_core_source_proof_missing`; it does not assign benchmarks, certify Performance benchmark-readiness evidence, certify benchmark methodology, calculate benchmark composition or returns, certify data mesh, prove Workbench behavior, approve client publication, or promote support. |
 | `LOTUS_IDEA_LOW_INCOME_CORE_CASHFLOW_LIVE_PROOF` | Passes a validated source-safe Lotus Core cashflow live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_live_core_cashflow_source_proof_missing`; it does not certify client income needs, funding advice, treasury instruction, suitability, planning objectives, data mesh, Workbench, client publication, or supported-feature promotion. |
 | `LOTUS_IDEA_MANAGE_MANDATE_LIVE_PROOF` | Passes a validated source-safe Lotus Manage mandate live-proof artifact into opportunity-archetype readiness. A valid artifact clears only `opportunity_archetype_portfolio_scoped_manage_source_proof_missing`, `opportunity_archetype_mandate_performance_health_source_ref_missing`, and `opportunity_archetype_mandate_risk_health_source_ref_missing`; it does not certify Core portfolio state, data mesh, Workbench, client publication, supported-feature promotion, rebalance authority, action authority, order creation, execution, or settlement. |
@@ -334,17 +334,16 @@ Lotus Core bond-maturity live proof is captured by
 `scripts/generate_bond_maturity_live_proof.py`. A valid artifact referenced
 through `LOTUS_IDEA_BOND_MATURITY_LIVE_PROOF` clears only
 `opportunity_archetype_maturity_live_core_source_proof_missing` for the
-`opportunity-archetype-scenarios` capability after Core publishes explicit
-source-owned maturity summary facts. Until `sgajbi/lotus-core#686` is delivered,
-the live adapter fails closed with `core_maturity_summary_missing` instead of
-deriving maturity dates or counts from raw positions. The artifact proves live
-Core maturity-summary evidence, current source refs, next maturity-date
-evidence, and maturing-position count presence without storing portfolio
-identity, request or response payloads, correlation IDs, trace IDs, candidate
-IDs, source routes, positions, holdings, security identifiers, maturity dates,
-or quantities. It deliberately retains data-mesh, Workbench,
-client-publication, product-recommendation, reinvestment-advice, suitability,
-risk, and supported-feature blockers.
+`opportunity-archetype-scenarios` capability. The live adapter consumes
+Core-owned `PortfolioMaturitySummary:v1`, requires upstream `HoldingsAsOf:v1`
+lineage, and fails closed instead of deriving maturity dates or counts from raw
+positions. The artifact proves live Core maturity-summary evidence, current
+source refs, next maturity-date evidence, and maturing-position count presence
+without storing portfolio identity, request or response payloads, correlation
+IDs, trace IDs, candidate IDs, source routes, positions, holdings, security
+identifiers, maturity dates, or quantities. It deliberately retains data-mesh,
+Workbench, client-publication, product-recommendation, reinvestment-advice,
+suitability, risk, and supported-feature blockers.
 
 Lotus Manage mandate live proof is captured by
 `scripts/generate_manage_mandate_live_proof.py`. A valid artifact referenced

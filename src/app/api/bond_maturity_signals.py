@@ -57,7 +57,7 @@ class EvaluateBondMaturitySignalRequest(CamelModel):
         default=None,
         alias="sourceReportedMaturingPositionCount",
         ge=0,
-        description="Number of maturing positions reported by the Core holdings source.",
+        description="Number of maturing holdings reported by Core PortfolioMaturitySummary evidence.",
         examples=[2],
     )
     holdings_ref: SourceRefRequest | None = Field(
@@ -68,7 +68,7 @@ class EvaluateBondMaturitySignalRequest(CamelModel):
     maturity_fact_ref: SourceRefRequest | None = Field(
         default=None,
         alias="maturityFactRef",
-        description="Source-owned Core maturity-fact reference.",
+        description="Source-owned Core PortfolioMaturitySummary reference.",
     )
     access_scope: ReviewAccessScopeRequest | None = Field(
         default=None,
@@ -160,7 +160,7 @@ def _source_ref_contracts(
         SignalSourceRefContract(
             request.maturity_fact_ref,
             SourceSystem.LOTUS_CORE,
-            ("lotus-core:HoldingsAsOf:v1",),
+            ("lotus-core:PortfolioMaturitySummary:v1",),
         ),
     )
 
@@ -170,7 +170,7 @@ BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
     "operation_id": "evaluateBondMaturityIdeaSignal",
     "summary": "Evaluate a bond maturity idea signal",
     "description": (
-        "Evaluates caller-supplied, source-owned Core holdings maturity evidence "
+        "Evaluates caller-supplied, source-owned Core PortfolioMaturitySummary evidence "
         "for bond-maturity / reinvestment review posture. The endpoint is a "
         "bounded API foundation; it does not fetch upstream sources, recommend "
         "replacement products, calculate reinvestment advice, approve planning "
@@ -203,6 +203,15 @@ BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
                             "sourceRefs": [
                                 {
                                     "productId": "lotus-core:HoldingsAsOf:v1",
+                                    "sourceSystem": "lotus-core",
+                                    "productVersion": "v1",
+                                    "asOfDate": "2026-06-21",
+                                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                                    "dataQualityStatus": "complete",
+                                    "freshness": "current",
+                                },
+                                {
+                                    "productId": "lotus-core:PortfolioMaturitySummary:v1",
                                     "sourceSystem": "lotus-core",
                                     "productVersion": "v1",
                                     "asOfDate": "2026-06-21",

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and fail-closed Core maturity-summary source-adapter contract pending explicit Core-owned maturity facts, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and Core `PortfolioMaturitySummary:v1` source-adapter consumption, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -123,11 +123,12 @@ Additional implemented bond-maturity / reinvestment foundation:
 3. `src/app/application/bond_maturity_signal.py`,
    `src/app/infrastructure/lotus_core_sources.py`, and
    `src/app/ports/core_sources.py` add the application command, Core source
-   port, and fail-closed Core maturity-summary adapter contract. The live
-   adapter accepts explicit Core-owned maturity summary fields only; it no
-   longer derives maturity dates or maturing-position counts from raw
-   `HoldingsAsOf` positions and raises `core_maturity_summary_missing` until
-   Core publishes the required contract tracked by `sgajbi/lotus-core#686`.
+   port, and fail-closed Core maturity-summary adapter. The live adapter
+   consumes Core-owned `PortfolioMaturitySummary:v1` from
+   `/portfolios/{portfolio_id}/maturity-summary`, requires upstream
+   `HoldingsAsOf:v1` lineage, accepts explicit maturity summary fields only,
+   and no longer derives maturity dates or maturing-position counts from raw
+   positions.
 4. `src/app/application/bond_maturity_live_proof.py`,
    `scripts/generate_bond_maturity_live_proof.py`, and
    `make bond-maturity-live-proof-contract-gate` define a source-safe live
@@ -136,7 +137,7 @@ Additional implemented bond-maturity / reinvestment foundation:
    product recommendations, reinvestment advice, or supported-feature status.
 5. `src/app/api/bond_maturity_signals.py` exposes
    `POST /api/v1/idea-signals/bond-maturity/evaluate` as a bounded
-   caller-supplied API foundation over Core holdings maturity evidence. It
+   caller-supplied API foundation over Core maturity-summary evidence. It
    requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
    events, redacts source route/hash fields from candidate responses, and does
    not fetch Core sources, recommend replacement products, calculate
@@ -154,8 +155,9 @@ Additional implemented bond-maturity / reinvestment foundation:
    bounded operation-event proof.
 8. The opportunity archetype contract now removes only the
    `maturity_signal_policy_missing` blocker. Live maturity source certification
-   remains blocked until Core-owned summary facts are available; data-mesh,
-   Workbench, client-publication, and supported-feature blockers remain.
+   remains blocked until a valid canonical Core maturity-summary live proof is
+   captured and merged; data-mesh, Workbench, client-publication, and
+   supported-feature blockers remain.
 
 Additional implemented concentration-risk foundation:
 

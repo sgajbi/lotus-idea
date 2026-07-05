@@ -171,9 +171,10 @@ Implementation files:
    and cash movement evidence with product-safe authorization, source-redacted
    response projection, OpenAPI examples, and operation events.
 5. `src/app/api/bond_maturity_signals.py`: bounded bond-maturity /
-   reinvestment review signal API over caller-supplied Core holdings maturity
-   evidence with product-safe authorization, source-redacted response
-   projection, OpenAPI examples, and operation events.
+   reinvestment review signal API over caller-supplied Core
+   `PortfolioMaturitySummary:v1` maturity evidence with product-safe
+   authorization, source-redacted response projection, OpenAPI examples, and
+   operation events.
 6. `src/app/api/concentration_risk_signals.py`: bounded concentration-risk
    signal API over caller-supplied Lotus Risk concentration evidence with
    shared product-safe authorization, source-redacted response projection,

@@ -365,6 +365,7 @@ def test_opportunity_archetype_contract_records_bond_maturity_foundation_without
     assert bond_maturity.implementation_status == "partially_implemented"
     assert bond_maturity.first_supported_journey is False
     assert "lotus-core:HoldingsAsOf:v1" in bond_maturity.source_products
+    assert "lotus-core:PortfolioMaturitySummary:v1" in bond_maturity.source_products
     assert "src/app/domain/bond_maturity_signal.py" in bond_maturity.evidence_refs
     assert "src/app/application/bond_maturity_signal.py" in bond_maturity.evidence_refs
     assert "src/app/api/bond_maturity_signals.py" in bond_maturity.evidence_refs

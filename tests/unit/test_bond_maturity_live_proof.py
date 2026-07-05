@@ -242,21 +242,25 @@ def _bond_maturity_evidence() -> CoreBondMaturityEvidence:
     return CoreBondMaturityEvidence(
         source_reported_next_maturity_date=date(2026, 7, 10),
         source_reported_maturing_position_count=2,
-        holdings_ref=_source_ref(),
-        maturity_fact_ref=_source_ref(content_hash_suffix=":maturity"),
+        holdings_ref=_source_ref("lotus-core:HoldingsAsOf:v1"),
+        maturity_fact_ref=_source_ref("lotus-core:PortfolioMaturitySummary:v1"),
         maturity_diagnostic="core_maturity_evidence_ready",
     )
 
 
-def _source_ref(*, content_hash_suffix: str = "") -> SourceRef:
+def _source_ref(product_id: str) -> SourceRef:
+    route_by_product = {
+        "lotus-core:HoldingsAsOf:v1": "/portfolios/{portfolio_id}/positions",
+        "lotus-core:PortfolioMaturitySummary:v1": "/portfolios/{portfolio_id}/maturity-summary",
+    }
     return SourceRef(
-        product_id="lotus-core:HoldingsAsOf:v1",
+        product_id=product_id,
         source_system=SourceSystem.LOTUS_CORE,
         product_version="v1",
-        route="/portfolios/{portfolio_id}/positions",
+        route=route_by_product[product_id],
         as_of_date=AS_OF_DATE,
         generated_at_utc=GENERATED_AT,
-        content_hash=f"sha256:holdings-as-of{content_hash_suffix}",
+        content_hash=f"sha256:{product_id}",
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )

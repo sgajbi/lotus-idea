@@ -199,13 +199,13 @@ def test_lotus_core_adapter_maps_missing_bond_maturity_freshness_to_unavailable(
         return httpx.Response(
             200,
             json=_payload_without_freshness(
-                "HoldingsAsOf",
+                "PortfolioMaturitySummary",
                 extra={
-                    "maturitySummary": {
-                        "nextMaturityDate": "2026-07-10",
-                        "maturingPositionCount": 1,
-                        "source_batch_fingerprint": "bond-maturity-summary",
-                    }
+                    "source_product_name": "HoldingsAsOf",
+                    "source_lineage": {"upstream_content_hash": "bond-maturity-holdings"},
+                    "next_maturity_date": "2026-07-10",
+                    "maturing_holding_count": 1,
+                    "source_batch_fingerprint": "bond-maturity-summary",
                 },
             ),
         )
