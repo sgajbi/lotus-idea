@@ -693,6 +693,40 @@ Additional implemented low-income / liquidity-shortfall foundation:
     certification, funding advice, treasury instruction, suitability, or
     planning objective proof.
 
+Additional implemented mandate health source-product ref foundation:
+
+1. `src/app/ports/performance_sources.py` now defines a direct
+   `PerformanceMandateHealthSourcePort` for
+   `lotus-performance:MandatePerformanceHealthContext:v1` source refs when
+   supplied source-owned period-return facts are available.
+2. `src/app/infrastructure/lotus_performance_sources.py` calls
+   `POST /performance/mandate-health-context`, validates the Performance source
+   product identity, preserves the source-owned request fingerprint as lineage
+   content hash, and does not calculate active return or performance health
+   locally.
+3. `src/app/ports/risk_sources.py` now defines a direct
+   `RiskMandateHealthSourcePort` for
+   `lotus-risk:MandateRiskHealthContext:v1` source refs when supplied
+   source-owned return observations and benchmark-return observations are
+   available.
+4. `src/app/infrastructure/lotus_risk_sources.py` calls
+   `POST /analytics/risk/mandate-health-context`, validates the Risk source
+   product identity, preserves the source-owned request fingerprint as lineage
+   content hash, and does not calculate tracking error, risk health, or risk
+   methodology locally.
+5. These are internal design-module foundations inside the existing
+   `lotus-idea` deployable. They do not introduce a runtime service, worker,
+   queue, scheduled fetch, or separately scalable process boundary.
+6. Because the upstream stateless source-product responses do not publish
+   freshness metadata, the preserved direct source refs remain explicit
+   `UNAVAILABLE` freshness refs until live source proof or richer source
+   telemetry supplies current freshness evidence.
+7. This clears only the direct Performance/Risk mandate-health source-port and
+   adapter-ref blocker for supplied source facts. It does not certify live
+   source fetching, Manage portfolio-scoped live proof, Gateway/Workbench
+   proof, data-product certification, client-publication readiness, or
+   supported-feature promotion.
+
 Not implemented yet:
 
 1. live Risk concentration source proof captured from an actual canonical
@@ -701,19 +735,16 @@ Not implemented yet:
    canonical runtime and merged as release evidence,
 3. live Performance benchmark-readiness proof captured from an actual canonical
    runtime and merged as release evidence,
-4. mandate performance-health source refs from the governed Performance source
-   authority,
-5. mandate risk-health source refs from the governed Risk source authority,
-6. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
+4. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
    live proof beyond the source-safe Manage mandate proof contract and Core
    portfolio-state source-ref proof,
-7. source-worker certification beyond bounded live Core source-ingestion proof,
-8. certified long-running scheduled daemon runtime and live-service recovery proof,
-9. source-fetching APIs beyond current caller-supplied signal foundation
+5. source-worker certification beyond bounded live Core source-ingestion proof,
+6. certified long-running scheduled daemon runtime and live-service recovery proof,
+7. source-fetching APIs beyond current caller-supplied signal foundation
    endpoints,
-11. Gateway/Workbench proof,
-12. supported-feature promotion,
-13. data-product certification.
+8. Gateway/Workbench proof,
+9. supported-feature promotion,
+10. data-product certification.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the
@@ -792,3 +823,16 @@ Current Core cash-weight adapter validation:
 2. This closes the adapter-shape gap only. It does not certify live Core
    source ingestion, certified scheduled daemon runtime, data-product certification,
    Gateway/Workbench support, or supported-feature promotion.
+
+Current mandate health source-product ref validation:
+
+1. `.venv\Scripts\python.exe -m pytest tests\unit\test_lotus_performance_sources.py tests\unit\test_lotus_risk_mandate_health_sources.py -q`
+   passed with `36 passed`, covering direct Performance and Risk mandate-health
+   source-product request payloads, trace/correlation propagation, source
+   product identity validation, source-owned request-fingerprint lineage,
+   explicit unavailable freshness posture, and entitlement-denied fail-closed
+   behavior.
+2. This closes only the supplied-source-fact source-port and adapter-ref
+   foundation. It does not certify live source fetching, live canonical runtime
+   proof, source-worker operation, Gateway/Workbench support, data-product
+   certification, or supported-feature promotion.

@@ -15,6 +15,7 @@ from app.infrastructure.lotus_performance_sources import (
 )
 from app.ports.performance_sources import (
     PerformanceBenchmarkReadinessEvidenceRequest,
+    PerformanceMandateHealthContextRequest,
     PerformanceSourceEntitlementDenied,
     PerformanceSourceUnavailable,
     PerformanceUnderperformanceEvidenceRequest,
@@ -175,6 +176,66 @@ def test_lotus_performance_adapter_fetches_benchmark_readiness_without_active_re
     assert evidence.performance_ref.route == "/integration/returns/series"
     assert evidence.performance_ref.freshness is EvidenceFreshness.CURRENT
     assert evidence.performance_diagnostic == "performance_benchmark_context_missing"
+
+
+def test_lotus_performance_adapter_fetches_mandate_health_source_product_ref() -> None:
+    seen: list[tuple[str, str, dict[str, Any]]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        seen.append((request.method, str(request.url), body))
+        assert request.headers["X-Correlation-Id"] == "corr-performance"
+        assert request.headers["X-Trace-Id"] == "trace-performance"
+        return httpx.Response(200, json=_mandate_health_payload())
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_mandate_health_context(
+        _mandate_health_request()
+    )
+
+    assert evidence.health_state == "attention"
+    assert evidence.threshold_breached is True
+    assert (
+        evidence.performance_diagnostic == "MANDATE_PERFORMANCE_HEALTH_ACTIVE_RETURN_SOURCE_READY"
+    )
+    assert evidence.mandate_performance_health_ref.product_id == (
+        "lotus-performance:MandatePerformanceHealthContext:v1"
+    )
+    assert evidence.mandate_performance_health_ref.source_system.name == "LOTUS_PERFORMANCE"
+    assert evidence.mandate_performance_health_ref.route == "/performance/mandate-health-context"
+    assert evidence.mandate_performance_health_ref.content_hash == "sha256:perf-health-request"
+    assert evidence.mandate_performance_health_ref.freshness is EvidenceFreshness.UNAVAILABLE
+    assert seen == [
+        (
+            "POST",
+            "https://performance.example/performance/mandate-health-context",
+            {
+                "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+                "as_of_date": "2026-06-21",
+                "period_name": "YTD",
+                "portfolio_period_return": "1.20",
+                "benchmark_period_return": "2.05",
+                "active_return_attention_threshold": "-0.50",
+            },
+        )
+    ]
+
+
+def test_lotus_performance_adapter_rejects_mandate_health_product_mismatch() -> None:
+    payload = _mandate_health_payload(extra={"product_name": "ReturnsSeriesBundle"})
+
+    with pytest.raises(PerformanceSourceUnavailable) as exc_info:
+        _adapter(
+            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+        ).fetch_mandate_health_context(_mandate_health_request())
+
+    assert exc_info.value.code == "performance_mandate_health_product_mismatch"
+
+
+def test_lotus_performance_adapter_maps_mandate_health_forbidden_response() -> None:
+    adapter = _adapter(httpx.MockTransport(lambda request: httpx.Response(403, json={})))
+
+    with pytest.raises(PerformanceSourceEntitlementDenied):
+        adapter.fetch_mandate_health_context(_mandate_health_request())
 
 
 def test_lotus_performance_adapter_does_not_derive_active_return_locally() -> None:
@@ -486,6 +547,18 @@ def test_performance_benchmark_readiness_request_requires_aware_evaluation_time(
         )
 
 
+def test_performance_mandate_health_request_requires_aware_evaluation_time() -> None:
+    with pytest.raises(ValueError, match="evaluated_at_utc must be timezone-aware"):
+        PerformanceMandateHealthContextRequest(
+            portfolio_id="PB_SG_GLOBAL_BAL_001",
+            as_of_date=AS_OF_DATE,
+            period_name="YTD",
+            evaluated_at_utc=datetime(2026, 6, 21, 10, 0),
+            portfolio_period_return=Decimal("1.20"),
+            benchmark_period_return=Decimal("2.05"),
+        )
+
+
 def _benchmark_readiness_request() -> PerformanceBenchmarkReadinessEvidenceRequest:
     return PerformanceBenchmarkReadinessEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
@@ -496,3 +569,58 @@ def _benchmark_readiness_request() -> PerformanceBenchmarkReadinessEvidenceReque
         correlation_id="corr-performance",
         trace_id="trace-performance",
     )
+
+
+def _mandate_health_request() -> PerformanceMandateHealthContextRequest:
+    return PerformanceMandateHealthContextRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        period_name="YTD",
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        portfolio_period_return=Decimal("1.20"),
+        benchmark_period_return=Decimal("2.05"),
+        active_return_attention_threshold=Decimal("-0.50"),
+        correlation_id="corr-performance",
+        trace_id="trace-performance",
+    )
+
+
+def _mandate_health_payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "product_name": "MandatePerformanceHealthContext",
+        "product_version": "v1",
+        "correlation_id": "corr-performance",
+        "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+        "as_of_date": "2026-06-21",
+        "period_name": "YTD",
+        "health_state": "attention",
+        "threshold_breached": True,
+        "active_return_attention_threshold": "-0.50",
+        "source_metric": {
+            "metric_name": "ACTIVE_RETURN",
+            "portfolio_period_return": "1.20",
+            "benchmark_period_return": "2.05",
+            "active_return": "-0.85",
+        },
+        "methodology_posture": {
+            "source_product_name": "MandatePerformanceHealthContext",
+            "source_product_version": "v1",
+            "source_service": "lotus-performance",
+            "source_metrics_product": "TimeWeightedReturnAnalytics:v1",
+            "methodology_version": "twr.v1",
+            "source_route": "/performance/twr",
+        },
+        "source_services": ["lotus-performance"],
+        "benchmark_context": {
+            "benchmark_available": True,
+            "benchmark_return_source": "request_supplied_period_return",
+        },
+        "request_fingerprint": "sha256:perf-health-request",
+        "reason_codes": [
+            "MANDATE_PERFORMANCE_HEALTH_ACTIVE_RETURN_SOURCE_READY",
+            "PERFORMANCE_METHODOLOGY_SOURCE_OWNED",
+        ],
+    }
+    if extra:
+        payload.update(extra)
+    return payload

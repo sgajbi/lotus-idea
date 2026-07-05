@@ -103,6 +103,53 @@ class RiskDrawdownEvidence:
     entitlement_allowed: bool = True
 
 
+@dataclass(frozen=True)
+class RiskReturnObservation:
+    observation_date: date
+    return_value: Decimal
+
+
+@dataclass(frozen=True)
+class RiskMandateHealthContextRequest:
+    portfolio_id: str
+    as_of_date: date
+    period_name: str
+    portfolio_open_date: date
+    returns: tuple[RiskReturnObservation, ...]
+    benchmark_returns: tuple[RiskReturnObservation, ...]
+    evaluated_at_utc: datetime
+    tracking_error_attention_threshold: Decimal = Decimal("0.05")
+    reporting_currency: str | None = None
+    net_or_gross: str = "NET"
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.portfolio_id.strip():
+            raise ValueError("portfolio_id is required")
+        if not self.period_name.strip():
+            raise ValueError("period_name is required")
+        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
+            raise ValueError("evaluated_at_utc must be timezone-aware")
+        if not self.returns:
+            raise ValueError("returns are required")
+        if not self.benchmark_returns:
+            raise ValueError("benchmark_returns are required")
+        if self.tracking_error_attention_threshold < Decimal("0"):
+            raise ValueError("tracking_error_attention_threshold must be non-negative")
+        if self.net_or_gross not in {"NET", "GROSS"}:
+            raise ValueError("net_or_gross must be NET or GROSS")
+
+
+@dataclass(frozen=True)
+class RiskMandateHealthContextEvidence:
+    mandate_risk_health_ref: SourceRef
+    health_state: str
+    threshold_breached: bool | None
+    risk_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
 class RiskOpportunitySourcePort(Protocol):
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
@@ -116,3 +163,10 @@ class RiskOpportunitySourcePort(Protocol):
 
     def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
         """Fetch source-owned Lotus Risk drawdown evidence for idea evaluation."""
+
+
+class RiskMandateHealthSourcePort(Protocol):
+    def fetch_mandate_health_context(
+        self, request: RiskMandateHealthContextRequest
+    ) -> RiskMandateHealthContextEvidence:
+        """Fetch source-owned mandate risk-health context refs for idea evaluation."""
