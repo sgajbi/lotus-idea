@@ -8,9 +8,11 @@ from fastapi.testclient import TestClient
 import app.api.allocation_drift_signals as allocation_drift_signals_api
 import app.api.drawdown_review_signals as drawdown_review_signals_api
 import app.api.high_volatility_signals as high_volatility_signals_api
+import app.api.missing_suitability_signals as missing_suitability_signals_api
 import app.api.underperformance_signals as underperformance_signals_api
 from app.main import app
 from app.runtime.source_ingestion_state import (
+    AdvisePolicyEvaluationSourceRuntimeBlocker,
     ManageMandateHealthSourceRuntimeBlocker,
     PerformanceUnderperformanceSourceRuntimeBlocker,
     RiskDrawdownSourceRuntimeBlocker,
@@ -135,6 +137,34 @@ def test_underperformance_source_api_emits_blocked_operation_event(
     ]
 
 
+def test_missing_suitability_source_api_emits_blocked_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events = capture_foundation_events(monkeypatch, missing_suitability_signals_api)
+    monkeypatch.setattr(
+        missing_suitability_signals_api,
+        "_build_advise_policy_evaluation_source_runtime_from_environment",
+        lambda: AdvisePolicyEvaluationSourceRuntimeBlocker("lotus_advise_base_url_not_configured"),
+    )
+
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/missing-suitability/evaluate-from-source",
+        json=missing_suitability_source_payload(),
+        headers=source_signal_headers(),
+    )
+
+    assert response.status_code == 503
+    assert events == [
+        (
+            "signal_evaluation",
+            "blocked",
+            "lotus-advise",
+            False,
+            "lotus_advise_base_url_not_configured",
+        )
+    ]
+
+
 def capture_foundation_events(
     monkeypatch: pytest.MonkeyPatch,
     module: Any,
@@ -171,5 +201,13 @@ def signal_source_payload() -> dict[str, str]:
         "portfolioId": "PB_SG_GLOBAL_BAL_001",
         "asOfDate": "2026-06-21",
         "periodName": "YTD",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+    }
+
+
+def missing_suitability_source_payload() -> dict[str, str]:
+    return {
+        "evaluationId": "pev_001",
+        "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
     }

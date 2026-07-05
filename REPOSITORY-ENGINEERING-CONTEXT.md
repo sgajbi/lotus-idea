@@ -177,6 +177,10 @@ Allocation-drift source-backed evaluation consumes only Lotus Manage-owned
 refs and must not calculate drift, approve mandate compliance, approve
 suitability, recommend trades, create rebalance actions, create orders, or
 promote Manage/product support.
+Missing-suitability source-backed evaluation consumes only Lotus Advise-owned
+`AdvisoryPolicyEvaluationRecord:v1` workflow posture and must not approve
+suitability, approve policy, approve proposals, approve sign-off, publish
+client communication, or promote Advise/product support.
 
 ## Current Implementation Map
 

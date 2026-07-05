@@ -27,6 +27,7 @@ from app.infrastructure.downstream_client import (
     DownstreamClientConfigurationError,
     DownstreamJsonClient,
 )
+from app.infrastructure.lotus_advise_sources import LotusAdvisePolicyEvaluationSourceAdapter
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.infrastructure.lotus_manage_sources import LotusManageMandateHealthSourceAdapter
 from app.infrastructure.lotus_performance_sources import (
@@ -37,6 +38,7 @@ from app.infrastructure.lotus_risk_sources import (
     LotusRiskDrawdownSourceAdapter,
     LotusRiskVolatilitySourceAdapter,
 )
+from app.ports.advise_sources import AdvisePolicyEvaluationSourcePort
 from app.ports.performance_sources import PerformanceUnderperformanceSourcePort
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentSourcePort,
@@ -69,6 +71,8 @@ PERFORMANCE_BASE_URL_ENV = "LOTUS_PERFORMANCE_BASE_URL"
 PERFORMANCE_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_PERFORMANCE_TIMEOUT_SECONDS"
 MANAGE_BASE_URL_ENV = "LOTUS_MANAGE_BASE_URL"
 MANAGE_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_MANAGE_TIMEOUT_SECONDS"
+ADVISE_BASE_URL_ENV = "LOTUS_ADVISE_BASE_URL"
+ADVISE_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_ADVISE_TIMEOUT_SECONDS"
 
 
 @dataclass(frozen=True)
@@ -179,6 +183,17 @@ class ManageMandateHealthSourceRuntime:
 
 
 @dataclass(frozen=True)
+class AdvisePolicyEvaluationSourceRuntime:
+    advise_source: AdvisePolicyEvaluationSourcePort
+    advise_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.advise_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -241,6 +256,12 @@ class ManageMandateHealthSourceRuntimeBlocker:
 
 
 @dataclass(frozen=True)
+class AdvisePolicyEvaluationSourceRuntimeBlocker:
+    code: str
+    advise_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
 class _ConfiguredCoreSourceAdapter:
     core_source: LotusCoreHighCashSourceAdapter
     core_query_base_url_configured: bool
@@ -285,6 +306,17 @@ class _ConfiguredManageSourceClient:
 class _ManageSourceClientBlocker:
     code: str
     manage_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class _ConfiguredAdviseSourceClient:
+    advise_client: DownstreamJsonClient
+
+
+@dataclass(frozen=True)
+class _AdviseSourceClientBlocker:
+    code: str
+    advise_base_url_configured: bool = False
 
 
 @dataclass(frozen=True)
@@ -553,6 +585,21 @@ def build_manage_mandate_health_source_runtime_from_environment() -> (
     )
 
 
+def build_advise_policy_evaluation_source_runtime_from_environment() -> (
+    AdvisePolicyEvaluationSourceRuntime | AdvisePolicyEvaluationSourceRuntimeBlocker
+):
+    configured_client = _build_configured_advise_source_client_from_environment()
+    if isinstance(configured_client, _AdviseSourceClientBlocker):
+        return AdvisePolicyEvaluationSourceRuntimeBlocker(
+            configured_client.code,
+            advise_base_url_configured=configured_client.advise_base_url_configured,
+        )
+    return AdvisePolicyEvaluationSourceRuntime(
+        advise_source=LotusAdvisePolicyEvaluationSourceAdapter(configured_client.advise_client),
+        advise_base_url_configured=True,
+    )
+
+
 def _build_configured_risk_source_client_from_environment() -> (
     _ConfiguredRiskSourceClient | _RiskSourceClientBlocker
 ):
@@ -601,6 +648,22 @@ def _build_configured_manage_source_client_from_environment() -> (
             manage_base_url_configured=True,
         )
     return _ConfiguredManageSourceClient(manage_client=DownstreamJsonClient(manage_config))
+
+
+def _build_configured_advise_source_client_from_environment() -> (
+    _ConfiguredAdviseSourceClient | _AdviseSourceClientBlocker
+):
+    advise_base_url = os.getenv(ADVISE_BASE_URL_ENV, "").strip()
+    if not advise_base_url:
+        return _AdviseSourceClientBlocker("lotus_advise_base_url_not_configured")
+    try:
+        advise_config = _advise_source_client_config(advise_base_url)
+    except DownstreamClientConfigurationError:
+        return _AdviseSourceClientBlocker(
+            "lotus_advise_base_url_invalid",
+            advise_base_url_configured=True,
+        )
+    return _ConfiguredAdviseSourceClient(advise_client=DownstreamJsonClient(advise_config))
 
 
 def _build_configured_core_source_adapter_from_environment() -> (
@@ -737,6 +800,28 @@ def _manage_source_client_config(manage_base_url: str) -> DownstreamClientConfig
     return DownstreamClientConfig(
         base_url=manage_base_url,
         timeout_seconds=_positive_float_env(MANAGE_TIMEOUT_SECONDS_ENV, default=2.0),
+        max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
+        max_keepalive_connections=_positive_int_env(
+            SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV, default=10
+        ),
+        pool_timeout_seconds=_positive_float_env(
+            SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV, default=2.0
+        ),
+        retry_max_attempts=_positive_int_env(SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV, default=1),
+        retry_initial_backoff_seconds=_non_negative_float_env(
+            SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+        ),
+        retry_max_backoff_seconds=_non_negative_float_env(
+            SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+        ),
+        retry_post_without_idempotency=True,
+    )
+
+
+def _advise_source_client_config(advise_base_url: str) -> DownstreamClientConfig:
+    return DownstreamClientConfig(
+        base_url=advise_base_url,
+        timeout_seconds=_positive_float_env(ADVISE_TIMEOUT_SECONDS_ENV, default=2.0),
         max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
         max_keepalive_connections=_positive_int_env(
             SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV, default=10

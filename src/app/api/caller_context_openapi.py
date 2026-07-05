@@ -43,6 +43,7 @@ _SIGNAL_REQUIREMENT_PATHS = (
     "/api/v1/idea-signals/missing-risk-profile/evaluate",
     "/api/v1/idea-signals/missing-benchmark/evaluate",
     "/api/v1/idea-signals/missing-benchmark/evaluate-from-source",
+    "/api/v1/idea-signals/missing-suitability/evaluate-from-source",
     "/api/v1/idea-signals/missing-suitability/evaluate",
 )
 

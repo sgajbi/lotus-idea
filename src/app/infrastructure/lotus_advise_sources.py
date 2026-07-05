@@ -34,6 +34,9 @@ class LotusAdvisePolicyEvaluationSourceAdapter:
     def __init__(self, advise_client: DownstreamJsonClient) -> None:
         self._advise_client = advise_client
 
+    def close(self) -> None:
+        self._advise_client.close()
+
     def fetch_policy_evaluation_evidence(
         self,
         request: AdvisePolicyEvaluationEvidenceRequest,

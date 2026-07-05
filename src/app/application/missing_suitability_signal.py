@@ -17,7 +17,7 @@ from app.domain import (
 )
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.advise_sources import (
-    AdviseOpportunitySourcePort,
+    AdvisePolicyEvaluationSourcePort,
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
     AdviseSourceEntitlementDenied,
@@ -46,6 +46,7 @@ class EvaluateMissingSuitabilityContextFromAdviseCommand:
     evaluation_id: str
     as_of_date: date
     evaluated_at_utc: datetime
+    access_scope: ReviewAccessScope | None = None
     duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
@@ -83,7 +84,7 @@ def evaluate_missing_suitability_context_signal_command(
 def evaluate_missing_suitability_context_signal_from_advise(
     command: EvaluateMissingSuitabilityContextFromAdviseCommand,
     *,
-    advise_source: AdviseOpportunitySourcePort,
+    advise_source: AdvisePolicyEvaluationSourcePort,
     policy: MissingSuitabilityContextSignalPolicy = DEFAULT_MISSING_SUITABILITY_CONTEXT_POLICY,
 ) -> SignalEvaluationResult:
     try:
@@ -142,6 +143,7 @@ def _evaluate_advise_evidence(
             policy_ref=evidence.policy_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
+            access_scope=command.access_scope,
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
