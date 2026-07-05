@@ -3,6 +3,23 @@
 `lotus-idea` turns governed Lotus evidence into reviewable private-banking
 opportunity ideas.
 
+Current summary: the service has certified internal foundations for opportunity
+candidate evaluation, lifecycle, review, feedback, readiness diagnostics, and
+bounded read-only Gateway publication. It is not yet a supported external
+business feature, full Workbench surface, certified data product, AI runtime
+claim, or downstream execution authority.
+
+## Reader Map
+
+| Reader need | Start here | Boundary to remember |
+| --- | --- | --- |
+| Understand the product role | [Current posture](#current-posture) | Opportunity intelligence is internal foundation until support gates pass. |
+| Check owned and non-owned capabilities | [Capability posture](#capability-posture) | Portfolio accounting, official performance, risk, suitability, execution, reporting, archive, and AI infrastructure stay upstream. |
+| Follow the lifecycle path | [Operating model](#operating-model) | Human review and source evidence are required before conversion posture. |
+| Validate integration readiness | [Current posture](#current-posture), [API Surface](API-Surface) | Gateway/Workbench proof and data-product certification remain separate evidence gates. |
+
+## Operating Model
+
 The target operating model is:
 
 1. consume source-owned facts from Lotus domain services,
@@ -79,3 +96,11 @@ implementation proof, or a client-demo feature claim.
 | Data mesh | Proposed contracts, readiness diagnostics, and blocked runtime snapshot evidence | Requires platform certification and runtime telemetry promotion |
 | Gateway and Workbench publication | Bounded read-only Gateway publication plus read-only Workbench queue/detail rendering | Requires full live proof, mutation affordances, entitlement-denied proof, and supported-feature evidence |
 | Downstream realization | Intent/outcome tracking foundation plus source-safe submission routes, adapter, and planned contract posture | Requires Advise, Manage, Report, Render, and Archive route-existence and execution proof |
+
+## Capability Posture
+
+`lotus-idea` owns opportunity detection, idea lifecycle, evidence packs,
+scoring, review workflow, feedback, conversion intent, and readiness posture.
+It does not own official portfolio accounting, performance, risk, suitability,
+compliance, rebalance execution, report rendering, archive authority, or AI
+infrastructure.

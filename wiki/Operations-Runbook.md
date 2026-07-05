@@ -419,36 +419,27 @@ flowchart LR
     Readiness -. "blocked until live proof" .-> Promotion
 ```
 
-Initial commands:
+## Command Map
+
+Use the Makefile as the authoritative command catalogue. The table below groups
+the operator entrypoints by purpose so this page stays readable.
+
+| Purpose | Command | When to use |
+| --- | --- | --- |
+| Environment setup | `make install` | Prepare the local toolchain. |
+| Developer confidence | `make check` | Fast local proof before a focused docs or code change. |
+| Broad local CI | `make ci` | PR-grade local validation when runtime prerequisites are available. |
+| Release evidence | `make ci-release` | Broad release posture, including Docker and PostgreSQL prerequisites. |
+| Durable storage proof | `make postgres-integration-gate`, `make durable-repository-proof-contract-gate` | Validate PostgreSQL-backed repository and proof-artifact posture. |
+| Source proof | `make source-ingestion-worker-check`, `make source-ingestion-scheduled-worker-check`, `make source-ingestion-live-proof-contract-gate` | Validate ingestion worker contracts and live-proof artifact shape. |
+| Upstream source-product proof | `make risk-concentration-live-proof-contract-gate`, `make high-volatility-live-proof-contract-gate`, `make risk-drawdown-live-proof-contract-gate`, `make core-benchmark-assignment-live-proof-contract-gate`, `make core-portfolio-state-live-proof-contract-gate`, `make manage-mandate-live-proof-contract-gate`, `make mandate-restriction-live-proof-contract-gate`, `make missing-suitability-live-proof-contract-gate`, `make missing-risk-profile-live-proof-contract-gate`, `make performance-underperformance-live-proof-contract-gate` | Validate bounded sibling source-proof artifacts without promoting support by command existence alone. |
+| Runtime trust and implementation proof | `make runtime-trust-telemetry-proof-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-preview-check`, `make runtime-trust-telemetry-snapshot-check` | Inspect aggregate blocker and runtime telemetry posture. |
+| Downstream proof | `make downstream-route-contract-proof-gate`, `make report-intake-route-proof-contract-gate`, `make report-materialization-proof-contract-gate` | Validate bounded Advise, Manage, and Report proof artifacts. |
+| Local hygiene | `make clean` | Remove ignored generated residue before branch hygiene checks. |
+
+Short local API example:
 
 ```powershell
-make install
-make check
-make ci
-make ci-release
-make postgres-integration-gate
-make durable-repository-proof-contract-gate
-make source-ingestion-worker-check
-make source-ingestion-scheduled-worker-check
-make source-ingestion-live-proof-contract-gate
-make risk-concentration-live-proof-contract-gate
-make high-volatility-live-proof-contract-gate
-make risk-drawdown-live-proof-contract-gate
-make core-benchmark-assignment-live-proof-contract-gate
-make core-portfolio-state-live-proof-contract-gate
-make manage-mandate-live-proof-contract-gate
-make mandate-restriction-live-proof-contract-gate
-make missing-suitability-live-proof-contract-gate
-make missing-risk-profile-live-proof-contract-gate
-make performance-underperformance-live-proof-contract-gate
-make runtime-trust-telemetry-proof-contract-gate
-make downstream-route-contract-proof-gate
-make report-intake-route-proof-contract-gate
-make report-materialization-proof-contract-gate
-make implementation-proof-readiness-check
-make runtime-trust-telemetry-preview-check
-make runtime-trust-telemetry-snapshot-check
-make clean
 uvicorn app.main:app --reload --port 8330
 ```
 

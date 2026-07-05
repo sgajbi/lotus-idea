@@ -1,15 +1,11 @@
 # API Surface
 
-This page is the first-stop map for `lotus-idea` API readers. It summarizes
-the implemented route families and routes deeper review to the certified
-endpoint ledger, OpenAPI gate, and operation runbooks. It is not a supported
-business-feature catalogue.
+This page is the first-stop map for `lotus-idea` API readers.
 
-Current API posture: internal foundation and operator diagnostics only. Bounded
-read-only Gateway publication exists for advisor queue and candidate detail,
-but full Workbench proof, data-product certification, client-ready publication,
-and supported-feature promotion remain blocked until their own evidence gates
-pass.
+Current posture: API support is internal foundation and operator diagnostics only. Bounded
+read-only Gateway publication exists for advisor queue and candidate detail; Workbench proof,
+data-product certification, client-ready publication, and supported-feature promotion remain
+separately gated.
 
 ## Route Families
 

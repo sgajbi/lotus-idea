@@ -1,15 +1,11 @@
 # Architecture
 
 This page explains the current `lotus-idea` service shape, ownership boundary,
-and proof-backed module structure. It keeps detailed foundation notes, but
-starts with the decisions a reader needs before diving into implementation
-history.
+and proof-backed module structure.
 
-Current summary: `lotus-idea` remains one deployable domain service with
-stronger internal bounded modules. Do not infer a separately scalable runtime
-boundary, source authority, Gateway/Workbench product support,
-data-product certification, or supported-feature promotion from these
-foundations alone.
+Current summary: `lotus-idea` remains one deployable domain service with stronger internal bounded
+modules. Do not infer separate runtime boundaries, Gateway/Workbench product support,
+data-product certification, or supported-feature promotion from these foundations alone.
 
 ## How To Read This Page
 

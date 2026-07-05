@@ -2,7 +2,21 @@
 
 The roadmap is governed by RFC-0002 and must stay aligned to implementation evidence.
 
-Current state:
+Current summary: RFC-0002 is partly implemented through internal foundations,
+operator diagnostics, and bounded publication proof. Business features remain
+planned until source authority, data-mesh certification, Gateway/Workbench
+proof, downstream proof, supported-feature evidence, and mainline CI all agree.
+
+## Roadmap Decision Map
+
+| Decision | Current answer | Evidence path |
+| --- | --- | --- |
+| Can a business feature be promoted? | No; all business features remain planned. | `supported-features/`, RFC-0002 slice evidence, CI gates |
+| Can Gateway/Workbench be treated as complete? | No; bounded read-only queue/detail proof exists, but full product-surface proof remains gated. | [Supported Features](Supported-Features), [API Surface](API-Surface) |
+| Can downstream realization be marketed as execution? | No; submission posture and route/materialization proof do not grant suitability, execution, reporting, or archive authority. | [Integrations](Integrations), [Operations Runbook](Operations-Runbook) |
+| Can data mesh be claimed as certified? | No; contracts and runtime diagnostics are preparatory evidence only. | [Security and Governance](Security-and-Governance), mesh proof gates |
+
+## Current State
 
 1. repository foundation is scaffolded,
 2. architecture decisions are recorded,
