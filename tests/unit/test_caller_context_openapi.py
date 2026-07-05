@@ -78,7 +78,7 @@ def test_candidate_detail_openapi_publishes_required_reader_roles() -> None:
 
 
 def test_caller_context_openapi_contract_ignores_malformed_schema_sections() -> None:
-    schema = {
+    schema: dict[str, Any] = {
         "paths": {
             "/api/v1/idea-signals/high-cash/evaluate": "not-a-path-item",
             "/api/v1/review-queues/advisor": {"get": "not-an-operation"},
@@ -117,7 +117,9 @@ def test_caller_context_openapi_contract_ignores_malformed_schema_sections() -> 
 
 
 def test_caller_context_openapi_contract_handles_sparse_parameters_and_alternatives() -> None:
-    operation = {"parameters": ["not-a-parameter", {"in": "query", "name": "limit"}]}
+    operation: dict[str, Any] = {
+        "parameters": ["not-a-parameter", {"in": "query", "name": "limit"}]
+    }
     _apply_operation_requirement(
         operation,
         CallerContextOpenApiRequirement(
@@ -128,11 +130,11 @@ def test_caller_context_openapi_contract_handles_sparse_parameters_and_alternati
         ),
     )
 
-    caller_context = operation[CALLER_CONTEXT_EXTENSION]
+    caller_context = cast(dict[str, Any], operation[CALLER_CONTEXT_EXTENSION])
     assert caller_context["requiredCapabilities"] == ["idea.synthetic.read"]
     assert caller_context["alternativeRoles"] == ["operator"]
 
-    schema = {
+    schema: dict[str, Any] = {
         "paths": {
             "/api/v1/idea-signals/high-cash/evaluate": {
                 "post": {
@@ -143,7 +145,11 @@ def test_caller_context_openapi_contract_handles_sparse_parameters_and_alternati
     }
 
     decorated = apply_caller_context_openapi_contract(schema)
+    decorated_operation = cast(
+        dict[str, Any],
+        cast(dict[str, Any], decorated["paths"])["/api/v1/idea-signals/high-cash/evaluate"],
+    )
+    decorated_post = cast(dict[str, Any], decorated_operation["post"])
+    decorated_context = cast(dict[str, Any], decorated_post[CALLER_CONTEXT_EXTENSION])
 
-    assert decorated["paths"]["/api/v1/idea-signals/high-cash/evaluate"]["post"][
-        CALLER_CONTEXT_EXTENSION
-    ]["requiredCapabilities"] == ["idea.signal.evaluate"]
+    assert decorated_context["requiredCapabilities"] == ["idea.signal.evaluate"]
