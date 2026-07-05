@@ -70,7 +70,7 @@ target and must not carry durable truth that is absent from `main`.
 | Group | Primary commands | Use |
 | --- | --- | --- |
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
-| Contract and documentation | `make ci-contract-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
+| Contract and documentation | `make ci-contract-gate`, `make slice2-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
 | Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make postgres-integration-gate`, `make container-runtime-smoke` | Prove durable storage, migration, and runtime behavior. |
 | Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-proof-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh and proof-readiness posture. |
@@ -648,6 +648,14 @@ PostgreSQL repository code uses public row, JSON, datetime, and domain
 serialization codec APIs. The gate is intentionally scoped to measured
 boundaries and does not claim complete application-helper or adapter-internal
 codec cleanup.
+
+`make slice2-structure-gate` is the RFC-0002 Slice 2 closure guard. It keeps
+the current surface in foundation-only posture by checking the support registry,
+README, repository context, RFC index, supported-features wiki, and this
+validation page against the same planned-versus-supported truth. It also
+reuses the architecture-boundary gate, including the domain ban on Pydantic DTO
+framework imports, so design modularity stays internal and no runtime service
+split is implied.
 
 The monetary-float guard blocks money-like `float` annotations, literals, and
 conversions in application source. It is AST-backed and intentionally allows

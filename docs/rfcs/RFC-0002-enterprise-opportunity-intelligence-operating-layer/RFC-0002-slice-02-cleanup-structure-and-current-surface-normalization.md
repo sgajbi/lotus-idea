@@ -1,6 +1,6 @@
 # RFC-0002 Slice 02: Cleanup, Structure, And Current Surface Normalization
 
-Status: Partially implemented - runtime composition providers, route metadata governance, API DTO base-model governance, shared signal DTO governance, signal caller-context and entitlement-scope dependency governance, API ProblemDetails boundary governance, API idempotency boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, public proof capability update APIs, and public PostgreSQL codec APIs normalized behind shared public surfaces with blocking enforcement retained
+Status: Implemented - current surface normalization is enforced by the Slice 2 structure gate, architecture-boundary gate, route metadata governance, API DTO base-model governance, shared signal DTO governance, signal caller-context and entitlement-scope dependency governance, API ProblemDetails boundary governance, API idempotency boundary governance, OpenAPI ProblemDetails example governance, protected private import boundary governance, public proof capability update APIs, and public PostgreSQL codec APIs normalized behind shared public surfaces with blocking enforcement retained
 
 ## Current Implementation Evidence
 
@@ -103,6 +103,17 @@ Implemented in this slice:
     service; it does not create a runtime signal microservice, certify live
     source entitlement, or promote caller-supplied signal APIs as supported
     features.
+18. `scripts/slice2_structure_gate.py`, `make slice2-structure-gate`, and
+    `tests/unit/test_slice2_structure_gate.py` now make the slice acceptance
+    gate executable. The gate verifies that `features[]` remains empty,
+    `current_posture` remains `foundation_only`, planned capabilities remain
+    planned, README/repo-context/RFC/wiki support truth agrees, and the
+    architecture boundary gate has no violations. The gate is wired into
+    `make lint` and protected by the CI contract gate.
+19. The architecture-boundary gate now treats Pydantic as an API/DTO framework
+    dependency that domain modules must not import. This keeps domain code
+    framework-free and preserves design modularity without adding a runtime
+    process boundary.
 
 Validation evidence from the cleanup slice:
 
@@ -138,22 +149,29 @@ Validation evidence from the cleanup slice:
 30. `.venv\Scripts\python.exe -m ruff check src\app\api\caller_headers.py src\app\api\allocation_drift_signals.py src\app\api\bond_maturity_signals.py src\app\api\concentration_risk_signals.py src\app\api\drawdown_review_signals.py src\app\api\high_volatility_signals.py src\app\api\idea_signals.py src\app\api\low_income_signals.py src\app\api\missing_benchmark_signals.py src\app\api\missing_risk_profile_signals.py src\app\api\missing_suitability_signals.py src\app\api\underperformance_signals.py scripts\signal_api_contract_gate.py tests\unit\test_signal_api_contract_gate.py tests\unit\test_security_caller_context.py`
 31. `make signal-api-contract-gate`
 32. `.venv\Scripts\python.exe -m pytest tests\unit\test_signal_api_contract_gate.py tests\unit\test_signal_api_support.py tests\unit\test_security_caller_context.py tests\integration\test_concentration_risk_signal_api.py -q`
+33. `make slice2-structure-gate`
+34. `.venv\Scripts\python.exe -m pytest tests\unit\test_slice2_structure_gate.py tests\unit\test_slice2_ci_contract_gate.py tests\unit\test_ci_contract_gate.py tests\unit\test_ci_enforcement_contract.py -q`
+35. `make ci-contract-gate`
+36. `make architecture-boundary-gate`
+37. `make documentation-contract-gate`
 
-## Remaining Work
+## Ongoing Hygiene Routed To Later Slices
 
-The broader cleanup slice is not complete. Remaining work includes:
+The current-surface cleanup and structure baseline is complete for Slice 2.
+Recurring cleanup remains part of every later implementation slice and the
+Slice 19 hardening pass, including:
 
-1. continued removal of scaffold placeholders as each product surface becomes
+1. removing stale scaffold placeholders when a future product surface becomes
    implementation-backed,
-2. continued route-module normalization as candidate lifecycle, review,
-   feedback, queue, conversion, downstream realization, and operator readiness
-   surfaces grow,
-3. continued cleanup of remaining application helpers and adapter-internal
-   persistence codec details as each boundary becomes measured and low-noise,
-4. documentation/wiki/context synchronization for each material repository
-   structure change,
-5. periodic dead-code, duplicate-vocabulary, and unsupported-claim checks before
-   supported-feature promotion.
+2. normalizing route modules as later lifecycle, review, feedback, queue,
+   conversion, downstream realization, and operator readiness behavior changes,
+3. extracting application helper or adapter-internal codec boundaries only
+   after measured duplication or ownership evidence justifies the design
+   boundary,
+4. synchronizing docs, wiki, supported-features, and repo context whenever
+   repository truth changes,
+5. running dead-code, duplicate-vocabulary, unsupported-claim, and
+   supported-feature checks before any future promotion.
 
 ## Outcome
 
@@ -176,3 +194,6 @@ starts with clean modules, vocabulary, docs, and test structure.
 2. Domain code remains framework-free.
 3. API layers contain no business logic.
 4. Docs and wiki state planned versus supported posture consistently.
+
+Executable closure: `make slice2-structure-gate`, `make architecture-boundary-gate`,
+`make documentation-contract-gate`, and `make supported-features-gate`.

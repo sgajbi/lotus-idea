@@ -12,7 +12,6 @@ from ci_contract_gate_expectations import (  # noqa: E402
     REQUIRED_LINT_TARGETS,
     REQUIRED_READINESS_WIRING,
     REQUIRED_TEST_SELECTORS,
-    SCRIPT_TARGET_EXPECTATIONS,
     TEST_TARGET_EXPECTATIONS,
 )
 from ci_e2e_contract import validate_e2e_suite  # noqa: E402
@@ -21,6 +20,7 @@ from ci_release_evidence_contract import (  # noqa: E402
     validate_dockerfile_runtime,
     validate_release_evidence_targets,
 )
+from ci_script_target_expectations import SCRIPT_TARGET_EXPECTATIONS  # noqa: E402
 from ci_workflow_contract_expectations import (  # noqa: E402
     PROHIBITED_WORKFLOW_PATTERNS,
     WORKFLOW_EXPECTATIONS,

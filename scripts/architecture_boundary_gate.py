@@ -15,6 +15,7 @@ LAYER_RULES = {
         "forbidden_prefixes": (
             "fastapi",
             "starlette",
+            "pydantic",
             "requests",
             "httpx",
             "sqlalchemy",

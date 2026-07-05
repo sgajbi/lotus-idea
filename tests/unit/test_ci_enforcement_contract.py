@@ -121,6 +121,15 @@ def test_architecture_boundary_gate_protects_runtime_composition_layer() -> None
     assert "framework" in runtime_rule["description"]
 
 
+def test_architecture_boundary_gate_keeps_domain_free_of_pydantic_dtos() -> None:
+    module = _load_architecture_boundary_gate()
+
+    domain_rule = module.LAYER_RULES["domain"]
+
+    assert "pydantic" in domain_rule["forbidden_prefixes"]
+    assert "framework-free" in domain_rule["description"]
+
+
 def test_architecture_boundary_gate_detects_runtime_api_leakage(
     tmp_path: Path,
     monkeypatch: Any,
