@@ -18,11 +18,11 @@ from app.domain import (
 from app.application.access_scope import portfolio_only_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.performance_sources import (
-    PerformanceOpportunitySourcePort,
     PerformanceSourceEntitlementDenied,
     PerformanceSourceUnavailable,
     PerformanceUnderperformanceEvidence,
     PerformanceUnderperformanceEvidenceRequest,
+    PerformanceUnderperformanceSourcePort,
 )
 
 
@@ -78,7 +78,7 @@ def evaluate_underperformance_signal_command(
 def evaluate_underperformance_signal_from_performance(
     command: EvaluateUnderperformanceFromPerformanceCommand,
     *,
-    performance_source: PerformanceOpportunitySourcePort,
+    performance_source: PerformanceUnderperformanceSourcePort,
     policy: UnderperformanceSignalPolicy = DEFAULT_UNDERPERFORMANCE_POLICY,
 ) -> SignalEvaluationResult:
     try:

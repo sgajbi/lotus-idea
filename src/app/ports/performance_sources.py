@@ -99,12 +99,16 @@ class PerformanceMandateHealthContextEvidence:
     entitlement_allowed: bool = True
 
 
-class PerformanceOpportunitySourcePort(Protocol):
+class PerformanceUnderperformanceSourcePort(Protocol):
     def fetch_underperformance_evidence(
         self,
         request: PerformanceUnderperformanceEvidenceRequest,
     ) -> PerformanceUnderperformanceEvidence:
         """Fetch source-owned performance evidence for underperformance idea evaluation."""
+
+
+class PerformanceOpportunitySourcePort(PerformanceUnderperformanceSourcePort, Protocol):
+    """Backward-compatible alias for the underperformance source contract."""
 
 
 class PerformanceBenchmarkReadinessSourcePort(Protocol):

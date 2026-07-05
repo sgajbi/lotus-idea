@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import json
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -101,6 +101,24 @@ def _request() -> PerformanceUnderperformanceEvidenceRequest:
         correlation_id="corr-performance",
         trace_id="trace-performance",
     )
+
+
+def test_lotus_performance_adapter_close_releases_owned_client() -> None:
+    class CloseAwareClient:
+        def __init__(self) -> None:
+            self.close_count = 0
+
+        def close(self) -> None:
+            self.close_count += 1
+
+    client = CloseAwareClient()
+    adapter = LotusPerformanceUnderperformanceSourceAdapter(
+        cast(DownstreamJsonClient, client),
+    )
+
+    adapter.close()
+
+    assert client.close_count == 1
 
 
 def test_lotus_performance_adapter_fetches_declared_returns_series_source_product() -> None:
