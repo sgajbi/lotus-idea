@@ -3,6 +3,18 @@ from __future__ import annotations
 import re
 
 
+SECRET_LIKE_BUILD_METADATA_NAMES = (
+    "SECRET",
+    "TOKEN",
+    "PASSWORD",
+    "PASSWD",
+    "CREDENTIAL",
+    "PRIVATE",
+    "API_KEY",
+    "ACCESS_KEY",
+)
+
+
 def _target_block(makefile: str, target: str) -> str:
     pattern = re.compile(rf"^{re.escape(target)}:.*?(?=^\S|\Z)", re.MULTILINE | re.DOTALL)
     match = pattern.search(makefile)
@@ -71,10 +83,44 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
     errors: list[str] = []
     if "CONTAINER_BASE_IMAGE ?= python:3.12-slim" not in makefile:
         errors.append("Makefile must govern `CONTAINER_BASE_IMAGE` as `python:3.12-slim`")
+    governed_image_tag = (
+        "BUILD_IMAGE_TAG ?= $(if $(BUILD_GIT_COMMIT_SHA),$(BUILD_GIT_COMMIT_SHA),local)"
+    )
+    if governed_image_tag not in makefile:
+        errors.append("Makefile must derive the container image tag from the Git commit SHA")
+    if "CONTAINER_IMAGE_NAME ?= lotus-idea:$(BUILD_IMAGE_TAG)" not in makefile:
+        errors.append("Makefile must tag the governed service image with the Git commit SHA")
+    if "docker push" in makefile:
+        errors.append("Makefile must not push images; registry publication is CI-only")
 
     docker_build = _target_block(makefile, "docker-build")
     if "--build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE)" not in docker_build:
         errors.append("Makefile docker-build target must pass governed Docker base image")
+    for fragment, error in {
+        "--build-arg GIT_COMMIT_SHA=$(BUILD_GIT_COMMIT_SHA)": (
+            "Makefile docker-build target must pass Git commit SHA provenance"
+        ),
+        "--build-arg GIT_BRANCH=$(BUILD_GIT_BRANCH)": (
+            "Makefile docker-build target must pass Git branch provenance"
+        ),
+        "--build-arg BUILD_TIMESTAMP=$(BUILD_TIMESTAMP)": (
+            "Makefile docker-build target must pass build timestamp provenance"
+        ),
+        "--build-arg REPO_URL=$(BUILD_REPO_URL)": (
+            "Makefile docker-build target must pass repository URL provenance"
+        ),
+        "--build-arg CI_RUN_ID=$(BUILD_CI_RUN_ID)": (
+            "Makefile docker-build target must pass CI run ID provenance"
+        ),
+        "--build-arg IMAGE_DIGEST=$(BUILD_IMAGE_DIGEST)": (
+            "Makefile docker-build target must pass image digest provenance"
+        ),
+        "--build-arg SERVICE_VERSION=$(BUILD_SERVICE_VERSION)": (
+            "Makefile docker-build target must pass service version provenance"
+        ),
+    }.items():
+        if fragment not in docker_build:
+            errors.append(error)
 
     errors.extend(_validate_container_runtime_smoke_target(makefile))
 
@@ -158,6 +204,36 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
         'org.opencontainers.image.base.name="${PYTHON_BASE_IMAGE}"': (
             "Dockerfile must label the runtime base image"
         ),
+        'org.opencontainers.image.version="${SERVICE_VERSION}"': (
+            "Dockerfile must label the service version"
+        ),
+        'org.opencontainers.image.revision="${GIT_COMMIT_SHA}"': (
+            "Dockerfile must label the Git commit SHA"
+        ),
+        'io.lotus.image.git.branch="${GIT_BRANCH}"': "Dockerfile must label the Git branch",
+        'org.opencontainers.image.created="${BUILD_TIMESTAMP}"': (
+            "Dockerfile must label the build timestamp"
+        ),
+        'org.opencontainers.image.source="${REPO_URL}"': "Dockerfile must label the repo URL",
+        'io.lotus.image.ci.run_id="${CI_RUN_ID}"': "Dockerfile must label the CI run ID",
+        'io.lotus.image.digest="${IMAGE_DIGEST}"': "Dockerfile must label the image digest",
+        'LOTUS_GIT_COMMIT_SHA="${GIT_COMMIT_SHA}"': (
+            "Dockerfile must expose Git commit SHA to runtime metadata"
+        ),
+        'LOTUS_GIT_BRANCH="${GIT_BRANCH}"': (
+            "Dockerfile must expose Git branch to runtime metadata"
+        ),
+        'LOTUS_BUILD_TIMESTAMP="${BUILD_TIMESTAMP}"': (
+            "Dockerfile must expose build timestamp to runtime metadata"
+        ),
+        'LOTUS_REPO_URL="${REPO_URL}"': "Dockerfile must expose repo URL to runtime metadata",
+        'LOTUS_CI_RUN_ID="${CI_RUN_ID}"': ("Dockerfile must expose CI run ID to runtime metadata"),
+        'LOTUS_IMAGE_DIGEST="${IMAGE_DIGEST}"': (
+            "Dockerfile must expose image digest to runtime metadata"
+        ),
+        'LOTUS_SERVICE_VERSION="${SERVICE_VERSION}"': (
+            "Dockerfile must expose service version to runtime metadata"
+        ),
         "COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt": (
             "Dockerfile must copy the resolved runtime dependency lockfile"
         ),
@@ -196,6 +272,20 @@ def validate_dockerfile_runtime(dockerfile: str) -> list[str]:
     for fragment, error in prohibited_fragments.items():
         if fragment in dockerfile:
             errors.append(error)
+    for line_number, line in enumerate(dockerfile.splitlines(), start=1):
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        for name_match in re.findall(
+            r"(?:ARG|ENV)\s+([A-Za-z_][A-Za-z0-9_]*)|\b([A-Za-z_][A-Za-z0-9_]*)=",
+            stripped,
+        ):
+            variable_name = next(part for part in name_match if part)
+            if any(marker in variable_name.upper() for marker in SECRET_LIKE_BUILD_METADATA_NAMES):
+                errors.append(
+                    f"Dockerfile line {line_number} must not expose secret-like build "
+                    f"metadata variable `{variable_name}` through ARG/ENV"
+                )
     ordered_fragments = [
         "COPY requirements/runtime-resolved.lock.txt ./requirements/runtime-resolved.lock.txt",
         "python -m pip install --no-cache-dir --requirement requirements/runtime-resolved.lock.txt",

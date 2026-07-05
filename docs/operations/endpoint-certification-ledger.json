@@ -1213,20 +1213,44 @@
       "path": "/metadata",
       "certification_status": "baseline_certified",
       "owner": "lotus-idea owners",
-      "purpose": "Report service identity and policy-version metadata for operators and validators.",
-      "when_to_use": "Use for operator diagnostics, inventory, and validation metadata checks.",
+      "purpose": "Report service identity, policy-version metadata, and image build provenance for operators and validators.",
+      "when_to_use": "Use for operator diagnostics, inventory, release provenance checks, and validation metadata checks.",
       "when_not_to_use": "Do not use as a business data or supportability endpoint.",
       "request_examples": [
         "No request body."
       ],
       "response_examples": [
-        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\"}"
+        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\",\"build\":{\"gitCommitSha\":\"unknown\",\"gitBranch\":\"unknown\",\"buildTimestamp\":\"unknown\",\"repoUrl\":\"unknown\",\"ciRunId\":\"local\",\"imageDigest\":\"local-unpublished\"}}"
       ],
       "error_examples": [
         "Unhandled service errors return product-safe Problem Details."
       ],
       "test_evidence": [
-        "tests/e2e/test_smoke.py::test_metadata_endpoint"
+        "tests/e2e/test_smoke.py::test_metadata_endpoint",
+        "tests/unit/test_service_contract.py::test_version_endpoint_exposes_build_metadata"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
+      "path": "/version",
+      "certification_status": "baseline_certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Report the same service identity, policy-version metadata, and image build provenance exposed by /metadata.",
+      "when_to_use": "Use for deployment inventory, runtime release provenance checks, and operator diagnostics that expect a conventional version endpoint.",
+      "when_not_to_use": "Do not use as a business data, portfolio accounting, risk, suitability, compliance, or performance endpoint.",
+      "request_examples": [
+        "No request body."
+      ],
+      "response_examples": [
+        "{\"service\":\"lotus-idea\",\"version\":\"0.1.0\",\"roundingPolicyVersion\":\"v1\",\"build\":{\"gitCommitSha\":\"unknown\",\"gitBranch\":\"unknown\",\"buildTimestamp\":\"unknown\",\"repoUrl\":\"unknown\",\"ciRunId\":\"local\",\"imageDigest\":\"local-unpublished\"}}"
+      ],
+      "error_examples": [
+        "Unhandled service errors return product-safe Problem Details."
+      ],
+      "test_evidence": [
+        "tests/e2e/test_smoke.py::test_version_endpoint_matches_metadata_endpoint",
+        "tests/unit/test_service_contract.py::test_version_endpoint_exposes_build_metadata"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     }

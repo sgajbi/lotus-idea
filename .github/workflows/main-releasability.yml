@@ -13,12 +13,15 @@ concurrency:
 permissions:
   contents: read
   actions: read
+  packages: write
+  id-token: write
+  attestations: write
 
 env:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PYTHONUNBUFFERED: "1"
   PYTHON_VERSION: "3.12"
-  CONTAINER_IMAGE_NAME: "backend-service:ci-test"
+  CONTAINER_IMAGE_NAME: "lotus-idea:${{ github.sha }}"
   CONTAINER_BASE_IMAGE: "python:3.12-slim"
   TRIVY_IMAGE: "aquasec/trivy:0.71.2"
   GIT_CONFIG_COUNT: "1"
@@ -170,6 +173,28 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: "pip"
+      - name: Resolve release image reference
+        id: release-image-metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          release_image_repository="ghcr.io/${GITHUB_REPOSITORY,,}"
+          release_image_tag="$GITHUB_SHA"
+          release_image_ref="${release_image_repository}:${release_image_tag}"
+
+          {
+            echo "CONTAINER_IMAGE_NAME=$release_image_ref"
+            echo "RELEASE_IMAGE_REPOSITORY=$release_image_repository"
+            echo "RELEASE_IMAGE_TAG=$release_image_tag"
+            echo "BUILD_IMAGE_DIGEST=registry-digest-resolved-in-release-evidence"
+          } >> "$GITHUB_ENV"
+
+          {
+            echo "image_repository=$release_image_repository"
+            echo "image_tag=$release_image_tag"
+            echo "image_ref=$release_image_ref"
+          } >> "$GITHUB_OUTPUT"
       - name: Install
         run: make install
       - name: Build Docker image
@@ -218,8 +243,64 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: Generate dependency SBOM
         run: make release-sbom
+      - name: Authenticate to GHCR
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Push commit-tagged image and resolve digest
+        id: publish-image
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docker push "$CONTAINER_IMAGE_NAME"
+          release_image_digest="$(
+            docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME" \
+              --format '{{json .Manifest.Digest}}' | tr -d '"'
+          )"
+          if [[ "$release_image_digest" != sha256:* ]]; then
+            echo "Unable to resolve registry digest for $CONTAINER_IMAGE_NAME" >&2
+            exit 1
+          fi
+          release_image_digest_ref="${RELEASE_IMAGE_REPOSITORY}@${release_image_digest}"
+
+          {
+            echo "RELEASE_IMAGE_DIGEST=$release_image_digest"
+            echo "RELEASE_IMAGE_DIGEST_REF=$release_image_digest_ref"
+          } >> "$GITHUB_ENV"
+          {
+            echo "image_digest=$release_image_digest"
+            echo "image_digest_ref=$release_image_digest_ref"
+          } >> "$GITHUB_OUTPUT"
+      - uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        with:
+          cosign-release: v2.6.0
+      - name: Sign published image digest
+        shell: bash
+        run: cosign sign --yes "${RELEASE_IMAGE_DIGEST_REF}"
+      - name: Generate provenance attestation
+        id: attest-provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-name: ${{ steps.release-image-metadata.outputs.image_repository }}
+          subject-digest: ${{ steps.publish-image.outputs.image_digest }}
+          push-to-registry: true
+      - name: Generate SBOM attestation
+        id: attest-sbom
+        uses: actions/attest@a1948c3f048ba23858d222213b7c278aabede763 # v4.1.1
+        with:
+          subject-name: ${{ steps.release-image-metadata.outputs.image_repository }}
+          subject-digest: ${{ steps.publish-image.outputs.image_digest }}
+          sbom-path: sbom.cdx.json
+          push-to-registry: true
       - name: Generate release metadata manifest
         shell: python
+        env:
+          PROVENANCE_ATTESTATION_URL: ${{ steps.attest-provenance.outputs.attestation-url }}
+          SBOM_ATTESTATION_URL: ${{ steps.attest-sbom.outputs.attestation-url }}
         run: |
           import json
           import os
@@ -235,7 +316,34 @@ jobs:
                       "run_id": os.environ["GITHUB_RUN_ID"],
                       "dockerfile_path": "Dockerfile",
                       "container_image": os.environ["CONTAINER_IMAGE_NAME"],
+                      "container_image_repository": os.environ["RELEASE_IMAGE_REPOSITORY"],
+                      "container_image_tag": os.environ["RELEASE_IMAGE_TAG"],
                       "container_image_id": os.environ["CONTAINER_IMAGE_ID"],
+                      "container_image_digest": os.environ["RELEASE_IMAGE_DIGEST"],
+                      "container_image_digest_reference": os.environ[
+                          "RELEASE_IMAGE_DIGEST_REF"
+                      ],
+                      "container_image_push_authority": (
+                          "CI-only publish from main-releasability.yml after release "
+                          "gates, scan, smoke, and SBOM generation pass."
+                      ),
+                      "promotion_policy": (
+                          "Promote the same container_image_digest_reference across "
+                          "environments; do not rebuild per environment."
+                      ),
+                      "kubernetes_deployment_reference": os.environ[
+                          "RELEASE_IMAGE_DIGEST_REF"
+                      ],
+                      "image_signature": {
+                          "tool": "cosign",
+                          "mode": "keyless",
+                          "subject": os.environ["RELEASE_IMAGE_DIGEST_REF"],
+                      },
+                      "provenance_attestation": {
+                          "tool": "actions/attest-build-provenance",
+                          "subject": os.environ["RELEASE_IMAGE_DIGEST_REF"],
+                          "url": os.environ["PROVENANCE_ATTESTATION_URL"],
+                      },
                       "docker_base_image": os.environ["CONTAINER_BASE_IMAGE"],
                       "docker_base_image_resolved_digest": os.environ[
                           "CONTAINER_BASE_IMAGE_DIGEST"
@@ -261,6 +369,11 @@ jobs:
                       "container_scanner_resolved_digest": os.environ[
                           "TRIVY_IMAGE_DIGEST"
                       ],
+                      "sbom_attestation": {
+                          "tool": "actions/attest",
+                          "subject": os.environ["RELEASE_IMAGE_DIGEST_REF"],
+                          "url": os.environ["SBOM_ATTESTATION_URL"],
+                      },
                       "ci_signal_evidence_path": "ci-signal-evidence.json",
                       "ci_signal_evidence_artifact": "main-releasability-ci-signal-evidence",
                   },

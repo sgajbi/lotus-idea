@@ -6,7 +6,10 @@ from types import ModuleType
 
 import pytest
 
-from scripts.ci_release_evidence_contract import validate_dockerfile_runtime
+from scripts.ci_release_evidence_contract import (
+    validate_dockerfile_runtime,
+    validate_release_evidence_targets,
+)
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -166,6 +169,64 @@ def test_ci_contract_gate_blocks_removed_release_digest_fields(
     )
 
 
+def test_ci_contract_gate_blocks_removed_release_image_digest_manifest_fields(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '"container_image_digest": os.environ["RELEASE_IMAGE_DIGEST"]',
+        '"container_image_reference_only": os.environ["RELEASE_IMAGE_DIGEST"]',
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert (
+        'main-releasability.yml missing `"container_image_digest": os.environ["RELEASE_IMAGE_DIGEST"]`'
+        in module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_removed_release_image_signature(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '"image_signature": {',
+        '"image_unsigned": {',
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert 'main-releasability.yml missing `"image_signature": {`' in (
+        module.validate_ci_contract()
+    )
+
+
+def test_ci_contract_gate_blocks_removed_release_image_attestation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    module = _load_ci_contract_gate()
+    workflow_dir = tmp_path / ".github" / "workflows"
+    _copy_workflows(
+        workflow_dir,
+        "main-releasability.yml",
+        '"provenance_attestation": {',
+        '"provenance_reference_only": {',
+    )
+
+    monkeypatch.setattr(module, "WORKFLOWS_DIR", workflow_dir)
+
+    assert 'main-releasability.yml missing `"provenance_attestation": {`' in (
+        module.validate_ci_contract()
+    )
+
+
 def test_ci_contract_gate_blocks_removed_release_sbom_scope_metadata(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -216,6 +277,40 @@ def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
     errors = validate_dockerfile_runtime(degraded)
 
     assert "Dockerfile runtime image must not install development extras" in errors
+
+
+def test_ci_contract_gate_blocks_secret_like_docker_build_args() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        "ARG SERVICE_VERSION=0.1.0",
+        "ARG SERVICE_VERSION=0.1.0\nARG API_TOKEN=unsafe",
+    )
+
+    errors = validate_dockerfile_runtime(degraded)
+
+    assert any("secret-like build metadata variable `API_TOKEN`" in error for error in errors)
+
+
+def test_ci_contract_gate_blocks_makefile_image_push_targets() -> None:
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    degraded = makefile.replace(
+        "docker-build:\n",
+        "docker-push:\n\tdocker push $(CONTAINER_IMAGE_NAME)\n\ndocker-build:\n",
+    )
+
+    assert "Makefile must not push images; registry publication is CI-only" in (
+        validate_release_evidence_targets(degraded)
+    )
+
+
+def test_ci_contract_gate_blocks_removed_service_version_image_label() -> None:
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    degraded = dockerfile.replace(
+        '      org.opencontainers.image.version="${SERVICE_VERSION}" \\\n',
+        "",
+    )
+
+    assert "Dockerfile must label the service version" in validate_dockerfile_runtime(degraded)
 
 
 def test_ci_contract_gate_blocks_root_runtime_dockerfile() -> None:

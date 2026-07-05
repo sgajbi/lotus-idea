@@ -126,9 +126,10 @@ provenance consumption, implementation-proof readiness release-lane artifact
 generation, runtime trust telemetry preview validation and runtime trust
 telemetry snapshot release-lane artifact generation,
 security audit, Docker build validation, runtime-only Docker dependency posture,
-non-root container execution, governed Docker base/scanner image identity and
-resolved digest provenance in release evidence, runtime Python dependency SBOM
-evidence tied to the built service image reference/id, packaged container startup
+non-root container execution, governed Docker base/scanner image identity,
+commit-tagged image publication, registry digest capture in release evidence,
+keyless image signing, provenance attestation, runtime Python dependency SBOM
+evidence tied to the published service image reference/id/digest, packaged container startup
 smoke proof over health/live/readiness, bounded GitHub job timeouts, no soft-failed
 critical jobs, immutable GitHub Action SHA pins with version provenance, and workflow lint. The
 `make ci-contract-gate` target explicitly fails if current blocking lint gates are removed from
@@ -183,7 +184,9 @@ removal of the workflow wiring. No CI duration threshold is enforced yet.
 Main Releasability SBOM evidence is runtime-dependency scoped. `make release-sbom`
 generates `sbom.cdx.json` from `requirements/runtime-resolved.lock.txt` with the pinned
 CycloneDX tool, and `release-evidence.json` records the SBOM scope, generator,
-dependency source, project metadata, target service image reference, and built image id.
+dependency source, project metadata, target service image reference, local image
+id, registry digest, digest deployment reference, signature subject, and
+provenance/SBOM attestation URLs.
 `make runtime-dependency-closure-gate` blocks direct-only runtime locks by
 checking the resolved lock against the installed transitive dependency closure
 for the `pyproject.toml` runtime roots and against the
@@ -192,8 +195,17 @@ for the `pyproject.toml` runtime roots and against the
 command: it installs from root pins without a stale runtime-lock constraint,
 then regenerates `requirements/runtime-resolved.lock.txt` and
 `requirements/requirements.txt` from the active runtime closure.
-Container OS/package posture remains the Trivy image scan's responsibility; the SBOM is
-not represented as a full image SBOM or registry attestation.
+Container OS/package posture remains the Trivy image scan's responsibility;
+the generated SBOM remains runtime-dependency scoped rather than a full
+container filesystem SBOM.
+
+Images are pushed by CI only. Main Releasability lower-cases the GHCR
+repository, tags the service image with `${GITHUB_SHA}`, scans and smoke-tests
+the same tag, pushes it only after the release gates pass, resolves
+`RELEASE_IMAGE_DIGEST_REF`, signs that digest with keyless Cosign, and creates
+GitHub provenance and SBOM attestations. Environments must promote the same
+`repository@sha256:<digest>` reference; deployment by mutable tag or
+environment rebuild is not a supported release path.
 
 PR Merge Gate and Main Releasability also run `make container-runtime-smoke`
 after the Docker image build. The target starts the built image, probes

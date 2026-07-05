@@ -41,8 +41,14 @@ PINNED_ACTIONS: dict[str, tuple[str, str]] = {
     "actions/setup-python": ("ece7cb06caefa5fff74198d8649806c4678c61a1", "v6.3.0"),
     "actions/upload-artifact": ("043fb46d1a93c77aae656e7c1c64a875d1fc6a0a", "v7.0.1"),
     "actions/download-artifact": ("3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c", "v8.0.1"),
+    "actions/attest": ("a1948c3f048ba23858d222213b7c278aabede763", "v4.1.1"),
+    "actions/attest-build-provenance": (
+        "0f67c3f4856b2e3261c31976d6725780e5e4c373",
+        "v4.1.1",
+    ),
     "docker/setup-buildx-action": ("d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5", "v4.1.0"),
     "reviewdog/action-actionlint": ("6fb7acc99f4a1008869fa8a0f09cfca740837d9d", "v1.72.0"),
+    "sigstore/cosign-installer": ("d7543c93d881b35a8faa02e8e3605f69b7a1ce62", "v3.10.0"),
 }
 
 REQUIRED_TARGETS = (

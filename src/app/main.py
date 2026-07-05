@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
@@ -41,8 +43,16 @@ from app.middleware.http_boundary import configure_http_boundary
 from app.observability import configure_logging, emit_request_diagnostic_event
 
 SERVICE_NAME = "lotus-idea"
-SERVICE_VERSION = "0.1.0"
+SERVICE_VERSION = os.getenv("LOTUS_SERVICE_VERSION", "0.1.0")
 ROUNDING_POLICY_VERSION = "v1"
+BUILD_METADATA = {
+    "gitCommitSha": os.getenv("LOTUS_GIT_COMMIT_SHA", "unknown"),
+    "gitBranch": os.getenv("LOTUS_GIT_BRANCH", "unknown"),
+    "buildTimestamp": os.getenv("LOTUS_BUILD_TIMESTAMP", "unknown"),
+    "repoUrl": os.getenv("LOTUS_REPO_URL", "unknown"),
+    "ciRunId": os.getenv("LOTUS_CI_RUN_ID", "local"),
+    "imageDigest": os.getenv("LOTUS_IMAGE_DIGEST", "local-unpublished"),
+}
 
 
 def create_app() -> FastAPI:
@@ -180,6 +190,31 @@ def _register_platform_routes(application: FastAPI) -> None:
                             "service": SERVICE_NAME,
                             "version": SERVICE_VERSION,
                             "roundingPolicyVersion": ROUNDING_POLICY_VERSION,
+                            "build": BUILD_METADATA,
+                        }
+                    }
+                },
+            }
+        },
+    )(metadata)
+    application.get(
+        "/version",
+        tags=["Metadata"],
+        summary="Get service version metadata",
+        description=(
+            "Returns service identity and build provenance metadata for operators, "
+            "validators, and image provenance checks."
+        ),
+        responses={
+            200: {
+                "description": "Service version metadata response.",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "service": SERVICE_NAME,
+                            "version": SERVICE_VERSION,
+                            "roundingPolicyVersion": ROUNDING_POLICY_VERSION,
+                            "build": BUILD_METADATA,
                         }
                     }
                 },
@@ -302,11 +337,12 @@ async def health_ready(request: Request, response: Response) -> dict[str, object
     return durable_write_readiness_payload(posture)
 
 
-async def metadata() -> dict[str, str]:
+async def metadata() -> dict[str, object]:
     return {
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
         "roundingPolicyVersion": ROUNDING_POLICY_VERSION,
+        "build": BUILD_METADATA,
     }
 
 
