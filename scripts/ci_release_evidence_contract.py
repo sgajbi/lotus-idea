@@ -147,6 +147,10 @@ def validate_release_evidence_targets(makefile: str) -> list[str]:
         errors.append("Makefile release-sbom target must generate reproducible SBOM output")
     if "--output-file sbom.cdx.json" not in release_sbom:
         errors.append("Makefile release-sbom target must write `sbom.cdx.json`")
+    if "scripts/finalize_release_sbom.py sbom.cdx.json" not in release_sbom:
+        errors.append(
+            "Makefile release-sbom target must finalize CycloneDX JSON for GitHub SBOM attestation"
+        )
 
     container_scan = _target_block(makefile, "container-image-scan")
     if "$(VENV_PYTHON)" in container_scan:

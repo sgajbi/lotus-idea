@@ -510,6 +510,7 @@ container-runtime-smoke:
 
 release-sbom:
 	$(VENV_PYTHON) -m cyclonedx_py requirements requirements/runtime-resolved.lock.txt --pyproject pyproject.toml --output-reproducible --output-format JSON --output-file sbom.cdx.json
+	$(VENV_PYTHON) scripts/finalize_release_sbom.py sbom.cdx.json
 
 container-image-scan:
 	mkdir -p $(dir $(CONTAINER_SCAN_OUTPUT))

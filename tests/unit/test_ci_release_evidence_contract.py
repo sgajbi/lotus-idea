@@ -267,6 +267,22 @@ def test_ci_contract_gate_blocks_removed_release_sbom_target_artifact(
     )
 
 
+def test_ci_contract_gate_blocks_unfinalized_cyclonedx_release_sbom() -> None:
+    makefile = (
+        (ROOT / "Makefile")
+        .read_text(encoding="utf-8")
+        .replace(
+            "\n\t$(VENV_PYTHON) scripts/finalize_release_sbom.py sbom.cdx.json",
+            "",
+        )
+    )
+
+    assert (
+        "Makefile release-sbom target must finalize CycloneDX JSON for GitHub SBOM attestation"
+        in validate_release_evidence_targets(makefile)
+    )
+
+
 def test_ci_contract_gate_blocks_dev_extras_in_runtime_dockerfile() -> None:
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     degraded = dockerfile.replace(
