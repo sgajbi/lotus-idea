@@ -2,6 +2,30 @@
 
 Current posture: no business feature is supported yet.
 
+This page is the support-posture truth for business, demo, operations, and
+engineering readers. A foundation can be real, tested, and useful without being
+a supported feature.
+
+## Current Support Summary
+
+| Source of truth | Current value |
+| --- | --- |
+| Registry | `supported-features/supported-features.json` |
+| `current_posture` | `foundation_only` |
+| `features[]` | Empty |
+| Planned capability records | Present under `planned_capabilities[]` only |
+| Promotion gate | `make supported-features-gate` |
+
+## Support Vocabulary
+
+| Term | Meaning |
+| --- | --- |
+| Implemented foundation | Real internal implementation with tests and evidence, but not a supported external feature. |
+| Planned capability | RFC-governed target posture or roadmap item; not support. |
+| Supported feature | A `features[]` entry backed by implementation, source proof, API/OpenAPI certification, docs/wiki/context truth, CI, runtime evidence, and mainline validation. |
+
+## Detailed Foundation Inventory
+
 Internal foundation exists for domain vocabulary, high-cash signal evaluation,
 candidate persistence/replay/idempotency/audit, candidate evidence replay,
 deterministic scoring with review-queue projection, source-safe candidate detail projection, advisor

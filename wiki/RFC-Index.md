@@ -1,5 +1,21 @@
 # RFC Index
 
+This page is the reader-friendly RFC entrypoint. The canonical detailed ledger
+is [`docs/rfcs/README.md`](../docs/rfcs/README.md).
+
+Current summary: RFC-0002 foundations are actively implemented, but final
+supported-feature promotion remains blocked until implementation-backed proof,
+documentation, CI, and mainline validation agree.
+
+## RFC Reader Map
+
+| Need | Use |
+| --- | --- |
+| Current slice status | `docs/rfcs/README.md` |
+| Product boundary | [Overview](Overview), [Architecture](Architecture) |
+| Support posture | [Supported Features](Supported-Features) |
+| CI and closure proof | [Validation and CI](Validation-and-CI) |
+
 Primary RFCs:
 
 1. `docs/rfcs/RFC-0001-repository-foundation-and-service-boundary.md`
@@ -11,6 +27,8 @@ contracts, signal generation, persistence, scoring, review, AI explanation,
 certified APIs, Gateway, Workbench, Advise/Manage conversion,
 Report/Render/Archive materialization, data products, operations, demo
 readiness, live proof, documentation, hardening, and closure.
+
+## Detailed RFC-0002 Implementation Ledger
 
 Current RFC-0002 implementation-start baseline:
 

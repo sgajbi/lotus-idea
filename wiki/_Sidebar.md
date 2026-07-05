@@ -1,25 +1,28 @@
 # lotus-idea
 
-## Orientation
+## Start
 
 - [Home](Home)
 - [Overview](Overview)
+- [Supported Features](Supported-Features)
+- [Roadmap](Roadmap)
+
+## Product And APIs
+
 - [Architecture](Architecture)
 - [API Surface](API-Surface)
 - [Integrations](Integrations)
-- [Supported Features](Supported-Features)
+- [Demo Readiness](Demo-Readiness)
 
-## Delivery
+## Engineering
 
 - [Getting Started](Getting-Started)
 - [Development Workflow](Development-Workflow)
 - [Validation and CI](Validation-and-CI)
+- [RFC Index](RFC-Index)
+
+## Operations And Governance
+
 - [Operations Runbook](Operations-Runbook)
 - [Troubleshooting](Troubleshooting)
-- [Demo Readiness](Demo-Readiness)
-
-## Governance
-
 - [Security and Governance](Security-and-Governance)
-- [RFC Index](RFC-Index)
-- [Roadmap](Roadmap)

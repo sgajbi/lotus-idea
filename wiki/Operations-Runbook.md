@@ -1,5 +1,41 @@
 # Operations Runbook
 
+This page is the first operator map for `lotus-idea`. It keeps the detailed
+runtime and proof posture below, but the first screen is organized for
+triage: identify the symptom, run the right diagnostic, then follow the linked
+deep runbook.
+
+Current summary: internal foundations and diagnostics exist. No externally
+supported business feature, live broker runtime, downstream execution proof,
+client publication, full Workbench proof, or data-product certification is
+promoted.
+
+## First Response Matrix
+
+| Symptom | Check first | Escalate to |
+| --- | --- | --- |
+| Service is unavailable | `/health/live`, container logs, runtime profile | [Getting Started](Getting-Started), `docs/runbooks/service-operations.md` |
+| Readiness is degraded | `/health/ready`, `/api/v1/implementation-proof/readiness` | [Troubleshooting](Troubleshooting), `docs/operations/implementation-proof-readiness.md` |
+| Durable writes fail | `LOTUS_IDEA_DATABASE_URL`, `make migration-execution-gate` | `docs/operations/persistence.md` |
+| Source ingestion is blocked | `/api/v1/source-ingestion/readiness` | `docs/operations/source-ingestion-run-once.md` |
+| Outbox delivery is blocked | `/api/v1/outbox-delivery/readiness` | [Operator Map](#operator-map) |
+| Downstream realization is blocked | `/api/v1/downstream-realization/readiness` | `docs/operations/downstream-realization-readiness.md` |
+| AI explanation is blocked | `/api/v1/ai-explanations/readiness` | `docs/operations/ai-governance.md` |
+| Mesh posture is blocked | `/api/v1/data-mesh/readiness` | `docs/operations/mesh-readiness.md` |
+
+## Operator Evidence Map
+
+| Evidence | Use |
+| --- | --- |
+| `make ci-release` | Broad local release evidence when Docker and PostgreSQL prerequisites exist. |
+| `make implementation-proof-readiness-check` | Aggregate blocker and proof posture. |
+| `make runtime-trust-telemetry-snapshot-check` | Runtime trust telemetry snapshot. |
+| `make postgres-integration-gate` | PostgreSQL-backed runtime proof when configured. |
+| `make container-runtime-smoke` | Container startup and health smoke proof. |
+| `make supported-features-gate` | Confirms no unproved support claim is promoted. |
+
+## Detailed Foundation Posture
+
 Current posture: scaffold operations plus internal domain, persistence/replay,
 lifecycle, review, AI-governance, certified internal high-cash, lifecycle,
 AI explanation, advisor queue, review-action, feedback, and candidate evidence

@@ -1,5 +1,20 @@
 # Demo Readiness
 
+This page is for safe demo planning. It separates implementation-backed
+foundation walkthroughs from unsupported client or product claims.
+
+Current summary: no client-demo-ready supported business behavior is promoted.
+Use this page only for controlled foundation walkthroughs with explicit
+boundary language.
+
+## Demo Decision Matrix
+
+| Audience question | Safe answer |
+| --- | --- |
+| What can be shown today? | Source-authority framing, candidate lifecycle, review posture, proof-readiness blockers, and governance controls. |
+| What is not proved? | Production support, client-ready publication, suitability approval, rebalance/execution, report rendering/archive authority, AI provider operation, mesh certification, or supported-feature promotion. |
+| Where is claim evidence? | `docs/demo/demo-claims.md`, `docs/demo/client-demo-operating-process.md`, [Supported Features](Supported-Features), and [Validation and CI](Validation-and-CI). |
+
 ## Current posture
 
 `lotus-idea` is not client-demo-ready for supported external business behavior.
