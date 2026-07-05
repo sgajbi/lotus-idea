@@ -77,12 +77,16 @@ def _payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
     return payload
 
 
-def _adapter(handler: httpx.MockTransport) -> LotusPerformanceUnderperformanceSourceAdapter:
+def _adapter(
+    handler: httpx.MockTransport,
+    **adapter_kwargs: Any,
+) -> LotusPerformanceUnderperformanceSourceAdapter:
     return LotusPerformanceUnderperformanceSourceAdapter(
         DownstreamJsonClient(
             DownstreamClientConfig(base_url="https://performance.example", timeout_seconds=0.5),
             client=httpx.Client(base_url="https://performance.example", transport=handler),
-        )
+        ),
+        **adapter_kwargs,
     )
 
 
@@ -297,21 +301,50 @@ def test_lotus_performance_adapter_rejects_source_service_mismatch() -> None:
     assert exc_info.value.code == "performance_source_service_mismatch"
 
 
-def test_lotus_performance_adapter_maps_pending_async_response_to_source_unavailable() -> None:
-    payload = {
+def test_lotus_performance_adapter_follows_async_result_path_for_underperformance() -> None:
+    accepted_payload = {
         "source_service": "lotus-performance",
         "contract_version": "v1",
         "execution_mode": "async",
         "status": "pending",
         "result_path": "/integration/returns/series/results/example",
     }
+    seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, request.url.path))
+        if request.method == "POST":
+            return httpx.Response(202, json=accepted_payload)
+        assert request.method == "GET"
+        assert request.headers["X-Correlation-Id"] == "corr-performance"
+        assert request.headers["X-Trace-Id"] == "trace-performance"
+        return httpx.Response(200, json=_payload())
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_underperformance_evidence(_request())
+
+    assert evidence.source_reported_active_return == Decimal("-0.0125")
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.content_hash == "sha256:returns-series-calculation"
+    assert seen == [
+        ("POST", "/integration/returns/series"),
+        ("GET", "/integration/returns/series/results/example"),
+    ]
+
+
+def test_lotus_performance_adapter_rejects_async_response_without_result_path() -> None:
+    payload = {
+        "source_service": "lotus-performance",
+        "contract_version": "v1",
+        "execution_mode": "async",
+        "status": "pending",
+    }
 
     with pytest.raises(PerformanceSourceUnavailable) as exc_info:
         _adapter(
-            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+            httpx.MockTransport(lambda request: httpx.Response(202, json=payload))
         ).fetch_underperformance_evidence(_request())
 
-    assert exc_info.value.code == "performance_returns_series_pending"
+    assert exc_info.value.code == "performance_returns_series_result_path_missing"
 
 
 def test_lotus_performance_adapter_rejects_benchmark_readiness_source_service_mismatch() -> None:
@@ -325,7 +358,36 @@ def test_lotus_performance_adapter_rejects_benchmark_readiness_source_service_mi
     assert exc_info.value.code == "performance_source_service_mismatch"
 
 
-def test_lotus_performance_adapter_maps_benchmark_readiness_pending_async_response() -> None:
+def test_lotus_performance_adapter_follows_async_result_path_for_benchmark_readiness() -> None:
+    accepted_payload = {
+        "source_service": "lotus-performance",
+        "contract_version": "v1",
+        "execution_mode": "async",
+        "status": "pending",
+        "result_path": "/integration/returns/series/results/example",
+    }
+    seen: list[tuple[str, str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.method, request.url.path))
+        if request.method == "POST":
+            return httpx.Response(202, json=accepted_payload)
+        return httpx.Response(200, json=_payload())
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_benchmark_readiness_evidence(
+        _benchmark_readiness_request()
+    )
+
+    assert evidence.benchmark_context_available is True
+    assert evidence.performance_ref is not None
+    assert evidence.performance_ref.route == "/integration/returns/series"
+    assert seen == [
+        ("POST", "/integration/returns/series"),
+        ("GET", "/integration/returns/series/results/example"),
+    ]
+
+
+def test_lotus_performance_adapter_preserves_pending_after_bounded_async_polls() -> None:
     payload = {
         "source_service": "lotus-performance",
         "contract_version": "v1",
@@ -336,7 +398,9 @@ def test_lotus_performance_adapter_maps_benchmark_readiness_pending_async_respon
 
     with pytest.raises(PerformanceSourceUnavailable) as exc_info:
         _adapter(
-            httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+            httpx.MockTransport(lambda request: httpx.Response(202, json=payload)),
+            async_result_max_polls=2,
+            async_result_poll_interval_seconds=0,
         ).fetch_benchmark_readiness_evidence(_benchmark_readiness_request())
 
     assert exc_info.value.code == "performance_returns_series_pending"
