@@ -751,6 +751,11 @@ Recent issue-derived patterns to preserve:
     dashboards, and alert proof gates must consume the same governed
     `OPERATION_EVENT_SOURCE_AUTHORITIES` set instead of duplicating partial
     allowlists.
+31. Keep context holistic. Detailed GitHub issue closure evidence belongs in
+    `docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md` and is enforced by
+    `make github-issue-closure-matrix-gate`; this context file should retain
+    durable patterns, boundaries, commands, and routing rules instead of
+    becoming a repeated per-issue evidence dump.
 
 Recent GitHub issue categories should keep being worked category-wise so
 repeated defect patterns are fixed once and pinned with tests or gates:

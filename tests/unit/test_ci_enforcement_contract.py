@@ -39,6 +39,8 @@ def test_architecture_boundary_gate_is_blocking_in_local_ci() -> None:
     assert "$(MAKE) documentation-contract-gate" in makefile
     assert "quality-scorecard-gate:" in makefile
     assert "$(MAKE) quality-scorecard-gate" in makefile
+    assert "github-issue-closure-matrix-gate:" in makefile
+    assert "$(MAKE) github-issue-closure-matrix-gate" in makefile
     assert "monetary-float-guard:" in makefile
     assert "$(MAKE) monetary-float-guard" in makefile
     assert "no-sensitive-content-guard:" in makefile
