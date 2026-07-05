@@ -10,6 +10,11 @@ from app.application.downstream_route_contract_proof import (
     build_manage_action_route_proof_payload,
 )
 
+try:
+    from scripts.proof_generator_io import write_json_payload
+except ImportError:  # pragma: no cover - supports direct script execution
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -26,13 +31,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"manage action route proof error: {exc}", file=sys.stderr)
         return 2
 
-    rendered = json.dumps(payload, indent=2, sort_keys=True)
-    if args.output:
-        output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(f"{rendered}\n", encoding="utf-8")
-    else:
-        print(rendered)
+    write_json_payload(payload, output=args.output)
     if payload["manageActionRouteProofValid"]:
         return 0
     proof_checks = payload.get("proofChecks")

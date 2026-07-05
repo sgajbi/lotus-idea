@@ -2,13 +2,17 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime
-import json
 import sys
 from pathlib import Path
 
 from app.application.outbox_consumer_runtime_proof import (
     build_outbox_consumer_runtime_proof_payload,
 )
+
+try:
+    from scripts.proof_generator_io import write_json_payload
+except ImportError:  # pragma: no cover - supports direct script execution
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,13 +29,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"outbox consumer runtime proof error: {exc}", file=sys.stderr)
         return 2
 
-    rendered = json.dumps(payload, indent=2, sort_keys=True)
-    if args.output:
-        output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(f"{rendered}\n", encoding="utf-8")
-    else:
-        print(rendered)
+    write_json_payload(payload, output=args.output)
     return 0 if payload["outboxConsumerRuntimeProofValid"] else 1
 
 

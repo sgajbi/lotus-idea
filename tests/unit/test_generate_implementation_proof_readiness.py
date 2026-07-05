@@ -164,7 +164,10 @@ def test_generate_implementation_proof_readiness_writes_output_file(
     assert result == 0
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["repository"] == "lotus-idea"
+    assert payload["generatedAtUtc"] == "2026-06-21T10:10:00Z"
     assert payload["evaluatedAtUtc"] == "2026-06-21T10:10:00Z"
+    assert payload["aggregateProofProvenance"]["repository"] == "lotus-idea"
+    assert payload["aggregateProofProvenance"]["proofRef"].endswith("proof/readiness.json")
     assert payload["readinessStatus"] == "blocked"
 
 

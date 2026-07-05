@@ -23,6 +23,11 @@ from run_scheduled_source_ingestion_worker import (
     SCHEDULE_MAX_RUNS_ENV,
 )
 
+try:
+    from scripts.proof_generator_io import write_json_payload
+except ImportError:  # pragma: no cover - supports direct script execution
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
+
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,12 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"scheduled source ingestion worker proof error: {exc}", file=sys.stderr)
         return 2
 
-    if args.output:
-        output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
-    else:
-        print(json.dumps(payload, indent=2, sort_keys=True))
+    write_json_payload(payload, output=args.output)
     return 0 if payload["scheduledWorkerDeployProofValid"] else 1
 
 

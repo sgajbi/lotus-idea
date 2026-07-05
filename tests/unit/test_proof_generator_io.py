@@ -18,6 +18,41 @@ from scripts.proof_generator_io import (
 )
 
 
+PROOF_GENERATOR_PATTERNS = (
+    "generate_*proof*.py",
+    "generate_*_live_proof.py",
+    "generate_*_readiness_proof.py",
+)
+MANUAL_PROOF_WRITER_MARKERS = (
+    "rendered = json.dumps(payload, indent=2, sort_keys=True)",
+    'output_path.write_text(f"{rendered}\\n", encoding="utf-8")',
+    "output_path.write_text(json.dumps(payload, indent=2, sort_keys=True)",
+    "print(json.dumps(payload, indent=2, sort_keys=True))",
+)
+
+
+def test_generated_proof_artifacts_use_shared_provenance_writer() -> None:
+    scripts_dir = Path("scripts")
+    proof_generators = sorted(
+        {
+            path
+            for pattern in PROOF_GENERATOR_PATTERNS
+            for path in scripts_dir.glob(pattern)
+            if "--output" in path.read_text(encoding="utf-8")
+        }
+    )
+
+    offenders: list[str] = []
+    for path in proof_generators:
+        source = path.read_text(encoding="utf-8")
+        if "write_json_payload(" not in source:
+            offenders.append(f"{path.as_posix()} does not use write_json_payload")
+        if any(marker in source for marker in MANUAL_PROOF_WRITER_MARKERS):
+            offenders.append(f"{path.as_posix()} still contains manual proof JSON writing")
+
+    assert offenders == []
+
+
 def test_parse_generated_at_utc_accepts_zulu_timestamp() -> None:
     assert parse_generated_at_utc("2026-06-21T10:10:00Z") == datetime(
         2026, 6, 21, 10, 10, tzinfo=UTC
