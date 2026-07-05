@@ -6,6 +6,8 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+from data_mesh_producer_semantics import validate_producer_product_semantics
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PLATFORM_CATALOG_PATH = (
@@ -133,6 +135,8 @@ def validate_producer_contract(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{product_id}: duplicate producer product")
         seen_product_ids.add(product_id)
 
+        if product_version != "v1":
+            errors.append(f"{product_id}: product_version must be v1")
         if product.get("owner_repository") != "lotus-idea":
             errors.append(f"{product_id}: owner_repository must be lotus-idea")
         if product.get("lifecycle_status") != "proposed":
@@ -148,17 +152,7 @@ def validate_producer_contract(payload: dict[str, Any]) -> list[str]:
         approved_consumers = product.get("approved_consumers")
         if not isinstance(approved_consumers, list) or "lotus-gateway" not in approved_consumers:
             errors.append(f"{product_id}: approved_consumers must include lotus-gateway")
-        trust_metadata = product.get("required_trust_metadata")
-        if not isinstance(trust_metadata, list) or "correlation_id" not in trust_metadata:
-            errors.append(f"{product_id}: required_trust_metadata must include correlation_id")
-        lineage_policy = product.get("lineage_policy")
-        if not isinstance(lineage_policy, dict):
-            errors.append(f"{product_id}: lineage_policy is required")
-        else:
-            if lineage_policy.get("lineage_required") is not True:
-                errors.append(f"{product_id}: lineage_required must be true")
-            if lineage_policy.get("evidence_bundle_required") is not True:
-                errors.append(f"{product_id}: evidence_bundle_required must be true")
+        errors.extend(validate_producer_product_semantics(product, product_id))
     return errors
 
 

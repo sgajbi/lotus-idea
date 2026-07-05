@@ -84,7 +84,9 @@ Current local validation:
    consumer dependencies include the current source-authority products from
    Slice 00.
 2. `scripts/data_mesh_contract_gate.py` validates proposed producer posture,
-   consumer source-authority dependencies, blocked static trust telemetry,
+   producer trust metadata, temporal/freshness/completeness semantics, lineage,
+   source-owner/security posture, deprecation posture, consumer
+   source-authority dependencies, blocked static trust telemetry,
    SLO/access/evidence policy coherence, and optional platform catalog/source
    manifest reconciliation.
 3. `tests/unit/test_data_mesh_contract_gate.py` covers pass/fail behavior for
@@ -94,7 +96,10 @@ Current local validation:
    pins the bounded `lotus-risk:ConcentrationRiskReport:v1` consumer
    declaration so concentration-review source authority cannot silently drift
    out of the mesh baseline.
-5. `make check` runs the data-mesh contract gate through `make lint` and keeps
+5. `tests/unit/test_data_mesh_contract_gate.py::test_producer_gate_blocks_weak_mesh_semantics`
+   proves producer products cannot silently lose required provenance,
+   freshness, quality, lineage, access, or deprecation semantics.
+6. `make check` runs the data-mesh contract gate through `make lint` and keeps
    producer products proposed and blocked from certification.
 
 ## Platform Follow-Up
