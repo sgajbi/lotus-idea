@@ -136,6 +136,13 @@ governed source contract before candidate creation: wrong `sourceSystem` or
 wrong `productId` is `400 invalid_request`, and rejection telemetry must use
 the expected source authority instead of the caller-supplied mismatched
 authority.
+Bounded source-fetching signal APIs may exist only when they call an explicit
+source-port/adapter, enforce caller entitlement scope before runtime dependency
+construction, return product-safe dependency failures, and preserve source
+authority. The high-cash `evaluate-from-source` API is the first such internal
+foundation; it does not certify live source support, persist candidates, create
+a separate runtime service, prove Gateway/Workbench behavior, certify a data
+product, or promote a supported feature.
 
 ## Current Implementation Map
 

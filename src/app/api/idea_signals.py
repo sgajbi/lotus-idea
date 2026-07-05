@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, Header, status
+from fastapi import FastAPI, Header, Request, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import CallerContextHeaders
@@ -11,14 +11,20 @@ from app.api.durable_write_guard import (
 from app.api.idea_signal_models import (
     CandidatePersistenceSummaryResponse,
     EvaluateAndPersistHighCashSignalResponse,
+    EvaluateHighCashFromSourceRequest,
     EvaluateHighCashSignalRequest,
     EvaluateHighCashSignalResponse,
     EvaluateMandateRestrictionSignalRequest,
     EvaluateMandateRestrictionSignalResponse,
 )
 from app.api.runtime_dependencies import (
+    CoreHighCashSourceRuntime,
+    CoreHighCashSourceRuntimeBlocker,
     get_idea_repository,
     idea_repository_durable_storage_backed,
+)
+from app.api.runtime_dependencies import (
+    build_core_high_cash_source_runtime_from_environment as _build_core_high_cash_source_runtime_from_environment,
 )
 from app.api.signal_api_support import (
     RouteMetadata,
@@ -33,8 +39,10 @@ from app.api.signal_api_support import (
 )
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
+    evaluate_high_cash_signal_from_core,
     evaluate_high_cash_signal_command,
 )
+from app.application.access_scope import portfolio_only_scope
 from app.application.high_cash_signal import (
     evaluate_and_persist_high_cash_signal as evaluate_and_persist_high_cash_signal_command,
 )
@@ -51,6 +59,7 @@ from app.api.problem_details import (
     invalid_request_metadata,
     permission_denied_metadata,
     problem_details_response as problem_response,
+    service_unavailable_metadata,
 )
 from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 from app.security.caller_context import (
@@ -95,6 +104,57 @@ async def evaluate_high_cash_signal(
         emit_event=emit_foundation_operation_event,
     )
     return EvaluateHighCashSignalResponse.from_domain(result, source_authority=source_authority)
+
+
+async def evaluate_high_cash_signal_from_source(
+    request: Request,
+    signal_request: EvaluateHighCashFromSourceRequest,
+    caller: CallerContextHeaders,
+) -> EvaluateHighCashSignalResponse | JSONResponse:
+    source_authority = SourceSystem.LOTUS_CORE.value
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        requested_access_scope=portfolio_only_scope(signal_request.portfolio_id),
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
+
+    runtime = _build_core_high_cash_source_runtime_from_environment()
+    if isinstance(runtime, CoreHighCashSourceRuntimeBlocker):
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.BLOCKED,
+            source_authority=source_authority,
+            error_code=runtime.code,
+        )
+        return problem_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail=("Core source runtime is not configured for high-cash source evaluation."),
+        )
+
+    try:
+        result = evaluate_high_cash_signal_from_core(
+            signal_request.to_command(
+                correlation_id=_request_correlation_id(request),
+                trace_id=_request_trace_id(request),
+            ),
+            core_source=runtime.core_source,
+        )
+        emit_signal_evaluation_event(
+            result=result,
+            source_authority=source_authority,
+            emit_event=emit_foundation_operation_event,
+        )
+        return EvaluateHighCashSignalResponse.from_domain(
+            result,
+            source_authority=source_authority,
+        )
+    finally:
+        _close_core_high_cash_source_runtime(runtime)
 
 
 async def evaluate_mandate_restriction_signal(
@@ -251,6 +311,28 @@ def _operation_outcome_from_candidate_persistence(
     return OperationOutcome.CONFLICT
 
 
+def _request_correlation_id(request: Request) -> str | None:
+    correlation_id = getattr(request.state, "correlation_id", None)
+    return str(correlation_id) if correlation_id else None
+
+
+def _request_trace_id(request: Request) -> str | None:
+    trace_id = getattr(request.state, "trace_id", None)
+    return str(trace_id) if trace_id else None
+
+
+def _close_core_high_cash_source_runtime(runtime: CoreHighCashSourceRuntime) -> None:
+    try:
+        runtime.close()
+    except Exception:
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.SUPPRESSED,
+            source_authority=SourceSystem.LOTUS_CORE.value,
+            error_code="runtime_cleanup_failed",
+        )
+
+
 def _high_cash_source_authority(request: EvaluateHighCashSignalRequest) -> str:
     return source_authority_from_contracts(_high_cash_source_ref_contracts(request))
 
@@ -339,6 +421,72 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
             },
         },
         **signal_problem_responses(),
+    },
+}
+
+
+HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/idea-signals/high-cash/evaluate-from-source",
+    "operation_id": "evaluateHighCashIdeaSignalFromSource",
+    "summary": "Evaluate a high-cash idea signal from Core",
+    "description": (
+        "Fetches source-owned high-cash evidence through the configured Core source "
+        "adapter, then evaluates deterministic high-cash candidate posture. The endpoint "
+        "does not persist candidates, calculate cash weight locally, certify live source "
+        "support, create Gateway/Workbench support, or promote a supported business feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": EvaluateHighCashSignalResponse,
+    "tags": ["Idea Signals"],
+    "responses": {
+        200: {
+            "description": "Core-backed high-cash signal evaluation completed with candidate, blocked, suppressed, or not-eligible posture.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "outcome": "candidate_created",
+                        "family": "high_cash",
+                        "reasonCodes": [
+                            "high_cash_ratio",
+                            "cash_source_ready",
+                            "review_required",
+                        ],
+                        "unsupportedReasons": [],
+                        "candidate": {
+                            "candidateId": "idea_high_cash_8d57adbf52f7f5a7",
+                            "family": "high_cash",
+                            "lifecycleStatus": "generated",
+                            "reviewPosture": "advisor_review_required",
+                            "evidencePacketId": "iep_high_cash_8d57adbf52f7f5a7",
+                            "supportability": "ready",
+                            "score": "82",
+                            "scorePolicyVersion": "idle-liquidity-v1",
+                            "sourceSignalIds": ["signal_high_cash_8d57adbf52f7f5a7"],
+                            "sourceRefs": [
+                                {
+                                    "productId": "lotus-core:PortfolioStateSnapshot:v1",
+                                    "sourceSystem": "lotus-core",
+                                    "productVersion": "v1",
+                                    "asOfDate": "2026-06-21",
+                                    "generatedAtUtc": "2026-06-21T10:00:00Z",
+                                    "dataQualityStatus": "complete",
+                                    "freshness": "current",
+                                }
+                            ],
+                        },
+                        "sourceAuthority": "lotus-core",
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        **signal_problem_responses(),
+        **service_unavailable_metadata(
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Core source runtime is not configured for high-cash source evaluation.",
+            description="Core source runtime configuration is missing or invalid.",
+        ),
     },
 }
 
@@ -500,6 +648,16 @@ def register_idea_signal_routes(app: FastAPI) -> None:
         tags=HIGH_CASH_EVALUATE_ROUTE["tags"],
         responses=HIGH_CASH_EVALUATE_ROUTE["responses"],
     )(evaluate_high_cash_signal)
+    app.post(
+        path=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["path"],
+        operation_id=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["operation_id"],
+        summary=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["summary"],
+        description=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["description"],
+        status_code=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["status_code"],
+        response_model=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["response_model"],
+        tags=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["tags"],
+        responses=HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE["responses"],
+    )(evaluate_high_cash_signal_from_source)
     app.post(
         path=MANDATE_RESTRICTION_EVALUATE_ROUTE["path"],
         operation_id=MANDATE_RESTRICTION_EVALUATE_ROUTE["operation_id"],

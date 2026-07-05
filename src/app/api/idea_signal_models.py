@@ -12,7 +12,10 @@ from app.api.signal_models import (
     SourceRefRequest,
 )
 from app.api.temporal_validation import require_timezone_aware
-from app.application.high_cash_signal import EvaluateHighCashSignalCommand
+from app.application.high_cash_signal import (
+    EvaluateHighCashFromCoreCommand,
+    EvaluateHighCashSignalCommand,
+)
 from app.application.mandate_restriction_signal import EvaluateMandateRestrictionSignalCommand
 from app.domain import CandidatePersistenceDecision, CandidatePersistenceRecord
 
@@ -117,6 +120,62 @@ class EvaluateHighCashSignalRequest(CamelModel):
             entitlement_allowed=self.entitlement_allowed,
             access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
             duplicate_of_candidate_id=self.duplicate_of_candidate_id,
+        )
+
+
+class EvaluateHighCashFromSourceRequest(CamelModel):
+    portfolio_id: str = Field(
+        ...,
+        alias="portfolioId",
+        min_length=1,
+        description="Portfolio identifier to request from Core source products.",
+        examples=["PB_SG_GLOBAL_BAL_001"],
+    )
+    as_of_date: date = Field(
+        ...,
+        alias="asOfDate",
+        description="Business date for Core source evidence.",
+        examples=["2026-06-21"],
+    )
+    evaluated_at_utc: datetime = Field(
+        ...,
+        alias="evaluatedAtUtc",
+        description="UTC timestamp for deterministic evaluation.",
+        examples=["2026-06-21T10:00:00Z"],
+    )
+    duplicate_of_candidate_id: str | None = Field(
+        default=None,
+        alias="duplicateOfCandidateId",
+        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
+        examples=["idea_high_cash_existing"],
+    )
+
+    @field_validator("portfolio_id")
+    @classmethod
+    def _portfolio_id_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("portfolioId is required")
+        return cleaned
+
+    @field_validator("evaluated_at_utc")
+    @classmethod
+    def _evaluated_at_must_be_aware(cls, value: datetime) -> datetime:
+        return require_timezone_aware(value, field_name="evaluatedAtUtc")
+
+    def to_command(
+        self,
+        *,
+        correlation_id: str | None,
+        trace_id: str | None,
+    ) -> EvaluateHighCashFromCoreCommand:
+        return EvaluateHighCashFromCoreCommand(
+            portfolio_id=self.portfolio_id,
+            as_of_date=self.as_of_date,
+            evaluated_at_utc=self.evaluated_at_utc,
+            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
         )
 
 
@@ -251,6 +310,7 @@ class EvaluateAndPersistHighCashSignalResponse(CamelModel):
 __all__ = [
     "CandidatePersistenceSummaryResponse",
     "EvaluateAndPersistHighCashSignalResponse",
+    "EvaluateHighCashFromSourceRequest",
     "EvaluateHighCashSignalRequest",
     "EvaluateHighCashSignalResponse",
     "EvaluateMandateRestrictionSignalRequest",
