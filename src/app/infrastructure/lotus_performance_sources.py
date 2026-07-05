@@ -62,6 +62,9 @@ class LotusPerformanceUnderperformanceSourceAdapter:
         self._async_result_poll_interval_seconds = async_result_poll_interval_seconds
         self._sleep = sleep
 
+    def close(self) -> None:
+        self._performance_client.close()
+
     def fetch_underperformance_evidence(
         self,
         request: PerformanceUnderperformanceEvidenceRequest,
