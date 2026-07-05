@@ -28,6 +28,7 @@ from app.infrastructure.downstream_client import (
     DownstreamJsonClient,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
+from app.infrastructure.lotus_manage_sources import LotusManageMandateHealthSourceAdapter
 from app.infrastructure.lotus_performance_sources import (
     LotusPerformanceUnderperformanceSourceAdapter,
 )
@@ -43,6 +44,7 @@ from app.ports.core_sources import (
     CoreLowIncomeSourcePort,
     CoreOpportunitySourcePort,
 )
+from app.ports.manage_sources import ManageMandateHealthSourcePort
 from app.ports.risk_sources import (
     RiskConcentrationSourcePort,
     RiskDrawdownSourcePort,
@@ -65,6 +67,8 @@ RISK_BASE_URL_ENV = "LOTUS_RISK_BASE_URL"
 RISK_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_RISK_TIMEOUT_SECONDS"
 PERFORMANCE_BASE_URL_ENV = "LOTUS_PERFORMANCE_BASE_URL"
 PERFORMANCE_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_PERFORMANCE_TIMEOUT_SECONDS"
+MANAGE_BASE_URL_ENV = "LOTUS_MANAGE_BASE_URL"
+MANAGE_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_MANAGE_TIMEOUT_SECONDS"
 
 
 @dataclass(frozen=True)
@@ -164,6 +168,17 @@ class PerformanceUnderperformanceSourceRuntime:
 
 
 @dataclass(frozen=True)
+class ManageMandateHealthSourceRuntime:
+    manage_source: ManageMandateHealthSourcePort
+    manage_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.manage_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -220,6 +235,12 @@ class PerformanceUnderperformanceSourceRuntimeBlocker:
 
 
 @dataclass(frozen=True)
+class ManageMandateHealthSourceRuntimeBlocker:
+    code: str
+    manage_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
 class _ConfiguredCoreSourceAdapter:
     core_source: LotusCoreHighCashSourceAdapter
     core_query_base_url_configured: bool
@@ -253,6 +274,17 @@ class _ConfiguredPerformanceSourceClient:
 class _PerformanceSourceClientBlocker:
     code: str
     performance_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class _ConfiguredManageSourceClient:
+    manage_client: DownstreamJsonClient
+
+
+@dataclass(frozen=True)
+class _ManageSourceClientBlocker:
+    code: str
+    manage_base_url_configured: bool = False
 
 
 @dataclass(frozen=True)
@@ -506,6 +538,21 @@ def build_performance_underperformance_source_runtime_from_environment() -> (
     )
 
 
+def build_manage_mandate_health_source_runtime_from_environment() -> (
+    ManageMandateHealthSourceRuntime | ManageMandateHealthSourceRuntimeBlocker
+):
+    configured_client = _build_configured_manage_source_client_from_environment()
+    if isinstance(configured_client, _ManageSourceClientBlocker):
+        return ManageMandateHealthSourceRuntimeBlocker(
+            configured_client.code,
+            manage_base_url_configured=configured_client.manage_base_url_configured,
+        )
+    return ManageMandateHealthSourceRuntime(
+        manage_source=LotusManageMandateHealthSourceAdapter(configured_client.manage_client),
+        manage_base_url_configured=True,
+    )
+
+
 def _build_configured_risk_source_client_from_environment() -> (
     _ConfiguredRiskSourceClient | _RiskSourceClientBlocker
 ):
@@ -538,6 +585,22 @@ def _build_configured_performance_source_client_from_environment() -> (
     return _ConfiguredPerformanceSourceClient(
         performance_client=DownstreamJsonClient(performance_config)
     )
+
+
+def _build_configured_manage_source_client_from_environment() -> (
+    _ConfiguredManageSourceClient | _ManageSourceClientBlocker
+):
+    manage_base_url = os.getenv(MANAGE_BASE_URL_ENV, "").strip()
+    if not manage_base_url:
+        return _ManageSourceClientBlocker("lotus_manage_base_url_not_configured")
+    try:
+        manage_config = _manage_source_client_config(manage_base_url)
+    except DownstreamClientConfigurationError:
+        return _ManageSourceClientBlocker(
+            "lotus_manage_base_url_invalid",
+            manage_base_url_configured=True,
+        )
+    return _ConfiguredManageSourceClient(manage_client=DownstreamJsonClient(manage_config))
 
 
 def _build_configured_core_source_adapter_from_environment() -> (
@@ -652,6 +715,28 @@ def _performance_source_client_config(performance_base_url: str) -> DownstreamCl
     return DownstreamClientConfig(
         base_url=performance_base_url,
         timeout_seconds=_positive_float_env(PERFORMANCE_TIMEOUT_SECONDS_ENV, default=2.0),
+        max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
+        max_keepalive_connections=_positive_int_env(
+            SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV, default=10
+        ),
+        pool_timeout_seconds=_positive_float_env(
+            SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV, default=2.0
+        ),
+        retry_max_attempts=_positive_int_env(SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV, default=1),
+        retry_initial_backoff_seconds=_non_negative_float_env(
+            SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+        ),
+        retry_max_backoff_seconds=_non_negative_float_env(
+            SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+        ),
+        retry_post_without_idempotency=True,
+    )
+
+
+def _manage_source_client_config(manage_base_url: str) -> DownstreamClientConfig:
+    return DownstreamClientConfig(
+        base_url=manage_base_url,
+        timeout_seconds=_positive_float_env(MANAGE_TIMEOUT_SECONDS_ENV, default=2.0),
         max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
         max_keepalive_connections=_positive_int_env(
             SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV, default=10

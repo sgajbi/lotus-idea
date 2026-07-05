@@ -1,10 +1,48 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
 from typing import Any
 
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
+import app.api.allocation_drift_signals as allocation_drift_api
+from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.main import app
+from app.ports.manage_sources import (
+    ManageMandateHealthEvidence,
+    ManageMandateHealthEvidenceRequest,
+    ManageSourceUnavailable,
+)
+from app.runtime.source_ingestion_state import (
+    ManageMandateHealthSourceRuntime,
+    ManageMandateHealthSourceRuntimeBlocker,
+)
+
+
+AS_OF_DATE = date(2026, 6, 21)
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+
+
+@dataclass
+class RecordingManageMandateHealthSource:
+    seen_request: ManageMandateHealthEvidenceRequest | None = None
+    error: Exception | None = None
+    close_count: int = 0
+
+    def fetch_mandate_health_evidence(
+        self,
+        request: ManageMandateHealthEvidenceRequest,
+    ) -> ManageMandateHealthEvidence:
+        self.seen_request = request
+        if self.error is not None:
+            raise self.error
+        return _manage_mandate_health_evidence()
+
+    def close(self) -> None:
+        self.close_count += 1
 
 
 def test_allocation_drift_signal_api_returns_pm_review_candidate() -> None:
@@ -148,11 +186,152 @@ def test_allocation_drift_signal_api_requires_signal_permission() -> None:
     }
 
 
+def test_allocation_drift_signal_from_source_api_returns_pm_review_candidate(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    manage_source = RecordingManageMandateHealthSource()
+    monkeypatch.setattr(
+        allocation_drift_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        lambda: ManageMandateHealthSourceRuntime(
+            manage_source=manage_source,
+            manage_base_url_configured=True,
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=allocation_drift_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "candidate_created"
+    assert payload["family"] == "allocation_drift"
+    assert payload["sourceAuthority"] == "lotus-manage"
+    assert payload["supportedFeaturePromoted"] is False
+    assert payload["candidate"]["scorePolicyVersion"] == "allocation-drift-mandate-review-v1"
+    assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
+        "lotus-manage:PortfolioActionRegister:v1",
+        "lotus-performance:MandatePerformanceHealthContext:v1",
+        "lotus-risk:MandateRiskHealthContext:v1",
+    }
+    assert manage_source.seen_request == ManageMandateHealthEvidenceRequest(
+        portfolio_id=PORTFOLIO_ID,
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=EVALUATED_AT,
+        correlation_id="corr-manage-allocation-source-api",
+        trace_id="trace-manage-allocation-source-api",
+    )
+    assert manage_source.close_count == 1
+
+
+def test_allocation_drift_signal_from_source_blocks_when_runtime_not_configured(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    monkeypatch.setattr(
+        allocation_drift_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        lambda: ManageMandateHealthSourceRuntimeBlocker("lotus_manage_base_url_not_configured"),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=allocation_drift_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 503,
+        "code": "source_runtime_not_configured",
+        "title": "Source runtime not configured",
+        "detail": "Manage source runtime is not configured for allocation-drift source evaluation.",
+    }
+    assert PORTFOLIO_ID not in response.text
+
+
+def test_allocation_drift_signal_from_source_checks_scope_before_runtime(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+
+    def fail_if_called() -> ManageMandateHealthSourceRuntimeBlocker:
+        raise AssertionError("runtime must not be built when caller scope is denied")
+
+    monkeypatch.setattr(
+        allocation_drift_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        fail_if_called,
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=allocation_drift_source_payload(),
+        headers=source_evaluation_headers(portfolio_ids="PB_SG_OTHER_002"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert PORTFOLIO_ID not in response.text
+    assert "PB_SG_OTHER_002" not in response.text
+
+
+def test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    manage_source = RecordingManageMandateHealthSource(
+        error=ManageSourceUnavailable(code="manage_source_unavailable")
+    )
+    monkeypatch.setattr(
+        allocation_drift_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        lambda: ManageMandateHealthSourceRuntime(
+            manage_source=manage_source,
+            manage_base_url_configured=True,
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=allocation_drift_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "blocked",
+        "family": "allocation_drift",
+        "reasonCodes": ["source_partial"],
+        "unsupportedReasons": ["source_unavailable"],
+        "candidate": None,
+        "sourceAuthority": "lotus-manage",
+        "supportedFeaturePromoted": False,
+    }
+    assert manage_source.close_count == 1
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
+    }
+
+
+def source_evaluation_headers(*, portfolio_ids: str = PORTFOLIO_ID) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.signal.evaluate",
+        "X-Correlation-Id": "corr-manage-allocation-source-api",
+        "X-Trace-Id": "trace-manage-allocation-source-api",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
     }
 
 
@@ -177,3 +356,53 @@ def allocation_drift_payload() -> dict[str, Any]:
         },
         "entitlementAllowed": True,
     }
+
+
+def allocation_drift_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+    return {
+        "portfolioId": portfolio_id,
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+    }
+
+
+def _manage_mandate_health_evidence() -> ManageMandateHealthEvidence:
+    return ManageMandateHealthEvidence(
+        workflow_decision_count=2,
+        lineage_edge_count=4,
+        supportability_state="ready",
+        supportability_reason="supportability_summary_ready",
+        freshness_bucket="current",
+        portfolio_scope_confirmed=True,
+        action_register_ref=_source_ref(),
+        mandate_performance_health_ref=_source_ref(
+            product_id="lotus-performance:MandatePerformanceHealthContext:v1",
+            source_system=SourceSystem.LOTUS_PERFORMANCE,
+            content_hash="sha256:mandate-performance-health",
+        ),
+        mandate_risk_health_ref=_source_ref(
+            product_id="lotus-risk:MandateRiskHealthContext:v1",
+            source_system=SourceSystem.LOTUS_RISK,
+            content_hash="sha256:mandate-risk-health",
+        ),
+        manage_diagnostic="manage_action_register_ready_portfolio_scope",
+    )
+
+
+def _source_ref(
+    *,
+    product_id: str = "lotus-manage:PortfolioActionRegister:v1",
+    source_system: SourceSystem = SourceSystem.LOTUS_MANAGE,
+    content_hash: str = "sha256:portfolio-action-register",
+) -> SourceRef:
+    return SourceRef(
+        product_id=product_id,
+        source_system=source_system,
+        product_version="v1",
+        route="/api/v1/rebalance/supportability/summary",
+        as_of_date=AS_OF_DATE,
+        generated_at_utc=EVALUATED_AT,
+        content_hash=content_hash,
+        data_quality_status="ready",
+        freshness=EvidenceFreshness.CURRENT,
+    )

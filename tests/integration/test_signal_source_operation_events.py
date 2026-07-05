@@ -5,11 +5,13 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+import app.api.allocation_drift_signals as allocation_drift_signals_api
 import app.api.drawdown_review_signals as drawdown_review_signals_api
 import app.api.high_volatility_signals as high_volatility_signals_api
 import app.api.underperformance_signals as underperformance_signals_api
 from app.main import app
 from app.runtime.source_ingestion_state import (
+    ManageMandateHealthSourceRuntimeBlocker,
     PerformanceUnderperformanceSourceRuntimeBlocker,
     RiskDrawdownSourceRuntimeBlocker,
     RiskVolatilitySourceRuntimeBlocker,
@@ -17,6 +19,34 @@ from app.runtime.source_ingestion_state import (
 
 
 OperationEventCall = tuple[str, str, str, bool, str | None]
+
+
+def test_allocation_drift_source_api_emits_blocked_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events = capture_foundation_events(monkeypatch, allocation_drift_signals_api)
+    monkeypatch.setattr(
+        allocation_drift_signals_api,
+        "_build_manage_mandate_health_source_runtime_from_environment",
+        lambda: ManageMandateHealthSourceRuntimeBlocker("lotus_manage_base_url_not_configured"),
+    )
+
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+        json=signal_source_payload(),
+        headers=source_signal_headers(),
+    )
+
+    assert response.status_code == 503
+    assert events == [
+        (
+            "signal_evaluation",
+            "blocked",
+            "lotus-manage",
+            False,
+            "lotus_manage_base_url_not_configured",
+        )
+    ]
 
 
 def test_drawdown_review_source_api_emits_blocked_operation_event(

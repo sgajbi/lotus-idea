@@ -96,6 +96,36 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Fetch source-owned Lotus Manage action-register posture through the configured Manage source adapter and evaluate deterministic allocation-drift / mandate-review posture.",
+      "when_to_use": "Use as the bounded RFC-0002 Slice 5 source-fetching API foundation when the caller is entitled to the requested portfolio scope and Lotus Manage runtime URL is configured.",
+      "when_not_to_use": "Do not use as live source certification, source-worker certification, durable candidate persistence, allocation-drift calculation, mandate compliance approval, suitability approval, rebalance action, order instruction, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\"}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"allocation_drift_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_allocation_drift_8d57adbf52f7f5a7\",\"family\":\"allocation_drift\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"pm_review_required\",\"evidencePacketId\":\"iep_allocation_drift_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"allocation-drift-mandate-review-v1\",\"sourceSignalIds\":[\"signal_allocation_drift_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-manage:PortfolioActionRegister:v1\",\"sourceSystem\":\"lotus-manage\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"allocation_drift\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-manage\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
+        "503 returns product-safe Problem Details when Manage source runtime configuration is missing or invalid.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_api_returns_pm_review_candidate",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_blocks_when_runtime_not_configured",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_checks_scope_before_runtime",
+        "tests/integration/test_allocation_drift_signal_api.py::test_allocation_drift_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_signal_source_operation_events.py::test_allocation_drift_source_api_emits_blocked_operation_event",
+        "tests/unit/test_source_ingestion_state.py::test_manage_mandate_health_source_runtime_builds_without_manifest"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/low-income/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
