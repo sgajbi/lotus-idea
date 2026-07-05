@@ -28,7 +28,7 @@ from app.infrastructure.downstream_client import (
     DownstreamJsonClient,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
-from app.ports.core_sources import CoreOpportunitySourcePort
+from app.ports.core_sources import CoreLowIncomeSourcePort, CoreOpportunitySourcePort
 
 SOURCE_INGESTION_MAX_CONNECTIONS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS"
 SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
@@ -58,9 +58,44 @@ class CoreHighCashSourceRuntime:
 
 
 @dataclass(frozen=True)
+class CoreLowIncomeSourceRuntime:
+    core_source: CoreLowIncomeSourcePort
+    core_base_url_configured: bool
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.core_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
+    core_query_base_url_configured: bool = False
+    core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class CoreLowIncomeSourceRuntimeBlocker:
+    code: str
+    core_base_url_configured: bool = False
+    core_query_base_url_configured: bool = False
+    core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class _ConfiguredCoreSourceAdapter:
+    core_source: LotusCoreHighCashSourceAdapter
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
+
+
+@dataclass(frozen=True)
+class _CoreSourceAdapterBlocker:
+    code: str
     core_query_base_url_configured: bool = False
     core_query_control_plane_base_url_configured: bool = False
 
@@ -165,11 +200,56 @@ def build_source_ingestion_runtime_from_environment() -> (
 def build_core_high_cash_source_runtime_from_environment() -> (
     CoreHighCashSourceRuntime | CoreHighCashSourceRuntimeBlocker
 ):
+    adapter = _build_configured_core_source_adapter_from_environment()
+    if isinstance(adapter, _CoreSourceAdapterBlocker):
+        return CoreHighCashSourceRuntimeBlocker(
+            adapter.code,
+            core_base_url_configured=adapter.code != "lotus_core_base_url_not_configured",
+            core_query_base_url_configured=adapter.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                adapter.core_query_control_plane_base_url_configured
+            ),
+        )
+    return CoreHighCashSourceRuntime(
+        core_source=adapter.core_source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=adapter.core_query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            adapter.core_query_control_plane_base_url_configured
+        ),
+    )
+
+
+def build_core_low_income_source_runtime_from_environment() -> (
+    CoreLowIncomeSourceRuntime | CoreLowIncomeSourceRuntimeBlocker
+):
+    adapter = _build_configured_core_source_adapter_from_environment()
+    if isinstance(adapter, _CoreSourceAdapterBlocker):
+        return CoreLowIncomeSourceRuntimeBlocker(
+            adapter.code,
+            core_base_url_configured=adapter.code != "lotus_core_base_url_not_configured",
+            core_query_base_url_configured=adapter.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                adapter.core_query_control_plane_base_url_configured
+            ),
+        )
+    return CoreLowIncomeSourceRuntime(
+        core_source=adapter.core_source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=adapter.core_query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            adapter.core_query_control_plane_base_url_configured
+        ),
+    )
+
+
+def _build_configured_core_source_adapter_from_environment() -> (
+    _ConfiguredCoreSourceAdapter | _CoreSourceAdapterBlocker
+):
     core_source_urls = core_source_runtime_urls_from_environment()
     if not core_source_urls.fully_configured:
-        return CoreHighCashSourceRuntimeBlocker(
+        return _CoreSourceAdapterBlocker(
             "lotus_core_base_url_not_configured",
-            core_base_url_configured=False,
             core_query_base_url_configured=core_source_urls.query_base_url_configured,
             core_query_control_plane_base_url_configured=(
                 core_source_urls.query_control_plane_base_url_configured
@@ -178,20 +258,18 @@ def build_core_high_cash_source_runtime_from_environment() -> (
     try:
         query_config, query_control_plane_config = _core_source_client_configs(core_source_urls)
     except DownstreamClientConfigurationError:
-        return CoreHighCashSourceRuntimeBlocker(
+        return _CoreSourceAdapterBlocker(
             "lotus_core_base_url_invalid",
-            core_base_url_configured=True,
             core_query_base_url_configured=core_source_urls.query_base_url_configured,
             core_query_control_plane_base_url_configured=(
                 core_source_urls.query_control_plane_base_url_configured
             ),
         )
-    return CoreHighCashSourceRuntime(
+    return _ConfiguredCoreSourceAdapter(
         core_source=LotusCoreHighCashSourceAdapter(
             query_client=DownstreamJsonClient(query_config),
             query_control_plane_client=DownstreamJsonClient(query_control_plane_config),
         ),
-        core_base_url_configured=True,
         core_query_base_url_configured=core_source_urls.query_base_url_configured,
         core_query_control_plane_base_url_configured=(
             core_source_urls.query_control_plane_base_url_configured

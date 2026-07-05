@@ -25,9 +25,12 @@ from app.runtime.settings import (
 from app.runtime.source_ingestion_state import (
     CoreHighCashSourceRuntime,
     CoreHighCashSourceRuntimeBlocker,
+    CoreLowIncomeSourceRuntime,
+    CoreLowIncomeSourceRuntimeBlocker,
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
     build_core_high_cash_source_runtime_from_environment,
+    build_core_low_income_source_runtime_from_environment,
     build_source_ingestion_runtime_from_environment,
 )
 
@@ -38,9 +41,12 @@ __all__ = [
     "RuntimeStoragePosture",
     "CoreHighCashSourceRuntime",
     "CoreHighCashSourceRuntimeBlocker",
+    "CoreLowIncomeSourceRuntime",
+    "CoreLowIncomeSourceRuntimeBlocker",
     "SourceIngestionRuntime",
     "SourceIngestionRuntimeBlocker",
     "build_core_high_cash_source_runtime_from_environment",
+    "build_core_low_income_source_runtime_from_environment",
     "build_outbox_publisher_from_environment",
     "build_source_ingestion_runtime_from_environment",
     "close_downstream_realization_clients",
