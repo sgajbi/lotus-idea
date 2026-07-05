@@ -154,7 +154,7 @@ def _sla_open_requirement_count(payload: dict[str, Any]) -> int | None:
         return None
     if isinstance(value, bool) or not isinstance(value, int) or value < 0:
         raise AdviseSourceUnavailable(code="advise_open_requirement_count_malformed")
-    return value
+    return int(value)
 
 
 def _optional_object_field(payload: dict[str, Any], key: str) -> dict[str, Any]:

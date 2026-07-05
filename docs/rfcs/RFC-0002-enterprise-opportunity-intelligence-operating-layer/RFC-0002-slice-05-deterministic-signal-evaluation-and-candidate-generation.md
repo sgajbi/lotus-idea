@@ -787,7 +787,8 @@ Not implemented yet:
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
 7. source-fetching APIs beyond bounded high-cash, low-income, bond-maturity,
-   and missing-benchmark `evaluate-from-source` evaluation,
+   missing-benchmark, and concentration-risk `evaluate-from-source`
+   evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
 10. data-product certification.
@@ -897,14 +898,24 @@ Current source-fetching API validation:
    Core source unavailability, cleanup-failure suppression,
    endpoint-ledger registration, and manifest-free Core source runtime
    construction.
-6. This closes only the bounded high-cash, low-income, bond-maturity, and missing-benchmark
-   source-fetching API foundations. It does not certify live Core source
-   support, source-worker operation, Gateway/Workbench support,
-   data-product certification, benchmark assignment, benchmark methodology
-   authority, performance calculation, maturity schedule authority, replacement
-   product recommendation, reinvestment advice, income-needs assessment,
-   funding advice, treasury instruction, planning suitability, client
-   publication, or supported-feature promotion.
+6. `python -m pytest tests\integration\test_concentration_risk_signal_api.py tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_risk_sources.py -q`
+   passed with `71 passed`, covering concentration-risk Lotus Risk-backed
+   evaluation, portfolio entitlement denial before runtime construction,
+   missing Risk runtime configuration, Risk source unavailability, route-owned
+   runtime cleanup, manifest-free Risk source runtime construction, and adapter
+   close delegation.
+7. `python -m ruff check src\app\api\concentration_risk_signals.py src\app\api\caller_context_openapi.py src\app\api\runtime_dependencies.py src\app\runtime\source_ingestion_state.py src\app\infrastructure\lotus_risk_sources.py tests\integration\test_concentration_risk_signal_api.py tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_risk_sources.py`
+   passed.
+8. This closes only the bounded high-cash, low-income, bond-maturity,
+   missing-benchmark, and concentration-risk source-fetching API foundations.
+   It does not certify live Core or Risk source support, source-worker operation,
+   Gateway/Workbench support, data-product certification, benchmark assignment,
+   benchmark methodology authority, performance calculation, maturity schedule
+   authority, replacement product recommendation, reinvestment advice,
+   income-needs assessment, funding advice, treasury instruction, planning
+   suitability, risk methodology approval, concentration calculation, trade
+   recommendation, rebalance action, client publication, or supported-feature
+   promotion.
 
 Current mandate health source-product ref validation:
 

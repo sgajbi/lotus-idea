@@ -1,12 +1,49 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from typing import Any
 
 from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.concentration_risk_signals as concentration_risk_api
+from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.main import app
+from app.ports.risk_sources import (
+    RiskConcentrationEvidence,
+    RiskConcentrationEvidenceRequest,
+    RiskSourceUnavailable,
+)
+from app.runtime.source_ingestion_state import (
+    RiskConcentrationSourceRuntime,
+    RiskConcentrationSourceRuntimeBlocker,
+)
+
+
+AS_OF_DATE = date(2026, 6, 21)
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+
+
+@dataclass
+class RecordingRiskSource:
+    seen_request: RiskConcentrationEvidenceRequest | None = None
+    error: Exception | None = None
+    close_count: int = 0
+
+    def fetch_concentration_evidence(
+        self,
+        request: RiskConcentrationEvidenceRequest,
+    ) -> RiskConcentrationEvidence:
+        self.seen_request = request
+        if self.error is not None:
+            raise self.error
+        return _risk_evidence()
+
+    def close(self) -> None:
+        self.close_count += 1
 
 
 def test_concentration_risk_signal_api_returns_review_candidate() -> None:
@@ -229,6 +266,132 @@ def test_concentration_risk_signal_api_rejects_blank_entitlement_scope_header() 
     }
 
 
+def test_concentration_risk_signal_from_source_api_returns_review_candidate(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    risk_source = RecordingRiskSource()
+    monkeypatch.setattr(
+        concentration_risk_api,
+        "_build_risk_concentration_source_runtime_from_environment",
+        lambda: RiskConcentrationSourceRuntime(
+            risk_source=risk_source,
+            risk_base_url_configured=True,
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
+        json=concentration_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "candidate_created"
+    assert payload["family"] == "concentration"
+    assert payload["sourceAuthority"] == "lotus-risk"
+    assert payload["supportedFeaturePromoted"] is False
+    assert payload["candidate"]["scorePolicyVersion"] == "concentration-attention-v1"
+    assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
+        "lotus-risk:ConcentrationRiskReport:v1"
+    }
+    assert risk_source.seen_request == RiskConcentrationEvidenceRequest(
+        portfolio_id=PORTFOLIO_ID,
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=EVALUATED_AT,
+        correlation_id="corr-risk-source-api",
+        trace_id="trace-risk-source-api",
+    )
+    assert risk_source.close_count == 1
+
+
+def test_concentration_risk_signal_from_source_blocks_when_runtime_not_configured(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    monkeypatch.setattr(
+        concentration_risk_api,
+        "_build_risk_concentration_source_runtime_from_environment",
+        lambda: RiskConcentrationSourceRuntimeBlocker("lotus_risk_base_url_not_configured"),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
+        json=concentration_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 503,
+        "code": "source_runtime_not_configured",
+        "title": "Source runtime not configured",
+        "detail": "Risk source runtime is not configured for concentration source evaluation.",
+    }
+    assert PORTFOLIO_ID not in response.text
+
+
+def test_concentration_risk_signal_from_source_checks_scope_before_runtime(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+
+    def fail_if_called() -> RiskConcentrationSourceRuntimeBlocker:
+        raise AssertionError("runtime must not be built when caller scope is denied")
+
+    monkeypatch.setattr(
+        concentration_risk_api,
+        "_build_risk_concentration_source_runtime_from_environment",
+        fail_if_called,
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
+        json=concentration_source_payload(),
+        headers=source_evaluation_headers(portfolio_ids="PB_SG_OTHER_002"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert PORTFOLIO_ID not in response.text
+    assert "PB_SG_OTHER_002" not in response.text
+
+
+def test_concentration_risk_signal_from_source_closes_runtime_on_source_blocker(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    risk_source = RecordingRiskSource(error=RiskSourceUnavailable(code="risk_source_unavailable"))
+    monkeypatch.setattr(
+        concentration_risk_api,
+        "_build_risk_concentration_source_runtime_from_environment",
+        lambda: RiskConcentrationSourceRuntime(
+            risk_source=risk_source,
+            risk_base_url_configured=True,
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
+        json=concentration_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "blocked",
+        "family": "concentration",
+        "reasonCodes": ["source_partial"],
+        "unsupportedReasons": ["source_unavailable"],
+        "candidate": None,
+        "sourceAuthority": "lotus-risk",
+        "supportedFeaturePromoted": False,
+    }
+    assert risk_source.close_count == 1
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
@@ -238,6 +401,17 @@ def evaluate_headers() -> dict[str, str]:
         "X-Caller-Book-Ids": "book-advisor-001",
         "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
         "X-Caller-Client-Ids": "client-001",
+    }
+
+
+def source_evaluation_headers(*, portfolio_ids: str = PORTFOLIO_ID) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.signal.evaluate",
+        "X-Correlation-Id": "corr-risk-source-api",
+        "X-Trace-Id": "trace-risk-source-api",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
     }
 
 
@@ -267,3 +441,31 @@ def concentration_payload() -> dict[str, Any]:
         },
         "entitlementAllowed": True,
     }
+
+
+def concentration_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+    return {
+        "portfolioId": portfolio_id,
+        "asOfDate": "2026-06-21",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+    }
+
+
+def _risk_evidence() -> RiskConcentrationEvidence:
+    return RiskConcentrationEvidence(
+        top_position_weight_current=Decimal("0.22"),
+        top_issuer_weight_current=Decimal("0.27"),
+        issuer_coverage_status="complete",
+        concentration_ref=SourceRef(
+            product_id="lotus-risk:ConcentrationRiskReport:v1",
+            source_system=SourceSystem.LOTUS_RISK,
+            product_version="v1",
+            route="/analytics/risk/concentration",
+            as_of_date=AS_OF_DATE,
+            generated_at_utc=EVALUATED_AT,
+            content_hash="sha256:risk-concentration-report",
+            data_quality_status="ready",
+            freshness=EvidenceFreshness.CURRENT,
+        ),
+        concentration_diagnostic="risk_issuer_coverage_complete",
+    )

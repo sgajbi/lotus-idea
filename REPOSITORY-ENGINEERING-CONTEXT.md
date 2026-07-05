@@ -139,11 +139,12 @@ authority.
 Bounded source-fetching signal APIs may exist only when they call an explicit
 source-port/adapter, enforce caller entitlement scope before runtime dependency
 construction, return product-safe dependency failures, and preserve source
-authority. High-cash, low-income, bond-maturity, and missing-benchmark
-`evaluate-from-source` APIs are internal foundations inside the existing
-runtime; they do not certify live source support, persist candidates, create a
-separate runtime service, prove Gateway/Workbench behavior, certify a data
-product, or promote a supported feature. Low-income source-backed evaluation
+authority. High-cash, low-income, bond-maturity, missing-benchmark, and
+concentration-risk `evaluate-from-source` APIs are internal foundations inside
+the existing runtime; they do not certify live source support, persist
+candidates, create a separate runtime service, prove Gateway/Workbench
+behavior, certify a data product, or promote a supported feature. Low-income
+source-backed evaluation
 consumes only Core-owned cash movement and cashflow projection evidence and
 must not infer income needs, funding advice, treasury instructions, planning
 suitability, or client-ready communication. Bond-maturity source-backed
@@ -153,6 +154,10 @@ calculate reinvestment advice, approve planning suitability, or create orders.
 Missing-benchmark source-backed evaluation consumes only Core-owned
 benchmark-assignment evidence and must not assign benchmarks, certify benchmark
 methodology, or calculate portfolio or benchmark performance.
+Concentration-risk source-backed evaluation consumes only Lotus Risk-owned
+`ConcentrationRiskReport:v1` evidence and must not calculate concentration,
+approve risk methodology, recommend trades, create rebalance actions, or
+promote risk/product support.
 
 ## Current Implementation Map
 

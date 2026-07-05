@@ -32,6 +32,7 @@ _SIGNAL_REQUIREMENT_PATHS = (
     "/api/v1/idea-signals/bond-maturity/evaluate",
     "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
     "/api/v1/idea-signals/concentration-risk/evaluate",
+    "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
     "/api/v1/idea-signals/drawdown-review/evaluate",
     "/api/v1/idea-signals/high-volatility/evaluate",
     "/api/v1/idea-signals/mandate-restriction/evaluate",

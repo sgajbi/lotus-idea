@@ -24,7 +24,7 @@ from app.ports.idea_repository import CandidatePersistenceRepository
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
-    RiskOpportunitySourcePort,
+    RiskConcentrationSourcePort,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
 )
@@ -104,7 +104,7 @@ def evaluate_concentration_risk_signal_command(
 def evaluate_concentration_risk_signal_from_risk(
     command: EvaluateConcentrationRiskFromRiskCommand,
     *,
-    risk_source: RiskOpportunitySourcePort,
+    risk_source: RiskConcentrationSourcePort,
     policy: ConcentrationRiskSignalPolicy = DEFAULT_CONCENTRATION_RISK_POLICY,
 ) -> SignalEvaluationResult:
     try:
@@ -171,7 +171,7 @@ def evaluate_and_persist_concentration_risk_signal(
 def evaluate_and_persist_concentration_risk_signal_from_risk(
     command: EvaluateAndPersistConcentrationRiskFromRiskCommand,
     *,
-    risk_source: RiskOpportunitySourcePort,
+    risk_source: RiskConcentrationSourcePort,
     repository: CandidatePersistenceRepository,
     policy: ConcentrationRiskSignalPolicy = DEFAULT_CONCENTRATION_RISK_POLICY,
 ) -> ConcentrationRiskSignalPersistenceResult:

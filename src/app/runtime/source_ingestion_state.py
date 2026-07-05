@@ -28,12 +28,14 @@ from app.infrastructure.downstream_client import (
     DownstreamJsonClient,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
+from app.infrastructure.lotus_risk_sources import LotusRiskConcentrationSourceAdapter
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentSourcePort,
     CoreBondMaturitySourcePort,
     CoreLowIncomeSourcePort,
     CoreOpportunitySourcePort,
 )
+from app.ports.risk_sources import RiskConcentrationSourcePort
 
 SOURCE_INGESTION_MAX_CONNECTIONS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS"
 SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
@@ -47,6 +49,8 @@ SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV = (
 SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV = (
     "LOTUS_IDEA_SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS"
 )
+RISK_BASE_URL_ENV = "LOTUS_RISK_BASE_URL"
+RISK_TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_RISK_TIMEOUT_SECONDS"
 
 
 @dataclass(frozen=True)
@@ -102,6 +106,17 @@ class CoreBondMaturitySourceRuntime:
 
 
 @dataclass(frozen=True)
+class RiskConcentrationSourceRuntime:
+    risk_source: RiskConcentrationSourcePort
+    risk_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.risk_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -131,6 +146,12 @@ class CoreBondMaturitySourceRuntimeBlocker:
     core_base_url_configured: bool = False
     core_query_base_url_configured: bool = False
     core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class RiskConcentrationSourceRuntimeBlocker:
+    code: str
+    risk_base_url_configured: bool = False
 
 
 @dataclass(frozen=True)
@@ -336,6 +357,25 @@ def build_core_bond_maturity_source_runtime_from_environment() -> (
     )
 
 
+def build_risk_concentration_source_runtime_from_environment() -> (
+    RiskConcentrationSourceRuntime | RiskConcentrationSourceRuntimeBlocker
+):
+    risk_base_url = os.getenv(RISK_BASE_URL_ENV, "").strip()
+    if not risk_base_url:
+        return RiskConcentrationSourceRuntimeBlocker("lotus_risk_base_url_not_configured")
+    try:
+        risk_config = _risk_source_client_config(risk_base_url)
+    except DownstreamClientConfigurationError:
+        return RiskConcentrationSourceRuntimeBlocker(
+            "lotus_risk_base_url_invalid",
+            risk_base_url_configured=True,
+        )
+    return RiskConcentrationSourceRuntime(
+        risk_source=LotusRiskConcentrationSourceAdapter(DownstreamJsonClient(risk_config)),
+        risk_base_url_configured=True,
+    )
+
+
 def _build_configured_core_source_adapter_from_environment() -> (
     _ConfiguredCoreSourceAdapter | _CoreSourceAdapterBlocker
 ):
@@ -419,6 +459,28 @@ def _core_source_client_configs(
             retry_max_backoff_seconds=retry_max_backoff_seconds,
             retry_post_without_idempotency=True,
         ),
+    )
+
+
+def _risk_source_client_config(risk_base_url: str) -> DownstreamClientConfig:
+    return DownstreamClientConfig(
+        base_url=risk_base_url,
+        timeout_seconds=_positive_float_env(RISK_TIMEOUT_SECONDS_ENV, default=2.0),
+        max_connections=_positive_int_env(SOURCE_INGESTION_MAX_CONNECTIONS_ENV, default=20),
+        max_keepalive_connections=_positive_int_env(
+            SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV, default=10
+        ),
+        pool_timeout_seconds=_positive_float_env(
+            SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV, default=2.0
+        ),
+        retry_max_attempts=_positive_int_env(SOURCE_INGESTION_RETRY_MAX_ATTEMPTS_ENV, default=1),
+        retry_initial_backoff_seconds=_non_negative_float_env(
+            SOURCE_INGESTION_RETRY_INITIAL_BACKOFF_SECONDS_ENV, default=0.05
+        ),
+        retry_max_backoff_seconds=_non_negative_float_env(
+            SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV, default=0.5
+        ),
+        retry_post_without_idempotency=True,
     )
 
 
