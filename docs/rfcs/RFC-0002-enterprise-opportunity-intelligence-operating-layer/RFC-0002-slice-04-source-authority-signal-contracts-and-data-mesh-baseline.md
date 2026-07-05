@@ -1,6 +1,6 @@
 # RFC-0002 Slice 04: Source Authority, Signal Contracts, And Data Mesh Baseline
 
-Status: Partially implemented
+Status: Implemented - pre-certification data-mesh baseline
 
 ## Outcome
 
