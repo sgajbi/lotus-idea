@@ -13,6 +13,9 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def _load_data_mesh_contract_gate() -> ModuleType:
     script_path = ROOT / "scripts" / "data_mesh_contract_gate.py"
+    scripts_path = str(script_path.parent)
+    if scripts_path not in sys.path:
+        sys.path.insert(0, scripts_path)
     spec = importlib.util.spec_from_file_location("data_mesh_contract_gate", script_path)
     assert spec is not None
     assert spec.loader is not None
@@ -119,9 +122,60 @@ def test_producer_gate_blocks_premature_product_promotion() -> None:
     assert any("lifecycle_status must remain proposed" in error for error in errors)
     assert any("current_routes must not exist" in error for error in errors)
     assert any("approved_consumers must include lotus-gateway" in error for error in errors)
-    assert any("required_trust_metadata must include correlation_id" in error for error in errors)
+    assert any("required_trust_metadata missing" in error for error in errors)
+    assert any("correlation_id" in error for error in errors)
     assert any("lineage_required must be true" in error for error in errors)
     assert any("evidence_bundle_required must be true" in error for error in errors)
+
+
+def test_producer_gate_blocks_weak_mesh_semantics() -> None:
+    module = _load_data_mesh_contract_gate()
+    producer = deepcopy(module._read_json(module.PRODUCER_DECLARATION_PATH))
+    product = producer["products"][0]
+    product["product_version"] = "v2"
+    product["request_scope"] = {"scope_level": "", "supports_bulk": "yes"}
+    product["temporal_scope"] = {
+        "primary_time_field": "as_of_date",
+        "freshness_basis": "booking_date",
+        "supports_restatement": False,
+    }
+    product["temporal_semantics_ref"] = "observed_at"
+    product["identifier_refs"] = ["portfolio_id"]
+    product["required_trust_metadata"] = ["correlation_id"]
+    product["freshness_policy"] = {
+        "freshness_class": "best_effort",
+        "max_allowed_age_description": "",
+    }
+    product["completeness_policy"] = {"default_status": "unknown", "partial_allowed": "yes"}
+    product["lineage_policy"]["lineage_bundle_class_ref"] = ""
+    product["lineage_policy"]["evidence_access_class_ref"] = ""
+    product["security_profile_ref"] = "public"
+    product["deprecation_policy"]["state"] = "deprecated"
+
+    errors = module.validate_producer_contract(producer)
+
+    assert any("product_version must be v1" in error for error in errors)
+    assert any("request_scope.scope_level is required" in error for error in errors)
+    assert any("request_scope.supports_bulk must be boolean" in error for error in errors)
+    assert any("temporal_semantics_ref must match primary_time_field" in error for error in errors)
+    assert any("temporal_scope.freshness_basis is invalid" in error for error in errors)
+    assert any("temporal_scope.supports_restatement must be true" in error for error in errors)
+    assert any(
+        "identifier_refs must include tenant_id and correlation_id" in error for error in errors
+    )
+    assert any("required_trust_metadata missing" in error for error in errors)
+    assert any("data_quality_status" in error for error in errors)
+    assert any("source_batch_fingerprint" in error for error in errors)
+    assert any("freshness_policy.freshness_class is invalid" in error for error in errors)
+    assert any(
+        "freshness_policy.max_allowed_age_description is required" in error for error in errors
+    )
+    assert any("completeness_policy.default_status is invalid" in error for error in errors)
+    assert any("completeness_policy.partial_allowed must be boolean" in error for error in errors)
+    assert any("lineage_bundle_class_ref is required" in error for error in errors)
+    assert any("evidence_access_class_ref is required" in error for error in errors)
+    assert any("security_profile_ref must retain client_confidential" in error for error in errors)
+    assert any("deprecation_policy.state must be not_deprecated" in error for error in errors)
 
 
 def test_mesh_readiness_gate_blocks_unblocked_static_telemetry() -> None:
