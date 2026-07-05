@@ -170,8 +170,10 @@ def test_rfc_index_and_main_rfc_match_data_mesh_foundation_truth() -> None:
 
     assert (
         "source-authority-signal-contracts-and-data-mesh-baseline.md) | "
-        "Partially implemented - repo-native mesh contract gate enforced, including bounded "
-        "Lotus Risk concentration consumer declaration |"
+        "Implemented - pre-certification mesh baseline enforced with producer/consumer "
+        "declarations, bounded Lotus Risk concentration dependency, producer mesh semantics, "
+        "consumer freshness/provenance metadata, blocked telemetry, policy files, platform "
+        "catalog reconciliation, and no product promotion |"
     ) in rfc_index
     assert "OpportunitySignalCandidate:v1" in main_rfc
     assert "IdeaCandidate:v1" in main_rfc

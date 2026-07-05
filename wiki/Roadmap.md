@@ -29,9 +29,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    anti-claim wording, with coverage in the `lotus-platform` scaffold contract
    tests,
 6. RFC-0002 Slice 03 implements pure domain vocabulary and lifecycle primitives,
-7. RFC-0002 Slice 04 partially implements source-authority and data-mesh
-   baseline contracts plus a repo-native data-mesh contract gate while keeping
-   mesh certification planned,
+7. RFC-0002 Slice 04 implements the pre-certification source-authority and
+   data-mesh baseline contracts plus a repo-native data-mesh contract gate
+   while keeping mesh certification planned,
 8. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
    policy plus the first Core source-port and conservative HTTP adapter
    foundation,
