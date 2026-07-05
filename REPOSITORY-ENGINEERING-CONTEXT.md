@@ -140,11 +140,12 @@ Bounded source-fetching signal APIs may exist only when they call an explicit
 source-port/adapter, enforce caller entitlement scope before runtime dependency
 construction, return product-safe dependency failures, and preserve source
 authority. High-cash, low-income, bond-maturity, missing-benchmark,
-concentration-risk, high-volatility, drawdown-review, and underperformance
-`evaluate-from-source` APIs are internal foundations inside the existing
-runtime; they do not certify live source support, persist candidates, create a
-separate runtime service, prove Gateway/Workbench behavior, certify a data
-product, or promote a supported feature. Low-income source-backed evaluation
+concentration-risk, high-volatility, drawdown-review, underperformance, and
+allocation-drift `evaluate-from-source` APIs are internal foundations inside
+the existing runtime; they do not certify live source support, persist
+candidates, create a separate runtime service, prove Gateway/Workbench
+behavior, certify a data product, or promote a supported feature. Low-income
+source-backed evaluation
 consumes only Core-owned cash movement and cashflow projection evidence and
 must not infer income needs, funding advice, treasury instructions, planning
 suitability, or client-ready communication. Bond-maturity source-backed
@@ -171,6 +172,11 @@ Underperformance source-backed evaluation consumes only Lotus Performance-owned
 not calculate returns, assign benchmarks, approve benchmark methodology,
 recommend trades, create rebalance actions, or promote performance/product
 support.
+Allocation-drift source-backed evaluation consumes only Lotus Manage-owned
+`PortfolioActionRegister:v1` posture and optional source-owned mandate-health
+refs and must not calculate drift, approve mandate compliance, approve
+suitability, recommend trades, create rebalance actions, create orders, or
+promote Manage/product support.
 
 ## Current Implementation Map
 

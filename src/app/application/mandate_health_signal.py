@@ -18,9 +18,9 @@ from app.domain import (
 from app.application.access_scope import portfolio_only_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.manage_sources import (
+    ManageMandateHealthSourcePort,
     ManageMandateHealthEvidence,
     ManageMandateHealthEvidenceRequest,
-    ManageOpportunitySourcePort,
     ManageSourceEntitlementDenied,
     ManageSourceUnavailable,
 )
@@ -85,7 +85,7 @@ def evaluate_mandate_health_signal_command(
 def evaluate_mandate_health_signal_from_manage(
     command: EvaluateMandateHealthFromManageCommand,
     *,
-    manage_source: ManageOpportunitySourcePort,
+    manage_source: ManageMandateHealthSourcePort,
     policy: MandateHealthSignalPolicy = DEFAULT_MANDATE_HEALTH_POLICY,
 ) -> SignalEvaluationResult:
     try:

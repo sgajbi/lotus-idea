@@ -36,6 +36,9 @@ class LotusManageMandateHealthSourceAdapter:
     def __init__(self, manage_client: DownstreamJsonClient) -> None:
         self._manage_client = manage_client
 
+    def close(self) -> None:
+        self._manage_client.close()
+
     def fetch_mandate_health_evidence(
         self, request: ManageMandateHealthEvidenceRequest
     ) -> ManageMandateHealthEvidence:

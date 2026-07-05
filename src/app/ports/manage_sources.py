@@ -47,8 +47,12 @@ class ManageMandateHealthEvidence:
     entitlement_allowed: bool = True
 
 
-class ManageOpportunitySourcePort(Protocol):
+class ManageMandateHealthSourcePort(Protocol):
     def fetch_mandate_health_evidence(
         self, request: ManageMandateHealthEvidenceRequest
     ) -> ManageMandateHealthEvidence:
         """Fetch source-owned Lotus Manage action-register posture for idea evaluation."""
+
+
+class ManageOpportunitySourcePort(ManageMandateHealthSourcePort, Protocol):
+    """Backward-compatible alias for the mandate-health source contract."""

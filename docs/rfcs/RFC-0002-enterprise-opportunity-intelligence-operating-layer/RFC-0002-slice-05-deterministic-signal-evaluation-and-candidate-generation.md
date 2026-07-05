@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus narrowed Risk drawdown source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, underperformance policy plus narrowed Performance underperformance source-port/adapter/live-proof and caller-supplied plus bounded Performance-backed `evaluate-from-source` API foundations, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus narrowed Risk drawdown source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, underperformance policy plus narrowed Performance underperformance source-port/adapter/live-proof and caller-supplied plus bounded Performance-backed `evaluate-from-source` API foundations, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied plus bounded Manage-backed `evaluate-from-source` API foundations, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -435,6 +435,20 @@ Additional implemented allocation-drift / mandate-review foundation:
    readiness. It does not certify Core portfolio state, data mesh, Workbench
    behavior, client publication, supported-feature promotion, rebalance
    authority, action authority, order creation, execution, or settlement.
+9. `POST /api/v1/idea-signals/allocation-drift/evaluate-from-source` exposes
+   the existing Manage mandate-health source-port through the bounded advisor
+   API pattern. It enforces advisor role, `idea.signal.evaluate`, and
+   portfolio entitlement before constructing Manage runtime dependencies;
+   returns product-safe 503 posture when Manage runtime configuration is
+   absent; closes route-owned runtime clients after each request; and redacts
+   source routes, content hashes, portfolio identifiers, and raw source
+   payloads from responses.
+10. This remains an internal design-module foundation inside the existing
+   `lotus-idea` service. It does not add a separately scalable process,
+   certify live Manage source support, calculate allocation drift, approve
+   mandate compliance or suitability, recommend trades, create rebalance
+   actions, create orders, prove Gateway/Workbench behavior, promote a data
+   product, or promote a supported feature.
 
 Additional implemented high-volatility foundation:
 
@@ -787,8 +801,8 @@ Not implemented yet:
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
 7. source-fetching APIs beyond bounded high-cash, low-income, bond-maturity,
-   missing-benchmark, concentration-risk, high-volatility, drawdown-review, and
-   underperformance `evaluate-from-source` evaluation,
+   missing-benchmark, concentration-risk, high-volatility, drawdown-review,
+   underperformance, and allocation-drift `evaluate-from-source` evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
 10. data-product certification.
@@ -925,18 +939,26 @@ Current source-fetching API validation:
    cleanup, manifest-free Performance source runtime construction, adapter
    close delegation, endpoint-ledger registration, and bounded operation-event
    proof.
-11. This closes only the bounded high-cash, low-income, bond-maturity,
-   missing-benchmark, concentration-risk, high-volatility, drawdown-review, and
-   underperformance source-fetching API foundations.
-   It does not certify live Core or Risk source support, source-worker operation,
-   live Performance source support, Gateway/Workbench support, data-product
+11. `python -m pytest tests\integration\test_allocation_drift_signal_api.py tests\integration\test_signal_source_operation_events.py::test_allocation_drift_source_api_emits_blocked_operation_event tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_manage_sources.py tests\unit\test_mandate_health_application.py tests\unit\test_service_contract.py -q`
+   covers allocation-drift Lotus Manage-backed evaluation, portfolio
+   entitlement denial before runtime construction, missing Manage runtime
+   configuration, Manage source unavailability, route-owned runtime cleanup,
+   manifest-free Manage source runtime construction, adapter close delegation,
+   endpoint-ledger registration, and bounded operation-event proof.
+12. This closes only the bounded high-cash, low-income, bond-maturity,
+   missing-benchmark, concentration-risk, high-volatility, drawdown-review,
+   underperformance, and allocation-drift source-fetching API foundations.
+   It does not certify live Core, Risk, Performance, or Manage source support,
+   source-worker operation, Gateway/Workbench support, data-product
    certification, benchmark assignment, benchmark methodology authority,
    performance calculation, maturity schedule authority, replacement product
    recommendation, reinvestment advice, income-needs assessment, funding
    advice, treasury instruction, planning suitability, risk methodology
    approval, concentration calculation, trade recommendation, rebalance action,
-   volatility calculation, VaR calculation, tracking-error calculation,
-   drawdown calculation, client publication, or supported-feature promotion.
+   order creation, volatility calculation, VaR calculation, tracking-error
+   calculation, drawdown calculation, allocation-drift calculation, mandate
+   compliance approval, suitability approval, client publication, or
+   supported-feature promotion.
 
 Current mandate health source-product ref validation:
 
