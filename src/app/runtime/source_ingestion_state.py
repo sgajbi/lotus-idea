@@ -30,6 +30,7 @@ from app.infrastructure.downstream_client import (
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentSourcePort,
+    CoreBondMaturitySourcePort,
     CoreLowIncomeSourcePort,
     CoreOpportunitySourcePort,
 )
@@ -88,6 +89,19 @@ class CoreBenchmarkAssignmentSourceRuntime:
 
 
 @dataclass(frozen=True)
+class CoreBondMaturitySourceRuntime:
+    core_source: CoreBondMaturitySourcePort
+    core_base_url_configured: bool
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.core_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -105,6 +119,14 @@ class CoreLowIncomeSourceRuntimeBlocker:
 
 @dataclass(frozen=True)
 class CoreBenchmarkAssignmentSourceRuntimeBlocker:
+    code: str
+    core_base_url_configured: bool = False
+    core_query_base_url_configured: bool = False
+    core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class CoreBondMaturitySourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
     core_query_base_url_configured: bool = False
@@ -282,6 +304,29 @@ def build_core_benchmark_assignment_source_runtime_from_environment() -> (
             ),
         )
     return CoreBenchmarkAssignmentSourceRuntime(
+        core_source=adapter.core_source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=adapter.core_query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            adapter.core_query_control_plane_base_url_configured
+        ),
+    )
+
+
+def build_core_bond_maturity_source_runtime_from_environment() -> (
+    CoreBondMaturitySourceRuntime | CoreBondMaturitySourceRuntimeBlocker
+):
+    adapter = _build_configured_core_source_adapter_from_environment()
+    if isinstance(adapter, _CoreSourceAdapterBlocker):
+        return CoreBondMaturitySourceRuntimeBlocker(
+            adapter.code,
+            core_base_url_configured=adapter.code != "lotus_core_base_url_not_configured",
+            core_query_base_url_configured=adapter.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                adapter.core_query_control_plane_base_url_configured
+            ),
+        )
+    return CoreBondMaturitySourceRuntime(
         core_source=adapter.core_source,
         core_base_url_configured=True,
         core_query_base_url_configured=adapter.core_query_base_url_configured,

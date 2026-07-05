@@ -218,6 +218,36 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Fetch source-owned Core HoldingsAsOf and PortfolioMaturitySummary evidence through the configured Core source adapter, then evaluate bond-maturity / reinvestment review posture.",
+      "when_to_use": "Use as the RFC-0002 bounded source-backed API foundation when an internal caller has advisor role, idea.signal.evaluate capability, and portfolio entitlement for the requested portfolio, and needs deterministic bond-maturity review posture over Core-owned maturity evidence.",
+      "when_not_to_use": "Do not use as durable candidate persistence, source-worker certification, live source certification, maturity schedule authority, replacement product recommendation, reinvestment advice, planning suitability approval, order/execution authority, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"maturityWindowDays\":45}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"bond_maturity\",\"reasonCodes\":[\"maturity_window\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_bond_maturity_8d57adbf52f7f5a7\",\"family\":\"bond_maturity\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_bond_maturity_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"70\",\"scorePolicyVersion\":\"bond-maturity-review-v1\",\"sourceSignalIds\":[\"signal_bond_maturity_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:HoldingsAsOf:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"},{\"productId\":\"lotus-core:PortfolioMaturitySummary:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"bond_maturity\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement scope.",
+        "503 returns product-safe Problem Details when Core source runtime configuration is missing or invalid.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_source_api_fetches_core_evidence_without_persistence",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_source_api_requires_portfolio_entitlement",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_source_api_blocks_when_core_runtime_is_not_configured",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_source_api_returns_blocked_posture_for_core_unavailable",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_source_api_emits_bounded_operation_events",
+        "tests/integration/test_bond_maturity_signal_api.py::test_bond_maturity_source_api_suppresses_runtime_close_failure"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/concentration-risk/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

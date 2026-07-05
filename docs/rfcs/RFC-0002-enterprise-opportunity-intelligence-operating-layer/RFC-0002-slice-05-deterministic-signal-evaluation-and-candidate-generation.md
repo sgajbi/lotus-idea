@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and Core `PortfolioMaturitySummary:v1` source-adapter consumption, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -167,16 +167,27 @@ Additional implemented bond-maturity / reinvestment foundation:
    reinvestment advice, own maturity schedules, approve planning suitability,
    create orders, publish client communication, certify data products, prove
    Workbench behavior, or promote support.
-6. `tests/unit/test_bond_maturity_signal_evaluation.py` and
+6. `POST /api/v1/idea-signals/bond-maturity/evaluate-from-source` exposes a
+   bounded Core-backed API foundation that fetches Core maturity evidence
+   through the configured source adapter only after advisor role,
+   `idea.signal.evaluate`, and portfolio entitlement checks pass. It closes
+   route-owned runtime clients after each request, returns product-safe
+   dependency posture when Core runtime is missing, does not persist
+   candidates, and does not certify live source support, maturity schedule
+   authority, replacement product recommendation, reinvestment advice,
+   planning suitability, orders/execution, Gateway/Workbench support,
+   data-product certification, client publication, or supported-feature
+   promotion.
+7. `tests/unit/test_bond_maturity_signal_evaluation.py` and
    `tests/unit/test_bond_maturity_application.py` cover positive,
    outside-window, zero-count, missing-source, missing-maturity-date, stale,
    duplicate, entitlement-denied, source-unavailable, and invalid-policy cases.
-7. `tests/integration/test_bond_maturity_signal_api.py` and
+8. `tests/integration/test_bond_maturity_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
    outside-window not-eligible posture, stale-source blocking, permission
    denial, source-redacted response projection, no-authority promotion, and
    bounded operation-event proof.
-8. The opportunity archetype contract now removes only the
+9. The opportunity archetype contract now removes only the
    `maturity_signal_policy_missing` blocker. Live maturity source certification
    remains blocked until a valid canonical Core maturity-summary live proof is
    captured and merged; data-mesh, Workbench, client-publication, and
@@ -775,8 +786,8 @@ Not implemented yet:
    portfolio-state source-ref proof,
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
-7. source-fetching APIs beyond bounded high-cash, low-income, and
-   missing-benchmark `evaluate-from-source` evaluation,
+7. source-fetching APIs beyond bounded high-cash, low-income, bond-maturity,
+   and missing-benchmark `evaluate-from-source` evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
 10. data-product certification.
@@ -880,13 +891,20 @@ Current source-fetching API validation:
    missing Core runtime configuration, Core source unavailability,
    cleanup-failure suppression, endpoint-ledger registration, and
    manifest-free Core source runtime construction.
-5. This closes only the bounded high-cash, low-income, and missing-benchmark
+5. `python -m pytest tests\integration\test_bond_maturity_signal_api.py tests\unit\test_source_ingestion_state.py tests\unit\test_service_contract.py -q`
+   passed, covering bond-maturity Core-backed evaluation, portfolio entitlement
+   denial before runtime construction, missing Core runtime configuration,
+   Core source unavailability, cleanup-failure suppression,
+   endpoint-ledger registration, and manifest-free Core source runtime
+   construction.
+6. This closes only the bounded high-cash, low-income, bond-maturity, and missing-benchmark
    source-fetching API foundations. It does not certify live Core source
    support, source-worker operation, Gateway/Workbench support,
    data-product certification, benchmark assignment, benchmark methodology
-   authority, performance calculation, income-needs assessment, funding advice,
-   treasury instruction, planning suitability, client publication, or
-   supported-feature promotion.
+   authority, performance calculation, maturity schedule authority, replacement
+   product recommendation, reinvestment advice, income-needs assessment,
+   funding advice, treasury instruction, planning suitability, client
+   publication, or supported-feature promotion.
 
 Current mandate health source-product ref validation:
 
