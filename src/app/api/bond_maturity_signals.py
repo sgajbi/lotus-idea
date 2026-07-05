@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
+from app.api.problem_details import (
+    problem_details_response as problem_response,
+    service_unavailable_metadata,
+)
+from app.api.runtime_dependencies import CoreBondMaturitySourceRuntimeBlocker
+from app.api.runtime_dependencies import (
+    build_core_bond_maturity_source_runtime_from_environment as _build_core_bond_maturity_source_runtime_from_environment,
+)
 from app.api.signal_models import (
     ReviewAccessScopeRequest,
     SignalEvaluationResponse,
@@ -17,18 +25,22 @@ from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
+    close_signal_source_runtime,
     emit_signal_evaluation_event,
     signal_permission_problem_or_none,
     signal_problem_responses,
     signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
 )
+from app.application.access_scope import portfolio_only_scope
 from app.application.bond_maturity_signal import (
+    EvaluateBondMaturityFromCoreCommand,
     EvaluateBondMaturitySignalCommand,
+    evaluate_bond_maturity_signal_from_core,
     evaluate_bond_maturity_signal_command,
 )
 from app.domain import SourceSystem
-from app.observability import emit_foundation_operation_event
+from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 
 
 class EvaluateBondMaturitySignalRequest(CamelModel):
@@ -108,6 +120,71 @@ class EvaluateBondMaturitySignalRequest(CamelModel):
         )
 
 
+class EvaluateBondMaturityFromSourceRequest(CamelModel):
+    portfolio_id: str = Field(
+        ...,
+        alias="portfolioId",
+        min_length=1,
+        description="Portfolio identifier to request from Core maturity source products.",
+        examples=["PB_SG_GLOBAL_BAL_001"],
+    )
+    as_of_date: date = Field(
+        ...,
+        alias="asOfDate",
+        description="Business date for Core maturity source evidence.",
+        examples=["2026-06-21"],
+    )
+    evaluated_at_utc: datetime = Field(
+        ...,
+        alias="evaluatedAtUtc",
+        description="UTC timestamp for deterministic evaluation.",
+        examples=["2026-06-21T10:00:00Z"],
+    )
+    maturity_window_days: int = Field(
+        default=30,
+        alias="maturityWindowDays",
+        ge=1,
+        le=366,
+        description="Bounded look-forward window passed to Core maturity evidence retrieval.",
+        examples=[45],
+    )
+    duplicate_of_candidate_id: str | None = Field(
+        default=None,
+        alias="duplicateOfCandidateId",
+        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
+        examples=["idea_bond_maturity_existing"],
+    )
+
+    @field_validator("portfolio_id")
+    @classmethod
+    def _portfolio_id_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("portfolioId is required")
+        return cleaned
+
+    @field_validator("evaluated_at_utc")
+    @classmethod
+    def _evaluated_at_must_be_aware(cls, value: datetime) -> datetime:
+        return require_timezone_aware(value, field_name="evaluatedAtUtc")
+
+    def to_command(
+        self,
+        *,
+        correlation_id: str | None,
+        trace_id: str | None,
+    ) -> EvaluateBondMaturityFromCoreCommand:
+        return EvaluateBondMaturityFromCoreCommand(
+            portfolio_id=self.portfolio_id,
+            as_of_date=self.as_of_date,
+            evaluated_at_utc=self.evaluated_at_utc,
+            maturity_window_days=self.maturity_window_days,
+            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+
 class EvaluateBondMaturitySignalResponse(SignalEvaluationResponse):
     pass
 
@@ -148,6 +225,61 @@ async def evaluate_bond_maturity_signal(
     )
 
 
+async def evaluate_bond_maturity_signal_from_source(
+    request: Request,
+    signal_request: EvaluateBondMaturityFromSourceRequest,
+    caller: CallerContextHeaders,
+) -> EvaluateBondMaturitySignalResponse | JSONResponse:
+    source_authority = SourceSystem.LOTUS_CORE.value
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        requested_access_scope=portfolio_only_scope(signal_request.portfolio_id),
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
+
+    runtime = _build_core_bond_maturity_source_runtime_from_environment()
+    if isinstance(runtime, CoreBondMaturitySourceRuntimeBlocker):
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.BLOCKED,
+            source_authority=source_authority,
+            error_code=runtime.code,
+        )
+        return problem_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Core source runtime is not configured for bond-maturity source evaluation.",
+        )
+
+    try:
+        result = evaluate_bond_maturity_signal_from_core(
+            signal_request.to_command(
+                correlation_id=_request_correlation_id(request),
+                trace_id=_request_trace_id(request),
+            ),
+            core_source=runtime.core_source,
+        )
+        emit_signal_evaluation_event(
+            result=result,
+            source_authority=source_authority,
+            emit_event=emit_foundation_operation_event,
+        )
+        return EvaluateBondMaturitySignalResponse.from_domain(
+            result,
+            source_authority=source_authority,
+        )
+    finally:
+        close_signal_source_runtime(
+            runtime=runtime,
+            source_authority=SourceSystem.LOTUS_CORE.value,
+            emit_event=emit_foundation_operation_event,
+        )
+
+
 def _source_ref_contracts(
     request: EvaluateBondMaturitySignalRequest,
 ) -> tuple[SignalSourceRefContract, ...]:
@@ -163,6 +295,16 @@ def _source_ref_contracts(
             ("lotus-core:PortfolioMaturitySummary:v1",),
         ),
     )
+
+
+def _request_correlation_id(request: Request) -> str | None:
+    correlation_id = getattr(request.state, "correlation_id", None)
+    return str(correlation_id) if correlation_id else None
+
+
+def _request_trace_id(request: Request) -> str | None:
+    trace_id = getattr(request.state, "trace_id", None)
+    return str(trace_id) if trace_id else None
 
 
 BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
@@ -232,6 +374,35 @@ BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
 }
 
 
+BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/idea-signals/bond-maturity/evaluate-from-source",
+    "operation_id": "evaluateBondMaturityIdeaSignalFromSource",
+    "summary": "Evaluate a bond maturity idea signal from Core",
+    "description": (
+        "Fetches source-owned Core PortfolioMaturitySummary and HoldingsAsOf evidence "
+        "through the configured Core source adapter, then evaluates deterministic "
+        "bond-maturity review posture. The endpoint does not persist candidates, own "
+        "maturity schedules, recommend replacement products, calculate reinvestment "
+        "advice, approve planning suitability, certify live source support, create "
+        "Gateway/Workbench support, create orders, publish client communication, certify "
+        "a data product, or promote a supported business feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": EvaluateBondMaturitySignalResponse,
+    "tags": ["Idea Signals"],
+    "responses": {
+        200: BOND_MATURITY_EVALUATE_ROUTE["responses"][200],
+        **signal_problem_responses(),
+        **service_unavailable_metadata(
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Core source runtime is not configured for bond-maturity source evaluation.",
+            description="Core source runtime configuration is missing or invalid.",
+        ),
+    },
+}
+
+
 def register_bond_maturity_signal_routes(app: FastAPI) -> None:
     app.post(
         path=BOND_MATURITY_EVALUATE_ROUTE["path"],
@@ -243,3 +414,13 @@ def register_bond_maturity_signal_routes(app: FastAPI) -> None:
         tags=BOND_MATURITY_EVALUATE_ROUTE["tags"],
         responses=BOND_MATURITY_EVALUATE_ROUTE["responses"],
     )(evaluate_bond_maturity_signal)
+    app.post(
+        path=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["path"],
+        operation_id=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["operation_id"],
+        summary=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["summary"],
+        description=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["description"],
+        status_code=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["status_code"],
+        response_model=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["response_model"],
+        tags=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["tags"],
+        responses=BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE["responses"],
+    )(evaluate_bond_maturity_signal_from_source)

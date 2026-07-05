@@ -139,17 +139,20 @@ authority.
 Bounded source-fetching signal APIs may exist only when they call an explicit
 source-port/adapter, enforce caller entitlement scope before runtime dependency
 construction, return product-safe dependency failures, and preserve source
-authority. High-cash, low-income, and missing-benchmark
+authority. High-cash, low-income, bond-maturity, and missing-benchmark
 `evaluate-from-source` APIs are internal foundations inside the existing
 runtime; they do not certify live source support, persist candidates, create a
 separate runtime service, prove Gateway/Workbench behavior, certify a data
 product, or promote a supported feature. Low-income source-backed evaluation
 consumes only Core-owned cash movement and cashflow projection evidence and
 must not infer income needs, funding advice, treasury instructions, planning
-suitability, or client-ready communication. Missing-benchmark source-backed
-evaluation consumes only Core-owned benchmark-assignment evidence and must not
-assign benchmarks, certify benchmark methodology, or calculate portfolio or
-benchmark performance.
+suitability, or client-ready communication. Bond-maturity source-backed
+evaluation consumes only Core-owned maturity summary and holdings lineage
+evidence and must not own maturity schedules, recommend replacement products,
+calculate reinvestment advice, approve planning suitability, or create orders.
+Missing-benchmark source-backed evaluation consumes only Core-owned
+benchmark-assignment evidence and must not assign benchmarks, certify benchmark
+methodology, or calculate portfolio or benchmark performance.
 
 ## Current Implementation Map
 
