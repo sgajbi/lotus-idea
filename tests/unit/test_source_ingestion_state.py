@@ -19,6 +19,8 @@ from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.runtime.source_ingestion_state import (
     CoreHighCashSourceRuntime,
     CoreHighCashSourceRuntimeBlocker,
+    CoreLowIncomeSourceRuntime,
+    CoreLowIncomeSourceRuntimeBlocker,
     SOURCE_INGESTION_MAX_CONNECTIONS_ENV,
     SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV,
     SOURCE_INGESTION_POOL_TIMEOUT_SECONDS_ENV,
@@ -28,6 +30,7 @@ from app.runtime.source_ingestion_state import (
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
     build_core_high_cash_source_runtime_from_environment,
+    build_core_low_income_source_runtime_from_environment,
     build_source_ingestion_runtime_from_environment,
 )
 
@@ -57,6 +60,18 @@ def test_core_high_cash_source_runtime_blocks_when_core_base_url_is_missing(
     assert result == CoreHighCashSourceRuntimeBlocker("lotus_core_base_url_not_configured")
 
 
+def test_core_low_income_source_runtime_blocks_when_core_base_url_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(CORE_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_BASE_URL_ENV, raising=False)
+    monkeypatch.delenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, raising=False)
+
+    result = build_core_low_income_source_runtime_from_environment()
+
+    assert result == CoreLowIncomeSourceRuntimeBlocker("lotus_core_base_url_not_configured")
+
+
 def test_core_high_cash_source_runtime_builds_without_manifest(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -73,6 +88,22 @@ def test_core_high_cash_source_runtime_builds_without_manifest(
     assert isinstance(result.core_source, LotusCoreHighCashSourceAdapter)
 
 
+def test_core_low_income_source_runtime_builds_without_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(MANIFEST_ENV, raising=False)
+    monkeypatch.setenv(CORE_QUERY_BASE_URL_ENV, "http://localhost:8201")
+    monkeypatch.setenv(CORE_QUERY_CONTROL_PLANE_BASE_URL_ENV, "http://localhost:8202")
+
+    result = build_core_low_income_source_runtime_from_environment()
+
+    assert isinstance(result, CoreLowIncomeSourceRuntime)
+    assert result.core_base_url_configured is True
+    assert result.core_query_base_url_configured is True
+    assert result.core_query_control_plane_base_url_configured is True
+    assert isinstance(result.core_source, LotusCoreHighCashSourceAdapter)
+
+
 def test_core_high_cash_source_runtime_blocks_invalid_core_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -81,6 +112,21 @@ def test_core_high_cash_source_runtime_blocks_invalid_core_configuration(
     result = build_core_high_cash_source_runtime_from_environment()
 
     assert result == CoreHighCashSourceRuntimeBlocker(
+        "lotus_core_base_url_invalid",
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+
+
+def test_core_low_income_source_runtime_blocks_invalid_core_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(CORE_BASE_URL_ENV, "not-a-url")
+
+    result = build_core_low_income_source_runtime_from_environment()
+
+    assert result == CoreLowIncomeSourceRuntimeBlocker(
         "lotus_core_base_url_invalid",
         core_base_url_configured=True,
         core_query_base_url_configured=True,

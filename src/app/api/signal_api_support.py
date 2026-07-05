@@ -29,6 +29,11 @@ class _SourceRefLike(Protocol):
     source_system: Any
 
 
+class _RuntimeWithClose(Protocol):
+    def close(self) -> None:
+        """Release route-owned runtime resources."""
+
+
 @dataclass(frozen=True)
 class SignalSourceRefContract:
     source_ref: _SourceRefLike | None
@@ -197,3 +202,20 @@ def emit_signal_evaluation_event(
         operation_outcome_from_signal_evaluation(result),
         source_authority=source_authority,
     )
+
+
+def close_signal_source_runtime(
+    *,
+    runtime: _RuntimeWithClose,
+    source_authority: str,
+    emit_event: Callable[..., None],
+) -> None:
+    try:
+        runtime.close()
+    except Exception:
+        emit_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.SUPPRESSED,
+            source_authority=source_authority,
+            error_code="runtime_cleanup_failed",
+        )

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and Core `PortfolioMaturitySummary:v1` source-adapter consumption, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied API foundation, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and Core `PortfolioMaturitySummary:v1` source-adapter consumption, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -119,6 +119,18 @@ Additional implemented source-adapter foundation:
     the existing `lotus-idea` service. It does not add a separately scalable
     process, certify live source support, persist candidates, promote a data
     product, prove Gateway/Workbench behavior, or promote a supported feature.
+13. `POST /api/v1/idea-signals/low-income/evaluate-from-source` now exposes the
+    existing Core low-income cashflow source-port through the same bounded
+    advisor API pattern. It enforces `idea.signal.evaluate`, advisor role, and
+    portfolio entitlement before constructing source runtime dependencies;
+    returns product-safe 503 posture when Core query runtime configuration is
+    absent; closes the Core runtime client after each request; and redacts
+    source routes, content hashes, portfolio identifiers, and raw source
+    payloads from responses.
+14. The shared Core source-runtime builder keeps source-backed evaluation as an
+    internal design-module boundary inside the existing `lotus-idea` process.
+    There is still no workload, failure-isolation, ownership, or operability
+    evidence justifying a separate runtime service boundary.
 
 Additional implemented bond-maturity / reinvestment foundation:
 
@@ -753,8 +765,8 @@ Not implemented yet:
    portfolio-state source-ref proof,
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
-7. source-fetching APIs beyond bounded high-cash `evaluate-from-source`
-   evaluation,
+7. source-fetching APIs beyond bounded high-cash and low-income
+   `evaluate-from-source` evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
 10. data-product certification.
@@ -837,7 +849,7 @@ Current Core cash-weight adapter validation:
    source ingestion, certified scheduled daemon runtime, data-product certification,
    Gateway/Workbench support, or supported-feature promotion.
 
-Current high-cash source-fetching API validation:
+Current source-fetching API validation:
 
 1. `python -m pytest tests\integration\test_high_cash_signal_api.py tests\unit\test_source_ingestion_state.py -q`
    passed with `47 passed`, covering Core-backed evaluation, portfolio
@@ -846,10 +858,17 @@ Current high-cash source-fetching API validation:
    suppression, and manifest-free Core source runtime construction.
 2. `python -m ruff check src\app\api\idea_signals.py src\app\api\idea_signal_models.py src\app\api\runtime_dependencies.py src\app\runtime\source_ingestion_state.py tests\integration\test_high_cash_signal_api.py tests\unit\test_source_ingestion_state.py`
    passed.
-3. This closes only the bounded high-cash source-fetching API foundation. It
-   does not certify live Core source support, source-worker operation,
-   Gateway/Workbench support, data-product certification, or supported-feature
-   promotion.
+3. `python -m pytest tests\integration\test_low_income_signal_api.py tests\unit\test_source_ingestion_state.py tests\unit\test_service_contract.py -q`
+   passed with `44 passed`, covering low-income Core-backed evaluation,
+   portfolio entitlement denial before runtime construction, missing Core
+   runtime configuration, Core source unavailability, runtime cleanup-failure
+   suppression, endpoint-ledger registration, and manifest-free Core source
+   runtime construction.
+4. This closes only the bounded high-cash and low-income source-fetching API
+   foundations. It does not certify live Core source support, source-worker
+   operation, Gateway/Workbench support, data-product certification,
+   income-needs assessment, funding advice, treasury instruction, planning
+   suitability, client publication, or supported-feature promotion.
 
 Current mandate health source-product ref validation:
 

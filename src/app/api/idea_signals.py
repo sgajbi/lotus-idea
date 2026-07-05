@@ -18,7 +18,6 @@ from app.api.idea_signal_models import (
     EvaluateMandateRestrictionSignalResponse,
 )
 from app.api.runtime_dependencies import (
-    CoreHighCashSourceRuntime,
     CoreHighCashSourceRuntimeBlocker,
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -29,6 +28,7 @@ from app.api.runtime_dependencies import (
 from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
+    close_signal_source_runtime,
     emit_signal_evaluation_event,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
@@ -154,7 +154,11 @@ async def evaluate_high_cash_signal_from_source(
             source_authority=source_authority,
         )
     finally:
-        _close_core_high_cash_source_runtime(runtime)
+        close_signal_source_runtime(
+            runtime=runtime,
+            source_authority=SourceSystem.LOTUS_CORE.value,
+            emit_event=emit_foundation_operation_event,
+        )
 
 
 async def evaluate_mandate_restriction_signal(
@@ -319,18 +323,6 @@ def _request_correlation_id(request: Request) -> str | None:
 def _request_trace_id(request: Request) -> str | None:
     trace_id = getattr(request.state, "trace_id", None)
     return str(trace_id) if trace_id else None
-
-
-def _close_core_high_cash_source_runtime(runtime: CoreHighCashSourceRuntime) -> None:
-    try:
-        runtime.close()
-    except Exception:
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.SUPPRESSED,
-            source_authority=SourceSystem.LOTUS_CORE.value,
-            error_code="runtime_cleanup_failed",
-        )
 
 
 def _high_cash_source_authority(request: EvaluateHighCashSignalRequest) -> str:
