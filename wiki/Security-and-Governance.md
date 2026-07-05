@@ -2,6 +2,26 @@
 
 `lotus-idea` must follow Lotus banking-grade governance.
 
+This page summarizes current security and governance truth for internal
+foundations. It is not a full external product security certification claim.
+
+Current posture: caller-context, entitlement, idempotency, product-safe error,
+operation-event, GitHub Security, and AI-governance foundations exist. Full
+identity-provider integration, Workbench entitlement UX proof, client-ready
+authorization certification, data-product certification, and supported-feature
+promotion remain blocked.
+
+## Governance Map
+
+| Concern | Current control | Evidence |
+| --- | --- | --- |
+| Caller authorization | Role plus `idea.*` capability and trusted caller provenance. | `make caller-context-contract-gate` |
+| Entitlement scope | Trusted tenant/book/portfolio/client headers bound to persisted candidate scope. | Review and feedback tests, API gates |
+| Idempotency | Required `Idempotency-Key` and replay/conflict posture. | `make api-idempotency-boundary-gate` |
+| Product-safe errors | RFC-7807 responses without raw source payloads or secrets. | `make api-problem-details-boundary-gate` |
+| Observability | Governed operation metrics and source-safe logs. | `make source-observability-contract-gate`, `make operation-metric-contract-gate` |
+| AI assistance | Deterministic evidence, workflow-pack allowlist, verifier, lineage, and model-risk controls. | AI governance docs and gates |
+
 Day-one standard:
 
 1. `lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md`

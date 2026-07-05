@@ -19,20 +19,18 @@ supported yet.
 
 ## Start Here
 
-1. [Overview](Overview)
-2. [Architecture](Architecture)
-3. [Getting Started](Getting-Started)
-4. [Development Workflow](Development-Workflow)
-5. [API Surface](API-Surface)
-6. [Validation and CI](Validation-and-CI)
-7. [RFC Index](RFC-Index)
-8. [Integrations](Integrations)
-9. [Supported Features](Supported-Features)
-10. [Operations Runbook](Operations-Runbook)
-11. [Troubleshooting](Troubleshooting)
-12. [Security and Governance](Security-and-Governance)
-13. [Demo Readiness](Demo-Readiness)
-14. [Roadmap](Roadmap)
+| Goal | Page |
+| --- | --- |
+| Understand what `lotus-idea` does | [Overview](Overview) |
+| See current support truth | [Supported Features](Supported-Features) |
+| Understand architecture and boundaries | [Architecture](Architecture) |
+| Start locally | [Getting Started](Getting-Started) |
+| Work on the repo | [Development Workflow](Development-Workflow) |
+| Understand APIs and integrations | [API Surface](API-Surface), [Integrations](Integrations) |
+| Validate changes | [Validation and CI](Validation-and-CI) |
+| Operate or troubleshoot | [Operations Runbook](Operations-Runbook), [Troubleshooting](Troubleshooting) |
+| Prepare a safe demo | [Demo Readiness](Demo-Readiness) |
+| Review governance and roadmap | [Security and Governance](Security-and-Governance), [RFC Index](RFC-Index), [Roadmap](Roadmap) |
 
 ## Evidence Standard
 

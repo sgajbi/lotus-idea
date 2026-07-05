@@ -1,5 +1,35 @@
 # Architecture
 
+This page explains the current `lotus-idea` service shape, ownership boundary,
+and proof-backed module structure. It keeps detailed foundation notes, but
+starts with the decisions a reader needs before diving into implementation
+history.
+
+Current summary: `lotus-idea` remains one deployable domain service with
+stronger internal bounded modules. Do not infer a separately scalable runtime
+boundary, source authority, Gateway/Workbench product support,
+data-product certification, or supported-feature promotion from these
+foundations alone.
+
+## How To Read This Page
+
+| Need | Section | Evidence |
+| --- | --- | --- |
+| Product/service boundary | [Source Authority](#source-authority) | `REPOSITORY-ENGINEERING-CONTEXT.md`, ADRs |
+| Data-mesh posture | [Data Mesh Baseline](#data-mesh-baseline) | `contracts/domain-data-products/`, mesh proof gates |
+| API and runtime foundations | [Certified API Foundation](#certified-api-foundation) | endpoint ledger, OpenAPI gates |
+| Persistence and review foundations | [Persistence Orchestration Foundation](#persistence-orchestration-foundation), [Review Workflow Persistence Foundation](#review-workflow-persistence-foundation) | repository tests, migration gates |
+| Modularity decisions | [Architecture Decisions](#architecture-decisions) | `quality/refactor_decisions.md`, ADRs |
+
+## Architecture Principles
+
+| Principle | Current application |
+| --- | --- |
+| Source authority stays upstream | `lotus-idea` carries source refs, freshness, and evidence; it does not recompute official portfolio, performance, risk, suitability, or report outcomes. |
+| Design modularity before runtime modularity | Internal API/domain/application/ports/infrastructure seams are strengthened inside the existing service before any process split is proposed. |
+| Proof is scoped | A proof artifact clears only the named blocker it covers; it does not promote unrelated Gateway, Workbench, data-mesh, downstream, or support claims. |
+| Support posture is explicit | [Supported Features](Supported-Features) remains the support truth; current foundations are not externally supported features. |
+
 `lotus-idea` is a separate domain service because opportunity intelligence spans
 portfolio facts, performance, risk, advisory, management, reporting, AI, gateway,
 and Workbench concerns.

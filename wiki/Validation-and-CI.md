@@ -1,5 +1,26 @@
 # Validation And CI
 
+This page explains which checks to run, what each lane proves, and where the
+gate details live. `lotus-idea` has many implementation-backed contract gates;
+the structure below keeps the decision path separate from the detailed
+evidence inventory.
+
+Current summary: branch or PR success is necessary but not sufficient for
+durable RFC/docs/wiki/support closure. Release truth requires merge to `main`,
+green mainline checks, synchronized docs/wiki/context/support posture, and
+clean branch hygiene.
+
+## Quick Decision Map
+
+| Situation | Run | Result needed |
+| --- | --- | --- |
+| Small code or docs edit | `make lint`, focused tests | Fast local proof before commit. |
+| API contract change | `make openapi-gate`, `make endpoint-certification-gate`, focused API tests | Runtime/OpenAPI/certification agreement. |
+| Supported-feature claim | `make supported-features-gate`, `make implementation-truth-gate` | No unproved support or certification language. |
+| Persistence or migration change | `make migration-contract-gate`, `make migration-execution-gate`, focused repository tests | Apply/rollback and query-shape proof. |
+| Release-grade local proof | `make ci-release` | Full local release evidence. |
+| Wiki source change | wiki audit, wiki check-only, publish after merge | Repo source and published wiki agree. |
+
 `lotus-idea` starts with the Lotus backend lane model:
 
 1. Feature Lane for branch feedback.
@@ -44,79 +65,20 @@ target and must not carry durable truth that is absent from `main`.
 | Post-merge publish | `C:\Users\Sandeep\projects\lotus-platform\automation\Sync-RepoWikis.ps1 -Publish -Repository lotus-idea` | Published wiki matches the repo-local source from merged `main`. |
 | Documentation gate | `make documentation-contract-gate` | Same-wiki links omit `.md`, required wiki surfaces exist, and governed anti-claim language remains present. |
 
-Repo-native validation commands:
+## Command Groups
 
-```powershell
-make check
-make ci
-make ci-release
-make ci-contract-gate
-make repository-hygiene-gate
-make maintainability-gate
-make private-import-boundary-gate
-make documentation-contract-gate
-make quality-scorecard-gate
-make github-issue-closure-matrix-gate
-make monetary-float-guard
-make no-sensitive-content-guard
-make source-observability-contract-gate
-make api-route-metadata-gate
-make api-problem-details-boundary-gate
-make api-idempotency-boundary-gate
-make api-camel-model-boundary-gate
-make api-signal-model-boundary-gate
-make openapi-problem-details-example-gate
-make signal-api-contract-gate
-make operation-metric-contract-gate
-make ai-model-risk-ops-contract-gate
-make ai-model-risk-operations-proof-contract-gate
-make operator-workflows-ops-contract-gate
-make operator-workflows-operations-proof-contract-gate
-make implementation-truth-gate
-make data-mesh-contract-gate
-make mesh-policy-proof-contract-gate
-make opportunity-archetype-contract-gate
-make downstream-realization-contract-gate
-make migration-contract-gate
-make migration-execution-gate
-make durable-repository-proof-contract-gate
-make runtime-trust-telemetry-proof-contract-gate
-make report-intake-route-proof-contract-gate
-make workbench-read-path-proof-contract-gate
-make gateway-workbench-operational-proof-contract-gate
-make gateway-workbench-discovery-proof-contract-gate
-make ai-lineage-store-proof-contract-gate
-make ai-workflow-pack-registration-proof-contract-gate
-make ai-workflow-pack-runtime-execution-proof-contract-gate
-make source-ingestion-worker-check
-make source-ingestion-scheduled-worker-check
-make source-ingestion-live-proof-contract-gate
-make risk-concentration-live-proof-contract-gate
-make high-volatility-live-proof-contract-gate
-make risk-drawdown-live-proof-contract-gate
-make core-benchmark-assignment-live-proof-contract-gate
-make core-portfolio-state-live-proof-contract-gate
-make bond-maturity-live-proof-contract-gate
-make low-income-core-cashflow-live-proof-contract-gate
-make manage-mandate-live-proof-contract-gate
-make mandate-restriction-live-proof-contract-gate
-make mandate-restriction-source-product-proof-contract-gate
-make missing-suitability-live-proof-contract-gate
-make missing-risk-profile-source-product-proof-contract-gate
-make missing-risk-profile-live-proof-contract-gate
-make performance-underperformance-live-proof-contract-gate
-make implementation-proof-readiness-check
-make runtime-trust-telemetry-preview-check
-make runtime-trust-telemetry-snapshot-check
-make supported-features-gate
-make endpoint-certification-gate
-make postgres-integration-gate
-make openapi-gate
-make architecture-boundary-gate
-make architecture-boundary-report
-make quality-baseline
-make clean
-```
+| Group | Primary commands | Use |
+| --- | --- | --- |
+| Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
+| Contract and documentation | `make ci-contract-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
+| API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
+| Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make postgres-integration-gate`, `make container-runtime-smoke` | Prove durable storage, migration, and runtime behavior. |
+| Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-proof-contract-gate`, `make implementation-proof-readiness-check`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh and proof-readiness posture. |
+| Quality and maintainability | `make maintainability-gate`, `make duplicate-implementation-gate`, `make quality-scorecard-gate`, `make architecture-boundary-gate` | Prevent modularity and maintainability regression. |
+
+Use the [Makefile](https://github.com/sgajbi/lotus-idea/blob/main/Makefile) as
+the authoritative complete command inventory. This page groups the commands by
+decision path so it stays readable.
 
 `make architecture-boundary-gate` is the durable blocking architecture proof.
 `make architecture-boundary-report` generates ignored local review evidence on
@@ -838,7 +800,7 @@ Data-mesh foundation checks:
    while `make implementation-proof-readiness-check` generates an invalid
    non-proof artifact and keeps blockers when sibling platform evidence is
    absent,
-7. the sibling [Lotus Data Mesh Standard](../../lotus-platform/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
+7. the sibling [Lotus Data Mesh Standard](https://github.com/sgajbi/lotus-platform/blob/main/docs/standards/Lotus%20Data%20Mesh%20Standard.md)
    remains the controlling platform rule,
 8. platform mesh certification is required before any supported mesh claim.
 

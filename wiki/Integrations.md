@@ -3,6 +3,21 @@
 `lotus-idea` is an orchestrating domain service. It must integrate through
 source-owned APIs, data products, and Gateway/BFF contracts.
 
+Current summary: bounded integration contracts and selected proof consumption
+exist. They do not certify source-owned calculations, downstream execution,
+Report/Render/Archive materialization, full Gateway/Workbench product support,
+data-product certification, or supported-feature promotion.
+
+## Integration Reader Map
+
+| Need | Section |
+| --- | --- |
+| Source authority | [Upstream](#upstream) |
+| Consumer and downstream boundaries | [Downstream](#downstream) |
+| Gateway publication posture | [Gateway Publication Foundation](#gateway-publication-foundation) |
+| Data product dependencies | [Data Product Dependencies](#data-product-dependencies) |
+| Adapter and conversion detail | [Current Source Adapter Posture](#current-source-adapter-posture), [Conversion Boundaries](#conversion-boundaries) |
+
 ## Upstream
 
 1. `lotus-core`
