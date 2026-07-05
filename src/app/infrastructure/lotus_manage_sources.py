@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
+from urllib.parse import quote
 
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
@@ -40,7 +41,7 @@ class LotusManageMandateHealthSourceAdapter:
     ) -> ManageMandateHealthEvidence:
         try:
             payload = self._manage_client.get_json(
-                ACTION_REGISTER_SUPPORTABILITY_ROUTE,
+                _portfolio_scoped_supportability_route(request.portfolio_id),
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
             )
@@ -306,3 +307,7 @@ def _diagnostic(posture: _ActionRegisterPosture) -> str:
     state = posture.supportability_state or "unknown"
     scope = "portfolio_scope" if posture.portfolio_scope_confirmed else "store_wide_scope"
     return f"manage_action_register_{state.lower()}_{scope}"
+
+
+def _portfolio_scoped_supportability_route(portfolio_id: str) -> str:
+    return f"{ACTION_REGISTER_SUPPORTABILITY_ROUTE}?portfolio_id={quote(portfolio_id, safe='')}"

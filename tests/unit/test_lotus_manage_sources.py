@@ -94,8 +94,31 @@ def test_lotus_manage_adapter_fetches_declared_action_register_source_product() 
     assert seen == [
         (
             "GET",
-            "https://manage.example/api/v1/rebalance/supportability/summary",
+            "https://manage.example/api/v1/rebalance/supportability/summary?portfolio_id=PB_SG_GLOBAL_BAL_001",
         )
+    ]
+
+
+def test_lotus_manage_adapter_url_encodes_scoped_portfolio_id() -> None:
+    seen: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        return httpx.Response(200, json=_payload(extra={"portfolio_id": "PB/SG BAL"}))
+
+    request = ManageMandateHealthEvidenceRequest(
+        portfolio_id="PB/SG BAL",
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=EVALUATED_AT,
+        correlation_id="corr-manage",
+        trace_id="trace-manage",
+    )
+
+    evidence = _adapter(httpx.MockTransport(handler)).fetch_mandate_health_evidence(request)
+
+    assert evidence.portfolio_scope_confirmed is True
+    assert seen == [
+        "https://manage.example/api/v1/rebalance/supportability/summary?portfolio_id=PB%2FSG%20BAL"
     ]
 
 
