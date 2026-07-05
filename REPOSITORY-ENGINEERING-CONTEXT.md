@@ -715,7 +715,15 @@ Recent issue-derived patterns to preserve:
     build context; `make ci-contract-gate` must catch source-before-dependency-
     install ordering, dependency reinstall drift, and Docker-context
     generated-artifact parity drift.
-27. duplicate-implementation controls now split report-only evidence from
+27. release images must be commit-tagged, CI-published only, signed, attested,
+    and promoted by digest. The Dockerfile must carry OCI labels for service
+    version, commit SHA, branch, build timestamp, repo URL, CI run ID, and image
+    digest metadata; `/version` must expose the same runtime build metadata as
+    `/metadata`; `release-evidence.json` must capture the registry digest,
+    digest deployment reference, keyless signature subject, provenance
+    attestation, SBOM attestation, scan evidence, and same-digest promotion
+    policy; Docker ARG/ENV names must reject secret-like build inputs.
+28. duplicate-implementation controls now split report-only evidence from
     blocking enforcement. `make duplicate-implementation-inventory` scans exact
     first-party function-body duplicates across `src/app` and `scripts`, writes
     no artifacts, and reports the inventory for review. `make
@@ -1096,7 +1104,9 @@ Current gaps remain explicit:
     or Workbench entitlement-denied proof for caller-context authorization,
 12. no production multi-process PostgreSQL concurrency certification beyond
     adapter-level stale-write and idempotency-collision proof,
-13. no full container-image SBOM or registry attestation,
+13. no full container-filesystem SBOM; release evidence includes
+    runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
+    image signature, and provenance/SBOM attestations,
 14. no deterministic freshness check for committed architecture boundary
     report evidence.
 

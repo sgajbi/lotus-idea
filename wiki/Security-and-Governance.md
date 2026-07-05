@@ -68,9 +68,11 @@ GitHub Security posture:
 6. Main Releasability SBOM evidence is explicitly runtime-dependency scoped.
    `make release-sbom` inventories `requirements/runtime-resolved.lock.txt`
    with the pinned CycloneDX tool, and `release-evidence.json` ties that SBOM
-   to the built service image reference and image id. Container OS package
-   posture remains covered by the Trivy image scan, not by the runtime
-   dependency SBOM. The `requirements/requirements.txt` mirror exists only to
+   to the published service image reference, local image id, registry digest,
+   keyless signature subject, and provenance/SBOM attestation URLs. Container OS
+   package posture remains covered by the Trivy image scan, not by the runtime
+   dependency SBOM. Images are pushed by CI only and must be promoted by digest,
+   not rebuilt per environment. The `requirements/requirements.txt` mirror exists only to
    keep GitHub Dependency Graph updates parseable and is gated against the
    resolved runtime lock.
 7. Dependabot Python updates use one grouped root-dependency stream. Routine

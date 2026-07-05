@@ -1,11 +1,32 @@
 from app.errors import ProblemDetails
 from app.application.service_profile import current_service_profile
 from app.domain.service_profile import DEFAULT_SERVICE_PROFILE, ServiceProfile
-from app.main import SERVICE_NAME, app
+from app.main import BUILD_METADATA, SERVICE_NAME, app
 
 
 def test_service_name_is_lotus_prefixed() -> None:
     assert SERVICE_NAME.startswith("lotus-")
+
+
+def test_version_endpoint_exposes_build_metadata() -> None:
+    from fastapi.testclient import TestClient
+
+    client = TestClient(app)
+    metadata_response = client.get("/metadata")
+    version_response = client.get("/version")
+
+    assert metadata_response.status_code == 200
+    assert version_response.status_code == 200
+    assert version_response.json() == metadata_response.json()
+    assert version_response.json()["build"] == BUILD_METADATA
+    assert set(version_response.json()["build"]) == {
+        "gitCommitSha",
+        "gitBranch",
+        "buildTimestamp",
+        "repoUrl",
+        "ciRunId",
+        "imageDigest",
+    }
 
 
 def test_service_profile_is_domain_authoritative() -> None:
@@ -91,6 +112,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("GET", "/health/live"),
         ("GET", "/health/ready"),
         ("GET", "/metadata"),
+        ("GET", "/version"),
     }
     assert (
         payload["policy"]

@@ -5,8 +5,16 @@ UNIT_TESTS ?= tests/unit
 INTEGRATION_TESTS ?= tests/integration
 E2E_TESTS ?= tests/e2e
 COVERAGE_DATA_DIR ?= .
-CONTAINER_IMAGE_NAME ?= backend-service:ci-test
 CONTAINER_BASE_IMAGE ?= python:3.12-slim
+BUILD_GIT_COMMIT_SHA ?= $(if $(GITHUB_SHA),$(GITHUB_SHA),$(shell git rev-parse HEAD 2>/dev/null))
+BUILD_GIT_BRANCH ?= $(if $(GITHUB_REF_NAME),$(GITHUB_REF_NAME),$(shell git branch --show-current 2>/dev/null))
+BUILD_TIMESTAMP ?= $(shell python -c "from datetime import datetime, timezone; print(datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))")
+BUILD_REPO_URL ?= $(if $(GITHUB_REPOSITORY),https://github.com/$(GITHUB_REPOSITORY),$(shell git config --get remote.origin.url 2>/dev/null))
+BUILD_CI_RUN_ID ?= $(if $(GITHUB_RUN_ID),$(GITHUB_RUN_ID),local)
+BUILD_IMAGE_DIGEST ?= local-unpublished
+BUILD_SERVICE_VERSION ?= 0.1.0
+BUILD_IMAGE_TAG ?= $(if $(BUILD_GIT_COMMIT_SHA),$(BUILD_GIT_COMMIT_SHA),local)
+CONTAINER_IMAGE_NAME ?= lotus-idea:$(BUILD_IMAGE_TAG)
 CONTAINER_SCAN_OUTPUT ?= output/security/container-image-scan.trivy.json
 CONTAINER_SCAN_SEVERITY ?= HIGH,CRITICAL
 CONTAINER_SMOKE_NAME ?= lotus-idea-runtime-smoke
@@ -488,7 +496,7 @@ ci: lint typecheck architecture-boundary-gate openapi-gate migration-contract-ga
 ci-release: ci implementation-proof-readiness-check runtime-trust-telemetry-snapshot-check postgres-integration-gate docker-build container-runtime-smoke container-image-scan release-sbom
 
 docker-build:
-	docker build --build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE) -t $(CONTAINER_IMAGE_NAME) .
+	docker build --build-arg PYTHON_BASE_IMAGE=$(CONTAINER_BASE_IMAGE) --build-arg GIT_COMMIT_SHA=$(BUILD_GIT_COMMIT_SHA) --build-arg GIT_BRANCH=$(BUILD_GIT_BRANCH) --build-arg BUILD_TIMESTAMP=$(BUILD_TIMESTAMP) --build-arg REPO_URL=$(BUILD_REPO_URL) --build-arg CI_RUN_ID=$(BUILD_CI_RUN_ID) --build-arg IMAGE_DIGEST=$(BUILD_IMAGE_DIGEST) --build-arg SERVICE_VERSION=$(BUILD_SERVICE_VERSION) -t $(CONTAINER_IMAGE_NAME) .
 
 container-runtime-smoke:
 	python scripts/container_runtime_smoke.py \

@@ -151,9 +151,12 @@ docker compose up --build
 ```
 
 Compose is runtime-parity evidence for local validation. It is not production
-deployment evidence, registry attestation, full container-image SBOM proof,
-Workbench proof, data-product certification, client publication, or
-supported-feature promotion.
+deployment evidence, Workbench proof, data-product certification, client
+publication, or supported-feature promotion. Post-merge Main Releasability is
+the only registry-publish path: it builds the image under the Git commit SHA,
+pushes it to GHCR, records the registry digest in `release-evidence.json`,
+generates the runtime-dependency SBOM, passes the Trivy image scan, signs the
+digest with keyless Cosign, and publishes provenance and SBOM attestations.
 
 ## Validation And CI Lanes
 
@@ -184,6 +187,11 @@ Common gates:
 | `make check` | Local PR-grade lane for routine feature work. |
 | `make ci-release` | Broad release evidence including implementation proof, Postgres, Docker, smoke, scan, and SBOM evidence. |
 
+The built image carries OCI labels for service version, Git commit, Git branch,
+build timestamp, repository URL, CI run ID, and image digest metadata. The
+runtime `/version` endpoint returns the same build metadata as `/metadata` for
+release inventory and deployment diagnostics.
+
 For README, wiki, RFC, context, contract, CI, or supported-feature edits, run
 stranded-truth reconciliation first:
 
@@ -205,6 +213,7 @@ trusted caller provenance, or source authority are not configured.
 Operator entrypoints:
 
 - `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
+- `/metadata` and `/version`
 - `/api/v1/source-ingestion/readiness` and `/api/v1/source-ingestion/run-once`
 - `/api/v1/outbox-delivery/readiness` and `/api/v1/outbox-delivery/run-once`
 - `/api/v1/review-queues/advisor/readiness`
