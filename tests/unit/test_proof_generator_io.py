@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from argparse import Namespace
 from datetime import UTC, datetime
+import json
 from pathlib import Path
 
 import pytest
@@ -130,6 +131,28 @@ def test_write_json_payload_writes_sorted_indented_file(tmp_path: Path) -> None:
     assert output_path.read_text(encoding="utf-8") == (
         '{\n  "a": {\n    "b": true\n  },\n  "z": 1\n}\n'
     )
+
+
+def test_write_json_payload_binds_aggregate_provenance_for_generated_proofs(
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "output" / "opportunity" / "proof.json"
+
+    write_json_payload(
+        {
+            "schemaVersion": "test-proof.v1",
+            "generatedAtUtc": "2026-06-21T10:10:00Z",
+        },
+        output=str(output_path),
+    )
+
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    provenance = payload["aggregateProofProvenance"]
+    assert provenance["repository"] == "lotus-idea"
+    assert provenance["proofRef"].endswith("output/opportunity/proof.json")
+    assert provenance["proofGeneratedAtUtc"] == "2026-06-21T10:10:00Z"
+    assert len(provenance["artifactSha256"]) == 64
+    assert isinstance(provenance["sourceTreeDirty"], bool)
 
 
 def test_write_json_payload_prints_when_output_is_absent(
