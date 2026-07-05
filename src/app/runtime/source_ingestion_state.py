@@ -45,6 +45,27 @@ SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV = (
 
 
 @dataclass(frozen=True)
+class CoreHighCashSourceRuntime:
+    core_source: CoreOpportunitySourcePort
+    core_base_url_configured: bool
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.core_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
+class CoreHighCashSourceRuntimeBlocker:
+    code: str
+    core_base_url_configured: bool = False
+    core_query_base_url_configured: bool = False
+    core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
 class SourceIngestionRuntime:
     plan: SourceIngestionWorkerPlan
     core_source: CoreOpportunitySourcePort
@@ -133,6 +154,43 @@ def build_source_ingestion_runtime_from_environment() -> (
             query_control_plane_client=DownstreamJsonClient(query_control_plane_config),
         ),
         configured_manifest_available=configured_manifest_available,
+        core_base_url_configured=True,
+        core_query_base_url_configured=core_source_urls.query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            core_source_urls.query_control_plane_base_url_configured
+        ),
+    )
+
+
+def build_core_high_cash_source_runtime_from_environment() -> (
+    CoreHighCashSourceRuntime | CoreHighCashSourceRuntimeBlocker
+):
+    core_source_urls = core_source_runtime_urls_from_environment()
+    if not core_source_urls.fully_configured:
+        return CoreHighCashSourceRuntimeBlocker(
+            "lotus_core_base_url_not_configured",
+            core_base_url_configured=False,
+            core_query_base_url_configured=core_source_urls.query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                core_source_urls.query_control_plane_base_url_configured
+            ),
+        )
+    try:
+        query_config, query_control_plane_config = _core_source_client_configs(core_source_urls)
+    except DownstreamClientConfigurationError:
+        return CoreHighCashSourceRuntimeBlocker(
+            "lotus_core_base_url_invalid",
+            core_base_url_configured=True,
+            core_query_base_url_configured=core_source_urls.query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                core_source_urls.query_control_plane_base_url_configured
+            ),
+        )
+    return CoreHighCashSourceRuntime(
+        core_source=LotusCoreHighCashSourceAdapter(
+            query_client=DownstreamJsonClient(query_config),
+            query_control_plane_client=DownstreamJsonClient(query_control_plane_config),
+        ),
         core_base_url_configured=True,
         core_query_base_url_configured=core_source_urls.query_base_url_configured,
         core_query_control_plane_base_url_configured=(

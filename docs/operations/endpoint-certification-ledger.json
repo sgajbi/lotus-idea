@@ -33,6 +33,37 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/high-cash/evaluate-from-source",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Fetch source-owned Core high-cash evidence through the configured Core source adapter and evaluate deterministic high-cash candidate posture.",
+      "when_to_use": "Use as the bounded RFC-0002 Slice 5 source-fetching API foundation when the caller is entitled to the requested portfolio scope and Core query/query-control-plane runtime URLs are configured.",
+      "when_not_to_use": "Do not use as live source certification, source-worker certification, durable candidate persistence, data-product certification proof, Gateway contract, Workbench product proof, or supported-feature promotion.",
+      "request_examples": [
+        "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\"}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"high_cash\",\"reasonCodes\":[\"high_cash_ratio\",\"cash_source_ready\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"family\":\"high_cash\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_high_cash_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"82\",\"scorePolicyVersion\":\"idle-liquidity-v1\",\"sourceSignalIds\":[\"signal_high_cash_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-core:PortfolioStateSnapshot:v1\",\"sourceSystem\":\"lotus-core\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"complete\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_cash\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-core\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
+        "503 returns product-safe Problem Details when Core source runtime configuration is missing or invalid.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_fetches_core_evidence_without_persistence",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_requires_portfolio_entitlement",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_blocks_when_core_runtime_is_not_configured",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_returns_blocked_posture_for_core_unavailable",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_emits_bounded_operation_events",
+        "tests/integration/test_high_cash_signal_api.py::test_high_cash_source_api_suppresses_runtime_close_failure",
+        "tests/unit/test_source_ingestion_state.py::test_core_high_cash_source_runtime_builds_without_manifest"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/allocation-drift/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

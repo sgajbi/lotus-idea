@@ -80,10 +80,16 @@ evaluation or candidate creation. These rejections return product-safe
 `400 invalid_request` Problem Details and emit `signal_evaluation`
 `invalid_request` telemetry using the expected source authority rather than the
 caller-supplied mismatched authority.
+The high-cash source-fetching endpoint is separately bounded: it calls only the
+configured Core source adapter, enforces caller portfolio entitlement before
+runtime construction, returns product-safe 503 posture when Core runtime
+configuration is absent, and does not persist candidates or certify live source
+support.
 
 | Endpoint | Foundation Scope | Required Capability | Current Boundary |
 | --- | --- | --- | --- |
 | `POST /api/v1/idea-signals/high-cash/evaluate` | High-cash deterministic evaluation over caller-supplied, source-owned Core evidence. | advisor role and `idea.signal.evaluate` capability | No live source ingestion, durable state, Gateway, Workbench, mesh certification, or supported-feature promotion. |
+| `POST /api/v1/idea-signals/high-cash/evaluate-from-source` | High-cash deterministic evaluation over Core evidence fetched through the configured source adapter after caller portfolio entitlement passes. | advisor role, `idea.signal.evaluate` capability, and portfolio entitlement scope for the requested portfolio | No durable state, source-worker certification, live source certification, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/low-income/evaluate` | Low-income / liquidity-shortfall deterministic evaluation over caller-supplied, source-owned Core cashflow projection and cash movement evidence. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, client income-needs assessment, funding advice, treasury instruction, planning suitability approval, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/bond-maturity/evaluate` | Bond-maturity / reinvestment review deterministic evaluation over caller-supplied, source-owned Core `PortfolioMaturitySummary:v1` evidence with upstream `HoldingsAsOf:v1` lineage. Canonical live Core source proof remains blocked until a valid source-safe runtime artifact is captured and merged. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, raw-position maturity schedule derivation, replacement product recommendation, reinvestment advice, maturity schedule authority, planning suitability approval, orders/execution, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/concentration-risk/evaluate` | Concentration-risk review deterministic evaluation over caller-supplied, source-owned Lotus Risk concentration evidence. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, concentration calculation, risk methodology approval, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |

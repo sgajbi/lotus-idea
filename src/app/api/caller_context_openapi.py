@@ -24,6 +24,7 @@ class CallerContextOpenApiRequirement:
 
 _SIGNAL_REQUIREMENT_PATHS = (
     "/api/v1/idea-signals/high-cash/evaluate",
+    "/api/v1/idea-signals/high-cash/evaluate-from-source",
     "/api/v1/idea-signals/allocation-drift/evaluate",
     "/api/v1/idea-signals/low-income/evaluate",
     "/api/v1/idea-signals/underperformance/evaluate",

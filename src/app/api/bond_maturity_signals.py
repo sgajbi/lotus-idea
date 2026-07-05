@@ -218,7 +218,7 @@ BOND_MATURITY_EVALUATE_ROUTE: RouteMetadata = {
                                     "generatedAtUtc": "2026-06-21T10:00:00Z",
                                     "dataQualityStatus": "complete",
                                     "freshness": "current",
-                                }
+                                },
                             ],
                         },
                         "sourceAuthority": "lotus-core",

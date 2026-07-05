@@ -6,8 +6,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 try:
+    from documentation_stale_claims import PROHIBITED_STALE_CLAIMS, PROOF_READINESS_HEADINGS
     from wiki_navigation_contract import same_wiki_page_link_errors
 except ModuleNotFoundError:
+    from scripts.documentation_stale_claims import (
+        PROHIBITED_STALE_CLAIMS,
+        PROOF_READINESS_HEADINGS,
+    )
     from scripts.wiki_navigation_contract import same_wiki_page_link_errors
 
 
@@ -259,27 +264,13 @@ POLISHED_SURFACES = (
     ),
     PolishedDocumentationSurface(
         "docs/operations/implementation-proof-readiness.md",
-        (
-            "## What It Proves",
-            "## What It Does Not Prove",
-            "## Current Blockers",
-            "## Response Shape",
-            "## Evidence",
-            "## Example",
-        ),
+        PROOF_READINESS_HEADINGS,
         2,
         1,
     ),
     PolishedDocumentationSurface(
         "docs/operations/downstream-realization-readiness.md",
-        (
-            "## What It Proves",
-            "## What It Does Not Prove",
-            "## Current Blockers",
-            "## Response Shape",
-            "## Evidence",
-            "## Example",
-        ),
+        PROOF_READINESS_HEADINGS,
         2,
         1,
     ),
@@ -392,20 +383,6 @@ POLISHED_SURFACES = (
 )
 
 PROHIBITED_PLACEHOLDERS = ("TODO", "TBD", "lorem ipsum", "coming soon")
-PROHIBITED_STALE_CLAIMS = (
-    (
-        "docs/operations/api-certification.md",
-        "Core publishes explicit maturity summary facts",
-        "bond-maturity API certification must describe current "
-        "PortfolioMaturitySummary:v1 consumption, not the superseded Core #686 blocker",
-    ),
-    (
-        "docs/operations/api-certification.md",
-        "Core holdings maturity evidence",
-        "bond-maturity API certification must describe current "
-        "PortfolioMaturitySummary:v1 consumption, not holdings-derived maturity evidence",
-    ),
-)
 
 
 def _non_empty_lines(content: str) -> list[str]:
@@ -469,8 +446,10 @@ def validate_documentation_contract(
         for name in PROHIBITED_PLACEHOLDERS:
             if re.search(rf"\b{re.escape(name)}\b", content, re.IGNORECASE):
                 errors.append(f"{surface.relative_path}: contains placeholder text `{name}`")
-        for relative_path, stale_fragment, message in PROHIBITED_STALE_CLAIMS:
-            if surface.relative_path == relative_path and stale_fragment in content:
+        for relative_path, stale_fragments, message in PROHIBITED_STALE_CLAIMS:
+            if surface.relative_path == relative_path and any(
+                fragment in content for fragment in stale_fragments
+            ):
                 errors.append(f"{surface.relative_path}: {message}")
     for surface in polished_surfaces:
         path = root / surface.relative_path
