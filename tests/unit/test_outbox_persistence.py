@@ -12,6 +12,9 @@ from app.domain import (
     OutboxEventStatus,
     SUPPORTED_OUTBOX_EVENT_TYPES,
     build_candidate_outbox_event,
+    lease_outbox_event,
+    mark_outbox_event_failed,
+    validate_outbox_failure_reason,
 )
 
 
@@ -35,6 +38,38 @@ def outbox_repository() -> tuple[InMemoryIdeaRepository, OutboxEventRecord]:
         )
     )
     return repository, event
+
+
+def event_record(
+    *,
+    status: OutboxEventStatus = OutboxEventStatus.PENDING,
+    published_at_utc: datetime | None = None,
+    failure_reason: str | None = None,
+    first_failed_at_utc: datetime | None = None,
+    last_failed_at_utc: datetime | None = None,
+    next_attempt_at_utc: datetime | None = None,
+    lease_owner: str | None = None,
+    lease_attempt_id: str | None = None,
+    lease_expires_at_utc: datetime | None = None,
+) -> OutboxEventRecord:
+    return OutboxEventRecord(
+        event_id="evt_invalid_state",
+        event_type="idea.candidate.persisted.v1",
+        aggregate_type="idea_candidate",
+        aggregate_id="idea-high-cash-001",
+        schema_version="v1",
+        payload={"candidate_family": "high_cash"},
+        occurred_at_utc=EVALUATED_AT,
+        status=status,
+        published_at_utc=published_at_utc,
+        failure_reason=failure_reason,
+        first_failed_at_utc=first_failed_at_utc,
+        last_failed_at_utc=last_failed_at_utc,
+        next_attempt_at_utc=next_attempt_at_utc,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        lease_expires_at_utc=lease_expires_at_utc,
+    )
 
 
 def claim_event(
@@ -111,6 +146,94 @@ def test_outbox_event_rejects_unknown_event_type_and_schema_version() -> None:
             payload={"candidate_family": "high_cash"},
             occurred_at_utc=EVALUATED_AT,
         )
+
+
+def test_outbox_event_rejects_invalid_lease_and_failure_state() -> None:
+    with pytest.raises(ValueError, match="lease_owner is required"):
+        event_record(status=OutboxEventStatus.LEASED)
+    with pytest.raises(ValueError, match="lease metadata is allowed only for leased"):
+        event_record(lease_owner="worker-1")
+    with pytest.raises(ValueError, match="published_at_utc is required"):
+        event_record(status=OutboxEventStatus.PUBLISHED)
+    with pytest.raises(ValueError, match="first_failed_at_utc is required"):
+        event_record(
+            status=OutboxEventStatus.FAILED,
+            failure_reason="publisher_unavailable",
+        )
+    with pytest.raises(ValueError, match="last_failed_at_utc is required"):
+        event_record(
+            status=OutboxEventStatus.FAILED,
+            failure_reason="publisher_unavailable",
+            first_failed_at_utc=EVALUATED_AT,
+        )
+    with pytest.raises(ValueError, match="leased outbox failure timing"):
+        event_record(
+            status=OutboxEventStatus.LEASED,
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-1",
+            lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+            first_failed_at_utc=EVALUATED_AT,
+        )
+    with pytest.raises(ValueError, match="leased outbox events cannot have next_attempt_at_utc"):
+        event_record(
+            status=OutboxEventStatus.LEASED,
+            lease_owner="worker-1",
+            lease_attempt_id="attempt-1",
+            lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+            next_attempt_at_utc=EVALUATED_AT + timedelta(seconds=60),
+        )
+    with pytest.raises(ValueError, match="failure timing is allowed only"):
+        event_record(first_failed_at_utc=EVALUATED_AT)
+
+
+def test_outbox_failure_transition_rejects_unsafe_retry_and_dead_letter_timing() -> None:
+    event = build_candidate_outbox_event(
+        event_type="idea.candidate.persisted.v1",
+        aggregate_id="idea-high-cash-001",
+        occurred_at_utc=EVALUATED_AT,
+        payload={"source_hash": "sha256:portfolio-state"},
+    )
+    leased = lease_outbox_event(
+        event,
+        lease_owner="worker-1",
+        lease_attempt_id="attempt-1",
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
+    )
+
+    with pytest.raises(ValueError, match="next_attempt_at_utc is required"):
+        mark_outbox_event_failed(
+            leased,
+            failure_reason="publisher_unavailable",
+            failed_at_utc=EVALUATED_AT,
+            max_retry_count=2,
+            next_attempt_at_utc=None,
+        )
+    with pytest.raises(ValueError, match="next_attempt_at_utc must be after failed_at_utc"):
+        mark_outbox_event_failed(
+            leased,
+            failure_reason="publisher_unavailable",
+            failed_at_utc=EVALUATED_AT,
+            max_retry_count=2,
+            next_attempt_at_utc=EVALUATED_AT,
+        )
+    with pytest.raises(ValueError, match="dead-lettered outbox events cannot have"):
+        mark_outbox_event_failed(
+            leased,
+            failure_reason="publisher_unavailable",
+            failed_at_utc=EVALUATED_AT,
+            max_retry_count=1,
+            next_attempt_at_utc=EVALUATED_AT + timedelta(seconds=60),
+        )
+    with pytest.raises(ValueError, match="max_retry_count must be positive"):
+        mark_outbox_event_failed(
+            leased,
+            failure_reason="publisher_unavailable",
+            failed_at_utc=EVALUATED_AT,
+            max_retry_count=0,
+            next_attempt_at_utc=None,
+        )
+    with pytest.raises(ValueError, match="sensitive keys"):
+        validate_outbox_failure_reason("account_id leaked by publisher")
 
 
 def test_outbox_delivery_marks_events_published_failed_and_dead_lettered() -> None:

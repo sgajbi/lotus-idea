@@ -13,7 +13,11 @@ from app.domain import (
     ReviewPersistenceResult,
 )
 from app.observability import IdeaOperation, OperationOutcome
-from app.security.caller_context import CallerEntitlementScope, PermissionDeniedError
+from app.security.caller_context import (
+    CallerContext,
+    CallerEntitlementScope,
+    PermissionDeniedError,
+)
 
 
 class BodyAuthorizedScope:
@@ -76,6 +80,18 @@ def test_prepare_review_workflow_mutation_rejects_scope_claim_outside_entitlemen
             capability="idea.review.record",
             idempotency_key="review-workflow-api-ops-denied-001",
             operation=IdeaOperation.REVIEW_ACTION,
+        )
+
+
+def test_build_review_actor_context_rejects_unscoped_mutating_actor() -> None:
+    with pytest.raises(PermissionDeniedError, match="Permission denied"):
+        operations.build_review_actor_context(
+            caller=CallerContext.from_iterables(
+                subject="advisor-001",
+                roles=("advisor",),
+                capabilities=("idea.review.record",),
+            ),
+            role=ReviewActorRole.ADVISOR,
         )
 
 
