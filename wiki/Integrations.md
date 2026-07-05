@@ -68,8 +68,9 @@ The gate includes the bounded Lotus Risk `ConcentrationRiskReport:v1`
 dependency used by the concentration-review foundation; it does not make
 `lotus-idea` the concentration calculation authority.
 The same gate also protects producer-side provenance, freshness, quality,
-lineage, access, and deprecation semantics before any platform mesh
-certification claim is made.
+lineage, access, and deprecation semantics plus consumer dependency
+freshness/provenance metadata before any platform mesh certification claim is
+made.
 Internal operators can call `GET /api/v1/data-mesh/readiness` with the
 `operator` role and `idea.mesh.readiness.read` capability to inspect the same
 repo-authored readiness truth at runtime. The route reports blockers only; it

@@ -93,6 +93,7 @@ def test_consumer_gate_blocks_invalid_dependency_posture() -> None:
     dependency["migration_posture"]["status"] = "legacy"
     dependency["validation_lanes"] = ["feature"]
     dependency["failure_posture"] = "optimistic"
+    dependency["consumption_mode"] = "cache"
     dependency["required_trust_metadata"] = []
     dependency["business_purpose"] = " "
 
@@ -102,8 +103,52 @@ def test_consumer_gate_blocks_invalid_dependency_posture() -> None:
     assert any("migration status must be current" in error for error in errors)
     assert any("validation_lanes must include feature and pr-merge" in error for error in errors)
     assert any("invalid failure_posture" in error for error in errors)
-    assert any("required_trust_metadata must include correlation_id" in error for error in errors)
+    assert any("consumption_mode is invalid" in error for error in errors)
+    assert any("required_trust_metadata missing" in error for error in errors)
+    assert any("correlation_id" in error for error in errors)
+    assert any(
+        "required_trust_metadata must include freshness metadata" in error for error in errors
+    )
     assert any("business_purpose is required" in error for error in errors)
+
+
+def test_consumer_gate_requires_source_freshness_and_provenance_metadata() -> None:
+    module = _load_data_mesh_contract_gate()
+    consumer = deepcopy(module._read_json(module.CONSUMER_DECLARATION_PATH))
+    returns_dependency = next(
+        dependency
+        for dependency in consumer["dependencies"]
+        if dependency["product_name"] == "ReturnsSeriesBundle"
+    )
+    risk_dependency = next(
+        dependency
+        for dependency in consumer["dependencies"]
+        if dependency["product_name"] == "RiskMetricsReport"
+    )
+    returns_dependency["required_trust_metadata"] = [
+        "product_name",
+        "product_version",
+        "correlation_id",
+    ]
+    risk_dependency["required_trust_metadata"] = [
+        "product_name",
+        "product_version",
+        "as_of_date",
+        "correlation_id",
+    ]
+
+    errors = module.validate_consumer_contract(consumer)
+
+    assert any(
+        "lotus-performance:ReturnsSeriesBundle:v1: required_trust_metadata must include "
+        "freshness metadata" in error
+        for error in errors
+    )
+    assert any(
+        "lotus-risk:RiskMetricsReport:v1: required_trust_metadata must include "
+        "provenance metadata" in error
+        for error in errors
+    )
 
 
 def test_producer_gate_blocks_premature_product_promotion() -> None:
