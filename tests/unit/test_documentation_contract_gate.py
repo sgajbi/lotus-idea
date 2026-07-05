@@ -123,6 +123,36 @@ def test_documentation_contract_gate_blocks_placeholder_text(tmp_path: Path) -> 
     assert errors == ["README.md: contains placeholder text `TODO`"]
 
 
+def test_documentation_contract_gate_blocks_stale_maturity_summary_claim(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    doc = tmp_path / "docs" / "operations" / "api-certification.md"
+    doc.parent.mkdir(parents=True)
+    doc.write_text(
+        "# API Certification\n\n"
+        "Core publishes explicit maturity summary facts before this endpoint is current.\n",
+        encoding="utf-8",
+    )
+    surface = module.DocumentationSurface(
+        "docs/operations/api-certification.md",
+        1,
+        ("API Certification",),
+    )
+
+    errors = module.validate_documentation_contract(
+        root=tmp_path,
+        surfaces=(surface,),
+        polished_surfaces=(),
+    )
+
+    assert errors == [
+        "docs/operations/api-certification.md: bond-maturity API certification must "
+        "describe current PortfolioMaturitySummary:v1 consumption, not the superseded "
+        "Core #686 blocker"
+    ]
+
+
 def test_documentation_contract_gate_blocks_unpolished_operator_doc(
     tmp_path: Path,
 ) -> None:
