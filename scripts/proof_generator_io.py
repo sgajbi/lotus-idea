@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.application.proof_provenance import bind_aggregate_proof_provenance
+
 
 def required_base_url_from_args(
     args: object,
@@ -79,6 +81,18 @@ def timeout_seconds_from_args(args: object) -> float:
 
 
 def write_json_payload(payload: dict[str, Any], *, output: str | None) -> None:
+    if output and payload.get("generatedAtUtc"):
+        output_path = Path(output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        unbound_rendered = json.dumps(payload, indent=2, sort_keys=True)
+        output_path.write_text(f"{unbound_rendered}\n", encoding="utf-8")
+        proof_ref = output_path.as_posix()
+        payload = bind_aggregate_proof_provenance(
+            payload,
+            artifact_path=output_path,
+            proof_ref=proof_ref,
+            repository_root=Path.cwd(),
+        )
     rendered = json.dumps(payload, indent=2, sort_keys=True)
     if output:
         output_path = Path(output)
