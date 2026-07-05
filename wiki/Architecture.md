@@ -181,6 +181,17 @@ from cash totals or portfolio market values. Positive high-cash generation from
 live Core remains blocked until a valid live-proof artifact is captured and
 referenced through readiness.
 
+Slice 05 also includes direct source-product ref adapters for mandate health.
+`lotus-idea` can preserve
+`lotus-performance:MandatePerformanceHealthContext:v1` and
+`lotus-risk:MandateRiskHealthContext:v1` refs when source-owned period-return
+or return-observation facts are supplied. The adapters validate the upstream
+source product identity and preserve request-fingerprint lineage; they do not
+calculate active return, tracking error, performance health, risk health,
+mandate approval, rebalance action, or execution posture. Live source fetching,
+portfolio-scoped canonical proof, Gateway/Workbench support, data-product
+certification, and supported-feature promotion remain blocked.
+
 ## Certified API Foundation
 
 `POST /api/v1/idea-signals/high-cash/evaluate` and

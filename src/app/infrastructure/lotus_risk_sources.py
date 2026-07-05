@@ -7,11 +7,15 @@ from typing import Any
 
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
+from app.infrastructure.source_product_payloads import first_reason_code
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
     RiskDrawdownEvidence,
     RiskDrawdownEvidenceRequest,
+    RiskMandateHealthContextEvidence,
+    RiskMandateHealthContextRequest,
+    RiskReturnObservation,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
     RiskVolatilityEvidence,
@@ -26,6 +30,8 @@ RISK_METRICS_PRODUCT_ID = "lotus-risk:RiskMetricsReport:v1"
 RISK_CALCULATE_ROUTE = "/analytics/risk/calculate"
 DRAWDOWN_PRODUCT_ID = "lotus-risk:DrawdownAnalyticsReport:v1"
 DRAWDOWN_ROUTE = "/analytics/risk/drawdown"
+MANDATE_RISK_HEALTH_PRODUCT_ID = "lotus-risk:MandateRiskHealthContext:v1"
+MANDATE_RISK_HEALTH_ROUTE = "/analytics/risk/mandate-health-context"
 
 
 @dataclass(frozen=True)
@@ -138,6 +144,34 @@ class LotusRiskDrawdownSourceAdapter:
         )
 
 
+class LotusRiskMandateHealthSourceAdapter:
+    def __init__(self, risk_client: DownstreamJsonClient) -> None:
+        self._risk_client = risk_client
+
+    def fetch_mandate_health_context(
+        self, request: RiskMandateHealthContextRequest
+    ) -> RiskMandateHealthContextEvidence:
+        try:
+            payload = self._risk_client.post_json(
+                MANDATE_RISK_HEALTH_ROUTE,
+                json_payload=_mandate_health_request_payload(request),
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise RiskSourceEntitlementDenied from exc
+            raise RiskSourceUnavailable(code=exc.code) from exc
+
+        _validate_mandate_health_payload(payload)
+        return RiskMandateHealthContextEvidence(
+            mandate_risk_health_ref=_mandate_health_source_ref(payload, request),
+            health_state=_required_text_field(payload, "health_state"),
+            threshold_breached=_optional_bool_field(payload, "threshold_breached"),
+            risk_diagnostic=first_reason_code(payload),
+        )
+
+
 def _risk_calculate_request_payload(request: RiskVolatilityEvidenceRequest) -> dict[str, Any]:
     return {
         "input_mode": "stateful",
@@ -171,6 +205,26 @@ def _drawdown_request_payload(request: RiskDrawdownEvidenceRequest) -> dict[str,
             "duration_unit": "BUSINESS_DAYS",
         },
     }
+
+
+def _mandate_health_request_payload(request: RiskMandateHealthContextRequest) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "portfolio_id": request.portfolio_id,
+        "scope": {
+            "as_of_date": request.as_of_date.isoformat(),
+            "net_or_gross": request.net_or_gross,
+        },
+        "period": {"type": request.period_name, "name": request.period_name},
+        "portfolio_open_date": request.portfolio_open_date.isoformat(),
+        "returns": _return_observations(request.returns),
+        "benchmark_returns": _return_observations(request.benchmark_returns),
+        "tracking_error_attention_threshold": str(request.tracking_error_attention_threshold),
+    }
+    if request.reporting_currency:
+        scope = payload["scope"]
+        assert isinstance(scope, dict)
+        scope["reporting_currency"] = request.reporting_currency
+    return payload
 
 
 def _volatility_measures(payload: dict[str, Any], *, period_name: str) -> _VolatilityMeasures:
@@ -335,6 +389,31 @@ def _risk_metrics_source_ref(payload: dict[str, Any]) -> SourceRef:
     )
 
 
+def _mandate_health_source_ref(
+    payload: dict[str, Any],
+    request: RiskMandateHealthContextRequest,
+) -> SourceRef:
+    return SourceRef(
+        product_id=MANDATE_RISK_HEALTH_PRODUCT_ID,
+        source_system=SourceSystem.LOTUS_RISK,
+        product_version=_required_text_field(payload, "product_version"),
+        route=MANDATE_RISK_HEALTH_ROUTE,
+        as_of_date=_date_field(payload, keys=("as_of_date", "asOfDate")),
+        generated_at_utc=request.evaluated_at_utc,
+        content_hash=_content_hash(payload),
+        data_quality_status=_required_text_field(payload, "health_state"),
+        freshness=EvidenceFreshness.UNAVAILABLE,
+    )
+
+
+def _validate_mandate_health_payload(payload: dict[str, Any]) -> None:
+    if _text_field(payload, "product_name") != "MandateRiskHealthContext":
+        raise RiskSourceUnavailable(code="risk_mandate_health_product_mismatch")
+    source_services = payload.get("source_services") or payload.get("sourceServices")
+    if not isinstance(source_services, list) or "lotus-risk" not in source_services:
+        raise RiskSourceUnavailable(code="risk_mandate_health_source_mismatch")
+
+
 def _supportability_state(metadata: dict[str, Any]) -> str | None:
     supportability = metadata.get("calculation_supportability")
     if isinstance(supportability, dict):
@@ -368,6 +447,28 @@ def _text_field(payload: dict[str, Any], key: str) -> str | None:
     if isinstance(value, str) and value.strip():
         return value.strip()
     return None
+
+
+def _required_text_field(payload: dict[str, Any], key: str) -> str:
+    value = _text_field(payload, key)
+    if value is None:
+        raise RiskSourceUnavailable(code=f"risk_{key}_missing")
+    return value
+
+
+def _optional_bool_field(payload: dict[str, Any], key: str) -> bool | None:
+    value = payload.get(key)
+    return value if isinstance(value, bool) else None
+
+
+def _return_observations(observations: tuple[RiskReturnObservation, ...]) -> list[dict[str, str]]:
+    return [
+        {
+            "date": observation.observation_date.isoformat(),
+            "value": str(observation.return_value),
+        }
+        for observation in observations
+    ]
 
 
 def _datetime_field(

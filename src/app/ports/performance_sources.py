@@ -30,12 +30,9 @@ class PerformanceUnderperformanceEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.period_name.strip():
-            raise ValueError("period_name is required")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _validate_portfolio_period_request(
+            self.portfolio_id, self.period_name, self.evaluated_at_utc
+        )
         if self.active_return_threshold < Decimal("-1") or self.active_return_threshold > Decimal(
             "0"
         ):
@@ -62,18 +59,42 @@ class PerformanceBenchmarkReadinessEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.period_name.strip():
-            raise ValueError("period_name is required")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _validate_portfolio_period_request(
+            self.portfolio_id, self.period_name, self.evaluated_at_utc
+        )
 
 
 @dataclass(frozen=True)
 class PerformanceBenchmarkReadinessEvidence:
     benchmark_context_available: bool
     performance_ref: SourceRef | None
+    performance_diagnostic: str | None = None
+    entitlement_allowed: bool = True
+
+
+@dataclass(frozen=True)
+class PerformanceMandateHealthContextRequest:
+    portfolio_id: str
+    as_of_date: date
+    period_name: str
+    evaluated_at_utc: datetime
+    portfolio_period_return: Decimal | None
+    benchmark_period_return: Decimal | None
+    active_return_attention_threshold: Decimal = Decimal("-0.50")
+    correlation_id: str | None = None
+    trace_id: str | None = None
+
+    def __post_init__(self) -> None:
+        _validate_portfolio_period_request(
+            self.portfolio_id, self.period_name, self.evaluated_at_utc
+        )
+
+
+@dataclass(frozen=True)
+class PerformanceMandateHealthContextEvidence:
+    mandate_performance_health_ref: SourceRef
+    health_state: str
+    threshold_breached: bool | None
     performance_diagnostic: str | None = None
     entitlement_allowed: bool = True
 
@@ -92,3 +113,24 @@ class PerformanceBenchmarkReadinessSourcePort(Protocol):
         request: PerformanceBenchmarkReadinessEvidenceRequest,
     ) -> PerformanceBenchmarkReadinessEvidence:
         """Fetch source-owned benchmark-readiness evidence for missing-benchmark review."""
+
+
+class PerformanceMandateHealthSourcePort(Protocol):
+    def fetch_mandate_health_context(
+        self,
+        request: PerformanceMandateHealthContextRequest,
+    ) -> PerformanceMandateHealthContextEvidence:
+        """Fetch source-owned mandate performance-health context refs for idea evaluation."""
+
+
+def _validate_portfolio_period_request(
+    portfolio_id: str,
+    period_name: str,
+    evaluated_at_utc: datetime,
+) -> None:
+    if not portfolio_id.strip():
+        raise ValueError("portfolio_id is required")
+    if not period_name.strip():
+        raise ValueError("period_name is required")
+    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+        raise ValueError("evaluated_at_utc must be timezone-aware")

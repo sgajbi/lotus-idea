@@ -142,6 +142,9 @@ Current RFC-0002 implementation-start baseline:
    Workbench queue/detail rendering exist for advisor review; full source-worker
    certification, full Workbench proof, data-product certification, and
    supported-feature promotion remain planned.
+   Slice 05 also includes direct Performance/Risk mandate-health source-product
+   ref adapters for supplied source facts; live source fetching and
+   portfolio-scoped canonical proof remain planned.
 12. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and downstream outcome tracking, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and

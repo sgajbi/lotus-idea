@@ -7,9 +7,12 @@ from typing import Any
 
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.infrastructure.downstream_client import DownstreamJsonClient, DownstreamServiceError
+from app.infrastructure.source_product_payloads import first_reason_code
 from app.ports.performance_sources import (
     PerformanceBenchmarkReadinessEvidence,
     PerformanceBenchmarkReadinessEvidenceRequest,
+    PerformanceMandateHealthContextEvidence,
+    PerformanceMandateHealthContextRequest,
     PerformanceSourceEntitlementDenied,
     PerformanceSourceUnavailable,
     PerformanceUnderperformanceEvidence,
@@ -20,6 +23,8 @@ from app.ports.performance_sources import (
 PRODUCT_VERSION = "v1"
 RETURNS_SERIES_PRODUCT_ID = "lotus-performance:ReturnsSeriesBundle:v1"
 RETURNS_SERIES_ROUTE = "/integration/returns/series"
+MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID = "lotus-performance:MandatePerformanceHealthContext:v1"
+MANDATE_PERFORMANCE_HEALTH_ROUTE = "/performance/mandate-health-context"
 
 
 @dataclass(frozen=True)
@@ -86,6 +91,30 @@ class LotusPerformanceUnderperformanceSourceAdapter:
             performance_diagnostic=measures.diagnostic,
         )
 
+    def fetch_mandate_health_context(
+        self,
+        request: PerformanceMandateHealthContextRequest,
+    ) -> PerformanceMandateHealthContextEvidence:
+        try:
+            payload = self._performance_client.post_json(
+                MANDATE_PERFORMANCE_HEALTH_ROUTE,
+                json_payload=_mandate_health_request_payload(request),
+                correlation_id=request.correlation_id,
+                trace_id=request.trace_id,
+            )
+        except DownstreamServiceError as exc:
+            if exc.status_code in {401, 403}:
+                raise PerformanceSourceEntitlementDenied from exc
+            raise PerformanceSourceUnavailable(code=exc.code) from exc
+
+        _validate_mandate_health_payload(payload)
+        return PerformanceMandateHealthContextEvidence(
+            mandate_performance_health_ref=_mandate_health_source_ref(payload, request),
+            health_state=_text_field(payload, "health_state"),
+            threshold_breached=_optional_bool_field(payload, "threshold_breached"),
+            performance_diagnostic=first_reason_code(payload),
+        )
+
 
 def _returns_series_request_payload(
     request: PerformanceUnderperformanceEvidenceRequest
@@ -113,6 +142,19 @@ def _returns_series_request_payload(
     if request.reporting_currency:
         payload["reporting_currency"] = request.reporting_currency
     return payload
+
+
+def _mandate_health_request_payload(
+    request: PerformanceMandateHealthContextRequest,
+) -> dict[str, Any]:
+    return {
+        "portfolio_id": request.portfolio_id,
+        "as_of_date": request.as_of_date.isoformat(),
+        "period_name": request.period_name,
+        "portfolio_period_return": _decimal_text(request.portfolio_period_return),
+        "benchmark_period_return": _decimal_text(request.benchmark_period_return),
+        "active_return_attention_threshold": str(request.active_return_attention_threshold),
+    }
 
 
 def _underperformance_measures(payload: dict[str, Any]) -> _UnderperformanceMeasures:
@@ -174,6 +216,31 @@ def _source_ref(payload: dict[str, Any]) -> SourceRef:
     )
 
 
+def _mandate_health_source_ref(
+    payload: dict[str, Any],
+    request: PerformanceMandateHealthContextRequest,
+) -> SourceRef:
+    return SourceRef(
+        product_id=MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID,
+        source_system=SourceSystem.LOTUS_PERFORMANCE,
+        product_version=_text_field(payload, "product_version"),
+        route=MANDATE_PERFORMANCE_HEALTH_ROUTE,
+        as_of_date=_date_field(payload, keys=("as_of_date", "asOfDate")),
+        generated_at_utc=request.evaluated_at_utc,
+        content_hash=_content_hash(payload),
+        data_quality_status=_text_field(payload, "health_state"),
+        freshness=EvidenceFreshness.UNAVAILABLE,
+    )
+
+
+def _validate_mandate_health_payload(payload: dict[str, Any]) -> None:
+    if _text_field(payload, "product_name") != "MandatePerformanceHealthContext":
+        raise PerformanceSourceUnavailable(code="performance_mandate_health_product_mismatch")
+    source_services = payload.get("source_services") or payload.get("sourceServices")
+    if not isinstance(source_services, list) or "lotus-performance" not in source_services:
+        raise PerformanceSourceUnavailable(code="performance_mandate_health_source_mismatch")
+
+
 def _is_async_accepted(payload: dict[str, Any]) -> bool:
     execution_mode = payload.get("execution_mode")
     status = payload.get("status")
@@ -185,6 +252,22 @@ def _object_field(payload: dict[str, Any], key: str) -> dict[str, Any]:
     if isinstance(value, dict):
         return value
     raise PerformanceSourceUnavailable(code=f"performance_{key}_missing")
+
+
+def _text_field(payload: dict[str, Any], key: str) -> str:
+    value = payload.get(key)
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+    raise PerformanceSourceUnavailable(code=f"performance_{key}_missing")
+
+
+def _optional_bool_field(payload: dict[str, Any], key: str) -> bool | None:
+    value = payload.get(key)
+    return value if isinstance(value, bool) else None
+
+
+def _decimal_text(value: Decimal | None) -> str | None:
+    return str(value) if value is not None else None
 
 
 def _last_return_value(value: Any, *, code: str) -> Decimal | None:
@@ -222,7 +305,12 @@ def _date_field(payload: dict[str, Any], *, keys: tuple[str, ...]) -> date:
 
 
 def _content_hash(provenance: dict[str, Any]) -> str:
-    value = provenance.get("calculation_hash") or provenance.get("input_fingerprint")
+    value = (
+        provenance.get("calculation_hash")
+        or provenance.get("input_fingerprint")
+        or provenance.get("request_fingerprint")
+        or provenance.get("requestFingerprint")
+    )
     if isinstance(value, str) and value.strip():
         return value if value.startswith("sha256:") else f"sha256:{value}"
     raise PerformanceSourceUnavailable(code="performance_content_hash_missing")
