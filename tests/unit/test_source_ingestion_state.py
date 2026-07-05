@@ -18,6 +18,7 @@ from app.infrastructure.downstream_client import DownstreamClientConfig
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.infrastructure.lotus_risk_sources import (
     LotusRiskConcentrationSourceAdapter,
+    LotusRiskDrawdownSourceAdapter,
     LotusRiskVolatilitySourceAdapter,
 )
 from app.runtime.source_ingestion_state import (
@@ -33,6 +34,8 @@ from app.runtime.source_ingestion_state import (
     RISK_TIMEOUT_SECONDS_ENV,
     RiskConcentrationSourceRuntime,
     RiskConcentrationSourceRuntimeBlocker,
+    RiskDrawdownSourceRuntime,
+    RiskDrawdownSourceRuntimeBlocker,
     RiskVolatilitySourceRuntime,
     RiskVolatilitySourceRuntimeBlocker,
     SOURCE_INGESTION_MAX_CONNECTIONS_ENV,
@@ -48,6 +51,7 @@ from app.runtime.source_ingestion_state import (
     build_core_high_cash_source_runtime_from_environment,
     build_core_low_income_source_runtime_from_environment,
     build_risk_concentration_source_runtime_from_environment,
+    build_risk_drawdown_source_runtime_from_environment,
     build_risk_volatility_source_runtime_from_environment,
     build_source_ingestion_runtime_from_environment,
 )
@@ -134,6 +138,16 @@ def test_risk_volatility_source_runtime_blocks_when_risk_base_url_is_missing(
     result = build_risk_volatility_source_runtime_from_environment()
 
     assert result == RiskVolatilitySourceRuntimeBlocker("lotus_risk_base_url_not_configured")
+
+
+def test_risk_drawdown_source_runtime_blocks_when_risk_base_url_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(RISK_BASE_URL_ENV, raising=False)
+
+    result = build_risk_drawdown_source_runtime_from_environment()
+
+    assert result == RiskDrawdownSourceRuntimeBlocker("lotus_risk_base_url_not_configured")
 
 
 def test_core_high_cash_source_runtime_builds_without_manifest(
@@ -226,6 +240,19 @@ def test_risk_volatility_source_runtime_builds_without_manifest(
     assert isinstance(result.risk_source, LotusRiskVolatilitySourceAdapter)
 
 
+def test_risk_drawdown_source_runtime_builds_without_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(MANIFEST_ENV, raising=False)
+    monkeypatch.setenv(RISK_BASE_URL_ENV, "http://localhost:8300")
+
+    result = build_risk_drawdown_source_runtime_from_environment()
+
+    assert isinstance(result, RiskDrawdownSourceRuntime)
+    assert result.risk_base_url_configured is True
+    assert isinstance(result.risk_source, LotusRiskDrawdownSourceAdapter)
+
+
 def test_core_high_cash_source_runtime_blocks_invalid_core_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -307,6 +334,19 @@ def test_risk_volatility_source_runtime_blocks_invalid_risk_configuration(
     result = build_risk_volatility_source_runtime_from_environment()
 
     assert result == RiskVolatilitySourceRuntimeBlocker(
+        "lotus_risk_base_url_invalid",
+        risk_base_url_configured=True,
+    )
+
+
+def test_risk_drawdown_source_runtime_blocks_invalid_risk_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(RISK_BASE_URL_ENV, "not-a-url")
+
+    result = build_risk_drawdown_source_runtime_from_environment()
+
+    assert result == RiskDrawdownSourceRuntimeBlocker(
         "lotus_risk_base_url_invalid",
         risk_base_url_configured=True,
     )
@@ -504,6 +544,20 @@ def test_risk_volatility_source_runtime_blocks_invalid_timeout(
     )
 
 
+def test_risk_drawdown_source_runtime_blocks_invalid_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(RISK_BASE_URL_ENV, "http://localhost:8300")
+    monkeypatch.setenv(RISK_TIMEOUT_SECONDS_ENV, "0")
+
+    result = build_risk_drawdown_source_runtime_from_environment()
+
+    assert result == RiskDrawdownSourceRuntimeBlocker(
+        "lotus_risk_base_url_invalid",
+        risk_base_url_configured=True,
+    )
+
+
 def test_source_ingestion_runtime_blocks_invalid_connection_limit(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
@@ -694,6 +748,33 @@ def test_risk_volatility_source_runtime_close_releases_owned_risk_client(
     result = build_risk_volatility_source_runtime_from_environment()
 
     assert isinstance(result, RiskVolatilitySourceRuntime)
+    assert len(created_clients) == 1
+    result.close()
+    assert created_clients[0].closed is True
+
+
+def test_risk_drawdown_source_runtime_close_releases_owned_risk_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class CloseAwareDownstreamClient:
+        def __init__(self, config: object) -> None:
+            self.config = config
+            self.closed = False
+            created_clients.append(self)
+
+        def close(self) -> None:
+            self.closed = True
+
+    created_clients: list[CloseAwareDownstreamClient] = []
+    monkeypatch.setattr(
+        "app.runtime.source_ingestion_state.DownstreamJsonClient",
+        CloseAwareDownstreamClient,
+    )
+    monkeypatch.setenv(RISK_BASE_URL_ENV, "http://localhost:8300")
+
+    result = build_risk_drawdown_source_runtime_from_environment()
+
+    assert isinstance(result, RiskDrawdownSourceRuntime)
     assert len(created_clients) == 1
     result.close()
     assert created_clients[0].closed is True

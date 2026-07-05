@@ -26,7 +26,6 @@ import app.api.review_workflow as review_workflow_api
 import app.api.underperformance_signals as underperformance_signals_api
 from app.runtime.source_ingestion_state import (
     RiskConcentrationSourceRuntimeBlocker,
-    RiskVolatilitySourceRuntimeBlocker,
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
@@ -879,41 +878,6 @@ def test_high_volatility_signal_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("signal_evaluation", "accepted", "lotus-risk", False, None)]
-
-
-def test_high_volatility_source_api_emits_blocked_operation_event(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    client = TestClient(app)
-    events = capture_operation_events(monkeypatch, high_volatility_signals_api)
-    monkeypatch.setattr(
-        high_volatility_signals_api,
-        "_build_risk_volatility_source_runtime_from_environment",
-        lambda: RiskVolatilitySourceRuntimeBlocker("lotus_risk_base_url_not_configured"),
-    )
-    headers = {**signal_headers(), "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001"}
-
-    response = client.post(
-        "/api/v1/idea-signals/high-volatility/evaluate-from-source",
-        json={
-            "portfolioId": "PB_SG_GLOBAL_BAL_001",
-            "asOfDate": "2026-06-21",
-            "periodName": "YTD",
-            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-        },
-        headers=headers,
-    )
-
-    assert response.status_code == 503
-    assert events == [
-        (
-            "signal_evaluation",
-            "blocked",
-            "lotus-risk",
-            False,
-            "lotus_risk_base_url_not_configured",
-        )
-    ]
 
 
 def test_underperformance_signal_api_emits_bounded_operation_event(

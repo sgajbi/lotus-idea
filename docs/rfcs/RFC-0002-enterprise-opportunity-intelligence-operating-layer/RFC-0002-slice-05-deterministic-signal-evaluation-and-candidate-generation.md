@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus Risk DrawdownAnalyticsReport source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus narrowed Risk drawdown source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -787,7 +787,7 @@ Not implemented yet:
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
 7. source-fetching APIs beyond bounded high-cash, low-income, bond-maturity,
-   missing-benchmark, concentration-risk, and high-volatility `evaluate-from-source`
+   missing-benchmark, concentration-risk, high-volatility, and drawdown-review `evaluate-from-source`
    evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
@@ -906,14 +906,20 @@ Current source-fetching API validation:
    close delegation.
 7. `python -m ruff check src\app\api\concentration_risk_signals.py src\app\api\caller_context_openapi.py src\app\api\runtime_dependencies.py src\app\runtime\source_ingestion_state.py src\app\infrastructure\lotus_risk_sources.py tests\integration\test_concentration_risk_signal_api.py tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_risk_sources.py`
    passed.
-8. `python -m pytest tests\integration\test_high_volatility_signal_api.py tests\integration\test_api_operation_events.py::test_high_volatility_source_api_emits_blocked_operation_event tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_risk_sources.py tests\unit\test_service_contract.py -q`
+8. `python -m pytest tests\integration\test_high_volatility_signal_api.py tests\integration\test_signal_source_operation_events.py::test_high_volatility_source_api_emits_blocked_operation_event tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_risk_sources.py tests\unit\test_service_contract.py -q`
    covers high-volatility Lotus Risk-backed evaluation, portfolio entitlement
    denial before runtime construction, missing Risk runtime configuration, Risk
    source unavailability, route-owned runtime cleanup, manifest-free Risk
    source runtime construction, adapter request-shape/source-ref preservation,
    endpoint-ledger registration, and bounded operation-event proof.
-9. This closes only the bounded high-cash, low-income, bond-maturity,
-   missing-benchmark, concentration-risk, and high-volatility source-fetching API foundations.
+9. `python -m pytest tests\integration\test_drawdown_review_signal_api.py tests\integration\test_signal_source_operation_events.py::test_drawdown_review_source_api_emits_blocked_operation_event tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_risk_drawdown_sources.py tests\unit\test_service_contract.py -q`
+   covers drawdown-review Lotus Risk-backed evaluation, portfolio entitlement
+   denial before runtime construction, missing Risk runtime configuration, Risk
+   source unavailability, route-owned runtime cleanup, manifest-free Risk
+   source runtime construction, adapter close delegation, endpoint-ledger
+   registration, and bounded operation-event proof.
+10. This closes only the bounded high-cash, low-income, bond-maturity,
+   missing-benchmark, concentration-risk, high-volatility, and drawdown-review source-fetching API foundations.
    It does not certify live Core or Risk source support, source-worker operation,
    Gateway/Workbench support, data-product certification, benchmark assignment,
    benchmark methodology authority, performance calculation, maturity schedule
@@ -921,8 +927,8 @@ Current source-fetching API validation:
    income-needs assessment, funding advice, treasury instruction, planning
    suitability, risk methodology approval, concentration calculation, trade
    recommendation, rebalance action, volatility calculation, VaR calculation,
-   tracking-error calculation, client publication, or supported-feature
-   promotion.
+   tracking-error calculation, drawdown calculation, client publication, or
+   supported-feature promotion.
 
 Current mandate health source-product ref validation:
 

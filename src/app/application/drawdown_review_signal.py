@@ -18,9 +18,9 @@ from app.domain import (
 from app.application.access_scope import portfolio_only_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.risk_sources import (
+    RiskDrawdownSourcePort,
     RiskDrawdownEvidence,
     RiskDrawdownEvidenceRequest,
-    RiskOpportunitySourcePort,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
 )
@@ -77,7 +77,7 @@ def evaluate_drawdown_review_signal_command(
 def evaluate_drawdown_review_signal_from_risk(
     command: EvaluateDrawdownReviewFromRiskCommand,
     *,
-    risk_source: RiskOpportunitySourcePort,
+    risk_source: RiskDrawdownSourcePort,
     policy: DrawdownReviewSignalPolicy = DEFAULT_DRAWDOWN_REVIEW_POLICY,
 ) -> SignalEvaluationResult:
     try:

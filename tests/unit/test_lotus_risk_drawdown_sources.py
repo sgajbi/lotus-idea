@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import json
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -80,6 +80,22 @@ def _request() -> RiskDrawdownEvidenceRequest:
         correlation_id="corr-risk",
         trace_id="trace-risk",
     )
+
+
+def test_lotus_risk_drawdown_adapter_close_releases_owned_client() -> None:
+    class CloseAwareClient:
+        def __init__(self) -> None:
+            self.close_count = 0
+
+        def close(self) -> None:
+            self.close_count += 1
+
+    client = CloseAwareClient()
+    adapter = LotusRiskDrawdownSourceAdapter(cast(DownstreamJsonClient, client))
+
+    adapter.close()
+
+    assert client.close_count == 1
 
 
 def test_lotus_risk_adapter_fetches_declared_drawdown_source_product() -> None:

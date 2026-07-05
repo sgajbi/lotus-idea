@@ -128,6 +128,9 @@ class LotusRiskDrawdownSourceAdapter:
     def __init__(self, risk_client: DownstreamJsonClient) -> None:
         self._risk_client = risk_client
 
+    def close(self) -> None:
+        self._risk_client.close()
+
     def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
         try:
             payload = self._risk_client.post_json(

@@ -30,6 +30,7 @@ from app.infrastructure.downstream_client import (
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.infrastructure.lotus_risk_sources import (
     LotusRiskConcentrationSourceAdapter,
+    LotusRiskDrawdownSourceAdapter,
     LotusRiskVolatilitySourceAdapter,
 )
 from app.ports.core_sources import (
@@ -38,7 +39,11 @@ from app.ports.core_sources import (
     CoreLowIncomeSourcePort,
     CoreOpportunitySourcePort,
 )
-from app.ports.risk_sources import RiskConcentrationSourcePort, RiskVolatilitySourcePort
+from app.ports.risk_sources import (
+    RiskConcentrationSourcePort,
+    RiskDrawdownSourcePort,
+    RiskVolatilitySourcePort,
+)
 
 SOURCE_INGESTION_MAX_CONNECTIONS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS"
 SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
@@ -131,6 +136,17 @@ class RiskVolatilitySourceRuntime:
 
 
 @dataclass(frozen=True)
+class RiskDrawdownSourceRuntime:
+    risk_source: RiskDrawdownSourcePort
+    risk_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.risk_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -170,6 +186,12 @@ class RiskConcentrationSourceRuntimeBlocker:
 
 @dataclass(frozen=True)
 class RiskVolatilitySourceRuntimeBlocker:
+    code: str
+    risk_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class RiskDrawdownSourceRuntimeBlocker:
     code: str
     risk_base_url_configured: bool = False
 
@@ -414,6 +436,21 @@ def build_risk_volatility_source_runtime_from_environment() -> (
         )
     return RiskVolatilitySourceRuntime(
         risk_source=LotusRiskVolatilitySourceAdapter(configured_client.risk_client),
+        risk_base_url_configured=True,
+    )
+
+
+def build_risk_drawdown_source_runtime_from_environment() -> (
+    RiskDrawdownSourceRuntime | RiskDrawdownSourceRuntimeBlocker
+):
+    configured_client = _build_configured_risk_source_client_from_environment()
+    if isinstance(configured_client, _RiskSourceClientBlocker):
+        return RiskDrawdownSourceRuntimeBlocker(
+            configured_client.code,
+            risk_base_url_configured=configured_client.risk_base_url_configured,
+        )
+    return RiskDrawdownSourceRuntime(
+        risk_source=LotusRiskDrawdownSourceAdapter(configured_client.risk_client),
         risk_base_url_configured=True,
     )
 
