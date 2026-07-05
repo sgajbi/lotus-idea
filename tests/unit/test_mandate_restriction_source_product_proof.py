@@ -140,6 +140,12 @@ def test_mandate_restriction_source_product_generator_writes_valid_artifact(
     payload = json.loads(output_path.read_text(encoding="utf-8"))
     assert payload["proofFamily"] == "mandate-restriction-source-product"
     assert payload["supportedFeaturePromoted"] is False
+    assert payload["aggregateProofProvenance"]["repository"] == "lotus-idea"
+    assert payload["aggregateProofProvenance"]["proofGeneratedAtUtc"] == "2026-06-28T10:10:00Z"
+    assert payload["aggregateProofProvenance"]["proofRef"].endswith(
+        "mandate-restriction-source-product-proof.json"
+    )
+    assert isinstance(payload["aggregateProofProvenance"]["sourceTreeDirty"], bool)
     assert mandate_restriction_source_product_proof_is_valid(payload) is True
 
 

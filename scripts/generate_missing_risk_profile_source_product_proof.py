@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
-from pathlib import Path
 
 from app.application.missing_risk_profile_source_product_proof import (
     build_missing_risk_profile_source_product_proof_payload,
 )
 
 try:
-    from scripts.proof_generator_io import parse_generated_at_utc
+    from scripts.proof_generator_io import parse_generated_at_utc, write_json_payload
 except ModuleNotFoundError:
-    from proof_generator_io import parse_generated_at_utc  # type: ignore[import-not-found,no-redef]
+    from proof_generator_io import (  # type: ignore[import-not-found,no-redef]
+        parse_generated_at_utc,
+        write_json_payload,
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -30,12 +31,7 @@ def main(argv: list[str] | None = None) -> int:
         payload = build_missing_risk_profile_source_product_proof_payload(
             generated_at_utc=parse_generated_at_utc(args.generated_at_utc),
         )
-        output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            f"{json.dumps(payload, indent=2, sort_keys=True)}\n",
-            encoding="utf-8",
-        )
+        write_json_payload(payload, output=args.output)
         return 0
     except (OSError, ValueError) as exc:
         print(f"missing risk-profile source-product proof error: {exc}", file=sys.stderr)
