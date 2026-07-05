@@ -69,7 +69,9 @@ Current RFC-0002 implementation-start baseline:
 5. Slice 04 partially implements the source-authority and data-mesh baseline,
    including proposed producer contracts, consumer dependencies, blocked static
    trust telemetry, SLO/access/evidence policy files, and a repo-native
-   `data-mesh-contract-gate`. Platform mesh certification remains planned.
+   `data-mesh-contract-gate` that pins the bounded Lotus Risk
+   `ConcentrationRiskReport:v1` dependency. Platform mesh certification remains
+   planned.
 6. Slice 05 partially implements the high-cash / idle-liquidity deterministic
    domain policy without source adapters, API, or supported-feature promotion.
 7. Slice 06 partially implements internal candidate persistence records,
