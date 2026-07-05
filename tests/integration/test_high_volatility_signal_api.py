@@ -1,10 +1,49 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
+from decimal import Decimal
 from typing import Any
 
 from fastapi.testclient import TestClient
+from pytest import MonkeyPatch
 
+import app.api.high_volatility_signals as high_volatility_api
+from app.domain import EvidenceFreshness, SourceRef, SourceSystem
 from app.main import app
+from app.ports.risk_sources import (
+    RiskSourceUnavailable,
+    RiskVolatilityEvidence,
+    RiskVolatilityEvidenceRequest,
+)
+from app.runtime.source_ingestion_state import (
+    RiskVolatilitySourceRuntime,
+    RiskVolatilitySourceRuntimeBlocker,
+)
+
+
+AS_OF_DATE = date(2026, 6, 21)
+EVALUATED_AT = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
+PORTFOLIO_ID = "PB_SG_GLOBAL_BAL_001"
+
+
+@dataclass
+class RecordingRiskVolatilitySource:
+    seen_request: RiskVolatilityEvidenceRequest | None = None
+    error: Exception | None = None
+    close_count: int = 0
+
+    def fetch_volatility_evidence(
+        self,
+        request: RiskVolatilityEvidenceRequest,
+    ) -> RiskVolatilityEvidence:
+        self.seen_request = request
+        if self.error is not None:
+            raise self.error
+        return _risk_volatility_evidence()
+
+    def close(self) -> None:
+        self.close_count += 1
 
 
 def test_high_volatility_signal_api_returns_review_candidate() -> None:
@@ -142,11 +181,152 @@ def test_high_volatility_signal_api_requires_signal_permission() -> None:
     }
 
 
+def test_high_volatility_signal_from_source_api_returns_review_candidate(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    risk_source = RecordingRiskVolatilitySource()
+    monkeypatch.setattr(
+        high_volatility_api,
+        "_build_risk_volatility_source_runtime_from_environment",
+        lambda: RiskVolatilitySourceRuntime(
+            risk_source=risk_source,
+            risk_base_url_configured=True,
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-volatility/evaluate-from-source",
+        json=high_volatility_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["outcome"] == "candidate_created"
+    assert payload["family"] == "high_volatility"
+    assert payload["sourceAuthority"] == "lotus-risk"
+    assert payload["supportedFeaturePromoted"] is False
+    assert payload["candidate"]["scorePolicyVersion"] == "high-volatility-attention-v1"
+    assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
+        "lotus-risk:RiskMetricsReport:v1"
+    }
+    assert risk_source.seen_request == RiskVolatilityEvidenceRequest(
+        portfolio_id=PORTFOLIO_ID,
+        as_of_date=AS_OF_DATE,
+        period_name="YTD",
+        evaluated_at_utc=EVALUATED_AT,
+        volatility_threshold=Decimal("12.00"),
+        correlation_id="corr-risk-volatility-source-api",
+        trace_id="trace-risk-volatility-source-api",
+    )
+    assert risk_source.close_count == 1
+
+
+def test_high_volatility_signal_from_source_blocks_when_runtime_not_configured(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    monkeypatch.setattr(
+        high_volatility_api,
+        "_build_risk_volatility_source_runtime_from_environment",
+        lambda: RiskVolatilitySourceRuntimeBlocker("lotus_risk_base_url_not_configured"),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-volatility/evaluate-from-source",
+        json=high_volatility_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "type": "about:blank",
+        "status": 503,
+        "code": "source_runtime_not_configured",
+        "title": "Source runtime not configured",
+        "detail": "Risk source runtime is not configured for high-volatility source evaluation.",
+    }
+    assert PORTFOLIO_ID not in response.text
+
+
+def test_high_volatility_signal_from_source_checks_scope_before_runtime(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+
+    def fail_if_called() -> RiskVolatilitySourceRuntimeBlocker:
+        raise AssertionError("runtime must not be built when caller scope is denied")
+
+    monkeypatch.setattr(
+        high_volatility_api,
+        "_build_risk_volatility_source_runtime_from_environment",
+        fail_if_called,
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-volatility/evaluate-from-source",
+        json=high_volatility_source_payload(),
+        headers=source_evaluation_headers(portfolio_ids="PB_SG_OTHER_002"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert PORTFOLIO_ID not in response.text
+    assert "PB_SG_OTHER_002" not in response.text
+
+
+def test_high_volatility_signal_from_source_closes_runtime_on_source_blocker(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    risk_source = RecordingRiskVolatilitySource(
+        error=RiskSourceUnavailable(code="risk_source_unavailable")
+    )
+    monkeypatch.setattr(
+        high_volatility_api,
+        "_build_risk_volatility_source_runtime_from_environment",
+        lambda: RiskVolatilitySourceRuntime(
+            risk_source=risk_source,
+            risk_base_url_configured=True,
+        ),
+    )
+
+    response = client.post(
+        "/api/v1/idea-signals/high-volatility/evaluate-from-source",
+        json=high_volatility_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "outcome": "blocked",
+        "family": "high_volatility",
+        "reasonCodes": ["source_partial"],
+        "unsupportedReasons": ["source_unavailable"],
+        "candidate": None,
+        "sourceAuthority": "lotus-risk",
+        "supportedFeaturePromoted": False,
+    }
+    assert risk_source.close_count == 1
+
+
 def evaluate_headers() -> dict[str, str]:
     return {
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Roles": "advisor",
         "X-Caller-Capabilities": "idea.signal.evaluate",
+    }
+
+
+def source_evaluation_headers(*, portfolio_ids: str = PORTFOLIO_ID) -> dict[str, str]:
+    return {
+        "X-Caller-Subject": "advisor-001",
+        "X-Caller-Roles": "advisor",
+        "X-Caller-Capabilities": "idea.signal.evaluate",
+        "X-Correlation-Id": "corr-risk-volatility-source-api",
+        "X-Trace-Id": "trace-risk-volatility-source-api",
+        "X-Caller-Portfolio-Ids": portfolio_ids,
     }
 
 
@@ -169,3 +349,31 @@ def high_volatility_payload() -> dict[str, Any]:
         },
         "entitlementAllowed": True,
     }
+
+
+def high_volatility_source_payload(*, portfolio_id: str = PORTFOLIO_ID) -> dict[str, str]:
+    return {
+        "portfolioId": portfolio_id,
+        "asOfDate": "2026-06-21",
+        "periodName": "YTD",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+    }
+
+
+def _risk_volatility_evidence() -> RiskVolatilityEvidence:
+    return RiskVolatilityEvidence(
+        source_reported_volatility=Decimal("14.25"),
+        risk_supportability_state="ready",
+        risk_ref=SourceRef(
+            product_id="lotus-risk:RiskMetricsReport:v1",
+            source_system=SourceSystem.LOTUS_RISK,
+            product_version="v1",
+            route="/analytics/risk/calculate",
+            as_of_date=AS_OF_DATE,
+            generated_at_utc=EVALUATED_AT,
+            content_hash="sha256:risk-metrics-report",
+            data_quality_status="ready",
+            freshness=EvidenceFreshness.CURRENT,
+        ),
+        risk_diagnostic="risk_volatility_source_ready",
+    )

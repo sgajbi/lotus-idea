@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from decimal import Decimal
 import json
 from typing import Any, cast
 
@@ -9,11 +10,15 @@ import pytest
 
 from app.domain import EvidenceFreshness
 from app.infrastructure.downstream_client import DownstreamClientConfig, DownstreamJsonClient
-from app.infrastructure.lotus_risk_sources import LotusRiskConcentrationSourceAdapter
+from app.infrastructure.lotus_risk_sources import (
+    LotusRiskConcentrationSourceAdapter,
+    LotusRiskVolatilitySourceAdapter,
+)
 from app.ports.risk_sources import (
     RiskConcentrationEvidenceRequest,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
+    RiskVolatilityEvidenceRequest,
 )
 
 
@@ -59,6 +64,15 @@ def _adapter(handler: httpx.MockTransport) -> LotusRiskConcentrationSourceAdapte
     )
 
 
+def _volatility_adapter(handler: httpx.MockTransport) -> LotusRiskVolatilitySourceAdapter:
+    return LotusRiskVolatilitySourceAdapter(
+        DownstreamJsonClient(
+            DownstreamClientConfig(base_url="https://risk.example", timeout_seconds=0.5),
+            client=httpx.Client(base_url="https://risk.example", transport=handler),
+        )
+    )
+
+
 def _request() -> RiskConcentrationEvidenceRequest:
     return RiskConcentrationEvidenceRequest(
         portfolio_id="PB_SG_GLOBAL_BAL_001",
@@ -67,6 +81,47 @@ def _request() -> RiskConcentrationEvidenceRequest:
         correlation_id="corr-risk",
         trace_id="trace-risk",
     )
+
+
+def _volatility_request() -> RiskVolatilityEvidenceRequest:
+    return RiskVolatilityEvidenceRequest(
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        as_of_date=AS_OF_DATE,
+        period_name="YTD",
+        evaluated_at_utc=datetime(2026, 6, 21, 10, 0, tzinfo=UTC),
+        volatility_threshold=Decimal("12.00"),
+        correlation_id="corr-risk",
+        trace_id="trace-risk",
+    )
+
+
+def _volatility_payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "scope": {
+            "as_of_date": "2026-06-21",
+            "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+        },
+        "results": {
+            "YTD": {
+                "metrics": {
+                    "VOLATILITY": {
+                        "value": "14.25",
+                    }
+                }
+            }
+        },
+        "metadata": {
+            "generated_at": "2026-06-21T10:00:00Z",
+            "request_fingerprint": "risk-metrics-fingerprint",
+            "calculation_supportability": {
+                "state": "ready",
+                "freshness_bucket": "current",
+            },
+        },
+    }
+    if extra:
+        payload.update(extra)
+    return payload
 
 
 def test_lotus_risk_adapter_close_releases_owned_client() -> None:
@@ -79,6 +134,22 @@ def test_lotus_risk_adapter_close_releases_owned_client() -> None:
 
     client = CloseAwareClient()
     adapter = LotusRiskConcentrationSourceAdapter(cast(DownstreamJsonClient, client))
+
+    adapter.close()
+
+    assert client.close_count == 1
+
+
+def test_lotus_risk_volatility_adapter_close_releases_owned_client() -> None:
+    class CloseAwareClient:
+        def __init__(self) -> None:
+            self.close_count = 0
+
+        def close(self) -> None:
+            self.close_count += 1
+
+    client = CloseAwareClient()
+    adapter = LotusRiskVolatilitySourceAdapter(cast(DownstreamJsonClient, client))
 
     adapter.close()
 
@@ -117,6 +188,45 @@ def test_lotus_risk_adapter_fetches_declared_concentration_source_product() -> N
                 "stateful_input": {
                     "portfolio_id": "PB_SG_GLOBAL_BAL_001",
                     "as_of_date": "2026-06-21",
+                },
+            },
+        )
+    ]
+
+
+def test_lotus_risk_volatility_adapter_fetches_declared_metrics_source_product() -> None:
+    seen: list[tuple[str, str, dict[str, Any]]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        seen.append((request.method, str(request.url), body))
+        assert request.headers["X-Correlation-Id"] == "corr-risk"
+        assert request.headers["X-Trace-Id"] == "trace-risk"
+        return httpx.Response(200, json=_volatility_payload())
+
+    evidence = _volatility_adapter(httpx.MockTransport(handler)).fetch_volatility_evidence(
+        _volatility_request()
+    )
+
+    assert evidence.source_reported_volatility == Decimal("14.25")
+    assert evidence.risk_supportability_state == "ready"
+    assert evidence.risk_ref is not None
+    assert evidence.risk_ref.product_id == "lotus-risk:RiskMetricsReport:v1"
+    assert evidence.risk_ref.route == "/analytics/risk/calculate"
+    assert evidence.risk_ref.content_hash == "sha256:risk-metrics-fingerprint"
+    assert evidence.risk_ref.freshness is EvidenceFreshness.CURRENT
+    assert evidence.risk_diagnostic == "risk_volatility_source_ready"
+    assert seen == [
+        (
+            "POST",
+            "https://risk.example/analytics/risk/calculate",
+            {
+                "input_mode": "stateful",
+                "stateful_input": {
+                    "portfolio_id": "PB_SG_GLOBAL_BAL_001",
+                    "as_of_date": "2026-06-21",
+                    "periods": [{"type": "YTD", "name": "YTD"}],
+                    "metrics": ["VOLATILITY"],
                 },
             },
         )

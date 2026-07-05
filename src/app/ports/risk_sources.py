@@ -157,14 +157,25 @@ class RiskConcentrationSourcePort(Protocol):
         """Fetch source-owned Lotus Risk concentration evidence for idea evaluation."""
 
 
-class RiskOpportunitySourcePort(RiskConcentrationSourcePort, Protocol):
+class RiskVolatilitySourcePort(Protocol):
     def fetch_volatility_evidence(
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
         """Fetch source-owned Lotus Risk volatility evidence for idea evaluation."""
 
+
+class RiskDrawdownSourcePort(Protocol):
     def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
         """Fetch source-owned Lotus Risk drawdown evidence for idea evaluation."""
+
+
+class RiskOpportunitySourcePort(
+    RiskConcentrationSourcePort,
+    RiskVolatilitySourcePort,
+    RiskDrawdownSourcePort,
+    Protocol,
+):
+    """Composite Risk source port for legacy consumers that need all Risk signals."""
 
 
 class RiskMandateHealthSourcePort(Protocol):

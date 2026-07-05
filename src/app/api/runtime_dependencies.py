@@ -33,6 +33,8 @@ from app.runtime.source_ingestion_state import (
     CoreLowIncomeSourceRuntimeBlocker,
     RiskConcentrationSourceRuntime,
     RiskConcentrationSourceRuntimeBlocker,
+    RiskVolatilitySourceRuntime,
+    RiskVolatilitySourceRuntimeBlocker,
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
     build_core_benchmark_assignment_source_runtime_from_environment,
@@ -40,6 +42,7 @@ from app.runtime.source_ingestion_state import (
     build_core_high_cash_source_runtime_from_environment,
     build_core_low_income_source_runtime_from_environment,
     build_risk_concentration_source_runtime_from_environment,
+    build_risk_volatility_source_runtime_from_environment,
     build_source_ingestion_runtime_from_environment,
 )
 
@@ -58,6 +61,8 @@ __all__ = [
     "CoreLowIncomeSourceRuntimeBlocker",
     "RiskConcentrationSourceRuntime",
     "RiskConcentrationSourceRuntimeBlocker",
+    "RiskVolatilitySourceRuntime",
+    "RiskVolatilitySourceRuntimeBlocker",
     "SourceIngestionRuntime",
     "SourceIngestionRuntimeBlocker",
     "build_core_benchmark_assignment_source_runtime_from_environment",
@@ -65,6 +70,7 @@ __all__ = [
     "build_core_high_cash_source_runtime_from_environment",
     "build_core_low_income_source_runtime_from_environment",
     "build_risk_concentration_source_runtime_from_environment",
+    "build_risk_volatility_source_runtime_from_environment",
     "build_outbox_publisher_from_environment",
     "build_source_ingestion_runtime_from_environment",
     "close_downstream_realization_clients",
