@@ -284,9 +284,10 @@
       "advisor_audience": "advisor",
       "source_products": [
         "lotus-core:PortfolioStateSnapshot:v1",
-        "lotus-core:HoldingsAsOf:v1"
+        "lotus-core:HoldingsAsOf:v1",
+        "lotus-core:PortfolioMaturitySummary:v1"
       ],
-      "lotus_idea_responsibility": "Evaluate source-owned maturity facts only from caller-supplied evidence or explicit Core-owned maturity summary facts with governed source refs, freshness, entitlement posture, next maturity date, and maturing holding count; never derive maturity schedules from raw positions; keep live generation and promotion blocked until source-safe live Core maturity-summary proof is supplied.",
+      "lotus_idea_responsibility": "Evaluate source-owned maturity facts only from caller-supplied evidence or Core-owned PortfolioMaturitySummary:v1 evidence with governed source refs, freshness, entitlement posture, upstream HoldingsAsOf lineage, next maturity date, and maturing holding count; never derive maturity schedules from raw positions; keep live generation and promotion blocked until source-safe live Core maturity-summary proof is supplied.",
       "evidence_refs": [
         "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-00-critical-review-source-map-and-product-gap-allocation.md",
         "src/app/domain/bond_maturity_signal.py",

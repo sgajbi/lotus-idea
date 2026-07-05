@@ -40,6 +40,41 @@ def _payload(product_name: str, *, extra: dict[str, Any] | None = None) -> dict[
     return payload
 
 
+def _maturity_summary_payload(*, extra: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload = _payload(
+        "PortfolioMaturitySummary",
+        extra={
+            "source_product_name": "HoldingsAsOf",
+            "source_product_version": "v1",
+            "window_start_date": "2026-06-21",
+            "window_end_date": "2026-07-21",
+            "horizon_days": 30,
+            "include_projected": False,
+            "maturity_basis": "CONTRACTUAL_INSTRUMENT_MATURITY_DATE",
+            "freshness_status": "CURRENT",
+            "next_maturity_date": "2026-07-10",
+            "maturing_holding_count": 1,
+            "maturity_bearing_holding_count": 2,
+            "missing_maturity_date_count": 0,
+            "unsupported_maturity_feature_count": 0,
+            "supportability_status": "SUPPORTED",
+            "supportability_reasons": [],
+            "request_fingerprint": "maturity_summary:abc123",
+            "content_hash": "sha256:portfolio-maturity-summary",
+            "source_batch_fingerprint": "sha256:portfolio-maturity-summary",
+            "source_lineage": {
+                "source_owner": "lotus-core",
+                "source_product": "PortfolioMaturitySummary",
+                "upstream_product": "HoldingsAsOf",
+                "upstream_content_hash": "sha256:holdings-as-of",
+            },
+        },
+    )
+    if extra:
+        payload.update(extra)
+    return payload
+
+
 def _adapter(handler: httpx.MockTransport) -> LotusCoreHighCashSourceAdapter:
     return LotusCoreHighCashSourceAdapter(
         DownstreamJsonClient(
@@ -314,33 +349,7 @@ def test_lotus_core_adapter_fetches_bond_maturity_source_product() -> None:
         assert request.headers["X-Trace-Id"] == "trace-core"
         return httpx.Response(
             200,
-            json=_payload(
-                "HoldingsAsOf",
-                extra={
-                    "maturitySummary": {
-                        "nextMaturityDate": "2026-07-10",
-                        "maturingPositionCount": 1,
-                        "source_batch_fingerprint": "bond-maturity-summary",
-                    },
-                    "positions": [
-                        {
-                            "security_id": "BOND1",
-                            "quantity": "100",
-                            "maturity_date": "2026-07-01",
-                        },
-                        {
-                            "security_id": "BOND2",
-                            "quantity": "50",
-                            "maturityDate": "2026-08-15",
-                        },
-                        {
-                            "security_id": "BOND3",
-                            "quantity": "0",
-                            "maturity_date": "2026-07-05",
-                        },
-                    ],
-                },
-            ),
+            json=_maturity_summary_payload(),
         )
 
     evidence = _adapter(httpx.MockTransport(handler)).fetch_bond_maturity_evidence(
@@ -351,29 +360,26 @@ def test_lotus_core_adapter_fetches_bond_maturity_source_product() -> None:
     assert evidence.source_reported_maturing_position_count == 1
     assert evidence.holdings_ref is not None
     assert evidence.holdings_ref.product_id == "lotus-core:HoldingsAsOf:v1"
+    assert evidence.holdings_ref.content_hash == "sha256:holdings-as-of"
     assert evidence.maturity_fact_ref is not None
-    assert evidence.maturity_fact_ref.content_hash == "sha256:bond-maturity-summary"
+    assert evidence.maturity_fact_ref.product_id == "lotus-core:PortfolioMaturitySummary:v1"
+    assert evidence.maturity_fact_ref.content_hash == "sha256:portfolio-maturity-summary"
     assert evidence.maturity_diagnostic == "core_maturity_evidence_ready"
     assert seen == [
-        "https://core.example/portfolios/PB_SG_GLOBAL_BAL_001/positions?as_of_date=2026-06-21"
+        "https://core.example/portfolios/PB_SG_GLOBAL_BAL_001/maturity-summary"
+        "?as_of_date=2026-06-21&horizon_days=30&include_projected=false"
     ]
 
 
-def test_lotus_core_adapter_blocks_missing_bond_maturity_summary() -> None:
+def test_lotus_core_adapter_blocks_missing_bond_maturity_upstream_lineage() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
-            json=_payload(
-                "HoldingsAsOf",
+            json=_maturity_summary_payload(
                 extra={
-                    "positions": [
-                        {
-                            "security_id": "BOND1",
-                            "quantity": "100",
-                            "maturity_date": "2026-07-10",
-                        }
-                    ]
-                },
+                    "source_product_name": "UnknownProduct",
+                    "source_lineage": {},
+                }
             ),
         )
 
@@ -382,20 +388,17 @@ def test_lotus_core_adapter_blocks_missing_bond_maturity_summary() -> None:
             _bond_maturity_request()
         )
 
-    assert exc_info.value.code == "core_maturity_summary_missing"
+    assert exc_info.value.code == "core_maturity_upstream_holdings_ref_missing"
 
 
 def test_lotus_core_adapter_reports_bond_maturity_window_empty() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
-            json=_payload(
-                "HoldingsAsOf",
+            json=_maturity_summary_payload(
                 extra={
-                    "maturity_summary": {
-                        "next_maturity_date": "2026-08-15",
-                        "maturing_holding_count": 0,
-                    }
+                    "next_maturity_date": "2026-08-15",
+                    "maturing_holding_count": 0,
                 },
             ),
         )
@@ -413,9 +416,11 @@ def test_lotus_core_adapter_maps_missing_maturing_count_to_source_unavailable() 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
-            json=_payload(
-                "HoldingsAsOf",
-                extra={"maturitySummary": {"nextMaturityDate": "2026-07-10"}},
+            json=_maturity_summary_payload(
+                extra={
+                    "next_maturity_date": "2026-07-10",
+                    "maturing_holding_count": None,
+                },
             ),
         )
 
@@ -431,13 +436,10 @@ def test_lotus_core_adapter_maps_malformed_bond_maturity_date_to_source_unavaila
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(
             200,
-            json=_payload(
-                "HoldingsAsOf",
+            json=_maturity_summary_payload(
                 extra={
-                    "maturitySummary": {
-                        "nextMaturityDate": "soon",
-                        "maturingPositionCount": 1,
-                    }
+                    "next_maturity_date": "soon",
+                    "maturing_holding_count": 1,
                 },
             ),
         )

@@ -27,10 +27,11 @@ def test_bond_maturity_signal_api_returns_review_candidate() -> None:
     assert payload["candidate"]["reviewPosture"] == "advisor_review_required"
     assert payload["candidate"]["scorePolicyVersion"] == "bond-maturity-review-v1"
     assert {source_ref["productId"] for source_ref in payload["candidate"]["sourceRefs"]} == {
-        "lotus-core:HoldingsAsOf:v1"
+        "lotus-core:HoldingsAsOf:v1",
+        "lotus-core:PortfolioMaturitySummary:v1",
     }
-    assert "route" not in payload["candidate"]["sourceRefs"][0]
-    assert "contentHash" not in payload["candidate"]["sourceRefs"][0]
+    assert all("route" not in source_ref for source_ref in payload["candidate"]["sourceRefs"])
+    assert all("contentHash" not in source_ref for source_ref in payload["candidate"]["sourceRefs"])
 
 
 def test_bond_maturity_signal_api_reports_outside_window_not_eligible() -> None:
@@ -128,13 +129,13 @@ def bond_maturity_payload() -> dict[str, Any]:
             "freshness": "current",
         },
         "maturityFactRef": {
-            "productId": "lotus-core:HoldingsAsOf:v1",
+            "productId": "lotus-core:PortfolioMaturitySummary:v1",
             "sourceSystem": "lotus-core",
             "productVersion": "v1",
-            "route": "/portfolios/PB_SG_GLOBAL_BAL_001/positions#maturity-date",
+            "route": "/portfolios/PB_SG_GLOBAL_BAL_001/maturity-summary",
             "asOfDate": "2026-06-21",
             "generatedAtUtc": "2026-06-21T10:00:00Z",
-            "contentHash": "sha256:bond-maturity-facts",
+            "contentHash": "sha256:portfolio-maturity-summary",
             "dataQualityStatus": "complete",
             "freshness": "current",
         },

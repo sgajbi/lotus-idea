@@ -30,6 +30,7 @@ HOLDINGS_PRODUCT_ID = "lotus-core:HoldingsAsOf:v1"
 CASH_MOVEMENT_PRODUCT_ID = "lotus-core:PortfolioCashMovementSummary:v1"
 CASHFLOW_PROJECTION_PRODUCT_ID = "lotus-core:PortfolioCashflowProjection:v1"
 BENCHMARK_ASSIGNMENT_PRODUCT_ID = "lotus-core:BenchmarkAssignment:v1"
+MATURITY_SUMMARY_PRODUCT_ID = "lotus-core:PortfolioMaturitySummary:v1"
 
 
 @dataclass(frozen=True)
@@ -254,8 +255,9 @@ class LotusCoreHighCashSourceAdapter:
         portfolio_ref = quote(request.portfolio_id, safe="")
         as_of = request.as_of_date.isoformat()
         try:
-            holdings_payload = self._query_client.get_json(
-                f"/portfolios/{portfolio_ref}/positions?as_of_date={as_of}",
+            maturity_summary_payload = self._query_client.get_json(
+                f"/portfolios/{portfolio_ref}/maturity-summary?as_of_date={as_of}"
+                f"&horizon_days={request.maturity_window_days}&include_projected=false",
                 correlation_id=request.correlation_id,
                 trace_id=request.trace_id,
             )
@@ -264,32 +266,52 @@ class LotusCoreHighCashSourceAdapter:
                 raise CoreSourceEntitlementDenied from exc
             raise CoreSourceUnavailable(code=exc.code) from exc
 
-        holdings_ref = _source_ref(
-            holdings_payload,
-            product_id=HOLDINGS_PRODUCT_ID,
-            route="/portfolios/{portfolio_id}/positions",
-        )
-        maturity_summary = _maturity_summary_payload(holdings_payload)
-        if maturity_summary is None:
-            raise CoreSourceUnavailable(code="core_maturity_summary_missing")
-        next_maturity_date = _explicit_next_maturity_date(maturity_summary)
-        maturing_position_count = _explicit_maturing_position_count(maturity_summary)
+        next_maturity_date = _explicit_next_maturity_date(maturity_summary_payload)
+        maturing_position_count = _explicit_maturing_position_count(maturity_summary_payload)
         maturity_fact_ref = _source_ref(
-            {**holdings_payload, **maturity_summary},
-            product_id=HOLDINGS_PRODUCT_ID,
-            route="/portfolios/{portfolio_id}/positions",
+            maturity_summary_payload,
+            product_id=MATURITY_SUMMARY_PRODUCT_ID,
+            route="/portfolios/{portfolio_id}/maturity-summary",
         )
+        holdings_ref = _holdings_lineage_ref_or_none(maturity_summary_payload)
+        if holdings_ref is None:
+            raise CoreSourceUnavailable(code="core_maturity_upstream_holdings_ref_missing")
         return CoreBondMaturityEvidence(
             source_reported_next_maturity_date=next_maturity_date,
             source_reported_maturing_position_count=maturing_position_count,
             holdings_ref=holdings_ref,
             maturity_fact_ref=maturity_fact_ref,
             maturity_diagnostic=_bond_maturity_diagnostic(
-                maturity_summary_present=True,
                 next_maturity_date_present=next_maturity_date is not None,
                 maturing_position_count=maturing_position_count,
+                supportability_status=_text_field(
+                    maturity_summary_payload,
+                    "supportability_status",
+                    "supportabilityStatus",
+                ),
             ),
         )
+
+
+def _holdings_lineage_ref_or_none(payload: dict[str, Any]) -> SourceRef | None:
+    source_product_name = _text_field(
+        payload,
+        "source_product_name",
+        "sourceProductName",
+    )
+    if source_product_name != "HoldingsAsOf":
+        return None
+    lineage = payload.get("source_lineage") or payload.get("sourceLineage")
+    upstream_hash = lineage.get("upstream_content_hash") if isinstance(lineage, dict) else None
+    payload_for_ref = dict(payload)
+    if isinstance(upstream_hash, str) and upstream_hash.strip():
+        payload_for_ref["content_hash"] = upstream_hash
+        payload_for_ref["source_batch_fingerprint"] = upstream_hash
+    return _source_ref(
+        payload_for_ref,
+        product_id=HOLDINGS_PRODUCT_ID,
+        route="/portfolios/{portfolio_id}/positions",
+    )
 
 
 def _source_reported_cash_weight(payload: dict[str, Any]) -> _CashWeightEvidence:
@@ -394,46 +416,20 @@ def _optional_date_field(payload: dict[str, Any], *keys: str) -> date | None:
 
 def _bond_maturity_diagnostic(
     *,
-    maturity_summary_present: bool,
     next_maturity_date_present: bool,
     maturing_position_count: int,
+    supportability_status: str | None,
 ) -> str:
-    if not maturity_summary_present:
-        return "core_maturity_summary_missing"
+    if supportability_status is not None and supportability_status.upper() not in {
+        "SUPPORTED",
+        "PARTIAL",
+    }:
+        return f"core_maturity_{supportability_status.lower()}"
     if not next_maturity_date_present:
         return "core_maturity_date_missing"
     if maturing_position_count < 1:
         return "core_maturity_window_empty"
     return "core_maturity_evidence_ready"
-
-
-def _maturity_summary_payload(payload: dict[str, Any]) -> dict[str, Any] | None:
-    for key in (
-        "maturity_summary",
-        "maturitySummary",
-        "bond_maturity_summary",
-        "bondMaturitySummary",
-    ):
-        value = payload.get(key)
-        if isinstance(value, dict):
-            return value
-    if _has_any_key(
-        payload,
-        (
-            "source_reported_next_maturity_date",
-            "sourceReportedNextMaturityDate",
-            "next_maturity_date",
-            "nextMaturityDate",
-            "source_reported_maturing_position_count",
-            "sourceReportedMaturingPositionCount",
-            "maturing_position_count",
-            "maturingPositionCount",
-            "maturing_holding_count",
-            "maturingHoldingCount",
-        ),
-    ):
-        return payload
-    return None
 
 
 def _explicit_next_maturity_date(payload: dict[str, Any]) -> date | None:
@@ -464,10 +460,6 @@ def _explicit_maturing_position_count(payload: dict[str, Any]) -> int:
     if value < 0:
         raise CoreSourceUnavailable(code="core_maturing_position_count_malformed")
     return value
-
-
-def _has_any_key(payload: dict[str, Any], keys: tuple[str, ...]) -> bool:
-    return any(key in payload for key in keys)
 
 
 def _text_field(payload: dict[str, Any], *keys: str) -> str | None:
@@ -564,6 +556,10 @@ def _content_hash(payload: dict[str, Any]) -> str:
     for key in (
         "source_batch_fingerprint",
         "sourceBatchFingerprint",
+        "content_hash",
+        "contentHash",
+        "source_digest",
+        "sourceDigest",
         "snapshot_id",
         "snapshotId",
         "request_fingerprint",
