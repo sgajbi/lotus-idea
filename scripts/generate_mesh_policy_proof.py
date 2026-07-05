@@ -11,9 +11,12 @@ from app.application.mesh_policy_proof import (
 )
 
 try:
-    from scripts.proof_generator_io import parse_generated_at_utc
-except ModuleNotFoundError:
-    from proof_generator_io import parse_generated_at_utc  # type: ignore[import-not-found,no-redef]
+    from scripts.proof_generator_io import parse_generated_at_utc, write_json_payload
+except ImportError:
+    from proof_generator_io import (  # type: ignore[import-not-found,no-redef]
+        parse_generated_at_utc,
+        write_json_payload,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -36,12 +39,7 @@ def main(argv: list[str] | None = None) -> int:
             generated_at_utc=generated_at_utc,
             repository_root=ROOT,
         )
-        output_path = Path(args.output)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(
-            f"{json.dumps(payload, indent=2, sort_keys=True)}\n",
-            encoding="utf-8",
-        )
+        write_json_payload(payload, output=args.output)
         if not mesh_policy_proof_is_valid(payload):
             print("mesh policy proof artifact is invalid", file=sys.stderr)
             return 1

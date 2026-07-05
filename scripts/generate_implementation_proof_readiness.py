@@ -34,6 +34,11 @@ from app.runtime.repository_state import (
 )
 from app.runtime.proof_artifact_files import read_optional_json_object
 
+try:
+    from scripts.proof_generator_io import write_json_payload
+except ImportError:  # pragma: no cover - supports direct script execution
+    from proof_generator_io import write_json_payload  # type: ignore[import-not-found,no-redef]
+
 
 @dataclass(frozen=True)
 class ProofArtifactInput:
@@ -69,13 +74,7 @@ def main(argv: list[str] | None = None) -> int:
                 **_proof_payload_kwargs(proof_artifacts),
             )
         payload = implementation_proof_readiness_payload(snapshot)
-        rendered = json.dumps(payload, indent=2, sort_keys=True)
-        if args.output:
-            output_path = Path(args.output)
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(f"{rendered}\n", encoding="utf-8")
-        else:
-            print(rendered)
+        write_json_payload(payload, output=args.output)
         return 0
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"implementation proof readiness error: {exc}", file=sys.stderr)
@@ -87,6 +86,7 @@ def implementation_proof_readiness_payload(
 ) -> dict[str, Any]:
     return {
         "repository": snapshot.repository,
+        "generatedAtUtc": _format_utc(snapshot.evaluated_at_utc),
         "evaluatedAtUtc": _format_utc(snapshot.evaluated_at_utc),
         "readinessStatus": snapshot.readiness_status,
         "supportabilityStatus": snapshot.supportability_status,
