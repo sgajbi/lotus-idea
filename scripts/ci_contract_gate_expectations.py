@@ -8,6 +8,7 @@ REQUIRED_LINT_TARGETS = (
     "private-import-boundary-gate",
     "documentation-contract-gate",
     "quality-scorecard-gate",
+    "github-issue-closure-matrix-gate",
     "monetary-float-guard",
     "no-sensitive-content-guard",
     "runtime-dependency-closure-gate",
@@ -74,7 +75,6 @@ REQUIRED_LINT_TARGETS = (
     "supported-features-gate",
     "endpoint-certification-gate",
 )
-
 TEST_TARGET_EXPECTATIONS = {
     "test-unit": "$(VENV_PYTHON) -m pytest $(UNIT_TESTS)",
     "test-integration": "$(VENV_PYTHON) -m pytest $(INTEGRATION_TESTS)",
@@ -206,6 +206,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "private-import-boundary-gate": "scripts/private_import_boundary_gate.py",
     "runtime-dependency-closure-gate": "scripts/runtime_dependency_closure_gate.py",
     "duplicate-implementation-inventory": "scripts/duplicate_implementation_inventory.py",
+    "github-issue-closure-matrix-gate": "scripts/github_issue_closure_matrix_gate.py",
     "dependency-refresh": "scripts.refresh_runtime_dependency_locks",
 }
 

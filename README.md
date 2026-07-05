@@ -7,14 +7,12 @@ feedback records, conversion intent, and readiness posture.
 
 Service profile: `domain-service`
 
-Primary context:
-
-- [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md)
-- [docs/rfcs/README.md](docs/rfcs/README.md)
-- [wiki/Home.md](wiki/Home.md)
-
-Governing contract:
-[LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md](../lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md)
+| Start with | Use it for |
+| --- | --- |
+| [REPOSITORY-ENGINEERING-CONTEXT.md](REPOSITORY-ENGINEERING-CONTEXT.md) | Current implementation truth, repo-local rules, and issue-derived patterns. |
+| [docs/rfcs/README.md](docs/rfcs/README.md) | RFC slice index and completion posture. |
+| [wiki/Home.md](wiki/Home.md) | Authored GitHub wiki source. |
+| [LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md](../lotus-platform/platform-standards/LOTUS_BANK_BUYABLE_ENGINEERING_CONTRACT.md) | Governing banking-grade engineering contract. |
 
 ## Current Posture
 
@@ -256,27 +254,17 @@ Downstream consumers:
 
 Local gates keep claims grounded:
 
-- `make implementation-truth-gate` blocks unqualified support, certification,
-  live-source, Gateway/Workbench, and client-ready claims.
-- `make documentation-contract-gate` protects this README, repo context, docs,
-  demo pages, evidence guide, and wiki source.
-- `make source-observability-contract-gate` blocks unsafe logging and raw output
-  bypasses.
-- `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`,
-  `make api-idempotency-boundary-gate`, `make api-camel-model-boundary-gate`,
-  `make api-signal-model-boundary-gate`, and
-  `make api-temporal-validation-boundary-gate` keep API concerns behind shared
-  boundaries.
-- `make operation-metric-contract-gate` keeps operation metric vocabulary tied
-  to implemented telemetry.
-- `make ai-model-risk-ops-contract-gate` and
-  `make ai-model-risk-operations-proof-contract-gate` keep AI-adjacent evidence
-  bounded to implemented readiness and model-risk telemetry.
-- `make maintainability-gate`, `make duplicate-implementation-gate`, and
-  `make private-import-boundary-gate` protect modularity and code ownership.
-- `make no-sensitive-content-guard` protects generated local evidence.
-- Modernization rule: remove stale compatibility paths, legacy vocabulary, and
-  duplicate local patterns unless a current contract explicitly requires them.
+| Control | Gate |
+| --- | --- |
+| Support and certification truth | `make implementation-truth-gate`, `make supported-features-gate` |
+| Documentation and issue closure | `make documentation-contract-gate`, `make github-issue-closure-matrix-gate` |
+| API boundary and OpenAPI truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make openapi-gate` |
+| Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make ai-model-risk-ops-contract-gate` |
+| Modularity and modern code posture | `make maintainability-gate`, `make duplicate-implementation-gate`, `make private-import-boundary-gate` |
+| Local evidence hygiene | `make no-sensitive-content-guard`, `make repository-hygiene-gate` |
+
+Modernization rule: remove stale compatibility paths, legacy vocabulary, and
+duplicate local patterns unless a current contract explicitly requires them.
 
 ## Documentation Map
 
@@ -292,6 +280,8 @@ Start here:
   support-promotion process.
 - [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md):
   modularity and issue-pattern hardening ledger.
+- [docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md](docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md):
+  local GitHub issue closure evidence and PR close intent.
 - [quality/quality_scorecard.md](quality/quality_scorecard.md): bank-buyable
   quality posture.
 - [quality/refactor_decisions.md](quality/refactor_decisions.md): design

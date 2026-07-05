@@ -56,6 +56,7 @@ make maintainability-gate
 make private-import-boundary-gate
 make documentation-contract-gate
 make quality-scorecard-gate
+make github-issue-closure-matrix-gate
 make monetary-float-guard
 make no-sensitive-content-guard
 make source-observability-contract-gate
@@ -284,8 +285,9 @@ operation, and label validation into `scripts.operations_contract_validators`; t
 measured baseline ignores pass/ellipsis-only protocol stubs, scans 1,607 executable function
 bodies, and reports 0 exact duplicate clusters. The CI contract gate protects the report-only and
 blocking target split, strict `--fail-on-duplicates` enforcement, and `make lint` lane placement.
-`make ci-contract-gate` protects the target wiring, but duplicate-code thresholds are not promoted
-yet.
+The exact duplicate-code threshold is promoted for first-party implementation bodies; broader
+near-duplicate or generated-pattern similarity checks remain unpromoted until they have their own
+measured baseline and exception policy.
 
 Protected `main` uses strict branch protection. Required PR Merge Gate status checks are:
 
