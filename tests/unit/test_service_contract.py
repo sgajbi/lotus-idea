@@ -100,6 +100,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("POST", "/api/v1/idea-signals/concentration-risk/evaluate"),
         ("POST", "/api/v1/idea-signals/concentration-risk/evaluate-from-source"),
         ("POST", "/api/v1/idea-signals/drawdown-review/evaluate"),
+        ("POST", "/api/v1/idea-signals/drawdown-review/evaluate-from-source"),
         ("POST", "/api/v1/idea-signals/high-volatility/evaluate"),
         ("POST", "/api/v1/idea-signals/high-volatility/evaluate-from-source"),
         ("POST", "/api/v1/idea-signals/high-cash/evaluate"),

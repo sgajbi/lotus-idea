@@ -344,6 +344,36 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/drawdown-review/evaluate-from-source",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Fetch source-owned Lotus Risk drawdown analytics evidence through the configured Risk source adapter and evaluate deterministic drawdown-review posture.",
+      "when_to_use": "Use as the bounded RFC-0002 Slice 5 source-fetching API foundation when the caller is entitled to the requested portfolio scope and Lotus Risk runtime URL is configured.",
+      "when_not_to_use": "Do not use as live source certification, source-worker certification, durable candidate persistence, drawdown calculation, risk methodology approval, trade recommendation, rebalance action, data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"asOfDate\":\"2026-06-21\",\"periodName\":\"YTD\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\"}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"high_volatility\",\"reasonCodes\":[\"drawdown_attention\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_drawdown_review_8d57adbf52f7f5a7\",\"family\":\"high_volatility\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_drawdown_review_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"72\",\"scorePolicyVersion\":\"drawdown-review-attention-v1\",\"sourceSignalIds\":[\"signal_drawdown_review_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-risk:DrawdownAnalyticsReport:v1\",\"sourceSystem\":\"lotus-risk\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"ready\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"high_volatility\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-risk\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or portfolio entitlement.",
+        "503 returns product-safe Problem Details when Risk source runtime configuration is missing or invalid.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_api_returns_review_candidate",
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_blocks_when_runtime_not_configured",
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_checks_scope_before_runtime",
+        "tests/integration/test_drawdown_review_signal_api.py::test_drawdown_review_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_signal_source_operation_events.py::test_drawdown_review_source_api_emits_blocked_operation_event",
+        "tests/unit/test_source_ingestion_state.py::test_risk_drawdown_source_runtime_builds_without_manifest"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/high-volatility/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
@@ -399,7 +429,7 @@
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_from_source_blocks_when_runtime_not_configured",
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_from_source_checks_scope_before_runtime",
         "tests/integration/test_high_volatility_signal_api.py::test_high_volatility_signal_from_source_closes_runtime_on_source_blocker",
-        "tests/integration/test_api_operation_events.py::test_high_volatility_source_api_emits_blocked_operation_event",
+        "tests/integration/test_signal_source_operation_events.py::test_high_volatility_source_api_emits_blocked_operation_event",
         "tests/unit/test_source_ingestion_state.py::test_risk_volatility_source_runtime_builds_without_manifest"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."

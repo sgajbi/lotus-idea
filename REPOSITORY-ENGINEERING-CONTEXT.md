@@ -140,7 +140,7 @@ Bounded source-fetching signal APIs may exist only when they call an explicit
 source-port/adapter, enforce caller entitlement scope before runtime dependency
 construction, return product-safe dependency failures, and preserve source
 authority. High-cash, low-income, bond-maturity, missing-benchmark,
-concentration-risk, and high-volatility `evaluate-from-source` APIs are
+concentration-risk, high-volatility, and drawdown-review `evaluate-from-source` APIs are
 internal foundations inside the existing runtime; they do not certify live
 source support, persist candidates, create a separate runtime service, prove
 Gateway/Workbench behavior, certify a data product, or promote a supported
@@ -162,6 +162,10 @@ High-volatility source-backed evaluation consumes only Lotus Risk-owned
 `RiskMetricsReport:v1` volatility evidence and must not calculate volatility,
 VaR, tracking error, approve risk methodology, recommend trades, create
 rebalance actions, or promote risk/product support.
+Drawdown-review source-backed evaluation consumes only Lotus Risk-owned
+`DrawdownAnalyticsReport:v1` evidence and must not calculate drawdown, approve
+risk methodology, recommend trades, create rebalance actions, or promote
+risk/product support.
 
 ## Current Implementation Map
 
