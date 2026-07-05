@@ -79,20 +79,33 @@ def _headers(
     return headers
 
 
+def _scope_headers() -> dict[str, str]:
+    return {
+        "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
+        "X-Caller-Book-Ids": "book-advisor-001",
+        "X-Caller-Portfolio-Ids": PORTFOLIO_ID,
+        "X-Caller-Client-Ids": "client-001",
+    }
+
+
 def _queue_headers() -> dict[str, str]:
     headers = _headers(
         subject="advisor-001",
         roles="advisor",
         capabilities="idea.review.queue.read",
     )
-    headers.update(
-        {
-            "X-Caller-Tenant-Ids": "tenant-private-bank-sg",
-            "X-Caller-Book-Ids": "book-advisor-001",
-            "X-Caller-Portfolio-Ids": PORTFOLIO_ID,
-            "X-Caller-Client-Ids": "client-001",
-        }
+    headers.update(_scope_headers())
+    return headers
+
+
+def _review_headers(*, idempotency_key: str) -> dict[str, str]:
+    headers = _headers(
+        subject="advisor-001",
+        roles="advisor",
+        capabilities="idea.review.record",
+        idempotency_key=idempotency_key,
     )
+    headers.update(_scope_headers())
     return headers
 
 
@@ -196,10 +209,7 @@ def test_critical_idea_workflow_preserves_authority_boundaries() -> None:
     review_response = client.post(
         f"/api/v1/idea-candidates/{candidate_id}/review-actions",
         json=_approve_review_payload(),
-        headers=_headers(
-            subject="advisor-001",
-            roles="advisor",
-            capabilities="idea.review.record",
+        headers=_review_headers(
             idempotency_key="critical-e2e-review-approve-001",
         ),
     )
