@@ -36,13 +36,14 @@ declared upstream source products are:
 7. `lotus-performance:BenchmarkExposureContext:v1`,
 8. `lotus-performance:MandatePerformanceHealthContext:v1`,
 9. `lotus-risk:RiskMetricsReport:v1`,
-10. `lotus-risk:MandateRiskHealthContext:v1`,
-11. `lotus-risk:RegimeScenarioPackEvaluation:v1`,
-12. `lotus-advise:AdvisoryProposalLifecycleRecord:v1`,
-13. `lotus-advise:AdvisoryPolicyEvaluationRecord:v1`,
-14. `lotus-advise:AdvisoryCopilotInteractionRecord:v1`,
-15. `lotus-manage:PortfolioActionRegister:v1`,
-16. `lotus-report:ClientReportEvidencePack:v1`.
+10. `lotus-risk:ConcentrationRiskReport:v1`,
+11. `lotus-risk:MandateRiskHealthContext:v1`,
+12. `lotus-risk:RegimeScenarioPackEvaluation:v1`,
+13. `lotus-advise:AdvisoryProposalLifecycleRecord:v1`,
+14. `lotus-advise:AdvisoryPolicyEvaluationRecord:v1`,
+15. `lotus-advise:AdvisoryCopilotInteractionRecord:v1`,
+16. `lotus-manage:PortfolioActionRegister:v1`,
+17. `lotus-report:ClientReportEvidencePack:v1`.
 
 The first high-cash / idle-liquidity journey depends on the Core portfolio
 state, holdings/cash balance, cash movement, and cashflow projection products.
@@ -89,7 +90,11 @@ Current local validation:
 3. `tests/unit/test_data_mesh_contract_gate.py` covers pass/fail behavior for
    premature product promotion, invalid dependency posture, platform catalog
    drift, and premature platform source-manifest inclusion.
-4. `make check` runs the data-mesh contract gate through `make lint` and keeps
+4. `tests/unit/test_data_mesh_contract_gate.py::test_consumer_gate_requires_concentration_risk_source_product`
+   pins the bounded `lotus-risk:ConcentrationRiskReport:v1` consumer
+   declaration so concentration-review source authority cannot silently drift
+   out of the mesh baseline.
+5. `make check` runs the data-mesh contract gate through `make lint` and keeps
    producer products proposed and blocked from certification.
 
 ## Platform Follow-Up

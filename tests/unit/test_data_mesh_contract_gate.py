@@ -62,6 +62,26 @@ def test_consumer_gate_blocks_missing_required_source_authority() -> None:
     )
 
 
+def test_consumer_gate_requires_concentration_risk_source_product() -> None:
+    module = _load_data_mesh_contract_gate()
+    consumer = module._read_json(module.CONSUMER_DECLARATION_PATH)
+    consumer["dependencies"] = [
+        dependency
+        for dependency in consumer["dependencies"]
+        if not (
+            dependency["producer_repository"] == "lotus-risk"
+            and dependency["product_name"] == "ConcentrationRiskReport"
+        )
+    ]
+
+    errors = module.validate_consumer_contract(consumer)
+
+    assert any(
+        "consumer declaration missing dependencies: lotus-risk:ConcentrationRiskReport:v1" in error
+        for error in errors
+    )
+
+
 def test_consumer_gate_blocks_invalid_dependency_posture() -> None:
     module = _load_data_mesh_contract_gate()
     consumer = module._read_json(module.CONSUMER_DECLARATION_PATH)

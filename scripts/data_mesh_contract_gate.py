@@ -51,6 +51,7 @@ REQUIRED_DEPENDENCIES = {
     ("lotus-performance", "BenchmarkExposureContext", "v1"),
     ("lotus-performance", "MandatePerformanceHealthContext", "v1"),
     ("lotus-risk", "RiskMetricsReport", "v1"),
+    ("lotus-risk", "ConcentrationRiskReport", "v1"),
     ("lotus-risk", "MandateRiskHealthContext", "v1"),
     ("lotus-risk", "RegimeScenarioPackEvaluation", "v1"),
     ("lotus-advise", "AdvisoryProposalLifecycleRecord", "v1"),
