@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import importlib.util
@@ -36,6 +36,8 @@ GENERATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 @dataclass
 class RecordingRiskSource(RiskOpportunitySourcePort):
     error: Exception | None = None
+    source_reported_max_drawdown: Decimal = Decimal("-0.1245")
+    requests: list[RiskDrawdownEvidenceRequest] = field(default_factory=list)
 
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
@@ -48,9 +50,10 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
         raise AssertionError("volatility evidence is not used by drawdown proof tests")
 
     def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
+        self.requests.append(request)
         if self.error is not None:
             raise self.error
-        return _risk_evidence()
+        return _risk_evidence(source_reported_max_drawdown=self.source_reported_max_drawdown)
 
 
 def test_risk_drawdown_live_proof_payload_is_source_safe_and_not_promoted() -> None:
@@ -212,6 +215,44 @@ def test_risk_drawdown_live_proof_cli_writes_source_safe_artifact(
     assert "trace-123" not in serialized
 
 
+def test_risk_drawdown_live_proof_cli_applies_threshold_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_live_proof_script()
+    output_path = tmp_path / "risk-drawdown-live-proof.json"
+    risk_source = RecordingRiskSource(source_reported_max_drawdown=Decimal("-0.025"))
+
+    monkeypatch.setattr(module, "LotusRiskDrawdownSourceAdapter", lambda _client: risk_source)
+
+    result = module.main(
+        [
+            "--risk-base-url",
+            "http://localhost:8300",
+            "--portfolio-id",
+            "PB_SG_GLOBAL_BAL_001",
+            "--as-of-date",
+            "2026-06-21",
+            "--period-name",
+            "YTD",
+            "--max-drawdown-threshold",
+            "-0.02",
+            "--generated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    assert risk_source.requests[0].drawdown_threshold == Decimal("-0.02")
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["candidateGenerated"] is True
+    assert risk_drawdown_live_proof_is_valid(payload) is True
+
+
 def test_risk_drawdown_live_proof_cli_writes_blocked_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -252,9 +293,11 @@ def test_risk_drawdown_live_proof_cli_writes_blocked_artifact(
     assert "PB_SG_GLOBAL_BAL_001" not in json.dumps(payload)
 
 
-def _risk_evidence() -> RiskDrawdownEvidence:
+def _risk_evidence(
+    *, source_reported_max_drawdown: Decimal = Decimal("-0.1245")
+) -> RiskDrawdownEvidence:
     return RiskDrawdownEvidence(
-        source_reported_max_drawdown=Decimal("-0.1245"),
+        source_reported_max_drawdown=source_reported_max_drawdown,
         risk_supportability_state="ready",
         risk_ref=SourceRef(
             product_id="lotus-risk:DrawdownAnalyticsReport:v1",
