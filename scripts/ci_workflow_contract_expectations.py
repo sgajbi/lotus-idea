@@ -103,7 +103,7 @@ WORKFLOW_EXPECTATIONS: dict[str, tuple[str, ...]] = {
         "make release-sbom",
         "sbom.cdx.json",
         "Authenticate to GHCR",
-        "docker login ghcr.io --username \"$GITHUB_ACTOR\" --password-stdin",
+        'docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin',
         "Push commit-tagged image and resolve digest",
         'docker push "$CONTAINER_IMAGE_NAME"',
         'docker buildx imagetools inspect "$CONTAINER_IMAGE_NAME"',
