@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and Core `PortfolioMaturitySummary:v1` source-adapter consumption, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied API foundation, underperformance policy plus Performance source-port/adapter/live-proof foundation, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied API foundation, bond-maturity / reinvestment deterministic policy plus caller-supplied API foundation and Core `PortfolioMaturitySummary:v1` source-adapter consumption, high-volatility and drawdown-review policies plus RiskMetricsReport and DrawdownAnalyticsReport source-port/adapter/live-proof foundations and caller-supplied API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied API foundation, missing risk-profile evidence-gap policy plus caller-supplied API foundation, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -323,34 +323,44 @@ Additional implemented missing-benchmark foundation:
    `CoreBenchmarkAssignmentSourcePort`, mapping source unavailable and
    entitlement-denied states to blocked outcomes without candidate creation.
 4. `src/app/api/missing_benchmark_signals.py` exposes
-   `POST /api/v1/idea-signals/missing-benchmark/evaluate` as a bounded
-   caller-supplied API foundation over Core benchmark-assignment posture. It
-   requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
-   events, redacts source route/hash fields from candidate responses, and does
-   not assign benchmarks, calculate performance, certify methodology, publish
-   client communication, or promote support.
-5. `tests/unit/test_missing_benchmark_signal_evaluation.py` and
+    `POST /api/v1/idea-signals/missing-benchmark/evaluate` as a bounded
+    caller-supplied API foundation over Core benchmark-assignment posture. It
+    requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
+    events, redacts source route/hash fields from candidate responses, and does
+    not assign benchmarks, calculate performance, certify methodology, publish
+    client communication, or promote support.
+5. `POST /api/v1/idea-signals/missing-benchmark/evaluate-from-source` exposes
+   the existing Core benchmark-assignment source-port through the bounded
+   advisor API pattern. It enforces advisor role, `idea.signal.evaluate`, and
+   portfolio entitlement before constructing source runtime dependencies;
+   returns product-safe 503 posture when Core runtime configuration is absent;
+   closes the Core runtime client after each request; and redacts source
+   routes, content hashes, portfolio identifiers, and raw source payloads from
+   responses.
+6. `tests/unit/test_missing_benchmark_signal_evaluation.py` and
    `tests/unit/test_missing_benchmark_application.py` cover positive
    evidence-gap creation, ready-assignment suppression, inactive or missing
    assignment posture, stale/missing source, entitlement denial, duplicate
    suppression, source-unavailable handling, and source request mapping.
-6. `tests/integration/test_missing_benchmark_signal_api.py` and
+7. `tests/integration/test_missing_benchmark_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
-   ready-assignment not-eligible posture, stale-source blocking, permission
-   denial, and operation-event proof.
-7. `src/app/application/missing_benchmark_live_proof.py`,
+   ready-assignment not-eligible posture, stale-source blocking, source-backed
+   Core evaluation, portfolio entitlement denial before runtime construction,
+   missing Core runtime configuration, Core source unavailability,
+   cleanup-failure suppression, permission denial, and operation-event proof.
+8. `src/app/application/missing_benchmark_live_proof.py`,
    `scripts/generate_missing_benchmark_live_proof.py`, and
    `make missing-benchmark-live-proof-contract-gate` define a source-safe live
    Core proof artifact that can clear only the missing-benchmark live Core
    source blocker when it proves a current Core source attempt produced an
    advisor-review missing-benchmark candidate.
-8. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
+9. `src/app/application/missing_benchmark_performance_readiness_proof.py`,
    `scripts/generate_missing_benchmark_performance_readiness_proof.py`, and
    `make missing-benchmark-performance-readiness-proof-contract-gate` define a
    source-safe Lotus Performance benchmark-readiness proof artifact that can
    clear only the missing-benchmark Performance source-ref blocker when
    `ReturnsSeriesBundle:v1` evidence proves benchmark readiness was evaluated.
-9. The opportunity archetype contract records `missing-benchmark-review` as a
+10. The opportunity archetype contract records `missing-benchmark-review` as a
    non-promoted bounded foundation. Remaining blockers include Performance
    benchmark-readiness source ref when no valid proof is supplied, data-mesh
    certification, Workbench proof, client publication, and supported-feature
@@ -765,8 +775,8 @@ Not implemented yet:
    portfolio-state source-ref proof,
 5. source-worker certification beyond bounded live Core source-ingestion proof,
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
-7. source-fetching APIs beyond bounded high-cash and low-income
-   `evaluate-from-source` evaluation,
+7. source-fetching APIs beyond bounded high-cash, low-income, and
+   missing-benchmark `evaluate-from-source` evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
 10. data-product certification.
@@ -864,11 +874,19 @@ Current source-fetching API validation:
    runtime configuration, Core source unavailability, runtime cleanup-failure
    suppression, endpoint-ledger registration, and manifest-free Core source
    runtime construction.
-4. This closes only the bounded high-cash and low-income source-fetching API
-   foundations. It does not certify live Core source support, source-worker
-   operation, Gateway/Workbench support, data-product certification,
-   income-needs assessment, funding advice, treasury instruction, planning
-   suitability, client publication, or supported-feature promotion.
+4. `python -m pytest tests\integration\test_missing_benchmark_signal_api.py tests\unit\test_source_ingestion_state.py tests\unit\test_service_contract.py -q`
+   passed with `47 passed`, covering missing-benchmark Core-backed evaluation, reporting-currency
+   normalization, portfolio entitlement denial before runtime construction,
+   missing Core runtime configuration, Core source unavailability,
+   cleanup-failure suppression, endpoint-ledger registration, and
+   manifest-free Core source runtime construction.
+5. This closes only the bounded high-cash, low-income, and missing-benchmark
+   source-fetching API foundations. It does not certify live Core source
+   support, source-worker operation, Gateway/Workbench support,
+   data-product certification, benchmark assignment, benchmark methodology
+   authority, performance calculation, income-needs assessment, funding advice,
+   treasury instruction, planning suitability, client publication, or
+   supported-feature promotion.
 
 Current mandate health source-product ref validation:
 

@@ -28,7 +28,11 @@ from app.infrastructure.downstream_client import (
     DownstreamJsonClient,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
-from app.ports.core_sources import CoreLowIncomeSourcePort, CoreOpportunitySourcePort
+from app.ports.core_sources import (
+    CoreBenchmarkAssignmentSourcePort,
+    CoreLowIncomeSourcePort,
+    CoreOpportunitySourcePort,
+)
 
 SOURCE_INGESTION_MAX_CONNECTIONS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS"
 SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
@@ -71,6 +75,19 @@ class CoreLowIncomeSourceRuntime:
 
 
 @dataclass(frozen=True)
+class CoreBenchmarkAssignmentSourceRuntime:
+    core_source: CoreBenchmarkAssignmentSourcePort
+    core_base_url_configured: bool
+    core_query_base_url_configured: bool
+    core_query_control_plane_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.core_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -80,6 +97,14 @@ class CoreHighCashSourceRuntimeBlocker:
 
 @dataclass(frozen=True)
 class CoreLowIncomeSourceRuntimeBlocker:
+    code: str
+    core_base_url_configured: bool = False
+    core_query_base_url_configured: bool = False
+    core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class CoreBenchmarkAssignmentSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
     core_query_base_url_configured: bool = False
@@ -234,6 +259,29 @@ def build_core_low_income_source_runtime_from_environment() -> (
             ),
         )
     return CoreLowIncomeSourceRuntime(
+        core_source=adapter.core_source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=adapter.core_query_base_url_configured,
+        core_query_control_plane_base_url_configured=(
+            adapter.core_query_control_plane_base_url_configured
+        ),
+    )
+
+
+def build_core_benchmark_assignment_source_runtime_from_environment() -> (
+    CoreBenchmarkAssignmentSourceRuntime | CoreBenchmarkAssignmentSourceRuntimeBlocker
+):
+    adapter = _build_configured_core_source_adapter_from_environment()
+    if isinstance(adapter, _CoreSourceAdapterBlocker):
+        return CoreBenchmarkAssignmentSourceRuntimeBlocker(
+            adapter.code,
+            core_base_url_configured=adapter.code != "lotus_core_base_url_not_configured",
+            core_query_base_url_configured=adapter.core_query_base_url_configured,
+            core_query_control_plane_base_url_configured=(
+                adapter.core_query_control_plane_base_url_configured
+            ),
+        )
+    return CoreBenchmarkAssignmentSourceRuntime(
         core_source=adapter.core_source,
         core_base_url_configured=True,
         core_query_base_url_configured=adapter.core_query_base_url_configured,
