@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+from data_mesh_consumer_semantics import validate_consumer_dependency_semantics
 from data_mesh_producer_semantics import validate_producer_product_semantics
 
 
@@ -176,6 +177,7 @@ def validate_consumer_contract(payload: dict[str, Any]) -> list[str]:
         product_name = str(dependency.get("product_name", ""))
         product_version = str(dependency.get("required_product_version", ""))
         dependency_id = (producer, product_name, product_version)
+        dependency_label = f"{producer}:{product_name}:{product_version}"
         if dependency_id in declared_dependencies:
             errors.append(f"{producer}:{product_name}:{product_version}: duplicate dependency")
         declared_dependencies.add(dependency_id)
@@ -206,15 +208,7 @@ def validate_consumer_contract(payload: dict[str, Any]) -> list[str]:
                 f"{producer}:{product_name}:{product_version}: invalid failure_posture "
                 f"{failure_posture!r}"
             )
-        required_trust_metadata = dependency.get("required_trust_metadata")
-        if (
-            not isinstance(required_trust_metadata, list)
-            or "correlation_id" not in required_trust_metadata
-        ):
-            errors.append(
-                f"{producer}:{product_name}:{product_version}: required_trust_metadata must include "
-                "correlation_id"
-            )
+        errors.extend(validate_consumer_dependency_semantics(dependency, dependency_label))
         if not str(dependency.get("business_purpose", "")).strip():
             errors.append(
                 f"{producer}:{product_name}:{product_version}: business_purpose is required"
