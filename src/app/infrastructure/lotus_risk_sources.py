@@ -59,6 +59,9 @@ class LotusRiskConcentrationSourceAdapter:
     def __init__(self, risk_client: DownstreamJsonClient) -> None:
         self._risk_client = risk_client
 
+    def close(self) -> None:
+        self._risk_client.close()
+
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
     ) -> RiskConcentrationEvidence:

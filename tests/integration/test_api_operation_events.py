@@ -24,6 +24,7 @@ import app.api.report_evidence as report_evidence_api
 import app.api.review_queues as review_queues_api
 import app.api.review_workflow as review_workflow_api
 import app.api.underperformance_signals as underperformance_signals_api
+from app.runtime.source_ingestion_state import RiskConcentrationSourceRuntimeBlocker
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 
@@ -809,6 +810,40 @@ def test_concentration_risk_signal_api_emits_bounded_operation_event(
 
     assert response.status_code == 200
     assert events == [("signal_evaluation", "accepted", "lotus-risk", False, None)]
+
+
+def test_concentration_risk_source_api_emits_blocked_operation_event(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    events = capture_operation_events(monkeypatch, concentration_risk_signals_api)
+    monkeypatch.setattr(
+        concentration_risk_signals_api,
+        "_build_risk_concentration_source_runtime_from_environment",
+        lambda: RiskConcentrationSourceRuntimeBlocker("lotus_risk_base_url_not_configured"),
+    )
+    headers = {**signal_headers(), "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001"}
+
+    response = client.post(
+        "/api/v1/idea-signals/concentration-risk/evaluate-from-source",
+        json={
+            "portfolioId": "PB_SG_GLOBAL_BAL_001",
+            "asOfDate": "2026-06-21",
+            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 503
+    assert events == [
+        (
+            "signal_evaluation",
+            "blocked",
+            "lotus-risk",
+            False,
+            "lotus_risk_base_url_not_configured",
+        )
+    ]
 
 
 def test_drawdown_review_signal_api_emits_bounded_operation_event(

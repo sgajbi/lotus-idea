@@ -150,12 +150,14 @@ class RiskMandateHealthContextEvidence:
     entitlement_allowed: bool = True
 
 
-class RiskOpportunitySourcePort(Protocol):
+class RiskConcentrationSourcePort(Protocol):
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
     ) -> RiskConcentrationEvidence:
         """Fetch source-owned Lotus Risk concentration evidence for idea evaluation."""
 
+
+class RiskOpportunitySourcePort(RiskConcentrationSourcePort, Protocol):
     def fetch_volatility_evidence(
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:

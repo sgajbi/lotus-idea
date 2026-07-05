@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 import json
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -67,6 +67,22 @@ def _request() -> RiskConcentrationEvidenceRequest:
         correlation_id="corr-risk",
         trace_id="trace-risk",
     )
+
+
+def test_lotus_risk_adapter_close_releases_owned_client() -> None:
+    class CloseAwareClient:
+        def __init__(self) -> None:
+            self.close_count = 0
+
+        def close(self) -> None:
+            self.close_count += 1
+
+    client = CloseAwareClient()
+    adapter = LotusRiskConcentrationSourceAdapter(cast(DownstreamJsonClient, client))
+
+    adapter.close()
+
+    assert client.close_count == 1
 
 
 def test_lotus_risk_adapter_fetches_declared_concentration_source_product() -> None:
