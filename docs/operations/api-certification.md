@@ -81,10 +81,10 @@ evaluation or candidate creation. These rejections return product-safe
 `invalid_request` telemetry using the expected source authority rather than the
 caller-supplied mismatched authority.
 Source-fetching signal endpoints are separately bounded: they call only the
-configured Core source adapter, enforce caller portfolio entitlement before
-runtime construction, return product-safe 503 posture when Core runtime
-configuration is absent, and do not persist candidates or certify live source
-support.
+configured source adapter for the declared source authority, enforce caller
+portfolio entitlement before runtime construction, return product-safe 503
+posture when source runtime configuration is absent, and do not persist
+candidates or certify live source support.
 
 | Endpoint | Foundation Scope | Required Capability | Current Boundary |
 | --- | --- | --- | --- |
@@ -97,6 +97,7 @@ support.
 | `POST /api/v1/idea-signals/concentration-risk/evaluate` | Concentration-risk review deterministic evaluation over caller-supplied, source-owned Lotus Risk concentration evidence. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, concentration calculation, risk methodology approval, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/concentration-risk/evaluate-from-source` | Concentration-risk review deterministic evaluation over Lotus Risk `ConcentrationRiskReport:v1` evidence fetched through the configured source adapter after caller portfolio entitlement passes. | advisor role, `idea.signal.evaluate` capability, and portfolio entitlement scope for the requested portfolio | No durable state, source-worker certification, live source certification, concentration calculation, risk methodology approval, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/high-volatility/evaluate` | High-volatility deterministic evaluation over caller-supplied, source-owned Lotus Risk metrics evidence. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, volatility, VaR, or tracking-error calculation, risk methodology approval, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
+| `POST /api/v1/idea-signals/high-volatility/evaluate-from-source` | High-volatility deterministic evaluation over Lotus Risk `RiskMetricsReport:v1` volatility evidence fetched through the configured source adapter after caller portfolio entitlement passes. | advisor role, `idea.signal.evaluate` capability, and portfolio entitlement scope for the requested portfolio | No durable state, source-worker certification, live source certification, volatility, VaR, or tracking-error calculation, risk methodology approval, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/drawdown-review/evaluate` | Drawdown-review deterministic evaluation over caller-supplied, source-owned Lotus Risk drawdown analytics evidence. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, drawdown calculation, risk methodology approval, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/underperformance/evaluate` | Underperformance review deterministic evaluation over caller-supplied, source-owned Lotus Performance active-return and benchmark-context evidence. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, returns calculation, benchmark assignment, benchmark methodology authority, trade recommendation, rebalance action, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |
 | `POST /api/v1/idea-signals/allocation-drift/evaluate` | Allocation-drift / mandate-review deterministic evaluation over caller-supplied, source-owned Lotus Manage action-register and mandate-health source-ref posture. | advisor role and `idea.signal.evaluate` capability | No upstream source fetch, drift calculation, mandate compliance approval, rebalance action, order creation, Gateway, Workbench, mesh certification, client publication, or supported-feature promotion. |

@@ -28,14 +28,17 @@ from app.infrastructure.downstream_client import (
     DownstreamJsonClient,
 )
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
-from app.infrastructure.lotus_risk_sources import LotusRiskConcentrationSourceAdapter
+from app.infrastructure.lotus_risk_sources import (
+    LotusRiskConcentrationSourceAdapter,
+    LotusRiskVolatilitySourceAdapter,
+)
 from app.ports.core_sources import (
     CoreBenchmarkAssignmentSourcePort,
     CoreBondMaturitySourcePort,
     CoreLowIncomeSourcePort,
     CoreOpportunitySourcePort,
 )
-from app.ports.risk_sources import RiskConcentrationSourcePort
+from app.ports.risk_sources import RiskConcentrationSourcePort, RiskVolatilitySourcePort
 
 SOURCE_INGESTION_MAX_CONNECTIONS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_MAX_CONNECTIONS"
 SOURCE_INGESTION_MAX_KEEPALIVE_CONNECTIONS_ENV = (
@@ -117,6 +120,17 @@ class RiskConcentrationSourceRuntime:
 
 
 @dataclass(frozen=True)
+class RiskVolatilitySourceRuntime:
+    risk_source: RiskVolatilitySourcePort
+    risk_base_url_configured: bool
+
+    def close(self) -> None:
+        close = getattr(self.risk_source, "close", None)
+        if callable(close):
+            close()
+
+
+@dataclass(frozen=True)
 class CoreHighCashSourceRuntimeBlocker:
     code: str
     core_base_url_configured: bool = False
@@ -155,6 +169,12 @@ class RiskConcentrationSourceRuntimeBlocker:
 
 
 @dataclass(frozen=True)
+class RiskVolatilitySourceRuntimeBlocker:
+    code: str
+    risk_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
 class _ConfiguredCoreSourceAdapter:
     core_source: LotusCoreHighCashSourceAdapter
     core_query_base_url_configured: bool
@@ -166,6 +186,17 @@ class _CoreSourceAdapterBlocker:
     code: str
     core_query_base_url_configured: bool = False
     core_query_control_plane_base_url_configured: bool = False
+
+
+@dataclass(frozen=True)
+class _ConfiguredRiskSourceClient:
+    risk_client: DownstreamJsonClient
+
+
+@dataclass(frozen=True)
+class _RiskSourceClientBlocker:
+    code: str
+    risk_base_url_configured: bool = False
 
 
 @dataclass(frozen=True)
@@ -360,20 +391,47 @@ def build_core_bond_maturity_source_runtime_from_environment() -> (
 def build_risk_concentration_source_runtime_from_environment() -> (
     RiskConcentrationSourceRuntime | RiskConcentrationSourceRuntimeBlocker
 ):
+    configured_client = _build_configured_risk_source_client_from_environment()
+    if isinstance(configured_client, _RiskSourceClientBlocker):
+        return RiskConcentrationSourceRuntimeBlocker(
+            configured_client.code,
+            risk_base_url_configured=configured_client.risk_base_url_configured,
+        )
+    return RiskConcentrationSourceRuntime(
+        risk_source=LotusRiskConcentrationSourceAdapter(configured_client.risk_client),
+        risk_base_url_configured=True,
+    )
+
+
+def build_risk_volatility_source_runtime_from_environment() -> (
+    RiskVolatilitySourceRuntime | RiskVolatilitySourceRuntimeBlocker
+):
+    configured_client = _build_configured_risk_source_client_from_environment()
+    if isinstance(configured_client, _RiskSourceClientBlocker):
+        return RiskVolatilitySourceRuntimeBlocker(
+            configured_client.code,
+            risk_base_url_configured=configured_client.risk_base_url_configured,
+        )
+    return RiskVolatilitySourceRuntime(
+        risk_source=LotusRiskVolatilitySourceAdapter(configured_client.risk_client),
+        risk_base_url_configured=True,
+    )
+
+
+def _build_configured_risk_source_client_from_environment() -> (
+    _ConfiguredRiskSourceClient | _RiskSourceClientBlocker
+):
     risk_base_url = os.getenv(RISK_BASE_URL_ENV, "").strip()
     if not risk_base_url:
-        return RiskConcentrationSourceRuntimeBlocker("lotus_risk_base_url_not_configured")
+        return _RiskSourceClientBlocker("lotus_risk_base_url_not_configured")
     try:
         risk_config = _risk_source_client_config(risk_base_url)
     except DownstreamClientConfigurationError:
-        return RiskConcentrationSourceRuntimeBlocker(
+        return _RiskSourceClientBlocker(
             "lotus_risk_base_url_invalid",
             risk_base_url_configured=True,
         )
-    return RiskConcentrationSourceRuntime(
-        risk_source=LotusRiskConcentrationSourceAdapter(DownstreamJsonClient(risk_config)),
-        risk_base_url_configured=True,
-    )
+    return _ConfiguredRiskSourceClient(risk_client=DownstreamJsonClient(risk_config))
 
 
 def _build_configured_core_source_adapter_from_environment() -> (

@@ -18,9 +18,9 @@ from app.domain import (
 from app.application.access_scope import portfolio_only_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.risk_sources import (
-    RiskOpportunitySourcePort,
     RiskSourceEntitlementDenied,
     RiskSourceUnavailable,
+    RiskVolatilitySourcePort,
     RiskVolatilityEvidence,
     RiskVolatilityEvidenceRequest,
 )
@@ -77,7 +77,7 @@ def evaluate_high_volatility_signal_command(
 def evaluate_high_volatility_signal_from_risk(
     command: EvaluateHighVolatilityFromRiskCommand,
     *,
-    risk_source: RiskOpportunitySourcePort,
+    risk_source: RiskVolatilitySourcePort,
     policy: HighVolatilitySignalPolicy = DEFAULT_HIGH_VOLATILITY_POLICY,
 ) -> SignalEvaluationResult:
     try:

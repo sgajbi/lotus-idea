@@ -97,6 +97,9 @@ class LotusRiskVolatilitySourceAdapter:
     def __init__(self, risk_client: DownstreamJsonClient) -> None:
         self._risk_client = risk_client
 
+    def close(self) -> None:
+        self._risk_client.close()
+
     def fetch_volatility_evidence(
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
