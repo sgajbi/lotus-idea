@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import importlib.util
@@ -36,6 +36,8 @@ GENERATED_AT = datetime(2026, 6, 21, 10, 10, tzinfo=UTC)
 @dataclass
 class RecordingRiskSource(RiskOpportunitySourcePort):
     error: Exception | None = None
+    source_reported_volatility: Decimal = Decimal("14.25")
+    requests: list[RiskVolatilityEvidenceRequest] = field(default_factory=list)
 
     def fetch_concentration_evidence(
         self, request: RiskConcentrationEvidenceRequest
@@ -45,9 +47,10 @@ class RecordingRiskSource(RiskOpportunitySourcePort):
     def fetch_volatility_evidence(
         self, request: RiskVolatilityEvidenceRequest
     ) -> RiskVolatilityEvidence:
+        self.requests.append(request)
         if self.error is not None:
             raise self.error
-        return _risk_evidence()
+        return _risk_evidence(source_reported_volatility=self.source_reported_volatility)
 
     def fetch_drawdown_evidence(self, request: RiskDrawdownEvidenceRequest) -> RiskDrawdownEvidence:
         raise AssertionError("drawdown evidence is not used by high-volatility proof tests")
@@ -237,6 +240,44 @@ def test_high_volatility_live_proof_cli_writes_source_safe_artifact(
     assert "trace-123" not in serialized
 
 
+def test_high_volatility_live_proof_cli_applies_threshold_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_live_proof_script()
+    output_path = tmp_path / "high-volatility-live-proof.json"
+    risk_source = RecordingRiskSource(source_reported_volatility=Decimal("8.50"))
+
+    monkeypatch.setattr(module, "LotusRiskVolatilitySourceAdapter", lambda _client: risk_source)
+
+    result = module.main(
+        [
+            "--risk-base-url",
+            "http://localhost:8300",
+            "--portfolio-id",
+            "PB_SG_GLOBAL_BAL_001",
+            "--as-of-date",
+            "2026-06-21",
+            "--period-name",
+            "YTD",
+            "--volatility-threshold",
+            "8.00",
+            "--generated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--evaluated-at-utc",
+            "2026-06-21T10:10:00Z",
+            "--output",
+            str(output_path),
+        ]
+    )
+
+    assert result == 0
+    assert risk_source.requests[0].volatility_threshold == Decimal("8.00")
+    payload = json.loads(output_path.read_text(encoding="utf-8"))
+    assert payload["candidateGenerated"] is True
+    assert high_volatility_live_proof_is_valid(payload) is True
+
+
 def test_high_volatility_live_proof_cli_writes_blocked_artifact(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -277,9 +318,11 @@ def test_high_volatility_live_proof_cli_writes_blocked_artifact(
     assert "PB_SG_GLOBAL_BAL_001" not in json.dumps(payload)
 
 
-def _risk_evidence() -> RiskVolatilityEvidence:
+def _risk_evidence(
+    *, source_reported_volatility: Decimal = Decimal("14.25")
+) -> RiskVolatilityEvidence:
     return RiskVolatilityEvidence(
-        source_reported_volatility=Decimal("14.25"),
+        source_reported_volatility=source_reported_volatility,
         risk_supportability_state="ready",
         risk_ref=SourceRef(
             product_id="lotus-risk:RiskMetricsReport:v1",

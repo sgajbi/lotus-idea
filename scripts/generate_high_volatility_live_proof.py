@@ -9,10 +9,11 @@ import sys
 
 from app.application.high_volatility_live_proof import build_high_volatility_live_proof_payload
 from app.application.high_volatility_signal import (
+    DEFAULT_HIGH_VOLATILITY_POLICY,
     EvaluateHighVolatilitySignalCommand,
     evaluate_high_volatility_signal_command,
 )
-from app.domain import EvidenceFreshness, SignalEvaluationResult
+from app.domain import EvidenceFreshness, HighVolatilitySignalPolicy, SignalEvaluationResult
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
     DownstreamClientConfigurationError,
@@ -52,13 +53,14 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         as_of_date = _parse_date(args.as_of_date, "as-of-date")
+        policy = _policy_from_args(args)
         evidence = risk_source.fetch_volatility_evidence(
             RiskVolatilityEvidenceRequest(
                 portfolio_id=args.portfolio_id,
                 as_of_date=as_of_date,
                 period_name=args.period_name,
                 evaluated_at_utc=evaluated_at_utc,
-                volatility_threshold=Decimal(args.volatility_threshold),
+                volatility_threshold=policy.volatility_threshold,
                 correlation_id=args.correlation_id,
                 trace_id=args.trace_id,
             )
@@ -71,7 +73,8 @@ def main(argv: list[str] | None = None) -> int:
                 risk_ref=evidence.risk_ref,
                 evaluated_at_utc=evaluated_at_utc,
                 entitlement_allowed=evidence.entitlement_allowed,
-            )
+            ),
+            policy=policy,
         )
         proof_payload = build_high_volatility_live_proof_payload(
             generated_at_utc=generated_at_utc,
@@ -130,7 +133,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--portfolio-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--period-name", default="YTD")
-    parser.add_argument("--volatility-threshold", default="12.00")
+    parser.add_argument(
+        "--volatility-threshold",
+        default="12.00",
+        help="Materiality threshold in the same units as Lotus Risk VOLATILITY.value.",
+    )
     parser.add_argument(
         "--generated-at-utc",
         required=True,
@@ -171,6 +178,14 @@ def _evaluation_summary(
         "unsupportedReasons": [reason.value for reason in evaluation.unsupported_reasons],
         "sourceDiagnosticCodes": ([evidence.risk_diagnostic] if evidence.risk_diagnostic else []),
     }
+
+
+def _policy_from_args(args: argparse.Namespace) -> HighVolatilitySignalPolicy:
+    return HighVolatilitySignalPolicy(
+        policy_version=DEFAULT_HIGH_VOLATILITY_POLICY.policy_version,
+        volatility_threshold=Decimal(args.volatility_threshold),
+        candidate_score=DEFAULT_HIGH_VOLATILITY_POLICY.candidate_score,
+    )
 
 
 def _risk_base_url(args: argparse.Namespace) -> str:
