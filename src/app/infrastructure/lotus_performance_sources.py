@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+import time
 from typing import Any
 
 from app.domain import EvidenceFreshness, SourceRef, SourceSystem
@@ -23,6 +25,8 @@ from app.ports.performance_sources import (
 PRODUCT_VERSION = "v1"
 RETURNS_SERIES_PRODUCT_ID = "lotus-performance:ReturnsSeriesBundle:v1"
 RETURNS_SERIES_ROUTE = "/integration/returns/series"
+ASYNC_RESULT_MAX_POLLS = 10
+ASYNC_RESULT_POLL_INTERVAL_SECONDS = 0.25
 MANDATE_PERFORMANCE_HEALTH_PRODUCT_ID = "lotus-performance:MandatePerformanceHealthContext:v1"
 MANDATE_PERFORMANCE_HEALTH_ROUTE = "/performance/mandate-health-context"
 
@@ -41,25 +45,28 @@ class _BenchmarkReadinessMeasures:
 
 
 class LotusPerformanceUnderperformanceSourceAdapter:
-    def __init__(self, performance_client: DownstreamJsonClient) -> None:
+    def __init__(
+        self,
+        performance_client: DownstreamJsonClient,
+        *,
+        async_result_max_polls: int = ASYNC_RESULT_MAX_POLLS,
+        async_result_poll_interval_seconds: float = ASYNC_RESULT_POLL_INTERVAL_SECONDS,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
+        if async_result_max_polls < 1:
+            raise ValueError("async_result_max_polls must be at least 1")
+        if async_result_poll_interval_seconds < 0:
+            raise ValueError("async_result_poll_interval_seconds must not be negative")
         self._performance_client = performance_client
+        self._async_result_max_polls = async_result_max_polls
+        self._async_result_poll_interval_seconds = async_result_poll_interval_seconds
+        self._sleep = sleep
 
     def fetch_underperformance_evidence(
         self,
         request: PerformanceUnderperformanceEvidenceRequest,
     ) -> PerformanceUnderperformanceEvidence:
-        try:
-            payload = self._performance_client.post_json(
-                RETURNS_SERIES_ROUTE,
-                json_payload=_returns_series_request_payload(request),
-                correlation_id=request.correlation_id,
-                trace_id=request.trace_id,
-            )
-        except DownstreamServiceError as exc:
-            if exc.status_code in {401, 403}:
-                raise PerformanceSourceEntitlementDenied from exc
-            raise PerformanceSourceUnavailable(code=exc.code) from exc
-
+        payload = self._fetch_returns_series_payload(request)
         measures = _underperformance_measures(payload)
         return PerformanceUnderperformanceEvidence(
             source_reported_active_return=measures.source_reported_active_return,
@@ -72,6 +79,19 @@ class LotusPerformanceUnderperformanceSourceAdapter:
         self,
         request: PerformanceBenchmarkReadinessEvidenceRequest,
     ) -> PerformanceBenchmarkReadinessEvidence:
+        payload = self._fetch_returns_series_payload(request)
+        measures = _benchmark_readiness_measures(payload)
+        return PerformanceBenchmarkReadinessEvidence(
+            benchmark_context_available=measures.benchmark_context_available,
+            performance_ref=_source_ref(payload),
+            performance_diagnostic=measures.diagnostic,
+        )
+
+    def _fetch_returns_series_payload(
+        self,
+        request: PerformanceUnderperformanceEvidenceRequest
+        | PerformanceBenchmarkReadinessEvidenceRequest,
+    ) -> dict[str, Any]:
         try:
             payload = self._performance_client.post_json(
                 RETURNS_SERIES_ROUTE,
@@ -84,12 +104,46 @@ class LotusPerformanceUnderperformanceSourceAdapter:
                 raise PerformanceSourceEntitlementDenied from exc
             raise PerformanceSourceUnavailable(code=exc.code) from exc
 
-        measures = _benchmark_readiness_measures(payload)
-        return PerformanceBenchmarkReadinessEvidence(
-            benchmark_context_available=measures.benchmark_context_available,
-            performance_ref=_source_ref(payload),
-            performance_diagnostic=measures.diagnostic,
-        )
+        if _is_async_accepted(payload):
+            return self._resolve_returns_series_result(payload, request)
+        return payload
+
+    def _resolve_returns_series_result(
+        self,
+        accepted_payload: dict[str, Any],
+        request: PerformanceUnderperformanceEvidenceRequest
+        | PerformanceBenchmarkReadinessEvidenceRequest,
+    ) -> dict[str, Any]:
+        result_path = _result_path(accepted_payload)
+        last_payload = accepted_payload
+        for attempt_index in range(self._async_result_max_polls):
+            try:
+                result_payload = self._performance_client.get_json(
+                    result_path,
+                    correlation_id=request.correlation_id,
+                    trace_id=request.trace_id,
+                )
+            except DownstreamServiceError as exc:
+                if exc.status_code == 404 and attempt_index < self._async_result_max_polls - 1:
+                    self._sleep_between_async_polls()
+                    continue
+                if exc.status_code in {401, 403}:
+                    raise PerformanceSourceEntitlementDenied from exc
+                raise PerformanceSourceUnavailable(code=exc.code) from exc
+
+            last_payload = result_payload
+            if not _is_async_accepted(result_payload):
+                return result_payload
+            if attempt_index < self._async_result_max_polls - 1:
+                self._sleep_between_async_polls()
+
+        if _is_async_accepted(last_payload):
+            raise PerformanceSourceUnavailable(code="performance_returns_series_pending")
+        return last_payload
+
+    def _sleep_between_async_polls(self) -> None:
+        if self._async_result_poll_interval_seconds > 0:
+            self._sleep(self._async_result_poll_interval_seconds)
 
     def fetch_mandate_health_context(
         self,
@@ -245,6 +299,13 @@ def _is_async_accepted(payload: dict[str, Any]) -> bool:
     execution_mode = payload.get("execution_mode")
     status = payload.get("status")
     return execution_mode == "async" or status == "pending"
+
+
+def _result_path(payload: dict[str, Any]) -> str:
+    value = payload.get("result_path")
+    if isinstance(value, str) and value.startswith("/"):
+        return value
+    raise PerformanceSourceUnavailable(code="performance_returns_series_result_path_missing")
 
 
 def _object_field(payload: dict[str, Any], key: str) -> dict[str, Any]:
