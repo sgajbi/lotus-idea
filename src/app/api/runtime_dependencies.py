@@ -23,6 +23,8 @@ from app.runtime.settings import (
     load_runtime_settings,
 )
 from app.runtime.source_ingestion_state import (
+    AdvisePolicyEvaluationSourceRuntime,
+    AdvisePolicyEvaluationSourceRuntimeBlocker,
     CoreBenchmarkAssignmentSourceRuntime,
     CoreBenchmarkAssignmentSourceRuntimeBlocker,
     CoreBondMaturitySourceRuntime,
@@ -43,6 +45,7 @@ from app.runtime.source_ingestion_state import (
     RiskVolatilitySourceRuntimeBlocker,
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
+    build_advise_policy_evaluation_source_runtime_from_environment,
     build_core_benchmark_assignment_source_runtime_from_environment,
     build_core_bond_maturity_source_runtime_from_environment,
     build_core_high_cash_source_runtime_from_environment,
@@ -60,6 +63,8 @@ __all__ = [
     "DURABLE_REPOSITORY_NOT_CONFIGURED",
     "DURABLE_REPOSITORY_UNAVAILABLE",
     "RuntimeStoragePosture",
+    "AdvisePolicyEvaluationSourceRuntime",
+    "AdvisePolicyEvaluationSourceRuntimeBlocker",
     "CoreBenchmarkAssignmentSourceRuntime",
     "CoreBenchmarkAssignmentSourceRuntimeBlocker",
     "CoreBondMaturitySourceRuntime",
@@ -80,6 +85,7 @@ __all__ = [
     "RiskVolatilitySourceRuntimeBlocker",
     "SourceIngestionRuntime",
     "SourceIngestionRuntimeBlocker",
+    "build_advise_policy_evaluation_source_runtime_from_environment",
     "build_core_benchmark_assignment_source_runtime_from_environment",
     "build_core_bond_maturity_source_runtime_from_environment",
     "build_core_high_cash_source_runtime_from_environment",

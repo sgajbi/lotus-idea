@@ -45,9 +45,13 @@ class AdvisePolicyEvaluationEvidence:
     entitlement_allowed: bool = True
 
 
-class AdviseOpportunitySourcePort(Protocol):
+class AdvisePolicyEvaluationSourcePort(Protocol):
     def fetch_policy_evaluation_evidence(
         self,
         request: AdvisePolicyEvaluationEvidenceRequest,
     ) -> AdvisePolicyEvaluationEvidence:
         """Fetch source-owned Lotus Advise policy evaluation posture for idea evaluation."""
+
+
+class AdviseOpportunitySourcePort(AdvisePolicyEvaluationSourcePort, Protocol):
+    """Backward-compatible alias for Advise opportunity source adapters."""

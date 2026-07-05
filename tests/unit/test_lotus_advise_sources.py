@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import pytest
@@ -359,3 +359,18 @@ def test_lotus_advise_adapter_distinguishes_sign_off_and_available_diagnostics()
 
     assert sign_off_blocked.advise_diagnostic == "advise_policy_sign_off_blocked"
     assert available.advise_diagnostic == "advise_policy_context_available"
+
+
+def test_lotus_advise_adapter_close_releases_owned_client() -> None:
+    class CloseAwareClient:
+        closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    client = CloseAwareClient()
+    adapter = LotusAdvisePolicyEvaluationSourceAdapter(cast(DownstreamJsonClient, client))
+
+    adapter.close()
+
+    assert client.closed is True

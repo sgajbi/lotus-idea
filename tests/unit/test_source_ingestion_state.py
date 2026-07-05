@@ -15,6 +15,7 @@ from app.application.source_ingestion_readiness import (
 from app.application.source_ingestion import SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING
 from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.infrastructure.downstream_client import DownstreamClientConfig
+from app.infrastructure.lotus_advise_sources import LotusAdvisePolicyEvaluationSourceAdapter
 from app.infrastructure.lotus_core_sources import LotusCoreHighCashSourceAdapter
 from app.infrastructure.lotus_manage_sources import LotusManageMandateHealthSourceAdapter
 from app.infrastructure.lotus_performance_sources import (
@@ -26,6 +27,10 @@ from app.infrastructure.lotus_risk_sources import (
     LotusRiskVolatilitySourceAdapter,
 )
 from app.runtime.source_ingestion_state import (
+    ADVISE_BASE_URL_ENV,
+    ADVISE_TIMEOUT_SECONDS_ENV,
+    AdvisePolicyEvaluationSourceRuntime,
+    AdvisePolicyEvaluationSourceRuntimeBlocker,
     CoreBenchmarkAssignmentSourceRuntime,
     CoreBenchmarkAssignmentSourceRuntimeBlocker,
     CoreBondMaturitySourceRuntime,
@@ -58,6 +63,7 @@ from app.runtime.source_ingestion_state import (
     SOURCE_INGESTION_RETRY_MAX_BACKOFF_SECONDS_ENV,
     SourceIngestionRuntime,
     SourceIngestionRuntimeBlocker,
+    build_advise_policy_evaluation_source_runtime_from_environment,
     build_core_benchmark_assignment_source_runtime_from_environment,
     build_core_bond_maturity_source_runtime_from_environment,
     build_core_high_cash_source_runtime_from_environment,
@@ -184,6 +190,18 @@ def test_manage_mandate_health_source_runtime_blocks_when_base_url_is_missing(
     result = build_manage_mandate_health_source_runtime_from_environment()
 
     assert result == ManageMandateHealthSourceRuntimeBlocker("lotus_manage_base_url_not_configured")
+
+
+def test_advise_policy_evaluation_source_runtime_blocks_when_base_url_is_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(ADVISE_BASE_URL_ENV, raising=False)
+
+    result = build_advise_policy_evaluation_source_runtime_from_environment()
+
+    assert result == AdvisePolicyEvaluationSourceRuntimeBlocker(
+        "lotus_advise_base_url_not_configured"
+    )
 
 
 def test_core_high_cash_source_runtime_builds_without_manifest(
@@ -315,6 +333,19 @@ def test_manage_mandate_health_source_runtime_builds_without_manifest(
     assert isinstance(result.manage_source, LotusManageMandateHealthSourceAdapter)
 
 
+def test_advise_policy_evaluation_source_runtime_builds_without_manifest(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv(MANIFEST_ENV, raising=False)
+    monkeypatch.setenv(ADVISE_BASE_URL_ENV, "http://localhost:8600")
+
+    result = build_advise_policy_evaluation_source_runtime_from_environment()
+
+    assert isinstance(result, AdvisePolicyEvaluationSourceRuntime)
+    assert result.advise_base_url_configured is True
+    assert isinstance(result.advise_source, LotusAdvisePolicyEvaluationSourceAdapter)
+
+
 def test_core_high_cash_source_runtime_blocks_invalid_core_configuration(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -437,6 +468,19 @@ def test_manage_mandate_health_source_runtime_blocks_invalid_configuration(
     assert result == ManageMandateHealthSourceRuntimeBlocker(
         "lotus_manage_base_url_invalid",
         manage_base_url_configured=True,
+    )
+
+
+def test_advise_policy_evaluation_source_runtime_blocks_invalid_configuration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(ADVISE_BASE_URL_ENV, "not-a-url")
+
+    result = build_advise_policy_evaluation_source_runtime_from_environment()
+
+    assert result == AdvisePolicyEvaluationSourceRuntimeBlocker(
+        "lotus_advise_base_url_invalid",
+        advise_base_url_configured=True,
     )
 
 
@@ -671,6 +715,20 @@ def test_manage_mandate_health_source_runtime_blocks_invalid_timeout(
     assert result == ManageMandateHealthSourceRuntimeBlocker(
         "lotus_manage_base_url_invalid",
         manage_base_url_configured=True,
+    )
+
+
+def test_advise_policy_evaluation_source_runtime_blocks_invalid_timeout(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv(ADVISE_BASE_URL_ENV, "http://localhost:8600")
+    monkeypatch.setenv(ADVISE_TIMEOUT_SECONDS_ENV, "0")
+
+    result = build_advise_policy_evaluation_source_runtime_from_environment()
+
+    assert result == AdvisePolicyEvaluationSourceRuntimeBlocker(
+        "lotus_advise_base_url_invalid",
+        advise_base_url_configured=True,
     )
 
 
@@ -945,6 +1003,33 @@ def test_manage_mandate_health_source_runtime_close_releases_owned_client(
     result = build_manage_mandate_health_source_runtime_from_environment()
 
     assert isinstance(result, ManageMandateHealthSourceRuntime)
+    assert len(created_clients) == 1
+    result.close()
+    assert created_clients[0].closed is True
+
+
+def test_advise_policy_evaluation_source_runtime_close_releases_owned_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class CloseAwareDownstreamClient:
+        def __init__(self, config: object) -> None:
+            self.config = config
+            self.closed = False
+            created_clients.append(self)
+
+        def close(self) -> None:
+            self.closed = True
+
+    created_clients: list[CloseAwareDownstreamClient] = []
+    monkeypatch.setattr(
+        "app.runtime.source_ingestion_state.DownstreamJsonClient",
+        CloseAwareDownstreamClient,
+    )
+    monkeypatch.setenv(ADVISE_BASE_URL_ENV, "http://localhost:8600")
+
+    result = build_advise_policy_evaluation_source_runtime_from_environment()
+
+    assert isinstance(result, AdvisePolicyEvaluationSourceRuntime)
     assert len(created_clients) == 1
     result.close()
     assert created_clients[0].closed is True
