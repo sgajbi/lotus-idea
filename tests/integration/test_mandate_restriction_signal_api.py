@@ -92,6 +92,94 @@ def test_mandate_restriction_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
+@pytest.mark.parametrize(
+    ("source_system", "product_id"),
+    (
+        ("lotus-core", "lotus-core:PortfolioStateSnapshot:v1"),
+        ("lotus-manage", "lotus-manage:PortfolioActionRegister:v1"),
+        ("lotus-advise", "lotus-advise:AdvisoryPolicyEvaluationRecord:v1"),
+    ),
+)
+def test_mandate_restriction_signal_api_accepts_governed_source_contracts(
+    source_system: str,
+    product_id: str,
+) -> None:
+    client = TestClient(app)
+    payload = mandate_restriction_payload()
+    payload["restrictionRef"]["sourceSystem"] = source_system
+    payload["restrictionRef"]["productId"] = product_id
+
+    response = client.post(
+        "/api/v1/idea-signals/mandate-restriction/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["outcome"] == "candidate_created"
+    assert body["sourceAuthority"] == source_system
+    assert body["candidate"]["sourceRefs"][0]["productId"] == product_id
+
+
+def test_mandate_restriction_signal_api_rejects_unknown_source_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    payload = mandate_restriction_payload()
+    payload["restrictionRef"]["sourceSystem"] = "lotus-risk"
+    payload["restrictionRef"]["productId"] = "lotus-risk:MandateRiskHealthContext:v1"
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(idea_signals_api, "emit_foundation_operation_event", capture)
+
+    response = client.post(
+        "/api/v1/idea-signals/mandate-restriction/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "MandateRiskHealthContext" not in response.text
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "source-owned",
+            "source_ref_contract_mismatch",
+        )
+    ]
+
+
+def test_mandate_restriction_signal_api_rejects_wrong_advise_product_id() -> None:
+    client = TestClient(app)
+    payload = mandate_restriction_payload()
+    payload["restrictionRef"]["productId"] = "lotus-advise:AdvisoryProposal:v1"
+
+    response = client.post(
+        "/api/v1/idea-signals/mandate-restriction/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "AdvisoryProposal" not in response.text
+
+
 def test_mandate_restriction_signal_api_requires_signal_permission() -> None:
     client = TestClient(app)
 
