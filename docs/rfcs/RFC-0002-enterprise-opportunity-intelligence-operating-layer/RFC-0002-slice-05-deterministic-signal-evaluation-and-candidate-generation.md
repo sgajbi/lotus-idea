@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus narrowed Risk drawdown source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, underperformance policy plus narrowed Performance underperformance source-port/adapter/live-proof and caller-supplied plus bounded Performance-backed `evaluate-from-source` API foundations, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied plus bounded Manage-backed `evaluate-from-source` API foundations, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, missing risk-profile evidence-gap policy plus caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, mandate/restriction review policy plus caller-supplied API foundation, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus narrowed Risk drawdown source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, underperformance policy plus narrowed Performance underperformance source-port/adapter/live-proof and caller-supplied plus bounded Performance-backed `evaluate-from-source` API foundations, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied plus bounded Manage-backed `evaluate-from-source` API foundations, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, missing risk-profile evidence-gap policy plus caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, mandate/restriction review policy plus explicit Advise restriction diagnostic consumption and caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
 
 ## Outcome
 
@@ -704,26 +704,53 @@ Additional implemented mandate/restriction review foundation:
    free command wrapper, and `src/app/api/idea_signals.py` exposes the bounded
    `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over
    caller-supplied Core, Manage, or Advise evidence refs.
-4. `tests/unit/test_mandate_restriction_signal_evaluation.py`,
+4. The application layer also consumes Lotus Advise
+   `AdvisoryPolicyEvaluationRecord:v1` source evidence through the existing
+   Advise policy-evaluation source port. It creates mandate/restriction review
+   candidates only when `advise_diagnostic` carries explicit restriction or
+   mandate diagnostic codes such as `mandate_restriction_review_required`,
+   `product_restriction_review_required`, `country_restriction_review_required`,
+   `mandate_breach`, or `restriction_breached`.
+5. Generic open suitability or policy requirements remain owned by the missing
+   suitability context path; they do not create mandate/restriction candidates
+   unless Advise emits explicit mandate/restriction diagnostic posture.
+6. `tests/unit/test_mandate_restriction_signal_evaluation.py`,
    `tests/unit/test_mandate_restriction_application.py`, and
    `tests/integration/test_mandate_restriction_signal_api.py` cover positive,
    not-eligible, stale-source, missing-source, missing-posture, duplicate,
-   entitlement-denied, permission-denied, and source-redaction cases.
-5. `src/app/application/mandate_restriction_source_product_proof.py`,
+   entitlement-denied, permission-denied, source-redaction, explicit Advise
+   diagnostic consumption, generic diagnostic suppression, runtime-not-configured,
+   access-scope denial, source-unavailable, and runtime cleanup cases.
+7. `src/app/application/mandate_restriction_source_product_proof.py`,
    `scripts/generate_mandate_restriction_source_product_proof.py`, and
    `make mandate-restriction-source-product-proof-contract-gate` define a
    source-safe typed Advise mandate/restriction source-product proof artifact.
    A valid artifact can clear only
    `opportunity_archetype_typed_restriction_source_product_missing` in
    aggregate readiness.
-6. `src/app/application/mandate_restriction_live_proof.py`,
+8. `src/app/application/mandate_restriction_live_proof.py`,
    `scripts/generate_mandate_restriction_live_proof.py`, and
    `make mandate-restriction-live-proof-contract-gate` define a separate
    source-safe live Advise mandate/restriction diagnostic proof. A valid
    artifact can clear only
    `opportunity_archetype_live_restriction_source_proof_missing` in aggregate
    readiness.
-7. This foundation does not include restriction clearance, mandate-state
+9. `POST /api/v1/idea-signals/mandate-restriction/evaluate-from-source`
+   exposes the existing Advise policy-evaluation source-port through the
+   bounded advisor API pattern. It enforces advisor role,
+   `idea.signal.evaluate`, and optional request access-scope entitlement before
+   constructing Advise runtime dependencies; returns product-safe 503 posture
+   when Advise runtime configuration is absent; closes route-owned runtime
+   clients after each request; and redacts source routes, content hashes,
+   workflow identifiers, and raw source payloads from responses.
+10. This remains an internal design-module foundation inside the existing
+    `lotus-idea` service. It does not add a separately scalable process,
+    certify live Advise source support, clear restrictions, change mandate
+    state, determine suitability, approve policy, approve proposals, recommend
+    trades, create rebalance actions, create orders, publish client
+    communication, prove Gateway/Workbench behavior, promote a typed
+    restriction data product, or promote a supported feature.
+11. This foundation does not include restriction clearance, mandate-state
    authority, data-mesh certification, Workbench proof, client-publication
    approval, or supported-feature promotion.
 
@@ -830,8 +857,8 @@ Not implemented yet:
 6. certified long-running scheduled daemon runtime and live-service recovery proof,
 7. source-fetching APIs beyond bounded high-cash, low-income, bond-maturity,
    missing-benchmark, concentration-risk, high-volatility, drawdown-review,
-   underperformance, allocation-drift, missing-suitability, and
-   missing-risk-profile
+   underperformance, allocation-drift, missing-suitability,
+   missing-risk-profile, and mandate/restriction
    `evaluate-from-source` evaluation,
 8. Gateway/Workbench proof,
 9. supported-feature promotion,
@@ -989,10 +1016,19 @@ Current source-fetching API validation:
    source unavailability, route-owned runtime cleanup, manifest-free Advise
    source runtime construction, adapter close delegation, endpoint-ledger
    registration, and bounded operation-event proof.
-14. This closes only the bounded high-cash, low-income, bond-maturity,
+14. `python -m pytest tests\integration\test_mandate_restriction_signal_api.py tests\integration\test_signal_source_operation_events.py::test_mandate_restriction_source_api_emits_blocked_operation_event tests\unit\test_mandate_restriction_application.py tests\unit\test_source_ingestion_state.py tests\unit\test_lotus_advise_sources.py tests\unit\test_service_contract.py -q`
+   covers mandate/restriction Lotus Advise-backed evaluation, explicit
+   restriction diagnostic consumption, generic suitability/policy diagnostic
+   suppression, request access-scope entitlement denial before runtime
+   construction, missing Advise runtime configuration, Advise source
+   unavailability, route-owned runtime cleanup, manifest-free Advise source
+   runtime construction, adapter close delegation, endpoint-ledger
+   registration, and bounded operation-event proof.
+15. This closes only the bounded high-cash, low-income, bond-maturity,
    missing-benchmark, concentration-risk, high-volatility, drawdown-review,
-   underperformance, allocation-drift, missing-suitability, and
-   missing-risk-profile source-fetching API foundations.
+   underperformance, allocation-drift, missing-suitability,
+   missing-risk-profile, and mandate/restriction source-fetching API
+   foundations.
    It does not certify live Core, Risk, Performance, Manage, or Advise source
    support, source-worker operation, Gateway/Workbench support, data-product
    certification, benchmark assignment, benchmark methodology authority,
@@ -1002,9 +1038,10 @@ Current source-fetching API validation:
    approval, concentration calculation, trade recommendation, rebalance action,
    order creation, volatility calculation, VaR calculation, tracking-error
    calculation, drawdown calculation, allocation-drift calculation, mandate
-   compliance approval, risk-profile approval, suitability approval, policy
-   approval, proposal approval, sign-off approval, client publication, typed
-   risk-profile data-product certification, or supported-feature promotion.
+   compliance approval, mandate-state change, restriction clearance,
+   risk-profile approval, suitability approval, policy approval, proposal
+   approval, sign-off approval, client publication, typed risk-profile or
+   restriction data-product certification, or supported-feature promotion.
 
 Current mandate health source-product ref validation:
 

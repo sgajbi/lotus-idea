@@ -140,8 +140,9 @@ Bounded source-fetching signal APIs may exist only when they call an explicit
 source-port/adapter, enforce caller entitlement scope before runtime dependency
 construction, return product-safe dependency failures, and preserve source
 authority. High-cash, low-income, bond-maturity, missing-benchmark,
-concentration-risk, high-volatility, drawdown-review, underperformance, and
-allocation-drift `evaluate-from-source` APIs are internal foundations inside
+concentration-risk, high-volatility, drawdown-review, underperformance,
+allocation-drift, missing-suitability, missing-risk-profile, and
+mandate/restriction `evaluate-from-source` APIs are internal foundations inside
 the existing runtime; they do not certify live source support, persist
 candidates, create a separate runtime service, prove Gateway/Workbench
 behavior, certify a data product, or promote a supported feature. Low-income
@@ -186,6 +187,12 @@ Missing-risk-profile source-backed evaluation consumes only Lotus Advise-owned
 not approve risk profiling, determine suitability, approve policy/proposals,
 publish client communication, certify a typed risk-profile data product, or
 promote Advise/product support.
+Mandate/restriction source-backed evaluation consumes only Lotus Advise-owned
+`AdvisoryPolicyEvaluationRecord:v1` explicit mandate/restriction diagnostic
+posture and must not clear restrictions, change mandate state, determine
+suitability, approve policy/proposals, recommend trades, create rebalance
+actions, create orders, publish client communication, certify a typed
+restriction data product, or promote Advise/product support.
 
 ## Current Implementation Map
 
