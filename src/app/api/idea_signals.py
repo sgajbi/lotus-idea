@@ -14,13 +14,18 @@ from app.api.idea_signal_models import (
     EvaluateHighCashFromSourceRequest,
     EvaluateHighCashSignalRequest,
     EvaluateHighCashSignalResponse,
+    EvaluateMandateRestrictionFromSourceRequest,
     EvaluateMandateRestrictionSignalRequest,
     EvaluateMandateRestrictionSignalResponse,
 )
 from app.api.runtime_dependencies import (
+    AdvisePolicyEvaluationSourceRuntimeBlocker,
     CoreHighCashSourceRuntimeBlocker,
     get_idea_repository,
     idea_repository_durable_storage_backed,
+)
+from app.api.runtime_dependencies import (
+    build_advise_policy_evaluation_source_runtime_from_environment as _build_advise_policy_evaluation_source_runtime_from_environment,
 )
 from app.api.runtime_dependencies import (
     build_core_high_cash_source_runtime_from_environment as _build_core_high_cash_source_runtime_from_environment,
@@ -47,6 +52,7 @@ from app.application.high_cash_signal import (
     evaluate_and_persist_high_cash_signal as evaluate_and_persist_high_cash_signal_command,
 )
 from app.application.mandate_restriction_signal import (
+    evaluate_mandate_restriction_signal_from_advise,
     evaluate_mandate_restriction_signal_command,
 )
 from app.domain import (
@@ -187,6 +193,65 @@ async def evaluate_mandate_restriction_signal(
         result,
         source_authority=source_authority,
     )
+
+
+async def evaluate_mandate_restriction_signal_from_source(
+    request: Request,
+    signal_request: EvaluateMandateRestrictionFromSourceRequest,
+    caller: CallerContextHeaders,
+) -> EvaluateMandateRestrictionSignalResponse | JSONResponse:
+    source_authority = SourceSystem.LOTUS_ADVISE.value
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        requested_access_scope=(
+            signal_request.access_scope.to_domain()
+            if signal_request.access_scope is not None
+            else None
+        ),
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
+
+    runtime = _build_advise_policy_evaluation_source_runtime_from_environment()
+    if isinstance(runtime, AdvisePolicyEvaluationSourceRuntimeBlocker):
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.BLOCKED,
+            source_authority=source_authority,
+            error_code=runtime.code,
+        )
+        return problem_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Advise source runtime is not configured for mandate-restriction source evaluation.",
+        )
+
+    try:
+        result = evaluate_mandate_restriction_signal_from_advise(
+            signal_request.to_command(
+                correlation_id=_request_correlation_id(request),
+                trace_id=_request_trace_id(request),
+            ),
+            advise_source=runtime.advise_source,
+        )
+        emit_signal_evaluation_event(
+            result=result,
+            source_authority=source_authority,
+            emit_event=emit_foundation_operation_event,
+        )
+        return EvaluateMandateRestrictionSignalResponse.from_domain(
+            result,
+            source_authority=source_authority,
+        )
+    finally:
+        close_signal_source_runtime(
+            runtime=runtime,
+            source_authority=source_authority,
+            emit_event=emit_foundation_operation_event,
+        )
 
 
 async def evaluate_and_persist_high_cash_signal(
@@ -543,6 +608,37 @@ MANDATE_RESTRICTION_EVALUATE_ROUTE: RouteMetadata = {
 }
 
 
+MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/idea-signals/mandate-restriction/evaluate-from-source",
+    "operation_id": "evaluateMandateRestrictionIdeaSignalFromSource",
+    "summary": "Evaluate a mandate or restriction idea signal from Lotus Advise",
+    "description": (
+        "Fetches source-owned Lotus Advise policy-evaluation workflow posture "
+        "through the configured Advise source adapter, then evaluates deterministic "
+        "mandate/restriction review posture only when Advise emits explicit "
+        "restriction diagnostic evidence. The endpoint does not persist candidates, "
+        "clear restrictions, change mandate state, approve suitability, approve "
+        "policy, approve proposals, create rebalance or order authority, publish "
+        "client communication, certify live source support, create Gateway/Workbench "
+        "support, certify a typed restriction data product, or promote a supported "
+        "business feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": EvaluateMandateRestrictionSignalResponse,
+    "tags": ["Idea Signals"],
+    "responses": {
+        200: MANDATE_RESTRICTION_EVALUATE_ROUTE["responses"][200],
+        **signal_problem_responses(),
+        **service_unavailable_metadata(
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Advise source runtime is not configured for mandate-restriction source evaluation.",
+            description="Advise source runtime configuration is missing or invalid.",
+        ),
+    },
+}
+
+
 HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE: RouteMetadata = {
     "path": "/api/v1/idea-signals/high-cash/evaluate-and-persist",
     "operation_id": "evaluateAndPersistHighCashIdeaSignal",
@@ -660,6 +756,16 @@ def register_idea_signal_routes(app: FastAPI) -> None:
         tags=MANDATE_RESTRICTION_EVALUATE_ROUTE["tags"],
         responses=MANDATE_RESTRICTION_EVALUATE_ROUTE["responses"],
     )(evaluate_mandate_restriction_signal)
+    app.post(
+        path=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["path"],
+        operation_id=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["operation_id"],
+        summary=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["summary"],
+        description=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["description"],
+        status_code=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["status_code"],
+        response_model=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["response_model"],
+        tags=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["tags"],
+        responses=MANDATE_RESTRICTION_EVALUATE_FROM_SOURCE_ROUTE["responses"],
+    )(evaluate_mandate_restriction_signal_from_source)
     app.post(
         path=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["path"],
         operation_id=HIGH_CASH_EVALUATE_AND_PERSIST_ROUTE["operation_id"],

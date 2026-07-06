@@ -110,6 +110,7 @@ def test_endpoint_certification_ledger_matches_public_operations() -> None:
         ("POST", "/api/v1/idea-signals/low-income/evaluate"),
         ("POST", "/api/v1/idea-signals/low-income/evaluate-from-source"),
         ("POST", "/api/v1/idea-signals/mandate-restriction/evaluate"),
+        ("POST", "/api/v1/idea-signals/mandate-restriction/evaluate-from-source"),
         ("POST", "/api/v1/idea-signals/missing-benchmark/evaluate"),
         ("POST", "/api/v1/idea-signals/missing-benchmark/evaluate-from-source"),
         ("POST", "/api/v1/idea-signals/missing-risk-profile/evaluate"),

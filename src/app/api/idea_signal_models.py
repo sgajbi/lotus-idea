@@ -17,6 +17,9 @@ from app.application.high_cash_signal import (
     EvaluateHighCashSignalCommand,
 )
 from app.application.mandate_restriction_signal import EvaluateMandateRestrictionSignalCommand
+from app.application.mandate_restriction_signal import (
+    EvaluateMandateRestrictionFromAdviseCommand,
+)
 from app.domain import CandidatePersistenceDecision, CandidatePersistenceRecord
 
 
@@ -251,6 +254,68 @@ class EvaluateMandateRestrictionSignalRequest(CamelModel):
         )
 
 
+class EvaluateMandateRestrictionFromSourceRequest(CamelModel):
+    evaluation_id: str = Field(
+        ...,
+        alias="evaluationId",
+        min_length=1,
+        description="Lotus Advise policy-evaluation workflow identifier to fetch.",
+        examples=["pev_001"],
+    )
+    as_of_date: date = Field(
+        ...,
+        alias="asOfDate",
+        description="Business date for the source-owned Advise mandate/restriction posture.",
+        examples=["2026-06-21"],
+    )
+    evaluated_at_utc: datetime = Field(
+        ...,
+        alias="evaluatedAtUtc",
+        description="UTC timestamp for deterministic evaluation.",
+        examples=["2026-06-21T10:00:00Z"],
+    )
+    access_scope: ReviewAccessScopeRequest | None = Field(
+        default=None,
+        alias="accessScope",
+        description="Optional review access scope checked against caller entitlement before source access.",
+    )
+    duplicate_of_candidate_id: str | None = Field(
+        default=None,
+        alias="duplicateOfCandidateId",
+        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
+        examples=["idea_mandate_restriction_existing"],
+    )
+
+    @field_validator("evaluation_id")
+    @classmethod
+    def _evaluation_id_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("evaluationId is required")
+        return cleaned
+
+    @field_validator("evaluated_at_utc")
+    @classmethod
+    def _evaluated_at_must_be_aware(cls, value: datetime) -> datetime:
+        return require_timezone_aware(value, field_name="evaluatedAtUtc")
+
+    def to_command(
+        self,
+        *,
+        correlation_id: str | None,
+        trace_id: str | None,
+    ) -> EvaluateMandateRestrictionFromAdviseCommand:
+        return EvaluateMandateRestrictionFromAdviseCommand(
+            evaluation_id=self.evaluation_id,
+            as_of_date=self.as_of_date,
+            evaluated_at_utc=self.evaluated_at_utc,
+            access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
+            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+
 class EvaluateHighCashSignalResponse(SignalEvaluationResponse):
     source_authority: str = Field(
         "lotus-core",
@@ -313,6 +378,7 @@ __all__ = [
     "EvaluateHighCashFromSourceRequest",
     "EvaluateHighCashSignalRequest",
     "EvaluateHighCashSignalResponse",
+    "EvaluateMandateRestrictionFromSourceRequest",
     "EvaluateMandateRestrictionSignalRequest",
     "EvaluateMandateRestrictionSignalResponse",
     "HighCashEvidenceRequest",

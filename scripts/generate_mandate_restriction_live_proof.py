@@ -12,6 +12,7 @@ from app.application.mandate_restriction_live_proof import (
 from app.application.mandate_restriction_signal import (
     EvaluateMandateRestrictionSignalCommand,
     evaluate_mandate_restriction_signal_command,
+    mandate_restriction_review_ready_from_advise_diagnostic,
 )
 from app.domain import EvidenceFreshness, SignalEvaluationResult
 from app.infrastructure.downstream_client import (
@@ -21,11 +22,8 @@ from app.infrastructure.downstream_client import (
     DownstreamServiceError,
 )
 from app.infrastructure.lotus_advise_sources import LotusAdvisePolicyEvaluationSourceAdapter
-from app.ports.advise_sources import (
-    AdvisePolicyEvaluationEvidence,
-    AdviseSourceEntitlementDenied,
-    AdviseSourceUnavailable,
-)
+from app.ports.advise_sources import AdvisePolicyEvaluationEvidence
+from app.ports.advise_sources import AdviseSourceEntitlementDenied, AdviseSourceUnavailable
 
 
 try:
@@ -37,18 +35,6 @@ except ModuleNotFoundError:
 
 ADVISE_BASE_URL_ENV = "LOTUS_ADVISE_BASE_URL"
 TIMEOUT_SECONDS_ENV = "LOTUS_IDEA_ADVISE_TIMEOUT_SECONDS"
-RESTRICTION_REVIEW_DIAGNOSTICS = {
-    "mandate_restriction_review_required",
-    "mandate_restriction_blocked",
-    "restriction_review_required",
-    "restriction_changed",
-    "product_restriction_changed",
-    "country_restriction_changed",
-    "actionability_blocked",
-    "policy_restriction_blocked",
-    "mandate_breach",
-    "restriction_breached",
-}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -66,15 +52,14 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         as_of_date = _parse_date(args.as_of_date, "as-of-date")
-        evidence = advise_source.fetch_policy_evaluation_evidence(
-            build_advise_policy_evaluation_evidence_request(
-                evaluation_id=args.evaluation_id,
-                as_of_date=as_of_date,
-                evaluated_at_utc=evaluated_at_utc,
-                correlation_id=args.correlation_id,
-                trace_id=args.trace_id,
-            )
+        request = build_advise_policy_evaluation_evidence_request(
+            evaluation_id=args.evaluation_id,
+            as_of_date=as_of_date,
+            evaluated_at_utc=evaluated_at_utc,
+            correlation_id=args.correlation_id,
+            trace_id=args.trace_id,
         )
+        evidence = advise_source.fetch_policy_evaluation_evidence(request)
         evaluation = evaluate_mandate_restriction_signal_command(
             EvaluateMandateRestrictionSignalCommand(
                 as_of_date=as_of_date,
@@ -195,7 +180,7 @@ def _restriction_status(evidence: AdvisePolicyEvaluationEvidence) -> str:
 
 
 def _restriction_review_ready(evidence: AdvisePolicyEvaluationEvidence) -> bool:
-    return _normalized_diagnostic(evidence.advise_diagnostic) in RESTRICTION_REVIEW_DIAGNOSTICS
+    return mandate_restriction_review_ready_from_advise_diagnostic(evidence.advise_diagnostic)
 
 
 def _normalized_diagnostic(value: str | None) -> str:
