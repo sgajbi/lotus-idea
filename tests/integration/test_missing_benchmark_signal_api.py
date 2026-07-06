@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 import app.api.missing_benchmark_signals as missing_benchmark_signals_api
@@ -360,6 +361,54 @@ def test_missing_benchmark_signal_api_reports_stale_source_blocker() -> None:
         "sourceAuthority": "lotus-core",
         "supportedFeaturePromoted": False,
     }
+
+
+def test_missing_benchmark_signal_api_rejects_wrong_source_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = TestClient(app)
+    payload = missing_benchmark_payload()
+    payload["benchmarkAssignmentRef"] = {
+        **payload["benchmarkAssignmentRef"],
+        "productId": "lotus-performance:ReturnsSeriesBundle:v1",
+        "sourceSystem": "lotus-performance",
+        "route": "/performance/returns/series",
+        "contentHash": "sha256:wrong-missing-benchmark-source",
+    }
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(missing_benchmark_signals_api, "emit_foundation_operation_event", capture)
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-benchmark/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "ReturnsSeriesBundle" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-core",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_missing_benchmark_signal_api_requires_signal_permission() -> None:

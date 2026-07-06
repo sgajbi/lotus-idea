@@ -337,10 +337,11 @@ Additional implemented missing-benchmark foundation:
 4. `src/app/api/missing_benchmark_signals.py` exposes
     `POST /api/v1/idea-signals/missing-benchmark/evaluate` as a bounded
     caller-supplied API foundation over Core benchmark-assignment posture. It
-    requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
-    events, redacts source route/hash fields from candidate responses, and does
-    not assign benchmarks, calculate performance, certify methodology, publish
-    client communication, or promote support.
+    requires advisor role and `idea.signal.evaluate` capability, rejects
+    non-Core or wrong-product source refs before candidate generation, emits
+    bounded operation events, redacts source route/hash fields from candidate
+    responses, and does not assign benchmarks, calculate performance, certify
+    methodology, publish client communication, or promote support.
 5. `POST /api/v1/idea-signals/missing-benchmark/evaluate-from-source` exposes
    the existing Core benchmark-assignment source-port through the bounded
    advisor API pattern. It enforces advisor role, `idea.signal.evaluate`, and
@@ -356,10 +357,11 @@ Additional implemented missing-benchmark foundation:
    suppression, source-unavailable handling, and source request mapping.
 7. `tests/integration/test_missing_benchmark_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
-   ready-assignment not-eligible posture, stale-source blocking, source-backed
-   Core evaluation, portfolio entitlement denial before runtime construction,
-   missing Core runtime configuration, Core source unavailability,
-   cleanup-failure suppression, permission denial, and operation-event proof.
+   ready-assignment not-eligible posture, stale-source blocking,
+   source-contract mismatch rejection, source-backed Core evaluation,
+   portfolio entitlement denial before runtime construction, missing Core
+   runtime configuration, Core source unavailability, cleanup-failure
+   suppression, permission denial, and operation-event proof.
 8. `src/app/application/missing_benchmark_live_proof.py`,
    `scripts/generate_missing_benchmark_live_proof.py`, and
    `make missing-benchmark-live-proof-contract-gate` define a source-safe live
