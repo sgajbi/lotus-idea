@@ -9,13 +9,14 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.high_volatility_signals as high_volatility_api
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.risk_sources import (
     RiskSourceUnavailable,
     RiskVolatilityEvidence,
     RiskVolatilityEvidenceRequest,
 )
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     RiskVolatilitySourceRuntime,
     RiskVolatilitySourceRuntimeBlocker,
@@ -141,11 +142,32 @@ def test_high_volatility_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
-def test_high_volatility_signal_api_rejects_non_risk_source_ref() -> None:
+def test_high_volatility_signal_api_rejects_wrong_source_contract(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = high_volatility_payload()
-    payload["riskRef"]["sourceSystem"] = "lotus-core"
-    payload["riskRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+    payload["riskRef"] = {
+        **payload["riskRef"],
+        "sourceSystem": "lotus-core",
+        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+        "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
+        "contentHash": "sha256:wrong-high-volatility-source",
+    }
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(high_volatility_api, "emit_foundation_operation_event", capture)
 
     response = client.post(
         "/api/v1/idea-signals/high-volatility/evaluate",
@@ -156,6 +178,16 @@ def test_high_volatility_signal_api_rejects_non_risk_source_ref() -> None:
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
+    assert "PortfolioStateSnapshot" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-risk",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_high_volatility_signal_api_requires_signal_permission() -> None:
