@@ -90,7 +90,10 @@ def signal_source_ref_contract_problem_or_none(
             emit_event(
                 IdeaOperation.SIGNAL_EVALUATION,
                 OperationOutcome.INVALID_REQUEST,
-                source_authority=source_authority,
+                source_authority=_contract_mismatch_source_authority(
+                    contract,
+                    fallback=source_authority,
+                ),
                 error_code="source_ref_contract_mismatch",
             )
             return problem_response(
@@ -102,6 +105,15 @@ def signal_source_ref_contract_problem_or_none(
                 ),
             )
     return None
+
+
+def _contract_mismatch_source_authority(
+    contract: SignalSourceRefContract,
+    *,
+    fallback: str,
+) -> str:
+    expected_source_system = contract.expected_source_system
+    return str(expected_source_system.value) if expected_source_system is not None else fallback
 
 
 def signal_source_ref_one_of_contract_problem_or_none(

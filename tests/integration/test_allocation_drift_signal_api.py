@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 from typing import Any
 
 from fastapi.testclient import TestClient
+import pytest
 from pytest import MonkeyPatch
 
 import app.api.allocation_drift_signals as allocation_drift_api
@@ -161,6 +162,77 @@ def test_allocation_drift_signal_api_reports_stale_source_blocker() -> None:
         "sourceAuthority": "lotus-manage",
         "supportedFeaturePromoted": False,
     }
+
+
+@pytest.mark.parametrize(
+    ("field_name", "source_system", "product_id", "expected_source_authority"),
+    (
+        (
+            "actionRegisterRef",
+            "lotus-core",
+            "lotus-core:PortfolioStateSnapshot:v1",
+            "lotus-manage",
+        ),
+        (
+            "mandatePerformanceHealthRef",
+            "lotus-core",
+            "lotus-core:PortfolioStateSnapshot:v1",
+            "lotus-performance",
+        ),
+        (
+            "mandateRiskHealthRef",
+            "lotus-performance",
+            "lotus-performance:ReturnsSeriesBundle:v1",
+            "lotus-risk",
+        ),
+    ),
+)
+def test_allocation_drift_signal_api_rejects_wrong_source_contract(
+    monkeypatch: MonkeyPatch,
+    field_name: str,
+    source_system: str,
+    product_id: str,
+    expected_source_authority: str,
+) -> None:
+    client = TestClient(app)
+    payload = allocation_drift_payload()
+    payload[field_name] = source_ref_payload(
+        product_id=product_id,
+        source_system=source_system,
+    )
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(allocation_drift_api, "emit_foundation_operation_event", capture)
+
+    response = client.post(
+        "/api/v1/idea-signals/allocation-drift/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "PortfolioStateSnapshot" not in response.text
+    assert "ReturnsSeriesBundle" not in response.text
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            expected_source_authority,
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_allocation_drift_signal_api_requires_signal_permission() -> None:
@@ -355,6 +427,24 @@ def allocation_drift_payload() -> dict[str, Any]:
             "freshness": "current",
         },
         "entitlementAllowed": True,
+    }
+
+
+def source_ref_payload(
+    *,
+    product_id: str,
+    source_system: str,
+) -> dict[str, str]:
+    return {
+        "productId": product_id,
+        "sourceSystem": source_system,
+        "productVersion": "v1",
+        "route": f"/source/{product_id}",
+        "asOfDate": "2026-06-21",
+        "generatedAtUtc": "2026-06-21T10:00:00Z",
+        "contentHash": f"sha256:{product_id}",
+        "dataQualityStatus": "ready",
+        "freshness": "current",
     }
 
 

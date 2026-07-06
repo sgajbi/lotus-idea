@@ -401,9 +401,14 @@ Additional implemented allocation-drift / mandate-review foundation:
    `POST /api/v1/idea-signals/allocation-drift/evaluate` as a bounded
    caller-supplied API foundation over source-owned Manage action-register and
    mandate-health source-ref posture. It requires advisor role and
-   `idea.signal.evaluate` capability, emits bounded operation events, redacts source route/hash
-   fields from candidate responses, returns portfolio-manager review
-   candidates or blocked/not-eligible/suppressed posture, and does not fetch
+   `idea.signal.evaluate` capability, validates Manage
+   `PortfolioActionRegister:v1`, Performance
+   `MandatePerformanceHealthContext:v1`, and Risk
+   `MandateRiskHealthContext:v1` refs before domain evaluation, emits bounded
+   operation events under the expected source owner for source-contract
+   mismatches, redacts source route/hash fields from candidate responses,
+   returns portfolio-manager review candidates or
+   blocked/not-eligible/suppressed posture, and does not fetch
    Manage sources, calculate allocation drift, approve mandate compliance,
    create rebalance actions, create orders, publish client communication,
    certify data products, prove Workbench behavior, or promote support.
@@ -417,9 +422,10 @@ Additional implemented allocation-drift / mandate-review foundation:
 7. `tests/integration/test_allocation_drift_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
    below-threshold posture, store-wide Manage supportability blocking,
-   non-ready and stale source blockers, permission denial, source-redacted
-   response projection, no-authority promotion, and bounded operation-event
-   proof.
+   non-ready and stale source blockers, Manage/Performance/Risk source-contract
+   mismatch rejection before candidate creation, permission denial,
+   source-redacted response projection, no-authority promotion, and bounded
+   operation-event proof.
    `contracts/opportunity-archetypes/lotus-idea-opportunity-archetypes.v1.json`
    and `make opportunity-archetype-contract-gate` now pin this API module,
    route, and integration test as allocation-drift evidence so the archetype
