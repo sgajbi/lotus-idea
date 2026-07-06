@@ -41,7 +41,7 @@ def test_source_authority_from_contracts_uses_expected_authority() -> None:
 
 
 def test_signal_source_ref_contract_rejects_wrong_source_without_leaking_ref() -> None:
-    events: list[tuple[str, str, str | None]] = []
+    events: list[tuple[str, str, str, str | None]] = []
     source_ref = SimpleNamespace(
         source_system=SourceSystem.LOTUS_CORE,
         product_id="lotus-core:PortfolioStateSnapshot:v1",
@@ -57,7 +57,12 @@ def test_signal_source_ref_contract_rejects_wrong_source_without_leaking_ref() -
         ),
         source_authority="lotus-risk",
         emit_event=lambda operation, outcome, **kwargs: events.append(
-            (operation.value, outcome.value, kwargs.get("error_code"))
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
         ),
     )
 
@@ -66,7 +71,48 @@ def test_signal_source_ref_contract_rejects_wrong_source_without_leaking_ref() -
     body = problem.body if isinstance(problem.body, bytes) else problem.body.tobytes()
     assert json.loads(body)["code"] == "invalid_request"
     assert "PortfolioStateSnapshot" not in body.decode("utf-8")
-    assert events == [("signal_evaluation", "invalid_request", "source_ref_contract_mismatch")]
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-risk",
+            "source_ref_contract_mismatch",
+        )
+    ]
+
+
+def test_signal_source_ref_contract_uses_offending_contract_source_authority() -> None:
+    events: list[tuple[str, str, str | None]] = []
+    manage_source_ref = SimpleNamespace(
+        source_system=SourceSystem.LOTUS_MANAGE,
+        product_id="lotus-manage:PortfolioActionRegister:v1",
+    )
+    mismatched_performance_source_ref = SimpleNamespace(
+        source_system=SourceSystem.LOTUS_CORE,
+        product_id="lotus-core:PortfolioStateSnapshot:v1",
+    )
+
+    problem = signal_source_ref_contract_problem_or_none(
+        contracts=(
+            SignalSourceRefContract(
+                manage_source_ref,
+                SourceSystem.LOTUS_MANAGE,
+                ("lotus-manage:PortfolioActionRegister:v1",),
+            ),
+            SignalSourceRefContract(
+                mismatched_performance_source_ref,
+                SourceSystem.LOTUS_PERFORMANCE,
+                ("lotus-performance:MandatePerformanceHealthContext:v1",),
+            ),
+        ),
+        source_authority="source-owned",
+        emit_event=lambda operation, outcome, **kwargs: events.append(
+            (operation.value, outcome.value, kwargs.get("source_authority"))
+        ),
+    )
+
+    assert problem is not None
+    assert events == [("signal_evaluation", "invalid_request", "lotus-performance")]
 
 
 def test_signal_source_ref_one_of_contract_accepts_any_matching_contract() -> None:
