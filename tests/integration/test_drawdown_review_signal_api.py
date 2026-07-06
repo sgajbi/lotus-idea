@@ -9,13 +9,14 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.drawdown_review_signals as drawdown_review_api
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.risk_sources import (
     RiskDrawdownEvidence,
     RiskDrawdownEvidenceRequest,
     RiskSourceUnavailable,
 )
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     RiskDrawdownSourceRuntime,
     RiskDrawdownSourceRuntimeBlocker,
@@ -141,11 +142,32 @@ def test_drawdown_review_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
-def test_drawdown_review_signal_api_rejects_non_risk_source_ref() -> None:
+def test_drawdown_review_signal_api_rejects_wrong_source_contract(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = drawdown_review_payload()
-    payload["drawdownRef"]["sourceSystem"] = "lotus-core"
-    payload["drawdownRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+    payload["drawdownRef"] = {
+        **payload["drawdownRef"],
+        "sourceSystem": "lotus-core",
+        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+        "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
+        "contentHash": "sha256:wrong-drawdown-review-source",
+    }
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(drawdown_review_api, "emit_foundation_operation_event", capture)
 
     response = client.post(
         "/api/v1/idea-signals/drawdown-review/evaluate",
@@ -156,6 +178,16 @@ def test_drawdown_review_signal_api_rejects_non_risk_source_ref() -> None:
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
+    assert "PortfolioStateSnapshot" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-risk",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_drawdown_review_signal_api_requires_signal_permission() -> None:
