@@ -501,16 +501,18 @@ Additional implemented high-volatility foundation:
 8. `src/app/api/high_volatility_signals.py` exposes
    `POST /api/v1/idea-signals/high-volatility/evaluate` as a bounded
    caller-supplied API foundation over Lotus Risk `RiskMetricsReport:v1`
-   volatility evidence. It requires advisor role and `idea.signal.evaluate` capability,
-   emits bounded operation events, redacts source route/hash fields from
-   candidate responses, and does not fetch Risk sources, calculate volatility,
-   approve Risk methodology, recommend trades, create rebalance actions,
-   publish client communication, certify data products, prove Workbench
-   behavior, or promote support.
+   volatility evidence. It requires advisor role and `idea.signal.evaluate`
+   capability, rejects non-Risk or wrong-product source refs before candidate
+   generation, emits bounded operation events, redacts source route/hash fields
+   from candidate responses, and does not fetch Risk sources, calculate
+   volatility, approve Risk methodology, recommend trades, create rebalance
+   actions, publish client communication, certify data products, prove
+   Workbench behavior, or promote support.
 9. The opportunity archetype contract gate now requires the high-volatility
-   API module, route, and integration test as implementation evidence for the
-   high-volatility / drawdown review archetype, so proof-readiness evidence
-   cannot regress to policy-only high-volatility proof.
+   API module, route, source-contract mismatch regression, and integration
+   test as implementation evidence for the high-volatility / drawdown review
+   archetype, so proof-readiness evidence cannot regress to policy-only
+   high-volatility proof.
 
 Additional implemented drawdown-review foundation:
 
