@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 import app.api.bond_maturity_signals as bond_maturity_signals_api
@@ -350,6 +351,56 @@ def test_bond_maturity_signal_api_reports_stale_source_blocker() -> None:
         "sourceAuthority": "lotus-core",
         "supportedFeaturePromoted": False,
     }
+
+
+@pytest.mark.parametrize("field_name", ("holdingsRef", "maturityFactRef"))
+def test_bond_maturity_signal_api_rejects_wrong_source_contract(
+    monkeypatch: Any,
+    field_name: str,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = TestClient(app)
+    payload = bond_maturity_payload()
+    payload[field_name] = {
+        **payload[field_name],
+        "productId": "lotus-risk:RiskMetricsReport:v1",
+        "sourceSystem": "lotus-risk",
+        "route": "/risk/reports/PB_SG_GLOBAL_BAL_001",
+        "contentHash": "sha256:wrong-bond-maturity-source",
+    }
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(bond_maturity_signals_api, "emit_foundation_operation_event", capture)
+
+    response = client.post(
+        "/api/v1/idea-signals/bond-maturity/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "RiskMetricsReport" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-core",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_bond_maturity_signal_api_requires_signal_permission() -> None:

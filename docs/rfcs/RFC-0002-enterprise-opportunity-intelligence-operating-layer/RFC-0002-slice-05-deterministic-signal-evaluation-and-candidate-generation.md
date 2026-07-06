@@ -161,12 +161,13 @@ Additional implemented bond-maturity / reinvestment foundation:
 5. `src/app/api/bond_maturity_signals.py` exposes
    `POST /api/v1/idea-signals/bond-maturity/evaluate` as a bounded
    caller-supplied API foundation over Core maturity-summary evidence. It
-   requires advisor role and `idea.signal.evaluate` capability, emits bounded operation
-   events, redacts source route/hash fields from candidate responses, and does
-   not fetch Core sources, recommend replacement products, calculate
-   reinvestment advice, own maturity schedules, approve planning suitability,
-   create orders, publish client communication, certify data products, prove
-   Workbench behavior, or promote support.
+   requires advisor role and `idea.signal.evaluate` capability, rejects
+   non-Core or wrong-product source refs before candidate generation, emits
+   bounded operation events, redacts source route/hash fields from candidate
+   responses, and does not fetch Core sources, recommend replacement products,
+   calculate reinvestment advice, own maturity schedules, approve planning
+   suitability, create orders, publish client communication, certify data
+   products, prove Workbench behavior, or promote support.
 6. `POST /api/v1/idea-signals/bond-maturity/evaluate-from-source` exposes a
    bounded Core-backed API foundation that fetches Core maturity evidence
    through the configured source adapter only after advisor role,
@@ -185,8 +186,8 @@ Additional implemented bond-maturity / reinvestment foundation:
 8. `tests/integration/test_bond_maturity_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover route success,
    outside-window not-eligible posture, stale-source blocking, permission
-   denial, source-redacted response projection, no-authority promotion, and
-   bounded operation-event proof.
+   denial, source-contract mismatch rejection, source-redacted response
+   projection, no-authority promotion, and bounded operation-event proof.
 9. The opportunity archetype contract now removes only the
    `maturity_signal_policy_missing` blocker. Live maturity source certification
    remains blocked until a valid canonical Core maturity-summary live proof is
