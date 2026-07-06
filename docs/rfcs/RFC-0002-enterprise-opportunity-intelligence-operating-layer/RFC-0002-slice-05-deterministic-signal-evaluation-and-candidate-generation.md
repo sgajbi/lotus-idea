@@ -609,12 +609,14 @@ Additional implemented missing suitability context foundation:
    external communication.
 7. `src/app/api/missing_suitability_signals.py` exposes the bounded
    `POST /api/v1/idea-signals/missing-suitability/evaluate` API over
-   caller-supplied Advise policy-evaluation evidence. The endpoint returns
-   source-safe candidate or blocked posture only and redacts raw route and
+   caller-supplied Advise policy-evaluation evidence. The endpoint rejects
+   non-Advise or wrong-product source refs before candidate generation, returns
+   source-safe candidate or blocked posture only, and redacts raw route and
    content-hash details from candidate source refs.
 8. `tests/integration/test_missing_suitability_signal_api.py` covers
-   candidate creation, blocked client-publication posture, permission denial,
-   and source-redaction behavior for the certified API contract.
+   candidate creation, blocked client-publication posture, source-contract
+   mismatch rejection, permission denial, and source-redaction behavior for the
+   certified API contract.
 9. `POST /api/v1/idea-signals/missing-suitability/evaluate-from-source`
    exposes the existing Advise policy-evaluation source-port through the
    bounded advisor API pattern. It enforces advisor role,

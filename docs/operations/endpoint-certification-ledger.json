@@ -704,11 +704,13 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when policyRef sourceSystem/productId does not match the governed Advise source contract.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
         "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_returns_compliance_review_candidate",
         "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_reports_uncertified_publication_blocker",
+        "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_rejects_wrong_source_contract",
         "tests/integration/test_missing_suitability_signal_api.py::test_missing_suitability_signal_api_requires_signal_permission",
         "tests/integration/test_api_operation_events.py::test_missing_suitability_signal_api_emits_bounded_operation_event"
       ],

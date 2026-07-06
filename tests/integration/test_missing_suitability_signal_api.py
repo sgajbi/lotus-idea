@@ -12,8 +12,9 @@ from app.ports.advise_sources import (
     AdvisePolicyEvaluationEvidenceRequest,
     AdviseSourceUnavailable,
 )
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     AdvisePolicyEvaluationSourceRuntime,
     AdvisePolicyEvaluationSourceRuntimeBlocker,
@@ -90,6 +91,54 @@ def test_missing_suitability_signal_api_reports_uncertified_publication_blocker(
         "sourceAuthority": "lotus-advise",
         "supportedFeaturePromoted": False,
     }
+
+
+def test_missing_suitability_signal_api_rejects_wrong_source_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
+    client = TestClient(app)
+    payload = missing_suitability_payload()
+    payload["policyRef"] = {
+        **payload["policyRef"],
+        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+        "sourceSystem": "lotus-core",
+        "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
+        "contentHash": "sha256:wrong-missing-suitability-source",
+    }
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(missing_suitability_api, "emit_foundation_operation_event", capture)
+
+    response = client.post(
+        "/api/v1/idea-signals/missing-suitability/evaluate",
+        json=payload,
+        headers=evaluate_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert "candidate_created" not in response.text
+    assert "PortfolioStateSnapshot" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-advise",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_missing_suitability_signal_api_requires_signal_permission() -> None:
