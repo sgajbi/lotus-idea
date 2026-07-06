@@ -181,6 +181,11 @@ Missing-suitability source-backed evaluation consumes only Lotus Advise-owned
 `AdvisoryPolicyEvaluationRecord:v1` workflow posture and must not approve
 suitability, approve policy, approve proposals, approve sign-off, publish
 client communication, or promote Advise/product support.
+Missing-risk-profile source-backed evaluation consumes only Lotus Advise-owned
+`AdvisoryPolicyEvaluationRecord:v1` risk-profile diagnostic posture and must
+not approve risk profiling, determine suitability, approve policy/proposals,
+publish client communication, certify a typed risk-profile data product, or
+promote Advise/product support.
 
 ## Current Implementation Map
 

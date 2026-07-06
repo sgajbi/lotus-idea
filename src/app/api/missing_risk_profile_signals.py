@@ -2,12 +2,20 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
+from app.api.problem_details import (
+    problem_details_response as problem_response,
+    service_unavailable_metadata,
+)
+from app.api.runtime_dependencies import AdvisePolicyEvaluationSourceRuntimeBlocker
+from app.api.runtime_dependencies import (
+    build_advise_policy_evaluation_source_runtime_from_environment as _build_advise_policy_evaluation_source_runtime_from_environment,
+)
 from app.api.signal_models import (
     ReviewAccessScopeRequest,
     SignalEvaluationResponse,
@@ -22,13 +30,16 @@ from app.api.signal_api_support import (
     signal_problem_responses,
     signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
+    close_signal_source_runtime,
 )
 from app.application.missing_risk_profile_signal import (
+    EvaluateMissingRiskProfileFromAdviseCommand,
     EvaluateMissingRiskProfileSignalCommand,
+    evaluate_missing_risk_profile_signal_from_advise,
     evaluate_missing_risk_profile_signal_command,
 )
 from app.domain import SourceSystem
-from app.observability import emit_foundation_operation_event
+from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
 
 
 class EvaluateMissingRiskProfileSignalRequest(CamelModel):
@@ -103,6 +114,68 @@ class EvaluateMissingRiskProfileSignalRequest(CamelModel):
         )
 
 
+class EvaluateMissingRiskProfileFromSourceRequest(CamelModel):
+    evaluation_id: str = Field(
+        ...,
+        alias="evaluationId",
+        min_length=1,
+        description="Lotus Advise policy-evaluation workflow identifier to fetch.",
+        examples=["pev_001"],
+    )
+    as_of_date: date = Field(
+        ...,
+        alias="asOfDate",
+        description="Business date for the source-owned Advise risk-profile posture.",
+        examples=["2026-06-21"],
+    )
+    evaluated_at_utc: datetime = Field(
+        ...,
+        alias="evaluatedAtUtc",
+        description="UTC timestamp for deterministic evaluation.",
+        examples=["2026-06-21T10:00:00Z"],
+    )
+    access_scope: ReviewAccessScopeRequest | None = Field(
+        default=None,
+        alias="accessScope",
+        description="Optional review access scope checked against caller entitlement before source access.",
+    )
+    duplicate_of_candidate_id: str | None = Field(
+        default=None,
+        alias="duplicateOfCandidateId",
+        description="Existing candidate identity when upstream duplicate detection found a prior candidate.",
+        examples=["idea_missing_risk_profile_existing"],
+    )
+
+    @field_validator("evaluation_id")
+    @classmethod
+    def _evaluation_id_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("evaluationId is required")
+        return cleaned
+
+    @field_validator("evaluated_at_utc")
+    @classmethod
+    def _evaluated_at_must_be_aware(cls, value: datetime) -> datetime:
+        return require_timezone_aware(value, field_name="evaluatedAtUtc")
+
+    def to_command(
+        self,
+        *,
+        correlation_id: str | None,
+        trace_id: str | None,
+    ) -> EvaluateMissingRiskProfileFromAdviseCommand:
+        return EvaluateMissingRiskProfileFromAdviseCommand(
+            evaluation_id=self.evaluation_id,
+            as_of_date=self.as_of_date,
+            evaluated_at_utc=self.evaluated_at_utc,
+            access_scope=(self.access_scope.to_domain() if self.access_scope is not None else None),
+            duplicate_of_candidate_id=self.duplicate_of_candidate_id,
+            correlation_id=correlation_id,
+            trace_id=trace_id,
+        )
+
+
 class EvaluateMissingRiskProfileSignalResponse(SignalEvaluationResponse):
     pass
 
@@ -141,6 +214,65 @@ async def evaluate_missing_risk_profile_signal(
         result,
         source_authority=source_authority,
     )
+
+
+async def evaluate_missing_risk_profile_signal_from_source(
+    request: Request,
+    signal_request: EvaluateMissingRiskProfileFromSourceRequest,
+    caller: CallerContextHeaders,
+) -> EvaluateMissingRiskProfileSignalResponse | JSONResponse:
+    source_authority = SourceSystem.LOTUS_ADVISE.value
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        requested_access_scope=(
+            signal_request.access_scope.to_domain()
+            if signal_request.access_scope is not None
+            else None
+        ),
+        emit_event=emit_foundation_operation_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
+
+    runtime = _build_advise_policy_evaluation_source_runtime_from_environment()
+    if isinstance(runtime, AdvisePolicyEvaluationSourceRuntimeBlocker):
+        emit_foundation_operation_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.BLOCKED,
+            source_authority=source_authority,
+            error_code=runtime.code,
+        )
+        return problem_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Advise source runtime is not configured for missing-risk-profile source evaluation.",
+        )
+
+    try:
+        result = evaluate_missing_risk_profile_signal_from_advise(
+            signal_request.to_command(
+                correlation_id=_request_correlation_id(request),
+                trace_id=_request_trace_id(request),
+            ),
+            advise_source=runtime.advise_source,
+        )
+        emit_signal_evaluation_event(
+            result=result,
+            source_authority=source_authority,
+            emit_event=emit_foundation_operation_event,
+        )
+        return EvaluateMissingRiskProfileSignalResponse.from_domain(
+            result,
+            source_authority=source_authority,
+        )
+    finally:
+        close_signal_source_runtime(
+            runtime=runtime,
+            source_authority=source_authority,
+            emit_event=emit_foundation_operation_event,
+        )
 
 
 def _source_ref_contracts(
@@ -212,6 +344,46 @@ MISSING_RISK_PROFILE_EVALUATE_ROUTE: RouteMetadata = {
 }
 
 
+MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
+    "path": "/api/v1/idea-signals/missing-risk-profile/evaluate-from-source",
+    "operation_id": "evaluateMissingRiskProfileIdeaSignalFromSource",
+    "summary": "Evaluate a missing risk-profile idea signal from Lotus Advise",
+    "description": (
+        "Fetches source-owned Lotus Advise policy-evaluation workflow posture "
+        "through the configured Advise source adapter, then evaluates deterministic "
+        "missing risk-profile review posture only when Advise emits explicit "
+        "risk-profile diagnostic evidence. The endpoint does not persist candidates, "
+        "approve risk profiling, approve suitability, approve policy, approve "
+        "proposals, publish client communication, certify live source support, create "
+        "Gateway/Workbench support, certify a typed risk-profile data product, or "
+        "promote a supported business feature."
+    ),
+    "status_code": status.HTTP_200_OK,
+    "response_model": EvaluateMissingRiskProfileSignalResponse,
+    "tags": ["Idea Signals"],
+    "responses": {
+        200: MISSING_RISK_PROFILE_EVALUATE_ROUTE["responses"][200],
+        **signal_problem_responses(),
+        **service_unavailable_metadata(
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail="Advise source runtime is not configured for missing-risk-profile source evaluation.",
+            description="Advise source runtime configuration is missing or invalid.",
+        ),
+    },
+}
+
+
+def _request_correlation_id(request: Request) -> str | None:
+    correlation_id = getattr(request.state, "correlation_id", None)
+    return str(correlation_id) if correlation_id else None
+
+
+def _request_trace_id(request: Request) -> str | None:
+    trace_id = getattr(request.state, "trace_id", None)
+    return str(trace_id) if trace_id else None
+
+
 def register_missing_risk_profile_signal_routes(app: FastAPI) -> None:
     app.post(
         path=MISSING_RISK_PROFILE_EVALUATE_ROUTE["path"],
@@ -223,3 +395,13 @@ def register_missing_risk_profile_signal_routes(app: FastAPI) -> None:
         tags=MISSING_RISK_PROFILE_EVALUATE_ROUTE["tags"],
         responses=MISSING_RISK_PROFILE_EVALUATE_ROUTE["responses"],
     )(evaluate_missing_risk_profile_signal)
+    app.post(
+        path=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["path"],
+        operation_id=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["operation_id"],
+        summary=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["summary"],
+        description=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["description"],
+        status_code=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["status_code"],
+        response_model=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["response_model"],
+        tags=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["tags"],
+        responses=MISSING_RISK_PROFILE_EVALUATE_FROM_SOURCE_ROUTE["responses"],
+    )(evaluate_missing_risk_profile_signal_from_source)
