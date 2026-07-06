@@ -52,6 +52,7 @@ class EvaluateMissingRiskProfileFromAdviseCommand:
     evaluation_id: str
     as_of_date: date
     evaluated_at_utc: datetime
+    access_scope: ReviewAccessScope | None = None
     duplicate_of_candidate_id: str | None = None
     correlation_id: str | None = None
     trace_id: str | None = None
@@ -108,6 +109,7 @@ def evaluate_missing_risk_profile_signal_from_advise(
                 risk_profile_review_due=None,
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
+                access_scope=command.access_scope,
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -150,6 +152,7 @@ def _evaluate_advise_evidence(
             },
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
+            access_scope=command.access_scope,
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,

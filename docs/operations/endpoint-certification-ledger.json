@@ -552,6 +552,37 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/idea-signals/missing-risk-profile/evaluate-from-source",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Fetch source-owned Lotus Advise policy-evaluation diagnostic posture through the configured Advise source adapter and evaluate deterministic missing risk-profile review posture only when explicit risk-profile diagnostics are present.",
+      "when_to_use": "Use as the bounded RFC-0002 Slice 5 source-fetching API foundation when the caller has advisor role, idea.signal.evaluate capability, optional request access-scope entitlement, and an Advise policy-evaluation workflow identifier.",
+      "when_not_to_use": "Do not use as live source certification, source-worker certification, durable candidate persistence, risk-profile approval, suitability approval, policy approval, proposal approval, typed risk-profile data-product certification proof, Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "{\"evaluationId\":\"pev_001\",\"asOfDate\":\"2026-06-21\",\"evaluatedAtUtc\":\"2026-06-21T10:00:00Z\",\"accessScope\":{\"tenantId\":\"tenant-sg\",\"bookId\":\"global-balanced\",\"portfolioId\":\"PB_SG_GLOBAL_BAL_001\",\"clientId\":\"client-001\"}}"
+      ],
+      "response_examples": [
+        "{\"outcome\":\"candidate_created\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"missing_risk_profile\",\"review_required\"],\"unsupportedReasons\":[],\"candidate\":{\"candidateId\":\"idea_missing_risk_profile_8d57adbf52f7f5a7\",\"family\":\"missing_risk_profile\",\"lifecycleStatus\":\"generated\",\"reviewPosture\":\"advisor_review_required\",\"evidencePacketId\":\"iep_missing_risk_profile_8d57adbf52f7f5a7\",\"supportability\":\"ready\",\"score\":\"64\",\"scorePolicyVersion\":\"missing-risk-profile-review-v1\",\"sourceSignalIds\":[\"signal_missing_risk_profile_8d57adbf52f7f5a7\"],\"sourceRefs\":[{\"productId\":\"lotus-advise:AdvisoryPolicyEvaluationRecord:v1\",\"sourceSystem\":\"lotus-advise\",\"productVersion\":\"v1\",\"asOfDate\":\"2026-06-21\",\"generatedAtUtc\":\"2026-06-21T10:00:00Z\",\"dataQualityStatus\":\"quality_passed\",\"freshness\":\"current\"}]},\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}",
+        "{\"outcome\":\"blocked\",\"family\":\"missing_risk_profile\",\"reasonCodes\":[\"source_partial\"],\"unsupportedReasons\":[\"source_unavailable\"],\"candidate\":null,\"sourceAuthority\":\"lotus-advise\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks advisor role, idea.signal.evaluate capability, or supplied request access-scope entitlement.",
+        "503 returns product-safe Problem Details when Advise source runtime configuration is missing or invalid.",
+        "400 returns product-safe Problem Details when request validation fails."
+      ],
+      "test_evidence": [
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_api_returns_review_candidate",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_blocks_when_runtime_not_configured",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_checks_scope_before_runtime",
+        "tests/integration/test_missing_risk_profile_signal_api.py::test_missing_risk_profile_signal_from_source_closes_runtime_on_source_blocker",
+        "tests/integration/test_signal_source_operation_events.py::test_missing_risk_profile_source_api_emits_blocked_operation_event",
+        "tests/unit/test_missing_risk_profile_application.py::test_missing_risk_profile_application_preserves_access_scope_from_advise_command",
+        "tests/unit/test_source_ingestion_state.py::test_advise_policy_evaluation_source_runtime_builds_without_manifest"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/idea-signals/missing-benchmark/evaluate",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

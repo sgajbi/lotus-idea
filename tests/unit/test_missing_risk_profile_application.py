@@ -19,6 +19,7 @@ from app.domain import (
     SourceRef,
     SourceSystem,
 )
+from app.domain.access_scope import ReviewAccessScope
 from app.ports.advise_sources import (
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
@@ -94,6 +95,36 @@ def test_missing_risk_profile_application_consumes_explicit_advise_diagnostic() 
     assert result.reason_codes == (ReasonCode.MISSING_RISK_PROFILE, ReasonCode.REVIEW_REQUIRED)
     assert advise_source.requests[0].evaluation_id == "pev_001"
     assert advise_source.requests[0].trace_id == "trace-advise"
+
+
+def test_missing_risk_profile_application_preserves_access_scope_from_advise_command() -> None:
+    advise_source = StubAdviseSource(
+        AdvisePolicyEvaluationEvidence(
+            evaluation_status="PENDING_REVIEW",
+            open_requirement_count=0,
+            blocked_requirement_count=0,
+            sign_off_status="PENDING_REVIEW",
+            sign_off_blocker_count=0,
+            client_ready_publication="BLOCKED",
+            policy_ref=_source_ref(),
+            advise_diagnostic="risk_profile_review_due",
+        )
+    )
+    command = EvaluateMissingRiskProfileFromAdviseCommand(
+        evaluation_id="pev_001",
+        as_of_date=AS_OF_DATE,
+        evaluated_at_utc=EVALUATED_AT,
+        access_scope=_access_scope(),
+    )
+
+    result = evaluate_missing_risk_profile_signal_from_advise(
+        command,
+        advise_source=advise_source,
+    )
+
+    assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
+    assert result.candidate is not None
+    assert result.candidate.access_scope == _access_scope()
 
 
 def test_missing_risk_profile_application_ignores_generic_suitability_gap() -> None:
@@ -181,4 +212,13 @@ def _source_ref() -> SourceRef:
         content_hash="sha256:advise-risk-profile-gap",
         data_quality_status="quality_passed",
         freshness=EvidenceFreshness.CURRENT,
+    )
+
+
+def _access_scope() -> ReviewAccessScope:
+    return ReviewAccessScope(
+        tenant_id="tenant-sg",
+        book_id="global-balanced",
+        portfolio_id="PB_SG_GLOBAL_BAL_001",
+        client_id="client-001",
     )
