@@ -104,6 +104,38 @@ def signal_source_ref_contract_problem_or_none(
     return None
 
 
+def signal_source_ref_one_of_contract_problem_or_none(
+    *,
+    contracts: Iterable[SignalSourceRefContract],
+    source_authority: str,
+    emit_event: Callable[..., None],
+) -> JSONResponse | None:
+    contract_tuple = tuple(contracts)
+    if not contract_tuple:
+        return None
+    source_ref = contract_tuple[0].source_ref
+    if source_ref is None:
+        return None
+    if any(
+        source_ref.source_system == contract.expected_source_system
+        and source_ref.product_id in contract.expected_product_ids
+        for contract in contract_tuple
+    ):
+        return None
+    emit_event(
+        IdeaOperation.SIGNAL_EVALUATION,
+        OperationOutcome.INVALID_REQUEST,
+        source_authority=source_authority,
+        error_code="source_ref_contract_mismatch",
+    )
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="Source refs must match the certified source contract for this signal family.",
+    )
+
+
 def signal_problem_responses() -> dict[int | str, dict[str, Any]]:
     return {
         **invalid_request_metadata(

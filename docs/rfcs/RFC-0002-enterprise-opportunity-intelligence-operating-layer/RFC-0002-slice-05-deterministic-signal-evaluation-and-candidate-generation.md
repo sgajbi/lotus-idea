@@ -703,7 +703,11 @@ Additional implemented mandate/restriction review foundation:
 3. `src/app/application/mandate_restriction_signal.py` provides the framework-
    free command wrapper, and `src/app/api/idea_signals.py` exposes the bounded
    `POST /api/v1/idea-signals/mandate-restriction/evaluate` API over
-   caller-supplied Core, Manage, or Advise evidence refs.
+   caller-supplied Core, Manage, or Advise evidence refs. The route now
+   validates the single restriction ref against the governed one-of source
+   contract before domain evaluation: Core `PortfolioStateSnapshot:v1`, Manage
+   `PortfolioActionRegister:v1`, or Advise
+   `AdvisoryPolicyEvaluationRecord:v1`.
 4. The application layer also consumes Lotus Advise
    `AdvisoryPolicyEvaluationRecord:v1` source evidence through the existing
    Advise policy-evaluation source port. It creates mandate/restriction review
@@ -718,8 +722,10 @@ Additional implemented mandate/restriction review foundation:
    `tests/unit/test_mandate_restriction_application.py`, and
    `tests/integration/test_mandate_restriction_signal_api.py` cover positive,
    not-eligible, stale-source, missing-source, missing-posture, duplicate,
-   entitlement-denied, permission-denied, source-redaction, explicit Advise
-   diagnostic consumption, generic diagnostic suppression, runtime-not-configured,
+   entitlement-denied, permission-denied, source-redaction, one-of
+   Core/Manage/Advise source-contract acceptance, source-contract mismatch
+   rejection, source-safe mismatch errors, explicit Advise diagnostic
+   consumption, generic diagnostic suppression, runtime-not-configured,
    access-scope denial, source-unavailable, and runtime cleanup cases.
 7. `src/app/application/mandate_restriction_source_product_proof.py`,
    `scripts/generate_mandate_restriction_source_product_proof.py`, and

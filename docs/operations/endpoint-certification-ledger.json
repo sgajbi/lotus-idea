@@ -511,12 +511,17 @@
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks advisor role or idea.signal.evaluate capability.",
+        "400 returns product-safe Problem Details when restrictionRef sourceSystem or productId does not match the governed Core, Manage, or Advise source contract.",
         "400 returns product-safe Problem Details when request validation fails."
       ],
       "test_evidence": [
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_returns_review_candidate",
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_reports_stale_source_blocker",
+        "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_accepts_governed_source_contracts",
+        "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_rejects_unknown_source_contract",
+        "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_rejects_wrong_advise_product_id",
         "tests/integration/test_mandate_restriction_signal_api.py::test_mandate_restriction_signal_api_requires_signal_permission",
+        "tests/unit/test_signal_api_support.py::test_signal_source_ref_one_of_contract_rejects_unknown_pair_without_leaking_ref",
         "tests/integration/test_api_operation_events.py::test_mandate_restriction_signal_api_emits_bounded_operation_event"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."

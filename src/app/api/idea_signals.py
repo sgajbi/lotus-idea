@@ -38,9 +38,9 @@ from app.api.signal_api_support import (
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
     signal_problem_responses,
+    signal_source_ref_one_of_contract_problem_or_none,
     signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
-    source_authority_from_refs,
 )
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashSignalCommand,
@@ -77,6 +77,13 @@ from app.security.caller_context import (
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )
+
+
+_MANDATE_RESTRICTION_PRODUCT_IDS_BY_SOURCE: dict[SourceSystem, tuple[str, ...]] = {
+    SourceSystem.LOTUS_CORE: ("lotus-core:PortfolioStateSnapshot:v1",),
+    SourceSystem.LOTUS_MANAGE: ("lotus-manage:PortfolioActionRegister:v1",),
+    SourceSystem.LOTUS_ADVISE: ("lotus-advise:AdvisoryPolicyEvaluationRecord:v1",),
+}
 
 
 async def evaluate_high_cash_signal(
@@ -171,7 +178,8 @@ async def evaluate_mandate_restriction_signal(
     request: EvaluateMandateRestrictionSignalRequest,
     caller: CallerContextHeaders,
 ) -> EvaluateMandateRestrictionSignalResponse | JSONResponse:
-    source_authority = source_authority_from_refs((request.restriction_ref,))
+    source_contracts = _mandate_restriction_source_ref_contracts(request)
+    source_authority = _mandate_restriction_source_authority(request)
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
         source_authority=source_authority,
@@ -182,6 +190,13 @@ async def evaluate_mandate_restriction_signal(
     )
     if permission_problem is not None:
         return permission_problem
+    contract_problem = signal_source_ref_one_of_contract_problem_or_none(
+        contracts=source_contracts,
+        source_authority=source_authority,
+        emit_event=emit_foundation_operation_event,
+    )
+    if contract_problem is not None:
+        return contract_problem
 
     result = evaluate_mandate_restriction_signal_command(request.to_command())
     emit_signal_evaluation_event(
@@ -394,6 +409,18 @@ def _high_cash_source_authority(request: EvaluateHighCashSignalRequest) -> str:
     return source_authority_from_contracts(_high_cash_source_ref_contracts(request))
 
 
+def _mandate_restriction_source_authority(
+    request: EvaluateMandateRestrictionSignalRequest,
+) -> str:
+    source_ref = request.restriction_ref
+    if (
+        source_ref is not None
+        and source_ref.source_system in _MANDATE_RESTRICTION_PRODUCT_IDS_BY_SOURCE
+    ):
+        return source_ref.source_system.value
+    return source_authority_from_contracts(_mandate_restriction_source_ref_contracts(request))
+
+
 def _high_cash_source_ref_contracts(
     request: EvaluateHighCashSignalRequest,
 ) -> tuple[SignalSourceRefContract, ...]:
@@ -419,6 +446,19 @@ def _high_cash_source_ref_contracts(
             SourceSystem.LOTUS_CORE,
             ("lotus-core:PortfolioCashflowProjection:v1",),
         ),
+    )
+
+
+def _mandate_restriction_source_ref_contracts(
+    request: EvaluateMandateRestrictionSignalRequest,
+) -> tuple[SignalSourceRefContract, ...]:
+    return tuple(
+        SignalSourceRefContract(
+            request.restriction_ref,
+            source_system,
+            product_ids,
+        )
+        for source_system, product_ids in _MANDATE_RESTRICTION_PRODUCT_IDS_BY_SOURCE.items()
     )
 
 

@@ -8,6 +8,7 @@ from app.api.signal_api_support import (
     SignalSourceRefContract,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
+    signal_source_ref_one_of_contract_problem_or_none,
     signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
     source_authority_from_refs,
@@ -65,6 +66,66 @@ def test_signal_source_ref_contract_rejects_wrong_source_without_leaking_ref() -
     body = problem.body if isinstance(problem.body, bytes) else problem.body.tobytes()
     assert json.loads(body)["code"] == "invalid_request"
     assert "PortfolioStateSnapshot" not in body.decode("utf-8")
+    assert events == [("signal_evaluation", "invalid_request", "source_ref_contract_mismatch")]
+
+
+def test_signal_source_ref_one_of_contract_accepts_any_matching_contract() -> None:
+    source_ref = SimpleNamespace(
+        source_system=SourceSystem.LOTUS_MANAGE,
+        product_id="lotus-manage:PortfolioActionRegister:v1",
+    )
+
+    problem = signal_source_ref_one_of_contract_problem_or_none(
+        contracts=(
+            SignalSourceRefContract(
+                source_ref,
+                SourceSystem.LOTUS_CORE,
+                ("lotus-core:PortfolioStateSnapshot:v1",),
+            ),
+            SignalSourceRefContract(
+                source_ref,
+                SourceSystem.LOTUS_MANAGE,
+                ("lotus-manage:PortfolioActionRegister:v1",),
+            ),
+        ),
+        source_authority="lotus-manage",
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert problem is None
+
+
+def test_signal_source_ref_one_of_contract_rejects_unknown_pair_without_leaking_ref() -> None:
+    events: list[tuple[str, str, str | None]] = []
+    source_ref = SimpleNamespace(
+        source_system=SourceSystem.LOTUS_RISK,
+        product_id="lotus-risk:MandateRiskHealthContext:v1",
+    )
+
+    problem = signal_source_ref_one_of_contract_problem_or_none(
+        contracts=(
+            SignalSourceRefContract(
+                source_ref,
+                SourceSystem.LOTUS_CORE,
+                ("lotus-core:PortfolioStateSnapshot:v1",),
+            ),
+            SignalSourceRefContract(
+                source_ref,
+                SourceSystem.LOTUS_MANAGE,
+                ("lotus-manage:PortfolioActionRegister:v1",),
+            ),
+        ),
+        source_authority="source-owned",
+        emit_event=lambda operation, outcome, **kwargs: events.append(
+            (operation.value, outcome.value, kwargs.get("error_code"))
+        ),
+    )
+
+    assert problem is not None
+    assert problem.status_code == 400
+    body = problem.body if isinstance(problem.body, bytes) else problem.body.tobytes()
+    assert json.loads(body)["code"] == "invalid_request"
+    assert "MandateRiskHealthContext" not in body.decode("utf-8")
     assert events == [("signal_evaluation", "invalid_request", "source_ref_contract_mismatch")]
 
 
