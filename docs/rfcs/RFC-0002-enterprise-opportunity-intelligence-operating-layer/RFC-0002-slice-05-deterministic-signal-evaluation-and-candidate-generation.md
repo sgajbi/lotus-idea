@@ -796,6 +796,7 @@ Additional implemented low-income / liquidity-shortfall foundation:
    `POST /api/v1/idea-signals/low-income/evaluate` as a bounded
    caller-supplied API foundation over Core cashflow projection and cash
    movement evidence. It requires advisor role and `idea.signal.evaluate` capability,
+   rejects non-Core or wrong-product source refs before candidate generation,
    emits source-authority-preserving operation events, redacts source routes and
    content hashes from response candidates, and does not fetch Core sources,
    infer client income needs, approve planning suitability, provide funding
@@ -804,8 +805,9 @@ Additional implemented low-income / liquidity-shortfall foundation:
 7. `tests/integration/test_low_income_signal_api.py` and
    `tests/integration/test_api_operation_events.py` cover candidate creation,
    not-eligible posture, stale-source blocker, permission denial,
-   source-redacted response projection, and bounded signal-evaluation operation
-   events for the caller-supplied API foundation.
+   source-contract mismatch rejection, source-redacted response projection, and
+   bounded signal-evaluation operation events for the caller-supplied API
+   foundation.
 8. `src/app/application/low_income_core_cashflow_live_proof.py`,
     `scripts/generate_low_income_core_cashflow_live_proof.py`, and
     `make low-income-core-cashflow-live-proof-contract-gate` define a
