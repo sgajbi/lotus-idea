@@ -9,13 +9,14 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.concentration_risk_signals as concentration_risk_api
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.risk_sources import (
     RiskConcentrationEvidence,
     RiskConcentrationEvidenceRequest,
     RiskSourceUnavailable,
 )
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     RiskConcentrationSourceRuntime,
     RiskConcentrationSourceRuntimeBlocker,
@@ -145,10 +146,16 @@ def test_concentration_risk_signal_api_reports_stale_source_blocker() -> None:
 def test_concentration_risk_signal_api_rejects_wrong_source_contract(
     monkeypatch: MonkeyPatch,
 ) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = concentration_payload()
-    payload["concentrationRef"]["sourceSystem"] = "lotus-core"
-    payload["concentrationRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+    payload["concentrationRef"] = {
+        **payload["concentrationRef"],
+        "sourceSystem": "lotus-core",
+        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+        "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
+        "contentHash": "sha256:wrong-concentration-source",
+    }
     events: list[tuple[str, str, str, str | None]] = []
 
     def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
@@ -173,6 +180,7 @@ def test_concentration_risk_signal_api_rejects_wrong_source_contract(
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
     assert "lotus-core:PortfolioStateSnapshot:v1" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
     assert events == [
         (
             "signal_evaluation",
