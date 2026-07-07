@@ -9,13 +9,14 @@ import pytest
 from pytest import MonkeyPatch
 
 import app.api.allocation_drift_signals as allocation_drift_api
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.manage_sources import (
     ManageMandateHealthEvidence,
     ManageMandateHealthEvidenceRequest,
     ManageSourceUnavailable,
 )
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     ManageMandateHealthSourceRuntime,
     ManageMandateHealthSourceRuntimeBlocker,
@@ -194,6 +195,7 @@ def test_allocation_drift_signal_api_rejects_wrong_source_contract(
     product_id: str,
     expected_source_authority: str,
 ) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = allocation_drift_payload()
     payload[field_name] = source_ref_payload(
@@ -225,6 +227,7 @@ def test_allocation_drift_signal_api_rejects_wrong_source_contract(
     assert "candidate_created" not in response.text
     assert "PortfolioStateSnapshot" not in response.text
     assert "ReturnsSeriesBundle" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
     assert events == [
         (
             "signal_evaluation",
