@@ -268,11 +268,13 @@ Additional implemented underperformance foundation:
    `POST /api/v1/idea-signals/underperformance/evaluate` as a bounded
    caller-supplied API foundation over Lotus Performance active-return and
    benchmark-context evidence. It requires advisor role and
-   `idea.signal.evaluate` capability, emits bounded operation events, redacts source route/hash fields from
-   candidate responses, and does not fetch Performance sources, calculate
-   returns, assign benchmarks, certify benchmark methodology, recommend trades,
-   create rebalance actions, publish client communication, certify data
-   products, prove Workbench behavior, or promote support.
+   `idea.signal.evaluate` capability, rejects non-Performance or wrong-product
+   source refs before candidate generation, emits bounded operation events,
+   redacts source route/hash fields from candidate responses, and does not
+   fetch Performance sources, calculate returns, assign benchmarks, certify
+   benchmark methodology, recommend trades, create rebalance actions, publish
+   client communication, certify data products, prove Workbench behavior, or
+   promote support.
 7. `src/app/application/performance_underperformance_live_proof.py`,
    `scripts/generate_performance_underperformance_live_proof.py`,
    `scripts/performance_underperformance_live_proof_contract_gate.py`, and

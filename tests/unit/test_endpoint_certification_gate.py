@@ -318,6 +318,75 @@ def test_endpoint_certification_gate_blocks_unimplemented_gateway_publication_cl
     ) in errors
 
 
+def test_endpoint_certification_gate_blocks_missing_signal_source_contract_example() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_wrong_source_contract",
+            "tests/integration/test_api_operation_events.py::test_underperformance_signal_api_emits_bounded_operation_event",
+        ]
+    )
+    endpoint["path"] = "/api/v1/idea-signals/underperformance/evaluate"
+
+    errors = module.validate_signal_source_contract_error_examples(endpoint)
+
+    assert errors == [
+        "('POST', '/api/v1/idea-signals/underperformance/evaluate'): "
+        "caller-supplied signal endpoint must document source-ref contract mismatch behavior"
+    ]
+
+
+def test_endpoint_certification_gate_blocks_unrelated_signal_source_contract_fields() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_wrong_source_contract",
+            "tests/integration/test_api_operation_events.py::test_underperformance_signal_api_emits_bounded_operation_event",
+        ]
+    )
+    endpoint["path"] = "/api/v1/idea-signals/underperformance/evaluate"
+    endpoint["error_examples"] = [
+        "403 returns product-safe Problem Details.",
+        (
+            "400 returns product-safe Problem Details when drawdownRef "
+            "sourceSystem/productId does not match the governed Risk source contract."
+        ),
+    ]
+
+    errors = module.validate_signal_source_contract_error_examples(endpoint)
+
+    assert (
+        "('POST', '/api/v1/idea-signals/underperformance/evaluate'): "
+        "source-ref contract error example must mention `performanceRef`"
+    ) in errors
+    assert (
+        "('POST', '/api/v1/idea-signals/underperformance/evaluate'): "
+        "source-ref contract error example mentions unrelated fields: drawdownRef"
+    ) in errors
+
+
+def test_endpoint_certification_gate_accepts_signal_source_contract_example() -> None:
+    module = _load_endpoint_certification_gate()
+    endpoint = _certified_endpoint(
+        test_evidence=[
+            "tests/integration/test_underperformance_signal_api.py::test_underperformance_signal_api_rejects_wrong_source_contract",
+            "tests/integration/test_api_operation_events.py::test_underperformance_signal_api_emits_bounded_operation_event",
+        ]
+    )
+    endpoint["path"] = "/api/v1/idea-signals/underperformance/evaluate"
+    endpoint["error_examples"] = [
+        "403 returns product-safe Problem Details.",
+        (
+            "400 returns product-safe Problem Details when performanceRef "
+            "sourceSystem/productId does not match the governed Performance source contract."
+        ),
+    ]
+
+    errors = module.validate_signal_source_contract_error_examples(endpoint)
+
+    assert errors == []
+
+
 def test_endpoint_certification_gate_validates_test_references() -> None:
     module = _load_endpoint_certification_gate()
 

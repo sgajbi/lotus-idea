@@ -8,7 +8,10 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "src"))
+
+from endpoint_source_contracts import validate_signal_source_contract_error_examples  # noqa: E402
 
 LEDGER_PATH = Path("docs/operations/endpoint-certification-ledger.json")
 APP_MAIN_PATH = Path("src/app/main.py")
@@ -208,6 +211,7 @@ def _validate_certified_endpoint_posture(
 
     errors.extend(_validate_certified_endpoint_test_pyramid(operation, test_evidence))
     errors.extend(_validate_gateway_publication_posture(endpoint))
+    errors.extend(validate_signal_source_contract_error_examples(endpoint))
     if openapi_spec is not None:
         errors.extend(_validate_openapi_caller_context_publication(endpoint, openapi_spec))
 

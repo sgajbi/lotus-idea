@@ -9,13 +9,14 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.underperformance_signals as underperformance_api
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.performance_sources import (
     PerformanceSourceUnavailable,
     PerformanceUnderperformanceEvidence,
     PerformanceUnderperformanceEvidenceRequest,
 )
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     PerformanceUnderperformanceSourceRuntime,
     PerformanceUnderperformanceSourceRuntimeBlocker,
@@ -141,11 +142,32 @@ def test_underperformance_signal_api_reports_stale_source_blocker() -> None:
     }
 
 
-def test_underperformance_signal_api_rejects_non_performance_source_ref() -> None:
+def test_underperformance_signal_api_rejects_wrong_source_contract(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = underperformance_payload()
-    payload["performanceRef"]["sourceSystem"] = "lotus-core"
-    payload["performanceRef"]["productId"] = "lotus-core:PortfolioStateSnapshot:v1"
+    payload["performanceRef"] = {
+        **payload["performanceRef"],
+        "sourceSystem": "lotus-core",
+        "productId": "lotus-core:PortfolioStateSnapshot:v1",
+        "route": "/integration/portfolios/PB_SG_GLOBAL_BAL_001/core-snapshot",
+        "contentHash": "sha256:wrong-underperformance-source",
+    }
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(underperformance_api, "emit_foundation_operation_event", capture)
 
     response = client.post(
         "/api/v1/idea-signals/underperformance/evaluate",
@@ -156,6 +178,16 @@ def test_underperformance_signal_api_rejects_non_performance_source_ref() -> Non
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
+    assert "PortfolioStateSnapshot" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-performance",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_underperformance_signal_api_rejects_wrong_performance_product_id() -> None:
