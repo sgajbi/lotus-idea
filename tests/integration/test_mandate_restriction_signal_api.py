@@ -7,13 +7,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.idea_signals as idea_signals_api
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.advise_sources import (
     AdvisePolicyEvaluationEvidence,
     AdvisePolicyEvaluationEvidenceRequest,
     AdviseSourceUnavailable,
 )
+from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
 from app.runtime.source_ingestion_state import (
     AdvisePolicyEvaluationSourceRuntime,
     AdvisePolicyEvaluationSourceRuntimeBlocker,
@@ -125,6 +126,7 @@ def test_mandate_restriction_signal_api_accepts_governed_source_contracts(
 def test_mandate_restriction_signal_api_rejects_unknown_source_contract(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = mandate_restriction_payload()
     payload["restrictionRef"]["sourceSystem"] = "lotus-risk"
@@ -153,6 +155,7 @@ def test_mandate_restriction_signal_api_rejects_unknown_source_contract(
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
     assert "MandateRiskHealthContext" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
     assert events == [
         (
             "signal_evaluation",
