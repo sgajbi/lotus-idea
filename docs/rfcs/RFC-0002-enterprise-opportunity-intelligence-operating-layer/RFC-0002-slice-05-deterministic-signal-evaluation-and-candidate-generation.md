@@ -687,8 +687,9 @@ Additional implemented missing risk profile foundation:
    candidate or blocked posture only and redacts raw route and content-hash
    details from candidate source refs.
 9. `tests/integration/test_missing_risk_profile_signal_api.py` covers
-   candidate creation, stale-source blocking, permission denial, and
-   source-redaction behavior for the certified API contract.
+   candidate creation, stale-source blocking, wrong-source contract rejection
+   before candidate generation, permission denial, and source-redaction
+   behavior for the certified API contract.
 10. `POST /api/v1/idea-signals/missing-risk-profile/evaluate-from-source`
     exposes the existing Advise policy-evaluation source-port through the
     bounded advisor API pattern. It enforces advisor role,
