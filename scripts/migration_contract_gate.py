@@ -135,6 +135,26 @@ REQUIRED_MIGRATIONS = (
             "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_schema_version",
         ),
     ),
+    MigrationContract(
+        version="004",
+        forward_path=MIGRATIONS_DIR / "004_outbox_dead_letter_recovery.sql",
+        rollback_path=MIGRATIONS_DIR / "004_outbox_dead_letter_recovery.rollback.sql",
+        required_tables=("idea_outbox_recovery_audit",),
+        required_indexes=(
+            "idx_idea_outbox_recovery_support_reference",
+            "idx_idea_outbox_recovery_requested_at",
+        ),
+        required_forward_fragments=(
+            "REFERENCES idea_outbox_event(outbox_event_id)",
+            "idempotency_fingerprint TEXT NOT NULL UNIQUE",
+            "request_fingerprint TEXT NOT NULL",
+            "original_failure_reason TEXT NOT NULL",
+            "original_first_failed_at_utc TIMESTAMPTZ NOT NULL",
+            "original_last_failed_at_utc TIMESTAMPTZ NOT NULL",
+            "CONSTRAINT uq_idea_outbox_recovery_event UNIQUE (outbox_event_id)",
+            "CONSTRAINT ck_idea_outbox_recovery_lease_window",
+        ),
+    ),
 )
 
 
