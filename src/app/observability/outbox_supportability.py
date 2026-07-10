@@ -9,12 +9,8 @@ from prometheus_client.core import GaugeMetricFamily, Metric
 from app.application.outbox_delivery_readiness import OutboxDeliveryReadinessSnapshot
 
 OUTBOX_DELIVERY_STATE_METRIC = "lotus_idea_outbox_delivery_events"
-OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC = (
-    "lotus_idea_outbox_delivery_oldest_ready_age_seconds"
-)
-OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC = (
-    "lotus_idea_outbox_delivery_configuration_ready"
-)
+OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC = "lotus_idea_outbox_delivery_oldest_ready_age_seconds"
+OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC = "lotus_idea_outbox_delivery_configuration_ready"
 OUTBOX_DELIVERY_COLLECTION_SUCCESS_METRIC = "lotus_idea_outbox_delivery_collection_success"
 OUTBOX_DELIVERY_STATES = (
     "pending",
@@ -82,9 +78,7 @@ class OutboxDeliverySupportabilityCollector:
             "Age in seconds of the oldest event currently eligible for delivery.",
             labels=["repository"],
         )
-        age_metric.add_metric(
-            [snapshot.repository], snapshot.oldest_delivery_ready_age_seconds
-        )
+        age_metric.add_metric([snapshot.repository], snapshot.oldest_delivery_ready_age_seconds)
         yield age_metric
 
         configuration_metric = GaugeMetricFamily(

@@ -29,35 +29,50 @@ def test_outbox_supportability_alerts_remain_quiet_at_thresholds() -> None:
 def test_outbox_supportability_alerts_detect_each_runtime_failure_family() -> None:
     baseline = readiness_snapshot()
 
-    assert evaluate_outbox_supportability_alert_posture(
-        replace(
-            baseline,
-            status_counts=replace(baseline.status_counts, dead_letter_count=1),
-        )
-    ).dead_letter_present is True
-    assert evaluate_outbox_supportability_alert_posture(
-        replace(baseline, expired_lease_count=1)
-    ).expired_lease_present is True
-    assert evaluate_outbox_supportability_alert_posture(
-        replace(
-            baseline,
-            delivery_ready_count=OUTBOX_DELIVERY_READY_COUNT_ALERT_THRESHOLD + 1,
-        )
-    ).delivery_backlog_stalled is True
-    assert evaluate_outbox_supportability_alert_posture(
-        replace(
-            baseline,
-            oldest_delivery_ready_age_seconds=(
-                OUTBOX_DELIVERY_OLDEST_READY_AGE_ALERT_SECONDS + 1
-            ),
-        )
-    ).delivery_backlog_stalled is True
-    assert evaluate_outbox_supportability_alert_posture(
-        replace(
-            baseline,
-            retry_deferred_count=OUTBOX_DELIVERY_RETRY_DEFERRED_ALERT_THRESHOLD + 1,
-        )
-    ).retry_pressure is True
+    assert (
+        evaluate_outbox_supportability_alert_posture(
+            replace(
+                baseline,
+                status_counts=replace(baseline.status_counts, dead_letter_count=1),
+            )
+        ).dead_letter_present
+        is True
+    )
+    assert (
+        evaluate_outbox_supportability_alert_posture(
+            replace(baseline, expired_lease_count=1)
+        ).expired_lease_present
+        is True
+    )
+    assert (
+        evaluate_outbox_supportability_alert_posture(
+            replace(
+                baseline,
+                delivery_ready_count=OUTBOX_DELIVERY_READY_COUNT_ALERT_THRESHOLD + 1,
+            )
+        ).delivery_backlog_stalled
+        is True
+    )
+    assert (
+        evaluate_outbox_supportability_alert_posture(
+            replace(
+                baseline,
+                oldest_delivery_ready_age_seconds=(
+                    OUTBOX_DELIVERY_OLDEST_READY_AGE_ALERT_SECONDS + 1
+                ),
+            )
+        ).delivery_backlog_stalled
+        is True
+    )
+    assert (
+        evaluate_outbox_supportability_alert_posture(
+            replace(
+                baseline,
+                retry_deferred_count=OUTBOX_DELIVERY_RETRY_DEFERRED_ALERT_THRESHOLD + 1,
+            )
+        ).retry_pressure
+        is True
+    )
 
 
 def readiness_snapshot(

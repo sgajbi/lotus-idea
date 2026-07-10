@@ -46,11 +46,26 @@ def test_outbox_supportability_collector_exposes_bounded_runtime_posture(
     metrics = generate_latest(registry).decode("utf-8")
 
     assert 'lotus_idea_outbox_delivery_collection_success{repository="lotus-idea"} 1.0' in metrics
-    assert 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="dead_letter"} 1.0' in metrics
-    assert 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="delivery_ready"} 3.0' in metrics
-    assert 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="retry_deferred"} 1.0' in metrics
-    assert 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="expired_lease"} 1.0' in metrics
-    assert 'lotus_idea_outbox_delivery_oldest_ready_age_seconds{repository="lotus-idea"} 300.0' in metrics
+    assert (
+        'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="dead_letter"} 1.0'
+        in metrics
+    )
+    assert (
+        'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="delivery_ready"} 3.0'
+        in metrics
+    )
+    assert (
+        'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="retry_deferred"} 1.0'
+        in metrics
+    )
+    assert (
+        'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="expired_lease"} 1.0'
+        in metrics
+    )
+    assert (
+        'lotus_idea_outbox_delivery_oldest_ready_age_seconds{repository="lotus-idea"} 300.0'
+        in metrics
+    )
     assert 'lotus_idea_outbox_delivery_configuration_ready{repository="lotus-idea"} 0.0' in metrics
     assert set(OUTBOX_DELIVERY_STATES) == {
         "pending",
