@@ -51,6 +51,11 @@ class ReviewAction(StrEnum):
     ESCALATE_TO_COMPLIANCE = "escalate_to_compliance"
 
 
+class ReviewMutationType(StrEnum):
+    REVIEW_DECISION = "review_decision"
+    FEEDBACK_EVENT = "feedback_event"
+
+
 class ReviewEntitlementDenied(PermissionError):
     def __init__(self, candidate_id: str) -> None:
         super().__init__("Review action is not permitted for this caller and candidate scope")
@@ -75,6 +80,42 @@ class InvalidReviewAction(ValueError):
         self.lifecycle_status = lifecycle_status
         self.review_posture = review_posture
         self.policy_version = CANDIDATE_STATE_POLICY_VERSION
+
+
+@dataclass(frozen=True)
+class ReviewMutationIdentity:
+    mutation_type: ReviewMutationType
+    resource_id: str
+    candidate_id: str
+    evidence_packet_id: str
+    evidence_content_hash: str
+    actor_subject: str
+    actor_role: ReviewActorRole
+    event_name: str
+    reason_codes: tuple[ReasonCode, ...]
+    occurred_at_utc: datetime
+    resulting_posture: ReviewPosture | None = None
+    suppression_reason: SuppressionReason | None = None
+    snoozed_until_utc: datetime | None = None
+    source_signal_ids: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        for field_name in (
+            "resource_id",
+            "candidate_id",
+            "evidence_packet_id",
+            "evidence_content_hash",
+            "actor_subject",
+            "event_name",
+        ):
+            _require_text(getattr(self, field_name), field_name)
+        _require_aware_utc(self.occurred_at_utc, "occurred_at_utc")
+        if not self.reason_codes:
+            raise ValueError("reason_codes is required")
+        if self.snoozed_until_utc is not None:
+            _require_aware_utc(self.snoozed_until_utc, "snoozed_until_utc")
+        object.__setattr__(self, "reason_codes", tuple(self.reason_codes))
+        object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
 
 
 @dataclass(frozen=True)
@@ -183,6 +224,10 @@ class GovernedReviewDecision:
     def grants_downstream_authority(self) -> bool:
         return False
 
+    @property
+    def mutation_identity(self) -> ReviewMutationIdentity:
+        return review_mutation_identity_from_decision(self)
+
     def __post_init__(self) -> None:
         _require_text(self.review_id, "review_id")
         _require_text(self.candidate_id, "candidate_id")
@@ -240,6 +285,10 @@ class GovernedFeedbackEvent:
         if not self.source_signal_ids:
             raise ValueError("source_signal_ids is required")
         object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
+
+    @property
+    def mutation_identity(self) -> ReviewMutationIdentity:
+        return feedback_mutation_identity_from_event(self)
 
 
 @dataclass(frozen=True)
@@ -301,6 +350,84 @@ _REVIEW_ACTION_LIFECYCLE_STATUSES: dict[ReviewAction, frozenset[IdeaLifecycleSta
     ReviewAction.ESCALATE_TO_COMPLIANCE: REVIEWABLE_LIFECYCLE_STATUSES
     | {IdeaLifecycleStatus.REVIEWED_BY_ADVISOR},
 }
+
+
+def review_mutation_identity_from_command(
+    candidate: IdeaCandidate,
+    command: ReviewDecisionCommand,
+) -> ReviewMutationIdentity:
+    return ReviewMutationIdentity(
+        mutation_type=ReviewMutationType.REVIEW_DECISION,
+        resource_id=command.review_id,
+        candidate_id=candidate.candidate_id,
+        evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
+        evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        actor_subject=command.actor.actor_subject,
+        actor_role=command.actor.role,
+        event_name=command.action.value,
+        resulting_posture=_REVIEW_ACTION_POSTURES[command.action],
+        reason_codes=(_REVIEW_ACTION_REASON_CODES[command.action], *command.reason_codes),
+        occurred_at_utc=command.decided_at_utc,
+        suppression_reason=command.suppression_reason,
+        snoozed_until_utc=command.snoozed_until_utc,
+    )
+
+
+def review_mutation_identity_from_decision(
+    decision: GovernedReviewDecision,
+) -> ReviewMutationIdentity:
+    return ReviewMutationIdentity(
+        mutation_type=ReviewMutationType.REVIEW_DECISION,
+        resource_id=decision.review_id,
+        candidate_id=decision.candidate_id,
+        evidence_packet_id=decision.evidence_packet_id,
+        evidence_content_hash=decision.evidence_content_hash,
+        actor_subject=decision.actor_subject,
+        actor_role=decision.actor_role,
+        event_name=decision.action.value,
+        resulting_posture=decision.resulting_posture,
+        reason_codes=decision.reason_codes,
+        occurred_at_utc=decision.decided_at_utc,
+        suppression_reason=decision.suppression_reason,
+        snoozed_until_utc=decision.snoozed_until_utc,
+    )
+
+
+def feedback_mutation_identity_from_command(
+    candidate: IdeaCandidate,
+    command: FeedbackCommand,
+) -> ReviewMutationIdentity:
+    return ReviewMutationIdentity(
+        mutation_type=ReviewMutationType.FEEDBACK_EVENT,
+        resource_id=command.feedback_id,
+        candidate_id=candidate.candidate_id,
+        evidence_packet_id=candidate.evidence_packet.evidence_packet_id,
+        evidence_content_hash=candidate.evidence_packet.lineage_ref.content_hash,
+        actor_subject=command.actor.actor_subject,
+        actor_role=command.actor.role,
+        event_name=command.outcome.value,
+        reason_codes=(ReasonCode.FEEDBACK_RECORDED, *command.reason_codes),
+        occurred_at_utc=command.recorded_at_utc,
+        source_signal_ids=candidate.source_signal_ids,
+    )
+
+
+def feedback_mutation_identity_from_event(
+    event: GovernedFeedbackEvent,
+) -> ReviewMutationIdentity:
+    return ReviewMutationIdentity(
+        mutation_type=ReviewMutationType.FEEDBACK_EVENT,
+        resource_id=event.feedback.feedback_id,
+        candidate_id=event.candidate_id,
+        evidence_packet_id=event.evidence_packet_id,
+        evidence_content_hash=event.evidence_content_hash,
+        actor_subject=event.actor_subject,
+        actor_role=event.actor_role,
+        event_name=event.feedback.outcome.value,
+        reason_codes=event.feedback.reason_codes,
+        occurred_at_utc=event.feedback.recorded_at_utc,
+        source_signal_ids=event.source_signal_ids,
+    )
 
 
 def apply_review_action(

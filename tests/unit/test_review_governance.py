@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from dataclasses import replace
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -36,7 +37,9 @@ from app.domain import (
     UnsupportedEvidenceReason,
     apply_review_action,
     build_review_queue,
+    feedback_mutation_identity_from_command,
     record_feedback,
+    review_mutation_identity_from_command,
 )
 
 
@@ -179,6 +182,37 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.audit_event.attributes["policy_version"] == "idea-candidate-state-v1"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
+
+
+def test_review_resource_identity_matches_the_persisted_decision_and_binds_business_fields() -> None:
+    source_candidate = candidate()
+    command = decision_command(ReviewAction.APPROVE_FOR_CONVERSION)
+    result = apply_review_action(source_candidate, command)
+    identity = review_mutation_identity_from_command(source_candidate, command)
+
+    assert identity == result.decision.mutation_identity
+    assert identity != replace(identity, candidate_id="idea-review-002")
+    assert identity != replace(identity, event_name=ReviewAction.REJECT.value)
+    assert identity != replace(identity, actor_subject="advisor-002")
+    assert identity != replace(identity, evidence_content_hash="sha256:changed")
+    assert identity != replace(identity, occurred_at_utc=DECIDED_AT + timedelta(seconds=1))
+
+
+def test_feedback_resource_identity_matches_the_persisted_event() -> None:
+    source_candidate = candidate()
+    command = FeedbackCommand(
+        feedback_id="feedback-identity-001",
+        actor=advisor_context(),
+        access_scope=access_scope(),
+        outcome=FeedbackOutcome.USEFUL,
+        reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+        recorded_at_utc=DECIDED_AT,
+    )
+    result = record_feedback(source_candidate, command)
+
+    assert feedback_mutation_identity_from_command(source_candidate, command) == (
+        result.feedback_event.mutation_identity
+    )
 
 
 def test_review_entitlement_fails_closed_for_wrong_portfolio_scope() -> None:
