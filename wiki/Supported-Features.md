@@ -55,6 +55,7 @@ repository posture plus configured manifest and Core settings, returns
 aggregate decision counts only, isolates route-owned runtime cleanup failures
 into source-safe suppressed operation events, and remains `not_certified`.
 Accepted internal mutations now create source-safe outbox records with
+required correlation and trace lineage, optional parent-event causation,
 lease-fenced delivery state, durable retry scheduling, retryable failed status,
 published status, and dead-letter status through the repository port. Certified
 internal outbox delivery readiness and run-once operator endpoints now report aggregate

@@ -385,6 +385,13 @@ The repo-owned downstream consumer contract at
 Advise, Manage, and Report as downstream consumers with source-authority
 boundaries and keeps them not runtime certified. It changes the outbox blocker
 taxonomy from missing consumer contracts to missing consumer runtime proof.
+Outbox event lineage is governed separately from business payload and
+idempotency. Every mutation event persists required correlation and trace,
+optional parent-event causation, and an explicit lineage origin through API,
+application, repository, PostgreSQL, and publisher layers. Migration `007`
+preserves legacy events while sanitizing unsafe identifiers. Replays keep the
+original durable lineage. See the repository architecture decision
+[`docs/architecture/outbox-event-lineage.md`](https://github.com/sgajbi/lotus-idea/blob/main/docs/architecture/outbox-event-lineage.md).
 
 `POST /api/v1/idea-candidates/{candidateId}/review-actions` and
 `POST /api/v1/idea-candidates/{candidateId}/feedback` are certified internal

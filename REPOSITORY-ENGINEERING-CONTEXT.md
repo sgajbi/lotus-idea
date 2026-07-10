@@ -1138,6 +1138,19 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     conversion-outcome-contract-gate` prevents layer, atomicity, migration, and
     OpenAPI regression. This remains internal design modularity; downstream
     services retain outcome authority and no runtime split is justified.
+29. Outbox event lineage: GitHub issue `#328` is addressed by the
+    framework-neutral `EventLineageContext`, shared API request mapper, typed
+    application commands, repository ports, in-memory/PostgreSQL adapters,
+    migration `007`, and publisher envelope. Correlation and trace are required
+    and distinct; causation is optional and valid only for a parent event or
+    workflow. Request retries with a new trace replay the original durable
+    event without rewriting lineage. Bounded system calls derive deterministic
+    non-null lineage, while legacy rows are sanitized without event deletion.
+    `make outbox-event-contract-gate` and `make outbox-consumer-contract-gate`
+    protect all seven mutation families and consumer replay semantics. This is
+    design modularity inside the existing runtime; no broker, consumer,
+    Gateway/Workbench certification, supported-feature promotion, or runtime
+    split is justified.
 
 Recently closed by PR `#273` and mainline validation:
 

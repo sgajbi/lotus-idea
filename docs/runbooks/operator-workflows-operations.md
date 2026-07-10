@@ -66,6 +66,24 @@ Response:
 4. Do not inspect raw event payloads or downstream payload bodies in dashboard
    or alert context.
 
+### Outbox Lineage Investigation
+
+When a request cannot be connected to a durable or published event:
+
+1. confirm the producer contract with `make outbox-event-contract-gate`,
+2. use authorized database support access to compare `correlation_id`,
+   `trace_id`, optional `causation_id`, and `lineage_origin`,
+3. confirm the publisher transport trace equals the event `trace_id`, not its
+   `causation_id`,
+4. expect an idempotent replay to retain the first event lineage even when the
+   retry request has a new trace,
+5. preserve the row and use governed dead-letter recovery for delivery
+   failure; do not rewrite lineage or copy raw broker payloads into tickets.
+
+Missing required lineage, causation on ordinary request lineage, or equal
+trace and causation values is a producer-contract defect. It is not evidence
+of downstream certification or authority.
+
 ## downstream-realization-readiness-blocked
 
 Trigger: `downstream_realization_readiness_read` or

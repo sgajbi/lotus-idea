@@ -553,6 +553,25 @@ duplicate side effect or raw database error. Existing primary keys provide the
 schema authority, so no migration is required. The design remains an internal
 bounded module and does not promote Slice 6 or a supported feature.
 
+## Issue 328 Outbox Event Lineage Hardening
+
+Every candidate-persistence, lifecycle, review, feedback, conversion-intent,
+conversion-outcome, and report evidence-pack request event now carries
+required correlation and trace metadata. Optional causation is accepted only
+for a distinct parent event or workflow. `app.api.event_lineage` maps the API
+request, application commands pass a framework-neutral context, repository
+ports preserve it independently of idempotency payloads, and the publisher
+uses trace rather than causation for transport tracing.
+
+Migration `007_outbox_event_lineage` performs non-destructive legacy backfill
+and enforces product-safe identifiers plus origin/causation compatibility.
+Unit, API, publisher, and real PostgreSQL tests prove all seven event families,
+new-trace replay preservation, repository reload hydration, migration
+sanitization, and database rejection of invalid combinations. Producer and
+consumer gates protect the contract. External broker, consumer, mesh,
+Gateway/Workbench, and supported-feature certification remain blocked. This is
+internal design modularity only; no runtime split is justified.
+
 ## Issue 326 Conversion Outcome Persistence Hardening
 
 Conversion outcomes now preserve `conversionOutcomeId` resource identity and a

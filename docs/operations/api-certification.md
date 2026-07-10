@@ -47,6 +47,14 @@ Rows below that require `Idempotency-Key` are enforced by
 required with no default, and route code must use the shared idempotency
 boundary instead of route-local validator clones.
 
+Outbox-producing mutation operations expose optional `X-Causation-Id` in
+OpenAPI. Correlation and trace come from the shared request middleware and are
+required in the durable event; causation is accepted only for a distinct
+parent event or workflow. The shared `app.api.event_lineage` mapper and
+`make outbox-event-contract-gate` prevent route-local interpretation and
+trace/causation substitution. Lineage headers do not alter business
+idempotency: an equivalent replay retains the original durable event context.
+
 The machine-readable source for endpoint certification tracking is:
 
 - docs/operations/endpoint-certification-ledger.json

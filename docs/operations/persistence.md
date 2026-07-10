@@ -77,6 +77,16 @@ both outcome ID and intent/version. Migration 006 snapshots contradictory
 legacy streams to `idea_conversion_outcome_quarantine` without deleting their
 source rows, and readiness excludes those streams. See
 `docs/architecture/conversion-outcome-identity-and-lifecycle.md`.
+
+All seven outbox mutation families now preserve required correlation and trace
+metadata from API request through application command, repository port,
+durable row, and publisher envelope. Optional causation identifies a distinct
+parent event only and is never substituted for transport trace. Migration
+`007_outbox_event_lineage` backfills legacy rows without deletion and enforces
+safe identifier and origin/causation combinations. Equivalent idempotent
+replays retain the original event lineage even when the retry has a new trace.
+See `docs/architecture/outbox-event-lineage.md` for the operator and consumer
+contract.
 Review and feedback mutation governance now uses the persisted candidate access
 scope after bounded candidate lookup. Request `accessScope` remains request
 shape, but it is not the runtime authorization target; trusted caller
@@ -105,6 +115,8 @@ outbox event contract. Runtime construction, repository replay, contract-gate
 alignment, the PostgreSQL foundation schema, and
 `003_outbox_event_contract_constraints.sql` all fail closed unless the event
 family, aggregate type, and schema version match the v1 contract.
+The same gate now requires correlation, trace, lineage origin, API mapper
+coverage, PostgreSQL wiring, and correct publisher trace semantics.
 `scripts/generate_outbox_broker_proof.py` and
 `make outbox-broker-proof-contract-gate` provide a source-safe outbox broker
 proof artifact for aggregate RFC implementation-readiness evidence. The artifact

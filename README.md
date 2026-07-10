@@ -247,7 +247,7 @@ Operator entrypoints:
 Operator details live in
 [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
 [docs/operations/observability.md](docs/operations/observability.md),
-[docs/operations/persistence.md](docs/operations/persistence.md),
+[persistence](docs/operations/persistence.md) and [outbox lineage](docs/architecture/outbox-event-lineage.md),
 [docs/operations/outbox-dead-letter-recovery.md](docs/operations/outbox-dead-letter-recovery.md), and
 [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
 
