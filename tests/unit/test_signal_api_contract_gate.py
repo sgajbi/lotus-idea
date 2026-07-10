@@ -130,6 +130,34 @@ def test_signal_api_contract_gate_requires_shared_signal_helpers(
     ]
 
 
+def test_signal_api_contract_gate_requires_shared_source_boundary(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    _write_valid_signal_support(tmp_path)
+    module_path = Path("src/app/api/missing_benchmark_signals.py")
+    _write_signal_module(
+        tmp_path,
+        module_path,
+        "from app.api.caller_headers import CallerContextHeaders\n"
+        "from app.api.signal_api_support import (\n"
+        "    signal_permission_problem_or_none, evaluate_caller_supplied_signal,\n"
+        "    emit_signal_evaluation_event, signal_problem_responses,\n"
+        "    source_authority_from_contracts,\n"
+        ")\n\n"
+        "def evaluate_missing_benchmark_signal_from_source():\n"
+        "    return None\n",
+    )
+    setattr(module, "SIGNAL_API_MODULES", (module_path,))
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "src/app/api/missing_benchmark_signals.py: source-backed signal APIs must use shared "
+        "`evaluate_source_signal` orchestration"
+    ]
+
+
 def test_signal_api_contract_gate_requires_strict_shared_signal_authorization(
     tmp_path: Path,
 ) -> None:

@@ -40,6 +40,8 @@ REQUIRED_SHARED_HELPERS = (
     "signal_problem_responses",
 )
 
+SOURCE_SIGNAL_SHARED_HELPER = "evaluate_source_signal"
+
 SOURCE_AUTHORITY_HELPERS = (
     "source_authority_from_refs",
     "source_authority_from_contracts",
@@ -84,8 +86,14 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
     text = path.read_text(encoding="utf-8")
     tree = ast.parse(text, filename=str(path))
     errors: list[str] = []
+    uses_shared_source_boundary = "_from_source" in text and SOURCE_SIGNAL_SHARED_HELPER in text
 
     for helper in REQUIRED_SHARED_HELPERS:
+        if uses_shared_source_boundary and helper in {
+            "signal_permission_problem_or_none",
+            "emit_signal_evaluation_event",
+        }:
+            continue
         if helper not in text:
             errors.append(
                 f"{relative_path}: caller-supplied signal APIs must use shared `{helper}` support"
@@ -94,6 +102,12 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
         errors.append(
             f"{relative_path}: caller-supplied signal APIs must use shared source-authority support "
             "(`source_authority_from_refs` or `source_authority_from_contracts`)"
+        )
+
+    if "_from_source" in text and SOURCE_SIGNAL_SHARED_HELPER not in text:
+        errors.append(
+            f"{relative_path}: source-backed signal APIs must use shared "
+            f"`{SOURCE_SIGNAL_SHARED_HELPER}` orchestration"
         )
 
     for node in ast.walk(tree):
