@@ -112,6 +112,27 @@ def test_downstream_realization_contract_gate_blocks_missing_source_truth() -> N
     )
 
 
+def test_downstream_realization_contract_gate_blocks_call_before_claim_regression(
+    tmp_path: Path,
+) -> None:
+    module = _load_downstream_realization_contract_gate()
+    source = (ROOT / "src" / "app" / "application" / "downstream_realization.py").read_text(
+        encoding="utf-8"
+    )
+    relative = Path("src/app/application/downstream_realization.py")
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True)
+    target.write_text(
+        source.replace("claim_downstream_submission", "removed_claim", 1),
+        encoding="utf-8",
+    )
+
+    errors = module._validate_durable_submission_state_machine(tmp_path)
+
+    assert any("claim_downstream_submission" in error for error in errors)
+    assert "downstream orchestration must durably claim before the external call" in errors
+
+
 def test_downstream_realization_contract_loader_rejects_non_object_file(tmp_path: Path) -> None:
     module = _load_downstream_realization_contract_gate()
     contract_path = tmp_path / "contract.json"

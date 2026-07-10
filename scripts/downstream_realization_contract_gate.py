@@ -88,6 +88,7 @@ def validate_downstream_realization_contract_plan_payload(
 
     errors.extend(_validate_source_of_truth(plan, repository_root=repository_root))
     errors.extend(_validate_contracts(plan))
+    errors.extend(_validate_durable_submission_state_machine(repository_root))
     return errors
 
 
@@ -104,6 +105,12 @@ def _validate_source_of_truth(
         "downstream_realization_api",
         "downstream_adapter_port",
         "downstream_adapter_foundation",
+        "downstream_submission_state",
+        "downstream_submission_postgres",
+        "downstream_submission_migration",
+        "downstream_reconciliation_application",
+        "downstream_reconciliation_api",
+        "downstream_submission_postgres_proof",
         "contract_gate",
         "operations_runbook",
         "rfc_slice_12",
@@ -122,6 +129,86 @@ def _validate_source_of_truth(
         if not (repository_root / path).exists():
             errors.append(f"downstream contract plan source_of_truth.{key} path missing")
     return errors
+
+
+def _validate_durable_submission_state_machine(repository_root: Path) -> list[str]:
+    orchestration = _read(repository_root, "src/app/application/downstream_realization.py")
+    postgres = _read(
+        repository_root,
+        "src/app/infrastructure/postgres_downstream_submission.py",
+    )
+    migration = _read(
+        repository_root,
+        "migrations/008_downstream_submission_state_machine.sql",
+    )
+    reconciliation_api = _read(
+        repository_root,
+        "src/app/api/downstream_submission_reconciliation.py",
+    )
+    makefile = _read(repository_root, "Makefile")
+    errors: list[str] = []
+    required_fragments = {
+        "downstream orchestration": (
+            orchestration,
+            (
+                "claim_downstream_submission",
+                "finalize_downstream_submission",
+                "DownstreamRealizationStatus.RECONCILIATION_REQUIRED",
+                "downstream_submission_finalization_failed",
+            ),
+        ),
+        "PostgreSQL submission adapter": (
+            postgres,
+            (
+                "ON CONFLICT DO NOTHING",
+                "FOR UPDATE",
+                "downstream submission support reference collision",
+                "downstream-submission-state-update",
+            ),
+        ),
+        "submission migration": (
+            migration,
+            (
+                "support_reference",
+                "lease_attempt_id",
+                "audit_json JSONB",
+                "idx_idea_downstream_submission_reconciliation",
+            ),
+        ),
+        "reconciliation API": (
+            reconciliation_api,
+            (
+                "idea.downstream-reconciliation.read",
+                "idea.downstream-reconciliation.resolve",
+                "require_role_and_capability",
+                "Idempotency-Key must be valid and equal changeReference",
+            ),
+        ),
+        "PostgreSQL integration gate": (
+            makefile,
+            ("tests/integration/test_postgres_downstream_submission_runtime.py",),
+        ),
+    }
+    for label, (source, fragments) in required_fragments.items():
+        for fragment in fragments:
+            if fragment not in source:
+                errors.append(f"{label} missing durable submission fragment: {fragment}")
+    claim_position = orchestration.find("claim_downstream_submission")
+    call_position = orchestration.find("outcome = call()")
+    if claim_position < 0 or call_position < 0 or claim_position > call_position:
+        errors.append("downstream orchestration must durably claim before the external call")
+    source_tree = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in sorted((repository_root / "src").rglob("*.py"))
+    )
+    if "record_downstream_submission(" in source_tree:
+        errors.append("legacy post-call downstream submission writes must remain removed")
+    return errors
+
+
+def _read(repository_root: Path, relative_path: str) -> str:
+    path = repository_root / relative_path
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def _validate_contracts(plan: DownstreamRealizationContractPlan) -> list[str]:
