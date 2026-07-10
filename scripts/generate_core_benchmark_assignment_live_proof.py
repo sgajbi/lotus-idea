@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         evidence = core_source.fetch_benchmark_assignment_evidence(
             CoreBenchmarkAssignmentEvidenceRequest(
+                tenant_id=args.tenant_id,
                 portfolio_id=args.portfolio_id,
                 as_of_date=_parse_date(args.as_of_date, "as-of-date"),
                 reporting_currency=args.reporting_currency,
@@ -127,6 +128,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--core-base-url", default=os.getenv(CORE_BASE_URL_ENV))
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument("--portfolio-id", required=True)
+    parser.add_argument("--tenant-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--reporting-currency")
     parser.add_argument(

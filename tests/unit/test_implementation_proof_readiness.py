@@ -74,21 +74,15 @@ from app.application.source_ingestion_readiness import (
     SCHEDULED_WORKER_PROOF_ENV,
 )
 from app.application.downstream_route_contract_proof import ADVISE_ROUTE_BLOCKERS_CLEARED
-from app.application.source_ingestion_scheduled_worker import (
-    build_scheduled_worker_check_summary,
-    build_scheduled_worker_deploy_proof_payload,
-    source_ingestion_schedule_config_from_values,
-)
-from app.application.source_ingestion_worker import (
-    MANIFEST_SCHEMA_VERSION,
-    source_ingestion_worker_plan_from_manifest,
-)
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 from app.runtime.repository_state import DATABASE_URL_ENV
 from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
     write_lotus_ai_workflow_pack_runtime_execution_fixture,
+)
+from tests.unit.source_ingestion_proof_helpers import (
+    valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
 from tests.support.downstream_route_contract_fixtures import (
     valid_advise_route_proof,
@@ -1033,30 +1027,6 @@ def test_implementation_proof_readiness_rejects_invalid_supported_features_shape
 
     with pytest.raises(ValueError, match="supported features must be a list"):
         _supported_feature_count(registry_path)
-
-
-def _valid_scheduled_worker_proof() -> dict[str, object]:
-    plan = source_ingestion_worker_plan_from_manifest(
-        {
-            "schemaVersion": MANIFEST_SCHEMA_VERSION,
-            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
-        }
-    )
-    summary = build_scheduled_worker_check_summary(
-        plan=plan,
-        schedule=source_ingestion_schedule_config_from_values(
-            interval_seconds=300,
-            max_runs=1,
-        ),
-    )
-    return build_scheduled_worker_deploy_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        check_summary=summary,
-        scheduler_entrypoint_present=True,
-        run_once_worker_entrypoint_present=True,
-        docker_compose_service_present=True,
-    )
 
 
 def _write_platform_mesh_fixture(tmp_path: Path) -> Path:

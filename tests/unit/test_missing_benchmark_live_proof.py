@@ -195,6 +195,8 @@ def test_missing_benchmark_live_proof_cli_writes_source_safe_candidate_artifact(
         [
             "--core-query-control-plane-base-url",
             "http://localhost:8101",
+            "--tenant-id",
+            "default",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",
@@ -248,6 +250,8 @@ def test_missing_benchmark_live_proof_cli_writes_ready_assignment_as_open_artifa
         [
             "--core-query-control-plane-base-url",
             "http://localhost:8101",
+            "--tenant-id",
+            "default",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",
@@ -288,6 +292,8 @@ def test_missing_benchmark_live_proof_cli_writes_blocked_artifact(
         [
             "--core-query-control-plane-base-url",
             "http://localhost:8101",
+            "--tenant-id",
+            "default",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",

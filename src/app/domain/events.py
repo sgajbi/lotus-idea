@@ -120,7 +120,9 @@ class OutboxEventRecord:
                 raise ValueError("leased outbox events cannot have next_attempt_at_utc")
         elif self.status is OutboxEventStatus.PUBLISHED:
             if (self.first_failed_at_utc is None) != (self.last_failed_at_utc is None):
-                raise ValueError("published outbox failure timing must include first and last failure")
+                raise ValueError(
+                    "published outbox failure timing must include first and last failure"
+                )
             if self.next_attempt_at_utc is not None:
                 raise ValueError("published outbox events cannot have next_attempt_at_utc")
         elif any(

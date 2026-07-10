@@ -563,6 +563,7 @@ def test_source_ingestion_runtime_blocks_manifest_over_batch_ceiling(
         json.dumps(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "maxItems": SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
                 "workItems": [
@@ -1133,6 +1134,7 @@ def write_manifest(tmp_path: Path) -> Path:
         json.dumps(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "workItems": [
                     {

@@ -157,6 +157,14 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         "GET", "/api/v1/outbox-delivery/readiness", "idea.outbox-delivery.readiness.read"
     ),
     _operator_requirement("POST", "/api/v1/outbox-delivery/run-once", "idea.outbox-delivery.run"),
+    _operator_requirement(
+        "GET", "/api/v1/outbox-delivery/dead-letters", "idea.outbox-recovery.read"
+    ),
+    _operator_requirement(
+        "POST",
+        "/api/v1/outbox-delivery/dead-letters/{supportReference}/redrive",
+        "idea.outbox-recovery.redrive",
+    ),
     _operator_requirement("GET", "/api/v1/data-mesh/readiness", "idea.mesh.readiness.read"),
     _operator_requirement(
         "GET",

@@ -405,6 +405,9 @@ def test_source_signal_boundary_blocks_before_runtime_use_case_and_cleanup() -> 
     calls: list[str] = []
     blocker = SimpleNamespace(code="core_base_url_missing")
 
+    def unexpected_evaluator(_command: None, _runtime: Any) -> SignalEvaluationResult:
+        raise AssertionError("blocked runtime must not reach the evaluator")
+
     response = evaluate_source_signal(
         caller=_signal_caller(portfolio_ids=("PB_SG_GLOBAL_BAL_001",)),
         source_authority="lotus-core",
@@ -413,7 +416,7 @@ def test_source_signal_boundary_blocks_before_runtime_use_case_and_cleanup() -> 
         is_runtime_blocked=lambda value: value is blocker,
         blocked_detail="Core source runtime is not configured.",
         command_factory=lambda runtime, tenant_id: calls.append("dto-mapped"),
-        evaluator=lambda command, runtime: calls.append("use-case"),
+        evaluator=unexpected_evaluator,
         response_factory=lambda result, **kwargs: result,
         emit_event=lambda *args, **kwargs: calls.append(kwargs.get("error_code", "event")),
     )

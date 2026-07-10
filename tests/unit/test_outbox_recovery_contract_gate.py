@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+from types import ModuleType
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -35,7 +36,7 @@ def test_outbox_recovery_contract_gate_rejects_sensitive_response_field(tmp_path
     assert any("source-sensitive response field `payload`" in error for error in errors)
 
 
-def _load_gate():
+def _load_gate() -> ModuleType:
     script_path = ROOT / "scripts/outbox_recovery_contract_gate.py"
     spec = importlib.util.spec_from_file_location("outbox_recovery_contract_gate", script_path)
     assert spec is not None and spec.loader is not None

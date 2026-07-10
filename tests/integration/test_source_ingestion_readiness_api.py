@@ -360,6 +360,7 @@ def test_source_ingestion_run_once_api_blocks_manifest_over_batch_ceiling(
         json.dumps(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "maxItems": SOURCE_INGESTION_RUN_ONCE_BATCH_CEILING + 1,
                 "workItems": [
@@ -405,6 +406,7 @@ def test_source_ingestion_run_once_api_executes_configured_batch_source_safely(
         plan=source_ingestion_worker_plan_from_manifest(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "correlationId": "corr-source-ingestion-run-api",
                 "traceId": "trace-source-ingestion-run-api",
@@ -475,6 +477,7 @@ def test_source_ingestion_run_once_api_closes_runtime_after_source_failure(
         plan=source_ingestion_worker_plan_from_manifest(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "correlationId": "corr-source-ingestion-run-api",
                 "traceId": "trace-source-ingestion-run-api",
@@ -532,6 +535,7 @@ def test_source_ingestion_run_once_api_preserves_bounded_result_when_runtime_clo
         plan=source_ingestion_worker_plan_from_manifest(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "correlationId": "corr-source-ingestion-run-api",
                 "traceId": "trace-source-ingestion-run-api",
@@ -636,6 +640,7 @@ def test_source_ingestion_run_once_api_emits_not_certified_operation_event(
         plan=source_ingestion_worker_plan_from_manifest(
             {
                 "schemaVersion": MANIFEST_SCHEMA_VERSION,
+                "tenantId": "default",
                 "evaluatedAtUtc": "2026-06-21T10:00:00Z",
                 "workItems": [
                     {

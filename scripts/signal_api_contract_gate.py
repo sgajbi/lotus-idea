@@ -62,6 +62,14 @@ CALLER_HEADER_ALIASES = (
     "X-Caller-Capabilities",
 )
 
+CORE_LIVE_PROOF_SCRIPTS = (
+    Path("scripts/generate_bond_maturity_live_proof.py"),
+    Path("scripts/generate_core_benchmark_assignment_live_proof.py"),
+    Path("scripts/generate_core_portfolio_state_live_proof.py"),
+    Path("scripts/generate_low_income_core_cashflow_live_proof.py"),
+    Path("scripts/generate_missing_benchmark_live_proof.py"),
+)
+
 
 def _relative(path: Path, root: Path) -> str:
     try:
@@ -263,7 +271,25 @@ def validate_signal_api_contract(root: Path = ROOT) -> list[str]:
     errors.extend(_validate_signal_api_support(root / SIGNAL_API_SUPPORT_MODULE, root))
     for relative_path in SIGNAL_API_MODULES:
         errors.extend(_validate_signal_api_module(root / relative_path, root))
+    if (root / "scripts").exists():
+        errors.extend(_validate_core_live_proof_tenant_contract(root))
     return sorted(errors)
+
+
+def _validate_core_live_proof_tenant_contract(root: Path) -> list[str]:
+    errors: list[str] = []
+    for relative_path in CORE_LIVE_PROOF_SCRIPTS:
+        path = root / relative_path
+        relative = relative_path.as_posix()
+        if not path.exists():
+            errors.append(f"{relative}: required Core live-proof script is missing")
+            continue
+        content = path.read_text(encoding="utf-8")
+        if 'parser.add_argument("--tenant-id", required=True)' not in content:
+            errors.append(f"{relative}: Core live proof must require explicit `--tenant-id`")
+        if "tenant_id=args.tenant_id" not in content:
+            errors.append(f"{relative}: Core live proof must pass tenant to its request port")
+    return errors
 
 
 def main() -> int:

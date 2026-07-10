@@ -35,6 +35,50 @@ original_last_failed_at_utc
 """
 
 
+class PostgresOutboxRecoveryRepositoryMixin:
+    _connection: PostgresConnection
+
+    def dead_letter_summaries(
+        self,
+        *,
+        limit: int = 100,
+    ) -> tuple[OutboxDeadLetterSummary, ...]:
+        return load_dead_letter_summaries(self._connection, limit=limit)
+
+    def claim_dead_letter_for_recovery(
+        self,
+        *,
+        support_reference: str,
+        idempotency_key: str,
+        request_payload: Mapping[str, Any],
+        actor_subject: str,
+        reason: str,
+        change_reference: str,
+        requested_at_utc: datetime,
+        lease_owner: str,
+        lease_attempt_id: str,
+        lease_expires_at_utc: datetime,
+        max_recovery_attempts: int = MAX_OUTBOX_RECOVERY_ATTEMPTS,
+    ) -> OutboxRecoveryClaimResult:
+        return claim_dead_letter_for_recovery(
+            self._connection,
+            support_reference=support_reference,
+            idempotency_key=idempotency_key,
+            request_payload=request_payload,
+            actor_subject=actor_subject,
+            reason=reason,
+            change_reference=change_reference,
+            requested_at_utc=requested_at_utc,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            lease_expires_at_utc=lease_expires_at_utc,
+            max_recovery_attempts=max_recovery_attempts,
+        )
+
+    def outbox_recovery_audit_records(self) -> tuple[OutboxRecoveryAuditRecord, ...]:
+        return load_outbox_recovery_audit_records(self._connection)
+
+
 def load_dead_letter_summaries(
     connection: PostgresConnection,
     *,
@@ -138,7 +182,8 @@ def claim_dead_letter_for_recovery(
                     audit_record=None,
                     blocker="recovery_attempt_limit_reached",
                 )
-            audit_record = build_outbox_recovery_audit_record(
+            result = _claim_eligible_dead_letter(
+                cursor,
                 event,
                 idempotency_key=idempotency_key,
                 request_payload=request_payload,
@@ -150,64 +195,91 @@ def claim_dead_letter_for_recovery(
                 lease_attempt_id=lease_attempt_id,
                 lease_expires_at_utc=lease_expires_at_utc,
             )
-            leased = lease_outbox_event(
-                event,
-                lease_owner=lease_owner,
-                lease_attempt_id=lease_attempt_id,
-                lease_expires_at_utc=lease_expires_at_utc,
-            )
-            cursor.execute(
-                f"""
-                UPDATE idea_outbox_event
-                SET status = %s,
-                    published_at_utc = NULL,
-                    next_attempt_at_utc = NULL,
-                    lease_owner = %s,
-                    lease_attempt_id = %s,
-                    lease_expires_at_utc = %s
-                WHERE outbox_event_id = %s AND status = %s
-                RETURNING {OUTBOX_EVENT_RETURNING_COLUMNS}
-                """,
-                (
-                    OutboxEventStatus.LEASED.value,
-                    lease_owner,
-                    lease_attempt_id,
-                    lease_expires_at_utc,
-                    event.event_id,
-                    OutboxEventStatus.DEAD_LETTER.value,
-                ),
-            )
-            rows = cursor.fetchall()
-            if not rows:
-                connection.commit()
-                return OutboxRecoveryClaimResult(
-                    decision=OutboxRecoveryDecision.LEASE_CONFLICT,
-                    event=_load_event(cursor, event.event_id),
-                    audit_record=None,
-                    blocker="recovery_lease_conflict",
-                )
-            cursor.execute(
-                """
-                INSERT INTO idea_outbox_recovery_audit (
-                    recovery_id, outbox_event_id, support_reference,
-                    idempotency_fingerprint, request_fingerprint, actor_subject,
-                    recovery_reason, change_reference, requested_at_utc, lease_owner,
-                    lease_attempt_id, lease_expires_at_utc, original_retry_count,
-                    original_failure_reason, original_first_failed_at_utc,
-                    original_last_failed_at_utc
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                _recovery_record_values(audit_record),
-            )
         connection.commit()
-        return OutboxRecoveryClaimResult(
-            decision=OutboxRecoveryDecision.ACCEPTED,
-            event=leased,
-            audit_record=audit_record,
-        )
+        return result
     except Exception:
         connection.rollback()
         raise
+
+
+def _claim_eligible_dead_letter(
+    cursor: Any,
+    event: OutboxEventRecord,
+    *,
+    idempotency_key: str,
+    request_payload: Mapping[str, Any],
+    actor_subject: str,
+    reason: str,
+    change_reference: str,
+    requested_at_utc: datetime,
+    lease_owner: str,
+    lease_attempt_id: str,
+    lease_expires_at_utc: datetime,
+) -> OutboxRecoveryClaimResult:
+    audit_record = build_outbox_recovery_audit_record(
+        event,
+        idempotency_key=idempotency_key,
+        request_payload=request_payload,
+        actor_subject=actor_subject,
+        reason=reason,
+        change_reference=change_reference,
+        requested_at_utc=requested_at_utc,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        lease_expires_at_utc=lease_expires_at_utc,
+    )
+    leased = lease_outbox_event(
+        event,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        lease_expires_at_utc=lease_expires_at_utc,
+    )
+    cursor.execute(
+        f"""
+        UPDATE idea_outbox_event
+        SET status = %s,
+            published_at_utc = NULL,
+            next_attempt_at_utc = NULL,
+            lease_owner = %s,
+            lease_attempt_id = %s,
+            lease_expires_at_utc = %s
+        WHERE outbox_event_id = %s AND status = %s
+        RETURNING {OUTBOX_EVENT_RETURNING_COLUMNS}
+        """,
+        (
+            OutboxEventStatus.LEASED.value,
+            lease_owner,
+            lease_attempt_id,
+            lease_expires_at_utc,
+            event.event_id,
+            OutboxEventStatus.DEAD_LETTER.value,
+        ),
+    )
+    if not cursor.fetchall():
+        return OutboxRecoveryClaimResult(
+            decision=OutboxRecoveryDecision.LEASE_CONFLICT,
+            event=_load_event(cursor, event.event_id),
+            audit_record=None,
+            blocker="recovery_lease_conflict",
+        )
+    cursor.execute(
+        """
+        INSERT INTO idea_outbox_recovery_audit (
+            recovery_id, outbox_event_id, support_reference,
+            idempotency_fingerprint, request_fingerprint, actor_subject,
+            recovery_reason, change_reference, requested_at_utc, lease_owner,
+            lease_attempt_id, lease_expires_at_utc, original_retry_count,
+            original_failure_reason, original_first_failed_at_utc,
+            original_last_failed_at_utc
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """,
+        _recovery_record_values(audit_record),
+    )
+    return OutboxRecoveryClaimResult(
+        decision=OutboxRecoveryDecision.ACCEPTED,
+        event=leased,
+        audit_record=audit_record,
+    )
 
 
 def _load_recovery_by_idempotency(

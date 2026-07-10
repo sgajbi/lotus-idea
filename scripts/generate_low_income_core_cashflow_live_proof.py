@@ -63,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         evidence = core_source.fetch_low_income_evidence(
             CoreLowIncomeEvidenceRequest(
+                tenant_id=args.tenant_id,
                 portfolio_id=args.portfolio_id,
                 as_of_date=_parse_date(args.as_of_date, "as-of-date"),
                 evaluated_at_utc=evaluated_at_utc,
@@ -123,6 +124,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--core-base-url", default=os.getenv(CORE_BASE_URL_ENV))
     parser.add_argument("--timeout-seconds", default=os.getenv(TIMEOUT_SECONDS_ENV, "2.0"))
     parser.add_argument("--portfolio-id", required=True)
+    parser.add_argument("--tenant-id", required=True)
     parser.add_argument("--as-of-date", required=True)
     parser.add_argument("--horizon-days", type=int, default=30)
     parser.add_argument(

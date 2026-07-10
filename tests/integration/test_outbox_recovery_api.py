@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -11,11 +12,13 @@ from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_TOKEN_ENV
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
+    OutboxEventRecord,
     OutboxEventStatus,
     build_candidate_outbox_event,
     mark_outbox_event_failed,
 )
 from app.main import app
+from app.observability import OperationEvent
 from app.ports.outbox_publisher import OutboxPublishOutcome
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.runtime.settings import RUNTIME_PROFILE_ENV
@@ -31,7 +34,7 @@ def reset_repository_provider() -> Iterator[None]:
     reset_idea_repository_for_tests()
 
 
-def test_dead_letter_inspection_is_operator_only_and_source_safe() -> None:
+def test_dead_letter_inspection_denied_for_non_operator_and_is_source_safe() -> None:
     event = _dead_lettered_event()
     reset_idea_repository_for_tests(repository=_repository_with_event(event))
     client = TestClient(app)
@@ -178,16 +181,49 @@ def test_production_redrive_rejects_untrusted_caller_before_mutation(
 
     assert response.status_code == 403
     assert response.json()["code"] == "permission_denied"
-    assert repository.snapshot().outbox_events[event.event_id].status is OutboxEventStatus.DEAD_LETTER
+    assert (
+        repository.snapshot().outbox_events[event.event_id].status is OutboxEventStatus.DEAD_LETTER
+    )
+
+
+def test_outbox_recovery_api_emits_bounded_operation_events(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    event = _dead_lettered_event()
+    reset_idea_repository_for_tests(repository=_repository_with_event(event))
+    publisher = RecordingPublisher(accepted=True)
+    monkeypatch.setattr(recovery_api, "build_outbox_publisher_from_environment", lambda: publisher)
+    emitted: list[OperationEvent] = []
+    monkeypatch.setattr(recovery_api, "emit_operation_event", emitted.append)
+    client = TestClient(app)
+
+    support_reference = _support_reference(client)
+    response = client.post(
+        f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive",
+        headers=_headers(
+            capability="idea.outbox-recovery.redrive",
+            idempotency_key="outbox-redrive:api:telemetry",
+        ),
+        json={"reason": "broker_route_corrected", "changeReference": "CHG-2026-0710"},
+    )
+
+    assert response.status_code == 200
+    assert [(item.operation.value, item.outcome.value) for item in emitted] == [
+        ("outbox_dead_letter_read", "accepted"),
+        ("outbox_dead_letter_redrive", "accepted"),
+    ]
+    assert all(item.supportability_status.value == "not_certified" for item in emitted)
+    assert all(item.supported_feature_promoted is False for item in emitted)
+    assert all(not item.attributes for item in emitted)
 
 
 class RecordingPublisher:
     def __init__(self, *, accepted: bool) -> None:
         self.accepted = accepted
-        self.events = []
+        self.events: list[OutboxEventRecord] = []
         self.close_count = 0
 
-    def publish(self, event):
+    def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
         self.events.append(event)
         if self.accepted:
             return OutboxPublishOutcome.accepted_by_publisher()
@@ -203,7 +239,8 @@ def _support_reference(client: TestClient) -> str:
         headers=_headers(capability="idea.outbox-recovery.read"),
     )
     assert response.status_code == 200
-    return response.json()["items"][0]["supportReference"]
+    payload: dict[str, Any] = response.json()
+    return str(payload["items"][0]["supportReference"])
 
 
 def _headers(*, capability: str, idempotency_key: str | None = None) -> dict[str, str]:
@@ -218,7 +255,7 @@ def _headers(*, capability: str, idempotency_key: str | None = None) -> dict[str
     return headers
 
 
-def _dead_lettered_event():
+def _dead_lettered_event() -> OutboxEventRecord:
     event = build_candidate_outbox_event(
         event_type="idea.candidate.persisted.v1",
         aggregate_id="candidate-sensitive",
@@ -235,7 +272,7 @@ def _dead_lettered_event():
     )
 
 
-def _repository_with_event(event):
+def _repository_with_event(event: OutboxEventRecord) -> InMemoryIdeaRepository:
     return InMemoryIdeaRepository(
         IdeaRepositorySnapshot(
             candidate_records={},

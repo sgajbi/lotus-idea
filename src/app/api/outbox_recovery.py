@@ -38,7 +38,11 @@ from app.observability import (
     OperationSupportability,
     emit_operation_event,
 )
-from app.security.caller_context import CapabilityPolicy, PermissionDeniedError, require_role_and_capability
+from app.security.caller_context import (
+    CapabilityPolicy,
+    PermissionDeniedError,
+    require_role_and_capability,
+)
 
 
 _READ_DEAD_LETTER_POLICY = CapabilityPolicy.for_roles(
@@ -70,7 +74,9 @@ async def get_outbox_dead_letters(
     try:
         require_role_and_capability(caller, _READ_DEAD_LETTER_POLICY)
     except PermissionDeniedError:
-        _emit_recovery_event(IdeaOperation.OUTBOX_DEAD_LETTER_READ, OperationOutcome.PERMISSION_DENIED)
+        _emit_recovery_event(
+            IdeaOperation.OUTBOX_DEAD_LETTER_READ, OperationOutcome.PERMISSION_DENIED
+        )
         return problem_details_response(**_permission_denied_args("inspect"))
     repository = get_idea_repository()
     summaries = repository.dead_letter_summaries(limit=limit)
@@ -116,13 +122,17 @@ async def post_outbox_dead_letter_redrive(
     try:
         require_role_and_capability(caller, _REDRIVE_DEAD_LETTER_POLICY)
     except PermissionDeniedError:
-        _emit_recovery_event(IdeaOperation.OUTBOX_DEAD_LETTER_REDRIVE, OperationOutcome.PERMISSION_DENIED)
+        _emit_recovery_event(
+            IdeaOperation.OUTBOX_DEAD_LETTER_REDRIVE, OperationOutcome.PERMISSION_DENIED
+        )
         return problem_details_response(**_permission_denied_args("re-drive"))
     validated_idempotency_key = idempotency_key or ""
     try:
         validate_idempotency_key(validated_idempotency_key)
     except ValueError:
-        _emit_recovery_event(IdeaOperation.OUTBOX_DEAD_LETTER_REDRIVE, OperationOutcome.INVALID_REQUEST)
+        _emit_recovery_event(
+            IdeaOperation.OUTBOX_DEAD_LETTER_REDRIVE, OperationOutcome.INVALID_REQUEST
+        )
         return problem_details_response(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
@@ -205,7 +215,10 @@ def _recovery_response(
             title="Dead letter not found",
             detail="No outbox dead letter matches the supplied support reference.",
         )
-    if summary.run_status in {OutboxRecoveryRunStatus.QUARANTINED, OutboxRecoveryRunStatus.LEASE_LOST}:
+    if summary.run_status in {
+        OutboxRecoveryRunStatus.QUARANTINED,
+        OutboxRecoveryRunStatus.LEASE_LOST,
+    }:
         return problem_details_response(
             status_code=status.HTTP_409_CONFLICT,
             code=summary.blocker or "recovery_not_eligible",

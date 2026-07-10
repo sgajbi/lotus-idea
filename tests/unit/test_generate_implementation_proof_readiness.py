@@ -59,20 +59,15 @@ from app.application.source_ingestion_readiness import (
     MANIFEST_ENV,
     SCHEDULED_WORKER_PROOF_ENV,
 )
-from app.application.source_ingestion_scheduled_worker import (
-    build_scheduled_worker_check_summary,
-    build_scheduled_worker_deploy_proof_payload,
-    source_ingestion_schedule_config_from_values,
-)
-from app.application.source_ingestion_worker import (
-    MANIFEST_SCHEMA_VERSION,
-    source_ingestion_worker_plan_from_manifest,
-)
+from app.application.source_ingestion_worker import MANIFEST_SCHEMA_VERSION
 from app.application.workbench_read_path_proof import build_workbench_read_path_proof_payload
 from app.domain import InMemoryIdeaRepository
 from tests.support.ai_workflow_pack_fixture import (
     write_lotus_ai_workflow_pack_fixture,
     write_lotus_ai_workflow_pack_runtime_execution_fixture,
+)
+from tests.unit.source_ingestion_proof_helpers import (
+    valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
 )
 from tests.unit.test_gateway_workbench_discovery_proof import _write_platform_fixture
 
@@ -1114,30 +1109,6 @@ def test_generate_implementation_proof_readiness_rejects_naive_timestamp(
 
     assert result == 2
     assert "timezone-aware" in capsys.readouterr().err
-
-
-def _valid_scheduled_worker_proof() -> dict[str, object]:
-    plan = source_ingestion_worker_plan_from_manifest(
-        {
-            "schemaVersion": MANIFEST_SCHEMA_VERSION,
-            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
-        }
-    )
-    summary = build_scheduled_worker_check_summary(
-        plan=plan,
-        schedule=source_ingestion_schedule_config_from_values(
-            interval_seconds=300,
-            max_runs=1,
-        ),
-    )
-    return build_scheduled_worker_deploy_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        check_summary=summary,
-        scheduler_entrypoint_present=True,
-        run_once_worker_entrypoint_present=True,
-        docker_compose_service_present=True,
-    )
 
 
 def _write_outbox_platform_fixture(tmp_path: Path) -> Path:

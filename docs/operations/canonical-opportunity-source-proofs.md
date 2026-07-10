@@ -92,6 +92,10 @@ caller context before building the source runtime. That tenant is carried
 through the application command and Core source port; the infrastructure
 adapter never substitutes a production `default` tenant. The run-once worker
 uses the same rule through a required `tenantId` in its versioned manifest.
+Every Core live-proof generator also requires explicit `--tenant-id` and
+passes it through the typed Core request port. The `signal-api-contract-gate`
+checks both route opt-in and proof-script propagation so certification tooling
+cannot bypass the runtime tenant boundary.
 The `unknown` value used by portfolio-only scope checks is an unconstrained
 scope dimension, not a tenant value that may be sent to Core.
 

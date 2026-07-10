@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import TypedDict
 
 from app.application.outbox_recovery import (
     OutboxRecoveryRunStatus,
@@ -9,6 +10,7 @@ from app.application.outbox_recovery import (
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
+    OutboxEventRecord,
     OutboxEventStatus,
     build_candidate_outbox_event,
     mark_outbox_event_failed,
@@ -18,6 +20,15 @@ from app.ports.outbox_publisher import OutboxPublishOutcome
 
 
 EVENT_TIME = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
+
+
+class RecoveryRequest(TypedDict):
+    support_reference: str
+    idempotency_key: str
+    reason: str
+    change_reference: str
+    actor_subject: str
+    requested_at_utc: datetime
 
 
 def test_recovery_publishes_once_and_replays_without_second_publication() -> None:
@@ -68,11 +79,15 @@ def test_recovery_idempotency_conflict_never_publishes_twice() -> None:
     publisher = RecordingPublisher(accepted=True)
     request = _recovery_request(event.event_id, "recovery:application:conflict")
     run_outbox_dead_letter_recovery(repository, publisher, **request)
+    conflict_request: RecoveryRequest = {
+        **request,
+        "reason": "different_approved_reason",
+    }
 
     conflict = run_outbox_dead_letter_recovery(
         repository,
         publisher,
-        **{**request, "reason": "different_approved_reason"},
+        **conflict_request,
     )
 
     assert conflict.run_status is OutboxRecoveryRunStatus.CONFLICT
@@ -83,16 +98,16 @@ def test_recovery_idempotency_conflict_never_publishes_twice() -> None:
 class RecordingPublisher:
     def __init__(self, *, accepted: bool) -> None:
         self.accepted = accepted
-        self.events = []
+        self.events: list[OutboxEventRecord] = []
 
-    def publish(self, event):
+    def publish(self, event: OutboxEventRecord) -> OutboxPublishOutcome:
         self.events.append(event)
         if self.accepted:
             return OutboxPublishOutcome.accepted_by_publisher()
         return OutboxPublishOutcome.rejected_by_publisher("publisher_rejected_again")
 
 
-def _recovery_request(event_id: str, idempotency_key: str):
+def _recovery_request(event_id: str, idempotency_key: str) -> RecoveryRequest:
     return {
         "support_reference": outbox_dead_letter_support_reference(event_id),
         "idempotency_key": idempotency_key,
@@ -103,7 +118,7 @@ def _recovery_request(event_id: str, idempotency_key: str):
     }
 
 
-def _dead_lettered_event():
+def _dead_lettered_event() -> OutboxEventRecord:
     event = build_candidate_outbox_event(
         event_type="idea.candidate.persisted.v1",
         aggregate_id="candidate-sensitive",
@@ -119,7 +134,7 @@ def _dead_lettered_event():
     )
 
 
-def _repository_with_event(event):
+def _repository_with_event(event: OutboxEventRecord) -> InMemoryIdeaRepository:
     return InMemoryIdeaRepository(
         IdeaRepositorySnapshot(
             candidate_records={},

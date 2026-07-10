@@ -1076,12 +1076,16 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     requiring exactly one trusted caller tenant for Core-backed source routes,
     carrying that value through API DTO mapping, application commands, Core
     source request ports, and the infrastructure adapter, and requiring
-    `tenantId` in the source-ingestion worker manifest. The adapter no longer
+    `tenantId` in the source-ingestion worker manifest. Core live-proof CLIs
+    require `--tenant-id` and pass it through the same request ports; the
+    signal API contract gate protects both routes and certification scripts.
+    The adapter no longer
     hard-codes `default`; `unknown` remains only an unconstrained portfolio
     scope sentinel and is never sent to Core. The signal API contract gate,
-    adapter A/B propagation tests, and fail-closed missing/ambiguous tenant
-    tests protect the boundary. This is design modularity within the existing
-    process and does not justify a new runtime service.
+    adapter A/B propagation tests, worker/proof tests, and fail-closed
+    missing/ambiguous tenant tests protect the boundary. This is design
+    modularity within the existing process and does not justify a new runtime
+    service.
 24. Caller-context ProblemDetails truth: GitHub issue `#336` is addressed by
     using `ProblemDetailsHTTPException` for shared caller-context dependency
     failures and preserving its approved code/title through the global HTTP

@@ -1382,6 +1382,62 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/outbox-delivery/dead-letters",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return a bounded, source-safe operator projection of quarantined local outbox events by opaque support reference.",
+      "when_to_use": "Use when an operator with idea.outbox-recovery.read needs event-family, schema, retry, failure-time, eligibility, and owner posture before an approved recovery decision.",
+      "when_not_to_use": "Do not use to retrieve payloads, aggregate/client/portfolio identifiers, raw idempotency material, or as external broker, downstream consumer, platform mesh, Gateway, Workbench, or supported-feature promotion proof.",
+      "request_examples": [
+        "GET /api/v1/outbox-delivery/dead-letters?limit=100 with X-Caller-Roles: operator and X-Caller-Capabilities: idea.outbox-recovery.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"supportabilityStatus\":\"not_certified\",\"items\":[{\"supportReference\":\"outbox-dlq-0123456789abcdef01234567\",\"eventFamily\":\"idea.candidate.persisted.v1\",\"schemaVersion\":\"v1\",\"retryCount\":3,\"firstFailedAtUtc\":\"2026-07-10T08:01:00Z\",\"lastFailedAtUtc\":\"2026-07-10T08:03:00Z\",\"failureReason\":\"publisher_rejected\",\"recoveryEligible\":true,\"recoveryBlocker\":null,\"disposition\":\"quarantined\",\"owner\":\"lotus-idea-operations\"}],\"returnedCount\":1,\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks the operator role or idea.outbox-recovery.read capability."
+      ],
+      "test_evidence": [
+        "tests/unit/test_outbox_recovery.py::test_dead_letter_summary_is_source_safe_and_recovery_eligible",
+        "tests/unit/test_postgres_outbox_delivery_adapter.py::test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced",
+        "tests/integration/test_outbox_recovery_api.py::test_dead_letter_inspection_denied_for_non_operator_and_is_source_safe",
+        "tests/integration/test_outbox_recovery_api.py::test_outbox_recovery_api_emits_bounded_operation_events"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py and make outbox-recovery-contract-gate validate metadata, source-safe fields, and recovery boundaries."
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/outbox-delivery/dead-letters/{supportReference}/redrive",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Perform one explicit, idempotent, audited, and lease-fenced publication attempt for an eligible local outbox dead letter.",
+      "when_to_use": "Use after correcting the external failure under an approved change when an operator has idea.outbox-recovery.redrive, trusted production provenance, Idempotency-Key, a bounded reason, and change reference.",
+      "when_not_to_use": "Do not use for automatic retries, repeated poison-message attempts, unsupported event families or schemas, direct database repair, external broker certification, downstream delivery proof, Gateway behavior, Workbench behavior, or supported-feature promotion.",
+      "request_examples": [
+        "POST /api/v1/outbox-delivery/dead-letters/outbox-dlq-0123456789abcdef01234567/redrive with operator role, idea.outbox-recovery.redrive, Idempotency-Key, reason, and changeReference"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"supportReference\":\"outbox-dlq-0123456789abcdef01234567\",\"runStatus\":\"published\",\"recoveryReference\":\"recovery_0123456789abcdef0123456789abcdef\",\"blocker\":null,\"publicationAttempted\":true,\"originalRetryCount\":3,\"supportabilityStatus\":\"not_certified\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "400 returns product-safe Problem Details when Idempotency-Key or bounded request fields are invalid.",
+        "403 returns product-safe Problem Details when operator capability or trusted caller provenance is absent.",
+        "404 returns dead_letter_not_found for an unknown opaque support reference.",
+        "409 returns product-safe idempotency, eligibility, poison-limit, or lease conflict posture.",
+        "503 returns product-safe configuration posture before mutation when durable storage or publisher wiring is unavailable."
+      ],
+      "test_evidence": [
+        "tests/unit/test_outbox_recovery_application.py::test_recovery_publishes_once_and_replays_without_second_publication",
+        "tests/unit/test_outbox_recovery_application.py::test_recovery_failure_returns_to_quarantine_without_automatic_retry",
+        "tests/integration/test_outbox_recovery_api.py::test_dead_letter_redrive_publishes_once_and_replays_without_mutation",
+        "tests/integration/test_outbox_recovery_api.py::test_dead_letter_redrive_conflict_and_publisher_failure_remain_quarantined",
+        "tests/integration/test_outbox_recovery_api.py::test_production_redrive_rejects_untrusted_caller_before_mutation",
+        "tests/integration/test_outbox_recovery_api.py::test_outbox_recovery_api_emits_bounded_operation_events"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py, scripts/api_idempotency_boundary_gate.py, and make outbox-recovery-contract-gate validate the route contract."
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/data-mesh/readiness",
       "certification_status": "certified",
       "owner": "lotus-idea owners",

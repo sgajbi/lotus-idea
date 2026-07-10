@@ -130,6 +130,7 @@ def test_high_cash_stale_source_blocks_positive_claim() -> None:
 
 def test_high_cash_mismatched_source_date_blocks_candidate_creation() -> None:
     input_value = high_cash_input()
+    assert input_value.portfolio_state_ref is not None
     mismatched_ref = replace(
         input_value.portfolio_state_ref,
         as_of_date=date(2026, 6, 20),
@@ -147,6 +148,7 @@ def test_high_cash_mismatched_source_date_blocks_candidate_creation() -> None:
 
 def test_high_cash_future_source_generation_blocks_candidate_creation() -> None:
     input_value = high_cash_input()
+    assert input_value.portfolio_state_ref is not None
     future_ref = replace(
         input_value.portfolio_state_ref,
         generated_at_utc=datetime(2026, 6, 21, 10, 0, 1, tzinfo=UTC),

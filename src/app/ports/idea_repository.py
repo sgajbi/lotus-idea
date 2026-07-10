@@ -375,6 +375,7 @@ class OutboxRecoveryRepository(OutboxDeliveryRepository, Protocol):
 
     def outbox_recovery_audit_records(self) -> tuple[OutboxRecoveryAuditRecord, ...]: ...
 
+
 class IdeaRepository(
     CandidatePersistenceRepository,
     CandidateLifecycleRepository,

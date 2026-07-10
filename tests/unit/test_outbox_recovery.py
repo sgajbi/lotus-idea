@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any, Mapping, TypedDict
 
 import pytest
 
 from app.domain import (
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
+    OutboxEventRecord,
     OutboxEventStatus,
     OutboxRecoveryDecision,
     build_candidate_outbox_event,
@@ -21,6 +23,18 @@ from app.domain import (
 
 
 EVENT_TIME = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
+
+
+class RecoveryClaimWithoutKey(TypedDict):
+    support_reference: str
+    request_payload: Mapping[str, Any]
+    actor_subject: str
+    reason: str
+    change_reference: str
+    requested_at_utc: datetime
+    lease_owner: str
+    lease_attempt_id: str
+    lease_expires_at_utc: datetime
 
 
 def test_dead_letter_summary_is_source_safe_and_recovery_eligible() -> None:
@@ -135,7 +149,7 @@ def test_in_memory_recovery_claim_is_idempotent_and_lease_fenced() -> None:
         change_reference="CHG-2026-0710",
         actor_subject="platform-operator",
     )
-    claim = {
+    claim: RecoveryClaimWithoutKey = {
         "support_reference": support_reference,
         "request_payload": request_payload,
         "actor_subject": "platform-operator",
@@ -155,9 +169,13 @@ def test_in_memory_recovery_claim_is_idempotent_and_lease_fenced() -> None:
         idempotency_key="outbox-redrive:accepted",
         **claim,
     )
+    competing_claim: RecoveryClaimWithoutKey = {
+        **claim,
+        "lease_attempt_id": "recovery-attempt-2",
+    }
     competing = repository.claim_dead_letter_for_recovery(
         idempotency_key="outbox-redrive:competing",
-        **{**claim, "lease_attempt_id": "recovery-attempt-2"},
+        **competing_claim,
     )
 
     assert accepted.decision is OutboxRecoveryDecision.ACCEPTED
@@ -246,7 +264,7 @@ def test_in_memory_dead_letter_inspection_is_bounded_and_source_safe() -> None:
         repository.dead_letter_summaries(limit=0)
 
 
-def _dead_lettered_event():
+def _dead_lettered_event() -> OutboxEventRecord:
     event = build_candidate_outbox_event(
         event_type="idea.candidate.persisted.v1",
         aggregate_id="idea-candidate-sensitive",
@@ -263,7 +281,7 @@ def _dead_lettered_event():
     )
 
 
-def _repository_with_event(event):
+def _repository_with_event(event: OutboxEventRecord) -> InMemoryIdeaRepository:
     return InMemoryIdeaRepository(
         IdeaRepositorySnapshot(
             candidate_records={},

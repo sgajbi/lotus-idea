@@ -396,7 +396,7 @@ def test_scheduled_worker_daemon_stops_cleanly_after_signal_request(
     )
 
     def stop_after_first_iteration(_args: list[str]) -> int:
-        module._stop_requested = True
+        setattr(module, "_stop_requested", True)
         return 0
 
     monkeypatch.setattr(module, "run_once_worker_main", stop_after_first_iteration)
@@ -449,6 +449,7 @@ def test_scheduled_worker_propagates_blocked_iteration_status(
 def _manifest() -> dict[str, Any]:
     return {
         "schemaVersion": MANIFEST_SCHEMA_VERSION,
+        "tenantId": "default",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
         "workItems": [
             {

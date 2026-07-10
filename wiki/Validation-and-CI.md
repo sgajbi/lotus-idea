@@ -829,6 +829,10 @@ blank values and does not supply a production default. The blocking
 `signal-api-contract-gate` checks that each Core-backed route opts into this
 shared tenant boundary, and integration tests prove missing, ambiguous, and
 distinct tenant contexts without calling Core under the wrong scope.
+The same gate requires every Core live-proof CLI to accept explicit
+`--tenant-id` and pass it into the typed source request. Worker manifests and
+proof fixtures carry `tenantId`, preventing local tests or certification
+automation from reintroducing an implicit production tenant.
 
 Data-mesh foundation checks:
 

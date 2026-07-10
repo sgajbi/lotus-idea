@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+from typing import Any, Mapping, TypedDict
 
 import pytest
 
@@ -22,6 +23,19 @@ from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
     high_cash_candidate,
 )
+
+
+class RecoveryClaim(TypedDict):
+    support_reference: str
+    idempotency_key: str
+    request_payload: Mapping[str, Any]
+    actor_subject: str
+    reason: str
+    change_reference: str
+    requested_at_utc: datetime
+    lease_owner: str
+    lease_attempt_id: str
+    lease_expires_at_utc: datetime
 
 
 class RaisingCursor:
@@ -142,7 +156,7 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
         change_reference="CHG-2026-0710",
         actor_subject="platform-operator",
     )
-    claim = {
+    claim: RecoveryClaim = {
         "support_reference": support_reference,
         "idempotency_key": "outbox-redrive:postgres:001",
         "request_payload": request_payload,
@@ -159,13 +173,12 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
     accepted = repository.claim_dead_letter_for_recovery(**claim)
     restarted_repository = PostgresIdeaRepository(connection)
     replay = restarted_repository.claim_dead_letter_for_recovery(**claim)
-    competing = restarted_repository.claim_dead_letter_for_recovery(
-        **{
-            **claim,
-            "idempotency_key": "outbox-redrive:postgres:002",
-            "lease_attempt_id": "recovery-attempt-2",
-        }
-    )
+    competing_claim: RecoveryClaim = {
+        **claim,
+        "idempotency_key": "outbox-redrive:postgres:002",
+        "lease_attempt_id": "recovery-attempt-2",
+    }
+    competing = restarted_repository.claim_dead_letter_for_recovery(**competing_claim)
 
     assert [summary.support_reference for summary in summaries] == [support_reference]
     assert accepted.decision is OutboxRecoveryDecision.ACCEPTED

@@ -140,9 +140,10 @@ Additional implemented source-adapter foundation:
 15. Core-backed source routes require exactly one trusted caller tenant before
     runtime construction. The resolved tenant is explicit in every Core source
     request port and is sent by the adapter for tenant-aware snapshot calls;
-    the worker manifest carries the same requirement through `tenantId`. The
-    shared signal contract gate prevents Core-backed routes from omitting this
-    fail-closed tenant boundary.
+    the worker manifest carries the same requirement through `tenantId`. Core
+    live-proof generators require explicit `--tenant-id` and use those same
+    request ports. The shared signal contract gate prevents Core-backed routes
+    or proof automation from omitting this fail-closed tenant boundary.
 
 Additional implemented bond-maturity / reinvestment foundation:
 

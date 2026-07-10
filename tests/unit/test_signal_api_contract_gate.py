@@ -298,3 +298,25 @@ def test_signal_api_contract_gate_requires_requested_access_scope_permission_che
         "src/app/api/concentration_risk_signals.py:5: signal permission checks must pass "
         "`requested_access_scope` for entitlement-scope intersection"
     ]
+
+
+def test_signal_api_contract_gate_requires_explicit_core_live_proof_tenant(
+    tmp_path: Path,
+) -> None:
+    module = _load_gate()
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir(parents=True)
+    script_path = scripts_dir / "generate_core_proof.py"
+    script_path.write_text(
+        "request = CoreRequest(portfolio_id=args.portfolio_id)\n", encoding="utf-8"
+    )
+    setattr(module, "CORE_LIVE_PROOF_SCRIPTS", (Path("scripts/generate_core_proof.py"),))
+    setattr(module, "SIGNAL_API_MODULES", ())
+    _write_valid_signal_support(tmp_path)
+
+    errors = module.validate_signal_api_contract(tmp_path)
+
+    assert errors == [
+        "scripts/generate_core_proof.py: Core live proof must pass tenant to its request port",
+        "scripts/generate_core_proof.py: Core live proof must require explicit `--tenant-id`",
+    ]

@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 
+import pytest
+
 from scripts.run_canonical_opportunity_source_proofs import (
     PROOF_CASES,
     _aggregate_payload,
@@ -45,7 +47,7 @@ def test_proof_command_keeps_source_adapter_arguments_explicit() -> None:
 
 def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
     tmp_path: Path,
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     class Completed:
         returncode = 3

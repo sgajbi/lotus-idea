@@ -198,11 +198,7 @@ def dead_letter_summaries(
     if limit <= 0:
         raise ValueError("limit must be positive")
     dead_letters = sorted(
-        (
-            event
-            for event in events.values()
-            if event.status is OutboxEventStatus.DEAD_LETTER
-        ),
+        (event for event in events.values() if event.status is OutboxEventStatus.DEAD_LETTER),
         key=lambda event: (event.last_failed_at_utc or event.occurred_at_utc, event.event_id),
         reverse=True,
     )

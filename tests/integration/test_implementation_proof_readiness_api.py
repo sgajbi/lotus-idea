@@ -511,6 +511,7 @@ def _valid_scheduled_worker_proof(*, generated_at_utc: datetime) -> dict[str, ob
     plan = source_ingestion_worker_plan_from_manifest(
         {
             "schemaVersion": MANIFEST_SCHEMA_VERSION,
+            "tenantId": "default",
             "evaluatedAtUtc": "2026-06-21T10:00:00Z",
             "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
         }

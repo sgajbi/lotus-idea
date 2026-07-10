@@ -192,6 +192,8 @@ def test_core_benchmark_assignment_live_proof_cli_writes_source_safe_artifact(
         [
             "--core-query-control-plane-base-url",
             "http://localhost:8101",
+            "--tenant-id",
+            "default",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",
@@ -247,6 +249,8 @@ def test_core_benchmark_assignment_live_proof_cli_writes_blocked_artifact(
         [
             "--core-query-control-plane-base-url",
             "http://localhost:8101",
+            "--tenant-id",
+            "default",
             "--portfolio-id",
             "PB_SG_GLOBAL_BAL_001",
             "--as-of-date",

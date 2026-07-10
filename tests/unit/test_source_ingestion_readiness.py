@@ -18,16 +18,10 @@ from app.application.source_ingestion_readiness import (
     SCHEDULED_WORKER_PROOF_ENV,
     build_source_ingestion_readiness_snapshot,
 )
-from app.application.source_ingestion_scheduled_worker import (
-    build_scheduled_worker_check_summary,
-    build_scheduled_worker_deploy_proof_payload,
-    source_ingestion_schedule_config_from_values,
-)
-from app.application.source_ingestion_worker import (
-    MANIFEST_SCHEMA_VERSION,
-    source_ingestion_worker_plan_from_manifest,
-)
 from app.runtime.repository_state import DATABASE_URL_ENV
+from tests.unit.source_ingestion_proof_helpers import (
+    valid_scheduled_worker_proof as _valid_scheduled_worker_proof,
+)
 
 
 def test_source_ingestion_readiness_reports_blocked_default_posture(
@@ -352,27 +346,3 @@ def test_source_ingestion_readiness_blocks_unreadable_configured_manifest(
     assert snapshot.configured_manifest_available is False
     assert snapshot.run_once_configured is False
     assert snapshot.configuration_blockers == ("source_ingestion_manifest_unreadable",)
-
-
-def _valid_scheduled_worker_proof() -> dict[str, object]:
-    plan = source_ingestion_worker_plan_from_manifest(
-        {
-            "schemaVersion": MANIFEST_SCHEMA_VERSION,
-            "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-            "workItems": [{"portfolioId": "PB_SG_GLOBAL_BAL_001", "asOfDate": "2026-06-21"}],
-        }
-    )
-    summary = build_scheduled_worker_check_summary(
-        plan=plan,
-        schedule=source_ingestion_schedule_config_from_values(
-            interval_seconds=300,
-            max_runs=1,
-        ),
-    )
-    return build_scheduled_worker_deploy_proof_payload(
-        generated_at_utc=datetime(2026, 6, 21, 10, 10, tzinfo=UTC),
-        check_summary=summary,
-        scheduler_entrypoint_present=True,
-        run_once_worker_entrypoint_present=True,
-        docker_compose_service_present=True,
-    )
