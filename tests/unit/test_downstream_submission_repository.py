@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from app.domain import (
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
@@ -86,6 +88,35 @@ def test_in_memory_reconciliation_is_source_safe_and_audited() -> None:
     assert reconciled.record is not None
     assert reconciled.record.status is DownstreamSubmissionPosture.QUARANTINED
     assert repository.downstream_submissions_requiring_reconciliation(limit=10) == ()
+
+
+def test_in_memory_submission_repository_fails_closed_for_missing_and_blank_lookups() -> None:
+    repository = InMemoryIdeaRepository()
+
+    missing_finalize = repository.finalize_downstream_submission(
+        idempotency_key="missing-submission",
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-missing",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT,
+    )
+    missing_reconcile = repository.reconcile_downstream_submission(
+        support_reference="downstream-submission-000000000000000000000000",
+        resolution=DownstreamSubmissionResolution.QUARANTINED,
+        actor_subject="operations-user",
+        reason="submission_not_found",
+        change_reference="INC-334-MISSING",
+        reconciled_at_utc=CLAIMED_AT,
+    )
+
+    assert missing_finalize.decision is DownstreamSubmissionMutationDecision.NOT_FOUND
+    assert missing_reconcile.decision is DownstreamSubmissionMutationDecision.NOT_FOUND
+    with pytest.raises(ValueError, match="limit must be positive"):
+        repository.downstream_submissions_requiring_reconciliation(limit=0)
+    with pytest.raises(ValueError, match="idempotency_key is required"):
+        repository.downstream_submission_by_idempotency_key(" ")
+    with pytest.raises(ValueError, match="support_reference is required"):
+        repository.downstream_submission_by_support_reference(" ")
 
 
 def _claim(idempotency_key: str, request_fingerprint: str) -> DownstreamSubmissionRecord:

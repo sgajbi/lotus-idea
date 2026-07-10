@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
 
+import app.infrastructure.postgres_downstream_submission as postgres_submission
 from app.domain import (
     ConversionTarget,
     DownstreamSubmissionClaimDecision,
@@ -95,6 +97,160 @@ def test_postgres_reconciliation_uses_opaque_reference_and_is_audited() -> None:
     assert result.record.status is DownstreamSubmissionPosture.QUARANTINED
     assert result.record.audit_history[-1].change_reference == "INC-334-001"
     assert restarted.downstream_submissions_requiring_reconciliation(limit=10) == ()
+
+
+def test_postgres_submission_mutations_fail_closed_for_missing_or_competing_claims() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+
+    missing_finalize = repository.finalize_downstream_submission(
+        idempotency_key="missing-submission",
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-missing",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT,
+    )
+    missing_reconcile = repository.reconcile_downstream_submission(
+        support_reference="downstream-submission-000000000000000000000000",
+        resolution=DownstreamSubmissionResolution.QUARANTINED,
+        actor_subject="operations-user",
+        reason="submission_not_found",
+        change_reference="INC-334-MISSING",
+        reconciled_at_utc=CLAIMED_AT,
+    )
+    repository.claim_downstream_submission(_claim("fingerprint-a"))
+    lease_conflict = repository.finalize_downstream_submission(
+        idempotency_key="submission-key",
+        lease_owner="competing-worker",
+        lease_attempt_id="attempt-competing",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+    )
+
+    assert missing_finalize.decision is DownstreamSubmissionMutationDecision.NOT_FOUND
+    assert missing_reconcile.decision is DownstreamSubmissionMutationDecision.NOT_FOUND
+    assert lease_conflict.decision is DownstreamSubmissionMutationDecision.LEASE_CONFLICT
+    assert (
+        repository.downstream_submission_by_support_reference(
+            lease_conflict.record.support_reference if lease_conflict.record else ""
+        )
+        == lease_conflict.record
+    )
+    with pytest.raises(ValueError, match="limit must be positive"):
+        repository.downstream_submissions_requiring_reconciliation(limit=0)
+
+
+@pytest.mark.parametrize(
+    ("audit_json", "message"),
+    [
+        ("not-an-array", "audit_json must be an array"),
+        (["not-an-object"], "audit_json entries must be objects"),
+    ],
+)
+def test_postgres_submission_decoder_rejects_malformed_audit_history(
+    audit_json: object,
+    message: str,
+) -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    repository.claim_downstream_submission(_claim("fingerprint-a"))
+    connection.rows["idea_downstream_submission"][0]["audit_json"] = audit_json
+
+    with pytest.raises(ValueError, match=message):
+        repository.downstream_submission_by_idempotency_key("submission-key")
+
+
+def test_postgres_submission_decoder_rejects_blank_persisted_identifiers() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    repository.claim_downstream_submission(_claim("fingerprint-a"))
+    connection.rows["idea_downstream_submission"][0]["resource_id"] = ""
+
+    with pytest.raises(ValueError, match="resource_id is required"):
+        repository.downstream_submission_by_idempotency_key("submission-key")
+
+
+def test_postgres_submission_decoder_rejects_blank_optional_audit_values() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    repository.claim_downstream_submission(_claim("fingerprint-a"))
+    audit_json = connection.rows["idea_downstream_submission"][0]["audit_json"]
+    assert isinstance(audit_json, list)
+    audit_json[0]["reason"] = ""
+
+    with pytest.raises(ValueError, match="reason must be a non-blank string"):
+        repository.downstream_submission_by_idempotency_key("submission-key")
+
+
+def test_postgres_submission_claim_fails_closed_for_unresolved_unique_conflicts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    claim = _claim("fingerprint-a")
+    repository.claim_downstream_submission(claim)
+    monkeypatch.setattr(
+        postgres_submission, "_load_by_idempotency_key", lambda *args, **kwargs: None
+    )
+
+    monkeypatch.setattr(
+        postgres_submission,
+        "_load_by_support_reference",
+        lambda *args, **kwargs: claim,
+    )
+    with pytest.raises(RuntimeError, match="support reference collision"):
+        postgres_submission.claim_postgres_downstream_submission(connection, claim)
+
+    monkeypatch.setattr(
+        postgres_submission,
+        "_load_by_support_reference",
+        lambda *args, **kwargs: None,
+    )
+    with pytest.raises(RuntimeError, match="claim conflict was not recoverable"):
+        postgres_submission.claim_postgres_downstream_submission(connection, claim)
+
+    assert connection.rollbacks == 2
+
+
+def test_postgres_submission_reconciliation_rolls_back_failed_state_commit() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    claim = _claim("fingerprint-a")
+    repository.claim_downstream_submission(claim)
+    repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        failure_reason="downstream_timeout",
+    )
+    connection.fail_on_update = "idea_downstream_submission"
+
+    with pytest.raises(RuntimeError, match="update failed"):
+        repository.reconcile_downstream_submission(
+            support_reference=claim.support_reference,
+            resolution=DownstreamSubmissionResolution.QUARANTINED,
+            actor_subject="operations-user",
+            reason="receipt_unverifiable",
+            change_reference="INC-334-ROLLBACK",
+            reconciled_at_utc=CLAIMED_AT + timedelta(minutes=2),
+        )
+
+    assert connection.rollbacks == 1
+
+
+def test_postgres_submission_state_update_is_lease_fenced() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    claim = _claim("fingerprint-a")
+    repository.claim_downstream_submission(claim)
+
+    with connection.cursor() as cursor, pytest.raises(RuntimeError, match="lost its lease"):
+        postgres_submission._update_mutable_submission_state(
+            cursor,
+            replace(claim, lease_attempt_id="attempt-stale"),
+        )
 
 
 def _claim(request_fingerprint: str) -> DownstreamSubmissionRecord:

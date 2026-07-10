@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
@@ -34,10 +34,15 @@ from app.domain import (
     ReviewPosture,
     SourceRef,
     SourceSystem,
+    DownstreamSubmissionMutationDecision,
+    DownstreamSubmissionMutationResult,
     request_conversion_intent,
     request_report_evidence_pack,
 )
-from app.ports.downstream_realization import DownstreamRealizationOutcome
+from app.ports.downstream_realization import (
+    DownstreamRealizationOutcome,
+    DownstreamRealizationOutcomePosture,
+)
 
 
 AS_OF_DATE = date(2026, 6, 21)
@@ -67,6 +72,22 @@ class CapturingAdviseClient:
         self.trace_id = trace_id
         self.idempotency_key = idempotency_key
         return self.outcome
+
+
+@dataclass
+class RaisingAdviseClient:
+    call_count: int = 0
+
+    def submit_proposal_intent(
+        self,
+        intent: GovernedConversionIntent,
+        *,
+        correlation_id: str | None = None,
+        trace_id: str | None = None,
+        idempotency_key: str | None = None,
+    ) -> DownstreamRealizationOutcome:
+        self.call_count += 1
+        raise RuntimeError("downstream response lost")
 
 
 @dataclass
@@ -257,6 +278,107 @@ def test_unknown_downstream_outcome_is_durable_and_never_retried_automatically()
     assert retry.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
     assert retry.idempotency_replayed is True
     assert len(advise_client.submitted) == 1
+
+
+def test_downstream_client_exception_is_durable_and_not_retried() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    client = RaisingAdviseClient()
+    command = RealizeConversionIntentCommand(
+        conversion_intent_id="conversion-advise_proposal-001",
+        idempotency_key="submission-client-exception-001",
+        actor_subject="advisor-redacted",
+        submitted_at_utc=EVALUATED_AT,
+    )
+
+    first = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=client,
+        manage_client=None,
+    )
+    replay = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=client,
+        manage_client=None,
+    )
+
+    assert first.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert first.downstream_failure_reason == "downstream_call_outcome_unknown"
+    assert replay.idempotency_replayed is True
+    assert client.call_count == 1
+
+
+def test_downstream_finalization_lease_conflict_returns_uncertain_posture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    monkeypatch.setattr(
+        repository,
+        "finalize_downstream_submission",
+        lambda **kwargs: DownstreamSubmissionMutationResult(
+            decision=DownstreamSubmissionMutationDecision.LEASE_CONFLICT,
+            record=None,
+            blocker="downstream_submission_lease_conflict",
+        ),
+    )
+
+    result = submit_conversion_intent_to_downstream(
+        RealizeConversionIntentCommand(
+            conversion_intent_id="conversion-advise_proposal-001",
+            idempotency_key="submission-finalize-conflict-001",
+            actor_subject="advisor-redacted",
+            submitted_at_utc=EVALUATED_AT,
+        ),
+        repository=repository,
+        advise_client=CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream()),
+        manage_client=None,
+    )
+
+    assert result.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert result.downstream_failure_reason == "downstream_submission_lease_conflict"
+
+
+@pytest.mark.parametrize(
+    ("submitted_at", "message"),
+    [
+        (datetime(2026, 6, 21, 10, 0), "must be timezone-aware"),
+        (
+            datetime(2026, 6, 21, 11, 0, tzinfo=timezone(timedelta(hours=1))),
+            "must be UTC",
+        ),
+    ],
+)
+def test_downstream_submission_requires_utc_submission_time(
+    submitted_at: datetime,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        submit_conversion_intent_to_downstream(
+            RealizeConversionIntentCommand(
+                conversion_intent_id="conversion-advise_proposal-001",
+                idempotency_key="submission-invalid-time-001",
+                actor_subject="advisor-redacted",
+                submitted_at_utc=submitted_at,
+            ),
+            repository=repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL),
+            advise_client=CapturingAdviseClient(
+                DownstreamRealizationOutcome.accepted_by_downstream()
+            ),
+            manage_client=None,
+        )
+
+
+def test_downstream_outcome_contract_rejects_ambiguous_postures() -> None:
+    with pytest.raises(ValueError, match="accepted outcome forbids failure_reason"):
+        DownstreamRealizationOutcome(
+            posture=DownstreamRealizationOutcomePosture.ACCEPTED,
+            failure_reason="unexpected",
+        )
+    with pytest.raises(ValueError, match="non-accepted outcome requires failure_reason"):
+        DownstreamRealizationOutcome(posture=DownstreamRealizationOutcomePosture.UNKNOWN)
+    with pytest.raises(ValueError, match="failure_reason is required"):
+        DownstreamRealizationOutcome.rejected_by_downstream(" ")
 
 
 def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> None:

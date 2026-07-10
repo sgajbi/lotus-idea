@@ -129,6 +129,34 @@ def test_reconciliation_requires_matching_mutation_identity() -> None:
     assert repository.downstream_submissions_requiring_reconciliation()
 
 
+def test_reconciliation_denies_unauthorized_mutation_and_reports_missing_reference() -> None:
+    client = TestClient(app)
+    support_reference = "downstream-submission-000000000000000000000000"
+    request = {
+        "resolution": "quarantined",
+        "reason": "downstream_receipt_unverifiable",
+        "changeReference": "CHG-334-API-MISSING",
+    }
+
+    denied = client.post(
+        f"/api/v1/downstream-submissions/reconciliation/{support_reference}",
+        headers={"Idempotency-Key": "CHG-334-API-MISSING"},
+        json=request,
+    )
+    missing = client.post(
+        f"/api/v1/downstream-submissions/reconciliation/{support_reference}",
+        headers=_headers(
+            "idea.downstream-reconciliation.resolve",
+            idempotency_key="CHG-334-API-MISSING",
+        ),
+        json=request,
+    )
+
+    assert denied.status_code == 403
+    assert missing.status_code == 404
+    assert missing.json()["code"] == "downstream_submission_not_found"
+
+
 def test_downstream_reconciliation_api_emits_bounded_operation_events(
     caplog: LogCaptureFixture,
 ) -> None:

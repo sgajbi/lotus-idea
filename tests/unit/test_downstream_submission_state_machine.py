@@ -204,6 +204,58 @@ def test_claim_rejects_partial_or_invalid_lease() -> None:
         )
 
 
+def test_submission_record_rejects_non_recoverable_state_shapes() -> None:
+    claim = _claim()
+
+    with pytest.raises(ValueError, match="attempt_count must be positive"):
+        replace(claim, attempt_count=0)
+    with pytest.raises(ValueError, match="audit_history is required"):
+        replace(claim, audit_history=())
+    with pytest.raises(ValueError, match="requires a complete lease"):
+        replace(claim, lease_owner=None)
+    with pytest.raises(ValueError, match="requires a failure reason"):
+        replace(
+            claim,
+            status=DownstreamSubmissionPosture.RECONCILIATION_REQUIRED,
+            lease_owner=None,
+            lease_attempt_id=None,
+            lease_expires_at_utc=None,
+        )
+    with pytest.raises(ValueError, match="forbids a failure reason"):
+        replace(claim, downstream_failure_reason="unexpected_failure")
+
+
+def test_finalization_rejects_terminal_rewrite_and_non_terminal_posture() -> None:
+    accepted = finalize_downstream_submission(
+        _claim(),
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-001",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+    ).record
+    assert accepted is not None
+
+    repeated = finalize_downstream_submission(
+        accepted,
+        lease_owner="downstream-submission",
+        lease_attempt_id="attempt-001",
+        posture=DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
+        finalized_at_utc=CLAIMED_AT + timedelta(minutes=2),
+        failure_reason="late_rejection",
+    )
+    with pytest.raises(ValueError, match="unsupported downstream submission final posture"):
+        finalize_downstream_submission(
+            _claim(),
+            lease_owner="downstream-submission",
+            lease_attempt_id="attempt-001",
+            posture=DownstreamSubmissionPosture.IN_FLIGHT,
+            finalized_at_utc=CLAIMED_AT + timedelta(minutes=1),
+        )
+
+    assert repeated.decision is DownstreamSubmissionMutationDecision.INVALID_STATE
+    assert repeated.blocker == "downstream_submission_not_in_flight"
+
+
 def _claim(
     *,
     lease_expires_at_utc: datetime = CLAIMED_AT + timedelta(minutes=5),
