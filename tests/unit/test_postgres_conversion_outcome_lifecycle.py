@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from dataclasses import replace
 
+import pytest
+
 from app.domain import (
     ConversionOutcomeStatus,
     ConversionPersistenceDecision,
@@ -12,6 +14,10 @@ from app.domain import (
     request_conversion_intent,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_conversion_outcome import (
+    ConcurrentConversionOutcomeMutationError,
+    insert_postgres_conversion_outcome,
+)
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
@@ -148,3 +154,85 @@ def test_postgres_serializes_competing_ids_for_the_same_source_version() -> None
     assert len(record.conversion_outcomes) == 1
     assert len(record.audit_events) == 3
     assert len(recovered.outbox_events) == 3
+
+
+def test_postgres_conversion_outcome_read_and_precheck_are_restart_safe() -> None:
+    connection, repository, intent = repository_with_conversion_intent()
+    outcome = record_conversion_outcome(intent, conversion_outcome_command())
+    payload = {"status": "accepted", "sourceEventVersion": 1}
+    accepted = repository.record_conversion_outcome(
+        outcome,
+        idempotency_key="outcome:postgres-precheck:accepted",
+        payload=payload,
+    )
+    restarted = PostgresIdeaRepository(connection)
+
+    history = restarted.conversion_outcomes_for_intent(intent.intent.conversion_intent_id)
+    replay = restarted.precheck_conversion_outcome_mutation(
+        idempotency_key="outcome:postgres-precheck:recovered",
+        payload=payload,
+        identity=outcome.conversion_outcome.identity,
+    )
+    changed_payload = restarted.precheck_conversion_outcome_mutation(
+        idempotency_key="outcome:postgres-precheck:recovered",
+        payload={**payload, "status": "rejected"},
+        identity=outcome.conversion_outcome.identity,
+    )
+
+    assert accepted.decision is ConversionPersistenceDecision.ACCEPTED
+    assert history == (outcome.conversion_outcome,)
+    assert replay is not None
+    assert replay.decision is ConversionPersistenceDecision.REPLAYED
+    assert replay.record is not None
+    assert changed_payload is not None
+    assert changed_payload.decision is ConversionPersistenceDecision.CONFLICT
+
+
+def test_postgres_conversion_outcome_precheck_distinguishes_absent_and_changed_identity() -> None:
+    connection, repository, intent = repository_with_conversion_intent()
+    outcome = record_conversion_outcome(intent, conversion_outcome_command())
+    repository.record_conversion_outcome(
+        outcome,
+        idempotency_key="outcome:postgres-identity:accepted",
+        payload={"status": "accepted"},
+    )
+    restarted = PostgresIdeaRepository(connection)
+
+    absent = restarted.precheck_conversion_outcome_mutation(
+        idempotency_key="outcome:postgres-identity:absent",
+        payload={"status": "accepted"},
+        identity=replace(
+            outcome.conversion_outcome.identity,
+            conversion_outcome_id="conversion-outcome-absent",
+        ),
+    )
+    conflict = restarted.precheck_conversion_outcome_mutation(
+        idempotency_key="outcome:postgres-identity:conflict",
+        payload={"status": "rejected"},
+        identity=replace(
+            outcome.conversion_outcome.identity,
+            status=ConversionOutcomeStatus.REJECTED,
+            downstream_reference=None,
+        ),
+    )
+
+    assert absent is None
+    assert conflict is not None
+    assert conflict.decision is ConversionPersistenceDecision.OUTCOME_CONFLICT
+    assert conflict.record is not None
+
+
+def test_postgres_conversion_outcome_insert_reports_concurrent_identity() -> None:
+    connection, _, intent = repository_with_conversion_intent()
+    outcome = record_conversion_outcome(intent, conversion_outcome_command()).conversion_outcome
+
+    with connection.cursor() as cursor:
+        insert_postgres_conversion_outcome(cursor, outcome)
+    with (
+        connection.cursor() as cursor,
+        pytest.raises(
+            ConcurrentConversionOutcomeMutationError,
+            match=outcome.outcome.conversion_outcome_id,
+        ),
+    ):
+        insert_postgres_conversion_outcome(cursor, outcome)

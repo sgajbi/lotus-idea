@@ -218,3 +218,81 @@ def test_invalid_legacy_history_has_no_authoritative_current_posture() -> None:
     )
 
     assert current_conversion_outcome_identity((rejected, contradictory)) is None
+
+
+@pytest.mark.parametrize(
+    ("history", "proposed", "expected_reason"),
+    [
+        (
+            (),
+            identity(ConversionOutcomeStatus.ACCEPTED, version=2),
+            ConversionOutcomePolicyReason.VERSION_CONFLICT,
+        ),
+        (
+            (),
+            identity(
+                ConversionOutcomeStatus.ACCEPTED,
+                supersedes="outcome-previous",
+                correction_reason="initial correction is invalid",
+            ),
+            ConversionOutcomePolicyReason.INVALID_CORRECTION,
+        ),
+        (
+            (identity(ConversionOutcomeStatus.REQUESTED),),
+            identity(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="outcome-002",
+                version=2,
+                minute=1,
+                correction_reason="unlinked correction",
+            ),
+            ConversionOutcomePolicyReason.INVALID_CORRECTION,
+        ),
+        (
+            (identity(ConversionOutcomeStatus.ACCEPTED),),
+            replace(
+                identity(
+                    ConversionOutcomeStatus.COMPLETED,
+                    outcome_id="outcome-002",
+                    version=2,
+                    minute=1,
+                ),
+                conversion_intent_id="different-intent",
+            ),
+            ConversionOutcomePolicyReason.IDENTITY_CONFLICT,
+        ),
+        (
+            (identity(ConversionOutcomeStatus.REJECTED),),
+            identity(
+                ConversionOutcomeStatus.ACCEPTED,
+                outcome_id="outcome-002",
+                version=2,
+                minute=1,
+                supersedes="outcome-001",
+                correction_reason=" ",
+            ),
+            ConversionOutcomePolicyReason.INVALID_CORRECTION,
+        ),
+        (
+            (identity(ConversionOutcomeStatus.REJECTED),),
+            identity(
+                ConversionOutcomeStatus.REQUESTED,
+                outcome_id="outcome-002",
+                version=2,
+                minute=1,
+                supersedes="outcome-001",
+                correction_reason="source correction",
+            ),
+            ConversionOutcomePolicyReason.INVALID_CORRECTION,
+        ),
+    ],
+)
+def test_conversion_outcome_policy_rejects_ambiguous_identity_progressions(
+    history: tuple[ConversionOutcomeIdentity, ...],
+    proposed: ConversionOutcomeIdentity,
+    expected_reason: ConversionOutcomePolicyReason,
+) -> None:
+    with pytest.raises(ConversionOutcomePolicyViolation) as exc_info:
+        validate_conversion_outcome_progression(history, proposed)
+
+    assert exc_info.value.reason is expected_reason
