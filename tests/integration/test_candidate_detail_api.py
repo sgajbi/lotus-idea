@@ -222,6 +222,7 @@ def conversion_intent_payload() -> dict[str, Any]:
 def conversion_outcome_payload() -> dict[str, Any]:
     return {
         "conversionOutcomeId": "detail-conversion-outcome-001",
+        "sourceEventVersion": 1,
         "status": "accepted",
         "sourceSystem": "lotus-report",
         "downstreamReference": "detail-report-evidence-pack-001",

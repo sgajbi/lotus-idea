@@ -236,6 +236,7 @@ def test_conversion_outcome_must_come_from_target_source_authority() -> None:
                 conversion_outcome_id="outcome-wrong-source",
                 status=ConversionOutcomeStatus.ACCEPTED,
                 source_system=SourceSystem.LOTUS_MANAGE,
+                source_event_version=1,
                 downstream_reference="manage-review-001",
                 recorded_at_utc=OUTCOME_AT,
             ),
@@ -251,6 +252,7 @@ def test_conversion_outcome_records_downstream_status_without_granting_authority
             conversion_outcome_id="outcome-report-accepted",
             status=ConversionOutcomeStatus.ACCEPTED,
             source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=1,
             downstream_reference="report-evidence-pack-001",
             recorded_at_utc=OUTCOME_AT,
         ),
@@ -273,6 +275,7 @@ def test_conversion_outcome_validates_optional_reference_and_time() -> None:
             conversion_outcome_id="outcome-invalid",
             status=ConversionOutcomeStatus.ACCEPTED,
             source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=1,
             downstream_reference=" ",
             recorded_at_utc=OUTCOME_AT,
         )
@@ -282,6 +285,7 @@ def test_conversion_outcome_validates_optional_reference_and_time() -> None:
             conversion_outcome_id="outcome-invalid",
             status=ConversionOutcomeStatus.ACCEPTED,
             source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=1,
             recorded_at_utc=datetime(2026, 6, 21, 10, 20),
         )
 

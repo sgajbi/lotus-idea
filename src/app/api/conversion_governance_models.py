@@ -74,7 +74,13 @@ class ConversionOutcomeRequest(CamelModel):
     conversion_outcome_id: str = Field(..., alias="conversionOutcomeId")
     status: ConversionOutcomeStatus
     source_system: SourceSystem = Field(..., alias="sourceSystem")
+    source_event_version: int = Field(..., alias="sourceEventVersion", gt=0)
     downstream_reference: str | None = Field(default=None, alias="downstreamReference")
+    supersedes_conversion_outcome_id: str | None = Field(
+        default=None,
+        alias="supersedesConversionOutcomeId",
+    )
+    correction_reason: str | None = Field(default=None, alias="correctionReason")
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
 
     @field_validator("conversion_outcome_id")
@@ -89,6 +95,13 @@ class ConversionOutcomeRequest(CamelModel):
     def _downstream_reference_must_not_be_blank(cls, value: str | None) -> str | None:
         if value is not None and not value.strip():
             raise ValueError("downstreamReference cannot be blank")
+        return value
+
+    @field_validator("supersedes_conversion_outcome_id", "correction_reason")
+    @classmethod
+    def _correction_fields_must_not_be_blank(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("correction fields cannot be blank")
         return value
 
     @field_validator("recorded_at_utc")
@@ -109,9 +122,12 @@ class ConversionOutcomeRequest(CamelModel):
                 conversion_outcome_id=self.conversion_outcome_id,
                 status=self.status,
                 source_system=self.source_system,
+                source_event_version=self.source_event_version,
                 downstream_reference=self.downstream_reference,
                 recorded_at_utc=self.recorded_at_utc,
                 actor_subject=caller.subject,
+                supersedes_conversion_outcome_id=self.supersedes_conversion_outcome_id,
+                correction_reason=self.correction_reason,
             ),
             idempotency_key=idempotency_key,
         )
@@ -155,7 +171,13 @@ class ConversionOutcomeResponse(CamelModel):
     target: ConversionTarget
     status: ConversionOutcomeStatus
     source_system: SourceSystem = Field(..., alias="sourceSystem")
+    source_event_version: int = Field(..., alias="sourceEventVersion")
     downstream_reference: str | None = Field(default=None, alias="downstreamReference")
+    supersedes_conversion_outcome_id: str | None = Field(
+        default=None,
+        alias="supersedesConversionOutcomeId",
+    )
+    correction_reason: str | None = Field(default=None, alias="correctionReason")
     boundary: str
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
     grants_execution_authority: bool = Field(False, alias="grantsExecutionAuthority")
@@ -173,7 +195,10 @@ class ConversionOutcomeResponse(CamelModel):
             target=outcome.target,
             status=outcome.outcome.status,
             sourceSystem=outcome.source_system,
+            sourceEventVersion=outcome.source_event_version,
             downstreamReference=outcome.outcome.downstream_reference,
+            supersedesConversionOutcomeId=outcome.supersedes_conversion_outcome_id,
+            correctionReason=outcome.correction_reason,
             boundary=outcome.boundary.value,
             recordedAtUtc=outcome.outcome.recorded_at_utc,
             grantsExecutionAuthority=outcome.grants_execution_authority,

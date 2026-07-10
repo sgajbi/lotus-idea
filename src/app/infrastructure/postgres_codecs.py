@@ -334,6 +334,10 @@ def _conversion_outcome_to_json(outcome: GovernedConversionOutcome) -> dict[str,
         "target": outcome.target.value,
         "source_system": outcome.source_system.value,
         "boundary": outcome.boundary.value,
+        "source_event_version": outcome.source_event_version,
+        "actor_subject": outcome.actor_subject,
+        "supersedes_conversion_outcome_id": outcome.supersedes_conversion_outcome_id,
+        "correction_reason": outcome.correction_reason,
     }
 
 
@@ -351,6 +355,18 @@ def _conversion_outcome_from_json(payload: Mapping[str, Any]) -> GovernedConvers
         target=ConversionTarget(payload["target"]),
         source_system=SourceSystem(payload["source_system"]),
         boundary=ConversionBoundary(payload["boundary"]),
+        source_event_version=int(payload["source_event_version"]),
+        actor_subject=str(payload["actor_subject"]),
+        supersedes_conversion_outcome_id=(
+            str(payload["supersedes_conversion_outcome_id"])
+            if payload.get("supersedes_conversion_outcome_id") is not None
+            else None
+        ),
+        correction_reason=(
+            str(payload["correction_reason"])
+            if payload.get("correction_reason") is not None
+            else None
+        ),
     )
 
 

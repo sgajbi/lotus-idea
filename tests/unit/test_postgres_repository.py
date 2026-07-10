@@ -1099,6 +1099,7 @@ def conversion_outcome_command() -> ConversionOutcomeCommand:
         conversion_outcome_id="conversion-outcome-001",
         status=ConversionOutcomeStatus.ACCEPTED,
         source_system=SourceSystem.LOTUS_REPORT,
+        source_event_version=1,
         recorded_at_utc=EVALUATED_AT + timedelta(minutes=5),
         downstream_reference="report-evidence-pack-001",
         actor_subject="lotus-report",

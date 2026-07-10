@@ -5,6 +5,13 @@ from datetime import datetime
 from enum import StrEnum
 
 from app.domain.audit import AuditEvent
+from app.domain.conversion_outcome_policy import (
+    CONVERSION_OUTCOME_POLICY_VERSION,
+    ConversionOutcomeIdentity,
+    ConversionOutcomePolicyViolation,
+    current_conversion_outcome_identity,
+    validate_conversion_outcome_progression,
+)
 from app.domain.ideas import (
     ConversionOutcomeStatus,
     ConversionTarget,
@@ -122,16 +129,28 @@ class ConversionOutcomeCommand:
     conversion_outcome_id: str
     status: ConversionOutcomeStatus
     source_system: SourceSystem
+    source_event_version: int
     recorded_at_utc: datetime
     downstream_reference: str | None = None
     actor_subject: str = "downstream-system"
+    supersedes_conversion_outcome_id: str | None = None
+    correction_reason: str | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_outcome_id, "conversion_outcome_id")
         _require_text(self.actor_subject, "actor_subject")
+        if self.source_event_version <= 0:
+            raise ValueError("source_event_version must be positive")
         _require_aware_utc(self.recorded_at_utc, "recorded_at_utc")
         if self.downstream_reference is not None:
             _require_text(self.downstream_reference, "downstream_reference")
+        if self.supersedes_conversion_outcome_id is not None:
+            _require_text(
+                self.supersedes_conversion_outcome_id,
+                "supersedes_conversion_outcome_id",
+            )
+        if self.correction_reason is not None:
+            _require_text(self.correction_reason, "correction_reason")
 
 
 @dataclass(frozen=True)
@@ -141,6 +160,26 @@ class GovernedConversionOutcome:
     target: ConversionTarget
     source_system: SourceSystem
     boundary: ConversionBoundary
+    source_event_version: int
+    actor_subject: str
+    supersedes_conversion_outcome_id: str | None = None
+    correction_reason: str | None = None
+
+    @property
+    def identity(self) -> ConversionOutcomeIdentity:
+        return ConversionOutcomeIdentity(
+            conversion_outcome_id=self.outcome.conversion_outcome_id,
+            conversion_intent_id=self.conversion_intent_id,
+            target=self.target,
+            source_system=self.source_system,
+            source_event_version=self.source_event_version,
+            status=self.outcome.status,
+            downstream_reference=self.outcome.downstream_reference,
+            recorded_at_utc=self.outcome.recorded_at_utc,
+            actor_subject=self.actor_subject,
+            supersedes_conversion_outcome_id=self.supersedes_conversion_outcome_id,
+            correction_reason=self.correction_reason,
+        )
 
     @property
     def grants_execution_authority(self) -> bool:
@@ -211,12 +250,26 @@ def request_conversion_intent(
 def record_conversion_outcome(
     governed_intent: GovernedConversionIntent,
     command: ConversionOutcomeCommand,
+    *,
+    existing_outcomes: tuple[GovernedConversionOutcome, ...] = (),
 ) -> ConversionOutcomeResult:
     expected_source = TARGET_SOURCE_AUTHORITIES[governed_intent.intent.target]
     if command.source_system is not expected_source:
         raise InvalidConversionOutcome(
             governed_intent.intent.conversion_intent_id,
             f"outcome source must be {expected_source.value}",
+        )
+    if (
+        command.status
+        in {
+            ConversionOutcomeStatus.ACCEPTED,
+            ConversionOutcomeStatus.COMPLETED,
+        }
+        and command.downstream_reference is None
+    ):
+        raise InvalidConversionOutcome(
+            governed_intent.intent.conversion_intent_id,
+            "accepted or completed outcome requires downstream reference",
         )
     outcome = IdeaConversionOutcome(
         conversion_outcome_id=command.conversion_outcome_id,
@@ -231,7 +284,21 @@ def record_conversion_outcome(
         target=governed_intent.intent.target,
         source_system=command.source_system,
         boundary=ConversionBoundary.DOWNSTREAM_REALIZATION_REQUIRED,
+        source_event_version=command.source_event_version,
+        actor_subject=command.actor_subject,
+        supersedes_conversion_outcome_id=command.supersedes_conversion_outcome_id,
+        correction_reason=command.correction_reason,
     )
+    try:
+        validate_conversion_outcome_progression(
+            tuple(outcome.identity for outcome in existing_outcomes),
+            governed_outcome.identity,
+        )
+    except ConversionOutcomePolicyViolation as exc:
+        raise InvalidConversionOutcome(
+            governed_intent.intent.conversion_intent_id,
+            exc.reason.value,
+        ) from exc
     audit_event = AuditEvent(
         event_type="idea.conversion.outcome_recorded",
         actor_subject=command.actor_subject,
@@ -242,9 +309,21 @@ def record_conversion_outcome(
             "conversion_status": command.status.value,
             "conversion_target": governed_intent.intent.target.value,
             "source_system": command.source_system.value,
+            "source_event_version": str(command.source_event_version),
+            "policy_version": CONVERSION_OUTCOME_POLICY_VERSION,
+            "supersedes_outcome": str(command.supersedes_conversion_outcome_id is not None).lower(),
         },
     )
     return ConversionOutcomeResult(conversion_outcome=governed_outcome, audit_event=audit_event)
+
+
+def current_conversion_outcome(
+    outcomes: tuple[GovernedConversionOutcome, ...],
+) -> GovernedConversionOutcome | None:
+    current = current_conversion_outcome_identity(tuple(outcome.identity for outcome in outcomes))
+    if current is None:
+        return None
+    return next(outcome for outcome in outcomes if outcome.identity == current)
 
 
 def _ensure_candidate_ready_for_conversion(candidate: IdeaCandidate) -> None:

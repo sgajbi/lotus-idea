@@ -208,6 +208,7 @@ def conversion_outcome_payload(
 ) -> dict[str, Any]:
     return {
         "conversionOutcomeId": conversion_outcome_id,
+        "sourceEventVersion": 1,
         "status": "accepted",
         "sourceSystem": source_system,
         "downstreamReference": downstream_reference,

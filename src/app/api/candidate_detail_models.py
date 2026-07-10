@@ -197,8 +197,14 @@ class ConversionOutcomeSummaryResponse(CamelModel):
     target: str
     status: str
     source_system: str = Field(..., alias="sourceSystem")
+    source_event_version: int = Field(..., alias="sourceEventVersion")
     boundary: str
     downstream_reference: str | None = Field(default=None, alias="downstreamReference")
+    supersedes_conversion_outcome_id: str | None = Field(
+        default=None,
+        alias="supersedesConversionOutcomeId",
+    )
+    correction_reason: str | None = Field(default=None, alias="correctionReason")
     recorded_at_utc: datetime = Field(..., alias="recordedAtUtc")
     grants_execution_authority: bool = Field(False, alias="grantsExecutionAuthority")
     grants_client_communication_authority: bool = Field(
@@ -214,8 +220,11 @@ class ConversionOutcomeSummaryResponse(CamelModel):
             target=outcome.target.value,
             status=outcome.outcome.status.value,
             sourceSystem=outcome.source_system.value,
+            sourceEventVersion=outcome.source_event_version,
             boundary=outcome.boundary.value,
             downstreamReference=outcome.outcome.downstream_reference,
+            supersedesConversionOutcomeId=outcome.supersedes_conversion_outcome_id,
+            correctionReason=outcome.correction_reason,
             recordedAtUtc=outcome.outcome.recorded_at_utc,
             grantsExecutionAuthority=outcome.grants_execution_authority,
             grantsClientCommunicationAuthority=outcome.grants_client_communication_authority,
