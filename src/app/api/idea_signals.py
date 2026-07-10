@@ -413,7 +413,11 @@ HIGH_CASH_EVALUATE_ROUTE: RouteMetadata = {
     "summary": "Evaluate a high-cash idea signal",
     "description": (
         "Evaluates caller-supplied, source-owned Core evidence for the first high-cash "
-        "opportunity family. The endpoint is a certified API foundation for RFC-0002 Slice 10; "
+        "opportunity family. Every source business date must equal request asOfDate, "
+        "and source generatedAtUtc must not be after evaluatedAtUtc; violations return "
+        "bounded source-quality posture without candidate creation. Source corrections "
+        "retain content lineage and produce new candidate identity. "
+        "The endpoint is a certified API foundation for RFC-0002 Slice 10; "
         "it does not fetch upstream sources, certify a data product, or promote a supported "
         "business feature."
     ),
@@ -473,7 +477,8 @@ HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "summary": "Evaluate a high-cash idea signal from Core",
     "description": (
         "Fetches source-owned high-cash evidence through the configured Core source "
-        "adapter, then evaluates deterministic high-cash candidate posture. The endpoint "
+        "adapter, then applies the same exact-date, generated-not-after-evaluation, and "
+        "content-hash correction identity contract as caller-supplied evidence. The endpoint "
         "does not persist candidates, calculate cash weight locally, certify live source "
         "support, create Gateway/Workbench support, or promote a supported business feature."
     ),

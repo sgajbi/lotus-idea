@@ -22,6 +22,16 @@ public ProblemDetails responses that lack either media-type example.
 Caller-supplied signal routes remain governed by `app.api.signal_api_support`,
 which owns their permission, source-authority, operation-event, and 400/403
 OpenAPI metadata as one contract.
+
+All signal operations also share `idea-source-temporal-v1` at the domain
+boundary. Every included source ref must match request `asOfDate`, must not be
+generated after `evaluatedAtUtc`, and must pass freshness policy before a ready
+candidate is returned. This applies to caller-supplied, source-adapter, and
+source-ingestion paths. Misalignment returns bounded `blocked` posture with
+`source_date_mismatch` or `source_generated_after_evaluation` plus
+`source_temporal_mismatch`; it does not persist a candidate. A source correction
+with a new content hash is retained in lineage and produces new candidate
+identity. No signal family currently permits an inferred effective-date window.
 The shared caller-context dependency preserves the same stable runtime
 vocabulary: malformed entitlement headers are `400 invalid_request`, and
 missing trusted provenance is `403 permission_denied`; raw header values never

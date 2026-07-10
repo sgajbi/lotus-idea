@@ -149,14 +149,20 @@ allocation-drift, missing-suitability, missing-risk-profile, and
 mandate/restriction `evaluate-from-source` APIs are internal foundations inside
 the existing runtime; they do not certify live source support, persist
 candidates, create a separate runtime service, prove Gateway/Workbench
-behavior, certify a data product, or promote a supported feature. Low-income
-All signal families share `src/app/domain/source_temporal.py`: source business
-dates must match the consuming signal `as_of_date`, and source evidence must
-not be generated after the consuming `evaluated_at_utc`. The shared domain
-policy applies to caller-supplied DTOs and source-adapter results before a
-candidate can be created; source-specific effective windows require an
-explicit versioned contract and must not be inferred locally.
-source-backed evaluation
+behavior, certify a data product, or promote a supported feature.
+
+All signal families share the versioned
+`src/app/domain/source_temporal.py` contract:
+
+1. every source business date must equal the consuming signal `as_of_date`,
+2. source evidence must not be generated after `evaluated_at_utc`,
+3. every included source ref is checked, including optional cross-domain refs,
+4. caller-supplied DTO and source-adapter paths use the same domain policy,
+5. a changed source content hash creates new lineage-bound candidate identity,
+6. source-specific effective windows require a new explicit contract version
+   and must never be inferred locally.
+
+Low-income source-backed evaluation
 consumes only Core-owned cash movement and cashflow projection evidence and
 must not infer income needs, funding advice, treasury instructions, planning
 suitability, or client-ready communication. Bond-maturity source-backed
