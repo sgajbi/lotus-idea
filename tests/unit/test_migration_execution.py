@@ -83,9 +83,9 @@ def test_dry_run_reports_apply_and_rollback_statement_counts() -> None:
 
 
 def test_candidate_state_rollback_is_safe_when_the_foundation_table_is_absent() -> None:
-    rollback_sql = (
-        ROOT / "migrations" / "005_candidate_state_policy.rollback.sql"
-    ).read_text(encoding="utf-8")
+    rollback_sql = (ROOT / "migrations" / "005_candidate_state_policy.rollback.sql").read_text(
+        encoding="utf-8"
+    )
 
     assert "ALTER TABLE IF EXISTS idea_candidate_record" in rollback_sql
 

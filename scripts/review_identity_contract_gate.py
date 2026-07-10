@@ -30,12 +30,8 @@ REQUIRED_FRAGMENTS = {
         "_insert_review_identity_delta(writer, cursor, before_record, after_record)",
         "def _insert_review_identity_delta",
     ),
-    "src/app/infrastructure/postgres_mutation_retry.py": (
-        "ConcurrentReviewIdentityMutationError",
-    ),
-    "src/app/api/review_workflow_operations.py": (
-        'code="review_identity_conflict"',
-    ),
+    "src/app/infrastructure/postgres_mutation_retry.py": ("ConcurrentReviewIdentityMutationError",),
+    "src/app/api/review_workflow_operations.py": ('code="review_identity_conflict"',),
     "src/app/api/review_workflow.py": (
         "_REVIEW_IDENTITY_CONFLICT",
         "_REVIEW_IDEMPOTENCY_CONFLICT",

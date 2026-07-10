@@ -184,7 +184,9 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert "client_id" not in result.audit_event.attributes
 
 
-def test_review_resource_identity_matches_the_persisted_decision_and_binds_business_fields() -> None:
+def test_review_resource_identity_matches_the_persisted_decision_and_binds_business_fields() -> (
+    None
+):
     source_candidate = candidate()
     command = decision_command(ReviewAction.APPROVE_FOR_CONVERSION)
     result = apply_review_action(source_candidate, command)

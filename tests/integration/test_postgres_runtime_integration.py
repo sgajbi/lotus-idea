@@ -371,11 +371,13 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
 
     review_decisions = _run_concurrent_repository_mutations(
         postgres_database_url,
-        lambda repository, key: repository.record_review_action(
-            review,
-            idempotency_key=key,
-            payload={"reviewId": review.decision.review_id},
-        ).decision,
+        lambda repository, key: (
+            repository.record_review_action(
+                review,
+                idempotency_key=key,
+                payload={"reviewId": review.decision.review_id},
+            ).decision
+        ),
         ("review:concurrent:first", "review:concurrent:second"),
     )
 
@@ -408,11 +410,13 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
 
     feedback_decisions = _run_concurrent_repository_mutations(
         postgres_database_url,
-        lambda repository, key: repository.record_feedback_event(
-            feedback,
-            idempotency_key=key,
-            payload={"feedbackId": feedback.feedback_event.feedback.feedback_id},
-        ).decision,
+        lambda repository, key: (
+            repository.record_feedback_event(
+                feedback,
+                idempotency_key=key,
+                payload={"feedbackId": feedback.feedback_event.feedback.feedback_id},
+            ).decision
+        ),
         ("feedback:concurrent:first", "feedback:concurrent:second"),
     )
 

@@ -194,8 +194,7 @@ class FakePostgresCursor:
                 identity_column = identity_columns[table_name]
                 resource_id = params[0]
                 if any(
-                    row[identity_column] == resource_id
-                    for row in self.connection.rows[table_name]
+                    row[identity_column] == resource_id for row in self.connection.rows[table_name]
                 ):
                     self._rows = []
                     return
