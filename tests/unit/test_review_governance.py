@@ -147,6 +147,20 @@ def decision_command(
     )
 
 
+def valid_decision_command(action: ReviewAction) -> ReviewDecisionCommand:
+    if action is ReviewAction.SUPPRESS:
+        return decision_command(
+            action,
+            suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
+        )
+    if action is ReviewAction.SNOOZE:
+        return decision_command(
+            action,
+            snoozed_until_utc=datetime(2026, 6, 21, 11, 0, tzinfo=UTC),
+        )
+    return decision_command(action)
+
+
 def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> None:
     result = apply_review_action(
         candidate(),
@@ -158,6 +172,11 @@ def test_advisor_can_approve_ready_candidate_without_downstream_authority() -> N
     assert result.decision.grants_downstream_authority is False
     assert result.decision.reason_codes[0] is ReasonCode.REVIEW_APPROVED_FOR_CONVERSION
     assert result.audit_event.event_type == "idea.review.decision_recorded"
+    assert result.audit_event.attributes["candidate_id"] == "idea-review-001"
+    assert result.audit_event.attributes["prior_lifecycle_status"] == "ready_for_review"
+    assert result.audit_event.attributes["prior_review_posture"] == "advisor_review_required"
+    assert result.audit_event.attributes["requested_action"] == "approve_for_conversion"
+    assert result.audit_event.attributes["policy_version"] == "idea-candidate-state-v1"
     assert "portfolio_id" not in result.audit_event.attributes
     assert "client_id" not in result.audit_event.attributes
 
@@ -409,7 +428,10 @@ def test_review_and_feedback_commands_validate_required_reason_and_time_fields()
 
 def test_review_lifecycle_edges_are_explicit() -> None:
     approved_from_reviewed = apply_review_action(
-        candidate(lifecycle_status=IdeaLifecycleStatus.REVIEWED_BY_ADVISOR),
+        candidate(
+            lifecycle_status=IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
+            review_posture=ReviewPosture.ADVISOR_REVIEWED,
+        ),
         decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
     )
 
@@ -426,3 +448,53 @@ def test_review_lifecycle_edges_are_explicit() -> None:
             candidate(lifecycle_status=IdeaLifecycleStatus.GENERATED),
             decision_command(ReviewAction.REJECT),
         )
+
+
+@pytest.mark.parametrize("action", list(ReviewAction))
+@pytest.mark.parametrize(
+    ("lifecycle_status", "review_posture"),
+    (
+        (IdeaLifecycleStatus.APPROVED, ReviewPosture.APPROVED_FOR_CONVERSION),
+        (IdeaLifecycleStatus.REJECTED, ReviewPosture.REJECTED),
+        (IdeaLifecycleStatus.EXPIRED, ReviewPosture.NO_ACTION),
+        (IdeaLifecycleStatus.CLOSED, ReviewPosture.NO_ACTION),
+    ),
+)
+def test_every_review_action_fails_closed_for_non_reviewable_states(
+    action: ReviewAction,
+    lifecycle_status: IdeaLifecycleStatus,
+    review_posture: ReviewPosture,
+) -> None:
+    with pytest.raises(InvalidReviewAction) as captured:
+        apply_review_action(
+            candidate(
+                lifecycle_status=lifecycle_status,
+                review_posture=review_posture,
+            ),
+            valid_decision_command(action),
+        )
+
+    assert captured.value.lifecycle_status is lifecycle_status
+    assert captured.value.review_posture is review_posture
+    assert captured.value.policy_version == "idea-candidate-state-v1"
+
+
+@pytest.mark.parametrize("action", list(ReviewAction))
+def test_repeated_review_action_is_deterministic_or_terminally_rejected(
+    action: ReviewAction,
+) -> None:
+    command = valid_decision_command(action)
+    first = apply_review_action(candidate(), command)
+
+    if action in {
+        ReviewAction.APPROVE_FOR_CONVERSION,
+        ReviewAction.REJECT,
+        ReviewAction.NO_ACTION,
+    }:
+        with pytest.raises(InvalidReviewAction):
+            apply_review_action(first.candidate, command)
+        return
+
+    repeated = apply_review_action(first.candidate, command)
+    assert repeated.candidate == first.candidate
+    assert repeated.decision == first.decision

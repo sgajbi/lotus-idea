@@ -296,17 +296,26 @@ def test_lifecycle_graph_quarantines_downstream_authority_statuses() -> None:
 
     with pytest.raises(InvalidLifecycleTransition):
         transition_candidate(
-            candidate(lifecycle_status=IdeaLifecycleStatus.APPROVED),
+            candidate(
+                lifecycle_status=IdeaLifecycleStatus.APPROVED,
+                review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+            ),
             IdeaLifecycleStatus.ACCEPTED,
         )
     with pytest.raises(InvalidLifecycleTransition):
         transition_candidate(
-            candidate(lifecycle_status=IdeaLifecycleStatus.ACCEPTED),
+            candidate(
+                lifecycle_status=IdeaLifecycleStatus.ACCEPTED,
+                review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+            ),
             IdeaLifecycleStatus.EXECUTED,
         )
 
     closed_legacy = transition_candidate(
-        candidate(lifecycle_status=IdeaLifecycleStatus.ACCEPTED),
+        candidate(
+            lifecycle_status=IdeaLifecycleStatus.ACCEPTED,
+            review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
+        ),
         IdeaLifecycleStatus.CLOSED,
     )
     assert closed_legacy.lifecycle_status is IdeaLifecycleStatus.CLOSED
@@ -315,7 +324,10 @@ def test_lifecycle_graph_quarantines_downstream_authority_statuses() -> None:
 def test_closed_lifecycle_is_terminal() -> None:
     with pytest.raises(InvalidLifecycleTransition):
         transition_candidate(
-            candidate(lifecycle_status=IdeaLifecycleStatus.CLOSED),
+            candidate(
+                lifecycle_status=IdeaLifecycleStatus.CLOSED,
+                review_posture=ReviewPosture.NO_ACTION,
+            ),
             IdeaLifecycleStatus.GENERATED,
         )
 

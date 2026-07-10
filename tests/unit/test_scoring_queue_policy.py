@@ -219,7 +219,11 @@ def test_review_queue_excludes_suppressed_blocked_expired_snoozed_and_unscored()
         suppression_reason=SuppressionReason.MANUAL_SUPPRESSION,
     )
     blocked = candidate("idea-blocked", supportability=EvidenceSupportability.BLOCKED)
-    expired = candidate("idea-expired", lifecycle_status=IdeaLifecycleStatus.EXPIRED)
+    expired = candidate(
+        "idea-expired",
+        lifecycle_status=IdeaLifecycleStatus.EXPIRED,
+        review_posture=ReviewPosture.NO_ACTION,
+    )
     snoozed = candidate("idea-snoozed")
     unscored = candidate("idea-unscored", score=None)
 
@@ -328,6 +332,7 @@ def test_queue_excludes_non_reviewable_post_review_status() -> None:
     approved = replace(
         candidate("idea-approved"),
         lifecycle_status=IdeaLifecycleStatus.APPROVED,
+        review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
     )
 
     queue = build_review_queue((approved,), policy=POLICY, evaluated_at_utc=EVALUATED_AT)
@@ -337,8 +342,16 @@ def test_queue_excludes_non_reviewable_post_review_status() -> None:
 
 
 def test_queue_excludes_closed_and_rejected_terminal_statuses() -> None:
-    closed = candidate("idea-closed", lifecycle_status=IdeaLifecycleStatus.CLOSED)
-    rejected = candidate("idea-rejected", lifecycle_status=IdeaLifecycleStatus.REJECTED)
+    closed = candidate(
+        "idea-closed",
+        lifecycle_status=IdeaLifecycleStatus.CLOSED,
+        review_posture=ReviewPosture.NO_ACTION,
+    )
+    rejected = candidate(
+        "idea-rejected",
+        lifecycle_status=IdeaLifecycleStatus.REJECTED,
+        review_posture=ReviewPosture.REJECTED,
+    )
 
     queue = build_review_queue((closed, rejected), policy=POLICY, evaluated_at_utc=EVALUATED_AT)
 

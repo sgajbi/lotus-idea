@@ -31,6 +31,14 @@ from app.domain.ai_lineage_persistence import (
     ai_explanation_lineage_record_from_result,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
+from app.domain.candidate_state import (
+    ALLOWED_REVIEW_POSTURES_BY_LIFECYCLE,
+    CANDIDATE_STATE_POLICY_VERSION,
+    REVIEWABLE_LIFECYCLE_STATUSES,
+    InvalidCandidateState,
+    candidate_state_is_compatible,
+    validate_candidate_state,
+)
 from app.domain.conversion_governance import (
     ConversionBoundary,
     ConversionIntentCommand,
@@ -243,6 +251,8 @@ __all__ = [
     "AIWorkflowOutput",
     "AIWorkflowPackRef",
     "AIWorkflowPurpose",
+    "ALLOWED_REVIEW_POSTURES_BY_LIFECYCLE",
+    "CANDIDATE_STATE_POLICY_VERSION",
     "GOVERNED_IDEA_EXPLANATION_WORKFLOW_PACK",
     "GovernedAIWorkflowPackContract",
     "AIExplanationLineagePersistenceDecision",
@@ -253,6 +263,7 @@ __all__ = [
     "InvalidAIExplanationRequest",
     "InvalidAIWorkflowPack",
     "InvalidAIWorkflowOutput",
+    "InvalidCandidateState",
     "RedactedIdeaEvidence",
     "RedactedSourceRef",
     "ai_workflow_pack_is_governed",
@@ -308,12 +319,15 @@ __all__ = [
     "ReasonCode",
     "ReviewDecision",
     "ReviewPosture",
+    "REVIEWABLE_LIFECYCLE_STATUSES",
     "SourceRef",
     "SourceSystem",
     "SuppressionReason",
     "UnsupportedEvidenceReason",
     "transition_candidate",
     "validate_caller_settable_lifecycle_status",
+    "candidate_state_is_compatible",
+    "validate_candidate_state",
     "BondMaturitySignalInput",
     "BondMaturitySignalPolicy",
     "ConcentrationRiskSignalInput",

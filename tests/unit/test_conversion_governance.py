@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -165,13 +166,22 @@ def test_conversion_target_maps_to_downstream_authority_and_lifecycle(
 def test_conversion_intent_requires_human_review_approved_ready_candidate() -> None:
     with pytest.raises(InvalidConversionIntent, match="candidate lifecycle is not approved"):
         request_conversion_intent(
-            candidate(lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW),
+            candidate(
+                lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+                review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+            ),
             intent_command(),
         )
 
+    contradictory_legacy_candidate = copy(candidate())
+    object.__setattr__(
+        contradictory_legacy_candidate,
+        "review_posture",
+        ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+    )
     with pytest.raises(InvalidConversionIntent, match="review posture is not approved"):
         request_conversion_intent(
-            candidate(review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED),
+            contradictory_legacy_candidate,
             intent_command(),
         )
 

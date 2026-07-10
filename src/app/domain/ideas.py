@@ -5,6 +5,13 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
+from app.domain.candidate_state import (
+    IdeaLifecycleStatus as IdeaLifecycleStatus,
+    ReviewPosture as ReviewPosture,
+    review_posture_for_transition,
+    validate_candidate_state,
+)
+
 from app.domain.access_scope import ReviewAccessScope
 
 
@@ -107,25 +114,6 @@ class ReasonCode(StrEnum):
     AI_FORBIDDEN_ACTION_BLOCKED = "ai_forbidden_action_blocked"
 
 
-class IdeaLifecycleStatus(StrEnum):
-    DETECTED = "detected"
-    GENERATED = "generated"
-    ENRICHED = "enriched"
-    SCORED = "scored"
-    GOVERNANCE_CHECKED = "governance_checked"
-    READY_FOR_REVIEW = "ready_for_review"
-    REVIEWED_BY_ADVISOR = "reviewed_by_advisor"
-    APPROVED = "approved"
-    CONVERTED_TO_PROPOSAL = "converted_to_proposal"
-    CONVERTED_TO_MANAGE_REVIEW = "converted_to_manage_review"
-    CONVERTED_TO_REPORT = "converted_to_report"
-    ACCEPTED = "accepted"
-    REJECTED = "rejected"
-    EXPIRED = "expired"
-    EXECUTED = "executed"
-    CLOSED = "closed"
-
-
 DOWNSTREAM_AUTHORITY_LIFECYCLE_STATUSES = frozenset(
     {
         IdeaLifecycleStatus.ACCEPTED,
@@ -145,18 +133,6 @@ def validate_caller_settable_lifecycle_status(target_status: IdeaLifecycleStatus
             f"{target_status.value} is reserved for downstream source-authority outcomes "
             "and cannot be set through idea lifecycle transitions"
         )
-
-
-class ReviewPosture(StrEnum):
-    NOT_REVIEWED = "not_reviewed"
-    ADVISOR_REVIEW_REQUIRED = "advisor_review_required"
-    ADVISOR_REVIEWED = "advisor_reviewed"
-    APPROVED_FOR_CONVERSION = "approved_for_conversion"
-    REJECTED = "rejected"
-    SUPPRESSED = "suppressed"
-    NO_ACTION = "no_action"
-    PM_REVIEW_REQUIRED = "pm_review_required"
-    COMPLIANCE_REVIEW_REQUIRED = "compliance_review_required"
 
 
 class SuppressionReason(StrEnum):
@@ -369,6 +345,11 @@ class IdeaCandidate:
         _require_aware_utc(self.updated_at_utc, "updated_at_utc")
         if not self.source_signal_ids:
             raise ValueError("source_signal_ids is required")
+        validate_candidate_state(
+            candidate_id=self.candidate_id,
+            lifecycle_status=self.lifecycle_status,
+            review_posture=self.review_posture,
+        )
         object.__setattr__(self, "source_signal_ids", tuple(self.source_signal_ids))
 
 
@@ -506,5 +487,10 @@ def transition_candidate(
     return replace(
         candidate,
         lifecycle_status=target_status,
+        review_posture=review_posture_for_transition(
+            candidate_id=candidate.candidate_id,
+            current_posture=candidate.review_posture,
+            target_status=target_status,
+        ),
         updated_at_utc=updated_at_utc or datetime.now(UTC),
     )

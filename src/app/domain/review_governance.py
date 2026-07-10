@@ -6,6 +6,10 @@ from enum import StrEnum
 
 from app.domain.audit import AuditEvent
 from app.domain.access_scope import ReviewAccessScope
+from app.domain.candidate_state import (
+    CANDIDATE_STATE_POLICY_VERSION,
+    REVIEWABLE_LIFECYCLE_STATUSES,
+)
 from app.domain.ideas import (
     EvidenceSupportability,
     FeedbackOutcome,
@@ -54,12 +58,23 @@ class ReviewEntitlementDenied(PermissionError):
 
 
 class InvalidReviewAction(ValueError):
-    def __init__(self, action: ReviewAction, lifecycle_status: IdeaLifecycleStatus) -> None:
+    code = "review_action_conflict"
+
+    def __init__(
+        self,
+        action: ReviewAction,
+        lifecycle_status: IdeaLifecycleStatus,
+        review_posture: ReviewPosture,
+    ) -> None:
         super().__init__(
-            f"Invalid review action for lifecycle status: {action.value} -> {lifecycle_status.value}"
+            "Invalid review action for candidate state under "
+            f"{CANDIDATE_STATE_POLICY_VERSION}: "
+            f"{action.value} -> {lifecycle_status.value}/{review_posture.value}"
         )
         self.action = action
         self.lifecycle_status = lifecycle_status
+        self.review_posture = review_posture
+        self.policy_version = CANDIDATE_STATE_POLICY_VERSION
 
 
 @dataclass(frozen=True)
@@ -268,6 +283,25 @@ _REVIEW_ACTION_POSTURES: dict[ReviewAction, ReviewPosture] = {
     ReviewAction.ESCALATE_TO_COMPLIANCE: ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
 }
 
+_DECISION_LIFECYCLE_STATUSES = frozenset(
+    {
+        IdeaLifecycleStatus.READY_FOR_REVIEW,
+        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
+    }
+)
+_REVIEW_ACTION_LIFECYCLE_STATUSES: dict[ReviewAction, frozenset[IdeaLifecycleStatus]] = {
+    ReviewAction.APPROVE_FOR_CONVERSION: _DECISION_LIFECYCLE_STATUSES,
+    ReviewAction.REJECT: _DECISION_LIFECYCLE_STATUSES,
+    ReviewAction.NO_ACTION: _DECISION_LIFECYCLE_STATUSES,
+    ReviewAction.SUPPRESS: REVIEWABLE_LIFECYCLE_STATUSES
+    | {IdeaLifecycleStatus.REVIEWED_BY_ADVISOR},
+    ReviewAction.SNOOZE: REVIEWABLE_LIFECYCLE_STATUSES | {IdeaLifecycleStatus.REVIEWED_BY_ADVISOR},
+    ReviewAction.ESCALATE_TO_PM: REVIEWABLE_LIFECYCLE_STATUSES
+    | {IdeaLifecycleStatus.REVIEWED_BY_ADVISOR},
+    ReviewAction.ESCALATE_TO_COMPLIANCE: REVIEWABLE_LIFECYCLE_STATUSES
+    | {IdeaLifecycleStatus.REVIEWED_BY_ADVISOR},
+}
+
 
 def apply_review_action(
     candidate: IdeaCandidate,
@@ -305,7 +339,8 @@ def apply_review_action(
     )
     audit_event = _review_audit_event(
         decision=decision,
-        candidate=updated_candidate,
+        candidate_before=candidate,
+        candidate_after=updated_candidate,
         outcome="accepted",
     )
     return ReviewActionResult(
@@ -384,7 +419,7 @@ def _candidate_after_review(
                 updated_at_utc=command.decided_at_utc,
             )
         else:
-            raise InvalidReviewAction(command.action, candidate.lifecycle_status)
+            raise _invalid_review_action(candidate, command.action)
         return replace(
             approved,
             review_posture=ReviewPosture.APPROVED_FOR_CONVERSION,
@@ -431,7 +466,7 @@ def _candidate_after_review(
             review_posture=ReviewPosture.COMPLIANCE_REVIEW_REQUIRED,
             updated_at_utc=command.decided_at_utc,
         )
-    raise InvalidReviewAction(command.action, candidate.lifecycle_status)
+    raise _invalid_review_action(candidate, command.action)
 
 
 def _ensure_allowed(
@@ -446,6 +481,8 @@ def _ensure_allowed(
         access_scope=command.access_scope,
         policy=policy,
     )
+    if candidate.lifecycle_status not in _REVIEW_ACTION_LIFECYCLE_STATUSES[command.action]:
+        raise _invalid_review_action(candidate, command.action)
 
 
 def _ensure_actor_scope(
@@ -462,21 +499,30 @@ def _ensure_actor_scope(
 
 def _ensure_evidence_ready(candidate: IdeaCandidate, action: ReviewAction) -> None:
     if candidate.evidence_packet.supportability is not EvidenceSupportability.READY:
-        raise InvalidReviewAction(action, candidate.lifecycle_status)
+        raise _invalid_review_action(candidate, action)
 
 
 def _ensure_terminal_review_allowed(candidate: IdeaCandidate, action: ReviewAction) -> None:
-    if candidate.lifecycle_status not in {
-        IdeaLifecycleStatus.READY_FOR_REVIEW,
-        IdeaLifecycleStatus.REVIEWED_BY_ADVISOR,
-    }:
-        raise InvalidReviewAction(action, candidate.lifecycle_status)
+    if candidate.lifecycle_status not in _DECISION_LIFECYCLE_STATUSES:
+        raise _invalid_review_action(candidate, action)
+
+
+def _invalid_review_action(
+    candidate: IdeaCandidate,
+    action: ReviewAction,
+) -> InvalidReviewAction:
+    return InvalidReviewAction(
+        action,
+        candidate.lifecycle_status,
+        candidate.review_posture,
+    )
 
 
 def _review_audit_event(
     *,
     decision: GovernedReviewDecision,
-    candidate: IdeaCandidate,
+    candidate_before: IdeaCandidate,
+    candidate_after: IdeaCandidate,
     outcome: str,
 ) -> AuditEvent:
     return AuditEvent(
@@ -486,9 +532,14 @@ def _review_audit_event(
         occurred_at_utc=decision.decided_at_utc,
         attributes={
             "actor_role": decision.actor_role.value,
-            "candidate_family": candidate.family.value,
+            "candidate_id": candidate_before.candidate_id,
+            "candidate_family": candidate_before.family.value,
             "evidence_packet_id": decision.evidence_packet_id,
+            "policy_version": CANDIDATE_STATE_POLICY_VERSION,
+            "prior_lifecycle_status": candidate_before.lifecycle_status.value,
+            "prior_review_posture": candidate_before.review_posture.value,
+            "requested_action": decision.action.value,
             "review_action": decision.action.value,
-            "review_posture": decision.resulting_posture.value,
+            "review_posture": candidate_after.review_posture.value,
         },
     )

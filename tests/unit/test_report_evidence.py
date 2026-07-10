@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -194,9 +195,15 @@ def test_report_evidence_pack_rejects_mismatched_or_unready_conversion_state() -
             command(),
         )
 
+    contradictory_legacy_candidate = copy(conversion.candidate)
+    object.__setattr__(
+        contradictory_legacy_candidate,
+        "review_posture",
+        ReviewPosture.ADVISOR_REVIEW_REQUIRED,
+    )
     with pytest.raises(InvalidReportEvidencePack, match="review posture"):
         request_report_evidence_pack(
-            replace(conversion.candidate, review_posture=ReviewPosture.ADVISOR_REVIEW_REQUIRED),
+            contradictory_legacy_candidate,
             conversion.conversion_intent,
             command(),
         )

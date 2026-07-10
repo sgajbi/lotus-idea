@@ -6,6 +6,10 @@ from decimal import Decimal, ROUND_HALF_UP
 from enum import StrEnum
 
 from app.domain.access_scope import QueueAccessScopeFilter
+from app.domain.candidate_state import (
+    REVIEWABLE_LIFECYCLE_STATUSES,
+    candidate_state_is_compatible,
+)
 from app.domain.ideas import (
     EvidenceSupportability,
     IdeaCandidate,
@@ -53,6 +57,7 @@ class QueuePriorityBucket(StrEnum):
 
 
 class QueueExclusionReason(StrEnum):
+    INVALID_STATE = "invalid_state"
     SUPPRESSED = "suppressed"
     DUPLICATE = "duplicate"
     EXPIRED = "expired"
@@ -220,16 +225,6 @@ _SCORE_REASON_CODES: tuple[ReasonCode, ...] = (
     ReasonCode.DOWNSTREAM_FIT_SCORE,
 )
 
-_REVIEWABLE_STATUSES: frozenset[IdeaLifecycleStatus] = frozenset(
-    {
-        IdeaLifecycleStatus.GENERATED,
-        IdeaLifecycleStatus.ENRICHED,
-        IdeaLifecycleStatus.SCORED,
-        IdeaLifecycleStatus.GOVERNANCE_CHECKED,
-        IdeaLifecycleStatus.READY_FOR_REVIEW,
-    }
-)
-
 
 def score_candidate(
     candidate: IdeaCandidate,
@@ -385,6 +380,12 @@ def _queue_exclusion_for_candidate(
             reason=QueueExclusionReason.ACCESS_SCOPE_MISMATCH,
             detail="candidate is outside the requested advisor access scope",
         )
+    if not candidate_state_is_compatible(candidate.lifecycle_status, candidate.review_posture):
+        return QueueExclusion(
+            candidate_id=candidate.candidate_id,
+            reason=QueueExclusionReason.INVALID_STATE,
+            detail="candidate lifecycle and review posture are incompatible",
+        )
     if candidate.candidate_id in active_snoozes:
         snooze = active_snoozes[candidate.candidate_id]
         return QueueExclusion(
@@ -431,7 +432,7 @@ def _queue_exclusion_for_candidate(
             reason=QueueExclusionReason.UNSCORED,
             detail="candidate has no score",
         )
-    if candidate.lifecycle_status not in _REVIEWABLE_STATUSES:
+    if candidate.lifecycle_status not in REVIEWABLE_LIFECYCLE_STATUSES:
         return QueueExclusion(
             candidate_id=candidate.candidate_id,
             reason=QueueExclusionReason.NON_REVIEWABLE_STATUS,
