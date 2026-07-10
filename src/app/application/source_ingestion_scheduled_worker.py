@@ -28,6 +28,7 @@ class SourceIngestionScheduleConfig:
     interval_seconds: int
     max_runs: int
     run_on_start: bool = True
+    run_forever: bool = False
 
 
 def build_scheduled_worker_check_summary(
@@ -48,6 +49,7 @@ def build_scheduled_worker_check_summary(
             "intervalSeconds": schedule.interval_seconds,
             "maxRuns": schedule.max_runs,
             "runOnStart": schedule.run_on_start,
+            "runForever": schedule.run_forever,
         },
         "runOnceManifest": plan.check_summary(),
         "supportedFeaturePromoted": False,
@@ -138,6 +140,7 @@ def source_ingestion_schedule_config_from_values(
     *,
     interval_seconds: object,
     max_runs: object,
+    run_forever: object = False,
 ) -> SourceIngestionScheduleConfig:
     return SourceIngestionScheduleConfig(
         interval_seconds=_positive_int(
@@ -146,6 +149,7 @@ def source_ingestion_schedule_config_from_values(
             default=DEFAULT_SCHEDULE_INTERVAL_SECONDS,
         ),
         max_runs=_positive_int(max_runs, "maxRuns", default=DEFAULT_SCHEDULE_MAX_RUNS),
+        run_forever=_boolean(run_forever, "runForever"),
     )
 
 
@@ -177,6 +181,8 @@ def _scheduled_worker_check_summary_is_valid(summary: Mapping[str, Any]) -> bool
         return False
     if schedule_policy.get("runOnStart") is not True:
         return False
+    if not isinstance(schedule_policy.get("runForever"), bool):
+        return False
     run_once_manifest = summary.get("runOnceManifest")
     if not isinstance(run_once_manifest, Mapping):
         return False
@@ -199,3 +205,13 @@ def _positive_int(value: object, field_name: str, *, default: int) -> int:
 
 def _is_positive_int(value: object) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and value > 0
+
+
+def _boolean(value: object, field_name: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value in {"true", "True", "1"}:
+        return True
+    if value in {"false", "False", "0", None, ""}:
+        return False
+    raise ValueError(f"{field_name} must be a boolean")

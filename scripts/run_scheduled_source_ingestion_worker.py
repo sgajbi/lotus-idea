@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import signal
 import sys
 import time
 from pathlib import Path
@@ -22,6 +23,7 @@ from app.application.source_ingestion_readiness import (  # noqa: E402
 from app.application.source_ingestion_scheduled_worker import (  # noqa: E402
     DEFAULT_SCHEDULE_INTERVAL_SECONDS,
     DEFAULT_SCHEDULE_MAX_RUNS,
+    SourceIngestionScheduleConfig,
     build_scheduled_worker_check_summary,
     source_ingestion_schedule_config_from_values,
 )
@@ -32,6 +34,8 @@ from run_source_ingestion_worker import main as run_once_worker_main  # noqa: E4
 SCHEDULE_INTERVAL_SECONDS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULE_INTERVAL_SECONDS"
 SCHEDULE_MAX_RUNS_ENV = "LOTUS_IDEA_SOURCE_INGESTION_SCHEDULE_MAX_RUNS"
 
+_stop_requested = False
+
 
 def main(argv: list[str] | None = None) -> int:
     parser = _parser()
@@ -41,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
         schedule = source_ingestion_schedule_config_from_values(
             interval_seconds=args.interval_seconds,
             max_runs=args.max_runs,
+            run_forever=args.run_forever,
         )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"scheduled source ingestion worker configuration error: {exc}", file=sys.stderr)
@@ -61,32 +66,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
-    exit_codes: list[int] = []
-    for iteration_index in range(schedule.max_runs):
-        _write_json(
-            {
-                "schemaVersion": "lotus-idea.source-ingestion.scheduled-worker-iteration.v1",
-                "mode": "scheduled_iteration_started",
-                "iterationIndex": iteration_index,
-                "supportedFeaturePromoted": False,
-            }
-        )
-        exit_code = run_once_worker_main(_run_once_args(args))
-        exit_codes.append(exit_code)
-        _write_json(
-            {
-                "schemaVersion": "lotus-idea.source-ingestion.scheduled-worker-iteration.v1",
-                "mode": "scheduled_iteration_completed",
-                "iterationIndex": iteration_index,
-                "workerExitCode": exit_code,
-                "supportedFeaturePromoted": False,
-            }
-        )
-        if exit_code == 2:
-            return 2
-        if iteration_index < schedule.max_runs - 1:
-            time.sleep(schedule.interval_seconds)
-    return 0 if exit_codes else 2
+    return _run_schedule(args=args, schedule=schedule)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -111,6 +91,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--max-runs",
         default=os.getenv(SCHEDULE_MAX_RUNS_ENV, str(DEFAULT_SCHEDULE_MAX_RUNS)),
+    )
+    parser.add_argument(
+        "--run-forever",
+        action="store_true",
+        default=False,
+        help="Keep scheduling until the process receives SIGTERM or SIGINT.",
     )
     parser.add_argument(
         "--check-only",
@@ -145,6 +131,72 @@ def _core_source_urls_configured(args: argparse.Namespace) -> bool:
     if args.core_base_url:
         return True
     return bool(args.core_query_base_url and args.core_query_control_plane_base_url)
+
+
+def _run_schedule(*, args: argparse.Namespace, schedule: SourceIngestionScheduleConfig) -> int:
+    global _stop_requested
+    _stop_requested = False
+    previous_handlers = _install_stop_handlers()
+    exit_codes: list[int] = []
+    iteration_index = 0
+    try:
+        while schedule.run_forever or iteration_index < schedule.max_runs:
+            if _stop_requested:
+                break
+            _write_json(
+                {
+                    "schemaVersion": "lotus-idea.source-ingestion.scheduled-worker-iteration.v1",
+                    "mode": "scheduled_iteration_started",
+                    "iterationIndex": iteration_index,
+                    "supportedFeaturePromoted": False,
+                }
+            )
+            exit_code = run_once_worker_main(_run_once_args(args))
+            exit_codes.append(exit_code)
+            _write_json(
+                {
+                    "schemaVersion": "lotus-idea.source-ingestion.scheduled-worker-iteration.v1",
+                    "mode": "scheduled_iteration_completed",
+                    "iterationIndex": iteration_index,
+                    "workerExitCode": exit_code,
+                    "supportedFeaturePromoted": False,
+                }
+            )
+            if exit_code != 0:
+                return exit_code
+            iteration_index += 1
+            if _stop_requested or (
+                not schedule.run_forever and iteration_index >= schedule.max_runs
+            ):
+                break
+            time.sleep(schedule.interval_seconds)
+    finally:
+        _restore_stop_handlers(previous_handlers)
+    return 0 if exit_codes else 2
+
+
+def _install_stop_handlers() -> dict[int, Any]:
+    previous_handlers: dict[int, Any] = {}
+    for signal_number in (signal.SIGINT, signal.SIGTERM):
+        try:
+            previous_handlers[signal_number] = signal.getsignal(signal_number)
+            signal.signal(signal_number, _request_stop)
+        except (OSError, RuntimeError, ValueError):
+            continue
+    return previous_handlers
+
+
+def _restore_stop_handlers(previous_handlers: dict[int, Any]) -> None:
+    for signal_number, handler in previous_handlers.items():
+        try:
+            signal.signal(signal_number, handler)
+        except (OSError, RuntimeError, ValueError):
+            continue
+
+
+def _request_stop(_signal_number: int, _frame: Any) -> None:
+    global _stop_requested
+    _stop_requested = True
 
 
 def _manifest_path(args: argparse.Namespace) -> Path:

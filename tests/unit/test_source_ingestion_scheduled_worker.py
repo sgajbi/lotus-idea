@@ -50,6 +50,7 @@ def test_builds_source_safe_scheduled_worker_check_summary() -> None:
         "intervalSeconds": 300,
         "maxRuns": 1,
         "runOnStart": True,
+        "runForever": False,
     }
     assert summary["supportedFeaturePromoted"] is False
     serialized = json.dumps(summary)
@@ -248,6 +249,17 @@ def test_schedule_config_defaults_none_values() -> None:
 
     assert schedule.interval_seconds == 300
     assert schedule.max_runs == 1
+    assert schedule.run_forever is False
+
+
+def test_schedule_config_accepts_explicit_daemon_mode() -> None:
+    schedule = source_ingestion_schedule_config_from_values(
+        interval_seconds="300",
+        max_runs="1",
+        run_forever="true",
+    )
+
+    assert schedule.run_forever is True
 
 
 @pytest.mark.parametrize(
@@ -298,6 +310,7 @@ def test_scheduled_worker_cli_check_only_is_source_safe(capsys: Any) -> None:
     assert payload["schemaVersion"] == SCHEDULED_WORKER_SCHEMA_VERSION
     assert payload["schedulePolicy"]["intervalSeconds"] == 60
     assert payload["schedulePolicy"]["maxRuns"] == 1
+    assert payload["schedulePolicy"]["runForever"] is False
     assert payload["supportedFeaturePromoted"] is False
     assert "PB_SG_GLOBAL_BAL_001" not in captured.out
     assert "portfolioId" not in captured.out
@@ -371,6 +384,66 @@ def test_scheduled_worker_cli_forwards_split_core_source_urls(
     assert "http://localhost:8202" in forwarded_args[0]
     captured = capsys.readouterr()
     assert "scheduled_iteration_started" in captured.out
+
+
+def test_scheduled_worker_daemon_stops_cleanly_after_signal_request(
+    capsys: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_scheduler_script()
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
+    )
+
+    def stop_after_first_iteration(_args: list[str]) -> int:
+        module._stop_requested = True
+        return 0
+
+    monkeypatch.setattr(module, "run_once_worker_main", stop_after_first_iteration)
+
+    assert (
+        module.main(
+            [
+                "--manifest",
+                str(manifest_path),
+                "--core-query-base-url",
+                "http://localhost:8201",
+                "--core-query-control-plane-base-url",
+                "http://localhost:8202",
+                "--run-forever",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    assert captured.out.count("scheduled_iteration_started") == 1
+    assert "scheduled_iteration_completed" in captured.out
+
+
+def test_scheduled_worker_propagates_blocked_iteration_status(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    module = _load_scheduler_script()
+    manifest_path = (
+        ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
+    )
+    monkeypatch.setattr(module, "run_once_worker_main", lambda _args: 3)
+
+    assert (
+        module.main(
+            [
+                "--manifest",
+                str(manifest_path),
+                "--core-query-base-url",
+                "http://localhost:8201",
+                "--core-query-control-plane-base-url",
+                "http://localhost:8202",
+                "--max-runs",
+                "2",
+            ]
+        )
+        == 3
+    )
 
 
 def _manifest() -> dict[str, Any]:
