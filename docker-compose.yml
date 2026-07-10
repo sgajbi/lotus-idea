@@ -15,6 +15,7 @@ services:
       retries: 10
   lotus-idea-source-ingestion-worker:
     build: .
+    restart: on-failure
     profiles:
       - worker
     env_file:
@@ -25,5 +26,4 @@ services:
     command:
       - python
       - scripts/run_scheduled_source_ingestion_worker.py
-      - --max-runs
-      - "1"
+      - --run-forever

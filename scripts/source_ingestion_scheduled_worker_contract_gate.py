@@ -70,6 +70,7 @@ def validate_source_ingestion_scheduled_worker_contract() -> list[str]:
         schedule = source_ingestion_schedule_config_from_values(
             interval_seconds=300,
             max_runs=1,
+            run_forever=True,
         )
         check_summary = build_scheduled_worker_check_summary(plan=plan, schedule=schedule)
         proof = build_scheduled_worker_deploy_proof_payload(

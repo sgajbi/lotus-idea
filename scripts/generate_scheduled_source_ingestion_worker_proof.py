@@ -40,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         schedule = source_ingestion_schedule_config_from_values(
             interval_seconds=args.interval_seconds,
             max_runs=args.max_runs,
+            run_forever=args.run_forever,
         )
         check_summary = build_scheduled_worker_check_summary(plan=plan, schedule=schedule)
         payload = build_scheduled_worker_deploy_proof_payload(
@@ -67,6 +68,11 @@ def _parser() -> argparse.ArgumentParser:
         default=os.getenv(SCHEDULE_INTERVAL_SECONDS_ENV, "300"),
     )
     parser.add_argument("--max-runs", default=os.getenv(SCHEDULE_MAX_RUNS_ENV, "1"))
+    parser.add_argument(
+        "--run-forever",
+        action="store_true",
+        help="Record that the deployed scheduler runs until a controlled stop.",
+    )
     parser.add_argument("--generated-at-utc", required=True)
     parser.add_argument("--output")
     return parser
