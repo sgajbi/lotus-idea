@@ -16,6 +16,7 @@ promoted.
 | --- | --- | --- |
 | Service is unavailable | `/health/live`, container logs, runtime profile | [Getting Started](Getting-Started), `docs/runbooks/service-operations.md` |
 | Readiness is degraded | `/health/ready`, `/api/v1/implementation-proof/readiness` | [Troubleshooting](Troubleshooting), `docs/operations/implementation-proof-readiness.md` |
+| Database recovery or cutover is active | `/health/ready`, `LOTUS_IDEA_RECOVERY_POSTURE` | [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery) |
 | Durable writes fail | `LOTUS_IDEA_DATABASE_URL`, `make migration-execution-gate` | `docs/operations/persistence.md` |
 | Source ingestion is blocked | `/api/v1/source-ingestion/readiness` | `docs/operations/source-ingestion-run-once.md` |
 | Outbox delivery is blocked | `/api/v1/outbox-delivery/readiness` | [Operator Map](#operator-map) |
@@ -31,6 +32,7 @@ promoted.
 | `make implementation-proof-readiness-check` | Aggregate blocker and proof posture. |
 | `make runtime-trust-telemetry-snapshot-check` | Runtime trust telemetry snapshot. |
 | `make postgres-integration-gate` | PostgreSQL-backed runtime proof when configured. |
+| `make disaster-recovery-proof-gate` | Restore integrity, RPO/RTO, replay, fencing, and no-mutation evidence. |
 | `make container-runtime-smoke` | Container startup and health smoke proof. |
 | `make supported-features-gate` | Confirms no unproved support claim is promoted. |
 | `make supported-feature-promotion-contract-gate` | Confirms gate, readiness API, and generated artifact use one promotion evaluator. |

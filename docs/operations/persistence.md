@@ -173,6 +173,7 @@ supported feature.
 | Area | Current implementation truth | Boundary |
 | --- | --- | --- |
 | Repository provider | `local`/`test` may use process-local writes; `demo`/`staging`/`production` require PostgreSQL through `LOTUS_IDEA_DATABASE_URL` and fail closed when it is absent | Not production recovery certification |
+| Disaster recovery | Versioned 15-table contract, real logical backup/restore, provider-restore validator, replay/fencing/no-mutation proof, recovery-aware write guard, and weekly attested CI drill | Logical evidence has `pitrProof=false`; managed physical base-backup/WAL topology and exercise remain required for production certification |
 | Outbox delivery foundation | Source-safe records, durable retry scheduling with first/last failure timing and due retry eligibility, retryable failure status, published status, dead-letter status, HTTP publisher adapter foundation, repo-owned outbox event and downstream consumer contracts, aggregate readiness diagnostic, bounded run-once operator action, source-safe outbox broker proof artifact, bounded downstream consumer runtime proof artifact, and bounded outbox platform mesh event publication proof artifact | No certified external broker publication, downstream delivery, Gateway/Workbench behavior, client-ready publication, or supported-feature promotion |
 | Source-ingestion worker check | Manifest plus source-safe check-only output contract | No Core call or repository write |
 | Source-ingestion run-once API | Durable-repository-only operator action over the configured manifest and Core adapter | No live Core certification, scheduler proof, or supported product claim |
@@ -419,12 +420,18 @@ Do not claim production storage readiness, production recovery, certified event
 publication, data-product promotion, or supported business workflows until
 later slices add:
 
-1. deploy-pipeline migration evidence,
-2. certified long-running scheduled source-ingestion worker proof against the real service,
-3. live source adapter proof against a running Core service,
-4. certified external broker publication and production event-publication
+1. approved managed-provider physical base-backup/WAL topology, encrypted
+   backup evidence, and a successful PITR cutover exercise,
+2. deploy-pipeline migration evidence,
+3. certified long-running scheduled source-ingestion worker proof against the real service,
+4. live source adapter proof against a running Core service,
+5. certified external broker publication and production event-publication
    evidence beyond the bounded outbox proof artifacts,
-5. data-product telemetry and platform mesh certification,
-6. Gateway/Workbench/downstream proof for supported workflows,
-7. updated endpoint certification, supported-feature, docs, wiki, and mesh
+6. data-product telemetry and platform mesh certification,
+7. Gateway/Workbench/downstream proof for supported workflows,
+8. updated endpoint certification, supported-feature, docs, wiki, and mesh
    posture.
+
+Migration rollback, repository replay, outbox re-drive, and logical dump
+restore are distinct controls. Use
+`docs/runbooks/postgres-disaster-recovery.md` for the governed DR procedure.

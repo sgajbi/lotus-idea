@@ -100,6 +100,12 @@ data-mesh readiness, client publication, or supported-feature status.
 - Metadata: /metadata
 - Version and image provenance metadata: /version
 
+Database restore and cutover use the dedicated
+[PostgreSQL disaster recovery runbook](postgres-disaster-recovery.md). Set
+`LOTUS_IDEA_RECOVERY_POSTURE` to `draining`, `restoring`, `degraded`, or
+`normal` as directed there. Every non-normal or invalid posture returns
+non-ready and blocks durable writes before mutation.
+
 `LOTUS_IDEA_RUNTIME_PROFILE` defaults to `local`. `local` and `test` allow
 process-local repository writes for development and automated tests. `demo`,
 `staging`, and `production` require `LOTUS_IDEA_DATABASE_URL`; without it,
@@ -179,6 +185,10 @@ flowchart TD
 
 1. Check container logs for request failures and stack traces.
 2. Verify /health/ready and metrics endpoint.
+   If readiness reports `draining`, `restoring`, or a recovery-posture
+   blocker, follow the dedicated PostgreSQL disaster recovery runbook. Do not
+   bypass the write guard or set posture to `normal` before restore and resume
+   proof pass.
    If readiness is degraded with `durable_repository_not_configured`, either
    configure `LOTUS_IDEA_DATABASE_URL` for the production-like profile or switch
    the runtime profile explicitly to `local`/`test` for non-production work.

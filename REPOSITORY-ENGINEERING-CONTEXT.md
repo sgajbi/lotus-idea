@@ -702,6 +702,26 @@ make postgres-integration-gate
 Run it only with a disposable PostgreSQL URL configured through the repo's
 expected environment variable.
 
+PostgreSQL disaster-recovery evidence uses distinct disposable source and
+target databases:
+
+```powershell
+make disaster-recovery-contract-gate
+make postgres-disaster-recovery-seed
+make postgres-disaster-recovery-drill
+make postgres-disaster-recovery-resume
+make disaster-recovery-proof-gate
+```
+
+`LOTUS_IDEA_DR_SOURCE_DATABASE_URL` and
+`LOTUS_IDEA_DR_TARGET_DATABASE_URL` are runtime-only secret inputs and must
+never appear in command arguments or evidence. The fixture refuses a non-empty
+database. Logical backup evidence is real restore proof but always carries
+`pitrProof=false`; production certification requires provider-owned physical
+base-backup plus WAL evidence. Use `LOTUS_IDEA_RECOVERY_POSTURE=draining`,
+`restoring`, `degraded`, or `normal` during cutover. Every non-normal or invalid
+value fails readiness and durable writes before mutation.
+
 Wiki check before merge when docs/wiki truth changed:
 
 ```powershell

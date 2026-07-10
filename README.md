@@ -232,23 +232,19 @@ trusted caller provenance, or source authority are not configured.
 
 Operator entrypoints:
 
-- `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
-- `/metadata` and `/version`
-- `/api/v1/source-ingestion/readiness` and `/api/v1/source-ingestion/run-once`
-- `/api/v1/outbox-delivery/readiness`, run-once, dead-letter inspection, and governed re-drive
-- `/api/v1/review-queues/advisor/readiness`
-- `/api/v1/ai-explanations/readiness`
-- `/api/v1/downstream-realization/readiness` and `/api/v1/downstream-submissions/reconciliation`
-- `/api/v1/implementation-proof/readiness`
-- `/api/v1/data-mesh/readiness`
-- `/api/v1/data-mesh/trust-telemetry/runtime-preview`
-- `/api/v1/data-mesh/trust-telemetry/runtime-snapshot`
+- Platform: `/health`, `/health/live`, `/health/ready`, `/metrics`, `/metadata`, `/version`, and `/docs`
+- Workers and delivery: source-ingestion readiness/run-once plus outbox readiness/run-once/recovery
+- Workflow operations: advisor queue, AI explanation, downstream realization, and reconciliation readiness
+- Governance: implementation-proof, data-mesh, and runtime trust-telemetry preview/snapshot
 
 Operator details live in
 [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
 [docs/operations/observability.md](docs/operations/observability.md),
-[persistence](docs/operations/persistence.md) and [outbox lineage](docs/architecture/outbox-event-lineage.md),
-[docs/operations/outbox-dead-letter-recovery.md](docs/operations/outbox-dead-letter-recovery.md), [downstream realization](docs/operations/downstream-realization-readiness.md), and
+[persistence](docs/operations/persistence.md),
+[outbox lineage](docs/architecture/outbox-event-lineage.md),
+[outbox dead-letter recovery](docs/operations/outbox-dead-letter-recovery.md),
+[downstream realization](docs/operations/downstream-realization-readiness.md),
+[PostgreSQL disaster recovery](docs/runbooks/postgres-disaster-recovery.md), and
 [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
 
 ## Ecosystem Boundaries
@@ -290,6 +286,7 @@ Local gates keep claims grounded:
 | Documentation and issue closure | `make documentation-contract-gate`, `make github-issue-closure-matrix-gate` |
 | API, review, and conversion-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make conversion-outcome-contract-gate`, `make openapi-gate` |
 | Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make outbox-supportability-contract-gate`, `make outbox-supportability-rule-test`, `make ai-model-risk-ops-contract-gate` |
+| PostgreSQL recovery | `make disaster-recovery-contract-gate`, `make postgres-disaster-recovery-drill`, `make postgres-disaster-recovery-resume`, `make disaster-recovery-proof-gate` |
 | Modularity and modern code posture | `make maintainability-gate`, `make duplicate-implementation-gate`, `make private-import-boundary-gate` |
 | Local evidence hygiene | `make no-sensitive-content-guard`, `make repository-hygiene-gate` |
 
@@ -308,6 +305,8 @@ Start here:
   endpoint certification baseline and ledger rules.
 - [docs/operations/supported-feature-promotion.md](docs/operations/supported-feature-promotion.md):
   support-promotion process.
+- [docs/runbooks/postgres-disaster-recovery.md](docs/runbooks/postgres-disaster-recovery.md):
+  RPO/RTO, backup/PITR boundaries, restore, resume, cutover, and evidence procedure.
 - [docs/architecture/CODEBASE-REVIEW-LEDGER.md](docs/architecture/CODEBASE-REVIEW-LEDGER.md):
   modularity and issue-pattern hardening ledger.
 - [docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md](docs/architecture/GITHUB-ISSUE-CLOSURE-MATRIX.md):

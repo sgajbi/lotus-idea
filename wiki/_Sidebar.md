@@ -24,5 +24,6 @@
 ## Operations And Governance
 
 - [Operations Runbook](Operations-Runbook)
+- [PostgreSQL Disaster Recovery](PostgreSQL-Disaster-Recovery)
 - [Troubleshooting](Troubleshooting)
 - [Security and Governance](Security-and-Governance)

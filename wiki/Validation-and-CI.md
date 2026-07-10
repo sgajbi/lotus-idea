@@ -18,6 +18,7 @@ clean branch hygiene.
 | API contract change | `make openapi-gate`, `make endpoint-certification-gate`, focused API tests | Runtime/OpenAPI/certification agreement. |
 | Supported-feature claim | `make supported-features-gate`, `make implementation-truth-gate` | No unproved support or certification language. |
 | Persistence or migration change | `make migration-contract-gate`, `make migration-execution-gate`, focused repository tests | Apply/rollback and query-shape proof. |
+| PostgreSQL recovery change | `make disaster-recovery-contract-gate`, real restore/resume proof, `make disaster-recovery-proof-gate` | RPO/RTO, restored invariants, replay/fencing, and no-mutation evidence. |
 | Canonical source-proof run | `make canonical-opportunity-source-proofs` with governed runtime arguments | Source-specific live evidence, traceability, and fail-closed blocker posture. |
 | Release-grade local proof | `make ci-release` | Full local release evidence. |
 | Wiki source change | wiki audit, wiki check-only, publish after merge | Repo source and published wiki agree. |
@@ -41,6 +42,7 @@ clean branch hygiene.
 | Feature Lane | Fast lint, typecheck, unit, action lint | Branch feedback without write permissions |
 | PR Merge Gate | Integration, coverage, Docker, PostgreSQL, security | Merge readiness and runtime parity |
 | Main Releasability | Release evidence, SBOM, Docker, PostgreSQL | Post-merge truth on `main` |
+| Scheduled PostgreSQL DR | Real logical backup/restore, resume proof, evidence attestation | Weekly recovery regression detection; not provider PITR certification |
 | Local contract gates | Makefile, docs, source safety, mesh, endpoint certification | Future-agent drift and unsupported claims |
 
 ```mermaid
@@ -73,7 +75,7 @@ target and must not carry durable truth that is absent from `main`.
 | Aggregate lanes | `make check`, `make ci`, `make ci-release` | Routine local proof, broad CI-equivalent proof, and release evidence. |
 | Contract and documentation | `make ci-contract-gate`, `make slice2-structure-gate`, `make documentation-contract-gate`, `make implementation-truth-gate`, `make supported-features-gate` | Prevent workflow, docs, support, and certification drift. |
 | API and OpenAPI | `make openapi-gate`, `make endpoint-certification-gate`, `make api-route-metadata-gate`, `make caller-context-contract-gate` | Keep runtime API and published contract truth aligned. |
-| Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make postgres-integration-gate`, `make container-runtime-smoke` | Prove durable storage, migration, and runtime behavior. |
+| Persistence and runtime | `make migration-contract-gate`, `make migration-execution-gate`, `make postgres-integration-gate`, `make disaster-recovery-contract-gate`, `make disaster-recovery-proof-gate`, `make container-runtime-smoke` | Prove durable storage, migration, restore/resume, and runtime behavior. |
 | Mesh and proof artifacts | `make data-mesh-contract-gate`, `make mesh-policy-proof-contract-gate`, `make implementation-proof-readiness-check`, `make canonical-opportunity-source-proofs`, `make runtime-trust-telemetry-snapshot-check` | Validate data-mesh, source-proof, and proof-readiness posture. |
 | Quality and maintainability | `make maintainability-gate`, `make duplicate-implementation-gate`, `make quality-scorecard-gate`, `make architecture-boundary-gate` | Prevent modularity and maintainability regression. |
 

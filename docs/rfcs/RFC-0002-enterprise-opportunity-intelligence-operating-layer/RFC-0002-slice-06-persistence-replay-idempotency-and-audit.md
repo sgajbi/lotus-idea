@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, replay, audit, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters and real concurrency/restart proof, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; external publication, production recovery certification, downstream execution/materialization proof, and supported-feature promotion remain blocked
+Status: Partially implemented - internal persistence, replay, audit, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters, real concurrency/restart proof, real logical backup/restore plus no-duplicate resume proof, provider-restore validation, recovery-aware write gating, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; physical/WAL production recovery certification, external publication, downstream execution/materialization proof, retention/legal-hold/erasure closure, and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -698,3 +698,34 @@ collision from fresh state. `make conversion-outcome-contract-gate` protects
 the layered policy, provider parity, migration, API examples, and architecture
 decision. The work remains internal design modularity and does not promote a
 supported feature or create a separately deployable service.
+
+## Issue 343 PostgreSQL Disaster Recovery
+
+Issue `#343` adds a versioned disaster-recovery contract with 15-table schema
+reconciliation, 15-minute RPO, 60-minute RTO, daily base-backup and continuous
+WAL expectations, jurisdiction/access/encryption controls, named ownership,
+cadence, and explicit certification blockers. A logical `pg_dump` drill and a
+provider-restored validation adapter share the same domain policy,
+application use case, read-only PostgreSQL inspector, and source-safe evidence
+shape. Logical evidence is always `pitrProof=false` and cannot clear the
+physical/WAL blocker.
+
+The representative fixture uses production domain/repository paths for
+candidate, review, feedback, conversion, report, AI-lineage, idempotency,
+audit, and outbox creation, then adds governed pending, leased, failed,
+dead-letter, published, recovery-audit, and downstream reconciliation states.
+Real disposable PostgreSQL proof restored the backup into a separate clean
+database, matched all table counts/hashes, returned zero relationship/state
+violations, measured RPO at `0s` and RTO below `2s`, and then proved candidate
+replay, recovery replay, downstream reconciliation fencing, stale-lease
+rejection, and unchanged table hashes.
+
+`LOTUS_IDEA_RECOVERY_POSTURE` now makes `draining`, `restoring`, `degraded`,
+and invalid posture fail readiness and every durable-write guard before
+mutation. The weekly CI workflow performs a real logical restore, validates
+resume safety, retains evidence for 90 days, and generates provenance
+attestation. Production PITR certification remains blocked until an approved
+managed-provider physical base-backup/WAL exercise is captured. This is
+internal design modularity and operator automation; database backup
+infrastructure remains platform/provider owned and no new runtime service is
+introduced.
