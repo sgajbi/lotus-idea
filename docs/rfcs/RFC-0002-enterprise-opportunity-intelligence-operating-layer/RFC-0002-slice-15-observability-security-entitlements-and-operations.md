@@ -240,6 +240,23 @@ The runtime trust telemetry preview and snapshot diagnostics are explicitly
 `not_certified` until platform mesh certification, Gateway/Workbench
 discovery, and supported-feature evidence exist.
 
+## Issue 329 Durable Outbox Supportability Telemetry
+
+Prometheus scrapes now invoke the existing bounded readiness use case and emit
+fixed-label gauges for outbox state counts, oldest delivery-ready age,
+configuration readiness, and projection collection success. API-call volume
+remains a separate operation counter, so absent operator traffic cannot hide a
+stalled queue.
+
+The dashboard separates runtime state, operator activity, due age, and
+configuration/collection posture. Sustained alerts cover collection failure,
+dead letters, expired leases, due backlog count/age, and deferred-retry
+pressure. Threshold policy is code-owned, contract-gated, and exercised by a
+real `promtool test rules` fixture for healthy and breached scenarios. Labels
+are limited to repository and governed state; event, client, portfolio,
+payload, request, and idempotency identity remain forbidden. This improves
+internal supportability only and does not certify a broker or consumer.
+
 ## Required Work
 
 1. Add metrics, logs, traces, audit events, health/readiness diagnostics, and

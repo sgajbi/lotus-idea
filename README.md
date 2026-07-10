@@ -289,7 +289,7 @@ Local gates keep claims grounded:
 | Support and certification truth | `make implementation-truth-gate`, `make supported-features-gate` |
 | Documentation and issue closure | `make documentation-contract-gate`, `make github-issue-closure-matrix-gate` |
 | API, review, and conversion-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make conversion-outcome-contract-gate`, `make openapi-gate` |
-| Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make ai-model-risk-ops-contract-gate` |
+| Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make outbox-supportability-contract-gate`, `make outbox-supportability-rule-test`, `make ai-model-risk-ops-contract-gate` |
 | Modularity and modern code posture | `make maintainability-gate`, `make duplicate-implementation-gate`, `make private-import-boundary-gate` |
 | Local evidence hygiene | `make no-sensitive-content-guard`, `make repository-hygiene-gate` |
 

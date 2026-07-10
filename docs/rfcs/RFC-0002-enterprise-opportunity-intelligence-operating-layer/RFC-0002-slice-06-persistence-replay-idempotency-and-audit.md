@@ -572,6 +572,18 @@ consumer gates protect the contract. External broker, consumer, mesh,
 Gateway/Workbench, and supported-feature certification remain blocked. This is
 internal design modularity only; no runtime split is justified.
 
+## Issue 329 Outbox Supportability Projection
+
+The bounded readiness projection now returns the oldest delivery-ready time in
+addition to status, due, deferred-retry, and expired-lease counts. PostgreSQL
+computes the value with the existing aggregate query; the in-memory adapter
+uses the same pending, due-retry, and expired-lease eligibility semantics.
+
+The application converts that timestamp to a non-negative age for metrics and
+tests exact due-time behavior. No event identity or payload is added to the
+projection, and no persistence or delivery transition changes. This is an
+internal query-contract extension, not a separate outbox runtime.
+
 ## Issue 326 Conversion Outcome Persistence Hardening
 
 Conversion outcomes now preserve `conversionOutcomeId` resource identity and a

@@ -17,6 +17,7 @@ This repository starts from the Lotus platform observability scaffold.
 | Operation metric contract | Machine-readable inventory of implemented operation metric vocabulary | Not dashboard, alert, mesh, or supported-feature certification |
 | AI model-risk operations contract | Machine-readable dashboard-control and alert posture for AI explanation operations, backed by repo-owned dashboard/rule/runbook artifacts | Not `lotus-ai`, Workbench, data-mesh, client-ready, or supported-feature certification |
 | Operator workflows operations contract | Machine-readable dashboard-control and alert posture for non-AI operator workflows, backed by repo-owned dashboard/rule/runbook artifacts | Not live source, external broker, downstream execution, Gateway/Workbench, data-mesh, or supported-feature certification |
+| Outbox supportability contract | Code-aligned state, age, configuration, collection, dashboard, and sustained-alert contract | Not broker publication, consumer delivery, or supported-feature certification |
 
 ## Sensitive-Content Rule
 
@@ -161,8 +162,8 @@ rules, and runbook are certified by
 
 | Contract area | Implemented evidence | Boundary |
 | --- | --- | --- |
-| Dashboard controls | Source-ingestion, outbox, downstream realization, runtime trust, and implementation-proof readiness posture over implemented operation telemetry | Certified source-safe dashboard artifact |
-| Alert rules | Blocked readiness and run-once/submission posture over implemented operation telemetry | Certified source-safe alert artifact |
+| Dashboard controls | Operation activity remains separate from outbox durable state, oldest due age, and configuration/collection posture | Certified source-safe dashboard artifact |
+| Alert rules | Blocked operation posture plus sustained collection, dead-letter, lease, backlog, age, and retry-pressure conditions | Certified source-safe alert artifact with `promtool` fixture proof |
 | Source-of-truth paths | Operation metric contract, operator runbook, source-ingestion, outbox, downstream, runtime-trust, implementation-proof source modules, and RFC slices | No live source, external broker, downstream execution, Gateway/Workbench, or support-promotion proof |
 | Source-authority policy | Dashboard and alert artifacts may group by the governed `source_authority` label; any explicit matcher must use the code-owned vocabulary above | No client, portfolio, account, request, response, raw entitlement, or ad hoc source labels |
 
@@ -170,6 +171,14 @@ This contract closes the non-AI dashboard/alert certification gap raised by
 GitHub issue `#282` without changing runtime modularity or feature support
 posture. It certifies operator visibility over existing bounded operation
 telemetry only.
+
+The outbox-specific metric and threshold inventory is owned by
+`contracts/observability/lotus-idea-outbox-supportability.v1.json`. Run
+`make outbox-supportability-contract-gate` for contract drift and
+`make outbox-supportability-rule-test` for real Prometheus rule evaluation.
+Counts at `100` delivery-ready, `900` seconds oldest due age, and `50` deferred
+retries remain quiet; alerts require a strict breach sustained for the period
+documented in the operator runbook.
 
 ## Operator Interpretation
 

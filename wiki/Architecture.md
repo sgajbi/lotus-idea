@@ -370,6 +370,14 @@ ready-count posture through repository-side `idea_outbox_event` projections
 instead of a whole idea repository snapshot. Failed rows below the retry limit
 are not delivery-ready until their durable `next_attempt_at_utc` is due;
 expired leases remain immediately recoverable.
+
+The same projection now returns the oldest actionable time. An internal
+Prometheus collector invokes the application use case at scrape time and emits
+fixed-label state, age, configuration, and collection gauges. Dashboard and
+alert adapters consume those gauges separately from operation-event request
+volume. This is design modularity inside the existing API runtime; workload,
+failure-isolation, ownership, and operability evidence do not justify a
+separately deployed metrics or outbox service.
 `POST /api/v1/outbox-delivery/run-once` exposes the bounded internal operator
 action for one delivery pass through the active repository and configured
 publisher adapter. It requires `Idempotency-Key`, binds the operator run

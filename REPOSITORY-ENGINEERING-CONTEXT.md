@@ -574,7 +574,9 @@ Workbench behavior, data-mesh certification, or supported-feature promotion.
 Non-AI operator workflow operations proof is limited to source-safe dashboard
 and alert visibility over implemented source-ingestion, outbox delivery,
 downstream realization, runtime trust telemetry, and implementation-proof
-readiness operation events. It does not certify live source ingestion,
+readiness. Outbox state, oldest due age, configuration, and collection gauges
+are derived on scrape from the bounded readiness projection and remain
+separate from operation-event traffic. It does not certify live source ingestion,
 external broker publication, downstream execution outcomes, Gateway/Workbench
 behavior, data-mesh certification, or supported-feature promotion.
 
@@ -1151,6 +1153,13 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     design modularity inside the existing runtime; no broker, consumer,
     Gateway/Workbench certification, supported-feature promotion, or runtime
     split is justified.
+30. Outbox supportability telemetry: GitHub issue `#329` is addressed by the
+    bounded readiness age projection, scrape-time collector, code-owned alert
+    thresholds, fixed-label contract, actual-state dashboard panels, sustained
+    Prometheus rules, and `promtool` healthy/breach fixtures. Collection
+    failure is explicit, request-volume telemetry stays separate, and no event
+    or private-banking identity becomes a metric label. This remains internal
+    design modularity; no separately scalable runtime is justified.
 
 Recently closed by PR `#273` and mainline validation:
 

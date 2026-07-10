@@ -661,6 +661,27 @@ drift away from the code-owned source-authority vocabulary. This is not live
 source, external broker, downstream execution, Gateway/Workbench, data-mesh, or
 supported-feature certification.
 
+### Outbox Runtime Posture
+
+Outbox state is measured independently of readiness/run-once request volume.
+Each `/metrics` scrape invokes the bounded readiness projection and publishes
+only repository and governed-state labels.
+
+| Signal | Operator Meaning |
+| --- | --- |
+| `lotus_idea_outbox_delivery_events` | Current pending, leased, failed, published, dead-letter, delivery-ready, deferred-retry, and expired-lease counts. |
+| `lotus_idea_outbox_delivery_oldest_ready_age_seconds` | Age of the oldest event currently eligible for delivery. |
+| `lotus_idea_outbox_delivery_configuration_ready` | Local broker configuration has no blocker. This is not broker certification. |
+| `lotus_idea_outbox_delivery_collection_success` | The bounded projection completed for the scrape. Investigate this first when other gauges disappear. |
+
+Use `make outbox-supportability-contract-gate` to validate metric/threshold
+vocabulary and `make outbox-supportability-rule-test` to evaluate healthy and
+sustained-breach fixtures with Prometheus `promtool`. Recovery steps and exact
+threshold windows are maintained in
+`docs/runbooks/operator-workflows-operations.md`. Never place event, aggregate,
+client, portfolio, payload, request, trace, correlation, or idempotency identity
+in metric labels.
+
 Request validation, HTTP, and unhandled-error diagnostics use the central
 request diagnostic helper and log route templates rather than raw URL paths.
 `make source-observability-contract-gate` blocks raw `print()`, direct Python
