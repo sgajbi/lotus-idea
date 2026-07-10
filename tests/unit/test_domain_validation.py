@@ -11,7 +11,12 @@ from app.domain.downstream_submission import (
     DownstreamSubmissionRecord,
     DownstreamSubmissionResourceType,
 )
-from app.domain.events import OutboxEventRecord, build_candidate_outbox_event
+from app.domain.events import (
+    EventLineageContext,
+    EventLineageOrigin,
+    OutboxEventRecord,
+    build_candidate_outbox_event,
+)
 from app.domain.ideas import ConversionTarget, SourceSystem
 from app.domain.outbox_delivery_state import (
     OutboxDeliveryDecision,
@@ -152,6 +157,10 @@ def outbox_event() -> OutboxEventRecord:
         occurred_at_utc=EVENT_TIME,
         payload={"candidateFamily": "high_cash"},
         idempotency_key="idea.candidate.persisted.v1:idempotency",
-        correlation_id="corr-001",
-        causation_id="cause-001",
+        lineage=EventLineageContext(
+            correlation_id="corr-001",
+            trace_id="trace-001",
+            causation_id="cause-001",
+            origin=EventLineageOrigin.PARENT_EVENT,
+        ),
     )

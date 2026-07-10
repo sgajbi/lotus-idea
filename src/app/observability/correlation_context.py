@@ -4,7 +4,7 @@ from collections.abc import Callable
 import uuid
 
 from app.domain.diagnostic_context import (
-    is_product_safe_context_id,
+    is_product_safe_context_id as is_product_safe_context_id,
     require_product_safe_context_id as require_product_safe_context_id,
 )
 
