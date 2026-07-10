@@ -23,6 +23,7 @@ REQUIRED_LINT_TARGETS = (
     "openapi-problem-details-example-gate",
     "caller-context-contract-gate",
     "signal-api-contract-gate",
+    "trusted-tenant-context-gate",
     "source-temporal-contract-gate",
     "operation-metric-contract-gate",
     "supported-feature-promotion-contract-gate",

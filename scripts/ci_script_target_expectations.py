@@ -90,6 +90,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "openapi-problem-details-example-gate": "scripts/openapi_problem_details_example_gate.py",
     "caller-context-contract-gate": "scripts/caller_context_contract_gate.py",
     "signal-api-contract-gate": "scripts/signal_api_contract_gate.py",
+    "trusted-tenant-context-gate": "scripts/trusted_tenant_context_gate.py",
     "source-temporal-contract-gate": "scripts/source_temporal_contract_gate.py",
     "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
     "supported-feature-promotion-contract-gate": (
