@@ -30,7 +30,8 @@ def _write_minimum_caller_headers(root: Path) -> None:
     _write_module(
         root,
         Path("src/app/api/caller_headers.py"),
-        "from fastapi import Header\n\n"
+        "from fastapi import Header\n"
+        "from app.api.problem_details import ProblemDetailsHTTPException\n\n"
         "TRUSTED_CALLER_CONTEXT_HEADER = 'X-Lotus-Trusted-Caller-Context'\n\n"
         "def caller_context_from_headers(*, subject, roles, capabilities, "
         "trusted_caller_context=None):\n"

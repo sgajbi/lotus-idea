@@ -127,6 +127,24 @@ def _validate_caller_headers_module(path: Path, root: Path) -> list[str]:
                 f"`{TRUSTED_HEADER_VALUE}`"
             )
 
+    source_text = path.read_text(encoding="utf-8")
+    if (
+        parser_function is not None
+        and "trusted_caller_context" in {arg.arg for arg in parser_function.args.kwonlyargs}
+        and "ProblemDetailsHTTPException" not in source_text
+    ):
+        errors.append(
+            f"{relative_path}: caller-context boundary must preserve stable ProblemDetails codes"
+        )
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Raise) or not isinstance(node.exc, ast.Call):
+            continue
+        if call_name(node.exc.func) == "HTTPException":
+            errors.append(
+                f"{relative_path}:{node.lineno}: caller-context failures must use "
+                "ProblemDetailsHTTPException"
+            )
+
     return errors
 
 
