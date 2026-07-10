@@ -70,6 +70,9 @@ from app.domain.report_evidence import ReportEvidencePackResult
 from app.domain.review_governance import (
     FeedbackResult,
     ReviewActionResult,
+    ReviewMutationIdentity,
+    feedback_mutation_identity_from_event,
+    review_mutation_identity_from_decision,
 )
 
 
@@ -348,6 +351,14 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
                 record=self._record_for_idempotency_key(idempotency_key),
             )
 
+        identity_result = self._review_identity_result(
+            identity=review_mutation_identity_from_decision(result.decision),
+            idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
+        )
+        if identity_result is not None:
+            return identity_result
+
         record = self._candidate_records.get(candidate_id)
         if record is None:
             return ReviewPersistenceResult(
@@ -398,16 +409,21 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        identity: ReviewMutationIdentity,
     ) -> ReviewPersistenceResult | None:
         _require_text(idempotency_key, "idempotency_key")
         existing_idempotency = self._idempotency_records.get(idempotency_key)
-        if existing_idempotency is None:
-            return None
-        idempotency_decision, _ = evaluate_idempotency(
+        idempotency_decision, idempotency_record = evaluate_idempotency(
             key=idempotency_key,
             payload=dict(payload),
             existing=existing_idempotency,
         )
+        if idempotency_decision is IdempotencyDecision.ACCEPTED:
+            return self._review_identity_result(
+                identity=identity,
+                idempotency_key=idempotency_key,
+                idempotency_record=idempotency_record,
+            )
         if idempotency_decision is IdempotencyDecision.CONFLICT:
             return ReviewPersistenceResult(
                 decision=ReviewPersistenceDecision.CONFLICT,
@@ -444,6 +460,14 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
                 decision=ReviewPersistenceDecision.REPLAYED,
                 record=self._record_for_idempotency_key(idempotency_key),
             )
+
+        identity_result = self._review_identity_result(
+            identity=feedback_mutation_identity_from_event(result.feedback_event),
+            idempotency_key=idempotency_key,
+            idempotency_record=idempotency_record,
+        )
+        if identity_result is not None:
+            return identity_result
 
         record = self._candidate_records.get(candidate_id)
         if record is None:
@@ -949,6 +973,48 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         if candidate_id is None:
             return None
         return self._candidate_records.get(candidate_id)
+
+    def _review_identity_result(
+        self,
+        *,
+        identity: ReviewMutationIdentity,
+        idempotency_key: str,
+        idempotency_record: IdempotencyRecord,
+    ) -> ReviewPersistenceResult | None:
+        existing = self._review_identity_record(identity)
+        if existing is None:
+            return None
+        existing_identity, record = existing
+        if existing_identity != identity:
+            return ReviewPersistenceResult(
+                decision=ReviewPersistenceDecision.IDENTITY_CONFLICT,
+                record=record,
+            )
+        self._idempotency_records[idempotency_key] = idempotency_record
+        self._idempotency_candidates[idempotency_key] = record.candidate.candidate_id
+        return ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.REPLAYED,
+            record=record,
+        )
+
+    def _review_identity_record(
+        self,
+        identity: ReviewMutationIdentity,
+    ) -> tuple[ReviewMutationIdentity, CandidatePersistenceRecord] | None:
+        for record in self._candidate_records.values():
+            for decision in record.review_decisions:
+                existing = review_mutation_identity_from_decision(decision)
+                if existing.mutation_type is identity.mutation_type and (
+                    existing.resource_id == identity.resource_id
+                ):
+                    return existing, record
+            for feedback in record.feedback_events:
+                existing = feedback_mutation_identity_from_event(feedback)
+                if existing.mutation_type is identity.mutation_type and (
+                    existing.resource_id == identity.resource_id
+                ):
+                    return existing, record
+        return None
 
     def _transition_record(
         self,

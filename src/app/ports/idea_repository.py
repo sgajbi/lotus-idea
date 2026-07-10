@@ -29,6 +29,7 @@ from app.domain import (
     QueueAccessScopeFilter,
     ReportEvidencePackResult,
     ReviewActionResult,
+    ReviewMutationIdentity,
     ReviewPersistenceResult,
     FeedbackResult,
     SourceRef,
@@ -191,6 +192,7 @@ class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        identity: ReviewMutationIdentity,
     ) -> ReviewPersistenceResult | None: ...
 
     def record_review_action(

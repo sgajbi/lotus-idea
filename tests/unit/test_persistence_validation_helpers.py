@@ -9,7 +9,12 @@ from app.domain.persistence import (
     InMemoryIdeaRepository,
     LifecycleHistoryEntry,
 )
-from app.domain.ideas import IdeaLifecycleStatus
+from app.domain.ideas import IdeaLifecycleStatus, ReasonCode
+from app.domain.review_governance import (
+    ReviewActorRole,
+    ReviewMutationIdentity,
+    ReviewMutationType,
+)
 from tests.unit.test_postgres_repository import high_cash_candidate
 
 
@@ -46,6 +51,18 @@ def test_persistence_public_prechecks_treat_missing_idempotency_as_absent() -> N
         repository.precheck_review_mutation(
             idempotency_key="missing-review-idempotency",
             payload={"reviewId": "review-001"},
+            identity=ReviewMutationIdentity(
+                mutation_type=ReviewMutationType.REVIEW_DECISION,
+                resource_id="review-001",
+                candidate_id="idea-001",
+                evidence_packet_id="evidence-001",
+                evidence_content_hash="sha256:evidence",
+                actor_subject="advisor-001",
+                actor_role=ReviewActorRole.ADVISOR,
+                event_name="approve_for_conversion",
+                reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+                occurred_at_utc=EVENT_TIME,
+            ),
         )
         is None
     )

@@ -275,6 +275,61 @@ def test_apply_review_action_to_repository_replays_before_reapplying_domain_tran
     assert len(replayed.persistence.record.review_decisions) == 1
 
 
+def test_review_resource_identity_replays_with_a_new_transport_key_without_side_effects() -> None:
+    repository = repository_with_candidate()
+    first_command = ApplyReviewActionToRepositoryCommand(
+        candidate_id="idea-review-001",
+        review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION),
+        idempotency_key="review-action:identity:first",
+    )
+    first = apply_review_action_to_repository(first_command, repository=repository)
+    before_replay = repository.snapshot()
+
+    replayed = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id=first_command.candidate_id,
+            review=first_command.review,
+            idempotency_key="review-action:identity:retry",
+        ),
+        repository=repository,
+    )
+    after_replay = repository.snapshot()
+
+    assert first.persistence.decision is ReviewPersistenceDecision.ACCEPTED
+    assert replayed.review_result is None
+    assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
+    assert after_replay.candidate_records == before_replay.candidate_records
+    assert after_replay.outbox_events == before_replay.outbox_events
+    assert "review-action:identity:retry" in after_replay.idempotency_records
+
+
+def test_review_resource_identity_conflicts_before_terminal_state_validation() -> None:
+    repository = repository_with_candidate()
+    review_id = "review-resource-conflict-001"
+    apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=decision_command(ReviewAction.APPROVE_FOR_CONVERSION, review_id=review_id),
+            idempotency_key="review-action:identity-conflict:first",
+        ),
+        repository=repository,
+    )
+    before_conflict = repository.snapshot()
+
+    conflict = apply_review_action_to_repository(
+        ApplyReviewActionToRepositoryCommand(
+            candidate_id="idea-review-001",
+            review=decision_command(ReviewAction.REJECT, review_id=review_id),
+            idempotency_key="review-action:identity-conflict:changed",
+        ),
+        repository=repository,
+    )
+
+    assert conflict.review_result is None
+    assert conflict.persistence.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT
+    assert repository.snapshot() == before_conflict
+
+
 def test_apply_review_action_to_repository_detects_idempotency_conflict_without_mutation() -> None:
     repository = repository_with_candidate()
     apply_review_action_to_repository(
@@ -377,6 +432,50 @@ def test_record_feedback_to_repository_replays_before_reapplying_domain_feedback
     assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
     assert replayed.persistence.record == first.persistence.record
     assert len(replayed.persistence.record.feedback_events) == 1
+
+
+def test_feedback_resource_identity_replays_or_conflicts_independently_of_transport_key() -> None:
+    repository = repository_with_candidate()
+    first_command = RecordFeedbackToRepositoryCommand(
+        candidate_id="idea-review-001",
+        feedback=feedback_command(),
+        idempotency_key="review-feedback:identity:first",
+    )
+    first = record_feedback_to_repository(first_command, repository=repository)
+    before_retry = repository.snapshot()
+
+    replayed = record_feedback_to_repository(
+        RecordFeedbackToRepositoryCommand(
+            candidate_id=first_command.candidate_id,
+            feedback=first_command.feedback,
+            idempotency_key="review-feedback:identity:retry",
+        ),
+        repository=repository,
+    )
+    changed_feedback = FeedbackCommand(
+        feedback_id=first_command.feedback.feedback_id,
+        actor=first_command.feedback.actor,
+        access_scope=first_command.feedback.access_scope,
+        outcome=FeedbackOutcome.NOT_USEFUL,
+        reason_codes=first_command.feedback.reason_codes,
+        recorded_at_utc=first_command.feedback.recorded_at_utc,
+    )
+    conflict = record_feedback_to_repository(
+        RecordFeedbackToRepositoryCommand(
+            candidate_id=first_command.candidate_id,
+            feedback=changed_feedback,
+            idempotency_key="review-feedback:identity:changed",
+        ),
+        repository=repository,
+    )
+
+    assert first.persistence.decision is ReviewPersistenceDecision.ACCEPTED
+    assert replayed.feedback_result is None
+    assert replayed.persistence.decision is ReviewPersistenceDecision.REPLAYED
+    assert conflict.feedback_result is None
+    assert conflict.persistence.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT
+    assert repository.snapshot().candidate_records == before_retry.candidate_records
+    assert repository.snapshot().outbox_events == before_retry.outbox_events
 
 
 def test_record_feedback_to_repository_returns_not_found_for_missing_candidate() -> None:

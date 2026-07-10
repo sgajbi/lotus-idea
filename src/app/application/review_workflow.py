@@ -16,7 +16,9 @@ from app.domain import (
     ReviewPersistenceDecision,
     ReviewPersistenceResult,
     apply_review_action,
+    feedback_mutation_identity_from_command,
     record_feedback,
+    review_mutation_identity_from_command,
 )
 from app.ports.idea_repository import ReviewWorkflowRepository
 
@@ -75,6 +77,7 @@ def apply_review_action_to_repository(
     prechecked = repository.precheck_review_mutation(
         idempotency_key=command.idempotency_key,
         payload=payload,
+        identity=review_mutation_identity_from_command(record.candidate, command.review),
     )
     if prechecked is not None:
         return ReviewWorkflowResult(review_result=None, persistence=prechecked)
@@ -115,6 +118,7 @@ def record_feedback_to_repository(
     prechecked = repository.precheck_review_mutation(
         idempotency_key=command.idempotency_key,
         payload=payload,
+        identity=feedback_mutation_identity_from_command(record.candidate, command.feedback),
     )
     if prechecked is not None:
         return FeedbackWorkflowResult(feedback_result=None, persistence=prechecked)
@@ -140,6 +144,7 @@ def _review_payload(command: ApplyReviewActionToRepositoryCommand) -> dict[str, 
     return {
         "action": review.action.value,
         "actor_role": review.actor.role.value,
+        "actor_subject": review.actor.actor_subject,
         "candidate_id": command.candidate_id,
         "decided_at_utc": review.decided_at_utc.isoformat(),
         "reason_codes": [reason.value for reason in review.reason_codes],
@@ -157,6 +162,7 @@ def _feedback_payload(command: RecordFeedbackToRepositoryCommand) -> dict[str, A
     feedback = command.feedback
     return {
         "actor_role": feedback.actor.role.value,
+        "actor_subject": feedback.actor.actor_subject,
         "candidate_id": command.candidate_id,
         "feedback_id": feedback.feedback_id,
         "outcome": feedback.outcome.value,

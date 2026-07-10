@@ -36,6 +36,7 @@ class ReviewPersistenceDecision(StrEnum):
     ACCEPTED = "accepted"
     REPLAYED = "replayed"
     CONFLICT = "conflict"
+    IDENTITY_CONFLICT = "identity_conflict"
     NOT_FOUND = "not_found"
 
 
