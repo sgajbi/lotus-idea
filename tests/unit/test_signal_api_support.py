@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 import json
 from fastapi.responses import JSONResponse
+import pytest
 
 from app.api.signal_api_support import (
     SignalSourceRefContract,
@@ -15,8 +16,10 @@ from app.api.signal_api_support import (
     source_authority_from_contracts,
     source_authority_from_refs,
 )
+from app.api.idea_signals import _operation_outcome_from_candidate_persistence
 from app.domain import SourceSystem
 from app.domain import (
+    CandidatePersistenceDecision,
     OpportunityFamily,
     ReasonCode,
     SignalEvaluationOutcome,
@@ -25,6 +28,8 @@ from app.domain import (
 from app.domain.access_scope import ReviewAccessScope
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import CallerContext, CallerEntitlementScope
+from app.application.source_ingestion import _source_ingestion_decision
+from app.infrastructure.source_product_payloads import first_reason_code
 
 
 def test_source_authority_falls_back_for_mixed_source_refs() -> None:
@@ -34,6 +39,12 @@ def test_source_authority_falls_back_for_mixed_source_refs() -> None:
     )
 
     assert source_authority_from_refs(source_refs) == "source-owned"
+
+
+def test_source_authority_uses_the_single_ref_authority() -> None:
+    source_refs = (SimpleNamespace(source_system=SimpleNamespace(value="lotus-core")),)
+
+    assert source_authority_from_refs(source_refs) == "lotus-core"
 
 
 def test_source_authority_from_contracts_uses_expected_authority() -> None:
@@ -147,6 +158,72 @@ def test_signal_source_ref_one_of_contract_accepts_any_matching_contract() -> No
     )
 
     assert problem is None
+
+
+def test_signal_source_ref_one_of_contract_allows_no_contracts_or_ref() -> None:
+    def emit_event(*args: Any, **kwargs: Any) -> None:
+        del args, kwargs
+
+    assert (
+        signal_source_ref_one_of_contract_problem_or_none(
+            contracts=(),
+            source_authority="source-owned",
+            emit_event=emit_event,
+        )
+        is None
+    )
+    assert (
+        signal_source_ref_one_of_contract_problem_or_none(
+            contracts=(
+                SignalSourceRefContract(
+                    None,
+                    SourceSystem.LOTUS_CORE,
+                    ("lotus-core:PortfolioStateSnapshot:v1",),
+                ),
+            ),
+            source_authority="lotus-core",
+            emit_event=emit_event,
+        )
+        is None
+    )
+
+
+def test_candidate_persistence_outcomes_preserve_duplicate_and_conflict_semantics() -> None:
+    evaluation = SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+        family=OpportunityFamily.HIGH_CASH,
+        reason_codes=(ReasonCode.BELOW_MATERIALITY,),
+    )
+
+    assert (
+        _operation_outcome_from_candidate_persistence(
+            persistence_decision=CandidatePersistenceDecision.DUPLICATE_CANDIDATE,
+            evaluation=evaluation,
+        )
+        is OperationOutcome.DUPLICATE
+    )
+    assert (
+        _operation_outcome_from_candidate_persistence(
+            persistence_decision=CandidatePersistenceDecision.CONFLICT,
+            evaluation=evaluation,
+        )
+        is OperationOutcome.CONFLICT
+    )
+
+
+def test_source_ingestion_rejects_unpersisted_candidate_created_result() -> None:
+    evaluation = SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.CANDIDATE_CREATED,
+        family=OpportunityFamily.HIGH_CASH,
+        reason_codes=(ReasonCode.HIGH_CASH_RATIO,),
+    )
+
+    with pytest.raises(RuntimeError, match="was not persisted"):
+        _source_ingestion_decision(SimpleNamespace(evaluation=evaluation, persistence=None))
+
+
+def test_first_reason_code_returns_none_for_empty_or_non_text_reasons() -> None:
+    assert first_reason_code({"reasonCodes": [None, " ", 42]}) is None
 
 
 def test_signal_source_ref_one_of_contract_rejects_unknown_pair_without_leaking_ref() -> None:
