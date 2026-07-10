@@ -48,6 +48,17 @@ It returns:
 11. supported-feature promotion blockers,
 12. source-of-truth implementation paths.
 
+## Supported-Feature Reconciliation
+
+Supported-feature readiness is derived by
+`app.application.supported_feature_promotion`, the same evaluator used by
+`make supported-features-gate`. A status string alone cannot clear promotion
+blockers. Missing, malformed, unresolved, future-dated, or stale registry
+evidence remains source-safely blocked; valid current evidence is projected
+consistently by the application snapshot, API response, and generated proof
+artifact. `make supported-feature-promotion-contract-gate` prevents those
+consumers from restoring independent counting or hard-coded output.
+
 ## What It Does Not Prove
 
 The diagnostic is deliberately not full live journey proof. It does not:

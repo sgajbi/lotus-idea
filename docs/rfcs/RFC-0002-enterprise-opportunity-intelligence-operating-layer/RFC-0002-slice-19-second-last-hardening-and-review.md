@@ -932,3 +932,17 @@ pass:
    external broker publication, downstream delivery, platform mesh event
    publication, Gateway/Workbench support, client-ready publication, or
    supported-feature promotion.
+
+## Issue 331 Supported-Feature Promotion Reconciliation
+
+The structured supported-feature policy now lives in
+`app.application.supported_feature_promotion`; the CLI gate is a thin adapter,
+and implementation-proof readiness consumes the typed evaluation. A status
+string cannot clear promotion blockers without valid current evidence.
+
+`make supported-feature-promotion-contract-gate` statically requires both
+callers to use the shared evaluator, rejects restoration of the former counter,
+and binds API/generated output to the domain snapshot. Tests cover empty,
+planned/not-applicable, malformed, missing path, stale review, missing/invalid
+registry, and valid current evidence. This is design modularity inside the
+existing runtime, not a publication service or supported-feature promotion.

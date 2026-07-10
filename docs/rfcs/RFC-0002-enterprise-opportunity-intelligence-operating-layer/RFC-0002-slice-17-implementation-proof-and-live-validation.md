@@ -590,6 +590,14 @@ Workbench proof, or supported-feature proof.
 
 ## Acceptance Gate
 
+Issue #331 closes the readiness/gate reconciliation gap. Aggregate readiness
+no longer counts `status=implemented` independently: it consumes the typed
+promotion evaluation used by `make supported-features-gate`. API and generated
+artifact projections use the same count, blockers, and promotion boolean.
+Malformed, missing-evidence, stale, planned, and not-applicable fixtures fail
+closed; one fully evidenced current fixture proves consistent promotion. The
+current repository remains empty and unpromoted.
+
 1. All proof gaps are fixed inside RFC-0002 or the supported claim is narrowed.
 2. Evidence includes success, unsupported, degraded, denied, stale, duplicate,
    AI unavailable, and downstream failure paths.

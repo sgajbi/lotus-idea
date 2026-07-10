@@ -33,6 +33,7 @@ promoted.
 | `make postgres-integration-gate` | PostgreSQL-backed runtime proof when configured. |
 | `make container-runtime-smoke` | Container startup and health smoke proof. |
 | `make supported-features-gate` | Confirms no unproved support claim is promoted. |
+| `make supported-feature-promotion-contract-gate` | Confirms gate, readiness API, and generated artifact use one promotion evaluator. |
 
 ## Detailed Foundation Posture
 
@@ -369,6 +370,9 @@ any proof family lacks live evidence, and it must not be used as live implementa
 live broker runtime, downstream delivery, Gateway/Workbench proof,
 data-product certification, certified runtime trust telemetry, client-ready
 publication, or supported-feature promotion.
+Supported-feature posture is reconciled through the same structured evaluator
+as `make supported-features-gate`; malformed or stale evidence remains blocked
+with stable source-safe codes instead of being counted from status alone.
 The internal `GET /api/v1/downstream-realization/readiness` diagnostic is
 available for operators with `idea.downstream-realization.readiness.read` to
 inspect Advise, Manage, Report, Render, and Archive realization blockers over

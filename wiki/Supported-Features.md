@@ -15,6 +15,7 @@ a supported feature.
 | `features[]` | Empty |
 | Planned capability records | Present under `planned_capabilities[]` only |
 | Promotion gate | `make supported-features-gate` |
+| Runtime reconciliation gate | `make supported-feature-promotion-contract-gate` |
 
 ## Support Vocabulary
 
@@ -155,7 +156,11 @@ last-reviewed UTC timestamp, and the promotion decision reference. Planned
 capabilities remain under `planned_capabilities[]`; planned or not-applicable
 records under `features[]` do not count as supported-feature promotion and are
 rejected by `make supported-features-gate`. The implementation-proof readiness
-diagnostic counts only implemented `features[]` entries before clearing
+diagnostic uses the same structured evaluator as the gate before clearing
 `no_supported_features_promoted`. `make supported-features-gate` rejects
 placeholder, string-only, stale-path, uncertified-endpoint, planned, or
-not-applicable feature evidence. This does not promote any current feature.
+not-applicable feature evidence. Reviews older than 90 days additionally emit
+`supported_feature_promotion_evidence_stale`; invalid registry state emits
+`supported_feature_registry_invalid`. API and generated readiness artifacts
+project the same count and promotion state, and expose only safe registry refs.
+This does not promote any current feature.

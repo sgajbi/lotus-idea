@@ -1160,6 +1160,14 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     failure is explicit, request-volume telemetry stays separate, and no event
     or private-banking identity becomes a metric label. This remains internal
     design modularity; no separately scalable runtime is justified.
+31. Supported-feature promotion reconciliation: GitHub issue `#331` is
+    addressed by `app.application.supported_feature_promotion`, which owns the
+    structured registry and 90-day review-freshness policy used by both the CLI
+    gate and implementation-proof readiness. Invalid or stale evidence cannot
+    count as promoted; API and generated artifacts project the typed result,
+    and `make supported-feature-promotion-contract-gate` prevents independent
+    status counters or hard-coded output from returning. This is internal
+    design modularity with no runtime split or current feature promotion.
 
 Recently closed by PR `#273` and mainline validation:
 

@@ -286,7 +286,7 @@ Local gates keep claims grounded:
 
 | Control | Gate |
 | --- | --- |
-| Support and certification truth | `make implementation-truth-gate`, `make supported-features-gate` |
+| Support and certification truth | `make implementation-truth-gate`, `make supported-features-gate`, `make supported-feature-promotion-contract-gate` |
 | Documentation and issue closure | `make documentation-contract-gate`, `make github-issue-closure-matrix-gate` |
 | API, review, and conversion-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make conversion-outcome-contract-gate`, `make openapi-gate` |
 | Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make outbox-supportability-contract-gate`, `make outbox-supportability-rule-test`, `make ai-model-risk-ops-contract-gate` |

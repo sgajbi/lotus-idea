@@ -9,9 +9,12 @@ The registry lives at:
 
 1. `supported-features/supported-features.json`
 2. `supported-features/supported-features.schema.json`
-3. `scripts/supported_features_gate.py`
+3. `src/app/application/supported_feature_promotion.py`
+4. `scripts/supported_features_gate.py`
 
 Run `make supported-features-gate` before any branch claims a capability is supported.
+Run `make supported-feature-promotion-contract-gate` when gate, readiness API,
+or generated readiness projection code changes.
 
 ## Promotion Contract
 
@@ -29,6 +32,28 @@ An implemented supported-feature entry must carry structured evidence for:
 The gate rejects placeholder or string-only promotion evidence. It also resolves referenced code,
 contract, documentation, runbook, and test evidence so a registry entry cannot pass with invented
 paths or nonexistent pytest functions.
+
+The shared evaluator also requires `last_reviewed_utc` to be no more than 90
+days old and not later than the readiness evaluation time. The CLI gate and
+runtime readiness use that same evaluator. A missing, invalid, incomplete, or
+unresolved registry yields `supported_feature_registry_invalid`; an expired
+review additionally yields `supported_feature_promotion_evidence_stale`.
+Neither condition counts a feature or exposes validation details or filesystem
+paths through the API.
+
+## Runtime Reconciliation
+
+The implementation-proof readiness application, API response, and generated
+artifact derive promotion from the validated evaluator result. They do not
+count an `implemented` status string independently.
+
+| Registry state | Runtime result |
+| --- | --- |
+| Valid and empty | `no_supported_features_promoted` |
+| Planned or not-applicable record under `features[]` | `supported_feature_registry_invalid` |
+| Missing field, path, test, endpoint, or proof evidence | `supported_feature_registry_invalid` |
+| Review older than 90 days | Invalid plus `supported_feature_promotion_evidence_stale` |
+| Fully evidenced, current implemented entry | Counted and projected consistently by gate, API, and artifact |
 
 ## Non-Promotion Boundary
 

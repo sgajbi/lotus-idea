@@ -158,6 +158,14 @@ runtime telemetry evidence, and bounded platform onboarding proof only.
 
 ## Acceptance Gate
 
+Issue #331 hardens promotion truth before this gate can clear. The supported
+feature registry, CLI gate, implementation-proof readiness API, and generated
+artifact now consume one application-owned evaluator. It validates structured
+evidence, referenced paths/tests/endpoints, planned-capability separation, and
+a 90-day review window before counting an implemented feature. Invalid or
+stale evidence remains blocked with stable source-safe codes. This does not
+activate any data product or promote a current feature.
+
 1. No proposed product is marked active before implementation proof.
 2. Platform aggregation and certification pass.
 3. `/platform/capabilities` or equivalent product discovery reflects only
