@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
-
-from app.domain.idempotency import IdempotencyRecord
 from app.domain.review_governance import (
     ReviewMutationIdentity,
     ReviewMutationType,
@@ -55,36 +52,3 @@ def load_postgres_review_identity(
     if identity.mutation_type is ReviewMutationType.REVIEW_DECISION:
         return review_mutation_identity_from_decision(review_decision_from_json(payload))
     return feedback_mutation_identity_from_event(feedback_event_from_json(payload))
-
-
-def reserve_replayed_review_idempotency(
-    connection: PostgresConnection,
-    *,
-    record: IdempotencyRecord,
-    candidate_id: str,
-    occurred_at_utc: datetime,
-) -> bool:
-    with connection.cursor() as cursor:
-        cursor.execute(
-            """
-            INSERT INTO idea_idempotency_record (
-                idempotency_key, operation_name, payload_hash, candidate_id,
-                created_at_utc
-            ) VALUES (%s, %s, %s, %s, %s)
-            ON CONFLICT (idempotency_key) DO NOTHING
-            RETURNING idempotency_key
-            """,
-            (
-                record.key,
-                record.key.split(":", 1)[0],
-                record.payload_hash,
-                candidate_id,
-                occurred_at_utc,
-            ),
-        )
-        inserted = bool(cursor.fetchall())
-    if inserted:
-        connection.commit()
-    else:
-        connection.rollback()
-    return inserted

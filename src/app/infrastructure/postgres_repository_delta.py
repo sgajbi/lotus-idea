@@ -138,6 +138,7 @@ def apply_postgres_snapshot_delta(
             continue
 
         _insert_review_identity_delta(writer, cursor, before_record, after_record)
+        _insert_conversion_outcome_delta(writer, cursor, before_record, after_record)
         if after_record.candidate != before_record.candidate:
             writer._update_candidate_record(cursor, before_record, after_record)
         _insert_record_detail_delta(writer, cursor, before_record, after_record)
@@ -176,13 +177,6 @@ def _insert_record_detail_delta(
         if intent.intent.conversion_intent_id not in conversion_intent_ids:
             writer._insert_conversion_intent(cursor, candidate_id, intent)
 
-    conversion_outcome_ids = {
-        outcome.outcome.conversion_outcome_id for outcome in before.conversion_outcomes
-    }
-    for outcome in after.conversion_outcomes:
-        if outcome.outcome.conversion_outcome_id not in conversion_outcome_ids:
-            writer._insert_conversion_outcome(cursor, outcome)
-
     report_pack_ids = {pack.report_evidence_pack_id for pack in before.report_evidence_packs}
     for evidence_pack in after.report_evidence_packs:
         if evidence_pack.report_evidence_pack_id not in report_pack_ids:
@@ -214,3 +208,17 @@ def _insert_review_identity_delta(
     for feedback in after.feedback_events:
         if feedback.feedback.feedback_id not in feedback_ids:
             writer._insert_feedback_event(cursor, candidate_id, feedback)
+
+
+def _insert_conversion_outcome_delta(
+    writer: PostgresSnapshotDeltaWriter,
+    cursor: Any,
+    before: CandidatePersistenceRecord,
+    after: CandidatePersistenceRecord,
+) -> None:
+    conversion_outcome_ids = {
+        outcome.outcome.conversion_outcome_id for outcome in before.conversion_outcomes
+    }
+    for outcome in after.conversion_outcomes:
+        if outcome.outcome.conversion_outcome_id not in conversion_outcome_ids:
+            writer._insert_conversion_outcome(cursor, outcome)

@@ -155,6 +155,34 @@ REQUIRED_MIGRATIONS = (
             "CONSTRAINT ck_idea_outbox_recovery_lease_window",
         ),
     ),
+    MigrationContract(
+        version="006",
+        forward_path=MIGRATIONS_DIR / "006_conversion_outcome_lifecycle.sql",
+        rollback_path=MIGRATIONS_DIR / "006_conversion_outcome_lifecycle.rollback.sql",
+        required_tables=("idea_conversion_outcome_quarantine",),
+        required_indexes=(
+            "idx_idea_conversion_outcome_current",
+            "idx_idea_conversion_outcome_quarantine_intent",
+        ),
+        required_forward_fragments=(
+            "source_event_version INTEGER",
+            "supersedes_conversion_outcome_id TEXT",
+            "correction_reason TEXT",
+            "actor_subject TEXT",
+            "CONSTRAINT uq_idea_conversion_outcome_intent_version",
+            "UNIQUE (conversion_intent_id, source_event_version)",
+            "CONSTRAINT fk_idea_conversion_outcome_supersedes",
+            "CHECK (source_event_version > 0)",
+            "invalid_legacy_conversion_outcome_history",
+            "ON CONFLICT (conversion_outcome_id) DO NOTHING",
+        ),
+        required_rollback_fragments=(
+            "DROP CONSTRAINT IF EXISTS fk_idea_conversion_outcome_supersedes",
+            "DROP CONSTRAINT IF EXISTS uq_idea_conversion_outcome_intent_version",
+            "DROP COLUMN IF EXISTS source_event_version",
+            "DROP TABLE IF EXISTS idea_conversion_outcome_quarantine",
+        ),
+    ),
 )
 
 

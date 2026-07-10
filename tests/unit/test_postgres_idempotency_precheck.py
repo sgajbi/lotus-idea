@@ -9,6 +9,8 @@ from app.domain import (
     request_conversion_intent,
 )
 from app.domain.persistence import ConversionPersistenceDecision, ReviewPersistenceDecision
+from app.domain.idempotency import IdempotencyDecision, evaluate_idempotency
+from app.infrastructure.postgres_idempotency_reservation import reserve_replayed_idempotency
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
@@ -165,6 +167,43 @@ def test_postgres_review_identity_precheck_replays_and_reserves_a_new_transport_
         row["idempotency_key"] == "review:resource-precheck:changed"
         for row in connection.rows["idea_idempotency_record"]
     )
+
+
+def test_replay_reservation_revalidates_the_durable_winner() -> None:
+    connection = FakePostgresConnection()
+    _, winner = evaluate_idempotency(
+        key="review:concurrent-reservation",
+        payload={"reviewId": "review-001"},
+        existing=None,
+    )
+    _, conflicting = evaluate_idempotency(
+        key=winner.key,
+        payload={"reviewId": "review-002"},
+        existing=None,
+    )
+
+    accepted = reserve_replayed_idempotency(
+        connection,
+        record=winner,
+        candidate_id="candidate-001",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    replayed = reserve_replayed_idempotency(
+        connection,
+        record=winner,
+        candidate_id="candidate-001",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    conflict = reserve_replayed_idempotency(
+        connection,
+        record=conflicting,
+        candidate_id="candidate-001",
+        occurred_at_utc=EVALUATED_AT,
+    )
+
+    assert accepted is IdempotencyDecision.ACCEPTED
+    assert replayed is IdempotencyDecision.REPLAYED
+    assert conflict is IdempotencyDecision.CONFLICT
 
 
 def assert_bounded_idempotency_precheck_sql(executed_sql: tuple[str, ...]) -> None:

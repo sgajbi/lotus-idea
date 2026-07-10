@@ -63,7 +63,14 @@ class FailingConnection(RecordingConnection):
 def test_discover_migrations_requires_rollbacks() -> None:
     migrations = discover_migrations(ROOT / "migrations")
 
-    assert [migration.version for migration in migrations] == ["001", "002", "003", "004", "005"]
+    assert [migration.version for migration in migrations] == [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+    ]
     assert migrations[0].rollback_path.name == "001_idea_repository_foundation.rollback.sql"
     assert migrations[1].rollback_path.name == "002_ai_explanation_lineage.rollback.sql"
     assert migrations[2].rollback_path.name == "003_outbox_event_contract_constraints.rollback.sql"
@@ -90,13 +97,30 @@ def test_candidate_state_rollback_is_safe_when_the_foundation_table_is_absent() 
     assert "ALTER TABLE IF EXISTS idea_candidate_record" in rollback_sql
 
 
+def test_conversion_outcome_migration_quarantines_without_deleting_legacy_history() -> None:
+    apply_sql = (
+        ROOT / "migrations" / "006_conversion_outcome_lifecycle.sql"
+    ).read_text(encoding="utf-8")
+
+    assert "idea_conversion_outcome_quarantine" in apply_sql
+    assert "invalid_legacy_conversion_outcome_history" in apply_sql
+    assert "DELETE FROM idea_conversion_outcome" not in apply_sql.upper()
+
+
 def test_execute_migration_plan_commits_after_all_statements() -> None:
     connection = RecordingConnection()
     plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
 
     records = execute_migration_plan(connection, plan)
 
-    assert [record.version for record in records] == ["001", "002", "003", "004", "005"]
+    assert [record.version for record in records] == [
+        "001",
+        "002",
+        "003",
+        "004",
+        "005",
+        "006",
+    ]
     assert sum(record.statement_count for record in records) == len(
         connection.cursor_instance.statements
     )

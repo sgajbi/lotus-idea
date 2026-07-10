@@ -12,7 +12,14 @@ from tests.unit.postgres_repository_fake import FakePostgresConnection
 def test_postgres_repository_uses_downstream_only_readiness_projection() -> None:
     connection = FakePostgresConnection()
     connection.rows["idea_conversion_intent"] = [{}, {}]
-    connection.rows["idea_conversion_outcome"] = [{}]
+    connection.rows["idea_conversion_outcome"] = [
+        {"conversion_intent_id": "intent-001"},
+        {"conversion_intent_id": "intent-001"},
+        {"conversion_intent_id": "intent-invalid"},
+    ]
+    connection.rows["idea_conversion_outcome_quarantine"] = [
+        {"conversion_intent_id": "intent-invalid"}
+    ]
     connection.rows["idea_report_evidence_pack_request"] = [{}, {}, {}]
 
     summary = PostgresIdeaRepository(connection).downstream_realization_readiness_summary()
@@ -24,6 +31,7 @@ def test_postgres_repository_uses_downstream_only_readiness_projection() -> None
     assert "/* lotus-idea downstream-realization-readiness-summary */" in executed_sql
     assert "from idea_conversion_intent" in executed_sql
     assert "from idea_conversion_outcome" in executed_sql
+    assert "from idea_conversion_outcome_quarantine" in executed_sql
     assert "from idea_report_evidence_pack_request" in executed_sql
     for unrelated_table in (
         "idea_candidate_record",

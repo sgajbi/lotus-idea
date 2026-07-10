@@ -30,7 +30,13 @@ def load_downstream_realization_readiness_summary(
             SELECT
                 (SELECT COUNT(*) FROM idea_conversion_intent)::integer
                     AS conversion_intent_count,
-                (SELECT COUNT(*) FROM idea_conversion_outcome)::integer
+                (SELECT COUNT(DISTINCT conversion_intent_id)
+                 FROM idea_conversion_outcome AS outcome
+                 WHERE NOT EXISTS (
+                     SELECT 1
+                     FROM idea_conversion_outcome_quarantine AS quarantine
+                     WHERE quarantine.conversion_intent_id = outcome.conversion_intent_id
+                 ))::integer
                     AS conversion_outcome_count,
                 (SELECT COUNT(*) FROM idea_report_evidence_pack_request)::integer
                     AS report_evidence_pack_request_count

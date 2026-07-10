@@ -64,11 +64,19 @@ class FakePostgresCursor:
             self._rows = outbox_readiness_summary_row(self.connection, params)
             return
         if normalized.startswith("/* lotus-idea downstream-realization-readiness-summary */"):
+            quarantined_intents = {
+                row["conversion_intent_id"]
+                for row in self.connection.rows["idea_conversion_outcome_quarantine"]
+            }
             self._rows = [
                 {
                     "conversion_intent_count": len(self.connection.rows["idea_conversion_intent"]),
                     "conversion_outcome_count": len(
-                        self.connection.rows["idea_conversion_outcome"]
+                        {
+                            row["conversion_intent_id"]
+                            for row in self.connection.rows["idea_conversion_outcome"]
+                            if row["conversion_intent_id"] not in quarantined_intents
+                        }
                     ),
                     "report_evidence_pack_request_count": len(
                         self.connection.rows["idea_report_evidence_pack_request"]
@@ -128,6 +136,30 @@ class FakePostgresCursor:
                 for row in self.connection.rows["idea_feedback_event"]
                 if row["feedback_event_id"] == params[0]
             ]
+            return
+        if normalized.startswith("/* lotus-idea conversion-outcome-identity */"):
+            assert params is not None
+            self._rows = [
+                {"outcome_json": row["outcome_json"]}
+                for row in self.connection.rows["idea_conversion_outcome"]
+                if row["conversion_outcome_id"] == params[0]
+            ]
+            return
+        if normalized.startswith("/* lotus-idea conversion-outcome-history */"):
+            assert params is not None
+            rows = [
+                row
+                for row in self.connection.rows["idea_conversion_outcome"]
+                if row["conversion_intent_id"] == params[0]
+            ]
+            rows.sort(
+                key=lambda row: (
+                    row["source_event_version"],
+                    row["recorded_at_utc"],
+                    row["conversion_outcome_id"],
+                )
+            )
+            self._rows = [{"outcome_json": row["outcome_json"]} for row in rows]
             return
         if normalized.startswith("with selected"):
             assert params is not None
@@ -201,6 +233,23 @@ class FakePostgresCursor:
                 row = row_for_insert(table_name, params)
                 self.connection.rows[table_name].append(row)
                 self._rows = [{identity_column: resource_id}]
+                return
+            if table_name == "idea_conversion_outcome" and "on conflict" in normalized:
+                resource_id, conversion_intent_id = params[:2]
+                source_event_version = params[4]
+                if any(
+                    row["conversion_outcome_id"] == resource_id
+                    or (
+                        row["conversion_intent_id"] == conversion_intent_id
+                        and row["source_event_version"] == source_event_version
+                    )
+                    for row in self.connection.rows[table_name]
+                ):
+                    self._rows = []
+                    return
+                row = row_for_insert(table_name, params)
+                self.connection.rows[table_name].append(row)
+                self._rows = [{"conversion_outcome_id": resource_id}]
                 return
             self.connection.rows[table_name].append(row_for_insert(table_name, params))
             return
@@ -313,6 +362,7 @@ class FakePostgresConnection:
             "idea_feedback_event": [],
             "idea_conversion_intent": [],
             "idea_conversion_outcome": [],
+            "idea_conversion_outcome_quarantine": [],
             "idea_report_evidence_pack_request": [],
             "idea_downstream_submission": [],
             "idea_ai_explanation_lineage": [],
@@ -353,6 +403,7 @@ def _table_from_select(query: str) -> str:
         "idea_review_decision",
         "idea_feedback_event",
         "idea_conversion_intent",
+        "idea_conversion_outcome_quarantine",
         "idea_conversion_outcome",
         "idea_report_evidence_pack_request",
         "idea_downstream_submission",

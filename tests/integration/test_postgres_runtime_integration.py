@@ -7,7 +7,7 @@ from decimal import Decimal
 import os
 from pathlib import Path
 from threading import Barrier
-from typing import Any, Callable, Iterator, cast
+from typing import Any, Callable, Iterator, TypeVar, cast
 
 import psycopg
 import pytest
@@ -22,6 +22,9 @@ from app.application.source_ingestion import (
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.domain import (
     EvidenceFreshness,
+    ConversionOutcomeCommand,
+    ConversionOutcomeStatus,
+    ConversionPersistenceDecision,
     FeedbackCommand,
     FeedbackOutcome,
     ReasonCode,
@@ -33,11 +36,13 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     apply_review_action,
+    record_conversion_outcome,
     record_feedback,
 )
 from app.infrastructure.migrations import (
     MigrationConnection,
     MigrationDirection,
+    MigrationExecutionPlan,
     build_migration_plan,
     execute_migration_plan,
 )
@@ -65,9 +70,12 @@ POSTGRES_SCHEMA_TABLES = (
     "idea_feedback_event",
     "idea_conversion_intent",
     "idea_conversion_outcome",
+    "idea_conversion_outcome_quarantine",
     "idea_report_evidence_pack_request",
     "idea_ai_explanation_lineage",
 )
+
+_T = TypeVar("_T")
 
 
 @pytest.fixture
@@ -122,6 +130,79 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
     )
     assert _table_count(postgres_database_url, "idea_candidate_record") == 1
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
+
+
+def test_conversion_outcome_migration_quarantines_invalid_legacy_history(
+    postgres_database_url: str,
+) -> None:
+    apply_plan = build_migration_plan(MIGRATIONS_DIR, MigrationDirection.APPLY)
+    migration = next(step for step in apply_plan.steps if step.version == "006")
+    rollback_plan = MigrationExecutionPlan(
+        direction=MigrationDirection.ROLLBACK,
+        steps=(migration,),
+    )
+    migration_apply_plan = MigrationExecutionPlan(
+        direction=MigrationDirection.APPLY,
+        steps=(migration,),
+    )
+    with psycopg.connect(postgres_database_url) as connection:
+        execute_migration_plan(cast(MigrationConnection, connection), rollback_plan)
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO idea_candidate_record (
+                    candidate_id, family, lifecycle_status, review_posture,
+                    evidence_packet_id, evidence_hash, candidate_json,
+                    persisted_at_utc, updated_at_utc
+                ) VALUES (
+                    'legacy-outcome-candidate', 'high_cash', 'approved',
+                    'approved_for_conversion', 'legacy-evidence', 'legacy-hash',
+                    '{}'::jsonb, '2026-06-21T10:00:00Z', '2026-06-21T10:00:00Z'
+                );
+                INSERT INTO idea_conversion_intent (
+                    conversion_intent_id, candidate_id, target, actor_subject,
+                    intent_json, requested_at_utc
+                ) VALUES (
+                    'legacy-outcome-intent', 'legacy-outcome-candidate', 'report_evidence',
+                    'legacy-worker', '{}'::jsonb, '2026-06-21T10:01:00Z'
+                );
+                INSERT INTO idea_conversion_outcome (
+                    conversion_outcome_id, conversion_intent_id, source_system,
+                    status, outcome_json, recorded_at_utc
+                ) VALUES
+                    (
+                        'legacy-outcome-rejected', 'legacy-outcome-intent', 'lotus-report',
+                        'rejected', '{}'::jsonb, '2026-06-21T10:02:00Z'
+                    ),
+                    (
+                        'legacy-outcome-accepted', 'legacy-outcome-intent', 'lotus-report',
+                        'accepted', '{}'::jsonb, '2026-06-21T10:03:00Z'
+                    );
+                """
+            )
+        connection.commit()
+        execute_migration_plan(cast(MigrationConnection, connection), migration_apply_plan)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) FROM idea_conversion_outcome")
+            active_count = cursor.fetchone()
+            cursor.execute("SELECT COUNT(*) FROM idea_conversion_outcome_quarantine")
+            quarantine_count = cursor.fetchone()
+            cursor.execute(
+                """
+                SELECT COUNT(DISTINCT outcome.conversion_intent_id)
+                FROM idea_conversion_outcome AS outcome
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM idea_conversion_outcome_quarantine AS quarantine
+                    WHERE quarantine.conversion_intent_id = outcome.conversion_intent_id
+                )
+                """
+            )
+            readiness_count = cursor.fetchone()
+
+    assert active_count == (2,)
+    assert quarantine_count == (2,)
+    assert readiness_count == (0,)
 
 
 def test_postgres_migration_rollback_and_reapply_restores_runtime_contract(
@@ -429,6 +510,122 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
     assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
 
 
+def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version(
+    postgres_database_url: str,
+) -> None:
+    client = TestClient(app)
+    persisted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=_high_cash_payload(),
+        headers=_persistence_headers("postgres-conversion-lifecycle-persist"),
+    )
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+    _transition_candidate_to_review_ready(client, candidate_id)
+    approved = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+        json=_approve_review_payload(),
+        headers=_review_headers("postgres-conversion-lifecycle-review"),
+    )
+    assert approved.status_code == 200
+    intent_id = "postgres-concurrent-conversion-intent"
+    intent_response = client.post(
+        f"/api/v1/idea-candidates/{candidate_id}/conversion-intents",
+        json={**_conversion_intent_payload(), "conversionIntentId": intent_id},
+        headers=_conversion_intent_headers("postgres-conversion-lifecycle-intent"),
+    )
+    assert intent_response.status_code == 200
+    reset_idea_repository_for_tests()
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(Any, connection))
+        intent = repository.conversion_intent_by_id(intent_id)
+    assert intent is not None
+    accepted_command = ConversionOutcomeCommand(
+        conversion_outcome_id="postgres-concurrent-outcome-v1",
+        status=ConversionOutcomeStatus.ACCEPTED,
+        source_system=SourceSystem.LOTUS_REPORT,
+        source_event_version=1,
+        downstream_reference="postgres-report-reference",
+        recorded_at_utc=datetime(2026, 6, 21, 10, 20, tzinfo=UTC),
+        actor_subject="lotus-report-worker",
+    )
+    accepted_result = record_conversion_outcome(intent, accepted_command)
+    before_audit = _table_count(postgres_database_url, "idea_audit_event")
+    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+
+    identity_decisions = _run_concurrent_repository_mutations(
+        postgres_database_url,
+        lambda repository, key: (
+            repository.record_conversion_outcome(
+                accepted_result,
+                idempotency_key=key,
+                payload={"conversionOutcomeId": accepted_command.conversion_outcome_id},
+            ).decision
+        ),
+        ("outcome:concurrent-identity:first", "outcome:concurrent-identity:second"),
+    )
+
+    assert set(identity_decisions) == {
+        ConversionPersistenceDecision.ACCEPTED,
+        ConversionPersistenceDecision.REPLAYED,
+    }
+    assert _table_count(postgres_database_url, "idea_conversion_outcome") == 1
+    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
+    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        repository = PostgresIdeaRepository(cast(Any, connection))
+        history = repository.conversion_outcomes_for_intent(intent_id)
+    first_completion = record_conversion_outcome(
+        intent,
+        ConversionOutcomeCommand(
+            conversion_outcome_id="postgres-concurrent-completion-a",
+            status=ConversionOutcomeStatus.COMPLETED,
+            source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=2,
+            downstream_reference="postgres-report-reference",
+            recorded_at_utc=datetime(2026, 6, 21, 10, 21, tzinfo=UTC),
+            actor_subject="lotus-report-worker",
+        ),
+        existing_outcomes=history,
+    )
+    second_completion = record_conversion_outcome(
+        intent,
+        ConversionOutcomeCommand(
+            conversion_outcome_id="postgres-concurrent-completion-b",
+            status=ConversionOutcomeStatus.COMPLETED,
+            source_system=SourceSystem.LOTUS_REPORT,
+            source_event_version=2,
+            downstream_reference="postgres-report-reference",
+            recorded_at_utc=datetime(2026, 6, 21, 10, 21, tzinfo=UTC),
+            actor_subject="lotus-report-worker",
+        ),
+        existing_outcomes=history,
+    )
+    before_audit = _table_count(postgres_database_url, "idea_audit_event")
+    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+
+    version_decisions = _run_concurrent_repository_mutations(
+        postgres_database_url,
+        lambda repository, key: (
+            repository.record_conversion_outcome(
+                first_completion if key.endswith("first") else second_completion,
+                idempotency_key=key,
+                payload={"sourceEventVersion": 2},
+            ).decision
+        ),
+        ("outcome:concurrent-version:first", "outcome:concurrent-version:second"),
+    )
+
+    assert set(version_decisions) == {
+        ConversionPersistenceDecision.ACCEPTED,
+        ConversionPersistenceDecision.OUTCOME_CONFLICT,
+    }
+    assert _table_count(postgres_database_url, "idea_conversion_outcome") == 2
+    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
+    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
+
+
 def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     postgres_database_url: str,
 ) -> None:
@@ -521,12 +718,12 @@ def _table_count(database_url: str, table_name: str) -> int:
 
 def _run_concurrent_repository_mutations(
     database_url: str,
-    mutation: Callable[[PostgresIdeaRepository, str], ReviewPersistenceDecision],
+    mutation: Callable[[PostgresIdeaRepository, str], _T],
     idempotency_keys: tuple[str, str],
-) -> tuple[ReviewPersistenceDecision, ReviewPersistenceDecision]:
+) -> tuple[_T, _T]:
     barrier = Barrier(2)
 
-    def run(idempotency_key: str) -> ReviewPersistenceDecision:
+    def run(idempotency_key: str) -> _T:
         with psycopg.connect(database_url, row_factory=dict_row) as connection:
             repository = PostgresIdeaRepository(cast(Any, connection))
             barrier.wait(timeout=10)
@@ -535,7 +732,7 @@ def _run_concurrent_repository_mutations(
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = tuple(executor.submit(run, key) for key in idempotency_keys)
         return cast(
-            tuple[ReviewPersistenceDecision, ReviewPersistenceDecision],
+            tuple[_T, _T],
             tuple(future.result(timeout=20) for future in futures),
         )
 

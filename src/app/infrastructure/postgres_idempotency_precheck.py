@@ -12,10 +12,10 @@ from app.domain.persistence import (
 from app.domain.review_governance import ReviewMutationIdentity
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
 from app.infrastructure.postgres_idempotency_lookup import load_idempotency_record_by_key
+from app.infrastructure.postgres_idempotency_reservation import reserve_replayed_idempotency
 from app.infrastructure.postgres_protocols import PostgresConnection
 from app.infrastructure.postgres_review_identity import (
     load_postgres_review_identity,
-    reserve_replayed_review_idempotency,
 )
 
 
@@ -63,12 +63,17 @@ def precheck_postgres_review_mutation(
         payload=dict(payload),
         existing=None,
     )
-    reserve_replayed_review_idempotency(
+    reservation = reserve_replayed_idempotency(
         connection,
         record=idempotency_record,
         candidate_id=identity.candidate_id,
         occurred_at_utc=identity.occurred_at_utc,
     )
+    if reservation is IdempotencyDecision.CONFLICT:
+        return ReviewPersistenceResult(
+            decision=ReviewPersistenceDecision.CONFLICT,
+            record=record,
+        )
     return ReviewPersistenceResult(
         decision=ReviewPersistenceDecision.REPLAYED,
         record=record,

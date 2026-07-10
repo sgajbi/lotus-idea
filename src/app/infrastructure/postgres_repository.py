@@ -16,6 +16,7 @@ from app.domain.conversion_governance import (
     GovernedConversionOutcome,
     GovernedConversionIntent,
 )
+from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
 from app.domain.ideas import (
     IdeaCandidate,
     IdeaLifecycleStatus,
@@ -51,6 +52,11 @@ from app.domain.review_governance import (
 from app.infrastructure.postgres_candidate_writes import (
     ConcurrentIdempotencyMutationError,
     update_postgres_candidate_record,
+)
+from app.infrastructure.postgres_conversion_outcome import (
+    ConcurrentConversionOutcomeMutationError,
+    load_postgres_conversion_outcomes_for_intent,
+    precheck_postgres_conversion_outcome_mutation,
 )
 from app.infrastructure.postgres_codecs import (
     ai_explanation_lineage_from_json,
@@ -301,6 +307,29 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         conversion_intent_id: str,
     ) -> GovernedConversionIntent | None:
         return load_conversion_intent_by_id(self._connection, conversion_intent_id)
+
+    def conversion_outcomes_for_intent(
+        self,
+        conversion_intent_id: str,
+    ) -> tuple[GovernedConversionOutcome, ...]:
+        return load_postgres_conversion_outcomes_for_intent(
+            self._connection,
+            conversion_intent_id,
+        )
+
+    def precheck_conversion_outcome_mutation(
+        self,
+        *,
+        idempotency_key: str,
+        payload: Mapping[str, Any],
+        identity: ConversionOutcomeIdentity,
+    ) -> ConversionPersistenceResult | None:
+        return precheck_postgres_conversion_outcome_mutation(
+            self._connection,
+            idempotency_key=idempotency_key,
+            payload=payload,
+            identity=identity,
+        )
 
     def record_conversion_outcome(
         self,
@@ -1118,18 +1147,27 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
             """
             INSERT INTO idea_conversion_outcome (
                 conversion_outcome_id, conversion_intent_id, source_system,
-                status, outcome_json, recorded_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s)
+                status, source_event_version, supersedes_conversion_outcome_id,
+                correction_reason, actor_subject, outcome_json, recorded_at_utc
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT DO NOTHING
+            RETURNING conversion_outcome_id
             """,
             (
                 outcome.outcome.conversion_outcome_id,
                 outcome.conversion_intent_id,
                 outcome.source_system.value,
                 outcome.outcome.status.value,
+                outcome.source_event_version,
+                outcome.supersedes_conversion_outcome_id,
+                outcome.correction_reason,
+                outcome.actor_subject,
                 Jsonb(conversion_outcome_to_json(outcome)),
                 outcome.outcome.recorded_at_utc,
             ),
         )
+        if not cursor.fetchall():
+            raise ConcurrentConversionOutcomeMutationError(outcome.identity)
 
     def _insert_report_evidence_packs(
         self,

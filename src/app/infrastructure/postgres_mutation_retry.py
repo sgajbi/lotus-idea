@@ -4,6 +4,9 @@ from typing import Any, Callable, TypeVar
 
 from app.domain.persistence import InMemoryIdeaRepository
 from app.infrastructure.postgres_candidate_writes import ConcurrentIdempotencyMutationError
+from app.infrastructure.postgres_conversion_outcome import (
+    ConcurrentConversionOutcomeMutationError,
+)
 from app.infrastructure.postgres_repository_delta import apply_postgres_snapshot_delta
 from app.infrastructure.postgres_review_identity import ConcurrentReviewIdentityMutationError
 
@@ -32,7 +35,11 @@ def execute_postgres_mutation(
                 )
             connection.commit()
             return result
-        except (ConcurrentIdempotencyMutationError, ConcurrentReviewIdentityMutationError):
+        except (
+            ConcurrentIdempotencyMutationError,
+            ConcurrentReviewIdentityMutationError,
+            ConcurrentConversionOutcomeMutationError,
+        ):
             connection.rollback()
             if attempt_index == 0:
                 use_fresh_snapshot = True
