@@ -12,6 +12,9 @@ from app.api.downstream_submission_reconciliation_models import (
 )
 from app.api.durable_write_guard import durable_write_problem
 from app.api.idempotency import validate_idempotency_key
+from app.api.operation_events import (
+    emit_api_foundation_operation_event as _emit_event,
+)
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
@@ -32,10 +35,7 @@ from app.application.downstream_submission_reconciliation import (
 )
 from app.observability import (
     IdeaOperation,
-    OperationEvent,
     OperationOutcome,
-    OperationSupportability,
-    emit_operation_event,
 )
 from app.security.caller_context import (
     CapabilityPolicy,
@@ -206,25 +206,6 @@ def _permission_denied(action: str) -> JSONResponse:
         code="permission_denied",
         title="Permission denied",
         detail=f"The caller is not permitted to {action} downstream submissions.",
-    )
-
-
-def _emit_event(
-    operation: IdeaOperation,
-    outcome: OperationOutcome,
-    error_code: str | None = None,
-    *,
-    durable_storage_backed: bool = False,
-) -> None:
-    emit_operation_event(
-        OperationEvent(
-            operation=operation,
-            outcome=outcome,
-            supportability_status=OperationSupportability.NOT_CERTIFIED,
-            durable_storage_backed=durable_storage_backed,
-            supported_feature_promoted=False,
-            error_code=error_code,
-        )
     )
 
 
