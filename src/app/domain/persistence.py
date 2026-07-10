@@ -18,7 +18,6 @@ from app.domain.ai_lineage_idempotency import (
 from app.domain.events import (
     EventLineageContext,
     OutboxEventRecord,
-    build_candidate_outbox_event,
 )
 from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.downstream_submission import DownstreamSubmissionRecord
@@ -39,6 +38,7 @@ from app.domain.outbox_recovery import (
     dead_letter_summaries,
 )
 from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
+from app.domain.persistence_outbox import InMemoryOutboxWriteMixin
 from app.domain.persistence_conversion_outcomes import (
     conversion_outcome_identity_result,
     precheck_conversion_outcome_identity_mutation,
@@ -86,7 +86,7 @@ from app.domain.review_governance import (
 )
 
 
-class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
+class InMemoryIdeaRepository(InMemoryIdeaLookupMixin, InMemoryOutboxWriteMixin):
     """Internal persistence contract for RFC-0002 Slice 06 before a database adapter exists."""
 
     def __init__(self, snapshot: IdeaRepositorySnapshot | None = None) -> None:
@@ -1128,26 +1128,6 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         )
         self._candidate_records[candidate_id] = updated
         return updated, audit_event
-
-    def _append_outbox_event(
-        self,
-        *,
-        event_type: str,
-        aggregate_id: str,
-        occurred_at_utc: datetime,
-        payload: Mapping[str, str],
-        idempotency_key: str,
-        event_lineage: EventLineageContext | None,
-    ) -> None:
-        event = build_candidate_outbox_event(
-            event_type=event_type,
-            aggregate_id=aggregate_id,
-            occurred_at_utc=occurred_at_utc,
-            payload=payload,
-            idempotency_key=idempotency_key,
-            lineage=event_lineage,
-        )
-        self._outbox_events[event.event_id] = event
 
 
 def _audit_event(

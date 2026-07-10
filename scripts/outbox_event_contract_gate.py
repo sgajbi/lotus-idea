@@ -293,10 +293,8 @@ def _validate_lineage_implementation_alignment(errors: list[str]) -> None:
             "trace_id: str",
             "lineage_origin: EventLineageOrigin",
         ),
-        "src/app/domain/persistence.py": (
-            "event_lineage: EventLineageContext | None",
-            "lineage=event_lineage",
-        ),
+        "src/app/domain/persistence.py": ("event_lineage: EventLineageContext | None",),
+        "src/app/domain/persistence_outbox.py": ("lineage=event_lineage",),
         "src/app/ports/idea_repository.py": ("EventLineageContext",),
         "src/app/infrastructure/postgres_outbox_writes.py": (
             "event.trace_id",
