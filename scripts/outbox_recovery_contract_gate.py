@@ -17,6 +17,10 @@ REQUIRED_FRAGMENTS = {
         "publish_outbox_event_safely",
         "max_retry_count=claim.event.retry_count + 1",
     ),
+    "src/app/infrastructure/postgres_outbox_recovery.py": (
+        "outbox-dead-letter-by-support-reference",
+        "sha256(outbox_event_id::bytea)",
+    ),
     "src/app/api/outbox_recovery.py": (
         "idea.outbox-recovery.read",
         "idea.outbox-recovery.redrive",
@@ -29,6 +33,7 @@ REQUIRED_FRAGMENTS = {
         "original_first_failed_at_utc TIMESTAMPTZ NOT NULL",
         "original_last_failed_at_utc TIMESTAMPTZ NOT NULL",
         "CONSTRAINT uq_idea_outbox_recovery_event UNIQUE (outbox_event_id)",
+        "idx_idea_outbox_dead_letter_support_reference",
     ),
 }
 FORBIDDEN_RESPONSE_FIELDS = (
@@ -70,6 +75,13 @@ def validate_outbox_recovery_contract(repository_root: Path = ROOT) -> list[str]
         errors.append("src/app/domain/events.py: publication must preserve prior failure reason")
     if "first_failed_at_utc=event.first_failed_at_utc" not in events_content:
         errors.append("src/app/domain/events.py: publication must preserve first failure time")
+    postgres_content = (
+        repository_root / "src/app/infrastructure/postgres_outbox_recovery.py"
+    ).read_text(encoding="utf-8")
+    if "MAX_DEAD_LETTER_RECOVERY_LOOKUP_ROWS" in postgres_content:
+        errors.append("PostgreSQL recovery lookup must not impose an arbitrary row limit")
+    if "ORDER BY occurred_at_utc" in postgres_content:
+        errors.append("PostgreSQL recovery lookup must resolve the exact support reference")
     return sorted(errors)
 
 

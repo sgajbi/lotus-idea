@@ -141,6 +141,7 @@ REQUIRED_MIGRATIONS = (
         rollback_path=MIGRATIONS_DIR / "004_outbox_dead_letter_recovery.rollback.sql",
         required_tables=("idea_outbox_recovery_audit",),
         required_indexes=(
+            "idx_idea_outbox_dead_letter_support_reference",
             "idx_idea_outbox_recovery_support_reference",
             "idx_idea_outbox_recovery_requested_at",
         ),
@@ -153,6 +154,7 @@ REQUIRED_MIGRATIONS = (
             "original_last_failed_at_utc TIMESTAMPTZ NOT NULL",
             "CONSTRAINT uq_idea_outbox_recovery_event UNIQUE (outbox_event_id)",
             "CONSTRAINT ck_idea_outbox_recovery_lease_window",
+            "sha256(outbox_event_id::bytea)",
         ),
     ),
     MigrationContract(

@@ -1,5 +1,14 @@
 -- Governed, append-only operator recovery evidence for dead-lettered Idea outbox events.
 
+CREATE INDEX IF NOT EXISTS idx_idea_outbox_dead_letter_support_reference
+    ON idea_outbox_event ((
+        'outbox-dlq-' || substr(
+            encode(sha256(outbox_event_id::bytea), 'hex'),
+            1,
+            24
+        )
+    ));
+
 CREATE TABLE IF NOT EXISTS idea_outbox_recovery_audit (
     recovery_id TEXT PRIMARY KEY,
     outbox_event_id TEXT NOT NULL REFERENCES idea_outbox_event(outbox_event_id),

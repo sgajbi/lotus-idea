@@ -32,13 +32,34 @@ class PostgresConnection(Protocol):
     def rollback(self) -> None: ...
 
 
-OUTBOX_EVENT_RETURNING_COLUMNS = """
-outbox_event_id, event_type, aggregate_type, aggregate_id, schema_version,
-payload_json, status, occurred_at_utc, idempotency_fingerprint, correlation_id,
-trace_id, causation_id, lineage_origin, published_at_utc, failure_reason, retry_count, first_failed_at_utc,
-last_failed_at_utc, next_attempt_at_utc, lease_owner, lease_attempt_id,
-lease_expires_at_utc
-"""
+OUTBOX_EVENT_COLUMN_NAMES = (
+    "outbox_event_id",
+    "event_type",
+    "aggregate_type",
+    "aggregate_id",
+    "schema_version",
+    "payload_json",
+    "status",
+    "occurred_at_utc",
+    "idempotency_fingerprint",
+    "correlation_id",
+    "trace_id",
+    "causation_id",
+    "lineage_origin",
+    "published_at_utc",
+    "failure_reason",
+    "retry_count",
+    "first_failed_at_utc",
+    "last_failed_at_utc",
+    "next_attempt_at_utc",
+    "lease_owner",
+    "lease_attempt_id",
+    "lease_expires_at_utc",
+)
+OUTBOX_EVENT_RETURNING_COLUMNS = ", ".join(OUTBOX_EVENT_COLUMN_NAMES)
+OUTBOX_EVENT_CLAIM_RETURNING_COLUMNS = ", ".join(
+    f"event.{column_name}" for column_name in OUTBOX_EVENT_COLUMN_NAMES
+)
 
 
 def claim_outbox_events_for_delivery(
@@ -81,7 +102,7 @@ def claim_outbox_events_for_delivery(
                     lease_expires_at_utc = %s
                 FROM selected
                 WHERE event.outbox_event_id = selected.outbox_event_id
-                RETURNING {OUTBOX_EVENT_RETURNING_COLUMNS}
+                RETURNING {OUTBOX_EVENT_CLAIM_RETURNING_COLUMNS}
                 """,
                 (
                     OutboxEventStatus.PENDING.value,

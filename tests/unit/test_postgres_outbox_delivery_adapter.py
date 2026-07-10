@@ -86,6 +86,8 @@ def test_postgres_outbox_adapter_reports_dead_lettered_delivery_races() -> None:
         claimed_at_utc=EVALUATED_AT,
         lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=5),
     )
+    claim_sql = next(query for query in connection.executed_sql if "with selected as" in query)
+    assert "returning event.outbox_event_id" in claim_sql
 
     dead_lettered = repository.mark_outbox_event_failed(
         event.event_id,
@@ -149,6 +151,20 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
         failed_at_utc=EVALUATED_AT + timedelta(minutes=1),
         max_retry_count=1,
     )
+    target_row = next(
+        row
+        for row in connection.rows["idea_outbox_event"]
+        if row["outbox_event_id"] == event.event_id
+    )
+    connection.rows["idea_outbox_event"].extend(
+        {
+            **target_row,
+            "outbox_event_id": f"event-newer-{index:04d}",
+            "status": OutboxEventStatus.PENDING.value,
+            "occurred_at_utc": EVALUATED_AT + timedelta(days=1),
+        }
+        for index in range(1001)
+    )
     support_reference = outbox_dead_letter_support_reference(event.event_id)
     request_payload = outbox_recovery_request_payload(
         support_reference=support_reference,
@@ -192,6 +208,15 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
     assert records[0].original_failure_reason == "publisher_rejected"
     assert records[0].original_retry_count == 1
     assert "outbox-redrive:postgres:001" not in str(connection.rows)
+    lookup_sql = next(
+        query
+        for query in connection.executed_sql
+        if "outbox-dead-letter-by-support-reference" in query
+    )
+    assert "where (" in lookup_sql
+    assert "sha256(outbox_event_id::bytea)" in lookup_sql
+    assert "order by" not in lookup_sql
+    assert "limit" not in lookup_sql
     with pytest.raises(ValueError, match="event_id is required"):
         repository.mark_outbox_event_published(
             " ",

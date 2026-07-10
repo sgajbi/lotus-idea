@@ -14,7 +14,6 @@ from app.domain.outbox_recovery import (
     OutboxRecoveryDecision,
     build_outbox_recovery_audit_record,
     dead_letter_summary,
-    outbox_dead_letter_support_reference,
     outbox_recovery_eligibility_blocker,
 )
 from app.infrastructure.postgres_codecs import read_row_value
@@ -25,7 +24,6 @@ from app.infrastructure.postgres_outbox_delivery import (
 )
 
 
-MAX_DEAD_LETTER_RECOVERY_LOOKUP_ROWS = 1000
 OUTBOX_RECOVERY_RETURNING_COLUMNS = """
 recovery_id, outbox_event_id, support_reference, idempotency_fingerprint,
 request_fingerprint, actor_subject, recovery_reason, change_reference,
@@ -304,22 +302,22 @@ def _load_event_for_support_reference(
 ) -> OutboxEventRecord | None:
     cursor.execute(
         f"""
+        /* lotus-idea outbox-dead-letter-by-support-reference */
         SELECT {OUTBOX_EVENT_RETURNING_COLUMNS}
         FROM idea_outbox_event
-        ORDER BY occurred_at_utc DESC, outbox_event_id DESC
-        LIMIT %s
+        WHERE (
+            'outbox-dlq-' || substr(
+                encode(sha256(outbox_event_id::bytea), 'hex'),
+                1,
+                24
+            )
+        ) = %s
         FOR UPDATE
         """,
-        (MAX_DEAD_LETTER_RECOVERY_LOOKUP_ROWS,),
+        (support_reference,),
     )
-    return next(
-        (
-            event
-            for event in (outbox_event_from_row(row) for row in cursor.fetchall())
-            if outbox_dead_letter_support_reference(event.event_id) == support_reference
-        ),
-        None,
-    )
+    rows = cursor.fetchall()
+    return outbox_event_from_row(rows[0]) if rows else None
 
 
 def _load_event(cursor: Any, event_id: str) -> OutboxEventRecord | None:

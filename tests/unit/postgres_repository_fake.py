@@ -3,6 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any, Sequence
 
+from app.domain.outbox_recovery import outbox_dead_letter_support_reference
 from tests.unit.postgres_outbox_fake_helpers import (
     claim_outbox_event_rows,
     fail_outbox_event_row,
@@ -332,14 +333,13 @@ def _execute_outbox_recovery_query(
             }
         ]
         return True
-    if "from idea_outbox_event" in normalized and "order by occurred_at_utc desc" in normalized:
+    if normalized.startswith("/* lotus-idea outbox-dead-letter-by-support-reference */"):
         assert params is not None
-        rows = sorted(
-            connection.rows["idea_outbox_event"],
-            key=lambda row: (row["occurred_at_utc"], row["outbox_event_id"]),
-            reverse=True,
-        )
-        cursor._rows = rows[: params[0]]
+        cursor._rows = [
+            row
+            for row in connection.rows["idea_outbox_event"]
+            if outbox_dead_letter_support_reference(row["outbox_event_id"]) == params[0]
+        ]
         return True
     if normalized.startswith("insert into idea_outbox_recovery_audit"):
         assert params is not None
