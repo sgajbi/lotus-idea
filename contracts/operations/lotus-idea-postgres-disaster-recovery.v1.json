@@ -13,7 +13,7 @@
   "recovery_objectives": {
     "rpo_minutes": 15,
     "rto_minutes": 60,
-    "rpo_measurement": "recovery_point_utc minus latest_durable_commit_utc",
+    "rpo_measurement": "incident_cutoff_utc minus recovery_point_utc",
     "rto_measurement": "authorized_restore_start_utc through validated_service_ready_utc"
   },
   "backup_and_pitr": {

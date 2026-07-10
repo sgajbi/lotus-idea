@@ -19,7 +19,12 @@ EXPECTED_HEADER = {
     "certification_status": "not_certified",
     "supported_feature_promoted": False,
 }
-EXPECTED_OBJECTIVES = {"rpo_minutes": 15, "rto_minutes": 60}
+EXPECTED_OBJECTIVES = {
+    "rpo_minutes": 15,
+    "rto_minutes": 60,
+    "rpo_measurement": "incident_cutoff_utc minus recovery_point_utc",
+    "rto_measurement": "authorized_restore_start_utc through validated_service_ready_utc",
+}
 EXPECTED_BACKUP_POLICY = {
     "strategy": "physical_base_backup_plus_continuous_wal_archiving",
     "base_backup_frequency_hours": 24,

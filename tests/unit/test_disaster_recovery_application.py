@@ -61,7 +61,6 @@ def test_restore_use_case_reports_every_independent_failure_without_short_circui
         recovery_point_utc=NOW - timedelta(hours=2),
         incident_cutoff_utc=NOW - timedelta(hours=1),
         restore_started_at_utc=NOW - timedelta(hours=1),
-        service_ready_at_utc=NOW,
     )
 
     evidence = ValidateRestoredDatabase(StubInspector(snapshot), policy(), now=lambda: NOW).execute(
@@ -99,6 +98,17 @@ def test_restore_policy_allows_only_declared_legacy_unvalidated_constraint() -> 
     assert evidence.status is RestoreValidationStatus.PASSED
 
 
+def test_restore_use_case_rejects_readiness_time_before_restore_started() -> None:
+    use_case = ValidateRestoredDatabase(
+        StubInspector(valid_snapshot()),
+        policy(),
+        now=lambda: NOW - timedelta(minutes=16),
+    )
+
+    with pytest.raises(ValueError, match="must not be before restore_started_at_utc"):
+        use_case.execute(valid_request())
+
+
 @pytest.mark.parametrize(
     ("changes", "message"),
     [
@@ -133,7 +143,6 @@ def valid_request() -> RestoreDrillRequest:
         incident_cutoff_utc=NOW - timedelta(minutes=20),
         recovery_point_utc=NOW - timedelta(minutes=25),
         restore_started_at_utc=NOW - timedelta(minutes=15),
-        service_ready_at_utc=NOW,
     )
 
 

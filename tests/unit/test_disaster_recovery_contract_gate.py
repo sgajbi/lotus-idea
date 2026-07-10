@@ -23,6 +23,7 @@ def test_disaster_recovery_contract_rejects_false_certification_and_weak_backup_
     payload["certification_status"] = "certified"
     payload["backup_and_pitr"]["logical_dump_is_pitr_proof"] = True
     payload["evidence_requirements"]["real_restored_backup_required"] = False
+    payload["recovery_objectives"]["rpo_measurement"] = "backup_age"
 
     errors = validate_payload(module, tmp_path, payload)
 
@@ -32,6 +33,10 @@ def test_disaster_recovery_contract_rejects_false_certification_and_weak_backup_
         "disaster recovery evidence requirements real_restored_backup_required must be True"
         in errors
     )
+    assert (
+        "disaster recovery recovery objectives rpo_measurement must be "
+        "'incident_cutoff_utc minus recovery_point_utc'"
+    ) in errors
 
 
 def test_disaster_recovery_contract_rejects_migration_inventory_drift(tmp_path: Path) -> None:
