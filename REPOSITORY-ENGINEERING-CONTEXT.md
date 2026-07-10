@@ -66,6 +66,10 @@ Current implementation includes these bounded foundations:
    certification,
 10. implementation-proof readiness diagnostics that aggregate blockers instead
     of promoting support.
+11. a canonical opportunity-source proof runner that composes existing source
+    adapters and proof generators, binds aggregate evidence to source revision,
+    correlation, and trace IDs, and fails closed on stale or incomplete source
+    evidence without persisting raw child process output.
 
 The first canonical demo/front-office portfolio remains
 `PB_SG_GLOBAL_BAL_001` when a governed Lotus front-office flow requires a
@@ -216,7 +220,9 @@ runtime modularity:
    codecs, downstream HTTP client, publisher, and proof persistence helpers.
 6. `src/app/runtime/`: runtime composition from environment variables.
 7. `scripts/`: repo-native proof generators, gates, validation utilities, and
-   operator helpers.
+   operator helpers, including
+   `run_canonical_opportunity_source_proofs.py` for source-specific live proof
+   aggregation.
 
 Design modularity does not imply runtime modularity. Do not introduce a new
 process, service, queue, worker class, or separately scalable boundary unless
@@ -615,6 +621,7 @@ make downstream-route-contract-proof-gate
 make outbox-broker-proof-contract-gate
 make runtime-trust-telemetry-proof-contract-gate
 make source-ingestion-live-proof-contract-gate
+make canonical-opportunity-source-proofs
 make source-ingestion-scheduled-worker-check
 make quality-scorecard-gate
 make repository-hygiene-gate

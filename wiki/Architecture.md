@@ -217,6 +217,21 @@ each source-backed route so timeout, unavailable-source, and cleanup-failure
 behavior stays observable and testable. This reduces design-time duplication
 without changing runtime topology.
 
+### Canonical Source-Proof Runner
+
+`scripts/run_canonical_opportunity_source_proofs.py` is an operator automation
+boundary over the existing source-proof generators. It invokes Risk
+concentration, Performance underperformance, and Performance
+benchmark-readiness proof use cases, validates each returned artifact, and
+writes one aggregate result. It records source revision, dirty-tree status,
+correlation, and trace IDs while suppressing child process output.
+
+The runner is not a new runtime service and does not move source authority into
+`lotus-idea`. A blocked or stale upstream result makes the aggregate
+`certificationReady=false`; a valid child proof clears only its named source
+blocker. Use [Canonical Opportunity Source Proofs](Canonical-Opportunity-Source-Proofs)
+for the preconditions, command, and current non-proof boundaries.
+
 `POST /api/v1/idea-signals/high-cash/evaluate` and
 `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` are the first
 certified internal API foundations. They evaluate caller-supplied, source-owned

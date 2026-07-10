@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - high-cash domain policy plus Core source-port, bounded Core-backed `evaluate-from-source` API foundation, concentration-risk policy plus Risk source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, high-volatility policy plus narrowed Risk volatility source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, drawdown-review policy plus narrowed Risk drawdown source-port/adapter/live-proof and caller-supplied plus bounded Risk-backed `evaluate-from-source` API foundations, underperformance policy plus narrowed Performance underperformance source-port/adapter/live-proof and caller-supplied plus bounded Performance-backed `evaluate-from-source` API foundations, allocation-drift mandate-review policy plus Manage action-register posture source-port/adapter/live-proof and caller-supplied plus bounded Manage-backed `evaluate-from-source` API foundations, bond-maturity / reinvestment deterministic policy plus Core `PortfolioMaturitySummary:v1` source-adapter consumption and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing suitability context policy plus Advise policy-evaluation workflow source-port/adapter/live-proof and caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, missing risk-profile evidence-gap policy plus caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, mandate/restriction review policy plus explicit Advise restriction diagnostic consumption and caller-supplied plus bounded Advise-backed `evaluate-from-source` API foundations, low-income / liquidity-shortfall policy plus Core cashflow source-port/adapter/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, missing-benchmark review policy plus Core benchmark-assignment source-port/live-proof and caller-supplied plus bounded Core-backed `evaluate-from-source` API foundations, route-level caller-supplied source-ref contract validation before candidate creation, run-once worker, and scheduled-worker deploy-contract foundation
+Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied routes use a shared ordered API boundary for entitlement, source-contract validation, DTO mapping, application evaluation, event emission, and response projection. The repo-native canonical opportunity-source proof runner now binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. Live Risk concentration and Performance underperformance evidence are current for the governed canonical portfolio; Performance benchmark-readiness remains fail-closed while returns-series evidence is pending. Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
 
 ## Outcome
 
@@ -877,12 +877,12 @@ Additional implemented mandate health source-product ref foundation:
 
 Not implemented yet:
 
-1. live Risk concentration source proof captured from an actual canonical
-   runtime and merged as release evidence,
-2. live Performance returns-series source proof captured from an actual
-   canonical runtime and merged as release evidence,
-3. live Performance benchmark-readiness proof captured from an actual canonical
-   runtime and merged as release evidence,
+1. merged release evidence for the current live Risk concentration proof,
+2. merged release evidence for the current live Performance returns-series
+   proof,
+3. live Performance benchmark-readiness proof with current returns-series
+   evidence; the canonical run currently reports
+   `performance_returns_series_pending`,
 4. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
    live proof beyond the source-safe Manage mandate proof contract and Core
    portfolio-state source-ref proof,
@@ -903,6 +903,37 @@ approval blocker. The new Risk live-proof artifact contract can clear the live
 Risk source blocker only when valid source-safe evidence is supplied; data-product
 certification, Gateway/Workbench proof, client-publication, and supported-feature
 promotion remain blocked.
+
+## Canonical Source-Proof Execution
+
+The repo-native runner `scripts/run_canonical_opportunity_source_proofs.py`
+executes the existing source adapters and proof generators for the governed
+canonical portfolio. It writes one aggregate artifact only when each child
+artifact is contract-valid; a blocked or stale source remains a failed
+certification result.
+
+```powershell
+make canonical-opportunity-source-proofs `
+  CANONICAL_OPPORTUNITY_PORTFOLIO_ID=PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_AS_OF_DATE=2026-04-10 `
+  CANONICAL_OPPORTUNITY_RISK_BASE_URL=http://risk.dev.lotus `
+  CANONICAL_OPPORTUNITY_PERFORMANCE_BASE_URL=http://performance.dev.lotus `
+  CANONICAL_OPPORTUNITY_GENERATED_AT_UTC=2026-07-10T00:00:00Z `
+  CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC=2026-07-10T00:00:00Z `
+  CANONICAL_OPPORTUNITY_CORRELATION_ID=corr-canonical-proof `
+  CANONICAL_OPPORTUNITY_TRACE_ID=trace-canonical-proof
+```
+
+The 2026-07-10 canonical run proved current Risk concentration and
+Performance underperformance evidence. Performance benchmark-readiness was
+blocked by `performance_returns_series_pending`; the aggregate therefore
+remained `certificationReady=false`. The aggregate records `sourceRevision`,
+`sourceTreeDirty`, correlation, trace, per-proof observations, and explicit
+non-proof boundaries. Raw child process output is intentionally excluded.
+
+This is implementation-proof automation, not Gateway/Workbench certification,
+data-product activation, client publication approval, official performance or
+risk calculation authority, or supported-feature promotion.
 
 ## Golden Scenarios
 

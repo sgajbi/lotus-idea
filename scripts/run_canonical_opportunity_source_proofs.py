@@ -81,7 +81,9 @@ def main(argv: list[str] | None = None) -> int:
             summaries=summaries,
         )
         aggregate_path = output_directory / "canonical-opportunity-source-proofs.json"
-        aggregate_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        aggregate_path.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"canonical opportunity source proof configuration error: {exc}", file=sys.stderr)
         return 2
@@ -226,9 +228,7 @@ def _aggregate_payload(
     source_tree_dirty: bool,
     summaries: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    ready = all(
-        summary["exitCode"] == 0 and summary["artifactValid"] for summary in summaries
-    )
+    ready = all(summary["exitCode"] == 0 and summary["artifactValid"] for summary in summaries)
     return {
         "schemaVersion": AGGREGATE_SCHEMA_VERSION,
         "repository": "lotus-idea",
