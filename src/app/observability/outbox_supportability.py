@@ -70,7 +70,7 @@ class OutboxDeliverySupportabilityCollector:
             labels=["repository", "state"],
         )
         for state in OUTBOX_DELIVERY_STATES:
-            state_metric.add_metric([snapshot.repository, state], float(state_values[state]))
+            state_metric.add_metric([snapshot.repository, state], state_values[state])
         yield state_metric
 
         age_metric = GaugeMetricFamily(
