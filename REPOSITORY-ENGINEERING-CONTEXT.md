@@ -1117,6 +1117,16 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     policy telemetry. This is internal design modularity in the existing
     process; no workload, isolation, ownership, or operability evidence
     justifies a separate runtime service.
+27. Review and feedback resource identity: GitHub issue `#327` is addressed by
+    `ReviewMutationIdentity`, application prechecks before domain mutation, and
+    repeated in-memory/PostgreSQL adapter enforcement. `reviewId` and
+    `feedbackId` bind candidate, evidence, actor, event, reasons, and time
+    independently of `Idempotency-Key`. Equivalent content under a new key
+    replays; changed content returns `review_identity_conflict`. PostgreSQL
+    claims resource identity before candidate/audit/outbox writes and retries a
+    collision from fresh state. `make review-identity-contract-gate` prevents
+    ordering and API-contract regression. This remains internal design
+    modularity; no runtime split is justified.
 
 Recently closed by PR `#273` and mainline validation:
 
@@ -1233,7 +1243,8 @@ Current gaps remain explicit:
 11. no full production identity-provider integration, signed caller assertion,
     or Workbench entitlement-denied proof for caller-context authorization,
 12. no production multi-process PostgreSQL concurrency certification beyond
-    adapter-level stale-write and idempotency-collision proof,
+    adapter-level stale-write, idempotency-collision, and review-resource
+    identity-collision proof,
 13. no full container-filesystem SBOM; release evidence includes
     runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
     image signature, and provenance/SBOM attestations,

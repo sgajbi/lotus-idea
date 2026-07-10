@@ -76,6 +76,18 @@ Implemented in this slice:
 18. Review queue and PostgreSQL readiness projections classify contradictory
     legacy snapshots as `invalid_state` and never count or decode them as normal
     advisor work items.
+19. GitHub issue `#327` defines `reviewId` and `feedbackId` as durable resource
+    identities independent of the HTTP `Idempotency-Key`. Identity binds
+    candidate, evidence, actor, action/outcome, reasons, time, and applicable
+    feedback lineage.
+20. Equivalent content under a new transport key replays before domain
+    lifecycle mutation and creates no second decision, feedback, audit, or
+    outbox event. Changed identity returns product-safe
+    `review_identity_conflict`.
+21. PostgreSQL claims resource identity before candidate mutation and retries a
+    collision once from fresh state. The same behavior is covered in the
+    process-local adapter, API, fake PostgreSQL concurrency suite, OpenAPI named
+    examples, and `make review-identity-contract-gate`.
 
 Validation evidence from the implementation slice:
 

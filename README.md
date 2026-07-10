@@ -94,7 +94,7 @@ existing deployable service.
 | `src/app/middleware/` | Correlation, trusted hosts, CORS, request-size limits, JSON write controls, and security headers. |
 | `src/app/observability/` | Structured logging, metrics, tracing, correlation, and operation events. |
 | `contracts/` | Data-mesh, SLO, access, evidence-policy, downstream, trust telemetry, and readiness contracts. |
-| `docs/` and `wiki/` | RFCs, operator runbooks, architecture evidence, demo posture, and GitHub wiki source. |
+| `docs/` and `wiki/` | RFCs, operator runbooks, architecture standards, demo posture, and GitHub wiki source. |
 
 ### Request Path
 
@@ -288,7 +288,7 @@ Local gates keep claims grounded:
 | --- | --- |
 | Support and certification truth | `make implementation-truth-gate`, `make supported-features-gate` |
 | Documentation and issue closure | `make documentation-contract-gate`, `make github-issue-closure-matrix-gate` |
-| API boundary and OpenAPI truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make openapi-gate` |
+| API and review-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make openapi-gate` |
 | Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make ai-model-risk-ops-contract-gate` |
 | Modularity and modern code posture | `make maintainability-gate`, `make duplicate-implementation-gate`, `make private-import-boundary-gate` |
 | Local evidence hygiene | `make no-sensitive-content-guard`, `make repository-hygiene-gate` |

@@ -537,3 +537,18 @@ domain matrix and classify historical contradictions as `invalid_state`.
 The constraint remains `NOT VALID` until controlled legacy reconciliation is
 complete. This avoids deployment-time data loss and does not turn quarantine
 into a supported operator repair feature.
+
+## Issue 327 Review Resource Identity Hardening
+
+Review decisions and feedback events now preserve business-resource identity
+independently of the HTTP `Idempotency-Key`. The domain binds resource ID,
+candidate, evidence, actor, event, reasons, and event time. Application
+prechecks resolve an equivalent new-key retry before lifecycle mutation, while
+the repository repeats the decision at the persistence boundary.
+
+PostgreSQL claims review or feedback identity before candidate, audit, and
+outbox writes. A primary-key collision rolls back and retries once from fresh
+state, producing deterministic replay or `review_identity_conflict` without a
+duplicate side effect or raw database error. Existing primary keys provide the
+schema authority, so no migration is required. The design remains an internal
+bounded module and does not promote Slice 6 or a supported feature.

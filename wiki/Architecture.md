@@ -738,10 +738,23 @@ runtime service.
 The internal application layer can apply governed advisor review actions and
 feedback after bounded candidate lookup, then persist accepted decisions,
 feedback events, safe audit evidence, lifecycle history, and idempotency
-replay/conflict posture through the Slice 06 repository contract. This is still an internal
-foundation; PostgreSQL-backed review workflow proof exists only inside the
-opt-in runtime proof, while Gateway/Workbench functionality and supported
-review-product promotion remain planned.
+replay/conflict posture through the Slice 06 repository contract.
+
+### Review And Feedback Resource Identity
+
+`reviewId` and `feedbackId` are durable business-resource identities, not
+aliases for `Idempotency-Key`. Identity binds candidate, evidence, actor,
+action/outcome, reasons, event time, and resource-specific lineage. Equivalent
+content under another transport key replays before lifecycle mutation; changed
+content returns `review_identity_conflict` without exposing prior content.
+
+PostgreSQL claims review or feedback primary-key identity before candidate,
+audit, and outbox writes. A collision rolls back and retries once from fresh
+state, converging to replay or typed conflict without duplicate side effects or
+raw database errors. This remains an internal bounded module; a runtime service
+split has no workload, failure-isolation, ownership, or operability evidence.
+Gateway/Workbench functionality and supported review-product promotion remain
+planned.
 
 ## Architecture Decisions
 

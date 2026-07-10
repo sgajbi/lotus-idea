@@ -60,6 +60,14 @@ projection instead of whole-store snapshot hydration. It is still not production
 storage certification, and future adapter work should continue moving hot
 precheck/replay paths toward database-native conditional reads and writes where
 that reduces contention.
+
+Review and feedback resources also have identity independent of the HTTP
+`Idempotency-Key`. Equivalent `reviewId` or `feedbackId` submissions under a
+new key replay without candidate, audit, or outbox duplication. Changed
+candidate, evidence, actor, action/outcome, reason, lineage, or timestamp returns
+`review_identity_conflict`. PostgreSQL claims the resource primary key before
+candidate mutation and retries one collision from fresh state; see
+`docs/architecture/review-feedback-identity-and-idempotency.md`.
 Review and feedback mutation governance now uses the persisted candidate access
 scope after bounded candidate lookup. Request `accessScope` remains request
 shape, but it is not the runtime authorization target; trusted caller

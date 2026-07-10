@@ -86,7 +86,10 @@ Current RFC-0002 implementation-start baseline:
    high-cash persistence/replay plus first internal
    source-ingestion replay/conflict recovery, manifest-backed run-once
    ingestion worker CLI with check-only gate, and
-   review/feedback/conversion/report workflow proof. A certified internal
+   review/feedback/conversion/report workflow proof. Review and feedback
+   resource IDs are governed independently of HTTP idempotency keys, with
+   equivalent new-key replay, changed-content conflict, and atomic PostgreSQL
+   collision handling before candidate/audit/outbox writes. A certified internal
    outbox-delivery-readiness diagnostic and run-once operator action now
    report aggregate backlog/status posture, durable repository posture, broker
    configuration posture, certification blockers, and source-safe operator run
@@ -102,7 +105,8 @@ Current RFC-0002 implementation-start baseline:
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, queue projection interaction, repository-backed
    persistence orchestration, and certified internal review/feedback API
-   foundations with PostgreSQL-backed internal workflow proof but without
+   foundations with lifecycle-state and resource-identity contract gates plus
+   PostgreSQL-backed internal workflow proof but without
    Gateway, Workbench, PM/compliance/operator queue surfaces, mesh
    certification, or supported-feature promotion.
 10. Slice 09 partially implements internal AI governance with redacted evidence

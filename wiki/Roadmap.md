@@ -36,7 +36,8 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    policy plus the first Core source-port and conservative HTTP adapter
    foundation,
 9. RFC-0002 Slice 06 partially implements internal persistence, replay,
-   idempotency, lifecycle audit history, recovery primitives, and high-cash
+   transport idempotency, review/feedback resource identity, lifecycle audit
+   history, recovery primitives, and high-cash
    evaluate-and-persist orchestration plus the manifest-backed run-once
    source-ingestion worker CLI and check-only gate,
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
@@ -46,8 +47,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    repository-side queue page projection,
 11. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance plus workflow persistence with fail-closed scope checks, review
-   actions, safe audit events, source provenance, idempotency replay/conflict,
-   and queue projection interaction,
+    actions, safe audit events, source provenance, idempotency replay/conflict,
+    business-resource replay/conflict across transport keys, atomic persistence,
+    and queue projection interaction,
 12. RFC-0002 Slice 09 partially implements internal AI governance with redacted
     evidence envelopes, verifier/fallback controls, safe audit events,
     certified internal AI explanation evaluator API, a not-certified AI
