@@ -146,9 +146,16 @@ value for support lookup.
 Caller-context dependency failures preserve the stable API vocabulary: blank
 entitlement-scope headers return `400 invalid_request`, while missing or
 invalid trusted caller-context provenance returns `403 permission_denied`.
-These details are product-safe and contain no raw header values; unrelated
-framework `HTTPException` failures retain the generic `request_rejected`
-fallback.
+Runtime bodies use `application/problem+json` and include the sanitized
+`X-Correlation-Id` response header. Operation diagnostics use only the route
+template, status, and bounded `caller_context_invalid_request` or
+`caller_context_permission_denied` category; they never include raw token,
+header, tenant, book, portfolio, or client-scope values. Generated OpenAPI also
+publishes both caller-boundary examples for every protected operation.
+Unrelated framework `HTTPException` failures retain the generic
+`request_rejected` fallback. Run `make caller-context-contract-gate` after any
+caller dependency, global exception handler, protected-route registration, or
+OpenAPI customization change.
 
 These controls improve service boundary posture only. They do not certify
 Gateway/Workbench browser support, external API support, client publication,

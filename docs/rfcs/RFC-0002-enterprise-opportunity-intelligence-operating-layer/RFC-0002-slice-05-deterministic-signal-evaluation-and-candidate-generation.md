@@ -1184,6 +1184,29 @@ Current trusted Core tenant validation:
    ingestion, OpenAPI, test, and telemetry parity. This is internal design
    modularity only; no runtime split is justified.
 
+Current caller-context boundary certification:
+
+1. Shared dependency failures preserve exact `400 invalid_request` and
+   `403 permission_denied` status, code, title, and product-safe detail through
+   the global exception handler; unrelated framework failures retain the
+   generic `request_rejected` fallback.
+2. Runtime responses use `application/problem+json`, return the sanitized
+   `X-Correlation-Id`, and emit only bounded
+   `caller_context_invalid_request` or
+   `caller_context_permission_denied` diagnostic categories. Raw provenance
+   tokens and tenant, book, portfolio, or client-scope values remain absent.
+3. Generated OpenAPI publishes both caller-boundary examples under
+   `application/json` and `application/problem+json` for every protected
+   operation while preserving route-specific examples.
+4. Representative signal, lifecycle, review, AI, report, downstream, and
+   implementation-readiness integration tests plus
+   `make caller-context-contract-gate` bind dependency, handler, route
+   registry, OpenAPI, runtime media, correlation, and diagnostics into one
+   cross-layer contract.
+5. This improves design modularity inside the existing API deployable. There
+   is no workload, failure-isolation, ownership, or operability evidence for a
+   separate caller-context runtime service.
+
 Current mandate health source-product ref validation:
 
 1. `.venv\Scripts\python.exe -m pytest tests\unit\test_lotus_performance_sources.py tests\unit\test_lotus_risk_mandate_health_sources.py -q`

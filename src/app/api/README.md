@@ -68,6 +68,13 @@ When a request includes `accessScope`, the signal permission helper rejects
 out-of-scope requests with product-safe 403 behavior before domain evaluation,
 without creating a separately deployable signal service.
 
+Caller-context parsing failures must use the shared typed exception contract.
+The global handler preserves exact status, code, title, safe detail, bounded
+diagnostic category, `application/problem+json`, and sanitized correlation.
+`app.api.caller_context_openapi` publishes matching 400/403 examples for every
+protected operation; `make caller-context-contract-gate` prevents any one
+layer from drifting independently.
+
 ## Temporal Validation
 
 Use `app.api.temporal_validation` for API timestamp awareness and UTC checks.

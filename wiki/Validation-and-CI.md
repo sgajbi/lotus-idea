@@ -308,14 +308,16 @@ Persistence adapter validation:
    provider caching, durable-storage status, and connection close/reset
    behavior.
 3. `tests/unit/test_security_caller_context.py` and
-   `tests/integration/test_review_queue_api.py` prove that production-like
-   profiles reject self-asserted `X-Caller-*` authorization headers without
-   trusted-ingress provenance, while valid
+   `tests/integration/test_caller_context_boundary_api.py` prove that
+   production-like profiles reject self-asserted `X-Caller-*` authorization
+   headers without trusted-ingress provenance, while valid
    `X-Lotus-Trusted-Caller-Context` propagation still authorizes through the
-   existing role plus capability policies. `make caller-context-contract-gate`
-   blocks future route-local parser drift and rejects API route policies that
-   pair `allowed_roles` with an `idea.*` capability but authorize through
-   role-or-capability semantics.
+   existing role plus capability policies. Representative signal, lifecycle,
+   review, AI, report, downstream, and readiness routes preserve exact
+   400/403 ProblemDetails, `application/problem+json`, sanitized correlation,
+   and source-safe diagnostic categories without raw header or scope values.
+   `make caller-context-contract-gate` blocks exception, handler, protected
+   route, OpenAPI, media-type, and route-local parser drift.
 4. `tests/integration/test_high_cash_signal_api.py` pins route-level
    `durableStorageBacked` derivation with an injected durable repository so
    future changes cannot hardcode repository-backed API posture to `false`.
@@ -750,7 +752,11 @@ when a route policy declares both `allowed_roles` and an `idea.*` capability,
 the route must use `require_role_and_capability`. This preserves the same
 least-privilege posture for advisor queue and candidate detail reads instead
 of letting broad role membership substitute for a published operation
-capability.
+capability. It also requires typed caller-boundary exceptions, exact stable
+codes and bounded error categories, preservation by the global handler,
+RFC 7807 runtime media, and generated 400/403 examples under both supported
+media types for every protected operation. Mutation tests fail when any one of
+those layers is weakened.
 
 The API idempotency boundary gate blocks route-local `Idempotency-Key`
 validator clones and verifies generated OpenAPI for certified idempotent

@@ -35,17 +35,26 @@ identity. No signal family currently permits an inferred effective-date window.
 The shared caller-context dependency preserves the same stable runtime
 vocabulary: malformed entitlement headers are `400 invalid_request`, and
 missing trusted provenance is `403 permission_denied`; raw header values never
-cross the ProblemDetails boundary.
+cross the ProblemDetails boundary. Runtime responses use
+`application/problem+json`, retain the sanitized `X-Correlation-Id`, and emit
+only bounded `caller_context_invalid_request` or
+`caller_context_permission_denied` diagnostic categories.
 
 Protected business/operator endpoints publish caller-context requirements in
 generated OpenAPI through the `LotusCallerContext` security scheme and the
 `x-lotus-caller-context` operation extension. The extension records required
 `idea.*` capabilities, required or alternative roles where policy uses them,
 entitlement-scope behavior, product-safe 403 posture, and production-like
-trusted-ingress provenance for privileged `X-Caller-*` headers. `make
+trusted-ingress provenance for privileged `X-Caller-*` headers. The generated
+contract injects product-safe caller-boundary 400/403 examples under both
+`application/json` and `application/problem+json` for every protected
+operation, while preserving route-specific examples. `make
 endpoint-certification-gate` fails if a certified endpoint names an `idea.*`
 capability in the ledger but generated OpenAPI omits the matching caller-context
-publication or leaves key caller-context headers undescribed.
+publication or leaves key caller-context headers undescribed. `make
+caller-context-contract-gate` binds the exception, handler, route registry,
+OpenAPI, runtime media, and representative cross-route tests into one blocking
+contract.
 
 Route metadata dictionaries should use `app.api.route_metadata.RouteMetadata`.
 `make api-route-metadata-gate` blocks local `RouteMetadata` and
@@ -184,8 +193,11 @@ requests carrying privileged `X-Caller-*` role, capability, or entitlement
 headers must also carry `X-Lotus-Trusted-Caller-Context` matching
 `LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN`; otherwise the shared caller-context
 boundary rejects the request with product-safe `403` behavior before route
-authorization. This is trusted-ingress provenance only, not identity-provider,
-signed assertion, Workbench entitlement, or client-publication proof.
+authorization. `tests/integration/test_caller_context_boundary_api.py` proves
+the stable response and source-safe diagnostic behavior across representative
+signal, lifecycle, review, AI, report, downstream, and readiness routes. This
+is trusted-ingress provenance only, not identity-provider, signed assertion,
+Workbench entitlement, or client-publication proof.
 
 Every row above is backed by
 `docs/operations/endpoint-certification-ledger.json`; keep this narrative guide

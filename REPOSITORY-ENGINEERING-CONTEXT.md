@@ -1115,21 +1115,29 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     `tenantId` in the source-ingestion worker manifest. Core live-proof CLIs
     require `--tenant-id` and pass it through the same request ports; the
     signal API contract gate protects both routes and certification scripts.
-    The adapter no longer
-    hard-codes `default`; `unknown` remains only an unconstrained portfolio
-    scope sentinel and is never sent to Core. The signal API contract gate,
-    adapter A/B propagation tests, worker/proof tests, and fail-closed
-    missing/ambiguous tenant tests protect the boundary. This is design
-    modularity within the existing process and does not justify a new runtime
-    service.
+    Successful Core-backed candidates retain tenant in access scope and stable
+    candidate identity; generated ingestion identity is tenant-bound as well.
+    The adapter no longer hard-codes `default`, and `unknown` remains only a
+    non-Core unconstrained portfolio-scope sentinel that is never sent to Core.
+    Tenant A/B propagation and identity tests, worker/proof tests, and
+    fail-closed missing, ambiguous, untrusted-header, and request-body override
+    tests protect the boundary. This is design modularity within the existing
+    process and does not justify a new runtime service.
 24. Caller-context ProblemDetails truth: GitHub issue `#336` is addressed by
     using `ProblemDetailsHTTPException` for shared caller-context dependency
-    failures and preserving its approved code/title through the global HTTP
-    handler. Blank entitlement headers return `invalid_request`; missing
-    trusted provenance returns `permission_denied`; unrelated framework
-    exceptions retain the generic `request_rejected` fallback. The
-    caller-context contract gate blocks direct generic raises in this boundary,
-    and tests verify product-safe response bodies.
+    failures and preserving approved status, code, title, detail, and bounded
+    diagnostic category through the global HTTP handler. Blank entitlement
+    headers return `400 invalid_request`; missing trusted provenance returns
+    `403 permission_denied`; runtime responses use
+    `application/problem+json`, carry the sanitized `X-Correlation-Id`, and do
+    not expose raw header or scope values. Generated OpenAPI injects both
+    caller-boundary examples under `application/json` and
+    `application/problem+json` for every protected operation. Representative
+    signal, lifecycle, review, AI, report, and readiness tests protect the
+    cross-route behavior; the caller-context contract gate protects the
+    exception, handler, OpenAPI, and media-type layers. Unrelated framework
+    exceptions retain the generic `request_rejected` fallback. This is a
+    shared in-process API boundary, not a separately scalable runtime service.
 25. Governed outbox dead-letter recovery: GitHub issue `#337` is addressed by
     the `app.domain.outbox_recovery` bounded module, application use case,
     `OutboxRecoveryRepository` port, in-memory/PostgreSQL adapters, migration
