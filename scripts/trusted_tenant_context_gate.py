@@ -150,6 +150,7 @@ def validate_trusted_tenant_context(root: Path = ROOT) -> list[str]:
             "test_high_cash_source_api_rejects_ambiguous_tenant_context",
             "test_high_cash_source_api_rejects_untrusted_tenant_override_before_runtime",
             "test_high_cash_source_api_rejects_body_tenant_override_before_runtime",
+            "test_high_cash_source_api_emits_bounded_tenant_scope_operation_event",
         ),
     }
     for relative_path, fragments in test_fragments.items():

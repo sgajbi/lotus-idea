@@ -454,7 +454,7 @@ def test_high_cash_source_api_returns_blocked_posture_for_core_unavailable(
     assert PORTFOLIO_ID not in response.text
 
 
-def test_high_cash_source_api_emits_bounded_tenant_scope_provenance(
+def test_high_cash_source_api_emits_bounded_tenant_scope_operation_event(
     monkeypatch: Any,
 ) -> None:
     source = RecordingCoreSource()
