@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import cast
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -8,11 +9,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
-from app.api.problem_details import (
-    problem_details_response as problem_response,
-    service_unavailable_metadata,
+from app.api.problem_details import service_unavailable_metadata
+from app.api.runtime_dependencies import (
+    ManageMandateHealthSourceRuntime,
+    ManageMandateHealthSourceRuntimeBlocker,
 )
-from app.api.runtime_dependencies import ManageMandateHealthSourceRuntimeBlocker
 from app.api.runtime_dependencies import (
     build_manage_mandate_health_source_runtime_from_environment as _build_manage_mandate_health_source_runtime_from_environment,
 )
@@ -25,10 +26,8 @@ from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
-    close_signal_source_runtime,
     evaluate_caller_supplied_signal,
-    emit_signal_evaluation_event,
-    signal_permission_problem_or_none,
+    evaluate_source_signal,
     signal_problem_responses,
     source_authority_from_contracts,
 )
@@ -40,7 +39,11 @@ from app.application.mandate_health_signal import (
     evaluate_mandate_health_signal_command,
 )
 from app.domain import SourceSystem
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.observability import emit_foundation_operation_event
+
+
+def _is_manage_mandate_runtime_blocked(runtime: object) -> bool:
+    return isinstance(runtime, ManageMandateHealthSourceRuntimeBlocker)
 
 
 class EvaluateAllocationDriftSignalRequest(CamelModel):
@@ -240,53 +243,24 @@ async def evaluate_allocation_drift_signal_from_source(
     caller: CallerContextHeaders,
 ) -> EvaluateAllocationDriftSignalResponse | JSONResponse:
     source_authority = SourceSystem.LOTUS_MANAGE.value
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_source_signal(
         caller=caller,
         source_authority=source_authority,
         requested_access_scope=portfolio_only_scope(signal_request.portfolio_id),
+        runtime_factory=_build_manage_mandate_health_source_runtime_from_environment,
+        is_runtime_blocked=_is_manage_mandate_runtime_blocked,
+        blocked_detail="Manage source runtime is not configured for allocation-drift source evaluation.",
+        command_factory=lambda runtime: signal_request.to_command(
+            correlation_id=_request_correlation_id(request),
+            trace_id=_request_trace_id(request),
+        ),
+        evaluator=lambda command, runtime: evaluate_mandate_health_signal_from_manage(
+            command,
+            manage_source=cast(ManageMandateHealthSourceRuntime, runtime).manage_source,
+        ),
+        response_factory=EvaluateAllocationDriftSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
     )
-    if permission_problem is not None:
-        return permission_problem
-
-    runtime = _build_manage_mandate_health_source_runtime_from_environment()
-    if isinstance(runtime, ManageMandateHealthSourceRuntimeBlocker):
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.BLOCKED,
-            source_authority=source_authority,
-            error_code=runtime.code,
-        )
-        return problem_response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            code="source_runtime_not_configured",
-            title="Source runtime not configured",
-            detail="Manage source runtime is not configured for allocation-drift source evaluation.",
-        )
-
-    try:
-        result = evaluate_mandate_health_signal_from_manage(
-            signal_request.to_command(
-                correlation_id=_request_correlation_id(request),
-                trace_id=_request_trace_id(request),
-            ),
-            manage_source=runtime.manage_source,
-        )
-        emit_signal_evaluation_event(
-            result=result,
-            source_authority=source_authority,
-            emit_event=emit_foundation_operation_event,
-        )
-        return EvaluateAllocationDriftSignalResponse.from_domain(
-            result,
-            source_authority=source_authority,
-        )
-    finally:
-        close_signal_source_runtime(
-            runtime=runtime,
-            source_authority=SourceSystem.LOTUS_MANAGE.value,
-            emit_event=emit_foundation_operation_event,
-        )
 
 
 def _source_ref_contracts(
