@@ -788,9 +788,12 @@ Recent issue-derived patterns to preserve:
     before copying application source, then install the local service package
     with `--no-deps` after `COPY src`; `.dockerignore` must keep generated
     coverage, SBOM, quality-report, and proof-output artifacts out of Docker
-    build context; `make ci-contract-gate` must catch source-before-dependency-
-    install ordering, dependency reinstall drift, and Docker-context
-    generated-artifact parity drift.
+    build context while explicitly re-including governed runtime assets that a
+    Dockerfile copies. The scheduled worker contract must verify its complete
+    image file closure, including the manifest and imported helper scripts;
+    `make ci-contract-gate` must catch source-before-dependency-install
+    ordering, dependency reinstall drift, Docker-context generated-artifact
+    parity drift, and declared-but-unpackaged worker assets.
 27. release images must be commit-tagged, CI-published only, signed, attested,
     and promoted by digest. The Dockerfile must carry OCI labels for service
     version, commit SHA, branch, build timestamp, repo URL, CI run ID, and image
