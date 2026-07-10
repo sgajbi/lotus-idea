@@ -137,6 +137,25 @@ def persistence_headers(idempotency_key: str) -> dict[str, str]:
     }
 
 
+def _capture_signal_operation_events(
+    monkeypatch: Any,
+) -> list[tuple[str, str, str, str | None]]:
+    events: list[tuple[str, str, str, str | None]] = []
+
+    def capture(operation: Any, outcome: Any, **kwargs: Any) -> None:
+        events.append(
+            (
+                operation.value,
+                outcome.value,
+                kwargs["source_authority"],
+                kwargs.get("error_code"),
+            )
+        )
+
+    monkeypatch.setattr(idea_signals_api, "emit_foundation_operation_event", capture)
+    return events
+
+
 def test_high_cash_source_api_fetches_core_evidence_without_persistence(
     monkeypatch: Any,
 ) -> None:
@@ -424,12 +443,14 @@ def test_high_cash_api_returns_blocked_posture_for_stale_source_evidence() -> No
     assert payload["unsupportedReasons"] == ["stale_source"]
 
 
-def test_high_cash_api_rejects_wrong_core_product_id() -> None:
+def test_high_cash_api_rejects_wrong_core_product_id(monkeypatch: Any) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = high_cash_payload()
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
         "lotus-core:BenchmarkAssignment:v1"
     )
+    events = _capture_signal_operation_events(monkeypatch)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -440,15 +461,27 @@ def test_high_cash_api_rejects_wrong_core_product_id() -> None:
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
+    assert "BenchmarkAssignment" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-core",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
-def test_high_cash_api_rejects_non_core_source_ref() -> None:
+def test_high_cash_api_rejects_non_core_source_ref(monkeypatch: Any) -> None:
+    reset_idea_repository_for_tests(InMemoryIdeaRepository())
     client = TestClient(app)
     payload = high_cash_payload()
     payload["sourceEvidence"]["portfolioStateRef"]["sourceSystem"] = "lotus-risk"
     payload["sourceEvidence"]["portfolioStateRef"]["productId"] = (
         "lotus-risk:ConcentrationRiskReport:v1"
     )
+    events = _capture_signal_operation_events(monkeypatch)
 
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate",
@@ -459,6 +492,16 @@ def test_high_cash_api_rejects_non_core_source_ref() -> None:
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
     assert "candidate_created" not in response.text
+    assert "ConcentrationRiskReport" not in response.text
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert events == [
+        (
+            "signal_evaluation",
+            "invalid_request",
+            "lotus-core",
+            "source_ref_contract_mismatch",
+        )
+    ]
 
 
 def test_high_cash_api_requires_signal_evaluation_capability() -> None:
