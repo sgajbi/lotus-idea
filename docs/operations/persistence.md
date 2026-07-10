@@ -365,6 +365,20 @@ and return `durable_repository_not_configured` for write-capable routes.
 That default is intentional for local foundation tests and must not be described
 as durable storage.
 
+## Governed Dead-Letter Recovery
+
+GitHub issue `#337` adds a narrow recovery path over the existing outbox state
+machine. A source-safe inspection projection and per-reference re-drive check a
+dedicated operator capability, idempotency identity, event family, schema
+version, and one-attempt poison-message ceiling before recording an append-only
+audit snapshot and acquiring a new lease.
+
+Migration `004_outbox_dead_letter_recovery` commits the audit row and lease
+transition together. In-memory and PostgreSQL adapters share the same port.
+Successful publication preserves retry count, failure reason, and first/last
+failure timestamps; failed re-drive returns directly to quarantine without a
+scheduled retry. See `docs/operations/outbox-dead-letter-recovery.md`.
+
 ## Unsupported Until Proven
 
 Do not claim production storage readiness, production recovery, certified event

@@ -839,3 +839,18 @@ until the durable next-attempt timestamp is due. It is
 not certified live broker runtime, downstream delivery proof, platform mesh
 event certification, Gateway/Workbench proof, client-ready publication, or
 supported-feature promotion.
+
+### Dead-Letter Recovery
+
+Use `GET /api/v1/outbox-delivery/dead-letters` for a bounded quarantine
+projection without payloads, aggregate ids, portfolio/client identifiers, or
+raw idempotency material. Use the per-reference re-drive only after correcting
+the external cause under an approved change. It requires `operator`,
+`idea.outbox-recovery.redrive`, trusted production caller provenance,
+`Idempotency-Key`, bounded reason, and `changeReference`.
+
+The action records original failure history and a new lease before one
+publication attempt. Same-key replay never republishes. Rejection or the
+one-attempt poison safeguard leaves the event quarantined for
+`lotus-idea-operations`; direct database mutation is prohibited. See
+`docs/operations/outbox-dead-letter-recovery.md` for the decision table.

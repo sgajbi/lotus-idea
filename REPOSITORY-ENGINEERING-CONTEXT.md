@@ -1090,6 +1090,17 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     exceptions retain the generic `request_rejected` fallback. The
     caller-context contract gate blocks direct generic raises in this boundary,
     and tests verify product-safe response bodies.
+25. Governed outbox dead-letter recovery: GitHub issue `#337` is addressed by
+    the `app.domain.outbox_recovery` bounded module, application use case,
+    `OutboxRecoveryRepository` port, in-memory/PostgreSQL adapters, migration
+    `004`, and operator routes. Recovery preserves original failure history,
+    creates a new fenced lease, permits one publication attempt, and leaves
+    poison or unsupported events quarantined. `make outbox-recovery-contract-gate`
+    blocks sensitive response fields and unbounded re-drive regression. This is
+    design modularity inside the existing deployable service; no workload,
+    failure-isolation, ownership, or operability evidence justifies another
+    runtime service. Broker, consumer, mesh, Gateway/Workbench, and supported
+    feature proof remain separate blockers.
 
 Recently closed by PR `#273` and mainline validation:
 

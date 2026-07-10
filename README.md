@@ -235,7 +235,7 @@ Operator entrypoints:
 - `/health`, `/health/live`, `/health/ready`, `/metrics`, and `/docs`
 - `/metadata` and `/version`
 - `/api/v1/source-ingestion/readiness` and `/api/v1/source-ingestion/run-once`
-- `/api/v1/outbox-delivery/readiness` and `/api/v1/outbox-delivery/run-once`
+- `/api/v1/outbox-delivery/readiness`, run-once, dead-letter inspection, and governed re-drive
 - `/api/v1/review-queues/advisor/readiness`
 - `/api/v1/ai-explanations/readiness`
 - `/api/v1/downstream-realization/readiness`
@@ -247,7 +247,8 @@ Operator entrypoints:
 Operator details live in
 [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
 [docs/operations/observability.md](docs/operations/observability.md),
-[docs/operations/persistence.md](docs/operations/persistence.md), and
+[docs/operations/persistence.md](docs/operations/persistence.md),
+[docs/operations/outbox-dead-letter-recovery.md](docs/operations/outbox-dead-letter-recovery.md), and
 [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
 
 ## Ecosystem Boundaries

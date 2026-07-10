@@ -509,3 +509,19 @@ Prior Slice 06 validation:
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.
+
+## Issue 337 Dead-Letter Recovery Hardening
+
+Issue `#337` closes the direct-database recovery gap without making dead
+letters automatically retryable. Source-safe inspection and explicit re-drive
+now flow through API DTOs, an application use case, typed recovery policy, a
+repository port, and in-memory/PostgreSQL adapters. Migration
+`004_outbox_dead_letter_recovery` preserves actor, reason, change reference,
+hashed idempotency identity, new lease identity, and the original failure
+snapshot.
+
+Concurrent and repeated actions are fenced. One failed re-drive remains
+quarantined with no next attempt. This is design modularity inside the existing
+`lotus-idea` runtime, not a new service boundary, and does not promote Slice 6
+or a supported feature while external publication and consumer proof remain
+open.
