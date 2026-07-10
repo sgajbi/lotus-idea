@@ -887,7 +887,8 @@ Not implemented yet:
    live proof beyond the source-safe Manage mandate proof contract and Core
    portfolio-state source-ref proof,
 5. source-worker certification beyond bounded live Core source-ingestion proof,
-6. certified long-running scheduled daemon runtime and live-service recovery proof,
+6. live-service execution, restart, and recovery evidence for the scheduled
+   daemon; the deploy contract and fail-closed daemon mode now exist,
 7. source-fetching APIs beyond bounded high-cash, low-income, bond-maturity,
    missing-benchmark, concentration-risk, high-volatility, drawdown-review,
    underperformance, allocation-drift, missing-suitability,
@@ -995,6 +996,11 @@ Current source-ingestion orchestration validation:
 6. `.venv\Scripts\python.exe scripts\source_ingestion_scheduled_worker_contract_gate.py`
    passed, proving the scheduled worker deploy-contract artifact remains
    source-safe and wired to the Compose worker profile.
+7. Scheduled deployment now uses explicit `--run-forever` daemon mode with
+   SIGTERM/SIGINT shutdown, `restart: on-failure`, and nonzero propagation for
+   blocked iterations. Focused scheduled-worker tests cover daemon stop and
+   blocked-source exit behavior. Live restart/recovery evidence is still a
+   separate certification blocker.
 
 Current Core cash-weight adapter validation:
 

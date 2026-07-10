@@ -46,9 +46,12 @@ cash-weight supportability without exposing source payloads or reconstructing
 cash weight in `lotus-idea`.
 
 `scripts/run_scheduled_source_ingestion_worker.py` wraps the run-once worker in
-a bounded scheduler entrypoint for deploy topology proof. The worker is also
-declared in `docker-compose.yml` as the opt-in
-`lotus-idea-source-ingestion-worker` service under the `worker` profile.
+an explicit scheduler entrypoint. `--max-runs` is useful for bounded operator
+proof; the deploy topology uses `--run-forever`, handles SIGTERM/SIGINT for
+controlled shutdown, and propagates blocked or failed iterations as nonzero
+exit status. The worker is declared in `docker-compose.yml` as the opt-in
+`lotus-idea-source-ingestion-worker` service under the `worker` profile with
+`restart: on-failure`.
 `scripts/generate_scheduled_source_ingestion_worker_proof.py` writes a
 source-safe deploy-proof artifact. When that artifact is valid and referenced
 through `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF`, readiness can
@@ -199,9 +202,9 @@ Scheduled-worker deploy proof:
 ```powershell
 python scripts/run_scheduled_source_ingestion_worker.py `
   --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
-  --check-only `
-  --interval-seconds 300 `
-  --max-runs 1
+  --core-query-base-url http://localhost:8201 `
+  --core-query-control-plane-base-url http://localhost:8202 `
+  --run-forever
 
 python scripts/generate_scheduled_source_ingestion_worker_proof.py `
   --manifest docs/examples/source-ingestion/high-cash-worker-manifest.example.json `
