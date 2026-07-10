@@ -8,7 +8,7 @@ from psycopg.types.json import Jsonb
 
 from app.domain.ai_governance import AIExplanationResult
 from app.domain.audit import AuditEvent
-from app.domain.events import OutboxEventRecord
+from app.domain.events import EventLineageContext, OutboxEventRecord
 from app.domain.downstream_submission import DownstreamSubmissionRecord
 from app.domain.conversion_governance import (
     ConversionIntentResult,
@@ -167,6 +167,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         payload: Mapping[str, Any],
         actor_subject: str,
         occurred_at_utc: datetime | None = None,
+        event_lineage: EventLineageContext | None = None,
     ) -> CandidatePersistenceResult:
         return self._mutate(
             lambda repository: repository.persist_candidate(
@@ -175,6 +176,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 payload=payload,
                 actor_subject=actor_subject,
                 occurred_at_utc=occurred_at_utc,
+                event_lineage=event_lineage,
             )
         )
 
@@ -202,6 +204,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         occurred_at_utc: datetime | None = None,
         transition_id: str | None = None,
         reason_codes: tuple[str, ...] = (),
+        event_lineage: EventLineageContext | None = None,
     ) -> LifecyclePersistenceResult:
         return self._mutate(
             lambda repository: repository.record_lifecycle_transition(
@@ -213,6 +216,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 occurred_at_utc=occurred_at_utc,
                 transition_id=transition_id,
                 reason_codes=reason_codes,
+                event_lineage=event_lineage,
             )
         )
 
@@ -250,12 +254,14 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult:
         return self._mutate(
             lambda repository: repository.record_review_action(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
+                event_lineage=event_lineage,
             )
         )
 
@@ -265,12 +271,14 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult:
         return self._mutate(
             lambda repository: repository.record_feedback_event(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
+                event_lineage=event_lineage,
             )
         )
 
@@ -292,12 +300,14 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
         return self._mutate(
             lambda repository: repository.record_conversion_intent(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
+                event_lineage=event_lineage,
             )
         )
 
@@ -336,12 +346,14 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
         return self._mutate(
             lambda repository: repository.record_conversion_outcome(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
+                event_lineage=event_lineage,
             )
         )
 
@@ -375,12 +387,14 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> EvidencePackPersistenceResult:
         return self._mutate(
             lambda repository: repository.record_report_evidence_pack(
                 result,
                 idempotency_key=idempotency_key,
                 payload=payload,
+                event_lineage=event_lineage,
             )
         )
 

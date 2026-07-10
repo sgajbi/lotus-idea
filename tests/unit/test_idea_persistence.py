@@ -22,6 +22,7 @@ from app.domain import (
     EvidencePackPersistenceDecision,
     EvidenceFreshness,
     EvidenceReplayStatus,
+    EventLineageContext,
     FeedbackCommand,
     FeedbackOutcome,
     HighCashSignalInput,
@@ -255,6 +256,10 @@ def ai_explanation_result_for_candidate(
 def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -> None:
     candidate, refs = high_cash_candidate()
     repository = InMemoryIdeaRepository()
+    first_lineage = EventLineageContext(
+        correlation_id="corr-candidate-workflow-001",
+        trace_id="trace-candidate-request-001",
+    )
 
     first = repository.persist_candidate(
         candidate,
@@ -262,6 +267,7 @@ def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -
         payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
+        event_lineage=first_lineage,
     )
     second = repository.persist_candidate(
         candidate,
@@ -269,6 +275,10 @@ def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -
         payload={"source_hashes": [source_ref.content_hash for source_ref in refs]},
         actor_subject="signal-ingestion-worker",
         occurred_at_utc=EVALUATED_AT,
+        event_lineage=EventLineageContext(
+            correlation_id="corr-candidate-workflow-001",
+            trace_id="trace-candidate-retry-002",
+        ),
     )
 
     assert first.decision is CandidatePersistenceDecision.ACCEPTED
@@ -289,6 +299,8 @@ def test_persist_candidate_accepts_once_and_replays_same_idempotency_payload() -
     }
     assert event.idempotency_fingerprint is not None
     assert "signal-ingestion:high-cash:001" not in event.idempotency_fingerprint
+    assert event.correlation_id == first_lineage.correlation_id
+    assert event.trace_id == first_lineage.trace_id
 
 
 def test_persist_candidate_rejects_idempotency_conflict_without_extra_audit_event() -> None:

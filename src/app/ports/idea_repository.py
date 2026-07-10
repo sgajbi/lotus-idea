@@ -15,6 +15,7 @@ from app.domain import (
     ConversionPersistenceResult,
     EvidenceReplayResult,
     EvidencePackPersistenceResult,
+    EventLineageContext,
     GovernedConversionIntent,
     GovernedConversionOutcome,
     GovernedReportEvidencePack,
@@ -160,6 +161,7 @@ class CandidatePersistenceRepository(Protocol):
         payload: dict[str, Any],
         actor_subject: str,
         occurred_at_utc: datetime | None = None,
+        event_lineage: EventLineageContext | None = None,
     ) -> CandidatePersistenceResult: ...
 
 
@@ -175,6 +177,7 @@ class CandidateLifecycleRepository(Protocol):
         occurred_at_utc: datetime | None = None,
         transition_id: str | None = None,
         reason_codes: tuple[str, ...] = (),
+        event_lineage: EventLineageContext | None = None,
     ) -> LifecyclePersistenceResult: ...
 
 
@@ -203,6 +206,7 @@ class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult: ...
 
     def record_feedback_event(
@@ -211,6 +215,7 @@ class ReviewWorkflowRepository(CandidateSnapshotRepository, Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult: ...
 
 
@@ -228,6 +233,7 @@ class ConversionIntentWorkflowRepository(CandidateSnapshotRepository, Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult: ...
 
 
@@ -256,6 +262,7 @@ class ConversionOutcomeWorkflowRepository(Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult: ...
 
 
@@ -291,6 +298,7 @@ class ReportEvidenceWorkflowRepository(Protocol):
         *,
         idempotency_key: str,
         payload: dict[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> EvidencePackPersistenceResult: ...
 
 

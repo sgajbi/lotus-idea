@@ -16,6 +16,7 @@ from app.domain.ai_lineage_idempotency import (
     record_ai_explanation_lineage_request_with_idempotency,
 )
 from app.domain.events import (
+    EventLineageContext,
     OutboxEventRecord,
     build_candidate_outbox_event,
 )
@@ -118,6 +119,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         payload: Mapping[str, Any],
         actor_subject: str,
         occurred_at_utc: datetime | None = None,
+        event_lineage: EventLineageContext | None = None,
     ) -> CandidatePersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         _require_text(actor_subject, "actor_subject")
@@ -171,6 +173,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate.candidate_id,
             occurred_at_utc=event_time,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "candidate_family": candidate.family.value,
                 "lifecycle_status": candidate.lifecycle_status.value,
@@ -216,6 +219,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         occurred_at_utc: datetime | None = None,
         transition_id: str | None = None,
         reason_codes: tuple[str, ...] = (),
+        event_lineage: EventLineageContext | None = None,
     ) -> LifecyclePersistenceResult:
         _require_text(candidate_id, "candidate_id")
         _require_text(idempotency_key, "idempotency_key")
@@ -269,6 +273,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate_id,
             occurred_at_utc=event_time,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "source_status": record.candidate.lifecycle_status.value,
                 "target_status": target_status.value,
@@ -339,6 +344,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         candidate_id = result.decision.candidate_id
@@ -402,6 +408,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate_id,
             occurred_at_utc=result.decision.decided_at_utc,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "action": result.decision.action.value,
                 "resulting_posture": result.decision.resulting_posture.value,
@@ -449,6 +456,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ReviewPersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         candidate_id = result.feedback_event.candidate_id
@@ -498,6 +506,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate_id,
             occurred_at_utc=result.feedback_event.feedback.recorded_at_utc,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "feedback_outcome": result.feedback_event.feedback.outcome.value,
                 "actor_role": result.feedback_event.actor_role.value,
@@ -540,6 +549,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         _require_matching_conversion_intent_idempotency(result, idempotency_key)
@@ -599,6 +609,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate_id,
             occurred_at_utc=result.conversion_intent.intent.requested_at_utc,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "target": result.conversion_intent.intent.target.value,
                 "target_source_authority": result.conversion_intent.target_source_authority.value,
@@ -616,6 +627,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> ConversionPersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         conversion_intent_id = result.conversion_outcome.conversion_intent_id
@@ -688,6 +700,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate_id,
             occurred_at_utc=result.conversion_outcome.outcome.recorded_at_utc,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "source_system": result.conversion_outcome.source_system.value,
                 "source_event_version": str(result.conversion_outcome.source_event_version),
@@ -752,6 +765,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        event_lineage: EventLineageContext | None = None,
     ) -> EvidencePackPersistenceResult:
         _require_text(idempotency_key, "idempotency_key")
         candidate_id = result.evidence_pack.candidate_id
@@ -796,6 +810,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             aggregate_id=candidate_id,
             occurred_at_utc=result.evidence_pack.requested_at_utc,
             idempotency_key=idempotency_key,
+            event_lineage=event_lineage,
             payload={
                 "purpose": result.evidence_pack.purpose.value,
                 "report_source_authority": result.evidence_pack.report_source_authority.value,
@@ -1122,6 +1137,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         occurred_at_utc: datetime,
         payload: Mapping[str, str],
         idempotency_key: str,
+        event_lineage: EventLineageContext | None,
     ) -> None:
         event = build_candidate_outbox_event(
             event_type=event_type,
@@ -1129,6 +1145,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             occurred_at_utc=occurred_at_utc,
             payload=payload,
             idempotency_key=idempotency_key,
+            lineage=event_lineage,
         )
         self._outbox_events[event.event_id] = event
 
