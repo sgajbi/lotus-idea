@@ -6,6 +6,25 @@ Run the RFC-0002 Slice 5 source-backed proof families against the governed
 canonical front-office runtime. This proves source consumption and
 deterministic signal evaluation; it does not promote a product feature.
 
+## Current Scope
+
+Current evidence covers canonical Risk concentration, Performance
+underperformance, and Performance benchmark-readiness source proofs plus the
+bounded layered Idea API proof. It is implementation evidence only. Data-mesh
+activation, full Gateway/Workbench behavior, downstream realization,
+client-ready publication, official calculation authority, and
+supported-feature promotion remain separately blocked.
+
+## Reader Map
+
+| Need | Go to | Expected outcome |
+| --- | --- | --- |
+| Prepare the governed runtime | [Preconditions](#preconditions) | Canonical stack, portfolio, as-of date, and source endpoints are ready. |
+| Run source-level proofs | [Run](#run) | One aggregate artifact with bounded child-proof observations. |
+| Prove the layered Idea API path | [Layered API Proof](#layered-api-proof) | Route-to-adapter evidence without raw response persistence. |
+| Interpret automation results | [Exit Codes](#exit-codes) | Deterministic pass, blocked, or invalid-run classification. |
+| Review current evidence | [Current Runtime Result](#current-runtime-result) | Branch-scoped proof posture and explicit non-claims. |
+
 ## Preconditions
 
 1. Start the governed Workbench stack with `npm run live:stack:up` from
