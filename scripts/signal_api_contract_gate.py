@@ -35,7 +35,7 @@ SIGNAL_API_MODULES = (
 REQUIRED_SHARED_HELPERS = (
     "CallerContextHeaders",
     "signal_permission_problem_or_none",
-    "signal_source_ref_contract_problem_or_none",
+    "evaluate_caller_supplied_signal",
     "emit_signal_evaluation_event",
     "signal_problem_responses",
 )

@@ -96,6 +96,25 @@ existing deployable service.
 | `contracts/` | Data-mesh, SLO, access, evidence-policy, downstream, trust telemetry, and readiness contracts. |
 | `docs/` and `wiki/` | RFCs, operator runbooks, architecture evidence, demo posture, and GitHub wiki source. |
 
+### Request Path
+
+Every caller-supplied opportunity signal follows the same internal path:
+
+```text
+External consumer
+  -> FastAPI route/controller -> request DTO mapper (`to_command`)
+  -> application use case -> framework-free domain policy and candidate model
+  -> source/repository port -> infrastructure adapter
+  -> PostgreSQL, source API, cache, queue, or downstream API
+```
+
+`app.api.signal_api_support.evaluate_caller_supplied_signal` owns the shared
+authorization, entitlement-scope, source-contract, operation-event, and response
+boundary for caller-supplied signals. Source-backed routes retain their
+route-owned adapter lifecycle because runtime construction, failure mapping, and
+cleanup have different operational semantics. This is design modularity inside
+one deployable service; it is not evidence for a signal microservice split.
+
 ## Data Mesh Posture
 
 `lotus-idea` is data-mesh-first, but certification is intentionally blocked

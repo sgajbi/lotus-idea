@@ -34,11 +34,11 @@ from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
     close_signal_source_runtime,
+    evaluate_caller_supplied_signal,
     emit_signal_evaluation_event,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
     signal_problem_responses,
-    signal_source_ref_one_of_contract_problem_or_none,
     signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
 )
@@ -92,31 +92,18 @@ async def evaluate_high_cash_signal(
 ) -> EvaluateHighCashSignalResponse | JSONResponse:
     source_authority = _high_cash_source_authority(request)
     source_contracts = _high_cash_source_ref_contracts(request)
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_caller_supplied_signal(
         caller=caller,
         source_authority=source_authority,
+        source_contracts=source_contracts,
         requested_access_scope=(
             request.access_scope.to_domain() if request.access_scope is not None else None
         ),
+        command_factory=request.to_command,
+        evaluator=evaluate_high_cash_signal_command,
+        response_factory=EvaluateHighCashSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
     )
-    if permission_problem is not None:
-        return permission_problem
-    contract_problem = signal_source_ref_contract_problem_or_none(
-        contracts=source_contracts,
-        source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
-    )
-    if contract_problem is not None:
-        return contract_problem
-
-    result = evaluate_high_cash_signal_command(request.to_command())
-    emit_signal_evaluation_event(
-        result=result,
-        source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
-    )
-    return EvaluateHighCashSignalResponse.from_domain(result, source_authority=source_authority)
 
 
 async def evaluate_high_cash_signal_from_source(
@@ -180,33 +167,18 @@ async def evaluate_mandate_restriction_signal(
 ) -> EvaluateMandateRestrictionSignalResponse | JSONResponse:
     source_contracts = _mandate_restriction_source_ref_contracts(request)
     source_authority = _mandate_restriction_source_authority(request)
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_caller_supplied_signal(
         caller=caller,
         source_authority=source_authority,
+        source_contracts=source_contracts,
         requested_access_scope=(
             request.access_scope.to_domain() if request.access_scope is not None else None
         ),
+        command_factory=request.to_command,
+        evaluator=evaluate_mandate_restriction_signal_command,
+        response_factory=EvaluateMandateRestrictionSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
-    )
-    if permission_problem is not None:
-        return permission_problem
-    contract_problem = signal_source_ref_one_of_contract_problem_or_none(
-        contracts=source_contracts,
-        source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
-    )
-    if contract_problem is not None:
-        return contract_problem
-
-    result = evaluate_mandate_restriction_signal_command(request.to_command())
-    emit_signal_evaluation_event(
-        result=result,
-        source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
-    )
-    return EvaluateMandateRestrictionSignalResponse.from_domain(
-        result,
-        source_authority=source_authority,
+        contract_mode="one_of",
     )
 
 

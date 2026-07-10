@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol, TypeVar
 
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -39,6 +39,10 @@ class SignalSourceRefContract:
     source_ref: _SourceRefLike | None
     expected_source_system: SourceSystem
     expected_product_ids: tuple[str, ...]
+
+
+CommandT = TypeVar("CommandT")
+ResponseT = TypeVar("ResponseT")
 
 
 SignalRouteMetadata = RouteMetadata
@@ -146,6 +150,59 @@ def signal_source_ref_one_of_contract_problem_or_none(
         title="Invalid request",
         detail="Source refs must match the certified source contract for this signal family.",
     )
+
+
+def evaluate_caller_supplied_signal(
+    *,
+    caller: CallerContext,
+    source_authority: str,
+    source_contracts: Iterable[SignalSourceRefContract],
+    requested_access_scope: ReviewAccessScope | None,
+    command_factory: Callable[[], CommandT],
+    evaluator: Callable[[CommandT], SignalEvaluationResult],
+    response_factory: Callable[..., ResponseT],
+    emit_event: Callable[..., None],
+    contract_mode: Literal["all", "one_of"] = "all",
+) -> ResponseT | JSONResponse:
+    """Run the shared caller-supplied signal boundary in one ordered path.
+
+    The route owns transport details and DTO mapping; this helper owns the
+    repeated boundary sequence before an application evaluator is called.
+    Source runtime construction remains in the route-specific path because it
+    has different lifecycle and failure semantics.
+    """
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        requested_access_scope=requested_access_scope,
+        emit_event=emit_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
+
+    contract_problem = (
+        signal_source_ref_one_of_contract_problem_or_none(
+            contracts=source_contracts,
+            source_authority=source_authority,
+            emit_event=emit_event,
+        )
+        if contract_mode == "one_of"
+        else signal_source_ref_contract_problem_or_none(
+            contracts=source_contracts,
+            source_authority=source_authority,
+            emit_event=emit_event,
+        )
+    )
+    if contract_problem is not None:
+        return contract_problem
+
+    result = evaluator(command_factory())
+    emit_signal_evaluation_event(
+        result=result,
+        source_authority=source_authority,
+        emit_event=emit_event,
+    )
+    return response_factory(result, source_authority=source_authority)
 
 
 def signal_problem_responses() -> dict[int | str, dict[str, Any]]:
