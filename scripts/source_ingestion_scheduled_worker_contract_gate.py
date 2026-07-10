@@ -29,6 +29,11 @@ ROOT = Path(__file__).resolve().parents[1]
 WORKER_MANIFEST_IMAGE_PATH = (
     "docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json"
 )
+WORKER_RUNTIME_IMAGE_PATHS = (
+    "scripts/proof_generator_io.py",
+    "scripts/run_source_ingestion_worker.py",
+    "scripts/run_scheduled_source_ingestion_worker.py",
+)
 EXAMPLE_MANIFEST_PATH = (
     ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
 )
@@ -102,6 +107,9 @@ def validate_source_ingestion_scheduled_worker_contract() -> list[str]:
             "Dockerfile must package the canonical scheduled-worker manifest at "
             f"{WORKER_MANIFEST_IMAGE_PATH}"
         )
+    for runtime_path in WORKER_RUNTIME_IMAGE_PATHS:
+        if not _docker_worker_file_packaged(runtime_path):
+            errors.append(f"Dockerfile must package scheduled-worker runtime file {runtime_path}")
 
     validate_forbidden_content(check_summary, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
@@ -120,11 +128,15 @@ def _docker_compose_service_present() -> bool:
 
 
 def _docker_worker_manifest_packaged() -> bool:
+    return _docker_worker_file_packaged(WORKER_MANIFEST_IMAGE_PATH)
+
+
+def _docker_worker_file_packaged(path: str) -> bool:
     try:
         dockerfile_text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     except OSError:
         return False
-    return f"COPY {WORKER_MANIFEST_IMAGE_PATH} ./{WORKER_MANIFEST_IMAGE_PATH}" in dockerfile_text
+    return f"COPY {path} ./{path}" in dockerfile_text
 
 
 def _read_manifest(path: Path) -> dict[str, Any]:

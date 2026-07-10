@@ -12,6 +12,7 @@ from scripts.source_ingestion_scheduled_worker_contract_gate import (
     FORBIDDEN_KEYS,
     FORBIDDEN_TEXT_FRAGMENTS,
     WORKER_MANIFEST_IMAGE_PATH,
+    WORKER_RUNTIME_IMAGE_PATHS,
     validate_source_ingestion_scheduled_worker_contract,
 )
 
@@ -77,3 +78,5 @@ def test_canonical_worker_manifest_and_compose_source_runtime_wiring_are_explici
     assert "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST" in compose_text
     dockerfile_text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
     assert f"COPY {WORKER_MANIFEST_IMAGE_PATH} ./{WORKER_MANIFEST_IMAGE_PATH}" in dockerfile_text
+    for runtime_path in WORKER_RUNTIME_IMAGE_PATHS:
+        assert f"COPY {runtime_path} ./{runtime_path}" in dockerfile_text
