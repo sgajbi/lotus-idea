@@ -8,6 +8,13 @@ services:
         required: true
       - path: .env
         required: false
+    environment:
+      LOTUS_CORE_QUERY_BASE_URL: "${LOTUS_CORE_QUERY_BASE_URL:-http://host.docker.internal:8201}"
+      LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL: "${LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL:-http://host.docker.internal:8202}"
+      LOTUS_RISK_BASE_URL: "${LOTUS_RISK_BASE_URL:-http://host.docker.internal:8130}"
+      LOTUS_PERFORMANCE_BASE_URL: "${LOTUS_PERFORMANCE_BASE_URL:-http://host.docker.internal:8002}"
+      LOTUS_ADVISE_BASE_URL: "${LOTUS_ADVISE_BASE_URL:-http://host.docker.internal:8000}"
+      LOTUS_MANAGE_BASE_URL: "${LOTUS_MANAGE_BASE_URL:-http://host.docker.internal:8001}"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8330/health/ready')"]
       interval: 15s
@@ -23,6 +30,10 @@ services:
         required: true
       - path: .env
         required: false
+    environment:
+      LOTUS_IDEA_SOURCE_INGESTION_MANIFEST: /app/docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json
+      LOTUS_CORE_QUERY_BASE_URL: "${LOTUS_CORE_QUERY_BASE_URL:-http://host.docker.internal:8201}"
+      LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL: "${LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL:-http://host.docker.internal:8202}"
     command:
       - python
       - scripts/run_scheduled_source_ingestion_worker.py

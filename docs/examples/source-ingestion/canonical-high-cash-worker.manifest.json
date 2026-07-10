@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "lotus-idea.source-ingestion.high-cash.run-once.v1",
+  "evaluatedAtUtc": "2026-07-10T00:00:00Z",
+  "actorSubject": "canonical-front-office-source-worker",
+  "maxItems": 100,
+  "correlationId": "corr-canonical-source-worker",
+  "traceId": "trace-canonical-source-worker",
+  "workItems": [
+    {
+      "portfolioId": "PB_SG_GLOBAL_BAL_001",
+      "asOfDate": "2026-04-10",
+      "idempotencyKey": "canonical-source-worker:high-cash:PB_SG_GLOBAL_BAL_001:2026-04-10"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+import json
+from pathlib import Path
 
 from app.application.source_ingestion_scheduled_worker import (
     build_scheduled_worker_deploy_proof_payload,
@@ -11,6 +13,9 @@ from scripts.source_ingestion_scheduled_worker_contract_gate import (
     FORBIDDEN_TEXT_FRAGMENTS,
     validate_source_ingestion_scheduled_worker_contract,
 )
+
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_scheduled_worker_contract_gate_passes_current_contract() -> None:
@@ -48,3 +53,24 @@ def test_scheduled_worker_contract_gate_detects_source_sensitive_content() -> No
 
     assert any("portfolioId" in error for error in errors)
     assert any("PB_SG_GLOBAL_BAL_001" in error for error in errors)
+
+
+def test_canonical_worker_manifest_and_compose_source_runtime_wiring_are_explicit() -> None:
+    manifest_path = (
+        ROOT
+        / "docs"
+        / "examples"
+        / "source-ingestion"
+        / ("canonical-high-cash-worker.manifest.json")
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    compose_text = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+
+    assert manifest["schemaVersion"] == "lotus-idea.source-ingestion.high-cash.run-once.v1"
+    assert manifest["workItems"][0]["portfolioId"] == "PB_SG_GLOBAL_BAL_001"
+    assert manifest["workItems"][0]["asOfDate"] == "2026-04-10"
+    assert "LOTUS_CORE_QUERY_BASE_URL" in compose_text
+    assert "LOTUS_CORE_QUERY_CONTROL_PLANE_BASE_URL" in compose_text
+    assert "LOTUS_RISK_BASE_URL" in compose_text
+    assert "LOTUS_PERFORMANCE_BASE_URL" in compose_text
+    assert "LOTUS_IDEA_SOURCE_INGESTION_MANIFEST" in compose_text
