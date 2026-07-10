@@ -17,6 +17,10 @@ except ModuleNotFoundError:
 ROOT = Path(__file__).resolve().parents[1]
 API_DIR = Path("src/app/api")
 CALLER_HEADERS_MODULE = API_DIR / "caller_headers.py"
+CALLER_CONTEXT_OPENAPI_MODULE = API_DIR / "caller_context_openapi.py"
+PROBLEM_DETAILS_MODULE = API_DIR / "problem_details.py"
+MAIN_MODULE = Path("src/app/main.py")
+ERRORS_MODULE = Path("src/app/errors.py")
 TRUSTED_HEADER_NAME = "TRUSTED_CALLER_CONTEXT_HEADER"
 TRUSTED_HEADER_VALUE = "X-Lotus-Trusted-Caller-Context"
 CALLER_HEADER_ALIASES = (
@@ -136,6 +140,17 @@ def _validate_caller_headers_module(path: Path, root: Path) -> list[str]:
         errors.append(
             f"{relative_path}: caller-context boundary must preserve stable ProblemDetails codes"
         )
+    if "ProblemDetailsHTTPException" in source_text:
+        for fragment in (
+            'code="invalid_request"',
+            'error_category="caller_context_invalid_request"',
+            'code="permission_denied"',
+            'error_category="caller_context_permission_denied"',
+        ):
+            if fragment not in source_text:
+                errors.append(
+                    f"{relative_path}: caller-context boundary contract `{fragment}` is missing"
+                )
     for node in ast.walk(tree):
         if not isinstance(node, ast.Raise) or not isinstance(node.exc, ast.Call):
             continue
@@ -188,6 +203,31 @@ def validate_caller_context_contract(root: Path = ROOT) -> list[str]:
         if path.name == CALLER_HEADERS_MODULE.name:
             continue
         errors.extend(_validate_api_module(path, root))
+    shared_contracts = {
+        MAIN_MODULE: (
+            "isinstance(exc, ProblemDetailsHTTPException)",
+            "exc.error_category",
+        ),
+        CALLER_CONTEXT_OPENAPI_MODULE: (
+            "_apply_caller_context_problem_responses(operation)",
+            '"invalid_request"',
+            '"permission_denied"',
+            "application/problem+json",
+        ),
+        PROBLEM_DETAILS_MODULE: ("self.error_category = error_category",),
+        ERRORS_MODULE: ('media_type="application/problem+json"',),
+    }
+    for relative_path, fragments in shared_contracts.items():
+        path = root / relative_path
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for fragment in fragments:
+            if fragment not in text:
+                errors.append(
+                    f"{relative_path.as_posix()}: caller-context boundary contract "
+                    f"`{fragment}` is missing"
+                )
     return sorted(errors)
 
 

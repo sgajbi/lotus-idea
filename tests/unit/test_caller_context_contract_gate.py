@@ -45,7 +45,20 @@ def _write_minimum_caller_headers(root: Path) -> None:
         "        roles=None,\n"
         "        capabilities=None,\n"
         "        trusted_caller_context=x_lotus_trusted_caller_context,\n"
-        "    )\n",
+        "    )\n" + _stable_problem_fragments(),
+    )
+
+
+def _stable_problem_fragments() -> str:
+    return (
+        "ProblemDetailsHTTPException(\n"
+        '    code="invalid_request",\n'
+        '    error_category="caller_context_invalid_request",\n'
+        ")\n"
+        "ProblemDetailsHTTPException(\n"
+        '    code="permission_denied",\n'
+        '    error_category="caller_context_permission_denied",\n'
+        ")\n"
     )
 
 

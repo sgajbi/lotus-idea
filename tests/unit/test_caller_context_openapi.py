@@ -4,6 +4,8 @@ from typing import Any, cast
 
 from app.api.caller_context_openapi import (
     CALLER_CONTEXT_EXTENSION,
+    PROBLEM_MEDIA_TYPES,
+    PROTECTED_OPERATION_REQUIREMENTS,
     CallerContextOpenApiRequirement,
     _apply_operation_requirement,
     apply_caller_context_openapi_contract,
@@ -75,6 +77,41 @@ def test_candidate_detail_openapi_publishes_required_reader_roles() -> None:
     caller_context = operation[CALLER_CONTEXT_EXTENSION]
     assert caller_context["requiredCapabilities"] == ["idea.candidate.detail.read"]
     assert caller_context["requiredRoles"] == ["advisor", "operator"]
+
+
+def test_every_protected_operation_publishes_caller_boundary_problem_contracts() -> None:
+    schema = app.openapi()
+
+    for requirement in PROTECTED_OPERATION_REQUIREMENTS:
+        operation = schema["paths"][requirement.path][requirement.method.lower()]
+        for status_code, code in (("400", "invalid_request"), ("403", "permission_denied")):
+            response = operation["responses"][status_code]
+            for media_type in PROBLEM_MEDIA_TYPES:
+                media = response["content"][media_type]
+                examples = media.get("examples", {})
+                assert examples[f"caller_context_{code}"]["value"]["code"] == code
+
+
+def test_every_operation_with_caller_headers_is_registered_as_protected() -> None:
+    schema = app.openapi()
+    registered = {
+        (requirement.method.lower(), requirement.path)
+        for requirement in PROTECTED_OPERATION_REQUIREMENTS
+    }
+    operations_with_caller_headers: set[tuple[str, str]] = set()
+    for path, path_item in schema["paths"].items():
+        for method, operation in path_item.items():
+            if not isinstance(operation, dict):
+                continue
+            header_names = {
+                parameter.get("name")
+                for parameter in operation.get("parameters", [])
+                if isinstance(parameter, dict) and parameter.get("in") == "header"
+            }
+            if "X-Caller-Capabilities" in header_names:
+                operations_with_caller_headers.add((method, path))
+
+    assert operations_with_caller_headers == registered
 
 
 def test_caller_context_openapi_contract_ignores_malformed_schema_sections() -> None:

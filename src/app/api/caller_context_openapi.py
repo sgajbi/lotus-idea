@@ -6,6 +6,7 @@ from typing import Any
 CALLER_CONTEXT_SECURITY_SCHEME = "LotusCallerContext"
 TRUSTED_CALLER_CONTEXT_SECURITY_SCHEME = "LotusTrustedCallerContext"
 CALLER_CONTEXT_EXTENSION = "x-lotus-caller-context"
+PROBLEM_MEDIA_TYPES = ("application/json", "application/problem+json")
 
 
 @dataclass(frozen=True)
@@ -287,6 +288,7 @@ def _apply_operation_requirement(
         extension["alternativeRoles"] = list(requirement.alternative_roles)
     operation[CALLER_CONTEXT_EXTENSION] = extension
     _describe_caller_context_headers(operation)
+    _apply_caller_context_problem_responses(operation)
 
 
 def _describe_caller_context_headers(operation: dict[str, Any]) -> None:
@@ -301,3 +303,74 @@ def _describe_caller_context_headers(operation: dict[str, Any]) -> None:
         name = parameter.get("name")
         if isinstance(name, str) and name in _HEADER_DESCRIPTIONS:
             parameter["description"] = _HEADER_DESCRIPTIONS[name]
+
+
+def _apply_caller_context_problem_responses(operation: dict[str, Any]) -> None:
+    contracts = (
+        (
+            "400",
+            "invalid_request",
+            "Invalid request",
+            "Caller entitlement scope headers cannot contain blank values.",
+            "Caller-context request validation failed.",
+        ),
+        (
+            "403",
+            "permission_denied",
+            "Permission denied",
+            "Trusted caller context provenance is required.",
+            "Caller-context authorization or trusted provenance failed.",
+        ),
+    )
+    responses = operation.setdefault("responses", {})
+    if not isinstance(responses, dict):
+        responses = {}
+        operation["responses"] = responses
+    for status_code, code, title, detail, description in contracts:
+        response = responses.setdefault(status_code, {"description": description})
+        if not isinstance(response, dict):
+            response = {"description": description}
+            responses[status_code] = response
+        response.setdefault("description", description)
+        content = response.setdefault("content", {})
+        if not isinstance(content, dict):
+            content = {}
+            response["content"] = content
+        example = {
+            "type": "about:blank",
+            "status": int(status_code),
+            "code": code,
+            "title": title,
+            "detail": detail,
+        }
+        for media_type in PROBLEM_MEDIA_TYPES:
+            media = content.setdefault(media_type, {})
+            if not isinstance(media, dict):
+                media = {}
+                content[media_type] = media
+            media.setdefault("schema", {"$ref": "#/components/schemas/ProblemDetails"})
+            _merge_caller_context_example(media, code=code, example=example)
+
+
+def _merge_caller_context_example(
+    media: dict[str, Any],
+    *,
+    code: str,
+    example: dict[str, Any],
+) -> None:
+    example_key = f"caller_context_{code}"
+    examples = media.get("examples")
+    if isinstance(examples, dict):
+        examples.setdefault(example_key, {"summary": example["title"], "value": example})
+        return
+    existing = media.pop("example", None)
+    merged_examples: dict[str, Any] = {}
+    if isinstance(existing, dict):
+        existing_code = existing.get("code")
+        existing_key = str(existing_code) if isinstance(existing_code, str) else "route_error"
+        merged_examples[existing_key] = {
+            "summary": str(existing.get("title", "Route error")),
+            "value": existing,
+        }
+    merged_examples[example_key] = {"summary": example["title"], "value": example}
+    media["examples"] = merged_examples
