@@ -26,6 +26,9 @@ except ModuleNotFoundError:
     from proof_source_safety import forbidden_content_validator, validate_forbidden_content  # type: ignore[import-not-found,no-redef]
 
 ROOT = Path(__file__).resolve().parents[1]
+WORKER_MANIFEST_IMAGE_PATH = (
+    "docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json"
+)
 EXAMPLE_MANIFEST_PATH = (
     ROOT / "docs" / "examples" / "source-ingestion" / "high-cash-worker-manifest.example.json"
 )
@@ -94,6 +97,11 @@ def validate_source_ingestion_scheduled_worker_contract() -> list[str]:
             f"docker-compose.yml must define {DOCKER_COMPOSE_WORKER_SERVICE} using "
             f"{SCHEDULED_WORKER_ENTRYPOINT}"
         )
+    if not _docker_worker_manifest_packaged():
+        errors.append(
+            "Dockerfile must package the canonical scheduled-worker manifest at "
+            f"{WORKER_MANIFEST_IMAGE_PATH}"
+        )
 
     validate_forbidden_content(check_summary, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
     validate_forbidden_content(proof, errors, FORBIDDEN_KEYS, FORBIDDEN_TEXT_FRAGMENTS)
@@ -109,6 +117,14 @@ def _docker_compose_service_present() -> bool:
         DOCKER_COMPOSE_WORKER_SERVICE in compose_text
         and SCHEDULED_WORKER_ENTRYPOINT in compose_text
     )
+
+
+def _docker_worker_manifest_packaged() -> bool:
+    try:
+        dockerfile_text = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    except OSError:
+        return False
+    return f"COPY {WORKER_MANIFEST_IMAGE_PATH} ./{WORKER_MANIFEST_IMAGE_PATH}" in dockerfile_text
 
 
 def _read_manifest(path: Path) -> dict[str, Any]:
