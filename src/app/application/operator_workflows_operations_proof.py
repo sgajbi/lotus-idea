@@ -34,19 +34,35 @@ REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS = (
 REQUIRED_OPERATOR_WORKFLOWS_OPERATIONS_EVIDENCE_REFS = (
     "contracts/observability/lotus-idea-operator-workflows-operations.v1.json",
     "contracts/observability/lotus-idea-operation-metrics.v1.json",
+    "contracts/observability/lotus-idea-outbox-supportability.v1.json",
     "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
     "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml",
+    "monitoring/prometheus/tests/lotus-idea-outbox-supportability.test.yml",
     "docs/runbooks/operator-workflows-operations.md",
     "src/app/observability/logging.py",
+    "src/app/observability/outbox_supportability.py",
     "tests/unit/test_operator_workflows_operations_proof.py",
     "make operator-workflows-ops-contract-gate",
+    "make outbox-supportability-contract-gate",
+    "make outbox-supportability-rule-test",
     "make operator-workflows-operations-proof-contract-gate",
 )
 EXPECTED_METRIC_NAME = "lotus_idea_operation_events_total"
+EXPECTED_OUTBOX_SUPPORTABILITY_METRICS = (
+    "lotus_idea_outbox_delivery_events",
+    "lotus_idea_outbox_delivery_oldest_ready_age_seconds",
+    "lotus_idea_outbox_delivery_configuration_ready",
+    "lotus_idea_outbox_delivery_collection_success",
+)
 EXPECTED_DASHBOARD_UID = "lotus-idea-operator-workflows-operations"
 EXPECTED_ALERT_IDS = (
     "source-ingestion-readiness-blocked",
     "outbox-delivery-readiness-blocked",
+    "outbox-delivery-collection-failed",
+    "outbox-delivery-dead-letter-present",
+    "outbox-delivery-expired-lease-present",
+    "outbox-delivery-backlog-stalled",
+    "outbox-delivery-retry-pressure",
     "downstream-realization-readiness-blocked",
     "implementation-proof-readiness-blocked",
 )
@@ -134,6 +150,7 @@ def build_operator_workflows_operations_proof_payload(
         },
         "remainingCertificationBlockers": REMAINING_OPERATOR_WORKFLOWS_OPERATIONS_BLOCKERS,
         "metricFamily": EXPECTED_METRIC_NAME,
+        "outboxSupportabilityMetricFamilies": EXPECTED_OUTBOX_SUPPORTABILITY_METRICS,
         "dashboardUid": EXPECTED_DASHBOARD_UID,
         "alertIds": EXPECTED_ALERT_IDS,
         "operatorDashboardCertified": proof_valid,
@@ -176,6 +193,10 @@ def operator_workflows_operations_proof_is_valid(payload: Mapping[str, Any]) -> 
     if any(payload.get(field_name) is not False for field_name in expected_false_fields):
         return False
     if tuple(payload.get("alertIds") or ()) != EXPECTED_ALERT_IDS:
+        return False
+    if tuple(payload.get("outboxSupportabilityMetricFamilies") or ()) != (
+        EXPECTED_OUTBOX_SUPPORTABILITY_METRICS
+    ):
         return False
     if not is_timezone_aware_datetime_text(payload.get("generatedAtUtc")):
         return False
@@ -227,12 +248,12 @@ def _dashboard_artifact_certified(repository_root: Path) -> bool:
     if not _contains_only_governed_source_authorities(serialized):
         return False
     metric_names = set(re.findall(r"lotus_[a-z0-9_]+", serialized))
-    if metric_names != {EXPECTED_METRIC_NAME}:
+    if metric_names != {EXPECTED_METRIC_NAME, *EXPECTED_OUTBOX_SUPPORTABILITY_METRICS}:
         return False
     if not all(operation in serialized for operation in EXPECTED_DASHBOARD_OPERATIONS):
         return False
     panels = dashboard.get("panels")
-    return isinstance(panels, list) and len(panels) == 4
+    return isinstance(panels, list) and len(panels) == 7
 
 
 def _alert_rules_artifact_certified(repository_root: Path) -> bool:

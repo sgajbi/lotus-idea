@@ -10,7 +10,7 @@ trust telemetry, and aggregate implementation-proof readiness.
 ## Operating Boundary
 
 The dashboard and alert rules certify operational visibility over implemented
-`lotus_idea_operation_events_total` telemetry only. They do not certify live
+operation-event telemetry and the bounded outbox readiness projection. They do not certify live
 source ingestion, external broker publication, downstream execution outcomes,
 data-mesh certification, Gateway or Workbench behavior, client-ready use, or
 supported-feature promotion.
@@ -30,9 +30,12 @@ identifiers as source authority.
 | Panel | Operator Question | Expected Use |
 | --- | --- | --- |
 | Source Ingestion Readiness And Run Once | Are source-ingestion readiness checks or run-once attempts blocked? | Start with configuration, manifest, Core query/control-plane URL, and scheduled-worker proof posture. |
-| Outbox Delivery Backlog And Recovery Posture | Are outbox readiness checks or run-once attempts blocked or invalid? | Inspect broker configuration, due retry/dead-letter posture, expired leases, and idempotent operator run identity. |
+| Outbox Delivery Runtime State | Is durable work pending, due, deferred, leased, failed, published, or dead-lettered? | Triage actual aggregate queue state independently of API traffic. |
 | Downstream Realization Readiness And Submission | Are downstream readiness or local submission paths blocked? | Separate local submission posture from downstream-owned execution or approval outcomes. |
 | Runtime Trust And Implementation Proof Readiness | Are runtime trust telemetry or aggregate proof readiness checks blocked? | Identify remaining proof blockers before any support or product-surface promotion. |
+| Outbox Operator Activity | Are readiness and run-once calls blocked or invalid? | Diagnose operator interaction separately from durable queue state. |
+| Outbox Oldest Due Age | How long has the oldest delivery-ready event waited? | Escalate sustained age above 900 seconds. |
+| Outbox Configuration And Collection | Is broker configuration ready and is the bounded projection collectible? | Separate configuration/certification blockers from runtime backlog. |
 
 ## source-ingestion-readiness-blocked
 
@@ -84,6 +87,69 @@ Missing required lineage, causation on ordinary request lineage, or equal
 trace and causation values is a producer-contract defect. It is not evidence
 of downstream certification or authority.
 
+## outbox-delivery-collection-failed
+
+Trigger: `lotus_idea_outbox_delivery_collection_success` remains below `1`
+for 5 minutes.
+
+Response:
+
+1. Confirm `/health/ready` and PostgreSQL connectivity.
+2. Check bounded projection logs and database saturation without querying raw
+   event payloads.
+3. Restore projection collection before using the remaining outbox gauges for
+   recovery decisions.
+
+## outbox-delivery-dead-letter-present
+
+Trigger: dead-letter state remains above `0` for 15 minutes.
+
+Response:
+
+1. Use the governed dead-letter inspection API and preserve source-safe output.
+2. Classify the publisher failure and confirm event-family/schema eligibility.
+3. Re-drive only through the authorized one-time fenced workflow, then verify
+   dead-letter count returns to `0` or retain quarantine with an incident record.
+
+## outbox-delivery-expired-lease-present
+
+Trigger: expired-lease state remains above `0` for 10 minutes.
+
+Response:
+
+1. Confirm active publisher workers and lease duration configuration.
+2. Verify an expired lease becomes delivery-ready and can be reclaimed with a
+   new fenced lease.
+3. Escalate repeated expiry as worker latency or availability degradation; do
+   not clear lease ownership directly in the database.
+
+## outbox-delivery-backlog-stalled
+
+Trigger: delivery-ready count remains above `100`, or oldest delivery-ready age
+remains above `900` seconds, for 15 minutes. Values at those thresholds remain
+quiet.
+
+Response:
+
+1. Check collection success and configuration readiness first.
+2. Compare delivery-ready, failed, deferred-retry, expired-lease, and
+   dead-letter counts to identify the pressure source.
+3. Run the idempotent bounded delivery action only when publisher configuration
+   and downstream posture are valid, then verify count and age decline.
+
+## outbox-delivery-retry-pressure
+
+Trigger: deferred-retry count remains above `50` for 30 minutes. A count of
+`50` remains quiet.
+
+Response:
+
+1. Confirm the failure is transient and inspect bounded failure categories.
+2. Preserve backoff and retry limits; do not accelerate retries by editing due
+   timestamps.
+3. Verify deferred work becomes due and drains, or escalates to governed
+   dead-letter handling after the retry limit.
+
 ## downstream-realization-readiness-blocked
 
 Trigger: `downstream_realization_readiness_read` or
@@ -120,12 +186,15 @@ Response:
 Certification evidence must include:
 
 1. `contracts/observability/lotus-idea-operator-workflows-operations.v1.json`,
-2. `monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json`,
-3. `monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
-4. `scripts/operator_workflows_operations_contract_gate.py`,
-5. `scripts/operator_workflows_operations_proof_contract_gate.py`,
-6. `make operator-workflows-ops-contract-gate`,
-7. `make operator-workflows-operations-proof-contract-gate`.
+2. `contracts/observability/lotus-idea-outbox-supportability.v1.json`,
+3. `monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json`,
+4. `monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml`,
+5. `scripts/operator_workflows_operations_contract_gate.py`,
+6. `scripts/outbox_supportability_contract_gate.py`,
+7. `scripts/operator_workflows_operations_proof_contract_gate.py`,
+8. `make operator-workflows-ops-contract-gate`,
+9. `make outbox-supportability-contract-gate`,
+10. `make operator-workflows-operations-proof-contract-gate`.
 
 Both gates must pass after any operation metric, dashboard, alert, or
 source-authority vocabulary change. The gates fail closed if the contract,

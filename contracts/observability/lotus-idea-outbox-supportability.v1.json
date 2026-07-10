@@ -11,6 +11,7 @@
     "contract_gate": "scripts/outbox_supportability_contract_gate.py",
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
     "alert_rules": "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml",
+    "rule_test": "monitoring/prometheus/tests/lotus-idea-outbox-supportability.test.yml",
     "runbook": "docs/runbooks/operator-workflows-operations.md"
   },
   "metric_families": [

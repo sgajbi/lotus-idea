@@ -63,12 +63,12 @@
       "id": 2,
       "targets": [
         {
-          "expr": "sum by (operation, outcome, durable_storage_backed) (increase(lotus_idea_operation_events_total{operation=~\"outbox_delivery_readiness_read|outbox_delivery_run_once\"}[15m]))",
-          "legendFormat": "{{operation}} {{outcome}} durable={{durable_storage_backed}}",
+          "expr": "sum by (state) (lotus_idea_outbox_delivery_events{repository=\"lotus-idea\"})",
+          "legendFormat": "{{state}}",
           "refId": "A"
         }
       ],
-      "title": "Outbox Delivery Backlog And Recovery Posture",
+      "title": "Outbox Delivery Runtime State",
       "type": "timeseries"
     },
     {
@@ -125,6 +125,97 @@
         }
       ],
       "title": "Runtime Trust And Implementation Proof Readiness",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 8
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (operation, outcome) (increase(lotus_idea_operation_events_total{operation=~\"outbox_delivery_readiness_read|outbox_delivery_run_once\"}[15m]))",
+          "legendFormat": "{{operation}} {{outcome}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Outbox Operator Activity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 8
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "max(lotus_idea_outbox_delivery_oldest_ready_age_seconds{repository=\"lotus-idea\"})",
+          "legendFormat": "oldest delivery-ready age",
+          "refId": "A"
+        }
+      ],
+      "title": "Outbox Oldest Due Age",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "max": 1,
+          "min": 0,
+          "unit": "bool"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 8
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "min(lotus_idea_outbox_delivery_configuration_ready{repository=\"lotus-idea\"})",
+          "legendFormat": "configuration ready",
+          "refId": "A"
+        },
+        {
+          "expr": "min(lotus_idea_outbox_delivery_collection_success{repository=\"lotus-idea\"})",
+          "legendFormat": "projection collected",
+          "refId": "B"
+        }
+      ],
+      "title": "Outbox Configuration And Collection",
       "type": "stat"
     }
   ],

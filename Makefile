@@ -1,6 +1,6 @@
 .PHONY: install dependency-refresh lint ci-contract-gate repository-hygiene-gate maintainability-gate duplicate-implementation-inventory duplicate-implementation-gate private-import-boundary-gate slice2-structure-gate documentation-contract-gate quality-scorecard-gate github-issue-closure-matrix-gate monetary-float-guard no-sensitive-content-guard runtime-dependency-closure-gate source-observability-contract-gate api-route-metadata-gate api-problem-details-boundary-gate api-idempotency-boundary-gate api-camel-model-boundary-gate api-signal-model-boundary-gate api-temporal-validation-boundary-gate openapi-problem-details-example-gate caller-context-contract-gate signal-api-contract-gate source-temporal-contract-gate operation-metric-contract-gate ai-model-risk-ops-contract-gate ai-model-risk-operations-proof-contract-gate ci-signal-evidence-contract-gate implementation-truth-gate data-mesh-contract-gate mesh-policy-proof-contract-gate opportunity-archetype-contract-gate downstream-realization-contract-gate downstream-route-contract-proof-gate outbox-event-contract-gate outbox-consumer-contract-gate outbox-recovery-contract-gate migration-contract-gate migration-execution-gate durable-repository-proof-contract-gate runtime-trust-telemetry-proof-contract-gate ai-lineage-store-proof-contract-gate ai-workflow-pack-registration-proof-contract-gate ai-workflow-pack-runtime-execution-proof-contract-gate report-intake-route-proof-contract-gate report-materialization-proof-contract-gate workbench-read-path-proof-contract-gate gateway-workbench-operational-proof-contract-gate gateway-workbench-discovery-proof-contract-gate outbox-broker-proof-contract-gate outbox-consumer-runtime-proof-contract-gate outbox-platform-mesh-event-publication-proof-contract-gate platform-mesh-onboarding-proof-contract-gate source-ingestion-worker-check source-ingestion-scheduled-worker-check source-ingestion-live-proof-contract-gate canonical-opportunity-source-proofs canonical-signal-api-proof risk-concentration-live-proof-contract-gate high-volatility-live-proof-contract-gate risk-drawdown-live-proof-contract-gate core-benchmark-assignment-live-proof-contract-gate core-portfolio-state-live-proof-contract-gate bond-maturity-live-proof-contract-gate missing-benchmark-live-proof-contract-gate missing-benchmark-performance-readiness-proof-contract-gate low-income-core-cashflow-live-proof-contract-gate manage-mandate-live-proof-contract-gate mandate-restriction-live-proof-contract-gate mandate-restriction-source-product-proof-contract-gate missing-suitability-live-proof-contract-gate missing-risk-profile-source-product-proof-contract-gate missing-risk-profile-live-proof-contract-gate performance-underperformance-live-proof-contract-gate implementation-proof-readiness-check runtime-trust-telemetry-preview-check runtime-trust-telemetry-snapshot-check migrate migrate-rollback supported-features-gate endpoint-certification-gate postgres-integration-gate typecheck architecture-boundary-gate architecture-boundary-report quality-baseline openapi-gate test test-unit test-integration test-e2e test-unit-coverage test-integration-coverage test-e2e-coverage test-coverage security-audit check ci ci-release docker-build container-runtime-smoke release-sbom container-image-scan clean
 
-.PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate
+.PHONY: candidate-state-contract-gate review-identity-contract-gate conversion-outcome-contract-gate outbox-supportability-contract-gate outbox-supportability-rule-test
 
 VENV_DIR ?= .venv
 UNIT_TESTS ?= tests/unit
@@ -26,6 +26,7 @@ CONTAINER_SMOKE_CONTAINER_PORT ?= 8330
 CONTAINER_SMOKE_TIMEOUT_SECONDS ?= 45
 CONTAINER_SMOKE_PROBE_INTERVAL_SECONDS ?= 1
 TRIVY_IMAGE ?= aquasec/trivy:0.71.2
+PROMETHEUS_IMAGE ?= prom/prometheus:v2.47.2
 IMPLEMENTATION_PROOF_EVALUATED_AT_UTC ?= 2026-06-21T10:10:00Z
 IMPLEMENTATION_PROOF_OUTPUT ?=
 LOTUS_CORE_BASE_URL ?=
@@ -300,6 +301,9 @@ operator-workflows-ops-contract-gate:
 
 outbox-supportability-contract-gate:
 	$(VENV_PYTHON) scripts/outbox_supportability_contract_gate.py
+
+outbox-supportability-rule-test:
+	MSYS_NO_PATHCONV=1 docker run --rm -v "$(CURDIR):/work" --entrypoint promtool $(PROMETHEUS_IMAGE) test rules /work/monitoring/prometheus/tests/lotus-idea-outbox-supportability.test.yml
 
 operator-workflows-operations-proof-contract-gate:
 	$(VENV_PYTHON) scripts/operator_workflows_operations_proof_contract_gate.py

@@ -15,6 +15,10 @@ from app.observability import (  # noqa: E402
     AGGREGATE_SOURCE_AUTHORITY,
     OPERATION_EVENT_SOURCE_AUTHORITIES,
     OperationOutcome,
+    OUTBOX_DELIVERY_COLLECTION_SUCCESS_METRIC,
+    OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC,
+    OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC,
+    OUTBOX_DELIVERY_STATE_METRIC,
 )
 
 try:
@@ -114,6 +118,8 @@ def _validate_source_of_truth(
     source_of_truth = payload.get("source_of_truth")
     required_keys = {
         "operation_metric_contract",
+        "outbox_supportability_contract",
+        "outbox_supportability_contract_gate",
         "contract_gate",
         "proof_contract_gate",
         "dashboard",
@@ -187,6 +193,17 @@ def _validate_dashboard_controls(payload: dict[str, Any]) -> list[str]:
             errors.append(f"{control_id}: required_endpoints must be a non-empty list")
         errors.extend(validate_required_operations(control_id, control.get("required_operations")))
         errors.extend(validate_required_labels(control_id, control.get("required_labels")))
+        if control_id == "outbox-delivery-backlog-and-recovery-posture":
+            expected_metrics = [
+                OUTBOX_DELIVERY_STATE_METRIC,
+                OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC,
+                OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC,
+                OUTBOX_DELIVERY_COLLECTION_SUCCESS_METRIC,
+            ]
+            if control.get("supportability_metric_families") != expected_metrics:
+                errors.append(
+                    f"{control_id}: supportability_metric_families must match code-owned metrics"
+                )
     return _validate_expected_ids(
         errors,
         observed,

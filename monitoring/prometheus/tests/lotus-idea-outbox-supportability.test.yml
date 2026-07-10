@@ -1,0 +1,104 @@
+rule_files:
+  - ../rules/lotus-idea-operator-workflows-operations.rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: outbox supportability remains quiet at documented thresholds
+    interval: 1m
+    input_series:
+      - series: 'lotus_idea_outbox_delivery_collection_success{repository="lotus-idea"}'
+        values: '1x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="dead_letter"}'
+        values: '0x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="expired_lease"}'
+        values: '0x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="delivery_ready"}'
+        values: '100x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="retry_deferred"}'
+        values: '50x35'
+      - series: 'lotus_idea_outbox_delivery_oldest_ready_age_seconds{repository="lotus-idea"}'
+        values: '900x35'
+    alert_rule_test:
+      - eval_time: 35m
+        alertname: LotusIdeaOutboxDeliveryCollectionFailed
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: LotusIdeaOutboxDeliveryDeadLetterPresent
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: LotusIdeaOutboxDeliveryExpiredLeasePresent
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: LotusIdeaOutboxDeliveryBacklogStalled
+        exp_alerts: []
+      - eval_time: 35m
+        alertname: LotusIdeaOutboxDeliveryRetryPressure
+        exp_alerts: []
+
+  - name: outbox supportability alerts after sustained threshold breach
+    interval: 1m
+    input_series:
+      - series: 'lotus_idea_outbox_delivery_collection_success{repository="lotus-idea"}'
+        values: '0x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="dead_letter"}'
+        values: '1x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="expired_lease"}'
+        values: '1x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="delivery_ready"}'
+        values: '101x35'
+      - series: 'lotus_idea_outbox_delivery_events{repository="lotus-idea",state="retry_deferred"}'
+        values: '51x35'
+      - series: 'lotus_idea_outbox_delivery_oldest_ready_age_seconds{repository="lotus-idea"}'
+        values: '901x35'
+    alert_rule_test:
+      - eval_time: 31m
+        alertname: LotusIdeaOutboxDeliveryCollectionFailed
+        exp_alerts:
+          - exp_labels:
+              alert_id: outbox-delivery-collection-failed
+              owner_repo: lotus-idea
+              severity: P2
+            exp_annotations:
+              summary: Outbox supportability projection cannot be collected.
+              runbook: docs/runbooks/operator-workflows-operations.md#outbox-delivery-collection-failed
+      - eval_time: 31m
+        alertname: LotusIdeaOutboxDeliveryDeadLetterPresent
+        exp_alerts:
+          - exp_labels:
+              alert_id: outbox-delivery-dead-letter-present
+              owner_repo: lotus-idea
+              severity: P2
+            exp_annotations:
+              summary: Dead-lettered outbox events require governed recovery review.
+              runbook: docs/runbooks/operator-workflows-operations.md#outbox-delivery-dead-letter-present
+      - eval_time: 31m
+        alertname: LotusIdeaOutboxDeliveryExpiredLeasePresent
+        exp_alerts:
+          - exp_labels:
+              alert_id: outbox-delivery-expired-lease-present
+              owner_repo: lotus-idea
+              severity: P2
+            exp_annotations:
+              summary: Expired outbox delivery leases are not recovering promptly.
+              runbook: docs/runbooks/operator-workflows-operations.md#outbox-delivery-expired-lease-present
+      - eval_time: 31m
+        alertname: LotusIdeaOutboxDeliveryBacklogStalled
+        exp_alerts:
+          - exp_labels:
+              alert_id: outbox-delivery-backlog-stalled
+              owner_repo: lotus-idea
+              severity: P2
+            exp_annotations:
+              summary: Delivery-ready outbox backlog count or age exceeds its operating threshold.
+              runbook: docs/runbooks/operator-workflows-operations.md#outbox-delivery-backlog-stalled
+      - eval_time: 31m
+        alertname: LotusIdeaOutboxDeliveryRetryPressure
+        exp_alerts:
+          - exp_labels:
+              alert_id: outbox-delivery-retry-pressure
+              owner_repo: lotus-idea
+              severity: P3
+            exp_annotations:
+              summary: Deferred outbox retries exceed the operating threshold.
+              runbook: docs/runbooks/operator-workflows-operations.md#outbox-delivery-retry-pressure

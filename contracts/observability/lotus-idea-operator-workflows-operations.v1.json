@@ -9,6 +9,8 @@
   "alert_certified": true,
   "source_of_truth": {
     "operation_metric_contract": "contracts/observability/lotus-idea-operation-metrics.v1.json",
+    "outbox_supportability_contract": "contracts/observability/lotus-idea-outbox-supportability.v1.json",
+    "outbox_supportability_contract_gate": "scripts/outbox_supportability_contract_gate.py",
     "contract_gate": "scripts/operator_workflows_operations_contract_gate.py",
     "proof_contract_gate": "scripts/operator_workflows_operations_proof_contract_gate.py",
     "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
@@ -70,6 +72,12 @@
       "control_id": "outbox-delivery-backlog-and-recovery-posture",
       "operator_question": "Can operators see outbox readiness and run-once failure pressure before dead-letter or recovery work is handled manually?",
       "implemented_metric_family": "lotus_idea_operation_events_total",
+      "supportability_metric_families": [
+        "lotus_idea_outbox_delivery_events",
+        "lotus_idea_outbox_delivery_oldest_ready_age_seconds",
+        "lotus_idea_outbox_delivery_configuration_ready",
+        "lotus_idea_outbox_delivery_collection_success"
+      ],
       "required_operations": [
         "outbox_delivery_readiness_read",
         "outbox_delivery_run_once"
