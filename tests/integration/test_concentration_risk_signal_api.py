@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from pytest import MonkeyPatch
 
 import app.api.concentration_risk_signals as concentration_risk_api
+from app.api.caller_headers import INVALID_CALLER_SCOPE_DETAIL
 from app.domain import EvidenceFreshness, InMemoryIdeaRepository, SourceRef, SourceSystem
 from app.main import app
 from app.ports.risk_sources import (
@@ -270,7 +271,7 @@ def test_concentration_risk_signal_api_rejects_blank_entitlement_scope_header() 
         "status": 400,
         "code": "invalid_request",
         "title": "Invalid request",
-        "detail": "caller entitlement scope headers cannot contain blank values",
+        "detail": INVALID_CALLER_SCOPE_DETAIL,
     }
 
 
