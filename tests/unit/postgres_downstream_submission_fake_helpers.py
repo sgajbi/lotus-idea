@@ -28,26 +28,18 @@ def execute_downstream_submission_query(
 
     if query.startswith("/* lotus-idea downstream-submission-by-idempotency */"):
         assert params is not None
-        cursor._rows = [
-            dict(row) for row in rows if row["idempotency_key"] == params[0]
-        ]
+        cursor._rows = [dict(row) for row in rows if row["idempotency_key"] == params[0]]
         return True
 
     if query.startswith("/* lotus-idea downstream-submission-by-support-reference */"):
         assert params is not None
-        cursor._rows = [
-            dict(row) for row in rows if row["support_reference"] == params[0]
-        ]
+        cursor._rows = [dict(row) for row in rows if row["support_reference"] == params[0]]
         return True
 
     if query.startswith("/* lotus-idea downstream-submission-reconciliation-list */"):
         assert params is not None
         first_posture, second_posture, limit = params
-        pending = [
-            dict(row)
-            for row in rows
-            if row["status"] in {first_posture, second_posture}
-        ]
+        pending = [dict(row) for row in rows if row["status"] in {first_posture, second_posture}]
         pending.sort(key=lambda row: (row["updated_at_utc"], row["support_reference"]))
         cursor._rows = pending[:limit]
         return True

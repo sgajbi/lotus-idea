@@ -101,9 +101,7 @@ def test_postgres_downstream_submission_claim_recovery_and_restart_proof(
 
     with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
         restarted = PostgresIdeaRepository(cast(PostgresConnection, connection))
-        persisted = restarted.downstream_submission_by_idempotency_key(
-            "interrupted-submission-key"
-        )
+        persisted = restarted.downstream_submission_by_idempotency_key("interrupted-submission-key")
         retry = restarted.claim_downstream_submission(_claim("interrupted-submission-key"))
         assert persisted is not None
         assert persisted.status is DownstreamSubmissionPosture.IN_FLIGHT

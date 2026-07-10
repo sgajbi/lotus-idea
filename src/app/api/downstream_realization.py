@@ -128,9 +128,7 @@ def _uncertain_submission_response_metadata() -> dict[int | str, dict[str, Any]]
                             "sourceAuthority": "lotus-advise",
                             "target": "advise_proposal",
                             "downstreamFailureReason": "downstream_timeout",
-                            "supportReference": (
-                                "downstream-submission-0123456789abcdef01234567"
-                            ),
+                            "supportReference": ("downstream-submission-0123456789abcdef01234567"),
                             "idempotencyReplayed": False,
                             "recordsDownstreamOutcome": False,
                             "grantsDownstreamAuthority": False,

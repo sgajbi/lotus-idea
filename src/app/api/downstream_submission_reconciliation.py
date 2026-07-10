@@ -73,7 +73,9 @@ async def get_downstream_submissions_requiring_reconciliation(
     try:
         require_role_and_capability(caller, _READ_POLICY)
     except PermissionDeniedError:
-        _emit_event(IdeaOperation.DOWNSTREAM_RECONCILIATION_READ, OperationOutcome.PERMISSION_DENIED)
+        _emit_event(
+            IdeaOperation.DOWNSTREAM_RECONCILIATION_READ, OperationOutcome.PERMISSION_DENIED
+        )
         return _permission_denied("inspect")
     repository = get_idea_repository()
     summaries = list_downstream_submissions_requiring_reconciliation(
@@ -300,9 +302,7 @@ DOWNSTREAM_RECONCILIATION_ROUTE: RouteMetadata = {
                         "repository": "lotus-idea",
                         "reconciliationStatus": "accepted",
                         "submission": {
-                            "supportReference": (
-                                "downstream-submission-0123456789abcdef01234567"
-                            ),
+                            "supportReference": ("downstream-submission-0123456789abcdef01234567"),
                             "resourceType": "conversion_intent",
                             "target": "advise_proposal",
                             "sourceAuthority": "lotus-advise",

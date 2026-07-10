@@ -271,9 +271,7 @@ def downstream_submission_audit_from_json(
         action=DownstreamSubmissionAuditAction(_required_string(payload, "action")),
         actor_subject=_required_string(payload, "actorSubject"),
         previous_posture=(DownstreamSubmissionPosture(str(previous)) if previous else None),
-        current_posture=DownstreamSubmissionPosture(
-            _required_string(payload, "currentPosture")
-        ),
+        current_posture=DownstreamSubmissionPosture(_required_string(payload, "currentPosture")),
         occurred_at_utc=decode_datetime(payload.get("occurredAtUtc")),
         reason=_optional_string(payload, "reason"),
         change_reference=_optional_string(payload, "changeReference"),

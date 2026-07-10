@@ -198,8 +198,7 @@ def _validate_durable_submission_state_machine(repository_root: Path) -> list[st
     if claim_position < 0 or call_position < 0 or claim_position > call_position:
         errors.append("downstream orchestration must durably claim before the external call")
     source_tree = "\n".join(
-        path.read_text(encoding="utf-8")
-        for path in sorted((repository_root / "src").rglob("*.py"))
+        path.read_text(encoding="utf-8") for path in sorted((repository_root / "src").rglob("*.py"))
     )
     if "record_downstream_submission(" in source_tree:
         errors.append("legacy post-call downstream submission writes must remain removed")

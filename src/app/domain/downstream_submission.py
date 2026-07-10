@@ -298,9 +298,7 @@ def reconcile_downstream_submission(
         occurred_at_utc=reconciled_at_utc,
         reason=reason,
         record_failure_reason=(
-            None
-            if resolution is DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM
-            else reason
+            None if resolution is DownstreamSubmissionResolution.ACCEPTED_BY_DOWNSTREAM else reason
         ),
         change_reference=change_reference,
     )
@@ -393,10 +391,14 @@ def _validate_posture(record: DownstreamSubmissionRecord) -> None:
     }
     if requires_failure and record.downstream_failure_reason is None:
         raise ValueError(f"{record.status.value} downstream submission requires a failure reason")
-    if record.status in {
-        DownstreamSubmissionPosture.IN_FLIGHT,
-        DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
-    } and record.downstream_failure_reason is not None:
+    if (
+        record.status
+        in {
+            DownstreamSubmissionPosture.IN_FLIGHT,
+            DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        }
+        and record.downstream_failure_reason is not None
+    ):
         raise ValueError(f"{record.status.value} downstream submission forbids a failure reason")
 
 
