@@ -581,12 +581,20 @@ Current branch validation:
 
 1. `make lint` passed all repository contract and governance gates.
 2. `make typecheck` passed across `563` source files.
-3. `make test-unit` passed with `2704 passed`.
-4. `make test-integration` passed with `385 passed` and `12` expected
+3. `make test-unit` passed with `2764 passed`.
+4. `make test-integration` passed with `389 passed` and `12` expected
    PostgreSQL skips when no integration DSN is configured.
 5. `make test-e2e` passed with `4 passed`.
 6. The required disposable PostgreSQL gate passed with `12 passed`, including
-   the new concurrent submission recovery scenario.
+   concurrent submission recovery, restart, connection-failure recovery,
+   outbox recovery, review-queue snapshot, and migration apply/rollback proof.
+7. `make ci` passed all blocking lint, modularity, duplicate, architecture,
+   contract, migration, OpenAPI, endpoint-certification, test, and dependency
+   audit gates. Combined coverage passed at `99.01%` with no known dependency
+   vulnerabilities.
+8. Final stranded-truth reconciliation on 2026-07-11 found no remote branches
+   unmerged from `origin/main`; no durable RFC, docs, wiki, context, contract,
+   migration, OpenAPI, or supported-feature truth required recovery.
 
 ## Issue 337 Dead-Letter Recovery Hardening
 
