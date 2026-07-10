@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 from types import ModuleType
 
@@ -142,6 +143,22 @@ def test_provider_restored_database_uses_same_validation_use_case(tmp_path: Path
     assert evidence.status is RestoreValidationStatus.PASSED
     assert evidence.pitr_proof is True
     assert evidence.backup_format == "physical-base-plus-wal"
+
+
+def test_restore_drill_direct_entrypoint_loads_shared_evidence_writer() -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/run_postgres_disaster_recovery_drill.py"),
+            "--help",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0
+    assert "--backup-identifier" in completed.stdout
 
 
 def valid_snapshot(tables: frozenset[str]) -> RestoredDatabaseSnapshot:

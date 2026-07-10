@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
@@ -13,6 +13,8 @@ from psycopg.rows import dict_row
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
@@ -29,6 +31,9 @@ from app.infrastructure.postgres_disaster_recovery import (  # noqa: E402
 )
 from app.infrastructure.postgres_protocols import PostgresConnection  # noqa: E402
 from app.infrastructure.postgres_repository import PostgresIdeaRepository  # noqa: E402
+from scripts.disaster_recovery_evidence_io import (  # noqa: E402
+    write_dataclass_evidence_atomic,
+)
 
 TARGET_DATABASE_URL_ENV = "LOTUS_IDEA_DR_TARGET_DATABASE_URL"
 DEFAULT_OUTPUT_PATH = ROOT / "output/disaster-recovery/postgres-resume-evidence.json"
@@ -140,7 +145,7 @@ def validate_restore_resume_safety(
         table_content_sha256_after=dict(sorted(after.table_content_sha256.items())),
         no_duplicate_or_mutation=no_mutation,
     )
-    _write_evidence_atomic(output_path, evidence)
+    write_dataclass_evidence_atomic(output_path, evidence)
     return evidence
 
 
@@ -158,16 +163,6 @@ def _safe_identifier(value: str, field_name: str) -> str:
     ):
         raise ValueError(f"{field_name} must be a source-safe identifier")
     return value
-
-
-def _write_evidence_atomic(path: Path, evidence: RestoreResumeEvidence) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(f"{path.suffix}.tmp")
-    temporary.write_text(
-        json.dumps(asdict(evidence), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(path)
 
 
 def _parser() -> argparse.ArgumentParser:

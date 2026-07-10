@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
 from datetime import UTC, datetime
 import hashlib
 import json
@@ -13,6 +12,8 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
@@ -28,6 +29,9 @@ from app.infrastructure.postgres_backup_restore import (  # noqa: E402
 )
 from app.infrastructure.postgres_disaster_recovery import (  # noqa: E402
     PostgresRestoredDatabaseInspector,
+)
+from scripts.disaster_recovery_evidence_io import (  # noqa: E402
+    write_dataclass_evidence_atomic,
 )
 
 CONTRACT_PATH = ROOT / "contracts/operations/lotus-idea-postgres-disaster-recovery.v1.json"
@@ -127,7 +131,7 @@ def validate_restored_database(
         now=now,
     )
     evidence = use_case.execute(request)
-    _write_evidence_atomic(output_path, evidence)
+    write_dataclass_evidence_atomic(output_path, evidence)
     return evidence
 
 
@@ -173,16 +177,6 @@ def _forward_migrations() -> list[Path]:
         for path in sorted(MIGRATIONS_PATH.glob("[0-9][0-9][0-9]_*.sql"))
         if not path.name.endswith(".rollback.sql")
     ]
-
-
-def _write_evidence_atomic(path: Path, evidence: RestoreDrillEvidence) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(f"{path.suffix}.tmp")
-    temporary.write_text(
-        json.dumps(asdict(evidence), indent=2, sort_keys=True) + "\n",
-        encoding="utf-8",
-    )
-    temporary.replace(path)
 
 
 def _parse_utc(value: str) -> datetime:

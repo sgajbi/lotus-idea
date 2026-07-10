@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 from pathlib import Path
+import subprocess
 import sys
 from types import ModuleType
 
@@ -30,6 +31,22 @@ def test_restore_resume_validator_binds_all_no_duplicate_decisions() -> None:
     ):
         assert decision in source
     assert "before.table_content_sha256 == after.table_content_sha256" in source
+
+
+def test_restore_resume_direct_entrypoint_loads_shared_evidence_writer() -> None:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts/validate_postgres_disaster_recovery_resume.py"),
+            "--help",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 0
+    assert "--operator-id" in completed.stdout
 
 
 def load_script() -> ModuleType:

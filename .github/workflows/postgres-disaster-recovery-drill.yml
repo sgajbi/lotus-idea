@@ -1,0 +1,79 @@
+name: PostgreSQL Disaster Recovery Drill
+
+on:
+  schedule:
+    - cron: "17 2 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONUNBUFFERED: "1"
+  PYTHON_VERSION: "3.12"
+  PGPASSWORD: lotus_idea_dr
+  LOTUS_IDEA_DATABASE_URL: postgresql://lotus_idea_dr:lotus_idea_dr@localhost:5432/lotus_idea_dr_source
+  LOTUS_IDEA_DR_SOURCE_DATABASE_URL: postgresql://lotus_idea_dr:lotus_idea_dr@localhost:5432/lotus_idea_dr_source
+  LOTUS_IDEA_DR_TARGET_DATABASE_URL: postgresql://lotus_idea_dr:lotus_idea_dr@localhost:5432/lotus_idea_dr_target
+
+jobs:
+  restore-drill:
+    name: Scheduled DR / Backup Restore Resume Proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: lotus_idea_dr_source
+          POSTGRES_PASSWORD: lotus_idea_dr
+          POSTGRES_USER: lotus_idea_dr
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U lotus_idea_dr -d lotus_idea_dr_source"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+      - name: Install
+        run: make install
+      - name: Verify PostgreSQL client tools
+        run: |
+          pg_dump --version
+          pg_restore --version
+      - name: Create clean restore target
+        run: createdb --host localhost --port 5432 --username lotus_idea_dr lotus_idea_dr_target
+      - name: Apply current source migrations
+        run: make migrate
+      - name: Seed representative linked recovery state
+        run: make postgres-disaster-recovery-seed
+      - name: Take and restore real logical backup
+        run: make postgres-disaster-recovery-drill
+      - name: Prove restart replay and lease fencing
+        run: make postgres-disaster-recovery-resume
+      - name: Validate source-safe recovery evidence
+        run: make disaster-recovery-proof-gate
+      - name: Attest recovery evidence provenance
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: output/disaster-recovery/*.json
+      - name: Upload recovery evidence
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: postgres-disaster-recovery-${{ github.run_id }}
+          path: output/disaster-recovery/*.json
+          if-no-files-found: error
+          retention-days: 90
