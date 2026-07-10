@@ -342,9 +342,9 @@ def _validate_lineage_implementation_alignment(errors: list[str]) -> None:
             errors.append(f"{relative_path} must expose the governed causation header")
 
     persistence_text = _read_source_text("src/app/domain/persistence.py", errors)
-    if persistence_text is not None and persistence_text.count(
-        "event_lineage=event_lineage"
-    ) < len(REQUIRED_EVENT_TYPES):
+    if persistence_text is not None and persistence_text.count("event_lineage=event_lineage") < len(
+        REQUIRED_EVENT_TYPES
+    ):
         errors.append("domain persistence must pass lineage to every outbox event family")
 
 

@@ -46,9 +46,7 @@ def test_outbox_event_contract_gate_rejects_conflated_example_lineage(tmp_path: 
     module = _load_contract_gate_script()
     source_contract = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"
     contract = json.loads(source_contract.read_text(encoding="utf-8"))
-    contract["envelope"]["example"]["traceId"] = contract["envelope"]["example"][
-        "causationId"
-    ]
+    contract["envelope"]["example"]["traceId"] = contract["envelope"]["example"]["causationId"]
     contract_path = tmp_path / "lotus-idea-outbox-events.v1.json"
     contract_path.write_text(json.dumps(contract), encoding="utf-8")
 

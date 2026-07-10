@@ -109,9 +109,7 @@ def test_conversion_outcome_migration_quarantines_without_deleting_legacy_histor
 
 
 def test_outbox_lineage_migration_backfills_without_deleting_event_history() -> None:
-    apply_sql = (ROOT / "migrations" / "007_outbox_event_lineage.sql").read_text(
-        encoding="utf-8"
-    )
+    apply_sql = (ROOT / "migrations" / "007_outbox_event_lineage.sql").read_text(encoding="utf-8")
 
     assert "trace_id" in apply_sql
     assert "lineage_origin" in apply_sql
