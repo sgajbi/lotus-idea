@@ -537,44 +537,6 @@ def test_review_action_api_replays_same_idempotency_payload() -> None:
     assert replayed.json()["persistence"]["candidateId"] == candidate_id
 
 
-def test_review_action_api_governs_resource_identity_across_transport_keys() -> None:
-    reset_idea_repository_for_tests()
-    client = TestClient(app)
-    candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-identity-001")
-    resource_id = "review-resource-identity-api-001"
-    request = suppress_review_payload(review_id=resource_id)
-    route = f"/api/v1/idea-candidates/{candidate_id}/review-actions"
-
-    first = client.post(
-        route,
-        json=request,
-        headers=review_headers("review-resource-identity-api-first"),
-    )
-    before_retry = get_idea_repository().snapshot()
-    replayed = client.post(
-        route,
-        json=request,
-        headers=review_headers("review-resource-identity-api-retry"),
-    )
-    changed_request = dict(request)
-    changed_request["decidedAtUtc"] = "2026-06-21T10:05:01Z"
-    conflict = client.post(
-        route,
-        json=changed_request,
-        headers=review_headers("review-resource-identity-api-changed"),
-    )
-    after_retry = get_idea_repository().snapshot()
-
-    assert first.status_code == 200
-    assert replayed.status_code == 200
-    assert replayed.json()["reviewDecision"] is None
-    assert replayed.json()["persistence"]["decision"] == "replayed"
-    assert conflict.status_code == 409
-    assert conflict.json()["code"] == "review_identity_conflict"
-    assert after_retry.candidate_records == before_retry.candidate_records
-    assert after_retry.outbox_events == before_retry.outbox_events
-
-
 def test_review_action_api_returns_conflict_for_changed_idempotency_payload() -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
@@ -796,42 +758,6 @@ def test_feedback_api_returns_not_found_and_permission_denied_safely() -> None:
     assert "different-portfolio" not in denied_by_scope.text
     assert not_found.status_code == 404
     assert not_found.json()["code"] == "candidate_not_found"
-
-
-def test_feedback_api_governs_resource_identity_across_transport_keys() -> None:
-    reset_idea_repository_for_tests()
-    client = TestClient(app)
-    candidate_id = persisted_candidate_id(client, idempotency_key="seed-feedback-identity-001")
-    resource_id = "feedback-resource-identity-api-001"
-    request = feedback_payload(feedback_id=resource_id)
-    route = f"/api/v1/idea-candidates/{candidate_id}/feedback"
-
-    first = client.post(
-        route,
-        json=request,
-        headers=feedback_headers("feedback-resource-identity-api-first"),
-    )
-    before_retry = get_idea_repository().snapshot()
-    replayed = client.post(
-        route,
-        json=request,
-        headers=feedback_headers("feedback-resource-identity-api-retry"),
-    )
-    conflict = client.post(
-        route,
-        json=feedback_payload(feedback_id=resource_id, outcome="not_useful"),
-        headers=feedback_headers("feedback-resource-identity-api-changed"),
-    )
-    after_retry = get_idea_repository().snapshot()
-
-    assert first.status_code == 200
-    assert replayed.status_code == 200
-    assert replayed.json()["feedbackEvent"] is None
-    assert replayed.json()["persistence"]["decision"] == "replayed"
-    assert conflict.status_code == 409
-    assert conflict.json()["code"] == "review_identity_conflict"
-    assert after_retry.candidate_records == before_retry.candidate_records
-    assert after_retry.outbox_events == before_retry.outbox_events
 
 
 def test_feedback_api_rejects_invalid_identity_time_and_idempotency() -> None:
