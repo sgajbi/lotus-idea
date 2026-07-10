@@ -114,6 +114,36 @@ def test_restore_drill_preserves_failed_evidence_for_investigation(tmp_path: Pat
     assert json.loads(output_path.read_text(encoding="utf-8"))["status"] == "failed"
 
 
+def test_provider_restored_database_uses_same_validation_use_case(tmp_path: Path) -> None:
+    module = load_script()
+    contract = json.loads(module.CONTRACT_PATH.read_text(encoding="utf-8"))
+    tables = frozenset(contract["restore_verification"]["owned_tables"])
+    output_path = tmp_path / "provider-restore-evidence.json"
+
+    evidence = module.validate_restored_database(
+        backup_identifier="provider-backup-001",
+        backup_source="managed-postgres-pitr",
+        operator_id="database-operator",
+        correlation_id="incident-001",
+        backup_format="physical-base-plus-wal",
+        backup_artifact_sha256="d" * 64,
+        pitr_proof=True,
+        backup_created_at_utc=NOW - timedelta(hours=12),
+        incident_cutoff_utc=NOW - timedelta(minutes=5),
+        recovery_point_utc=NOW - timedelta(minutes=6),
+        restore_started_at_utc=NOW - timedelta(minutes=4),
+        restore_completed_at_utc=NOW - timedelta(minutes=1),
+        output_path=output_path,
+        target_database_url="postgresql://target",
+        inspector_factory=lambda url: StubInspector(url, valid_snapshot(tables)),
+        now=lambda: NOW,
+    )
+
+    assert evidence.status is RestoreValidationStatus.PASSED
+    assert evidence.pitr_proof is True
+    assert evidence.backup_format == "physical-base-plus-wal"
+
+
 def valid_snapshot(tables: frozenset[str]) -> RestoredDatabaseSnapshot:
     return RestoredDatabaseSnapshot(
         database_identity_sha256="b" * 64,

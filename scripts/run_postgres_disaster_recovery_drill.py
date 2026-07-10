@@ -55,15 +55,13 @@ def run_disaster_recovery_drill(
     target_url = target_database_url or os.getenv(TARGET_DATABASE_URL_ENV, "").strip()
     if not source_url or not target_url:
         raise ValueError(f"{SOURCE_DATABASE_URL_ENV} and {TARGET_DATABASE_URL_ENV} are required")
-    contract = _load_contract()
-    policy = _policy_from_contract(contract)
     runner = backup_restore or PostgresLogicalBackupRestore()
     restore = runner.execute(
         source_database_url=source_url,
         target_database_url=target_url,
     )
     cutoff = incident_cutoff_utc or restore.recovery_point_utc
-    request = RestoreDrillRequest(
+    return validate_restored_database(
         backup_identifier=backup_identifier,
         backup_source=backup_source,
         operator_id=operator_id,
@@ -71,13 +69,57 @@ def run_disaster_recovery_drill(
         backup_format=restore.backup_format,
         backup_artifact_sha256=restore.backup_artifact_sha256,
         pitr_proof=restore.pitr_proof,
-        migration_bundle_sha256=_migration_bundle_sha256(),
-        latest_migration=_latest_migration(),
         backup_created_at_utc=restore.backup_created_at_utc,
         incident_cutoff_utc=cutoff,
         recovery_point_utc=restore.recovery_point_utc,
         restore_started_at_utc=restore.restore_started_at_utc,
         restore_completed_at_utc=restore.restore_completed_at_utc,
+        output_path=output_path,
+        target_database_url=target_url,
+        inspector_factory=inspector_factory,
+        now=now,
+    )
+
+
+def validate_restored_database(
+    *,
+    backup_identifier: str,
+    backup_source: str,
+    operator_id: str,
+    correlation_id: str,
+    backup_format: str,
+    backup_artifact_sha256: str,
+    pitr_proof: bool,
+    backup_created_at_utc: datetime,
+    incident_cutoff_utc: datetime,
+    recovery_point_utc: datetime,
+    restore_started_at_utc: datetime,
+    restore_completed_at_utc: datetime,
+    output_path: Path = DEFAULT_OUTPUT_PATH,
+    target_database_url: str | None = None,
+    inspector_factory: Any = PostgresRestoredDatabaseInspector,
+    now: Any | None = None,
+) -> RestoreDrillEvidence:
+    target_url = target_database_url or os.getenv(TARGET_DATABASE_URL_ENV, "").strip()
+    if not target_url:
+        raise ValueError(f"{TARGET_DATABASE_URL_ENV} is required")
+    contract = _load_contract()
+    policy = _policy_from_contract(contract)
+    request = RestoreDrillRequest(
+        backup_identifier=backup_identifier,
+        backup_source=backup_source,
+        operator_id=operator_id,
+        correlation_id=correlation_id,
+        backup_format=backup_format,
+        backup_artifact_sha256=backup_artifact_sha256,
+        pitr_proof=pitr_proof,
+        migration_bundle_sha256=_migration_bundle_sha256(),
+        latest_migration=_latest_migration(),
+        backup_created_at_utc=backup_created_at_utc,
+        incident_cutoff_utc=incident_cutoff_utc,
+        recovery_point_utc=recovery_point_utc,
+        restore_started_at_utc=restore_started_at_utc,
+        restore_completed_at_utc=restore_completed_at_utc,
     )
     use_case = ValidateRestoredDatabase(
         inspector_factory(target_url),
