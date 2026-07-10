@@ -5,7 +5,10 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app.domain import (
+    IdeaRepositorySnapshot,
+    InMemoryIdeaRepository,
     OutboxEventStatus,
+    OutboxRecoveryDecision,
     build_candidate_outbox_event,
     build_outbox_recovery_audit_record,
     dead_letter_summary,
@@ -122,6 +125,127 @@ def test_recovery_audit_rejects_invalid_lease_window() -> None:
         )
 
 
+def test_in_memory_recovery_claim_is_idempotent_and_lease_fenced() -> None:
+    dead_lettered = _dead_lettered_event()
+    repository = _repository_with_event(dead_lettered)
+    support_reference = outbox_dead_letter_support_reference(dead_lettered.event_id)
+    request_payload = outbox_recovery_request_payload(
+        support_reference=support_reference,
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        actor_subject="platform-operator",
+    )
+    claim = {
+        "support_reference": support_reference,
+        "request_payload": request_payload,
+        "actor_subject": "platform-operator",
+        "reason": "broker_route_corrected",
+        "change_reference": "CHG-2026-0710",
+        "requested_at_utc": EVENT_TIME + timedelta(minutes=5),
+        "lease_owner": "outbox-recovery",
+        "lease_attempt_id": "recovery-attempt-1",
+        "lease_expires_at_utc": EVENT_TIME + timedelta(minutes=10),
+    }
+
+    accepted = repository.claim_dead_letter_for_recovery(
+        idempotency_key="outbox-redrive:accepted",
+        **claim,
+    )
+    replay = repository.claim_dead_letter_for_recovery(
+        idempotency_key="outbox-redrive:accepted",
+        **claim,
+    )
+    competing = repository.claim_dead_letter_for_recovery(
+        idempotency_key="outbox-redrive:competing",
+        **{**claim, "lease_attempt_id": "recovery-attempt-2"},
+    )
+
+    assert accepted.decision is OutboxRecoveryDecision.ACCEPTED
+    assert accepted.event is not None
+    assert accepted.event.status is OutboxEventStatus.LEASED
+    assert accepted.event.failure_reason == "publisher_rejected"
+    assert accepted.event.first_failed_at_utc == dead_lettered.first_failed_at_utc
+    assert replay.decision is OutboxRecoveryDecision.REPLAYED
+    assert replay.audit_record == accepted.audit_record
+    assert competing.decision is OutboxRecoveryDecision.LEASE_CONFLICT
+    assert len(repository.outbox_recovery_audit_records()) == 1
+
+
+def test_in_memory_recovery_rejects_idempotency_conflict_and_attempt_limit() -> None:
+    dead_lettered = _dead_lettered_event()
+    repository = _repository_with_event(dead_lettered)
+    support_reference = outbox_dead_letter_support_reference(dead_lettered.event_id)
+    request_payload = outbox_recovery_request_payload(
+        support_reference=support_reference,
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        actor_subject="platform-operator",
+    )
+    accepted = repository.claim_dead_letter_for_recovery(
+        support_reference=support_reference,
+        idempotency_key="outbox-redrive:bounded",
+        request_payload=request_payload,
+        actor_subject="platform-operator",
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        requested_at_utc=EVENT_TIME + timedelta(minutes=5),
+        lease_owner="outbox-recovery",
+        lease_attempt_id="recovery-attempt-1",
+        lease_expires_at_utc=EVENT_TIME + timedelta(minutes=10),
+    )
+    conflict = repository.claim_dead_letter_for_recovery(
+        support_reference=support_reference,
+        idempotency_key="outbox-redrive:bounded",
+        request_payload={**request_payload, "reason": "different_reason"},
+        actor_subject="platform-operator",
+        reason="different_reason",
+        change_reference="CHG-2026-0710",
+        requested_at_utc=EVENT_TIME + timedelta(minutes=5),
+        lease_owner="outbox-recovery",
+        lease_attempt_id="recovery-attempt-2",
+        lease_expires_at_utc=EVENT_TIME + timedelta(minutes=10),
+    )
+    assert accepted.event is not None
+    repository.mark_outbox_event_failed(
+        dead_lettered.event_id,
+        lease_owner="outbox-recovery",
+        lease_attempt_id="recovery-attempt-1",
+        failure_reason="publisher_rejected_again",
+        failed_at_utc=EVENT_TIME + timedelta(minutes=6),
+        max_retry_count=1,
+    )
+    exhausted = repository.claim_dead_letter_for_recovery(
+        support_reference=support_reference,
+        idempotency_key="outbox-redrive:second-attempt",
+        request_payload={**request_payload, "changeReference": "CHG-2026-0711"},
+        actor_subject="platform-operator",
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0711",
+        requested_at_utc=EVENT_TIME + timedelta(minutes=7),
+        lease_owner="outbox-recovery",
+        lease_attempt_id="recovery-attempt-3",
+        lease_expires_at_utc=EVENT_TIME + timedelta(minutes=12),
+    )
+
+    assert conflict.decision is OutboxRecoveryDecision.CONFLICT
+    assert exhausted.decision is OutboxRecoveryDecision.RECOVERY_LIMIT_REACHED
+    assert exhausted.blocker == "recovery_attempt_limit_reached"
+
+
+def test_in_memory_dead_letter_inspection_is_bounded_and_source_safe() -> None:
+    dead_lettered = _dead_lettered_event()
+    repository = _repository_with_event(dead_lettered)
+
+    summaries = repository.dead_letter_summaries(limit=1)
+
+    assert len(summaries) == 1
+    assert summaries[0].support_reference == outbox_dead_letter_support_reference(
+        dead_lettered.event_id
+    )
+    with pytest.raises(ValueError, match="limit must be positive"):
+        repository.dead_letter_summaries(limit=0)
+
+
 def _dead_lettered_event():
     event = build_candidate_outbox_event(
         event_type="idea.candidate.persisted.v1",
@@ -136,4 +260,19 @@ def _dead_lettered_event():
         failed_at_utc=EVENT_TIME + timedelta(minutes=1),
         max_retry_count=1,
         next_attempt_at_utc=None,
+    )
+
+
+def _repository_with_event(event):
+    return InMemoryIdeaRepository(
+        IdeaRepositorySnapshot(
+            candidate_records={},
+            idempotency_records={},
+            idempotency_candidates={},
+            conversion_intent_candidates={},
+            report_evidence_pack_candidates={},
+            ai_explanation_lineage_candidates={},
+            outbox_events={event.event_id: event},
+            downstream_submission_records={},
+        )
     )

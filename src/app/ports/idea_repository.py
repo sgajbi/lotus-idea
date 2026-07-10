@@ -23,6 +23,9 @@ from app.domain import (
     LifecyclePersistenceResult,
     OutboxDeliveryResult,
     OutboxEventRecord,
+    OutboxDeadLetterSummary,
+    OutboxRecoveryAuditRecord,
+    OutboxRecoveryClaimResult,
     QueueAccessScopeFilter,
     ReportEvidencePackResult,
     ReviewActionResult,
@@ -347,6 +350,31 @@ class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
     ) -> OutboxDeliveryResult: ...
 
 
+class OutboxRecoveryRepository(OutboxDeliveryRepository, Protocol):
+    def dead_letter_summaries(
+        self,
+        *,
+        limit: int = 100,
+    ) -> tuple[OutboxDeadLetterSummary, ...]: ...
+
+    def claim_dead_letter_for_recovery(
+        self,
+        *,
+        support_reference: str,
+        idempotency_key: str,
+        request_payload: Mapping[str, Any],
+        actor_subject: str,
+        reason: str,
+        change_reference: str,
+        requested_at_utc: datetime,
+        lease_owner: str,
+        lease_attempt_id: str,
+        lease_expires_at_utc: datetime,
+        max_recovery_attempts: int = 1,
+    ) -> OutboxRecoveryClaimResult: ...
+
+    def outbox_recovery_audit_records(self) -> tuple[OutboxRecoveryAuditRecord, ...]: ...
+
 class IdeaRepository(
     CandidatePersistenceRepository,
     CandidateLifecycleRepository,
@@ -356,7 +384,7 @@ class IdeaRepository(
     ReportEvidenceWorkflowRepository,
     AIExplanationRepository,
     DownstreamSubmissionRepository,
-    OutboxDeliveryRepository,
+    OutboxRecoveryRepository,
     Protocol,
 ):
     """Complete repository port surface used by API runtime wiring."""

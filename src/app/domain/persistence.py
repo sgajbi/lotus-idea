@@ -29,6 +29,14 @@ from app.domain.outbox_delivery_state import (
     mark_owned_outbox_event_published,
     outbox_events_for_delivery,
 )
+from app.domain.outbox_recovery import (
+    MAX_OUTBOX_RECOVERY_ATTEMPTS,
+    OutboxDeadLetterSummary,
+    OutboxRecoveryAuditRecord,
+    OutboxRecoveryClaimResult,
+    claim_dead_letter_for_recovery,
+    dead_letter_summaries,
+)
 from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
 from app.domain.persistence_models import (
     CandidatePersistenceDecision,
@@ -76,6 +84,7 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         self._report_evidence_pack_candidates: dict[str, str] = {}
         self._ai_explanation_lineage_candidates: dict[str, str] = {}
         self._outbox_events: dict[str, OutboxEventRecord] = {}
+        self._outbox_recovery_records: dict[str, OutboxRecoveryAuditRecord] = {}
         self._downstream_submission_records: dict[str, DownstreamSubmissionRecord] = {}
         if snapshot is not None:
             self._candidate_records.update(snapshot.candidate_records)
@@ -879,6 +888,47 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
             max_retry_count=max_retry_count,
             next_attempt_at_utc=next_attempt_at_utc,
         )
+
+    def dead_letter_summaries(
+        self,
+        *,
+        limit: int = 100,
+    ) -> tuple[OutboxDeadLetterSummary, ...]:
+        return dead_letter_summaries(self._outbox_events, limit=limit)
+
+    def claim_dead_letter_for_recovery(
+        self,
+        *,
+        support_reference: str,
+        idempotency_key: str,
+        request_payload: Mapping[str, Any],
+        actor_subject: str,
+        reason: str,
+        change_reference: str,
+        requested_at_utc: datetime,
+        lease_owner: str,
+        lease_attempt_id: str,
+        lease_expires_at_utc: datetime,
+        max_recovery_attempts: int = MAX_OUTBOX_RECOVERY_ATTEMPTS,
+    ) -> OutboxRecoveryClaimResult:
+        return claim_dead_letter_for_recovery(
+            self._outbox_events,
+            self._outbox_recovery_records,
+            support_reference=support_reference,
+            idempotency_key=idempotency_key,
+            request_payload=request_payload,
+            actor_subject=actor_subject,
+            reason=reason,
+            change_reference=change_reference,
+            requested_at_utc=requested_at_utc,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            lease_expires_at_utc=lease_expires_at_utc,
+            max_recovery_attempts=max_recovery_attempts,
+        )
+
+    def outbox_recovery_audit_records(self) -> tuple[OutboxRecoveryAuditRecord, ...]:
+        return tuple(self._outbox_recovery_records.values())
 
     def snapshot(self) -> IdeaRepositorySnapshot:
         return IdeaRepositorySnapshot(

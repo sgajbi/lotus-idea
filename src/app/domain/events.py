@@ -190,7 +190,7 @@ def lease_outbox_event(
         event,
         status=OutboxEventStatus.LEASED,
         published_at_utc=None,
-        failure_reason=None,
+        failure_reason=event.failure_reason,
         first_failed_at_utc=event.first_failed_at_utc,
         last_failed_at_utc=event.last_failed_at_utc,
         next_attempt_at_utc=None,
