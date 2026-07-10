@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import FastAPI, Header, Path, Request, status
 from fastapi.responses import JSONResponse
 from pydantic import Field
@@ -111,11 +113,44 @@ def _downstream_submission_service_unavailable_metadata() -> dict[int | str, dic
     )
 
 
+def _uncertain_submission_response_metadata() -> dict[int | str, dict[str, Any]]:
+    return {
+        status.HTTP_202_ACCEPTED: {
+            "description": (
+                "The downstream outcome is uncertain and requires governed reconciliation."
+            ),
+            "model": DownstreamSubmissionApiResponse,
+            "content": {
+                "application/json": {
+                    "example": {
+                        "downstreamSubmission": {
+                            "submissionStatus": "reconciliation_required",
+                            "sourceAuthority": "lotus-advise",
+                            "target": "advise_proposal",
+                            "downstreamFailureReason": "downstream_timeout",
+                            "supportReference": (
+                                "downstream-submission-0123456789abcdef01234567"
+                            ),
+                            "idempotencyReplayed": False,
+                            "recordsDownstreamOutcome": False,
+                            "grantsDownstreamAuthority": False,
+                            "supportedFeaturePromoted": False,
+                        },
+                        "durableStorageBacked": True,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        }
+    }
+
+
 class DownstreamSubmissionResultResponse(CamelModel):
     submission_status: DownstreamRealizationStatus = Field(..., alias="submissionStatus")
     source_authority: SourceSystem | None = Field(default=None, alias="sourceAuthority")
     target: ConversionTarget | None = None
     downstream_failure_reason: str | None = Field(default=None, alias="downstreamFailureReason")
+    support_reference: str | None = Field(default=None, alias="supportReference")
     idempotency_replayed: bool = Field(False, alias="idempotencyReplayed")
     records_downstream_outcome: bool = Field(False, alias="recordsDownstreamOutcome")
     grants_downstream_authority: bool = Field(False, alias="grantsDownstreamAuthority")
@@ -131,6 +166,7 @@ class DownstreamSubmissionResultResponse(CamelModel):
             sourceAuthority=result.source_authority,
             target=result.target,
             downstreamFailureReason=result.downstream_failure_reason,
+            supportReference=result.support_reference,
             idempotencyReplayed=result.idempotency_replayed,
             recordsDownstreamOutcome=result.records_downstream_outcome,
             grantsDownstreamAuthority=result.grants_downstream_authority,
@@ -210,6 +246,7 @@ async def submit_conversion_intent_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id=conversion_intent_id,
             idempotency_key=idempotency_key,
+            actor_subject=caller.subject,
             correlation_id=correlation_id,
             trace_id=trace_id,
         ),
@@ -234,11 +271,12 @@ async def submit_conversion_intent_downstream(
         correlation_id=correlation_id,
         trace_id=trace_id,
     )
-    return DownstreamSubmissionApiResponse(
+    response = DownstreamSubmissionApiResponse(
         downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
+    return _submission_response(result, response)
 
 
 async def submit_report_evidence_pack_downstream(
@@ -301,6 +339,7 @@ async def submit_report_evidence_pack_downstream(
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id=report_evidence_pack_id,
             idempotency_key=idempotency_key,
+            actor_subject=caller.subject,
             correlation_id=correlation_id,
             trace_id=trace_id,
         ),
@@ -324,11 +363,12 @@ async def submit_report_evidence_pack_downstream(
         correlation_id=correlation_id,
         trace_id=trace_id,
     )
-    return DownstreamSubmissionApiResponse(
+    response = DownstreamSubmissionApiResponse(
         downstreamSubmission=DownstreamSubmissionResultResponse.from_domain(result),
         durableStorageBacked=durable_storage_backed,
         supportedFeaturePromoted=False,
     )
+    return _submission_response(result, response)
 
 
 def _require_submission_caller(caller: CallerContext) -> None:
@@ -381,6 +421,18 @@ def _problem_for_submission_result(
     return None
 
 
+def _submission_response(
+    result: DownstreamRealizationSubmissionResult,
+    response: DownstreamSubmissionApiResponse,
+) -> DownstreamSubmissionApiResponse | JSONResponse:
+    if result.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED:
+        return JSONResponse(
+            status_code=status.HTTP_202_ACCEPTED,
+            content=response.model_dump(by_alias=True, mode="json"),
+        )
+    return response
+
+
 def _permission_denied() -> JSONResponse:
     return problem_response(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -423,6 +475,8 @@ def _operation_outcome_from_submission_status(
     if submission_status is DownstreamRealizationStatus.IDEMPOTENCY_CONFLICT:
         return OperationOutcome.CONFLICT
     if submission_status is DownstreamRealizationStatus.NOT_CONFIGURED:
+        return OperationOutcome.BLOCKED
+    if submission_status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED:
         return OperationOutcome.BLOCKED
     return OperationOutcome.INVALID_STATE
 
@@ -493,6 +547,7 @@ CONVERSION_INTENT_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
                 }
             },
         },
+        **_uncertain_submission_response_metadata(),
         **invalid_request_metadata(
             detail="Correct the downstream submission request and retry.",
         ),
@@ -544,6 +599,7 @@ REPORT_EVIDENCE_PACK_DOWNSTREAM_SUBMISSION_ROUTE: RouteMetadata = {
                 }
             },
         },
+        **_uncertain_submission_response_metadata(),
         **invalid_request_metadata(
             detail="Correct the report evidence-pack downstream submission request and retry.",
         ),

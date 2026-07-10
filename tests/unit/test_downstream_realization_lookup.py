@@ -9,10 +9,10 @@ from app.application.downstream_realization import (
 )
 from app.domain import (
     ConversionTarget,
-    DownstreamSubmissionRecord,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     IdeaRepositorySnapshot,
+    InMemoryIdeaRepository,
 )
 from app.ports.downstream_realization import DownstreamRealizationOutcome
 from tests.unit.test_downstream_realization_application import (
@@ -34,6 +34,7 @@ def test_downstream_conversion_submission_uses_lookup_without_snapshot() -> None
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="downstream-lookup-conversion",
+            actor_subject="advisor-redacted",
         ),
         repository=repository,
         advise_client=advise_client,
@@ -42,7 +43,10 @@ def test_downstream_conversion_submission_uses_lookup_without_snapshot() -> None
 
     assert result.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
     assert repository.requested_conversion_intent_ids == ["conversion-advise_proposal-001"]
-    assert repository.recorded_submissions
+    assert (
+        repository.downstream_submission_by_idempotency_key("downstream-lookup-conversion")
+        is not None
+    )
 
 
 def test_downstream_report_pack_submission_uses_lookup_without_snapshot() -> None:
@@ -56,6 +60,7 @@ def test_downstream_report_pack_submission_uses_lookup_without_snapshot() -> Non
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id="report-evidence-pack-001",
             idempotency_key="downstream-lookup-report-pack",
+            actor_subject="advisor-redacted",
         ),
         repository=repository,
         report_client=report_client,
@@ -63,21 +68,24 @@ def test_downstream_report_pack_submission_uses_lookup_without_snapshot() -> Non
 
     assert result.status is DownstreamRealizationStatus.ACCEPTED_BY_DOWNSTREAM
     assert repository.requested_report_evidence_pack_ids == ["report-evidence-pack-001"]
-    assert repository.recorded_submissions
+    assert (
+        repository.downstream_submission_by_idempotency_key("downstream-lookup-report-pack")
+        is not None
+    )
 
 
-class LookupOnlyDownstreamRepository:
+class LookupOnlyDownstreamRepository(InMemoryIdeaRepository):
     def __init__(
         self,
         *,
         conversion_intent: GovernedConversionIntent | None = None,
         report_evidence_pack: GovernedReportEvidencePack | None = None,
     ) -> None:
+        super().__init__()
         self.conversion_intent = conversion_intent
         self.report_evidence_pack = report_evidence_pack
         self.requested_conversion_intent_ids: list[str] = []
         self.requested_report_evidence_pack_ids: list[str] = []
-        self.recorded_submissions: list[DownstreamSubmissionRecord] = []
 
     def conversion_intent_by_id(
         self,
@@ -102,18 +110,6 @@ class LookupOnlyDownstreamRepository:
         ):
             return self.report_evidence_pack
         return None
-
-    def downstream_submission_by_idempotency_key(
-        self,
-        idempotency_key: str,
-    ) -> DownstreamSubmissionRecord | None:
-        for record in self.recorded_submissions:
-            if record.idempotency_key == idempotency_key:
-                return record
-        return None
-
-    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None:
-        self.recorded_submissions.append(record)
 
     def snapshot(self) -> IdeaRepositorySnapshot:
         raise AssertionError("downstream realization lookup must not hydrate a full snapshot")

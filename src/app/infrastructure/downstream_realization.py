@@ -187,7 +187,10 @@ def _post_downstream_envelope(
             idempotency_key=idempotency_key,
         )
     except DownstreamServiceError as exc:
-        return DownstreamRealizationOutcome.rejected_by_downstream(_failure_reason(exc))
+        failure_reason = _failure_reason(exc)
+        if exc.status_code is not None and 400 <= exc.status_code < 500:
+            return DownstreamRealizationOutcome.rejected_by_downstream(failure_reason)
+        return DownstreamRealizationOutcome.unknown(failure_reason)
     return DownstreamRealizationOutcome.accepted_by_downstream()
 
 

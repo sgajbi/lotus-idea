@@ -124,6 +124,7 @@ def test_submit_conversion_intent_routes_advise_intent_without_recording_outcome
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="submission-advise-001",
+            actor_subject="advisor-redacted",
             correlation_id="corr-realization",
             trace_id="trace-realization",
         ),
@@ -156,6 +157,7 @@ def test_submit_conversion_intent_replays_local_downstream_submission_without_cl
     command = RealizeConversionIntentCommand(
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-advise-replay-001",
+        actor_subject="advisor-redacted",
         correlation_id="corr-realization",
         trace_id="trace-realization",
         submitted_at_utc=EVALUATED_AT,
@@ -180,6 +182,81 @@ def test_submit_conversion_intent_replays_local_downstream_submission_without_cl
     assert second.idempotency_replayed is True
     assert len(advise_client.submitted) == 1
     assert manage_client.submitted == ()
+
+
+def test_downstream_acceptance_with_failed_local_finalize_requires_reconciliation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    command = RealizeConversionIntentCommand(
+        conversion_intent_id="conversion-advise_proposal-001",
+        idempotency_key="submission-finalize-failure-001",
+        actor_subject="advisor-redacted",
+        submitted_at_utc=EVALUATED_AT,
+    )
+    original_finalize = repository.finalize_downstream_submission
+
+    def fail_finalize(**_: object) -> None:
+        raise RuntimeError("simulated local commit failure")
+
+    monkeypatch.setattr(repository, "finalize_downstream_submission", fail_finalize)
+    first = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+    monkeypatch.setattr(repository, "finalize_downstream_submission", original_finalize)
+    retry = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+
+    persisted = repository.downstream_submission_by_idempotency_key(command.idempotency_key)
+    assert first.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert first.downstream_failure_reason == "downstream_submission_finalization_failed"
+    assert first.grants_downstream_authority is False
+    assert retry.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert retry.idempotency_replayed is True
+    assert persisted is not None
+    assert persisted.status.value == "in_flight"
+    assert len(advise_client.submitted) == 1
+
+
+def test_unknown_downstream_outcome_is_durable_and_never_retried_automatically() -> None:
+    repository = repository_with_conversion(ConversionTarget.ADVISE_PROPOSAL)
+    advise_client = CapturingAdviseClient(
+        DownstreamRealizationOutcome.unknown("downstream_timeout")
+    )
+    command = RealizeConversionIntentCommand(
+        conversion_intent_id="conversion-advise_proposal-001",
+        idempotency_key="submission-timeout-001",
+        actor_subject="advisor-redacted",
+        submitted_at_utc=EVALUATED_AT,
+    )
+
+    first = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+    retry = submit_conversion_intent_to_downstream(
+        command,
+        repository=repository,
+        advise_client=advise_client,
+        manage_client=None,
+    )
+
+    assert first.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert first.downstream_failure_reason == "downstream_timeout"
+    assert first.support_reference is not None
+    assert retry.status is DownstreamRealizationStatus.RECONCILIATION_REQUIRED
+    assert retry.idempotency_replayed is True
+    assert len(advise_client.submitted) == 1
 
 
 def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> None:
@@ -207,6 +284,7 @@ def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> N
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-advise_proposal-001",
             idempotency_key="submission-advise-conflict-001",
+            actor_subject="advisor-redacted",
             submitted_at_utc=EVALUATED_AT,
         ),
         repository=repository,
@@ -217,6 +295,7 @@ def test_submit_conversion_intent_rejects_same_key_for_different_resource() -> N
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-advise_proposal-002",
             idempotency_key="submission-advise-conflict-001",
+            actor_subject="advisor-redacted",
             submitted_at_utc=EVALUATED_AT,
         ),
         repository=repository,
@@ -235,6 +314,7 @@ def test_submit_conversion_intent_persists_not_configured_posture_for_replay() -
     command = RealizeConversionIntentCommand(
         conversion_intent_id="conversion-advise_proposal-001",
         idempotency_key="submission-advise-not-configured-001",
+        actor_subject="advisor-redacted",
         submitted_at_utc=EVALUATED_AT,
     )
     advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
@@ -263,13 +343,14 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
     repository = repository_with_conversion(ConversionTarget.MANAGE_REVIEW)
     advise_client = CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingManageClient(
-        DownstreamRealizationOutcome.rejected_by_downstream("downstream_timeout")
+        DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
     )
 
     result = submit_conversion_intent_to_downstream(
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-manage_review-001",
             idempotency_key="submission-manage-001",
+            actor_subject="advisor-redacted",
             correlation_id="corr-manage-realization",
             trace_id="trace-manage-realization",
         ),
@@ -281,7 +362,7 @@ def test_submit_conversion_intent_maps_downstream_rejection_to_bounded_status() 
     assert result.status is DownstreamRealizationStatus.REJECTED_BY_DOWNSTREAM
     assert result.source_authority is SourceSystem.LOTUS_MANAGE
     assert result.target is ConversionTarget.MANAGE_REVIEW
-    assert result.downstream_failure_reason == "downstream_timeout"
+    assert result.downstream_failure_reason == "downstream_rejected"
     assert advise_client.submitted == ()
     assert manage_client.submitted[0].target_source_authority is SourceSystem.LOTUS_MANAGE
     assert manage_client.correlation_id == "corr-manage-realization"
@@ -296,6 +377,7 @@ def test_report_conversion_intent_requires_report_evidence_pack_request_submissi
         RealizeConversionIntentCommand(
             conversion_intent_id="conversion-report_evidence-001",
             idempotency_key="submission-report-intent-001",
+            actor_subject="advisor-redacted",
         ),
         repository=repository,
         advise_client=CapturingAdviseClient(DownstreamRealizationOutcome.accepted_by_downstream()),
@@ -316,6 +398,7 @@ def test_submit_report_evidence_pack_uses_report_materialization_client() -> Non
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id="report-evidence-pack-001",
             idempotency_key="submission-report-pack-001",
+            actor_subject="advisor-redacted",
             correlation_id="corr-report-realization",
             trace_id="trace-report-realization",
         ),
@@ -339,6 +422,7 @@ def test_submit_report_evidence_pack_replays_local_submission_without_client_cal
     command = RealizeReportEvidencePackCommand(
         report_evidence_pack_id="report-evidence-pack-001",
         idempotency_key="submission-report-pack-replay-001",
+        actor_subject="advisor-redacted",
         submitted_at_utc=EVALUATED_AT,
     )
 
@@ -370,6 +454,7 @@ def test_downstream_realization_returns_not_found_without_calling_clients() -> N
         RealizeConversionIntentCommand(
             conversion_intent_id="missing-conversion",
             idempotency_key="submission-missing-conversion-001",
+            actor_subject="advisor-redacted",
         ),
         repository=repository,
         advise_client=advise_client,
@@ -379,6 +464,7 @@ def test_downstream_realization_returns_not_found_without_calling_clients() -> N
         RealizeReportEvidencePackCommand(
             report_evidence_pack_id="missing-pack",
             idempotency_key="submission-missing-pack-001",
+            actor_subject="advisor-redacted",
         ),
         repository=repository,
         report_client=report_client,
@@ -400,6 +486,7 @@ def test_submit_conversion_intent_requires_non_blank_identifier() -> None:
             RealizeConversionIntentCommand(
                 conversion_intent_id=" ",
                 idempotency_key="submission-blank-conversion-001",
+                actor_subject="advisor-redacted",
             ),
             repository=InMemoryIdeaRepository(),
             advise_client=advise_client,
@@ -418,6 +505,7 @@ def test_submit_report_evidence_pack_requires_non_blank_identifier() -> None:
             RealizeReportEvidencePackCommand(
                 report_evidence_pack_id=" ",
                 idempotency_key="submission-blank-report-pack-001",
+                actor_subject="advisor-redacted",
             ),
             repository=InMemoryIdeaRepository(),
             report_client=report_client,

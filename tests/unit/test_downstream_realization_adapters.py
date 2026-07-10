@@ -27,6 +27,7 @@ from app.infrastructure.downstream_realization import (
     HttpManageActionRealizationClient,
     HttpReportEvidencePackMaterializationClient,
 )
+from app.ports.downstream_realization import DownstreamRealizationOutcomePosture
 
 
 REQUEST_TIME = datetime(2026, 6, 21, 10, 15, tzinfo=UTC)
@@ -136,16 +137,17 @@ def test_report_adapter_omits_source_routes_and_raw_hash_keys() -> None:
 
 
 @pytest.mark.parametrize(
-    ("status_code", "failure_reason"),
+    ("status_code", "failure_reason", "expected_posture"),
     [
-        (400, "downstream_rejected"),
-        (403, "downstream_permission_denied"),
-        (500, "downstream_unavailable"),
+        (400, "downstream_rejected", DownstreamRealizationOutcomePosture.REJECTED),
+        (403, "downstream_permission_denied", DownstreamRealizationOutcomePosture.REJECTED),
+        (500, "downstream_unavailable", DownstreamRealizationOutcomePosture.UNKNOWN),
     ],
 )
 def test_downstream_http_failures_map_to_bounded_reasons(
     status_code: int,
     failure_reason: str,
+    expected_posture: DownstreamRealizationOutcomePosture,
 ) -> None:
     adapter = HttpManageActionRealizationClient(
         DownstreamRealizationAdapterConfig(
@@ -164,6 +166,7 @@ def test_downstream_http_failures_map_to_bounded_reasons(
     )
 
     assert outcome.accepted is False
+    assert outcome.posture is expected_posture
     assert outcome.failure_reason == failure_reason
 
 
@@ -185,6 +188,7 @@ def test_downstream_transport_errors_do_not_leak_raw_exception_text() -> None:
     )
 
     assert outcome.accepted is False
+    assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
     assert outcome.failure_reason == "downstream_unavailable"
 
 
@@ -218,6 +222,7 @@ def test_downstream_retry_exhaustion_maps_to_bounded_timeout_reason() -> None:
     )
 
     assert outcome.accepted is False
+    assert outcome.posture is DownstreamRealizationOutcomePosture.UNKNOWN
     assert outcome.failure_reason == "downstream_timeout"
     assert attempts == 2
 

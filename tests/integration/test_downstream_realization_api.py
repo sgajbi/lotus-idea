@@ -111,7 +111,7 @@ class CapturingReportClient:
         return self.outcome
 
 
-def test_conversion_downstream_submission_api_accepts_advise_intent_without_support_claim(
+def test_conversion_downstream_submission_api_accepts_advise_intent_with_support_reference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
@@ -143,12 +143,16 @@ def test_conversion_downstream_submission_api_accepts_advise_intent_without_supp
 
     assert response.status_code == 200
     payload = response.json()
+    support_reference = payload["downstreamSubmission"]["supportReference"]
+    assert support_reference.startswith("downstream-submission-")
+    assert "downstream-submit-advise-api-001" not in support_reference
     assert payload == {
         "downstreamSubmission": {
             "submissionStatus": "accepted_by_downstream",
             "sourceAuthority": "lotus-advise",
             "target": "advise_proposal",
             "downstreamFailureReason": None,
+            "supportReference": support_reference,
             "idempotencyReplayed": False,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
@@ -261,7 +265,7 @@ def test_conversion_downstream_submission_api_rejects_idempotency_conflict(
     assert manage_client.submitted == ()
 
 
-def test_report_downstream_submission_api_accepts_pack_without_publication_claim(
+def test_report_downstream_submission_api_accepts_pack_with_support_reference(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     reset_idea_repository_for_tests()
@@ -297,12 +301,17 @@ def test_report_downstream_submission_api_accepts_pack_without_publication_claim
     )
 
     assert response.status_code == 200
-    assert response.json() == {
+    payload = response.json()
+    support_reference = payload["downstreamSubmission"]["supportReference"]
+    assert support_reference.startswith("downstream-submission-")
+    assert "downstream-submit-report-api-001" not in support_reference
+    assert payload == {
         "downstreamSubmission": {
             "submissionStatus": "accepted_by_downstream",
             "sourceAuthority": "lotus-report",
             "target": "report_evidence",
             "downstreamFailureReason": None,
+            "supportReference": support_reference,
             "idempotencyReplayed": False,
             "recordsDownstreamOutcome": False,
             "grantsDownstreamAuthority": False,
@@ -560,7 +569,7 @@ def test_conversion_downstream_submission_api_returns_bounded_rejection(
     client = TestClient(app)
     advise_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
     manage_client = CapturingConversionClient(
-        DownstreamRealizationOutcome.rejected_by_downstream("downstream_timeout")
+        DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
     )
     monkeypatch.setattr(
         downstream_realization_api,
@@ -586,11 +595,15 @@ def test_conversion_downstream_submission_api_returns_bounded_rejection(
     )
 
     assert response.status_code == 200
-    assert response.json()["downstreamSubmission"] == {
+    submission = response.json()["downstreamSubmission"]
+    support_reference = submission["supportReference"]
+    assert support_reference.startswith("downstream-submission-")
+    assert submission == {
         "submissionStatus": "rejected_by_downstream",
         "sourceAuthority": "lotus-manage",
         "target": "manage_review",
-        "downstreamFailureReason": "downstream_timeout",
+        "downstreamFailureReason": "downstream_rejected",
+        "supportReference": support_reference,
         "idempotencyReplayed": False,
         "recordsDownstreamOutcome": False,
         "grantsDownstreamAuthority": False,
@@ -600,6 +613,56 @@ def test_conversion_downstream_submission_api_returns_bounded_rejection(
     assert manage_client.submitted[0].intent.conversion_intent_id == (
         "conversion-manage-rejected-api-001"
     )
+
+
+def test_conversion_downstream_submission_api_returns_durable_uncertain_posture(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    advise_client = CapturingConversionClient(
+        DownstreamRealizationOutcome.unknown("downstream_timeout")
+    )
+    manage_client = CapturingConversionClient(DownstreamRealizationOutcome.accepted_by_downstream())
+    monkeypatch.setattr(
+        downstream_realization_api,
+        "get_conversion_realization_clients",
+        lambda: ConversionRealizationClients(advise_client, manage_client),
+    )
+    candidate_id = seed_approved_candidate(
+        client,
+        suffix="-advise-uncertain-downstream",
+        idempotency_prefix="advise-uncertain-downstream",
+    )
+    record_conversion_intent(
+        client,
+        candidate_id,
+        conversion_intent_id="conversion-advise-uncertain-api-001",
+        target="advise_proposal",
+        idempotency_key="conversion-advise-uncertain-api-001",
+    )
+    headers = downstream_submission_headers("downstream-submit-advise-uncertain-api-001")
+
+    first = client.post(
+        "/api/v1/conversion-intents/conversion-advise-uncertain-api-001/downstream-submissions",
+        headers=headers,
+    )
+    retry = client.post(
+        "/api/v1/conversion-intents/conversion-advise-uncertain-api-001/downstream-submissions",
+        headers=headers,
+    )
+
+    assert first.status_code == 202
+    assert retry.status_code == 202
+    first_submission = first.json()["downstreamSubmission"]
+    retry_submission = retry.json()["downstreamSubmission"]
+    assert first_submission["submissionStatus"] == "reconciliation_required"
+    assert first_submission["downstreamFailureReason"] == "downstream_timeout"
+    assert first_submission["supportReference"].startswith("downstream-submission-")
+    assert retry_submission["supportReference"] == first_submission["supportReference"]
+    assert retry_submission["idempotencyReplayed"] is True
+    assert len(advise_client.submitted) == 1
+    assert manage_client.submitted == ()
 
 
 def test_conversion_downstream_submission_api_rejects_report_target_on_conversion_route(
@@ -666,7 +729,7 @@ def test_report_downstream_submission_api_returns_bounded_rejection(
     reset_idea_repository_for_tests()
     client = TestClient(app)
     report_client = CapturingReportClient(
-        DownstreamRealizationOutcome.rejected_by_downstream("downstream_unavailable")
+        DownstreamRealizationOutcome.rejected_by_downstream("downstream_rejected")
     )
     monkeypatch.setattr(
         downstream_realization_api,
@@ -698,11 +761,15 @@ def test_report_downstream_submission_api_returns_bounded_rejection(
     )
 
     assert response.status_code == 200
-    assert response.json()["downstreamSubmission"] == {
+    submission = response.json()["downstreamSubmission"]
+    support_reference = submission["supportReference"]
+    assert support_reference.startswith("downstream-submission-")
+    assert submission == {
         "submissionStatus": "rejected_by_downstream",
         "sourceAuthority": "lotus-report",
         "target": "report_evidence",
-        "downstreamFailureReason": "downstream_unavailable",
+        "downstreamFailureReason": "downstream_rejected",
+        "supportReference": support_reference,
         "idempotencyReplayed": False,
         "recordsDownstreamOutcome": False,
         "grantsDownstreamAuthority": False,
