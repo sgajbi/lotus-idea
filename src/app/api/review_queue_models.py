@@ -78,6 +78,7 @@ class ReviewQueuePageResponse(CamelModel):
     total_excluded_candidate_count: int = Field(..., alias="totalExcludedCandidateCount")
     next_offset: int | None = Field(None, alias="nextOffset")
     has_next_page: bool = Field(..., alias="hasNextPage")
+    snapshot_token: str = Field(..., alias="snapshotToken")
 
     @classmethod
     def from_domain(cls, queue_page: ReviewQueuePage) -> "ReviewQueuePageResponse":
@@ -91,6 +92,7 @@ class ReviewQueuePageResponse(CamelModel):
             totalExcludedCandidateCount=page.total_excluded_candidate_count,
             nextOffset=page.next_offset,
             hasNextPage=page.has_next_page,
+            snapshotToken=page.snapshot_token,
         )
 
 

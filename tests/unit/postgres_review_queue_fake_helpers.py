@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, Protocol, Sequence
 
@@ -20,13 +23,13 @@ def review_queue_count_rows(
     query: str,
     params: Sequence[Any],
 ) -> list[dict[str, Any]]:
+    visible_rows = _review_queue_visible_rows(connection, params[0])
     rows = _review_queue_ordered_rows(connection, query, params)
     return [
         {
             "total_reviewable_item_count": len(rows),
-            "total_excluded_candidate_count": (
-                len(connection.rows["idea_candidate_record"]) - len(rows)
-            ),
+            "total_excluded_candidate_count": len(visible_rows) - len(rows),
+            "snapshot_fingerprint": _review_queue_snapshot_fingerprint(visible_rows),
         }
     ]
 
@@ -52,11 +55,12 @@ def review_queue_readiness_summary_rows(
         for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
         if f"->>'{field_name}'" in query
     )
+    evaluated_at_utc = params[0]
     scope_values = {
         field_name: set(values)
-        for field_name, values in zip(scope_fields, params[: len(scope_fields)], strict=True)
+        for field_name, values in zip(scope_fields, params[1 : 1 + len(scope_fields)], strict=True)
     }
-    offset = len(scope_fields)
+    offset = 1 + len(scope_fields)
     suppressed_posture = params[offset]
     expired_status = params[offset + 1]
     closed_status = params[offset + 2]
@@ -67,7 +71,8 @@ def review_queue_readiness_summary_rows(
     eligible_rows: list[dict[str, Any]] = []
     scored_candidate_count = 0
     unscored_candidate_count = 0
-    for row in connection.rows["idea_candidate_record"]:
+    visible_rows = _review_queue_visible_rows(connection, evaluated_at_utc)
+    for row in visible_rows:
         candidate_json = row["candidate_json"]
         if candidate_json.get("score") is None:
             unscored_candidate_count += 1
@@ -96,7 +101,7 @@ def review_queue_readiness_summary_rows(
     exclusion_counts[QueueExclusionReason.DUPLICATE.value] = duplicate_count
     return [
         {
-            "candidate_snapshot_count": len(connection.rows["idea_candidate_record"]),
+            "candidate_snapshot_count": len(visible_rows),
             "reviewable_item_count": len(winners_by_signal),
             "excluded_candidate_count": sum(exclusion_counts.values()),
             "scored_candidate_count": scored_candidate_count,
@@ -111,20 +116,21 @@ def _review_queue_ordered_rows(
     query: str,
     params: Sequence[Any],
 ) -> list[dict[str, Any]]:
-    lifecycle_statuses = set(params[0])
-    suppressed_posture = params[1]
-    blocked_supportability = params[2]
+    evaluated_at_utc = params[0]
+    lifecycle_statuses = set(params[1])
+    suppressed_posture = params[2]
+    blocked_supportability = params[3]
     scope_fields = tuple(
         field_name
         for field_name in ("tenant_id", "book_id", "portfolio_id", "client_id")
         if f"->>'{field_name}'" in query
     )
     scope_values = {
-        field_name: set(values) for field_name, values in zip(scope_fields, params[3:], strict=True)
+        field_name: set(values) for field_name, values in zip(scope_fields, params[4:], strict=True)
     }
     eligible_rows = [
         row
-        for row in connection.rows["idea_candidate_record"]
+        for row in _review_queue_visible_rows(connection, evaluated_at_utc)
         if _review_queue_row_is_eligible(
             row,
             lifecycle_statuses=lifecycle_statuses,
@@ -138,6 +144,31 @@ def _review_queue_ordered_rows(
         signal_key = _source_signal_key(row)
         winners_by_signal.setdefault(signal_key, row)
     return sorted(winners_by_signal.values(), key=_review_queue_sort_key)
+
+
+def _review_queue_visible_rows(
+    connection: FakeReviewQueueConnection,
+    evaluated_at_utc: datetime,
+) -> list[dict[str, Any]]:
+    return [
+        row
+        for row in connection.rows["idea_candidate_record"]
+        if datetime.fromisoformat(row["candidate_json"]["created_at_utc"]) <= evaluated_at_utc
+    ]
+
+
+def _review_queue_snapshot_fingerprint(rows: list[dict[str, Any]]) -> str:
+    material = "".join(
+        hashlib.md5(  # noqa: S324 - mirrors PostgreSQL's non-security change fingerprint
+            (
+                f"{row['candidate_id']}|{row['evidence_hash']}|"
+                f"{json.dumps(row['candidate_json'], sort_keys=True, separators=(',', ':'))}"
+            ).encode("utf-8"),
+            usedforsecurity=False,
+        ).hexdigest()
+        for row in sorted(rows, key=lambda item: item["candidate_id"])
+    )
+    return hashlib.md5(material.encode("utf-8"), usedforsecurity=False).hexdigest()
 
 
 def _review_queue_row_exclusion_reason(

@@ -38,10 +38,11 @@ def high_cash_payload(
     cash_weight: str,
     suffix: str = "",
     candidate_scope: dict[str, str] | None = None,
+    evaluated_at_utc: str = "2026-06-21T10:00:00Z",
 ) -> dict[str, Any]:
     return {
         "asOfDate": "2026-06-21",
-        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+        "evaluatedAtUtc": evaluated_at_utc,
         "sourceReportedCashWeight": cash_weight,
         "sourceEvidence": {
             "portfolioStateRef": source_ref("lotus-core:PortfolioStateSnapshot:v1", suffix),
@@ -110,6 +111,7 @@ def persist_candidate(
     suffix: str,
     idempotency_key: str,
     candidate_scope: dict[str, str] | None = None,
+    evaluated_at_utc: str = "2026-06-21T10:00:00Z",
 ) -> str:
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -117,6 +119,7 @@ def persist_candidate(
             cash_weight=cash_weight,
             suffix=suffix,
             candidate_scope=candidate_scope,
+            evaluated_at_utc=evaluated_at_utc,
         ),
         headers=persist_headers(idempotency_key),
     )
@@ -156,7 +159,7 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
     )
     assert [item["rank"] for item in payload["items"]] == [1, 2]
     assert payload["exclusions"] == []
-    assert payload["page"] == {
+    assert payload["page"] | {"snapshotToken": None} == {
         "limit": 25,
         "offset": 0,
         "returnedItemCount": 2,
@@ -165,7 +168,9 @@ def test_advisor_review_queue_api_projects_persisted_candidates() -> None:
         "totalExcludedCandidateCount": 0,
         "nextOffset": None,
         "hasNextPage": False,
+        "snapshotToken": None,
     }
+    assert payload["page"]["snapshotToken"].startswith("rqs1_")
 
 
 def test_advisor_review_queue_api_defaults_to_active_queue_snapshot() -> None:
@@ -203,8 +208,16 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
         for index in range(3)
     ]
 
+    first_page = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1",
+        headers=queue_headers(),
+    )
+    snapshot_token = first_page.json()["page"]["snapshotToken"]
     response = client.get(
-        ("/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1&offset=1"),
+        (
+            "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
+            f"&limit=1&offset=1&snapshotToken={snapshot_token}"
+        ),
         headers=queue_headers(),
     )
 
@@ -214,7 +227,7 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
         sorted(candidate_ids)[1]
     ]
     assert payload["items"][0]["rank"] == 2
-    assert payload["page"] == {
+    assert payload["page"] | {"snapshotToken": None} == {
         "limit": 1,
         "offset": 1,
         "returnedItemCount": 1,
@@ -223,7 +236,111 @@ def test_advisor_review_queue_api_returns_bounded_page_metadata() -> None:
         "totalExcludedCandidateCount": 0,
         "nextOffset": 2,
         "hasNextPage": True,
+        "snapshotToken": None,
     }
+    assert payload["page"]["snapshotToken"] == snapshot_token
+
+
+def test_advisor_review_queue_api_requires_snapshot_token_for_continuation() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&offset=1",
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "review_queue_snapshot_token_required"
+
+
+def test_advisor_review_queue_api_rejects_malformed_snapshot_token() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+
+    response = client.get(
+        (
+            "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
+            "&offset=1&snapshotToken=database-row-42"
+        ),
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_review_queue_snapshot_token"
+
+
+def test_advisor_review_queue_api_rejects_stale_snapshot_after_backdated_insert() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    persist_candidate(
+        client,
+        cash_weight="0.18",
+        suffix="-snapshot-first",
+        idempotency_key="seed-review-queue-snapshot-first",
+    )
+    first_page = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1",
+        headers=queue_headers(),
+    )
+    snapshot_token = first_page.json()["page"]["snapshotToken"]
+    persist_candidate(
+        client,
+        cash_weight="0.20",
+        suffix="-snapshot-backdated",
+        idempotency_key="seed-review-queue-snapshot-backdated",
+    )
+
+    response = client.get(
+        (
+            "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
+            f"&limit=1&offset=1&snapshotToken={snapshot_token}"
+        ),
+        headers=queue_headers(),
+    )
+
+    assert response.status_code == 409
+    assert response.json()["code"] == "review_queue_snapshot_conflict"
+
+
+def test_advisor_review_queue_snapshot_ignores_candidates_created_after_as_of() -> None:
+    reset_idea_repository_for_tests()
+    client = TestClient(app)
+    visible_ids = [
+        persist_candidate(
+            client,
+            cash_weight=f"0.2{index}",
+            suffix=f"-snapshot-visible-{index}",
+            idempotency_key=f"seed-review-queue-snapshot-visible-{index}",
+        )
+        for index in range(2)
+    ]
+    first_page = client.get(
+        "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z&limit=1",
+        headers=queue_headers(),
+    )
+    snapshot_token = first_page.json()["page"]["snapshotToken"]
+    future_id = persist_candidate(
+        client,
+        cash_weight="0.29",
+        suffix="-snapshot-future",
+        idempotency_key="seed-review-queue-snapshot-future",
+        evaluated_at_utc="2026-06-21T10:11:00Z",
+    )
+
+    second_page = client.get(
+        (
+            "/api/v1/review-queues/advisor?evaluatedAtUtc=2026-06-21T10:10:00Z"
+            f"&limit=1&offset=1&snapshotToken={snapshot_token}"
+        ),
+        headers=queue_headers(),
+    )
+
+    assert second_page.status_code == 200
+    returned_ids = [item["candidate"]["candidateId"] for item in second_page.json()["items"]]
+    assert returned_ids == [sorted(visible_ids)[1]]
+    assert future_id not in returned_ids
+    assert second_page.json()["page"]["totalReviewableItemCount"] == 2
 
 
 def test_advisor_review_queue_api_rejects_page_size_above_maximum() -> None:

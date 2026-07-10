@@ -166,6 +166,17 @@ from app.domain.outbox_recovery import (
     outbox_recovery_request_payload,
 )
 from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
+from app.domain.review_queue_snapshot import (
+    InvalidReviewQueueSnapshotTokenError,
+    ReviewQueueSnapshotConflictError,
+    ReviewQueueSnapshotIdentity,
+    ReviewQueueSnapshotTokenRequiredError,
+    build_review_queue_snapshot_identity,
+    require_matching_review_queue_snapshot,
+    review_queue_candidate_fingerprint,
+    validate_review_queue_snapshot_token,
+    visible_review_queue_candidate_records,
+)
 from app.domain.persistence import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -419,6 +430,15 @@ __all__ = [
     "SignalEvaluationResult",
     "evidence_hash_for_candidate",
     "evidence_hash_for_source_refs",
+    "InvalidReviewQueueSnapshotTokenError",
+    "ReviewQueueSnapshotConflictError",
+    "ReviewQueueSnapshotIdentity",
+    "ReviewQueueSnapshotTokenRequiredError",
+    "build_review_queue_snapshot_identity",
+    "require_matching_review_queue_snapshot",
+    "review_queue_candidate_fingerprint",
+    "validate_review_queue_snapshot_token",
+    "visible_review_queue_candidate_records",
     "ai_explanation_lineage_record_from_result",
     "GovernedReportEvidencePack",
     "InvalidReportEvidencePack",

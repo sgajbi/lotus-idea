@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from dataclasses import replace
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -26,8 +27,10 @@ from app.domain import (
     QueueExclusionReason,
     QueueSnooze,
     ReasonCode,
+    ReviewQueueSnapshotConflictError,
     SourceRef,
     SourceSystem,
+    visible_review_queue_candidate_records,
 )
 from app.domain.access_scope import QueueAccessScopeFilter, ReviewAccessScope
 from app.ports.idea_repository import (
@@ -166,6 +169,7 @@ def test_build_review_queue_from_repository_pages_reviewable_items_deterministic
             evaluated_at_utc=EVALUATED_AT,
             limit=1,
             offset=1,
+            snapshot_token=first_page.page.snapshot_token,
         ),
         repository=repository,
     )
@@ -178,6 +182,97 @@ def test_build_review_queue_from_repository_pages_reviewable_items_deterministic
     assert first_page.page.has_next_page is True
     assert second_page.page.offset == 1
     assert second_page.page.next_offset == 2
+
+
+def test_review_queue_as_of_includes_creation_equality_and_excludes_later_candidate() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_id = persist_high_cash_candidate(repository)
+    record = repository.snapshot().candidate_records[candidate_id]
+    future_record = replace(
+        record,
+        candidate=replace(
+            record.candidate,
+            candidate_id="idea_future_candidate",
+            source_signal_ids=("signal_future_candidate",),
+            created_at_utc=EVALUATED_AT + timedelta(microseconds=1),
+            updated_at_utc=EVALUATED_AT + timedelta(microseconds=1),
+        ),
+    )
+
+    visible = visible_review_queue_candidate_records(
+        (record, future_record),
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert [item.candidate.candidate_id for item in visible] == [candidate_id]
+
+
+def test_review_queue_as_of_does_not_reinterpret_source_authority_dates() -> None:
+    repository = InMemoryIdeaRepository()
+    candidate_id = persist_high_cash_candidate(repository)
+    record = repository.snapshot().candidate_records[candidate_id]
+    future_source_refs = tuple(
+        replace(
+            source_ref_item,
+            as_of_date=AS_OF_DATE + timedelta(days=1),
+            generated_at_utc=EVALUATED_AT + timedelta(days=1),
+        )
+        for source_ref_item in record.candidate.evidence_packet.source_refs
+    )
+    evidence_packet = replace(
+        record.candidate.evidence_packet,
+        source_refs=future_source_refs,
+        lineage_ref=replace(
+            record.candidate.evidence_packet.lineage_ref,
+            source_refs=future_source_refs,
+        ),
+    )
+    source_temporal_record = replace(
+        record,
+        candidate=replace(record.candidate, evidence_packet=evidence_packet),
+    )
+
+    visible = visible_review_queue_candidate_records(
+        (source_temporal_record,),
+        evaluated_at_utc=EVALUATED_AT,
+    )
+
+    assert visible == (source_temporal_record,)
+
+
+def test_review_queue_continuation_rejects_backdated_candidate_insert() -> None:
+    repository = InMemoryIdeaRepository()
+    persist_high_cash_candidate(repository)
+    persist_high_cash_candidate(
+        repository,
+        cash_weight=Decimal("0.20"),
+        suffix="-snapshot-second",
+        idempotency_key="signal-ingestion:high-cash:snapshot-second",
+    )
+    first_page = build_review_queue_from_repository(
+        BuildReviewQueueFromRepositoryCommand(
+            evaluated_at_utc=EVALUATED_AT,
+            limit=1,
+        ),
+        repository=repository,
+    )
+    persist_high_cash_candidate(
+        repository,
+        cash_weight=Decimal("0.22"),
+        suffix="-snapshot-insert",
+        idempotency_key="signal-ingestion:high-cash:snapshot-insert",
+    )
+
+    with pytest.raises(ReviewQueueSnapshotConflictError):
+        build_review_queue_from_repository(
+            BuildReviewQueueFromRepositoryCommand(
+                evaluated_at_utc=EVALUATED_AT,
+                limit=1,
+                offset=1,
+                snapshot_token=first_page.page.snapshot_token,
+            ),
+            repository=repository,
+        )
 
 
 def test_build_review_queue_from_repository_uses_repository_side_page_projection() -> None:
@@ -208,17 +303,24 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
         def review_queue_candidate_page(
             self,
             *,
+            evaluated_at_utc: datetime,
+            expected_snapshot_token: str | None,
+            policy_version: str,
             access_scope_filter: QueueAccessScopeFilter | None,
             limit: int,
             offset: int,
         ) -> ReviewQueueRepositoryPage:
             assert access_scope_filter is None
+            assert evaluated_at_utc == EVALUATED_AT
+            assert expected_snapshot_token == "rqs1_" + "a" * 64
+            assert policy_version == "idea-deterministic-ranking-v1"
             self.requested_limit = limit
             self.requested_offset = offset
             return ReviewQueueRepositoryPage(
                 candidate_records=(self.record,),
                 total_reviewable_item_count=3,
                 total_excluded_candidate_count=0,
+                snapshot_token="rqs1_" + "a" * 64,
             )
 
     paged_repository = RepositorySidePageRepository(second_record)
@@ -228,6 +330,7 @@ def test_build_review_queue_from_repository_uses_repository_side_page_projection
             evaluated_at_utc=EVALUATED_AT,
             limit=1,
             offset=1,
+            snapshot_token="rqs1_" + "a" * 64,
         ),
         repository=paged_repository,
     )
@@ -533,9 +636,11 @@ def test_build_review_queue_readiness_snapshot_clears_repository_side_pagination
         def review_queue_readiness_summary(
             self,
             *,
+            evaluated_at_utc: datetime,
             access_scope_filter: QueueAccessScopeFilter | None,
         ) -> ReviewQueueReadinessRepositorySummary:
             assert access_scope_filter is None
+            assert evaluated_at_utc == EVALUATED_AT
             self.readiness_summary_count += 1
             return ReviewQueueReadinessRepositorySummary(
                 candidate_snapshot_count=2,

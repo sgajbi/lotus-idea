@@ -13,9 +13,15 @@ from app.domain import (
     QueueExclusionReason,
     QueueAccessScopeFilter,
     QueueSnooze,
+    ReviewQueueSnapshotTokenRequiredError,
     ReviewQueueItem,
     ReviewQueueProjection,
+    build_review_queue_snapshot_identity,
     build_review_queue,
+    require_matching_review_queue_snapshot,
+    review_queue_candidate_fingerprint,
+    validate_review_queue_snapshot_token,
+    visible_review_queue_candidate_records,
 )
 from app.ports.idea_repository import (
     CandidateSnapshotRepository,
@@ -37,6 +43,7 @@ class BuildReviewQueueFromRepositoryCommand:
     access_scope_filter: QueueAccessScopeFilter | None = None
     limit: int = DEFAULT_REVIEW_QUEUE_PAGE_LIMIT
     offset: int = 0
+    snapshot_token: str | None = None
 
     def __post_init__(self) -> None:
         if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
@@ -45,6 +52,16 @@ class BuildReviewQueueFromRepositoryCommand:
             raise ValueError(f"limit must be between 1 and {MAX_REVIEW_QUEUE_PAGE_LIMIT}")
         if self.offset < 0:
             raise ValueError("offset must be greater than or equal to zero")
+        if self.snapshot_token is not None:
+            object.__setattr__(
+                self,
+                "snapshot_token",
+                validate_review_queue_snapshot_token(self.snapshot_token),
+            )
+        if self.offset > 0 and self.snapshot_token is None:
+            raise ReviewQueueSnapshotTokenRequiredError(
+                "snapshot_token is required when offset is greater than zero"
+            )
         object.__setattr__(self, "snoozes", tuple(self.snoozes))
 
 
@@ -58,6 +75,7 @@ class ReviewQueuePageMetadata:
     total_excluded_candidate_count: int
     next_offset: int | None
     has_next_page: bool
+    snapshot_token: str
 
 
 @dataclass(frozen=True)
@@ -126,14 +144,21 @@ def build_review_queue_from_repository(
 ) -> ReviewQueuePage:
     if not command.snoozes and isinstance(repository, ReviewQueueProjectionRepository):
         repository_page = repository.review_queue_candidate_page(
+            evaluated_at_utc=command.evaluated_at_utc,
+            expected_snapshot_token=command.snapshot_token,
+            policy_version=policy.policy_version,
             access_scope_filter=command.access_scope_filter,
             limit=command.limit,
             offset=command.offset,
         )
         return _page_repository_review_queue(repository_page, command=command, policy=policy)
     snapshot = repository.snapshot()
-    queue = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
-    return _page_review_queue(queue, command=command)
+    queue, snapshot_token = _build_review_queue_from_snapshot(
+        command,
+        snapshot=snapshot,
+        policy=policy,
+    )
+    return _page_review_queue(queue, command=command, snapshot_token=snapshot_token)
 
 
 def build_review_queue_readiness_snapshot(
@@ -150,6 +175,7 @@ def build_review_queue_readiness_snapshot(
     if repository_side_pagination_certified and not command.snoozes:
         readiness_repository = cast(ReviewQueueReadinessProjectionRepository, repository)
         readiness_summary = readiness_repository.review_queue_readiness_summary(
+            evaluated_at_utc=command.evaluated_at_utc,
             access_scope_filter=command.access_scope_filter,
         )
         return _review_queue_readiness_snapshot_from_summary(
@@ -161,12 +187,18 @@ def build_review_queue_readiness_snapshot(
         )
 
     snapshot = repository.snapshot()
-    queue = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
+    queue, _ = _build_review_queue_from_snapshot(command, snapshot=snapshot, policy=policy)
     exclusion_counts = {
         reason.value: sum(1 for exclusion in queue.exclusions if exclusion.reason is reason)
         for reason in QueueExclusionReason
     }
-    candidates = tuple(record.candidate for record in snapshot.candidate_records.values())
+    candidates = tuple(
+        record.candidate
+        for record in visible_review_queue_candidate_records(
+            tuple(snapshot.candidate_records.values()),
+            evaluated_at_utc=command.evaluated_at_utc,
+        )
+    )
     certification_blockers = _review_queue_certification_blockers(
         durable_storage_backed=durable_storage_backed,
         repository_side_pagination_certified=repository_side_pagination_certified,
@@ -280,6 +312,7 @@ def _page_repository_review_queue(
             total_excluded_candidate_count=repository_page.total_excluded_candidate_count,
             next_offset=(next_offset if has_next_page else None),
             has_next_page=has_next_page,
+            snapshot_token=repository_page.snapshot_token,
         ),
     )
 
@@ -289,27 +322,38 @@ def _build_review_queue_from_snapshot(
     *,
     snapshot: IdeaRepositorySnapshot,
     policy: IdeaScoringPolicy,
-) -> ReviewQueueProjection:
-    candidates = tuple(
-        record.candidate
-        for record in sorted(
-            snapshot.candidate_records.values(),
-            key=lambda record: record.candidate.candidate_id,
-        )
+) -> tuple[ReviewQueueProjection, str]:
+    visible_records = visible_review_queue_candidate_records(
+        tuple(snapshot.candidate_records.values()),
+        evaluated_at_utc=command.evaluated_at_utc,
     )
-    return build_review_queue(
+    candidates = tuple(record.candidate for record in visible_records)
+    queue = build_review_queue(
         candidates,
         policy=policy,
         evaluated_at_utc=command.evaluated_at_utc,
         snoozes=command.snoozes,
         access_scope_filter=command.access_scope_filter,
     )
+    snapshot_identity = build_review_queue_snapshot_identity(
+        fingerprint=review_queue_candidate_fingerprint(visible_records),
+        evaluated_at_utc=command.evaluated_at_utc,
+        policy_version=queue.policy_version,
+        access_scope_filter=command.access_scope_filter,
+        snoozes=command.snoozes,
+    )
+    require_matching_review_queue_snapshot(
+        expected_token=command.snapshot_token,
+        actual_token=snapshot_identity.token,
+    )
+    return queue, snapshot_identity.token
 
 
 def _page_review_queue(
     queue: ReviewQueueProjection,
     *,
     command: BuildReviewQueueFromRepositoryCommand,
+    snapshot_token: str,
 ) -> ReviewQueuePage:
     item_window = queue.items[command.offset : command.offset + command.limit]
     exclusion_window = queue.exclusions[command.offset : command.offset + command.limit]
@@ -332,5 +376,6 @@ def _page_review_queue(
             total_excluded_candidate_count=len(queue.exclusions),
             next_offset=(next_offset if has_next_page else None),
             has_next_page=has_next_page,
+            snapshot_token=snapshot_token,
         ),
     )

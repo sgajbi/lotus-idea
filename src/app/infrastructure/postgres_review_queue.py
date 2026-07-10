@@ -1,9 +1,15 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
+from datetime import datetime
+from typing import Any, Mapping, Sequence
 
 from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ideas import EvidenceSupportability, IdeaLifecycleStatus, ReviewPosture
+from app.domain.review_queue_snapshot import (
+    ReviewQueueSnapshotConflictError,
+    build_review_queue_snapshot_identity,
+    require_matching_review_queue_snapshot,
+)
 from app.domain.scoring import QueueExclusionReason
 from app.domain.persistence import CandidatePersistenceRecord
 from app.infrastructure.postgres_codecs import (
@@ -27,9 +33,50 @@ REVIEW_QUEUE_ACCESS_SCOPE_FILTER_FIELDS = (
 )
 
 
+class PostgresReviewQueueRepositoryMixin:
+    """Bounded PostgreSQL adapter for advisor queue projections."""
+
+    _connection: PostgresConnection
+
+    def review_queue_candidate_page(
+        self,
+        *,
+        evaluated_at_utc: datetime,
+        expected_snapshot_token: str | None,
+        policy_version: str,
+        access_scope_filter: QueueAccessScopeFilter | None,
+        limit: int,
+        offset: int,
+    ) -> ReviewQueueRepositoryPage:
+        return load_review_queue_candidate_page(
+            self._connection,
+            evaluated_at_utc=evaluated_at_utc,
+            expected_snapshot_token=expected_snapshot_token,
+            policy_version=policy_version,
+            access_scope_filter=access_scope_filter,
+            limit=limit,
+            offset=offset,
+        )
+
+    def review_queue_readiness_summary(
+        self,
+        *,
+        evaluated_at_utc: datetime,
+        access_scope_filter: QueueAccessScopeFilter | None,
+    ) -> ReviewQueueReadinessRepositorySummary:
+        return load_review_queue_readiness_summary(
+            self._connection,
+            evaluated_at_utc=evaluated_at_utc,
+            access_scope_filter=access_scope_filter,
+        )
+
+
 def load_review_queue_candidate_page(
     connection: PostgresConnection,
     *,
+    evaluated_at_utc: datetime,
+    expected_snapshot_token: str | None,
+    policy_version: str,
     access_scope_filter: QueueAccessScopeFilter | None,
     limit: int,
     offset: int,
@@ -39,7 +86,10 @@ def load_review_queue_candidate_page(
     if offset < 0:
         raise ValueError("offset must be greater than or equal to zero")
 
-    predicate_sql, predicate_params = _review_queue_candidate_predicates(access_scope_filter)
+    predicate_sql, predicate_params = _review_queue_candidate_predicates(
+        evaluated_at_utc=evaluated_at_utc,
+        access_scope_filter=access_scope_filter,
+    )
     with connection.cursor() as cursor:
         cursor.execute(_review_queue_count_query(predicate_sql), predicate_params)
         count_rows = cursor.fetchall()
@@ -54,6 +104,17 @@ def load_review_queue_candidate_page(
             total_excluded_candidate_count = int(
                 read_row_value(count_row, "total_excluded_candidate_count")
             )
+        fingerprint = _snapshot_fingerprint(count_rows)
+        snapshot_identity = build_review_queue_snapshot_identity(
+            fingerprint=fingerprint,
+            evaluated_at_utc=evaluated_at_utc,
+            policy_version=policy_version,
+            access_scope_filter=access_scope_filter,
+        )
+        require_matching_review_queue_snapshot(
+            expected_token=expected_snapshot_token,
+            actual_token=snapshot_identity.token,
+        )
 
         cursor.execute(
             _review_queue_page_query(predicate_sql),
@@ -61,22 +122,38 @@ def load_review_queue_candidate_page(
         )
         records = tuple(candidate_record_from_row(row) for row in cursor.fetchall())
 
+        cursor.execute(_review_queue_count_query(predicate_sql), predicate_params)
+        verification_rows = cursor.fetchall()
+        verification_identity = build_review_queue_snapshot_identity(
+            fingerprint=_snapshot_fingerprint(verification_rows),
+            evaluated_at_utc=evaluated_at_utc,
+            policy_version=policy_version,
+            access_scope_filter=access_scope_filter,
+        )
+        if verification_identity.token != snapshot_identity.token:
+            raise ReviewQueueSnapshotConflictError(
+                "advisor review queue state changed while the page was being read"
+            )
+
     return ReviewQueueRepositoryPage(
         candidate_records=records,
         total_reviewable_item_count=total_reviewable_item_count,
         total_excluded_candidate_count=total_excluded_candidate_count,
+        snapshot_token=snapshot_identity.token,
     )
 
 
 def load_review_queue_readiness_summary(
     connection: PostgresConnection,
     *,
+    evaluated_at_utc: datetime,
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> ReviewQueueReadinessRepositorySummary:
     access_scope_mismatch_sql, access_scope_params = _access_scope_mismatch_predicate(
         access_scope_filter,
     )
     params = (
+        evaluated_at_utc,
         *access_scope_params,
         ReviewPosture.SUPPRESSED.value,
         IdeaLifecycleStatus.EXPIRED.value,
@@ -135,7 +212,15 @@ def _empty_readiness_summary() -> ReviewQueueReadinessRepositorySummary:
     )
 
 
+def _snapshot_fingerprint(rows: Sequence[Any]) -> str:
+    if not rows:
+        return "empty"
+    return str(read_row_value(rows[0], "snapshot_fingerprint"))
+
+
 def _review_queue_candidate_predicates(
+    *,
+    evaluated_at_utc: datetime,
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> tuple[str, tuple[Any, ...]]:
     predicates = [
@@ -147,6 +232,7 @@ def _review_queue_candidate_predicates(
         "(candidate_json->'evidence_packet'->>'supportability') <> %s",
     ]
     params: list[Any] = [
+        evaluated_at_utc,
         [
             status.value
             for status in (
@@ -217,6 +303,7 @@ def _review_queue_candidate_cte(predicate_sql: str) -> str:
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
             FROM idea_candidate_record
+            WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
         ),
         eligible AS (
             SELECT *
@@ -239,7 +326,19 @@ def _review_queue_count_query(predicate_sql: str) -> str:
         SELECT
             (SELECT COUNT(*) FROM deduped)::integer AS total_reviewable_item_count,
             ((SELECT COUNT(*) FROM base) - (SELECT COUNT(*) FROM deduped))::integer
-                AS total_excluded_candidate_count
+                AS total_excluded_candidate_count,
+            md5(
+                COALESCE(
+                    (
+                        SELECT string_agg(
+                            md5(candidate_id || '|' || evidence_hash || '|' || candidate_json::text),
+                            '' ORDER BY candidate_id
+                        )
+                        FROM base
+                    ),
+                    ''
+                )
+            ) AS snapshot_fingerprint
         """
     )
 
@@ -263,6 +362,7 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
                    ((candidate_json->'score'->>'score')::numeric) AS queue_score,
                    (candidate_json->>'created_at_utc') AS queue_created_at_utc
             FROM idea_candidate_record
+            WHERE (candidate_json->>'created_at_utc')::timestamptz <= %s
         ),
         classified AS (
             SELECT *,

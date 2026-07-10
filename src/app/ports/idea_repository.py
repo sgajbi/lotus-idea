@@ -45,6 +45,7 @@ class ReviewQueueRepositoryPage:
     candidate_records: tuple[CandidatePersistenceRecord, ...]
     total_reviewable_item_count: int
     total_excluded_candidate_count: int
+    snapshot_token: str
 
     @property
     def has_review_queue_projection(self) -> bool:
@@ -116,6 +117,9 @@ class ReviewQueueProjectionRepository(Protocol):
     def review_queue_candidate_page(
         self,
         *,
+        evaluated_at_utc: datetime,
+        expected_snapshot_token: str | None,
+        policy_version: str,
         access_scope_filter: QueueAccessScopeFilter | None,
         limit: int,
         offset: int,
@@ -127,6 +131,7 @@ class ReviewQueueReadinessProjectionRepository(Protocol):
     def review_queue_readiness_summary(
         self,
         *,
+        evaluated_at_utc: datetime,
         access_scope_filter: QueueAccessScopeFilter | None,
     ) -> ReviewQueueReadinessRepositorySummary: ...
 

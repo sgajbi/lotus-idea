@@ -28,6 +28,7 @@ def test_advisor_review_queue_response_maps_source_safe_page() -> None:
             total_excluded_candidate_count=0,
             next_offset=None,
             has_next_page=False,
+            snapshot_token="rqs1_" + "a" * 64,
         ),
     )
 
@@ -49,6 +50,7 @@ def test_advisor_review_queue_response_maps_source_safe_page() -> None:
         "totalExcludedCandidateCount": 0,
         "nextOffset": None,
         "hasNextPage": False,
+        "snapshotToken": "rqs1_" + "a" * 64,
     }
     assert len(response["items"]) == 1
     item = response["items"][0]

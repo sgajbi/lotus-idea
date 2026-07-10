@@ -22,7 +22,6 @@ from app.domain.ideas import (
     IdeaLifecycleStatus,
     SourceRef,
 )
-from app.domain.access_scope import QueueAccessScopeFilter
 from app.domain.ai_lineage_persistence import AIExplanationLineagePersistenceResult
 from app.domain.idempotency import IdempotencyDecision, IdempotencyRecord
 from app.domain.outbox_delivery_state import OutboxDeliveryResult
@@ -101,17 +100,14 @@ from app.infrastructure.postgres_idempotency_precheck import (
 )
 from app.infrastructure.postgres_mutation_retry import execute_postgres_mutation
 from app.infrastructure.postgres_review_queue import (
+    PostgresReviewQueueRepositoryMixin,
     candidate_record_from_row,
-    load_review_queue_candidate_page,
-    load_review_queue_readiness_summary,
 )
 from app.infrastructure.postgres_review_identity import ConcurrentReviewIdentityMutationError
 from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
 from app.infrastructure.postgres_candidate_detail import load_candidate_record_by_id
-from app.ports.idea_repository import ReviewQueueRepositoryPage
-from app.ports.idea_repository import ReviewQueueReadinessRepositorySummary
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
 
@@ -119,34 +115,17 @@ from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
 _T = TypeVar("_T")
 
 
-class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecoveryRepositoryMixin):
+class PostgresIdeaRepository(
+    PostgresReviewQueueRepositoryMixin,
+    PostgresOutboxRepositoryMixin,
+    PostgresOutboxRecoveryRepositoryMixin,
+):
     """PostgreSQL-backed implementation of the governed idea repository ports."""
 
     durable_storage_backed = True
 
     def __init__(self, connection: PostgresConnection) -> None:
         self._connection = connection
-
-    def review_queue_candidate_page(
-        self,
-        *,
-        access_scope_filter: QueueAccessScopeFilter | None,
-        limit: int,
-        offset: int,
-    ) -> ReviewQueueRepositoryPage:
-        return load_review_queue_candidate_page(
-            self._connection, access_scope_filter=access_scope_filter, limit=limit, offset=offset
-        )
-
-    def review_queue_readiness_summary(
-        self,
-        *,
-        access_scope_filter: QueueAccessScopeFilter | None,
-    ) -> ReviewQueueReadinessRepositorySummary:
-        return load_review_queue_readiness_summary(
-            self._connection,
-            access_scope_filter=access_scope_filter,
-        )
 
     def candidate_record_by_id(self, candidate_id: str) -> CandidatePersistenceRecord | None:
         return load_candidate_record_by_id(self._connection, candidate_id)

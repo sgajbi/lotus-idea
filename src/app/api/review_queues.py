@@ -10,7 +10,11 @@ from app.api.caller_headers import (
     caller_access_scope_filter,
     caller_context_from_headers,
 )
-from app.api.problem_details import invalid_request_metadata, permission_denied_metadata
+from app.api.problem_details import (
+    conflict_metadata,
+    invalid_request_metadata,
+    permission_denied_metadata,
+)
 from app.api.review_queue_models import (
     AdvisorReviewQueueResponse,
     ReviewQueueCandidateResponse,
@@ -33,6 +37,11 @@ from app.application.review_queue import (
     build_review_queue_readiness_snapshot,
 )
 from app.domain.access_scope import QueueAccessScopeFilter
+from app.domain.review_queue_snapshot import (
+    InvalidReviewQueueSnapshotTokenError,
+    ReviewQueueSnapshotConflictError,
+    ReviewQueueSnapshotTokenRequiredError,
+)
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import (
     IdeaOperation,
@@ -85,6 +94,7 @@ async def get_advisor_review_queue(
         le=MAX_REVIEW_QUEUE_PAGE_LIMIT,
     ),
     offset: int = Query(default=0, ge=0),
+    snapshot_token: str | None = Query(default=None, alias="snapshotToken", max_length=69),
     x_caller_subject: str | None = Header(default=None, alias="X-Caller-Subject"),
     x_caller_roles: str | None = Header(default=None, alias="X-Caller-Roles"),
     x_caller_capabilities: str | None = Header(default=None, alias="X-Caller-Capabilities"),
@@ -134,16 +144,7 @@ async def get_advisor_review_queue(
         )
     resolved_evaluated_at_utc = evaluated_at_utc or ACTIVE_ADVISOR_REVIEW_QUEUE_EVALUATED_AT_UTC
     if not is_timezone_aware(resolved_evaluated_at_utc):
-        _emit_review_queue_operation_event(
-            OperationOutcome.INVALID_REQUEST,
-            "invalid_request",
-        )
-        return problem_response(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            code="invalid_request",
-            title="Invalid request",
-            detail="evaluatedAtUtc must be timezone-aware.",
-        )
+        return _invalid_review_queue_evaluation_time_problem()
     try:
         requested_scope_filter = QueueAccessScopeFilter(
             tenant_id=tenant_id,
@@ -180,17 +181,28 @@ async def get_advisor_review_queue(
 
     repository = get_idea_repository()
     durable_storage_backed = idea_repository_durable_storage_backed(repository)
-    queue = build_review_queue_from_repository(
-        BuildReviewQueueFromRepositoryCommand(
-            evaluated_at_utc=resolved_evaluated_at_utc,
-            limit=limit,
-            offset=offset,
-            access_scope_filter=(
-                None if effective_scope_filter.is_empty else effective_scope_filter
+    try:
+        queue = build_review_queue_from_repository(
+            BuildReviewQueueFromRepositoryCommand(
+                evaluated_at_utc=resolved_evaluated_at_utc,
+                limit=limit,
+                offset=offset,
+                snapshot_token=snapshot_token,
+                access_scope_filter=(
+                    None if effective_scope_filter.is_empty else effective_scope_filter
+                ),
             ),
-        ),
-        repository=repository,
-    )
+            repository=repository,
+        )
+    except (
+        InvalidReviewQueueSnapshotTokenError,
+        ReviewQueueSnapshotConflictError,
+        ReviewQueueSnapshotTokenRequiredError,
+    ) as error:
+        return _review_queue_snapshot_problem(
+            error,
+            durable_storage_backed=durable_storage_backed,
+        )
     _emit_review_queue_operation_event(
         OperationOutcome.ACCEPTED,
         durable_storage_backed=durable_storage_backed,
@@ -273,6 +285,55 @@ def _effective_queue_scope_filter(
     )
 
 
+def _review_queue_snapshot_problem(
+    error: (
+        InvalidReviewQueueSnapshotTokenError
+        | ReviewQueueSnapshotConflictError
+        | ReviewQueueSnapshotTokenRequiredError
+    ),
+    *,
+    durable_storage_backed: bool,
+) -> JSONResponse:
+    if isinstance(error, ReviewQueueSnapshotTokenRequiredError):
+        outcome = OperationOutcome.INVALID_REQUEST
+        status_code = status.HTTP_400_BAD_REQUEST
+        code = "review_queue_snapshot_token_required"
+        title = "Review queue snapshot token required"
+        detail = "snapshotToken is required when offset is greater than zero."
+    elif isinstance(error, InvalidReviewQueueSnapshotTokenError):
+        outcome = OperationOutcome.INVALID_REQUEST
+        status_code = status.HTTP_400_BAD_REQUEST
+        code = "invalid_review_queue_snapshot_token"
+        title = "Invalid review queue snapshot token"
+        detail = "snapshotToken is not a valid opaque advisor queue snapshot token."
+    else:
+        outcome = OperationOutcome.CONFLICT
+        status_code = status.HTTP_409_CONFLICT
+        code = "review_queue_snapshot_conflict"
+        title = "Review queue snapshot conflict"
+        detail = (
+            "The advisor queue changed after this snapshot was issued. "
+            "Restart paging from offset zero."
+        )
+    _emit_review_queue_operation_event(outcome, code, durable_storage_backed)
+    return problem_response(
+        status_code=status_code,
+        code=code,
+        title=title,
+        detail=detail,
+    )
+
+
+def _invalid_review_queue_evaluation_time_problem() -> JSONResponse:
+    _emit_review_queue_operation_event(OperationOutcome.INVALID_REQUEST, "invalid_request")
+    return problem_response(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        code="invalid_request",
+        title="Invalid request",
+        detail="evaluatedAtUtc must be timezone-aware.",
+    )
+
+
 def _emit_review_queue_operation_event(
     outcome: OperationOutcome,
     error_code: str | None = None,
@@ -315,9 +376,16 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
         "query filters constrain results to the requested advisor access scope. "
         "When evaluatedAtUtc is omitted, the route returns the governed active "
         "advisor queue evaluation snapshot. "
+        "evaluatedAtUtc is a candidate-creation as-of boundary: candidates created "
+        "after it are not visible, while source as-of and evidence generation dates "
+        "remain source-authority facts. "
         f"limit and offset page the ranked items and exclusions with a default "
         f"limit of {DEFAULT_REVIEW_QUEUE_PAGE_LIMIT} and maximum limit of "
         f"{MAX_REVIEW_QUEUE_PAGE_LIMIT}. "
+        "Page metadata returns an opaque snapshotToken bound to the evaluation time, "
+        "entitled scope, ranking policy, and queue state. Requests with offset greater "
+        "than zero must return that token; changed queue state returns a 409 snapshot "
+        "conflict so consumers restart without silent skips or duplicates. "
         "When platform caller-context scope headers are present, the route applies "
         "those entitlements automatically and rejects broader query scopes fail-closed. "
         "This is a certified internal API foundation for RFC-0002 Slice 07 and Slice 10 "
@@ -367,6 +435,10 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
                             "totalExcludedCandidateCount": 0,
                             "nextOffset": None,
                             "hasNextPage": False,
+                            "snapshotToken": (
+                                "rqs1_0123456789abcdef0123456789abcdef"
+                                "0123456789abcdef0123456789abcdef"
+                            ),
                         },
                         "durableStorageBacked": False,
                         "supportedFeaturePromoted": False,
@@ -386,6 +458,12 @@ ADVISOR_REVIEW_QUEUE_ROUTE: RouteMetadata = {
                 "Caller lacks advisor queue read permission or requested scope is outside "
                 "caller entitlements."
             ),
+        ),
+        **conflict_metadata(
+            code="review_queue_snapshot_conflict",
+            title="Review queue snapshot conflict",
+            detail="Restart advisor queue paging from offset zero.",
+            description="Queue state changed after the supplied snapshot token was issued.",
         ),
     },
 }
