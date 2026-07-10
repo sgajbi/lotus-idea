@@ -661,7 +661,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
             """
             SELECT outbox_event_id, event_type, aggregate_type, aggregate_id,
                    schema_version, payload_json, status, occurred_at_utc,
-                   idempotency_fingerprint, correlation_id, causation_id,
+                   idempotency_fingerprint, correlation_id, trace_id, causation_id,
+                   lineage_origin,
                    published_at_utc, failure_reason, retry_count,
                    first_failed_at_utc, last_failed_at_utc, next_attempt_at_utc,
                    lease_owner, lease_attempt_id, lease_expires_at_utc

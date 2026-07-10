@@ -5,6 +5,8 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from app.domain import (
+    EventLineageContext,
+    EventLineageOrigin,
     IdeaRepositorySnapshot,
     InMemoryIdeaRepository,
     OutboxDeliveryDecision,
@@ -116,6 +118,40 @@ def test_outbox_event_accepts_governed_event_families(event_type: str) -> None:
 
     assert event.event_type == event_type
     assert event.schema_version == "v1"
+    assert event.correlation_id.startswith("corr-system-")
+    assert event.trace_id.startswith("trace-system-")
+    assert event.lineage_origin is EventLineageOrigin.SYSTEM_GENERATED
+
+
+def test_outbox_event_rejects_partial_or_sensitive_lineage() -> None:
+    with pytest.raises(ValueError, match="trace_id"):
+        OutboxEventRecord(
+            event_id="evt-partial-lineage",
+            event_type="idea.candidate.persisted.v1",
+            aggregate_type="idea_candidate",
+            aggregate_id="idea-high-cash-001",
+            schema_version="v1",
+            payload={"candidate_family": "high_cash"},
+            occurred_at_utc=EVALUATED_AT,
+            correlation_id="corr-request-001",
+        )
+    with pytest.raises(ValueError, match="correlation_id"):
+        EventLineageContext(
+            correlation_id="PB_SG_GLOBAL_BAL_001",
+            trace_id="trace-request-001",
+        )
+    with pytest.raises(ValueError, match="required for parent_event"):
+        EventLineageContext(
+            correlation_id="corr-request-001",
+            trace_id="trace-request-001",
+            origin=EventLineageOrigin.PARENT_EVENT,
+        )
+    with pytest.raises(ValueError, match="allowed only for parent_event"):
+        EventLineageContext(
+            correlation_id="corr-request-001",
+            trace_id="trace-request-001",
+            causation_id="cause-parent-001",
+        )
 
 
 def test_outbox_event_rejects_unknown_event_type_and_schema_version() -> None:

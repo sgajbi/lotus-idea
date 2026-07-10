@@ -183,6 +183,30 @@ REQUIRED_MIGRATIONS = (
             "DROP TABLE IF EXISTS idea_conversion_outcome_quarantine",
         ),
     ),
+    MigrationContract(
+        version="007",
+        forward_path=MIGRATIONS_DIR / "007_outbox_event_lineage.sql",
+        rollback_path=MIGRATIONS_DIR / "007_outbox_event_lineage.rollback.sql",
+        required_tables=(),
+        required_indexes=(),
+        required_forward_fragments=(
+            "trace_id TEXT",
+            "lineage_origin TEXT",
+            "ALTER COLUMN correlation_id SET NOT NULL",
+            "ALTER COLUMN trace_id SET NOT NULL",
+            "CONSTRAINT ck_idea_outbox_event_lineage_origin",
+            "CONSTRAINT ck_idea_outbox_event_lineage_identifiers",
+            "CONSTRAINT ck_idea_outbox_event_causation_origin",
+            "legacy_migrated",
+        ),
+        required_rollback_fragments=(
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_causation_origin",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_lineage_identifiers",
+            "DROP CONSTRAINT IF EXISTS ck_idea_outbox_event_lineage_origin",
+            "ALTER COLUMN correlation_id DROP NOT NULL",
+            "DROP COLUMN IF EXISTS trace_id",
+        ),
+    ),
 )
 
 

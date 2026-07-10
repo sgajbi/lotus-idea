@@ -6,7 +6,12 @@ from typing import Any
 import httpx
 import pytest
 
-from app.domain import OutboxEventRecord, build_candidate_outbox_event
+from app.domain import (
+    EventLineageContext,
+    EventLineageOrigin,
+    OutboxEventRecord,
+    build_candidate_outbox_event,
+)
 from app.infrastructure.downstream_client import (
     DownstreamClientConfig,
     DownstreamJsonClient,
@@ -52,7 +57,7 @@ def test_http_outbox_event_publisher_posts_source_safe_event_envelope() -> None:
     assert outcome.accepted is True
     assert captured["path"] == "/events/lotus-idea/outbox"
     assert captured["correlation_id"] == "corr-outbox"
-    assert captured["trace_id"] == "cause-outbox"
+    assert captured["trace_id"] == "trace-outbox"
     assert captured["idempotency_key"] == event.idempotency_fingerprint
     payload = httpx.Response(200, content=captured["payload"]).json()
     assert payload == {
@@ -65,7 +70,9 @@ def test_http_outbox_event_publisher_posts_source_safe_event_envelope() -> None:
         "payload": {"candidate_family": "high_cash"},
         "idempotencyFingerprint": event.idempotency_fingerprint,
         "correlationId": "corr-outbox",
+        "traceId": "trace-outbox",
         "causationId": "cause-outbox",
+        "lineageOrigin": "parent_event",
         "producer": "lotus-idea",
         "sourceAuthority": "lotus-idea",
         "supportabilityStatus": "not_certified",
@@ -282,6 +289,10 @@ def outbox_event() -> OutboxEventRecord:
         occurred_at_utc=EVENT_TIME,
         payload={"candidate_family": "high_cash"},
         idempotency_key="idea.candidate.persisted.v1:idempotency",
-        correlation_id="corr-outbox",
-        causation_id="cause-outbox",
+        lineage=EventLineageContext(
+            correlation_id="corr-outbox",
+            trace_id="trace-outbox",
+            causation_id="cause-outbox",
+            origin=EventLineageOrigin.PARENT_EVENT,
+        ),
     )

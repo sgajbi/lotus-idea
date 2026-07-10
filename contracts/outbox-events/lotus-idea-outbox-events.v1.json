@@ -22,6 +22,9 @@
       "aggregateId",
       "schemaVersion",
       "occurredAtUtc",
+      "correlationId",
+      "traceId",
+      "lineageOrigin",
       "payload",
       "producer",
       "sourceAuthority",
@@ -29,7 +32,6 @@
     ],
     "optionalFields": [
       "idempotencyFingerprint",
-      "correlationId",
       "causationId"
     ],
     "fieldPolicies": {
@@ -38,6 +40,10 @@
       "aggregateId": "internal aggregate identifier; not client-ready publication identity",
       "schemaVersion": "must be v1 for all event families in this contract",
       "occurredAtUtc": "must be timezone-aware UTC ISO-8601 text",
+      "correlationId": "required product-safe workflow correlation identifier preserved across request, state change, replay, and publication",
+      "traceId": "required product-safe distributed trace identifier; never derived from or substituted by causationId",
+      "causationId": "optional product-safe parent event or workflow identifier; present only when a causal parent exists",
+      "lineageOrigin": "request, parent_event, system_generated, or legacy_migrated; identifies how correlation and trace context were established",
       "payload": "source-safe string map with no raw source payload, portfolio, account, holding, client, route, request, response, content hash, evidence hash, or raw idempotency key"
     }
   },

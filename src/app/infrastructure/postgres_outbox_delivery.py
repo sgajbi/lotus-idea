@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol, Sequence
 
 from app.domain.events import (
+    EventLineageOrigin,
     OutboxEventRecord,
     OutboxEventStatus,
     validate_outbox_failure_reason,
@@ -34,7 +35,7 @@ class PostgresConnection(Protocol):
 OUTBOX_EVENT_RETURNING_COLUMNS = """
 outbox_event_id, event_type, aggregate_type, aggregate_id, schema_version,
 payload_json, status, occurred_at_utc, idempotency_fingerprint, correlation_id,
-causation_id, published_at_utc, failure_reason, retry_count, first_failed_at_utc,
+trace_id, causation_id, lineage_origin, published_at_utc, failure_reason, retry_count, first_failed_at_utc,
 last_failed_at_utc, next_attempt_at_utc, lease_owner, lease_attempt_id,
 lease_expires_at_utc
 """
@@ -353,7 +354,9 @@ def outbox_event_from_row(row: Any) -> OutboxEventRecord:
         occurred_at_utc=read_row_value(row, "occurred_at_utc"),
         idempotency_fingerprint=read_row_value(row, "idempotency_fingerprint"),
         correlation_id=read_row_value(row, "correlation_id"),
+        trace_id=read_row_value(row, "trace_id"),
         causation_id=read_row_value(row, "causation_id"),
+        lineage_origin=EventLineageOrigin(read_row_value(row, "lineage_origin")),
         published_at_utc=read_row_value(row, "published_at_utc"),
         failure_reason=read_row_value(row, "failure_reason"),
         retry_count=read_row_value(row, "retry_count"),

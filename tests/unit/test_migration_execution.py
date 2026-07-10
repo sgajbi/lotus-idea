@@ -70,6 +70,7 @@ def test_discover_migrations_requires_rollbacks() -> None:
         "004",
         "005",
         "006",
+        "007",
     ]
     assert migrations[0].rollback_path.name == "001_idea_repository_foundation.rollback.sql"
     assert migrations[1].rollback_path.name == "002_ai_explanation_lineage.rollback.sql"
@@ -107,6 +108,19 @@ def test_conversion_outcome_migration_quarantines_without_deleting_legacy_histor
     assert "DELETE FROM idea_conversion_outcome" not in apply_sql.upper()
 
 
+def test_outbox_lineage_migration_backfills_without_deleting_event_history() -> None:
+    apply_sql = (ROOT / "migrations" / "007_outbox_event_lineage.sql").read_text(
+        encoding="utf-8"
+    )
+
+    assert "trace_id" in apply_sql
+    assert "lineage_origin" in apply_sql
+    assert "ALTER COLUMN correlation_id SET NOT NULL" in apply_sql
+    assert "ck_idea_outbox_event_lineage_identifiers" in apply_sql
+    assert "ck_idea_outbox_event_causation_origin" in apply_sql
+    assert "DELETE FROM IDEA_OUTBOX_EVENT" not in apply_sql.upper()
+
+
 def test_execute_migration_plan_commits_after_all_statements() -> None:
     connection = RecordingConnection()
     plan = build_migration_plan(ROOT / "migrations", MigrationDirection.APPLY)
@@ -120,6 +134,7 @@ def test_execute_migration_plan_commits_after_all_statements() -> None:
         "004",
         "005",
         "006",
+        "007",
     ]
     assert sum(record.statement_count for record in records) == len(
         connection.cursor_instance.statements

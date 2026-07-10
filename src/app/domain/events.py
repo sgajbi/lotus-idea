@@ -8,6 +8,8 @@ import json
 from types import MappingProxyType
 from typing import Mapping
 
+from app.domain.diagnostic_context import require_product_safe_context_id
+
 
 FORBIDDEN_OUTBOX_PAYLOAD_KEYS = frozenset(
     {
@@ -47,6 +49,46 @@ class OutboxEventStatus(StrEnum):
     PUBLISHED = "published"
 
 
+class EventLineageOrigin(StrEnum):
+    REQUEST = "request"
+    PARENT_EVENT = "parent_event"
+    SYSTEM_GENERATED = "system_generated"
+    LEGACY_MIGRATED = "legacy_migrated"
+
+
+@dataclass(frozen=True)
+class EventLineageContext:
+    correlation_id: str
+    trace_id: str
+    causation_id: str | None = None
+    origin: EventLineageOrigin = EventLineageOrigin.REQUEST
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "correlation_id",
+            require_product_safe_context_id(self.correlation_id, "correlation_id"),
+        )
+        object.__setattr__(
+            self,
+            "trace_id",
+            require_product_safe_context_id(self.trace_id, "trace_id"),
+        )
+        if self.causation_id is not None:
+            object.__setattr__(
+                self,
+                "causation_id",
+                require_product_safe_context_id(self.causation_id, "causation_id"),
+            )
+        if self.origin is EventLineageOrigin.PARENT_EVENT and self.causation_id is None:
+            raise ValueError("causation_id is required for parent_event lineage")
+        if self.causation_id is not None and self.origin not in {
+            EventLineageOrigin.PARENT_EVENT,
+            EventLineageOrigin.LEGACY_MIGRATED,
+        }:
+            raise ValueError("causation_id is allowed only for parent_event lineage")
+
+
 @dataclass(frozen=True)
 class OutboxEventRecord:
     event_id: str
@@ -58,8 +100,10 @@ class OutboxEventRecord:
     occurred_at_utc: datetime
     status: OutboxEventStatus = OutboxEventStatus.PENDING
     idempotency_fingerprint: str | None = None
-    correlation_id: str | None = None
+    correlation_id: str = ""
+    trace_id: str = ""
     causation_id: str | None = None
+    lineage_origin: EventLineageOrigin = EventLineageOrigin.SYSTEM_GENERATED
     published_at_utc: datetime | None = None
     failure_reason: str | None = None
     retry_count: int = 0
@@ -83,6 +127,20 @@ class OutboxEventRecord:
         if self.schema_version != OUTBOX_EVENT_SCHEMA_VERSION:
             raise ValueError(f"unsupported outbox schema_version: {self.schema_version}")
         _require_aware_utc(self.occurred_at_utc, "occurred_at_utc")
+        lineage = (
+            _system_event_lineage(self.event_id)
+            if not self.correlation_id and not self.trace_id
+            else EventLineageContext(
+                correlation_id=self.correlation_id,
+                trace_id=self.trace_id,
+                causation_id=self.causation_id,
+                origin=self.lineage_origin,
+            )
+        )
+        object.__setattr__(self, "correlation_id", lineage.correlation_id)
+        object.__setattr__(self, "trace_id", lineage.trace_id)
+        object.__setattr__(self, "causation_id", lineage.causation_id)
+        object.__setattr__(self, "lineage_origin", lineage.origin)
         if self.published_at_utc is not None:
             _require_aware_utc(self.published_at_utc, "published_at_utc")
         if self.first_failed_at_utc is not None:
@@ -153,8 +211,7 @@ def build_candidate_outbox_event(
     occurred_at_utc: datetime,
     payload: Mapping[str, str],
     idempotency_key: str | None = None,
-    correlation_id: str | None = None,
-    causation_id: str | None = None,
+    lineage: EventLineageContext | None = None,
 ) -> OutboxEventRecord:
     _require_aware_utc(occurred_at_utc, "occurred_at_utc")
     idempotency_fingerprint = _fingerprint(idempotency_key) if idempotency_key is not None else None
@@ -164,6 +221,7 @@ def build_candidate_outbox_event(
         occurred_at_utc=occurred_at_utc,
         idempotency_fingerprint=idempotency_fingerprint,
     )
+    event_lineage = lineage or _system_event_lineage(event_id)
     return OutboxEventRecord(
         event_id=event_id,
         event_type=event_type,
@@ -173,8 +231,19 @@ def build_candidate_outbox_event(
         payload=payload,
         occurred_at_utc=occurred_at_utc,
         idempotency_fingerprint=idempotency_fingerprint,
-        correlation_id=correlation_id,
-        causation_id=causation_id,
+        correlation_id=event_lineage.correlation_id,
+        trace_id=event_lineage.trace_id,
+        causation_id=event_lineage.causation_id,
+        lineage_origin=event_lineage.origin,
+    )
+
+
+def _system_event_lineage(event_id: str) -> EventLineageContext:
+    digest = hashlib.sha256(event_id.encode("utf-8")).hexdigest()[:24]
+    return EventLineageContext(
+        correlation_id=f"corr-system-{digest}",
+        trace_id=f"trace-system-{digest}",
+        origin=EventLineageOrigin.SYSTEM_GENERATED,
     )
 
 

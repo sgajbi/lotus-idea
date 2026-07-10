@@ -27,6 +27,7 @@ CONTRACT_PATH = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events
 OUTBOX_MIGRATION_PATHS = (
     ROOT / "migrations" / "001_idea_repository_foundation.sql",
     ROOT / "migrations" / "003_outbox_event_contract_constraints.sql",
+    ROOT / "migrations" / "007_outbox_event_lineage.sql",
 )
 
 REQUIRED_EVENT_TYPES = SUPPORTED_OUTBOX_EVENT_TYPES
@@ -38,6 +39,9 @@ REQUIRED_ENVELOPE_FIELDS = (
     "aggregateId",
     "schemaVersion",
     "occurredAtUtc",
+    "correlationId",
+    "traceId",
+    "lineageOrigin",
     "payload",
     "producer",
     "sourceAuthority",
@@ -46,7 +50,6 @@ REQUIRED_ENVELOPE_FIELDS = (
 
 OPTIONAL_ENVELOPE_FIELDS = (
     "idempotencyFingerprint",
-    "correlationId",
     "causationId",
 )
 

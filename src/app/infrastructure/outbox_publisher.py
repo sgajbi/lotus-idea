@@ -76,7 +76,7 @@ class HttpOutboxEventPublisher:
                 self._config.publish_path,
                 json_payload=_event_envelope(event),
                 correlation_id=event.correlation_id,
-                trace_id=event.causation_id,
+                trace_id=event.trace_id,
                 idempotency_key=event.idempotency_fingerprint,
             )
         except DownstreamServiceError as exc:
@@ -98,7 +98,9 @@ def _event_envelope(event: OutboxEventRecord) -> dict[str, Any]:
         "payload": dict(event.payload),
         "idempotencyFingerprint": event.idempotency_fingerprint,
         "correlationId": event.correlation_id,
+        "traceId": event.trace_id,
         "causationId": event.causation_id,
+        "lineageOrigin": event.lineage_origin.value,
         "producer": "lotus-idea",
         "sourceAuthority": "lotus-idea",
         "supportabilityStatus": "not_certified",
