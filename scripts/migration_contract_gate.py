@@ -229,6 +229,33 @@ REQUIRED_MIGRATIONS = (
             "DROP COLUMN IF EXISTS support_reference",
         ),
     ),
+    MigrationContract(
+        version="009",
+        forward_path=MIGRATIONS_DIR / "009_data_lifecycle_control.sql",
+        rollback_path=MIGRATIONS_DIR / "009_data_lifecycle_control.rollback.sql",
+        required_tables=(
+            "idea_data_lifecycle_control",
+            "idea_data_lifecycle_operation",
+        ),
+        required_indexes=(
+            "idx_idea_data_lifecycle_control_tenant_candidate",
+            "idx_idea_data_lifecycle_control_state_expiry",
+            "idx_idea_data_lifecycle_operation_candidate_time",
+            "idx_idea_data_lifecycle_operation_tenant_time",
+        ),
+        required_forward_fragments=(
+            "REFERENCES idea_candidate_record(candidate_id)",
+            "idempotency_key TEXT NOT NULL UNIQUE",
+            "request_fingerprint TEXT NOT NULL",
+            "blockers_json JSONB NOT NULL",
+            "affected_row_counts_json JSONB NOT NULL",
+            "ck_idea_data_lifecycle_control_hold",
+            "ck_idea_data_lifecycle_control_erasure",
+            "ck_idea_data_lifecycle_operation_time",
+            "INTERVAL '7 years'",
+            "ON CONFLICT (candidate_id) DO NOTHING",
+        ),
+    ),
 )
 
 

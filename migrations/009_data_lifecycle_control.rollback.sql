@@ -1,0 +1,7 @@
+DROP INDEX IF EXISTS idx_idea_data_lifecycle_operation_tenant_time;
+DROP INDEX IF EXISTS idx_idea_data_lifecycle_operation_candidate_time;
+DROP INDEX IF EXISTS idx_idea_data_lifecycle_control_state_expiry;
+DROP INDEX IF EXISTS idx_idea_data_lifecycle_control_tenant_candidate;
+
+DROP TABLE IF EXISTS idea_data_lifecycle_operation;
+DROP TABLE IF EXISTS idea_data_lifecycle_control;

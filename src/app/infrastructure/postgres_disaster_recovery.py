@@ -44,6 +44,18 @@ REFERENTIAL_CHECKS: dict[str, tuple[frozenset[str], str]] = {
            WHERE child.supersedes_conversion_outcome_id IS NOT NULL
              AND parent.conversion_outcome_id IS NULL""",
     ),
+    "data_lifecycle_control_candidate": (
+        frozenset({"idea_data_lifecycle_control", "idea_candidate_record"}),
+        """SELECT COUNT(*) FROM idea_data_lifecycle_control child
+           LEFT JOIN idea_candidate_record parent ON parent.candidate_id = child.candidate_id
+           WHERE parent.candidate_id IS NULL""",
+    ),
+    "data_lifecycle_operation_candidate": (
+        frozenset({"idea_data_lifecycle_operation", "idea_candidate_record"}),
+        """SELECT COUNT(*) FROM idea_data_lifecycle_operation child
+           LEFT JOIN idea_candidate_record parent ON parent.candidate_id = child.candidate_id
+           WHERE parent.candidate_id IS NULL""",
+    ),
     "feedback_candidate": (
         frozenset({"idea_feedback_event", "idea_candidate_record"}),
         """SELECT COUNT(*) FROM idea_feedback_event child

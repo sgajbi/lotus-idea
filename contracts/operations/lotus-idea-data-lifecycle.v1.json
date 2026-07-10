@@ -165,6 +165,24 @@
       "purge_policy": "immutable_tombstone_only"
     },
     {
+      "table": "idea_data_lifecycle_control",
+      "data_classes": ["restricted_privacy_control", "confidential_operational_metadata"],
+      "purpose": "tenant_scoped_retention_hold_erasure_and_purge_state",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "authoritative_local_hold_projection",
+      "erasure_policy": "preserve_control_tombstone_and_source_safe_hash",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_data_lifecycle_operation",
+      "data_classes": ["restricted_security_audit", "restricted_privacy_control"],
+      "purpose": "immutable_authorized_lifecycle_operation_audit",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "pseudonymize_operator_preserve_decision_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
       "table": "idea_candidate_state_quarantine",
       "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
       "purpose": "legacy_candidate_state_reconciliation",
