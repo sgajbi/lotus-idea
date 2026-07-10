@@ -99,7 +99,7 @@ def implementation_proof_readiness_payload(
         "overallBlockers": list(snapshot.overall_blockers),
         "sourceOfTruth": dict(snapshot.source_of_truth),
         "capabilities": [_capability_payload(capability) for capability in snapshot.capabilities],
-        "supportedFeaturePromoted": False,
+        "supportedFeaturePromoted": snapshot.supported_features_promoted,
     }
 
 

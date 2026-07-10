@@ -119,7 +119,7 @@ class ImplementationProofReadinessResponse(CamelModel):
                 ImplementationProofCapabilityReadinessResponse.from_domain(capability)
                 for capability in snapshot.capabilities
             ),
-            supportedFeaturePromoted=False,
+            supportedFeaturePromoted=snapshot.supported_features_promoted,
         )
 
 

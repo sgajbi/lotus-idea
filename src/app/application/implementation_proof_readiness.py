@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
 from pathlib import Path
 from typing import Mapping, cast
 
@@ -52,6 +51,10 @@ from app.application.source_ingestion_readiness import (
 )
 from app.application.source_ingestion_live_proof import (
     source_ingestion_live_proof_can_clear_aggregate_blockers,
+)
+from app.application.supported_feature_promotion import (
+    SupportedFeaturePromotionEvaluation,
+    evaluate_supported_feature_promotion,
 )
 from app.ports.idea_repository import OutboxDeliveryRepository
 
@@ -172,14 +175,17 @@ def build_implementation_proof_readiness_snapshot(
     opportunity_archetype_scenario = build_opportunity_archetype_scenario_readiness(
         repository_root=repository_root,
     )
-    supported_feature_count = _supported_feature_count(repository_root / SUPPORTED_FEATURES_PATH)
+    supported_feature_evaluation = evaluate_supported_feature_promotion(
+        repository_root / SUPPORTED_FEATURES_PATH,
+        evaluated_at_utc=evaluated_at_utc,
+    )
     capabilities = _build_capabilities_with_available_proofs(locals())
-    return _readiness_snapshot(evaluated_at_utc, supported_feature_count, capabilities)
+    return _readiness_snapshot(evaluated_at_utc, supported_feature_evaluation, capabilities)
 
 
 def _readiness_snapshot(
     evaluated_at_utc: datetime,
-    supported_feature_count: int,
+    supported_feature_evaluation: SupportedFeaturePromotionEvaluation,
     capabilities: tuple[ImplementationProofCapabilityReadiness, ...],
 ) -> ImplementationProofReadinessSnapshot:
     overall_blockers = tuple(
@@ -199,8 +205,8 @@ def _readiness_snapshot(
         blocked_capability_count=sum(
             1 for capability in capabilities if not capability.certification_ready
         ),
-        supported_feature_count=supported_feature_count,
-        supported_features_promoted=bool(supported_feature_count),
+        supported_feature_count=supported_feature_evaluation.promoted_feature_count,
+        supported_features_promoted=supported_feature_evaluation.supported_features_promoted,
         overall_blockers=overall_blockers,
         source_of_truth={
             "rfc": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-enterprise-opportunity-intelligence-operating-layer.md",
@@ -246,7 +252,10 @@ def _build_capabilities_with_available_proofs(
             DownstreamRealizationReadinessSnapshot,
             scope["downstream_realization"],
         ),
-        supported_feature_count=cast(int, scope["supported_feature_count"]),
+        supported_feature_evaluation=cast(
+            SupportedFeaturePromotionEvaluation,
+            scope["supported_feature_evaluation"],
+        ),
     )
     return apply_available_proofs_from_scope(capabilities=capabilities, scope=scope)
 
@@ -264,7 +273,7 @@ def _build_base_capabilities(
     outbox_delivery: OutboxDeliveryReadinessSnapshot,
     opportunity_archetype_scenario: ImplementationProofCapabilityReadiness,
     downstream_realization: DownstreamRealizationReadinessSnapshot,
-    supported_feature_count: int,
+    supported_feature_evaluation: SupportedFeaturePromotionEvaluation,
 ) -> tuple[ImplementationProofCapabilityReadiness, ...]:
     return (
         _source_ingestion_capability(
@@ -282,7 +291,7 @@ def _build_base_capabilities(
         _workbench_product_capability(),
         opportunity_archetype_scenario,
         _downstream_realization_capability(downstream_realization),
-        _supported_feature_capability(supported_feature_count),
+        _supported_feature_capability(supported_feature_evaluation),
     )
 
 
@@ -521,7 +530,7 @@ def _downstream_realization_capability(
 
 
 def _supported_feature_capability(
-    supported_feature_count: int,
+    evaluation: SupportedFeaturePromotionEvaluation,
 ) -> ImplementationProofCapabilityReadiness:
     return build_capability_readiness(
         "supported-feature-promotion",
@@ -529,23 +538,11 @@ def _supported_feature_capability(
         readiness_status="blocked",
         supportability_status="not_certified",
         evidence_refs=(
-            "supported-features/supported-features.json",
+            evaluation.source_ref,
             "docs/demo/demo-claims.md",
             "wiki/Supported-Features.md",
             "wiki/Demo-Readiness.md",
         ),
-        blockers=(() if supported_feature_count else ("no_supported_features_promoted",)),
-        supported_feature_promoted=bool(supported_feature_count),
-    )
-
-
-def _supported_feature_count(path: Path) -> int:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    features = payload.get("features", ())
-    if not isinstance(features, list):
-        raise ValueError("supported features must be a list")
-    return sum(
-        1
-        for feature in features
-        if isinstance(feature, dict) and feature.get("status") == "implemented"
+        blockers=evaluation.blocker_codes,
+        supported_feature_promoted=evaluation.supported_features_promoted,
     )

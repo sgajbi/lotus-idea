@@ -33,8 +33,11 @@ from app.application.implementation_proof_consumption import (
     _apply_report_materialization_proof,
 )
 from app.application.implementation_proof_readiness import (
-    _supported_feature_count,
     build_implementation_proof_readiness_snapshot,
+)
+from app.application.supported_feature_promotion import (
+    SUPPORTED_FEATURE_REGISTRY_INVALID,
+    evaluate_supported_feature_promotion,
 )
 from app.application.implementation_proof_opportunity_archetype_proofs import (
     _apply_risk_concentration_live_proof,
@@ -1014,7 +1017,7 @@ def test_implementation_proof_readiness_rejects_naive_evaluation_time() -> None:
         )
 
 
-def test_implementation_proof_readiness_rejects_invalid_supported_features_shape(
+def test_implementation_proof_readiness_blocks_invalid_supported_features_shape(
     tmp_path: Path,
 ) -> None:
     supported_features_path = tmp_path / "supported-features"
@@ -1025,8 +1028,13 @@ def test_implementation_proof_readiness_rejects_invalid_supported_features_shape
         encoding="utf-8",
     )
 
-    with pytest.raises(ValueError, match="supported features must be a list"):
-        _supported_feature_count(registry_path)
+    evaluation = evaluate_supported_feature_promotion(
+        registry_path,
+        evaluated_at_utc=datetime(2026, 7, 10, tzinfo=UTC),
+    )
+
+    assert evaluation.promoted_feature_count == 0
+    assert evaluation.blocker_codes == (SUPPORTED_FEATURE_REGISTRY_INVALID,)
 
 
 def _write_platform_mesh_fixture(tmp_path: Path) -> Path:

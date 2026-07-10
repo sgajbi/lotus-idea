@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import app.api.implementation_proof_readiness as implementation_proof_readiness_api
+import app.application.implementation_proof_readiness as implementation_proof_readiness_application
 from app.application.ai_lineage_store_proof import (
     AI_LINEAGE_STORE_PROOF_ENV,
     build_ai_lineage_store_proof_payload,
@@ -66,6 +67,10 @@ from app.application.workbench_read_path_proof import (
 from app.runtime.repository_state import reset_idea_repository_for_tests
 from app.main import app
 from tests.support.proof_provenance import bind_clean_aggregate_proof_provenance
+from tests.unit.test_supported_features_gate import (
+    _base_registry,
+    _valid_implemented_feature,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -189,6 +194,77 @@ def test_implementation_proof_readiness_api_returns_blocked_operator_posture(
     assert archetype_scenarios["supportedFeaturePromoted"] is False
     assert "portfolio_id" not in response.text
     assert "client_id" not in response.text
+
+
+def test_implementation_proof_readiness_api_blocks_invalid_registry_safely(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    registry_path = tmp_path / "supported-features.json"
+    registry_path.write_text(
+        json.dumps({"features": [{"id": "fake-feature", "status": "implemented"}]}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        implementation_proof_readiness_application,
+        "SUPPORTED_FEATURES_PATH",
+        registry_path,
+    )
+    reset_idea_repository_for_tests()
+
+    response = TestClient(app).get(
+        readiness_url(evaluated_at_utc="2026-07-10T00:00:00Z"),
+        headers=proof_readiness_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["supportedFeatureCount"] == 0
+    assert payload["supportedFeaturesPromoted"] is False
+    assert payload["supportedFeaturePromoted"] is False
+    assert "supported_feature_registry_invalid" in payload["overallBlockers"]
+    capability = next(
+        item
+        for item in payload["capabilities"]
+        if item["capabilityId"] == "supported-feature-promotion"
+    )
+    assert capability["blockers"] == ["supported_feature_registry_invalid"]
+    assert capability["evidenceRefs"][0] == "supported-features.json"
+    assert str(tmp_path) not in response.text
+
+
+def test_implementation_proof_readiness_api_reports_valid_promotion_consistently(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    registry_path = tmp_path / "supported-features.json"
+    registry = _base_registry()
+    registry["features"] = [_valid_implemented_feature()]
+    registry_path.write_text(json.dumps(registry), encoding="utf-8")
+    monkeypatch.setattr(
+        implementation_proof_readiness_application,
+        "SUPPORTED_FEATURES_PATH",
+        registry_path,
+    )
+    reset_idea_repository_for_tests()
+
+    response = TestClient(app).get(
+        readiness_url(evaluated_at_utc="2026-07-10T00:00:00Z"),
+        headers=proof_readiness_headers(),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["supportedFeatureCount"] == 1
+    assert payload["supportedFeaturesPromoted"] is True
+    assert payload["supportedFeaturePromoted"] is True
+    capability = next(
+        item
+        for item in payload["capabilities"]
+        if item["capabilityId"] == "supported-feature-promotion"
+    )
+    assert capability["blockers"] == []
+    assert capability["supportedFeaturePromoted"] is True
 
 
 def test_implementation_proof_readiness_api_consumes_configured_proof_artifacts(
