@@ -718,6 +718,23 @@ database-backed queue product, or certified data product.
 
 ## Review Workflow Persistence Foundation
 
+### Candidate State Invariant
+
+Lifecycle and review posture are governed together by
+`idea-candidate-state-v1`. The policy defines an exhaustive compatibility
+matrix, rejects contradictory construction and PostgreSQL rehydration, and
+normalizes `expired` and `closed` candidates to `no_action`. Every review action
+uses an explicit lifecycle matrix; terminal candidates cannot be suppressed,
+snoozed, or escalated back into an actionable queue state.
+
+PostgreSQL queue and readiness projections derive eligibility from the same
+domain policy. Migration `005_candidate_state_policy` copies contradictory
+legacy rows into `idea_candidate_state_quarantine`, blocks new contradictions,
+and reports historical rows as `invalid_state` until controlled reconciliation.
+The implementation remains an internal bounded module because no scaling,
+failure-isolation, ownership, or operability evidence justifies a separate
+runtime service.
+
 The internal application layer can apply governed advisor review actions and
 feedback after bounded candidate lookup, then persist accepted decisions,
 feedback events, safe audit evidence, lifecycle history, and idempotency

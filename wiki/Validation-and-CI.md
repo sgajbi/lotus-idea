@@ -944,6 +944,21 @@ claims, premature certification, missing blockers, and missing evidence refs.
 Its passing checks certify contract-plan hygiene only; they do not prove
 downstream route existence or execution.
 
+## Candidate-State Contract Gate
+
+`make candidate-state-contract-gate` protects the
+`idea-candidate-state-v1` lifecycle/review-posture matrix across domain
+construction, transition normalization, review actions, PostgreSQL queue
+quarantine, migration/rollback, stable API diagnostics, and the architecture
+standard. Matrix, terminal-action, legacy JSON, raw-row queue, API telemetry,
+and migration tests provide behavioral evidence; the gate prevents future
+agents from deleting one enforcement layer while leaving documentation claims
+behind.
+
+This gate proves the internal invariant only. It does not promote review
+features, certify Gateway/Workbench behavior, validate the migration constraint
+against production data, or publish supported-feature truth.
+
 CI warning policy:
 
 1. use current approved action versions,

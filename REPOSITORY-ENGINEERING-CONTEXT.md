@@ -1105,6 +1105,18 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     failure-isolation, ownership, or operability evidence justifies another
     runtime service. Broker, consumer, mesh, Gateway/Workbench, and supported
     feature proof remain separate blockers.
+26. Candidate lifecycle/review-posture compatibility: GitHub issue `#330` is
+    addressed by `app.domain.candidate_state` policy
+    `idea-candidate-state-v1`. `IdeaCandidate` construction, PostgreSQL JSON
+    rehydration, lifecycle transitions, and every review action use one golden
+    compatibility matrix. Terminal transitions normalize to non-actionable
+    posture; contradictory legacy rows are copied to
+    `idea_candidate_state_quarantine`, excluded from queue/readiness as
+    `invalid_state`, and blocked on new writes by migration `005`. Review API
+    conflicts expose stable ProblemDetails plus source-safe candidate state and
+    policy telemetry. This is internal design modularity in the existing
+    process; no workload, isolation, ownership, or operability evidence
+    justifies a separate runtime service.
 
 Recently closed by PR `#273` and mainline validation:
 
