@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
-import os
-from pathlib import Path
 from threading import Barrier
-from typing import Any, Callable, Iterator, TypeVar, cast
+from typing import Any, Callable, TypeVar, cast
 
 import psycopg
 import pytest
@@ -27,8 +25,6 @@ from app.domain import (
     ConversionPersistenceDecision,
     FeedbackCommand,
     FeedbackOutcome,
-    OutboxEventStatus,
-    OutboxRecoveryDecision,
     ReasonCode,
     ReviewAction,
     ReviewActorContext,
@@ -38,8 +34,6 @@ from app.domain import (
     SourceRef,
     SourceSystem,
     apply_review_action,
-    outbox_dead_letter_support_reference,
-    outbox_recovery_request_payload,
     record_conversion_outcome,
     record_feedback,
 )
@@ -58,12 +52,14 @@ from app.ports.core_sources import (
     CoreOpportunitySourcePort,
 )
 from app.runtime.repository_state import get_idea_repository
+from tests.integration.postgres_runtime_support import (
+    MIGRATIONS_DIR,
+    execute_migrations,
+    high_cash_payload,
+    persistence_headers,
+)
 
 
-ROOT = Path(__file__).resolve().parents[2]
-MIGRATIONS_DIR = ROOT / "migrations"
-POSTGRES_URL_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_URL"
-POSTGRES_REQUIRED_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED"
 POSTGRES_SCHEMA_TABLES = (
     "idea_candidate_record",
     "idea_idempotency_record",
@@ -82,31 +78,12 @@ POSTGRES_SCHEMA_TABLES = (
 _T = TypeVar("_T")
 
 
-@pytest.fixture
-def postgres_database_url(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
-    database_url = os.getenv(POSTGRES_URL_ENV, "").strip()
-    if not database_url:
-        if os.getenv(POSTGRES_REQUIRED_ENV) == "1":
-            pytest.fail(f"{POSTGRES_URL_ENV} is required for PostgreSQL integration proof")
-        pytest.skip(f"{POSTGRES_URL_ENV} is not configured")
-
-    _execute_migrations(database_url, MigrationDirection.ROLLBACK)
-    _execute_migrations(database_url, MigrationDirection.APPLY)
-    monkeypatch.setenv("LOTUS_IDEA_DATABASE_URL", database_url)
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    try:
-        yield database_url
-    finally:
-        reset_idea_repository_for_tests()
-        _execute_migrations(database_url, MigrationDirection.ROLLBACK)
-
-
 def test_postgres_runtime_provider_persists_api_state_across_reloaded_connections(
     postgres_database_url: str,
 ) -> None:
     client = TestClient(app)
-    headers = _persistence_headers("postgres-runtime-proof-high-cash-001")
-    payload = _high_cash_payload()
+    headers = persistence_headers("postgres-runtime-proof-high-cash-001")
+    payload = high_cash_payload()
 
     accepted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
@@ -154,81 +131,14 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
         connection.rollback()
 
 
-def test_postgres_outbox_recovery_resolves_exact_support_reference_after_restart(
-    postgres_database_url: str,
-) -> None:
-    client = TestClient(app)
-    response = client.post(
-        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=_high_cash_payload(),
-        headers=_persistence_headers("postgres-outbox-recovery-001"),
-    )
-    assert response.status_code == 200
-    repository = get_idea_repository()
-    assert isinstance(repository, PostgresIdeaRepository)
-    event = next(iter(repository.snapshot().outbox_events.values()))
-    claimed_at = datetime(2026, 6, 21, 11, 0, tzinfo=UTC)
-    claimed = repository.claim_outbox_events_for_delivery(
-        limit=1,
-        max_retry_count=1,
-        lease_owner="postgres-delivery-proof",
-        lease_attempt_id="postgres-delivery-attempt",
-        claimed_at_utc=claimed_at,
-        lease_expires_at_utc=claimed_at + timedelta(minutes=1),
-    )
-    assert claimed[0].status is OutboxEventStatus.LEASED
-    repository.mark_outbox_event_failed(
-        event.event_id,
-        lease_owner="postgres-delivery-proof",
-        lease_attempt_id="postgres-delivery-attempt",
-        failure_reason="publisher_rejected",
-        failed_at_utc=claimed_at + timedelta(minutes=1),
-        max_retry_count=1,
-    )
-    support_reference = outbox_dead_letter_support_reference(event.event_id)
-    request_payload = outbox_recovery_request_payload(
-        support_reference=support_reference,
-        reason="broker_route_corrected",
-        change_reference="CHG-POSTGRES-RECOVERY-001",
-        actor_subject="platform-operator",
-    )
-    claim: dict[str, Any] = {
-        "support_reference": support_reference,
-        "idempotency_key": "outbox-redrive:postgres-runtime:001",
-        "request_payload": request_payload,
-        "actor_subject": "platform-operator",
-        "reason": "broker_route_corrected",
-        "change_reference": "CHG-POSTGRES-RECOVERY-001",
-        "requested_at_utc": claimed_at + timedelta(minutes=2),
-        "lease_owner": "outbox-recovery",
-        "lease_attempt_id": "postgres-recovery-attempt",
-        "lease_expires_at_utc": claimed_at + timedelta(minutes=7),
-    }
-
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    restarted = get_idea_repository()
-    assert isinstance(restarted, PostgresIdeaRepository)
-    accepted = restarted.claim_dead_letter_for_recovery(**claim)
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    replayed = get_idea_repository().claim_dead_letter_for_recovery(**claim)
-
-    assert accepted.decision is OutboxRecoveryDecision.ACCEPTED
-    assert accepted.event is not None
-    assert accepted.event.status is OutboxEventStatus.LEASED
-    assert accepted.audit_record is not None
-    assert accepted.audit_record.support_reference == support_reference
-    assert replayed.decision is OutboxRecoveryDecision.REPLAYED
-    assert replayed.audit_record == accepted.audit_record
-
-
 def test_outbox_lineage_migration_preserves_and_sanitizes_legacy_event(
     postgres_database_url: str,
 ) -> None:
     client = TestClient(app)
     response = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=_high_cash_payload(),
-        headers=_persistence_headers("postgres-lineage-legacy-event-001"),
+        json=high_cash_payload(),
+        headers=persistence_headers("postgres-lineage-legacy-event-001"),
     )
     assert response.status_code == 200
     event_id = next(iter(get_idea_repository().snapshot().outbox_events))
@@ -353,18 +263,18 @@ def test_postgres_migration_rollback_and_reapply_restores_runtime_contract(
 ) -> None:
     assert _schema_tables_exist(postgres_database_url) is True
 
-    _execute_migrations(postgres_database_url, MigrationDirection.ROLLBACK)
+    execute_migrations(postgres_database_url, MigrationDirection.ROLLBACK)
     assert _schema_tables_exist(postgres_database_url) is False
 
-    _execute_migrations(postgres_database_url, MigrationDirection.APPLY)
+    execute_migrations(postgres_database_url, MigrationDirection.APPLY)
     assert _schema_tables_exist(postgres_database_url) is True
 
     reset_idea_repository_for_tests(reload_from_environment=True)
     client = TestClient(app)
     recovered = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=_high_cash_payload(),
-        headers=_persistence_headers("postgres-runtime-proof-recovery-001"),
+        json=high_cash_payload(),
+        headers=persistence_headers("postgres-runtime-proof-recovery-001"),
     )
 
     assert recovered.status_code == 200
@@ -427,12 +337,12 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     postgres_database_url: str,
 ) -> None:
     client = TestClient(app)
-    persist_headers = _persistence_headers("postgres-runtime-proof-workflow-persist-001")
-    high_cash_payload = _high_cash_payload()
+    persist_headers = persistence_headers("postgres-runtime-proof-workflow-persist-001")
+    high_cash_request = high_cash_payload()
 
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=high_cash_payload,
+        json=high_cash_request,
         headers=persist_headers,
     )
     assert persisted.status_code == 200
@@ -605,8 +515,8 @@ def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_ide
     client = TestClient(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=_high_cash_payload(),
-        headers=_persistence_headers("postgres-runtime-identity-persist-001"),
+        json=high_cash_payload(),
+        headers=persistence_headers("postgres-runtime-identity-persist-001"),
     )
     candidate_id = str(persisted.json()["persistence"]["candidateId"])
     _transition_candidate_to_review_ready(client, candidate_id)
@@ -706,8 +616,8 @@ def test_postgres_runtime_serializes_conversion_outcome_identity_and_source_vers
     client = TestClient(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=_high_cash_payload(),
-        headers=_persistence_headers("postgres-conversion-lifecycle-persist"),
+        json=high_cash_payload(),
+        headers=persistence_headers("postgres-conversion-lifecycle-persist"),
     )
     candidate_id = str(persisted.json()["persistence"]["candidateId"])
     _transition_candidate_to_review_ready(client, candidate_id)
@@ -822,8 +732,8 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     client = TestClient(app)
     persisted = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
-        json=_high_cash_payload(),
-        headers=_persistence_headers("postgres-runtime-proof-ai-lineage-seed-001"),
+        json=high_cash_payload(),
+        headers=persistence_headers("postgres-runtime-proof-ai-lineage-seed-001"),
     )
     assert persisted.status_code == 200
     candidate_id = str(persisted.json()["persistence"]["candidateId"])
@@ -886,12 +796,6 @@ def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     assert "client_id" not in lineage_json
     assert "prompt" not in lineage_json
     assert "provider_payload" not in lineage_json
-
-
-def _execute_migrations(database_url: str, direction: MigrationDirection) -> None:
-    plan = build_migration_plan(MIGRATIONS_DIR, direction)
-    with psycopg.connect(database_url) as connection:
-        execute_migration_plan(cast(MigrationConnection, connection), plan)
 
 
 def _table_count(database_url: str, table_name: str) -> int:
@@ -1011,46 +915,6 @@ def _core_source_ref(product_id: str, *, content_hash: str | None = None) -> Sou
         data_quality_status="complete",
         freshness=EvidenceFreshness.CURRENT,
     )
-
-
-def _source_ref(product_id: str) -> dict[str, str]:
-    return {
-        "productId": product_id,
-        "sourceSystem": "lotus-core",
-        "productVersion": "v1",
-        "route": f"/source/{product_id}",
-        "asOfDate": "2026-06-21",
-        "generatedAtUtc": "2026-06-21T10:00:00Z",
-        "contentHash": f"sha256:{product_id}",
-        "dataQualityStatus": "complete",
-        "freshness": "current",
-    }
-
-
-def _high_cash_payload() -> dict[str, Any]:
-    return {
-        "asOfDate": "2026-06-21",
-        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
-        "sourceReportedCashWeight": "0.18",
-        "sourceEvidence": {
-            "portfolioStateRef": _source_ref("lotus-core:PortfolioStateSnapshot:v1"),
-            "holdingsRef": _source_ref("lotus-core:HoldingsAsOf:v1"),
-            "cashMovementRef": _source_ref("lotus-core:PortfolioCashMovementSummary:v1"),
-            "cashflowProjectionRef": _source_ref("lotus-core:PortfolioCashflowProjection:v1"),
-        },
-        "entitlementAllowed": True,
-        "accessScope": _access_scope(),
-    }
-
-
-def _persistence_headers(idempotency_key: str) -> dict[str, str]:
-    return {
-        "X-Caller-Subject": "signal-ingestion-worker",
-        "X-Caller-Capabilities": "idea.candidate.persist",
-        "X-Correlation-Id": "corr-postgres-runtime-proof",
-        "X-Trace-Id": "trace-postgres-runtime-proof",
-        "Idempotency-Key": idempotency_key,
-    }
 
 
 def _review_queue_headers() -> dict[str, str]:

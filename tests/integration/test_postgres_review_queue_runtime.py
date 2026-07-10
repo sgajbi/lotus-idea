@@ -1,47 +1,10 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any, Iterator, cast
-import os
+from typing import Any
 
-import psycopg
-import pytest
 from fastapi.testclient import TestClient
-from psycopg.rows import dict_row
 
-from app.infrastructure.migrations import (
-    MigrationConnection,
-    MigrationDirection,
-    build_migration_plan,
-    execute_migration_plan,
-)
 from app.main import app
-from app.runtime.repository_state import reset_idea_repository_for_tests
-
-
-ROOT = Path(__file__).resolve().parents[2]
-MIGRATIONS_DIR = ROOT / "migrations"
-POSTGRES_URL_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_URL"
-POSTGRES_REQUIRED_ENV = "LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED"
-
-
-@pytest.fixture
-def postgres_database_url(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
-    database_url = os.getenv(POSTGRES_URL_ENV, "").strip()
-    if not database_url:
-        if os.getenv(POSTGRES_REQUIRED_ENV) == "1":
-            pytest.fail(f"{POSTGRES_URL_ENV} is required for PostgreSQL integration proof")
-        pytest.skip(f"{POSTGRES_URL_ENV} is not configured")
-
-    _execute_migrations(database_url, MigrationDirection.ROLLBACK)
-    _execute_migrations(database_url, MigrationDirection.APPLY)
-    monkeypatch.setenv("LOTUS_IDEA_DATABASE_URL", database_url)
-    reset_idea_repository_for_tests(reload_from_environment=True)
-    try:
-        yield database_url
-    finally:
-        reset_idea_repository_for_tests()
-        _execute_migrations(database_url, MigrationDirection.ROLLBACK)
 
 
 def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejects_stale_token(
@@ -112,12 +75,6 @@ def test_postgres_review_queue_preserves_snapshot_across_future_insert_and_rejec
     )
     assert stale_page.status_code == 409
     assert stale_page.json()["code"] == "review_queue_snapshot_conflict"
-
-
-def _execute_migrations(database_url: str, direction: MigrationDirection) -> None:
-    plan = build_migration_plan(MIGRATIONS_DIR, direction)
-    with psycopg.connect(database_url, row_factory=dict_row) as connection:
-        execute_migration_plan(cast(MigrationConnection, connection), plan)
 
 
 def _source_ref(product_id: str, *, suffix: str) -> dict[str, str]:
