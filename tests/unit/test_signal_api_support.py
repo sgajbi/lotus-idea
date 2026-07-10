@@ -3,9 +3,11 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import Any, cast
 import json
+from fastapi.responses import JSONResponse
 
 from app.api.signal_api_support import (
     SignalSourceRefContract,
+    evaluate_caller_supplied_signal,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
     signal_source_ref_one_of_contract_problem_or_none,
@@ -14,6 +16,12 @@ from app.api.signal_api_support import (
     source_authority_from_refs,
 )
 from app.domain import SourceSystem
+from app.domain import (
+    OpportunityFamily,
+    ReasonCode,
+    SignalEvaluationOutcome,
+    SignalEvaluationResult,
+)
 from app.domain.access_scope import ReviewAccessScope
 from app.observability import IdeaOperation, OperationOutcome
 from app.security.caller_context import CallerContext, CallerEntitlementScope
@@ -173,6 +181,88 @@ def test_signal_source_ref_one_of_contract_rejects_unknown_pair_without_leaking_
     assert json.loads(body)["code"] == "invalid_request"
     assert "MandateRiskHealthContext" not in body.decode("utf-8")
     assert events == [("signal_evaluation", "invalid_request", "source_ref_contract_mismatch")]
+
+
+def test_caller_supplied_signal_boundary_orders_auth_contract_evaluation_and_projection() -> None:
+    events: list[tuple[str, str, str]] = []
+    calls: list[str] = []
+    expected = SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+        family=OpportunityFamily.HIGH_CASH,
+        reason_codes=(ReasonCode.BELOW_MATERIALITY,),
+    )
+
+    def map_command() -> object:
+        calls.append("dto-mapped")
+        return object()
+
+    def evaluate(command: object) -> SignalEvaluationResult:
+        calls.append("use-case")
+        return expected
+
+    def project(
+        result: SignalEvaluationResult,
+        *,
+        source_authority: str,
+    ) -> SignalEvaluationResult:
+        calls.append(f"response:{source_authority}:{result.outcome.value}")
+        return result
+
+    response = evaluate_caller_supplied_signal(
+        caller=_signal_caller(portfolio_ids=("PB_SG_GLOBAL_BAL_001",)),
+        source_authority="lotus-core",
+        source_contracts=(
+            SignalSourceRefContract(
+                None,
+                SourceSystem.LOTUS_CORE,
+                ("lotus-core:PortfolioStateSnapshot:v1",),
+            ),
+        ),
+        requested_access_scope=_requested_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+        command_factory=map_command,
+        evaluator=evaluate,
+        response_factory=project,
+        emit_event=lambda operation, outcome, **kwargs: events.append(
+            (operation.value, outcome.value, kwargs["source_authority"])
+        ),
+    )
+
+    assert response is expected
+    assert calls == ["dto-mapped", "use-case", "response:lotus-core:not_eligible"]
+    assert events == [("signal_evaluation", "not_eligible", "lotus-core")]
+
+
+def test_caller_supplied_signal_boundary_does_not_call_use_case_after_scope_denial() -> None:
+    calls: list[str] = []
+
+    def map_command() -> object:
+        calls.append("dto-mapped")
+        return object()
+
+    def unexpected_evaluator(command: object) -> SignalEvaluationResult:
+        raise AssertionError("the application use case must not run after scope denial")
+
+    def project(
+        result: SignalEvaluationResult,
+        *,
+        source_authority: str,
+    ) -> SignalEvaluationResult:
+        return result
+
+    response = evaluate_caller_supplied_signal(
+        caller=_signal_caller(portfolio_ids=("PB_SG_GLOBAL_BAL_001",)),
+        source_authority="lotus-core",
+        source_contracts=(),
+        requested_access_scope=_requested_scope(portfolio_id="PB_SG_OTHER_002"),
+        command_factory=map_command,
+        evaluator=unexpected_evaluator,
+        response_factory=project,
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 403
+    assert calls == []
 
 
 def test_signal_outcome_maps_suppressed_to_operation_outcome() -> None:

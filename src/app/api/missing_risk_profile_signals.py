@@ -25,10 +25,10 @@ from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
+    evaluate_caller_supplied_signal,
     emit_signal_evaluation_event,
     signal_permission_problem_or_none,
     signal_problem_responses,
-    signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
     close_signal_source_runtime,
 )
@@ -186,33 +186,17 @@ async def evaluate_missing_risk_profile_signal(
 ) -> EvaluateMissingRiskProfileSignalResponse | JSONResponse:
     source_contracts = _source_ref_contracts(request)
     source_authority = source_authority_from_contracts(source_contracts)
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_caller_supplied_signal(
         caller=caller,
         source_authority=source_authority,
+        source_contracts=source_contracts,
         requested_access_scope=(
             request.access_scope.to_domain() if request.access_scope is not None else None
         ),
+        command_factory=request.to_command,
+        evaluator=evaluate_missing_risk_profile_signal_command,
+        response_factory=EvaluateMissingRiskProfileSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
-    )
-    if permission_problem is not None:
-        return permission_problem
-    contract_problem = signal_source_ref_contract_problem_or_none(
-        contracts=source_contracts,
-        source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
-    )
-    if contract_problem is not None:
-        return contract_problem
-
-    result = evaluate_missing_risk_profile_signal_command(request.to_command())
-    emit_signal_evaluation_event(
-        result=result,
-        source_authority=source_authority,
-        emit_event=emit_foundation_operation_event,
-    )
-    return EvaluateMissingRiskProfileSignalResponse.from_domain(
-        result,
-        source_authority=source_authority,
     )
 
 

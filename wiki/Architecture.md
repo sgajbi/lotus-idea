@@ -194,6 +194,29 @@ certification, and supported-feature promotion remain blocked.
 
 ## Certified API Foundation
 
+### Signal Request Boundary
+
+Caller-supplied signal routes use one ordered boundary:
+
+```text
+External consumer
+  -> route/controller
+  -> request DTO mapper
+  -> application use case
+  -> domain policy and candidate model
+  -> port
+  -> infrastructure adapter
+  -> source API or persistence boundary
+```
+
+`app.api.signal_api_support.evaluate_caller_supplied_signal` centralizes the
+shared entitlement, source-contract, operation-event, and response-projection
+steps before the route-specific application evaluator runs. The helper does
+not construct source runtimes or own adapter cleanup; those remain explicit in
+each source-backed route so timeout, unavailable-source, and cleanup-failure
+behavior stays observable and testable. This reduces design-time duplication
+without changing runtime topology.
+
 `POST /api/v1/idea-signals/high-cash/evaluate` and
 `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` are the first
 certified internal API foundations. They evaluate caller-supplied, source-owned

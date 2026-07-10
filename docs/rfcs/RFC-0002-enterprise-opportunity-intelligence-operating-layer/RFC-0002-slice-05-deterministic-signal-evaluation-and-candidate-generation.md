@@ -50,6 +50,12 @@ Implemented first-wave scope:
    requests return product-safe `400 invalid_request` responses and emit
    invalid-request telemetry under the expected route source authority, not the
    caller-supplied mismatched authority.
+8. Caller-supplied signal routes share one typed API boundary in
+   `src/app/api/signal_api_support.py`: entitlement and scope checks, source
+   contract validation, DTO-to-command invocation, application evaluation,
+   operation-event emission, and response projection occur in that order. The
+   route-specific source-backed paths remain separate because runtime
+   construction and cleanup have distinct failure semantics.
 
 Additional implemented source-adapter foundation:
 

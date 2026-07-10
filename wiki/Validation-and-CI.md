@@ -729,10 +729,13 @@ and `idempotency_conflict`.
 
 The signal API contract gate blocks duplicated caller-supplied signal API
 authorization, source-authority, operation-event, and error-model mechanics.
-Signal routes must use shared signal API support, and that support must require
-both advisor role and `idea.signal.evaluate` capability before source-owned
-evidence evaluation, so future slices do not reintroduce copy-pasted policy,
-role-only authorization, or inconsistent problem-detail behavior.
+Signal routes must use shared signal API support, including the ordered
+`evaluate_caller_supplied_signal` boundary, and that support must require both
+advisor role and `idea.signal.evaluate` capability before source-owned evidence
+evaluation. This keeps DTO mapping, application evaluation, domain policy, and
+source-contract checks in a predictable path so future slices do not reintroduce
+copy-pasted policy, role-only authorization, or inconsistent problem-detail
+behavior.
 
 The caller-context contract gate also covers adjacent protected API modules:
 when a route policy declares both `allowed_roles` and an `idea.*` capability,

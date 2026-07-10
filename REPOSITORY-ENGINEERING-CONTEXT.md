@@ -262,7 +262,11 @@ Use shared API helpers instead of route-local clones:
    readiness response DTOs behind the existing `app.api.review_queues` route
    surface,
 15. `app.api.signal_api_support` for caller context, scope checks, source-ref
-   rendering, and signal outcome mapping,
+   validation, the ordered caller-supplied signal boundary, source-ref
+   rendering, and signal outcome mapping. The boundary is route/controller
+   plumbing only: request DTOs map to application commands, application use
+   cases call framework-free domain policies, and source-backed paths retain
+   their explicit ports and adapters.
 16. `app.api.review_workflow_operations` for review-action and feedback route
    caller parsing, mutating capability checks, trusted entitlement-scope subset
    validation, idempotency validation, durable-write guards, operation-event

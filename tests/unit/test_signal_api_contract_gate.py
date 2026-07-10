@@ -55,7 +55,7 @@ def test_signal_api_contract_gate_blocks_local_signal_permission_policy(
         module_path,
         "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
+        "evaluate_caller_supplied_signal, signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
         "signal_problem_responses, source_authority_from_contracts\n"
         "from app.security.caller_context import CapabilityPolicy\n\n"
         "LOCAL_POLICY = CapabilityPolicy.for_roles(\n"
@@ -83,7 +83,7 @@ def test_signal_api_contract_gate_blocks_local_signal_outcome_helper(
         module_path,
         "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
+        "evaluate_caller_supplied_signal, signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
         "signal_problem_responses, source_authority_from_contracts\n\n"
         "def _operation_outcome_from_signal_evaluation(result):\n"
         "    return 'accepted'\n",
@@ -119,11 +119,11 @@ def test_signal_api_contract_gate_requires_shared_signal_helpers(
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`emit_signal_evaluation_event` support",
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
+        "`evaluate_caller_supplied_signal` support",
+        "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`signal_permission_problem_or_none` support",
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "`signal_problem_responses` support",
-        "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
-        "`signal_source_ref_contract_problem_or_none` support",
         "src/app/api/missing_benchmark_signals.py: caller-supplied signal APIs must use shared "
         "source-authority support (`source_authority_from_refs` or "
         "`source_authority_from_contracts`)",
@@ -193,7 +193,7 @@ def test_signal_api_contract_gate_requires_shared_problem_response_metadata(
         module_path,
         "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
+        "evaluate_caller_supplied_signal, signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
         "signal_problem_responses, source_authority_from_contracts\n\n"
         "CONCENTRATION_RISK_EVALUATE_ROUTE = {\n"
         "    'responses': {\n"
@@ -225,7 +225,7 @@ def test_signal_api_contract_gate_blocks_route_local_caller_context_headers(
         "from fastapi import Header\n"
         "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
+        "evaluate_caller_supplied_signal, signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
         "signal_problem_responses, source_authority_from_contracts\n\n"
         "def evaluate_underperformance_signal(\n"
         "    x_caller_subject: str | None = Header(default=None, alias='X-Caller-Subject'),\n"
@@ -253,7 +253,7 @@ def test_signal_api_contract_gate_requires_requested_access_scope_permission_che
         module_path,
         "from app.api.caller_headers import CallerContextHeaders\n"
         "from app.api.signal_api_support import signal_permission_problem_or_none, "
-        "signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
+        "evaluate_caller_supplied_signal, signal_source_ref_contract_problem_or_none, emit_signal_evaluation_event, "
         "signal_problem_responses, source_authority_from_contracts\n\n"
         "def evaluate_concentration_risk_signal(request, caller: CallerContextHeaders):\n"
         "    return signal_permission_problem_or_none(\n"
