@@ -1,0 +1,87 @@
+{
+  "contract_id": "lotus-idea-outbox-supportability",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "supportability_status": "not_certified",
+  "supported_feature_promoted": false,
+  "source_of_truth": {
+    "projection": "src/app/application/outbox_delivery_readiness.py",
+    "alert_policy": "src/app/application/outbox_supportability_alerts.py",
+    "collector": "src/app/observability/outbox_supportability.py",
+    "contract_gate": "scripts/outbox_supportability_contract_gate.py",
+    "dashboard": "monitoring/grafana/dashboards/lotus-idea-operator-workflows-operations.json",
+    "alert_rules": "monitoring/prometheus/rules/lotus-idea-operator-workflows-operations.rules.yml",
+    "runbook": "docs/runbooks/operator-workflows-operations.md"
+  },
+  "metric_families": [
+    {
+      "name": "lotus_idea_outbox_delivery_events",
+      "type": "gauge",
+      "labels": ["repository", "state"],
+      "states": [
+        "pending",
+        "leased",
+        "failed",
+        "published",
+        "dead_letter",
+        "delivery_ready",
+        "retry_deferred",
+        "expired_lease"
+      ]
+    },
+    {
+      "name": "lotus_idea_outbox_delivery_oldest_ready_age_seconds",
+      "type": "gauge",
+      "labels": ["repository"]
+    },
+    {
+      "name": "lotus_idea_outbox_delivery_configuration_ready",
+      "type": "gauge",
+      "labels": ["repository"]
+    },
+    {
+      "name": "lotus_idea_outbox_delivery_collection_success",
+      "type": "gauge",
+      "labels": ["repository"]
+    }
+  ],
+  "thresholds": {
+    "delivery_ready_count": 100,
+    "oldest_delivery_ready_age_seconds": 900,
+    "retry_deferred_count": 50,
+    "dead_letter_count": 0,
+    "expired_lease_count": 0
+  },
+  "alerts": [
+    {
+      "alert_id": "outbox-delivery-collection-failed",
+      "severity": "P2",
+      "for": "5m"
+    },
+    {
+      "alert_id": "outbox-delivery-dead-letter-present",
+      "severity": "P2",
+      "for": "15m"
+    },
+    {
+      "alert_id": "outbox-delivery-expired-lease-present",
+      "severity": "P2",
+      "for": "10m"
+    },
+    {
+      "alert_id": "outbox-delivery-backlog-stalled",
+      "severity": "P2",
+      "for": "15m"
+    },
+    {
+      "alert_id": "outbox-delivery-retry-pressure",
+      "severity": "P3",
+      "for": "30m"
+    }
+  ],
+  "label_policy": "Only repository and governed state labels are permitted. Event, aggregate, portfolio, client, payload, request, trace, correlation, and idempotency identity are forbidden.",
+  "non_proof_boundaries": [
+    "This contract does not certify external broker publication or downstream consumption.",
+    "This contract does not authorize client-ready publication or supported-feature promotion."
+  ]
+}
