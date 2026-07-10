@@ -5,6 +5,7 @@ from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import ModuleType
+from typing import Any, cast
 
 import pytest
 from pydantic import ValidationError
@@ -261,7 +262,7 @@ def _evaluation_source_request_payload() -> dict[str, object]:
     ],
 )
 def test_source_request_rejects_blank_identity_fields(
-    request_model: type[object],
+    request_model: type[Any],
     payload: dict[str, object],
     field: str,
     message: str,
@@ -274,7 +275,7 @@ def test_source_request_rejects_blank_identity_fields(
 
 def test_missing_benchmark_request_preserves_explicitly_omitted_currency() -> None:
     request = EvaluateMissingBenchmarkFromSourceRequest(
-        **_portfolio_source_request_payload(),
+        **cast(Any, _portfolio_source_request_payload()),
         reportingCurrency=None,
     )
 
@@ -284,19 +285,19 @@ def test_missing_benchmark_request_preserves_explicitly_omitted_currency() -> No
 def test_missing_benchmark_request_rejects_blank_currency() -> None:
     with pytest.raises(ValidationError, match="reportingCurrency must not be blank"):
         EvaluateMissingBenchmarkFromSourceRequest(
-            **_portfolio_source_request_payload(),
+            **cast(Any, _portfolio_source_request_payload()),
             reportingCurrency=" ",
         )
 
 
 def test_underperformance_request_preserves_optional_currency_and_normalizes_it() -> None:
     request = EvaluateUnderperformanceFromSourceRequest(
-        **_portfolio_source_request_payload(),
+        **cast(Any, _portfolio_source_request_payload()),
         periodName="YTD",
         reportingCurrency=None,
     )
     normalized = EvaluateUnderperformanceFromSourceRequest(
-        **_portfolio_source_request_payload(),
+        **cast(Any, _portfolio_source_request_payload()),
         periodName="YTD",
         reportingCurrency="usd",
     )
@@ -308,7 +309,7 @@ def test_underperformance_request_preserves_optional_currency_and_normalizes_it(
 def test_underperformance_request_rejects_non_iso_currency() -> None:
     with pytest.raises(ValidationError, match="3-letter ISO currency code"):
         EvaluateUnderperformanceFromSourceRequest(
-            **_portfolio_source_request_payload(),
+            **cast(Any, _portfolio_source_request_payload()),
             periodName="YTD",
             reportingCurrency="US1",
         )
