@@ -9,7 +9,6 @@ from app.domain.ai_lineage_persistence import AIExplanationLineageRecord
 from app.domain.downstream_submission import (
     DownstreamSubmissionPosture,
     DownstreamSubmissionRecord,
-    DownstreamSubmissionResourceType,
 )
 from app.domain.events import (
     EventLineageContext,
@@ -17,13 +16,13 @@ from app.domain.events import (
     OutboxEventRecord,
     build_candidate_outbox_event,
 )
-from app.domain.ideas import ConversionTarget, SourceSystem
 from app.domain.outbox_delivery_state import (
     OutboxDeliveryDecision,
     claim_outbox_events_for_delivery,
     mark_owned_outbox_event_failed,
     mark_owned_outbox_event_published,
 )
+from tests.unit.downstream_submission_helpers import build_downstream_submission_record
 
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
@@ -112,15 +111,12 @@ def test_outbox_delivery_state_reports_lease_lost_for_wrong_owner() -> None:
 
 
 def downstream_submission_record() -> DownstreamSubmissionRecord:
-    return DownstreamSubmissionRecord(
+    return build_downstream_submission_record(
         idempotency_key="downstream-submit-001",
         request_fingerprint="sha256:downstream-submit",
-        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-intent-001",
-        target=ConversionTarget.ADVISE_PROPOSAL,
-        source_authority=SourceSystem.LOTUS_ADVISE,
         status=DownstreamSubmissionPosture.REJECTED_BY_DOWNSTREAM,
-        downstream_failure_reason="publisher_rejected",
+        failure_reason="publisher_rejected",
         submitted_at_utc=EVENT_TIME,
     )
 

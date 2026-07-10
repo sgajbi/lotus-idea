@@ -19,8 +19,6 @@ from app.domain import (
     ConversionOutcomeStatus,
     ConversionTarget,
     DownstreamSubmissionPosture,
-    DownstreamSubmissionRecord,
-    DownstreamSubmissionResourceType,
     EvidenceFreshness,
     EvidenceReplayStatus,
     FeedbackCommand,
@@ -60,6 +58,7 @@ from app.domain.persistence import (
     ReviewPersistenceDecision,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.unit.downstream_submission_helpers import build_downstream_submission_record
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
 from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError
 from app.infrastructure.postgres_codecs import (
@@ -783,15 +782,11 @@ def test_postgres_repository_rejects_sensitive_outbox_failure_reason() -> None:
 def test_postgres_repository_round_trips_downstream_submission_records() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    record = DownstreamSubmissionRecord(
+    record = build_downstream_submission_record(
         idempotency_key="downstream-submit-postgres-001",
         request_fingerprint="sha256:downstream-submit-postgres",
-        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-postgres-001",
-        target=ConversionTarget.ADVISE_PROPOSAL,
-        source_authority=SourceSystem.LOTUS_ADVISE,
         status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
-        downstream_failure_reason=None,
         correlation_id="corr-postgres",
         trace_id="trace-postgres",
         submitted_at_utc=EVALUATED_AT,

@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 
 from app.domain import (
     ConversionTarget,
     DownstreamSubmissionPosture,
-    DownstreamSubmissionRecord,
     DownstreamSubmissionResourceType,
     GovernedConversionIntent,
     GovernedReportEvidencePack,
     SourceSystem,
+    create_downstream_submission_claim,
+    finalize_downstream_submission,
 )
 from app.domain.idempotency import payload_fingerprint
 from app.ports.downstream_realization import (
@@ -319,21 +320,34 @@ def _record_submission(
     request_fingerprint: str,
     failure_reason: str | None,
 ) -> None:
-    repository.record_downstream_submission(
-        DownstreamSubmissionRecord(
-            idempotency_key=command.idempotency_key,
-            request_fingerprint=request_fingerprint,
-            resource_type=resource_type,
-            resource_id=resource_id,
-            target=target,
-            source_authority=source_authority,
-            status=DownstreamSubmissionPosture(status.value),
-            downstream_failure_reason=failure_reason,
-            correlation_id=command.correlation_id,
-            trace_id=command.trace_id,
-            submitted_at_utc=command.submitted_at_utc or datetime.now(UTC),
-        )
+    submitted_at = command.submitted_at_utc or datetime.now(UTC)
+    lease_owner = "downstream-realization"
+    lease_attempt_id = f"legacy-{command.idempotency_key}"
+    claimed = create_downstream_submission_claim(
+        idempotency_key=command.idempotency_key,
+        request_fingerprint=request_fingerprint,
+        resource_type=resource_type,
+        resource_id=resource_id,
+        target=target,
+        source_authority=source_authority,
+        actor_subject=lease_owner,
+        claimed_at_utc=submitted_at,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        lease_expires_at_utc=submitted_at + timedelta(minutes=5),
+        correlation_id=command.correlation_id,
+        trace_id=command.trace_id,
     )
+    finalized = finalize_downstream_submission(
+        claimed,
+        lease_owner=lease_owner,
+        lease_attempt_id=lease_attempt_id,
+        posture=DownstreamSubmissionPosture(status.value),
+        finalized_at_utc=submitted_at,
+        failure_reason=failure_reason,
+    )
+    assert finalized.record is not None
+    repository.record_downstream_submission(finalized.record)
 
 
 def _idempotent_submission_result(

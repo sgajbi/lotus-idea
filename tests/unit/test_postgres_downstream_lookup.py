@@ -3,18 +3,15 @@ from __future__ import annotations
 from dataclasses import replace
 
 from app.domain import (
-    ConversionTarget,
     DownstreamSubmissionPosture,
-    DownstreamSubmissionRecord,
-    DownstreamSubmissionResourceType,
     IdeaCandidate,
     IdeaLifecycleStatus,
     ReviewPosture,
-    SourceSystem,
     request_conversion_intent,
     request_report_evidence_pack,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from tests.unit.downstream_submission_helpers import build_downstream_submission_record
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
@@ -109,13 +106,10 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
 def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_query() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    record = DownstreamSubmissionRecord(
+    record = build_downstream_submission_record(
         idempotency_key="downstream-submit:bounded-lookup",
         request_fingerprint="sha256:downstream-submit-bounded",
-        resource_type=DownstreamSubmissionResourceType.CONVERSION_INTENT,
         resource_id="conversion-bounded-lookup",
-        target=ConversionTarget.ADVISE_PROPOSAL,
-        source_authority=SourceSystem.LOTUS_ADVISE,
         status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
         submitted_at_utc=EVALUATED_AT,
         correlation_id="corr-downstream-bounded",
