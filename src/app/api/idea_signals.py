@@ -21,6 +21,7 @@ from app.api.idea_signal_models import (
     EvaluateMandateRestrictionSignalResponse,
 )
 from app.api.runtime_dependencies import (
+    AdvisePolicyEvaluationSourceRuntime,
     AdvisePolicyEvaluationSourceRuntimeBlocker,
     CoreHighCashSourceRuntime,
     CoreHighCashSourceRuntimeBlocker,
@@ -36,12 +37,9 @@ from app.api.runtime_dependencies import (
 from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
-    close_signal_source_runtime,
     evaluate_caller_supplied_signal,
     evaluate_source_signal,
-    emit_signal_evaluation_event,
     operation_outcome_from_signal_evaluation,
-    signal_permission_problem_or_none,
     signal_problem_responses,
     signal_source_ref_contract_problem_or_none,
     source_authority_from_contracts,
@@ -83,6 +81,10 @@ def _is_core_high_cash_runtime_blocked(
     runtime: object,
 ) -> bool:
     return isinstance(runtime, CoreHighCashSourceRuntimeBlocker)
+
+
+def _is_advise_policy_runtime_blocked(runtime: object) -> bool:
+    return isinstance(runtime, AdvisePolicyEvaluationSourceRuntimeBlocker)
 
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
@@ -169,7 +171,7 @@ async def evaluate_mandate_restriction_signal_from_source(
     caller: CallerContextHeaders,
 ) -> EvaluateMandateRestrictionSignalResponse | JSONResponse:
     source_authority = SourceSystem.LOTUS_ADVISE.value
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_source_signal(
         caller=caller,
         source_authority=source_authority,
         requested_access_scope=(
@@ -177,49 +179,20 @@ async def evaluate_mandate_restriction_signal_from_source(
             if signal_request.access_scope is not None
             else None
         ),
+        runtime_factory=_build_advise_policy_evaluation_source_runtime_from_environment,
+        is_runtime_blocked=_is_advise_policy_runtime_blocked,
+        blocked_detail="Advise source runtime is not configured for mandate-restriction source evaluation.",
+        command_factory=lambda runtime: signal_request.to_command(
+            correlation_id=_request_correlation_id(request),
+            trace_id=_request_trace_id(request),
+        ),
+        evaluator=lambda command, runtime: evaluate_mandate_restriction_signal_from_advise(
+            command,
+            advise_source=cast(AdvisePolicyEvaluationSourceRuntime, runtime).advise_source,
+        ),
+        response_factory=EvaluateMandateRestrictionSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
     )
-    if permission_problem is not None:
-        return permission_problem
-
-    runtime = _build_advise_policy_evaluation_source_runtime_from_environment()
-    if isinstance(runtime, AdvisePolicyEvaluationSourceRuntimeBlocker):
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.BLOCKED,
-            source_authority=source_authority,
-            error_code=runtime.code,
-        )
-        return problem_response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            code="source_runtime_not_configured",
-            title="Source runtime not configured",
-            detail="Advise source runtime is not configured for mandate-restriction source evaluation.",
-        )
-
-    try:
-        result = evaluate_mandate_restriction_signal_from_advise(
-            signal_request.to_command(
-                correlation_id=_request_correlation_id(request),
-                trace_id=_request_trace_id(request),
-            ),
-            advise_source=runtime.advise_source,
-        )
-        emit_signal_evaluation_event(
-            result=result,
-            source_authority=source_authority,
-            emit_event=emit_foundation_operation_event,
-        )
-        return EvaluateMandateRestrictionSignalResponse.from_domain(
-            result,
-            source_authority=source_authority,
-        )
-    finally:
-        close_signal_source_runtime(
-            runtime=runtime,
-            source_authority=source_authority,
-            emit_event=emit_foundation_operation_event,
-        )
 
 
 async def evaluate_and_persist_high_cash_signal(
