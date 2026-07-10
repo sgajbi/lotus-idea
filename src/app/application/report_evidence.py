@@ -6,6 +6,7 @@ from typing import Any
 from app.domain import (
     EvidencePackPersistenceDecision,
     EvidencePackPersistenceResult,
+    EventLineageContext,
     ReportEvidencePackCommand,
     ReportEvidencePackResult,
     request_report_evidence_pack,
@@ -18,6 +19,7 @@ class RequestReportEvidencePackToRepositoryCommand:
     conversion_intent_id: str
     evidence_pack: ReportEvidencePackCommand
     idempotency_key: str
+    event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
@@ -66,6 +68,7 @@ def request_report_evidence_pack_to_repository(
         evidence_pack_result,
         idempotency_key=command.idempotency_key,
         payload=payload,
+        event_lineage=command.event_lineage,
     )
     return ReportEvidencePackWorkflowResult(
         evidence_pack_result=evidence_pack_result,

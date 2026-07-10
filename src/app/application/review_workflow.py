@@ -6,6 +6,7 @@ from typing import Any
 from app.application.candidate_lookup import candidate_record_by_id
 from app.domain import (
     DEFAULT_REVIEW_ACTION_POLICY,
+    EventLineageContext,
     FeedbackCommand,
     FeedbackResult,
     ReviewAccessScope,
@@ -28,6 +29,7 @@ class ApplyReviewActionToRepositoryCommand:
     candidate_id: str
     review: ReviewDecisionCommand
     idempotency_key: str
+    event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
@@ -39,6 +41,7 @@ class RecordFeedbackToRepositoryCommand:
     candidate_id: str
     feedback: FeedbackCommand
     idempotency_key: str
+    event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
@@ -94,6 +97,7 @@ def apply_review_action_to_repository(
         review_result,
         idempotency_key=command.idempotency_key,
         payload=payload,
+        event_lineage=command.event_lineage,
     )
     return ReviewWorkflowResult(review_result=review_result, persistence=persistence)
 
@@ -135,6 +139,7 @@ def record_feedback_to_repository(
         feedback_result,
         idempotency_key=command.idempotency_key,
         payload=payload,
+        event_lineage=command.event_lineage,
     )
     return FeedbackWorkflowResult(feedback_result=feedback_result, persistence=persistence)
 

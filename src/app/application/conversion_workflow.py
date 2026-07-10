@@ -11,6 +11,7 @@ from app.domain import (
     ConversionOutcomeResult,
     ConversionPersistenceDecision,
     ConversionPersistenceResult,
+    EventLineageContext,
     conversion_outcome_identity_from_command,
     record_conversion_outcome,
     request_conversion_intent,
@@ -26,6 +27,7 @@ class RequestConversionIntentToRepositoryCommand:
     candidate_id: str
     conversion: ConversionIntentCommand
     idempotency_key: str
+    event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
@@ -39,6 +41,7 @@ class RecordConversionOutcomeToRepositoryCommand:
     conversion_intent_id: str
     outcome: ConversionOutcomeCommand
     idempotency_key: str
+    event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.conversion_intent_id, "conversion_intent_id")
@@ -85,6 +88,7 @@ def request_conversion_intent_to_repository(
         conversion_result,
         idempotency_key=command.idempotency_key,
         payload=payload,
+        event_lineage=command.event_lineage,
     )
     return ConversionIntentWorkflowResult(
         conversion_result=conversion_result,
@@ -127,6 +131,7 @@ def record_conversion_outcome_to_repository(
         outcome_result,
         idempotency_key=command.idempotency_key,
         payload=payload,
+        event_lineage=command.event_lineage,
     )
     return ConversionOutcomeWorkflowResult(
         outcome_result=(

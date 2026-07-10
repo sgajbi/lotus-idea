@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 
 from app.domain import (
+    EventLineageContext,
     IdeaLifecycleStatus,
     LifecyclePersistenceResult,
     validate_caller_settable_lifecycle_status,
@@ -21,6 +22,7 @@ class ApplyCandidateLifecycleTransitionCommand:
     reason_codes: tuple[str, ...]
     actor_subject: str
     idempotency_key: str
+    event_lineage: EventLineageContext | None = None
 
     def __post_init__(self) -> None:
         _require_text(self.candidate_id, "candidate_id")
@@ -51,6 +53,7 @@ def apply_candidate_lifecycle_transition_to_repository(
         occurred_at_utc=command.changed_at_utc,
         transition_id=command.transition_id,
         reason_codes=command.reason_codes,
+        event_lineage=command.event_lineage,
     )
 
 
