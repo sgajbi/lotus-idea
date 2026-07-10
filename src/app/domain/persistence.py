@@ -38,6 +38,10 @@ from app.domain.outbox_recovery import (
     dead_letter_summaries,
 )
 from app.domain.persistence_lookups import InMemoryIdeaLookupMixin
+from app.domain.persistence_conversion_outcomes import (
+    conversion_outcome_identity_result,
+    precheck_conversion_outcome_identity_mutation,
+)
 from app.domain.persistence_models import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -633,7 +637,10 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
                 record=self._record_for_idempotency_key(idempotency_key),
             )
 
-        identity_result = self._conversion_outcome_identity_result(
+        identity_result = conversion_outcome_identity_result(
+            candidate_records=self._candidate_records,
+            idempotency_records=self._idempotency_records,
+            idempotency_candidates=self._idempotency_candidates,
             identity=result.conversion_outcome.identity,
             idempotency_key=idempotency_key,
             idempotency_record=idempotency_record,
@@ -705,26 +712,13 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
         identity: ConversionOutcomeIdentity,
     ) -> ConversionPersistenceResult | None:
         _require_text(idempotency_key, "idempotency_key")
-        existing_idempotency = self._idempotency_records.get(idempotency_key)
-        idempotency_decision, idempotency_record = evaluate_idempotency(
-            key=idempotency_key,
-            payload=dict(payload),
-            existing=existing_idempotency,
-        )
-        if idempotency_decision is IdempotencyDecision.CONFLICT:
-            return ConversionPersistenceResult(
-                decision=ConversionPersistenceDecision.CONFLICT,
-                record=self._record_for_idempotency_key(idempotency_key),
-            )
-        if idempotency_decision is IdempotencyDecision.REPLAYED:
-            return ConversionPersistenceResult(
-                decision=ConversionPersistenceDecision.REPLAYED,
-                record=self._record_for_idempotency_key(idempotency_key),
-            )
-        return self._conversion_outcome_identity_result(
-            identity=identity,
+        return precheck_conversion_outcome_identity_mutation(
+            candidate_records=self._candidate_records,
+            idempotency_records=self._idempotency_records,
+            idempotency_candidates=self._idempotency_candidates,
             idempotency_key=idempotency_key,
-            idempotency_record=idempotency_record,
+            payload=payload,
+            identity=identity,
         )
 
     def precheck_evidence_pack_mutation(
@@ -1075,39 +1069,6 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin):
                     existing.resource_id == identity.resource_id
                 ):
                     return existing, record
-        return None
-
-    def _conversion_outcome_identity_result(
-        self,
-        *,
-        identity: ConversionOutcomeIdentity,
-        idempotency_key: str,
-        idempotency_record: IdempotencyRecord,
-    ) -> ConversionPersistenceResult | None:
-        existing = self._conversion_outcome_identity_record(identity.conversion_outcome_id)
-        if existing is None:
-            return None
-        existing_identity, record = existing
-        if existing_identity != identity:
-            return ConversionPersistenceResult(
-                decision=ConversionPersistenceDecision.OUTCOME_CONFLICT,
-                record=record,
-            )
-        self._idempotency_records[idempotency_key] = idempotency_record
-        self._idempotency_candidates[idempotency_key] = record.candidate.candidate_id
-        return ConversionPersistenceResult(
-            decision=ConversionPersistenceDecision.REPLAYED,
-            record=record,
-        )
-
-    def _conversion_outcome_identity_record(
-        self,
-        conversion_outcome_id: str,
-    ) -> tuple[ConversionOutcomeIdentity, CandidatePersistenceRecord] | None:
-        for record in self._candidate_records.values():
-            for outcome in record.conversion_outcomes:
-                if outcome.outcome.conversion_outcome_id == conversion_outcome_id:
-                    return outcome.identity, record
         return None
 
     def _transition_record(

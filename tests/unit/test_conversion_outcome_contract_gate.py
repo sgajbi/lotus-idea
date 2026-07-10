@@ -23,9 +23,9 @@ def test_conversion_outcome_contract_gate_rejects_non_atomic_postgres_claim(
         target = tmp_path / relative_path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
-    repository_path = tmp_path / "src/app/infrastructure/postgres_repository.py"
-    repository_path.write_text(
-        repository_path.read_text(encoding="utf-8").replace(
+    adapter_path = tmp_path / "src/app/infrastructure/postgres_conversion_outcome.py"
+    adapter_path.write_text(
+        adapter_path.read_text(encoding="utf-8").replace(
             "ON CONFLICT DO NOTHING",
             "removed conversion outcome conflict handling",
         ),

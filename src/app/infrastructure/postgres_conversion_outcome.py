@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any, Mapping
 
+from psycopg.types.json import Jsonb
+
 from app.domain.conversion_governance import GovernedConversionOutcome
 from app.domain.conversion_outcome_policy import ConversionOutcomeIdentity
 from app.domain.idempotency import IdempotencyDecision, evaluate_idempotency
@@ -11,6 +13,7 @@ from app.domain.persistence import (
 )
 from app.infrastructure.postgres_codecs import (
     conversion_outcome_from_json,
+    conversion_outcome_to_json,
     read_json_object,
 )
 from app.infrastructure.postgres_downstream_lookup import (
@@ -18,7 +21,7 @@ from app.infrastructure.postgres_downstream_lookup import (
 )
 from app.infrastructure.postgres_idempotency_lookup import load_idempotency_record_by_key
 from app.infrastructure.postgres_idempotency_reservation import reserve_replayed_idempotency
-from app.infrastructure.postgres_protocols import PostgresConnection
+from app.infrastructure.postgres_protocols import PostgresConnection, PostgresCursor
 
 
 class ConcurrentConversionOutcomeMutationError(RuntimeError):
@@ -27,6 +30,37 @@ class ConcurrentConversionOutcomeMutationError(RuntimeError):
             f"concurrent conversion outcome identity: {identity.conversion_outcome_id}"
         )
         self.identity = identity
+
+
+def insert_postgres_conversion_outcome(
+    cursor: PostgresCursor,
+    outcome: GovernedConversionOutcome,
+) -> None:
+    cursor.execute(
+        """
+        INSERT INTO idea_conversion_outcome (
+            conversion_outcome_id, conversion_intent_id, source_system,
+            status, source_event_version, supersedes_conversion_outcome_id,
+            correction_reason, actor_subject, outcome_json, recorded_at_utc
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT DO NOTHING
+        RETURNING conversion_outcome_id
+        """,
+        (
+            outcome.outcome.conversion_outcome_id,
+            outcome.conversion_intent_id,
+            outcome.source_system.value,
+            outcome.outcome.status.value,
+            outcome.source_event_version,
+            outcome.supersedes_conversion_outcome_id,
+            outcome.correction_reason,
+            outcome.actor_subject,
+            Jsonb(conversion_outcome_to_json(outcome)),
+            outcome.outcome.recorded_at_utc,
+        ),
+    )
+    if not cursor.fetchall():
+        raise ConcurrentConversionOutcomeMutationError(outcome.identity)
 
 
 def load_postgres_conversion_outcomes_for_intent(

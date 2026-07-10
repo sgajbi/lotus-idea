@@ -54,7 +54,7 @@ from app.infrastructure.postgres_candidate_writes import (
     update_postgres_candidate_record,
 )
 from app.infrastructure.postgres_conversion_outcome import (
-    ConcurrentConversionOutcomeMutationError,
+    insert_postgres_conversion_outcome,
     load_postgres_conversion_outcomes_for_intent,
     precheck_postgres_conversion_outcome_mutation,
 )
@@ -63,7 +63,6 @@ from app.infrastructure.postgres_codecs import (
     conversion_intent_from_json,
     conversion_intent_to_json,
     conversion_outcome_from_json,
-    conversion_outcome_to_json,
     feedback_event_from_json,
     feedback_event_to_json,
     idea_candidate_to_json,
@@ -1143,31 +1142,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         cursor: PostgresCursor,
         outcome: GovernedConversionOutcome,
     ) -> None:
-        cursor.execute(
-            """
-            INSERT INTO idea_conversion_outcome (
-                conversion_outcome_id, conversion_intent_id, source_system,
-                status, source_event_version, supersedes_conversion_outcome_id,
-                correction_reason, actor_subject, outcome_json, recorded_at_utc
-            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ON CONFLICT DO NOTHING
-            RETURNING conversion_outcome_id
-            """,
-            (
-                outcome.outcome.conversion_outcome_id,
-                outcome.conversion_intent_id,
-                outcome.source_system.value,
-                outcome.outcome.status.value,
-                outcome.source_event_version,
-                outcome.supersedes_conversion_outcome_id,
-                outcome.correction_reason,
-                outcome.actor_subject,
-                Jsonb(conversion_outcome_to_json(outcome)),
-                outcome.outcome.recorded_at_utc,
-            ),
-        )
-        if not cursor.fetchall():
-            raise ConcurrentConversionOutcomeMutationError(outcome.identity)
+        insert_postgres_conversion_outcome(cursor, outcome)
 
     def _insert_report_evidence_packs(
         self,

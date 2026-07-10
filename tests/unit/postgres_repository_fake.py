@@ -121,6 +121,8 @@ class FakePostgresCursor:
             assert params is not None
             self._rows = idempotency_lookup_rows(self.connection, normalized, params)
             return
+        if _execute_conversion_outcome_query(self, normalized, params):
+            return
         if normalized.startswith("/* lotus-idea review-identity-decision */"):
             assert params is not None
             self._rows = [
@@ -136,30 +138,6 @@ class FakePostgresCursor:
                 for row in self.connection.rows["idea_feedback_event"]
                 if row["feedback_event_id"] == params[0]
             ]
-            return
-        if normalized.startswith("/* lotus-idea conversion-outcome-identity */"):
-            assert params is not None
-            self._rows = [
-                {"outcome_json": row["outcome_json"]}
-                for row in self.connection.rows["idea_conversion_outcome"]
-                if row["conversion_outcome_id"] == params[0]
-            ]
-            return
-        if normalized.startswith("/* lotus-idea conversion-outcome-history */"):
-            assert params is not None
-            rows = [
-                row
-                for row in self.connection.rows["idea_conversion_outcome"]
-                if row["conversion_intent_id"] == params[0]
-            ]
-            rows.sort(
-                key=lambda row: (
-                    row["source_event_version"],
-                    row["recorded_at_utc"],
-                    row["conversion_outcome_id"],
-                )
-            )
-            self._rows = [{"outcome_json": row["outcome_json"]} for row in rows]
             return
         if normalized.startswith("with selected"):
             assert params is not None
@@ -218,38 +196,7 @@ class FakePostgresCursor:
                 self.connection.rows[table_name].append(row)
                 self._rows = [{"idempotency_key": idempotency_key}]
                 return
-            identity_columns = {
-                "idea_review_decision": "review_decision_id",
-                "idea_feedback_event": "feedback_event_id",
-            }
-            if table_name in identity_columns and "on conflict" in normalized:
-                identity_column = identity_columns[table_name]
-                resource_id = params[0]
-                if any(
-                    row[identity_column] == resource_id for row in self.connection.rows[table_name]
-                ):
-                    self._rows = []
-                    return
-                row = row_for_insert(table_name, params)
-                self.connection.rows[table_name].append(row)
-                self._rows = [{identity_column: resource_id}]
-                return
-            if table_name == "idea_conversion_outcome" and "on conflict" in normalized:
-                resource_id, conversion_intent_id = params[:2]
-                source_event_version = params[4]
-                if any(
-                    row["conversion_outcome_id"] == resource_id
-                    or (
-                        row["conversion_intent_id"] == conversion_intent_id
-                        and row["source_event_version"] == source_event_version
-                    )
-                    for row in self.connection.rows[table_name]
-                ):
-                    self._rows = []
-                    return
-                row = row_for_insert(table_name, params)
-                self.connection.rows[table_name].append(row)
-                self._rows = [{"conversion_outcome_id": resource_id}]
+            if _execute_identity_insert(self, table_name, normalized, params):
                 return
             self.connection.rows[table_name].append(row_for_insert(table_name, params))
             return
@@ -263,6 +210,76 @@ class FakePostgresCursor:
 
     def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
         return None
+
+
+def _execute_conversion_outcome_query(
+    cursor: FakePostgresCursor,
+    normalized: str,
+    params: Sequence[Any] | None,
+) -> bool:
+    if normalized.startswith("/* lotus-idea conversion-outcome-identity */"):
+        assert params is not None
+        cursor._rows = [
+            {"outcome_json": row["outcome_json"]}
+            for row in cursor.connection.rows["idea_conversion_outcome"]
+            if row["conversion_outcome_id"] == params[0]
+        ]
+        return True
+    if normalized.startswith("/* lotus-idea conversion-outcome-history */"):
+        assert params is not None
+        rows = [
+            row
+            for row in cursor.connection.rows["idea_conversion_outcome"]
+            if row["conversion_intent_id"] == params[0]
+        ]
+        rows.sort(
+            key=lambda row: (
+                row["source_event_version"],
+                row["recorded_at_utc"],
+                row["conversion_outcome_id"],
+            )
+        )
+        cursor._rows = [{"outcome_json": row["outcome_json"]} for row in rows]
+        return True
+    return False
+
+
+def _execute_identity_insert(
+    cursor: FakePostgresCursor,
+    table_name: str,
+    normalized: str,
+    params: Sequence[Any],
+) -> bool:
+    identity_columns = {
+        "idea_review_decision": "review_decision_id",
+        "idea_feedback_event": "feedback_event_id",
+    }
+    if table_name in identity_columns and "on conflict" in normalized:
+        identity_column = identity_columns[table_name]
+        resource_id = params[0]
+        if any(row[identity_column] == resource_id for row in cursor.connection.rows[table_name]):
+            cursor._rows = []
+            return True
+        cursor.connection.rows[table_name].append(row_for_insert(table_name, params))
+        cursor._rows = [{identity_column: resource_id}]
+        return True
+    if table_name == "idea_conversion_outcome" and "on conflict" in normalized:
+        resource_id, conversion_intent_id = params[:2]
+        source_event_version = params[4]
+        if any(
+            row["conversion_outcome_id"] == resource_id
+            or (
+                row["conversion_intent_id"] == conversion_intent_id
+                and row["source_event_version"] == source_event_version
+            )
+            for row in cursor.connection.rows[table_name]
+        ):
+            cursor._rows = []
+            return True
+        cursor.connection.rows[table_name].append(row_for_insert(table_name, params))
+        cursor._rows = [{"conversion_outcome_id": resource_id}]
+        return True
+    return False
 
 
 def _execute_outbox_recovery_query(

@@ -20,10 +20,13 @@ REQUIRED_FRAGMENTS = {
     ),
     "src/app/domain/persistence.py": (
         "ConversionPersistenceDecision.OUTCOME_CONFLICT",
-        "def _conversion_outcome_identity_result",
         "validate_conversion_outcome_progression(",
     ),
-    "src/app/infrastructure/postgres_repository.py": (
+    "src/app/domain/persistence_conversion_outcomes.py": (
+        "def conversion_outcome_identity_result",
+        "ConversionPersistenceDecision.OUTCOME_CONFLICT",
+    ),
+    "src/app/infrastructure/postgres_conversion_outcome.py": (
         "ON CONFLICT DO NOTHING",
         "raise ConcurrentConversionOutcomeMutationError",
     ),
