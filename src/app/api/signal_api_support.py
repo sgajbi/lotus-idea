@@ -261,12 +261,16 @@ def evaluate_source_signal(
     runtime_or_blocker = runtime_factory()
     if is_runtime_blocked(runtime_or_blocker):
         blocker = cast(_SourceRuntimeBlocker, runtime_or_blocker)
+        event_fields: dict[str, object] = {
+            "source_authority": source_authority,
+            "error_code": blocker.code,
+        }
+        if event_attributes is not None:
+            event_fields["attributes"] = event_attributes
         emit_event(
             IdeaOperation.SIGNAL_EVALUATION,
             OperationOutcome.BLOCKED,
-            source_authority=source_authority,
-            error_code=blocker.code,
-            attributes=event_attributes,
+            **event_fields,
         )
         return problem_response(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,

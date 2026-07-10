@@ -37,7 +37,7 @@ def test_allocation_drift_source_api_emits_blocked_operation_event(
 
     response = TestClient(app).post(
         "/api/v1/idea-signals/allocation-drift/evaluate-from-source",
-        json=signal_source_payload(),
+        json=allocation_drift_source_payload(),
         headers=source_signal_headers(),
     )
 
@@ -259,6 +259,14 @@ def signal_source_payload() -> dict[str, str]:
         "portfolioId": "PB_SG_GLOBAL_BAL_001",
         "asOfDate": "2026-06-21",
         "periodName": "YTD",
+        "evaluatedAtUtc": "2026-06-21T10:00:00Z",
+    }
+
+
+def allocation_drift_source_payload() -> dict[str, str]:
+    return {
+        "portfolioId": "PB_SG_GLOBAL_BAL_001",
+        "asOfDate": "2026-06-21",
         "evaluatedAtUtc": "2026-06-21T10:00:00Z",
     }
 
