@@ -42,6 +42,21 @@ def test_outbox_event_contract_gate_rejects_runtime_contract_drift(tmp_path: Pat
     assert "eventFamilies must list every implemented v1 event type in order" in errors
 
 
+def test_outbox_event_contract_gate_rejects_conflated_example_lineage(tmp_path: Path) -> None:
+    module = _load_contract_gate_script()
+    source_contract = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"
+    contract = json.loads(source_contract.read_text(encoding="utf-8"))
+    contract["envelope"]["example"]["traceId"] = contract["envelope"]["example"][
+        "causationId"
+    ]
+    contract_path = tmp_path / "lotus-idea-outbox-events.v1.json"
+    contract_path.write_text(json.dumps(contract), encoding="utf-8")
+
+    errors = module.validate_outbox_event_contract(contract_path=contract_path)
+
+    assert "envelope.example must keep traceId distinct from causationId" in errors
+
+
 def test_outbox_event_contract_gate_rejects_forbidden_contract_text(tmp_path: Path) -> None:
     module = _load_contract_gate_script()
     source_contract = ROOT / "contracts" / "outbox-events" / "lotus-idea-outbox-events.v1.json"

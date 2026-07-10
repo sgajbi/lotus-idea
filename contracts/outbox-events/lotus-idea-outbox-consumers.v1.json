@@ -16,6 +16,7 @@
     "authorityBoundary": "Consumers may use lotus-idea outbox events only as source-safe workflow notifications. They must call source-authoritative services for portfolio, suitability, action, report, render, archive, and AI facts.",
     "payloadPolicy": "Consumers must not require raw portfolio, account, holding, client, request, response, route, content hash, evidence hash, or raw idempotency values in event payloads.",
     "failurePolicy": "Consumer failures must be reported with governed status codes and must not echo raw source payloads, broker payloads, or downstream transport bodies.",
+    "lineagePolicy": "Consumers must preserve correlationId and traceId as distinct required diagnostic identifiers, treat causationId only as an optional parent event or workflow identifier, deduplicate replays by eventId and business identity rather than traceId, and never copy lineage identifiers into business payload fields.",
     "certificationPolicy": "A declared consumer becomes certified only after live contract tests, entitlement checks, replay posture, bounded failure handling, and Gateway or downstream publication evidence are merged."
   },
   "declaredConsumers": [

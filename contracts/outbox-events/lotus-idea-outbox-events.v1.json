@@ -45,6 +45,26 @@
       "causationId": "optional product-safe parent event or workflow identifier; present only when a causal parent exists",
       "lineageOrigin": "request, parent_event, system_generated, or legacy_migrated; identifies how correlation and trace context were established",
       "payload": "source-safe string map with no raw source payload, portfolio, account, holding, client, route, request, response, content hash, evidence hash, or raw idempotency key"
+    },
+    "example": {
+      "eventId": "evt-example-workflow-001",
+      "eventType": "idea.lifecycle.transitioned.v1",
+      "aggregateType": "idea_candidate",
+      "aggregateId": "idea-candidate-example-001",
+      "schemaVersion": "v1",
+      "occurredAtUtc": "2026-07-10T10:15:00Z",
+      "correlationId": "corr-workflow-example-001",
+      "traceId": "trace-request-example-001",
+      "causationId": "event-parent-example-001",
+      "lineageOrigin": "parent_event",
+      "payload": {
+        "source_status": "generated",
+        "target_status": "enriched"
+      },
+      "idempotencyFingerprint": "sha256:example-fingerprint",
+      "producer": "lotus-idea",
+      "sourceAuthority": "lotus-idea",
+      "supportabilityStatus": "not_certified"
     }
   },
   "eventFamilies": [

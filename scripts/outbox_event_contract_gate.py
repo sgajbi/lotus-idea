@@ -159,6 +159,15 @@ def _validate_envelope(payload: Mapping[str, Any], errors: list[str]) -> None:
     for field_name in REQUIRED_ENVELOPE_FIELDS:
         if field_name not in field_policies and field_name in {"aggregateType", "payload"}:
             errors.append(f"envelope.fieldPolicies missing required policy for {field_name}")
+    example = envelope.get("example")
+    if not isinstance(example, Mapping):
+        errors.append("envelope.example must be present")
+        return
+    missing_example_fields = sorted(set(REQUIRED_ENVELOPE_FIELDS) - set(example))
+    if missing_example_fields:
+        errors.append("envelope.example missing fields: " + ", ".join(missing_example_fields))
+    if example.get("traceId") == example.get("causationId"):
+        errors.append("envelope.example must keep traceId distinct from causationId")
 
 
 def _validate_event_families(payload: Mapping[str, Any], errors: list[str]) -> None:

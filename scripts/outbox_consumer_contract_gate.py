@@ -127,6 +127,7 @@ def _validate_policy(payload: Mapping[str, Any], errors: list[str]) -> None:
         "authorityBoundary": "source-authoritative services",
         "payloadPolicy": "must not require raw",
         "failurePolicy": "must not echo raw",
+        "lineagePolicy": "must preserve correlationId and traceId as distinct",
         "certificationPolicy": "live contract tests",
     }
     for key, required_fragment in required_fragments.items():
