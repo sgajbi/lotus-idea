@@ -8,6 +8,8 @@ from app.infrastructure.postgres_outbox_delivery import (
     load_outbox_events_for_delivery,
 )
 from app.infrastructure.postgres_protocols import PostgresConnection
+from app.infrastructure.postgres_protocols import PostgresCursor
+from app.infrastructure.postgres_outbox_writes import insert_outbox_event
 from app.ports.idea_repository import OutboxDeliveryReadinessRepositorySummary
 
 
@@ -39,3 +41,6 @@ class PostgresOutboxRepositoryMixin:
             max_retry_count=max_retry_count,
             evaluated_at_utc=evaluated_at_utc,
         )
+
+    def _insert_outbox_event(self, cursor: PostgresCursor, event: OutboxEventRecord) -> None:
+        insert_outbox_event(cursor, event)

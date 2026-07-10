@@ -59,10 +59,8 @@ from app.domain.persistence import (
     LifecyclePersistenceDecision,
     ReviewPersistenceDecision,
 )
-from app.infrastructure.postgres_repository import (
-    PostgresIdeaRepository,
-    _idempotency_created_at,
-)
+from app.infrastructure.postgres_repository import PostgresIdeaRepository
+from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
 from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError
 from app.infrastructure.postgres_codecs import (
     decode_datetime,
@@ -964,7 +962,7 @@ def test_postgres_repository_ignores_orphan_detail_rows_during_hydration() -> No
 def test_postgres_repository_row_and_json_guards() -> None:
     assert read_json_object({"payload": Jsonb({"ok": True})}, "payload") == {"ok": True}
     assert decode_datetime(EVALUATED_AT) is EVALUATED_AT
-    assert isinstance(_idempotency_created_at(None, IdeaRepositorySnapshot({}, {}, {})), datetime)
+    assert isinstance(idempotency_created_at(None, IdeaRepositorySnapshot({}, {}, {})), datetime)
     with pytest.raises(TypeError, match="mapping rows"):
         read_row_value(("not", "mapping"), "payload")
     with pytest.raises(TypeError, match="must be a JSON object"):

@@ -81,7 +81,7 @@ from app.infrastructure.postgres_outbox_delivery import (
     outbox_event_from_row,
 )
 from app.infrastructure.postgres_outbox_repository import PostgresOutboxRepositoryMixin
-from app.infrastructure.postgres_outbox_writes import insert_outbox_event
+from app.infrastructure.postgres_mutation_metadata import idempotency_created_at, operation_name
 from app.infrastructure.postgres_outbox_recovery import PostgresOutboxRecoveryRepositoryMixin
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
@@ -550,7 +550,7 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 for candidate_record in snapshot.candidate_records.values():
                     self._insert_record_details(cursor, candidate_record)
                 for outbox_event in snapshot.outbox_events.values():
-                    insert_outbox_event(cursor, outbox_event)
+                    self._insert_outbox_event(cursor, outbox_event)
                 for record in snapshot.downstream_submission_records.values():
                     self._insert_downstream_submission_record(cursor, record)
             self._connection.commit()
@@ -923,10 +923,10 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
             """,
             (
                 record.key,
-                _operation_name(record.key),
+                operation_name(record.key),
                 record.payload_hash,
                 candidate_id,
-                _idempotency_created_at(candidate_id, snapshot),
+                idempotency_created_at(candidate_id, snapshot),
             ),
         )
         if not cursor.fetchall():
@@ -1191,19 +1191,3 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 evidence_pack.requested_at_utc,
             ),
         )
-
-    def _insert_outbox_event(self, cursor: PostgresCursor, event: OutboxEventRecord) -> None:
-        insert_outbox_event(cursor, event)
-
-
-def _operation_name(idempotency_key: str) -> str:
-    return idempotency_key.split(":", 1)[0]
-
-
-def _idempotency_created_at(
-    candidate_id: str | None,
-    snapshot: IdeaRepositorySnapshot,
-) -> datetime:
-    if candidate_id is not None and candidate_id in snapshot.candidate_records:
-        return snapshot.candidate_records[candidate_id].persisted_at_utc
-    return datetime.now().astimezone()
