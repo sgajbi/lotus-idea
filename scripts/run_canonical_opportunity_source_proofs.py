@@ -165,10 +165,11 @@ def _proof_command(
         command.extend(["--performance-base-url", args.performance_base_url])
     else:
         command.extend(["--risk-base-url", args.risk_base_url])
-    if args.period_name:
-        command.extend(["--period-name", args.period_name])
-    if args.reporting_currency:
-        command.extend(["--reporting-currency", args.reporting_currency])
+    if case.name in {"performance_underperformance", "performance_benchmark_readiness"}:
+        if args.period_name:
+            command.extend(["--period-name", args.period_name])
+        if args.reporting_currency:
+            command.extend(["--reporting-currency", args.reporting_currency])
     if args.timeout_seconds:
         command.extend(["--timeout-seconds", args.timeout_seconds])
     return command

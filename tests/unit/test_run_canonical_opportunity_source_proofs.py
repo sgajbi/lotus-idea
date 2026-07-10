@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import UTC, datetime
 import json
 from pathlib import Path
 
@@ -26,8 +27,8 @@ def test_proof_command_keeps_source_adapter_arguments_explicit() -> None:
     command = _proof_command(
         case=PROOF_CASES[0],
         args=args,
-        generated_at=__import__("datetime").datetime.fromisoformat("2026-07-10T00:00:00+00:00"),
-        evaluated_at=__import__("datetime").datetime.fromisoformat("2026-07-10T00:00:00+00:00"),
+        generated_at=datetime(2026, 7, 10, tzinfo=UTC),
+        evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
         output_path=Path("output/opportunity/risk.json"),
     )
 
@@ -69,13 +70,13 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
     summaries = _run_proofs(
         cases=PROOF_CASES,
         args=args,
-        generated_at=__import__("datetime").datetime.fromisoformat("2026-07-10T00:00:00+00:00"),
-        evaluated_at=__import__("datetime").datetime.fromisoformat("2026-07-10T00:00:00+00:00"),
+        generated_at=datetime(2026, 7, 10, tzinfo=UTC),
+        evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
         output_directory=tmp_path,
     )
     payload = _aggregate_payload(
-        generated_at=__import__("datetime").datetime.fromisoformat("2026-07-10T00:00:00+00:00"),
-        evaluated_at=__import__("datetime").datetime.fromisoformat("2026-07-10T00:00:00+00:00"),
+        generated_at=datetime(2026, 7, 10, tzinfo=UTC),
+        evaluated_at=datetime(2026, 7, 10, tzinfo=UTC),
         portfolio_id=args.portfolio_id,
         as_of_date=args.as_of_date,
         summaries=summaries,
