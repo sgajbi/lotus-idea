@@ -219,7 +219,9 @@ def test_source_ingestion_rejects_unpersisted_candidate_created_result() -> None
     )
 
     with pytest.raises(RuntimeError, match="was not persisted"):
-        _source_ingestion_decision(SimpleNamespace(evaluation=evaluation, persistence=None))
+        _source_ingestion_decision(
+            cast(Any, SimpleNamespace(evaluation=evaluation, persistence=None))
+        )
 
 
 def test_first_reason_code_returns_none_for_empty_or_non_text_reasons() -> None:
