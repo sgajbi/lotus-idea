@@ -1026,6 +1026,14 @@ Current source-ingestion orchestration validation:
     preserving one-process runtime topology and source-specific failure
     semantics.
 
+11. The domain signal policy now applies one source-temporal contract to all
+    RFC-0002 signal families. Source business dates must equal the evaluation
+    `asOfDate`, and source evidence generated after `evaluatedAtUtc` is blocked
+    with stable `source_date_mismatch` or
+    `source_generated_after_evaluation` reason codes. This applies equally to
+    caller-supplied DTOs and infrastructure adapter results; no candidate is
+    created from temporally misaligned evidence.
+
 Current Core cash-weight adapter validation:
 
 1. `.venv\Scripts\python.exe -m pytest tests\unit\test_lotus_core_sources.py -q`

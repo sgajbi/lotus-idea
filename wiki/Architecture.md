@@ -223,6 +223,13 @@ The `signal-api-contract-gate` blocks source-backed routes that bypass this
 boundary. This is design modularity inside one process, not a new runtime
 service or process boundary.
 
+The domain signal policy in `app.domain.source_temporal` also reconciles the
+consumer `asOfDate` and `evaluatedAtUtc` with every source reference. Exact
+business-date mismatches and source evidence generated after evaluation return
+bounded blocked posture before candidate creation. This same policy is used by
+caller-supplied and adapter-returned evidence, so transport shape cannot bypass
+source temporal correctness.
+
 ### Canonical Source-Proof Runner
 
 `scripts/run_canonical_opportunity_source_proofs.py` is an operator automation

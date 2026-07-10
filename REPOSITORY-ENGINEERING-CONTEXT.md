@@ -150,6 +150,12 @@ mandate/restriction `evaluate-from-source` APIs are internal foundations inside
 the existing runtime; they do not certify live source support, persist
 candidates, create a separate runtime service, prove Gateway/Workbench
 behavior, certify a data product, or promote a supported feature. Low-income
+All signal families share `src/app/domain/source_temporal.py`: source business
+dates must match the consuming signal `as_of_date`, and source evidence must
+not be generated after the consuming `evaluated_at_utc`. The shared domain
+policy applies to caller-supplied DTOs and source-adapter results before a
+candidate can be created; source-specific effective windows require an
+explicit versioned contract and must not be inferred locally.
 source-backed evaluation
 consumes only Core-owned cash movement and cashflow projection evidence and
 must not infer income needs, funding advice, treasury instructions, planning

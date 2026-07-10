@@ -87,6 +87,12 @@ source runtime factory, application use case, and port-specific adapter; the
 helper owns the ordered entitlement, fail-closed runtime, event, projection,
 and cleanup sequence. The `signal-api-contract-gate` enforces this boundary.
 
+The domain layer also rejects source evidence whose business date differs from
+the requested `asOfDate`, or whose `generatedAtUtc` is later than
+`evaluatedAtUtc`. The proof runner therefore cannot turn temporally
+misaligned source data into a candidate; such cases remain a bounded blocked
+outcome with source-temporal reason codes.
+
 ## Current Boundary
 
 The runner currently certifies these source-owned proof families:
