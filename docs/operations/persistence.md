@@ -406,7 +406,12 @@ Migration `004_outbox_dead_letter_recovery` commits the audit row and lease
 transition together. In-memory and PostgreSQL adapters share the same port.
 Successful publication preserves retry count, failure reason, and first/last
 failure timestamps; failed re-drive returns directly to quarantine without a
-scheduled retry. See `docs/operations/outbox-dead-letter-recovery.md`.
+scheduled retry. PostgreSQL maps the opaque support reference through an exact
+immutable SHA-256 expression index and locks one matching event across
+dead-letter, leased, or terminal posture; arbitrary recent-row scans are
+forbidden by the recovery contract gate. The real PostgreSQL lane proves this
+lookup after repository reload and durable same-key replay. See
+`docs/operations/outbox-dead-letter-recovery.md`.
 
 ## Unsupported Until Proven
 

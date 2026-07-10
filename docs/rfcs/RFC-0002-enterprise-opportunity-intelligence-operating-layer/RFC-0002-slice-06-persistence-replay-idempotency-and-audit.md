@@ -373,9 +373,11 @@ Current slice validation:
    identifiers.
 9. `.venv\Scripts\python.exe -m pytest tests\integration\test_postgres_runtime_integration.py -q`
    skips locally when `LOTUS_IDEA_POSTGRES_INTEGRATION_URL` is not configured;
-   the suite now includes internal source-ingestion replay/conflict recovery
-   proof for GitHub PR/Main PostgreSQL lanes where `postgres:18-alpine` is
-   configured.
+   a required local disposable-PostgreSQL run passed with `11 passed` across
+   the runtime and review-queue suites. The runtime suite includes internal
+   source-ingestion replay/conflict recovery plus exact outbox dead-letter
+   recovery lookup and durable audit replay after connection reload. GitHub
+   PR/Main PostgreSQL lanes run the same contract on `postgres:18-alpine`.
 10. `make check` passed with lint, format, CI contract, maintainability,
    monetary/no-sensitive guards, implementation-truth, data-mesh,
    migration, supported-feature, endpoint-certification, typecheck,
@@ -525,6 +527,16 @@ quarantined with no next attempt. This is design modularity inside the existing
 `lotus-idea` runtime, not a new service boundary, and does not promote Slice 6
 or a supported feature while external publication and consumer proof remain
 open.
+
+PostgreSQL recovery now resolves the opaque support reference with an exact
+immutable SHA-256 expression index instead of scanning and locking the latest
+1,000 outbox rows. The selector remains state-aware so a competing request sees
+the leased event and returns a deterministic conflict. The shared delivery
+claim also qualifies its `RETURNING` columns for PostgreSQL `UPDATE ... FROM`.
+The required real-PostgreSQL lane proves delivery claim, dead-lettering,
+connection reload, exact recovery claim, durable replay, and migration
+rollback/reapply. `make outbox-recovery-contract-gate` rejects reintroduction
+of a bounded selector.
 
 ## Issue 330 Candidate-State Persistence Hardening
 

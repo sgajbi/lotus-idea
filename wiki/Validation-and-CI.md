@@ -963,6 +963,15 @@ only; they do not certify live broker runtime, downstream consumer delivery,
 platform mesh event publication proof, Gateway/Workbench support, data-product
 promotion, client-ready publication, or supported-feature promotion.
 
+`make outbox-recovery-contract-gate` protects operator authorization,
+idempotent one-attempt recovery, source-safe responses, immutable failure
+history, and exact PostgreSQL opaque-reference selection. It rejects the prior
+fixed-window scan pattern. The required PostgreSQL runtime lane additionally
+proves migration execution, qualified delivery claim SQL, dead-lettering,
+connection reload, exact recovery claim, durable audit replay, and
+rollback/reapply. These checks certify local recovery control only, not broker
+publication or downstream receipt.
+
 The internal downstream-realization-readiness endpoint is covered by OpenAPI,
 endpoint certification, unit tests, and integration tests. Its passing checks
 certify the diagnostic route only; planned contract records are not downstream

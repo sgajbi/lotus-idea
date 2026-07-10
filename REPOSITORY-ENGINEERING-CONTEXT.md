@@ -1143,7 +1143,15 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     `OutboxRecoveryRepository` port, in-memory/PostgreSQL adapters, migration
     `004`, and operator routes. Recovery preserves original failure history,
     creates a new fenced lease, permits one publication attempt, and leaves
-    poison or unsupported events quarantined. `make outbox-recovery-contract-gate`
+    poison or unsupported events quarantined. PostgreSQL resolves the opaque
+    support reference through an exact immutable SHA-256 expression index; it
+    does not scan or lock an arbitrary recent-row window. The shared delivery
+    claim qualifies its `RETURNING` projection so the real PostgreSQL
+    `UPDATE ... FROM` path remains executable. `make outbox-recovery-contract-gate`
+    blocks bounded-scan regressions, and the required PostgreSQL runtime lane
+    proves dead-lettering, connection reload, exact recovery claim, durable
+    audit replay, and migration rollback/reapply. This is design modularity
+    within the existing process, not a new recovery service or broker claim.
     blocks sensitive response fields and unbounded re-drive regression. This is
     design modularity inside the existing deployable service; no workload,
     failure-isolation, ownership, or operability evidence justifies another

@@ -50,8 +50,9 @@ internal mutations also create source-safe outbox records with internal
 retry/dead-letter delivery state semantics and a source-safe HTTP
 broker-publisher adapter foundation, and source-safe downstream adapter
 foundations plus certified internal downstream submission APIs. There is still
-no certified live broker runtime, downstream execution proof, production
-recovery command, Workbench proof, or supported business API. Bounded
+no certified live broker runtime, downstream execution proof,
+production-certified recovery posture, Workbench proof, or supported business
+API. Bounded
 read-only Gateway publication exists for advisor queue and candidate detail
 only. A versioned
 migration/rollback schema contract exists for the durable repository and is
@@ -879,3 +880,8 @@ publication attempt. Same-key replay never republishes. Rejection or the
 one-attempt poison safeguard leaves the event quarantined for
 `lotus-idea-operations`; direct database mutation is prohibited. See
 `docs/operations/outbox-dead-letter-recovery.md` for the decision table.
+
+The PostgreSQL path resolves the opaque reference through an exact SHA-256
+expression index and locks only the matching event. The recovery gate forbids
+fixed-size recent-row scans; the required PostgreSQL runtime lane proves exact
+lookup and replay after connection reload.

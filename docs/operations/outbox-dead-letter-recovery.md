@@ -54,12 +54,26 @@ also retains prior retry count, failure reason, and first/last failure times on
 the outbox event. API responses and operation telemetry omit event payloads,
 aggregate ids, portfolio/client identifiers, and raw idempotency keys.
 
+PostgreSQL resolves `supportReference` with the same SHA-256 derivation as the
+domain through an immutable expression index. The selector locks only the exact
+event and remains state-aware so a competing request sees `lease_conflict`
+rather than `not_found`. It must never fall back to a fixed-size recent-row
+scan, because that makes older dead letters unreachable and locks unrelated
+outbox work.
+
 ## Validation
 
 ```powershell
 make outbox-recovery-contract-gate
 .\.venv\Scripts\python.exe -m pytest tests/unit/test_outbox_recovery.py tests/unit/test_outbox_recovery_application.py tests/unit/test_postgres_outbox_delivery_adapter.py tests/integration/test_outbox_recovery_api.py -q
+make postgres-integration-gate
 ```
+
+The PostgreSQL gate must run with
+`LOTUS_IDEA_POSTGRES_INTEGRATION_REQUIRED=1` against a disposable database. It
+proves migration execution, delivery claim, dead-letter transition, connection
+reload, exact support-reference recovery, durable audit replay, and schema
+rollback/reapply.
 
 Promotion remains blocked until the full repository gates, external broker and
 consumer proof, merged-main validation, and supported-feature governance pass.
