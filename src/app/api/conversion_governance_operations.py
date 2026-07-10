@@ -107,6 +107,13 @@ def problem_for_conversion_persistence(
             title="Idempotency conflict",
             detail="The idempotency key was already used with a different request payload.",
         )
+    if result.decision is ConversionPersistenceDecision.OUTCOME_CONFLICT:
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="conversion_outcome_conflict",
+            title="Conversion outcome conflict",
+            detail="The conversion outcome conflicts with the governed source-event history.",
+        )
     return None
 
 
@@ -133,4 +140,6 @@ def error_code_from_conversion_decision(
         return "conversion_resource_not_found"
     if decision is ConversionPersistenceDecision.CONFLICT:
         return "idempotency_conflict"
+    if decision is ConversionPersistenceDecision.OUTCOME_CONFLICT:
+        return "conversion_outcome_conflict"
     return None

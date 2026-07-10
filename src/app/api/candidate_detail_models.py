@@ -14,6 +14,7 @@ from app.domain import (
     GovernedReviewDecision,
     LifecycleHistoryEntry,
     SourceRef,
+    current_conversion_outcome,
 )
 
 
@@ -297,6 +298,10 @@ class CandidateDetailResponse(CamelModel):
     conversion_outcomes: tuple[ConversionOutcomeSummaryResponse, ...] = Field(
         ..., alias="conversionOutcomes"
     )
+    current_conversion_outcomes: tuple[ConversionOutcomeSummaryResponse, ...] = Field(
+        ...,
+        alias="currentConversionOutcomes",
+    )
     report_evidence_packs: tuple[ReportEvidencePackSummaryResponse, ...] = Field(
         ..., alias="reportEvidencePacks"
     )
@@ -333,6 +338,10 @@ class CandidateDetailResponse(CamelModel):
                 ConversionOutcomeSummaryResponse.from_domain(outcome)
                 for outcome in record.conversion_outcomes
             ),
+            currentConversionOutcomes=tuple(
+                ConversionOutcomeSummaryResponse.from_domain(outcome)
+                for outcome in _current_conversion_outcomes(record)
+            ),
             reportEvidencePacks=tuple(
                 ReportEvidencePackSummaryResponse.from_domain(pack)
                 for pack in record.report_evidence_packs
@@ -341,6 +350,23 @@ class CandidateDetailResponse(CamelModel):
             durableStorageBacked=durable_storage_backed,
             supportedFeaturePromoted=False,
         )
+
+
+def _current_conversion_outcomes(
+    record: CandidatePersistenceRecord,
+) -> tuple[GovernedConversionOutcome, ...]:
+    current: list[GovernedConversionOutcome] = []
+    for intent in record.conversion_intents:
+        outcome = current_conversion_outcome(
+            tuple(
+                item
+                for item in record.conversion_outcomes
+                if item.conversion_intent_id == intent.intent.conversion_intent_id
+            )
+        )
+        if outcome is not None:
+            current.append(outcome)
+    return tuple(current)
 
 
 __all__ = (

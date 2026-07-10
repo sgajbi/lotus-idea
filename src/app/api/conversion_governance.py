@@ -26,6 +26,7 @@ from app.api.durable_write_guard import durable_repository_write_unavailable_met
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
 )
@@ -44,6 +45,19 @@ from app.security.caller_context import PermissionDeniedError
 
 _CONVERSION_INTENT_CAPABILITY = "idea.conversion.intent.record"
 _CONVERSION_OUTCOME_CAPABILITY = "idea.conversion.outcome.record"
+
+_CONVERSION_IDEMPOTENCY_CONFLICT = conflict_metadata(
+    code="idempotency_conflict",
+    title="Idempotency conflict",
+    detail="The idempotency key was already used with a different request payload.",
+    description="The transport idempotency key conflicts with an earlier request.",
+)
+_CONVERSION_OUTCOME_CONFLICT = conflict_metadata(
+    code="conversion_outcome_conflict",
+    title="Conversion outcome conflict",
+    detail="The conversion outcome conflicts with the governed source-event history.",
+    description="The source event identity, version, transition, or correction is invalid.",
+)
 
 __all__ = [
     "ConversionIntentApiResponse",
@@ -338,7 +352,10 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
                             "target": "report_evidence",
                             "status": "accepted",
                             "sourceSystem": "lotus-report",
+                            "sourceEventVersion": 1,
                             "downstreamReference": "report-evidence-pack-001",
+                            "supersedesConversionOutcomeId": None,
+                            "correctionReason": None,
                             "boundary": "downstream_realization_required",
                             "recordedAtUtc": "2026-06-21T10:20:00Z",
                             "grantsExecutionAuthority": False,
@@ -369,11 +386,13 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
             detail="The requested idea conversion resource was not found.",
             description="Conversion intent was not found.",
         ),
-        **conflict_metadata(
-            code="conversion_outcome_conflict",
-            title="Conversion outcome conflict",
-            detail="The conversion outcome is not valid for the recorded conversion intent.",
-            description="Idempotency conflict or invalid conversion outcome source.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_409_CONFLICT,
+            description="Conversion outcome mutation conflict.",
+            responses=(
+                _CONVERSION_IDEMPOTENCY_CONFLICT,
+                _CONVERSION_OUTCOME_CONFLICT,
+            ),
         ),
         **durable_repository_write_unavailable_metadata(),
     },

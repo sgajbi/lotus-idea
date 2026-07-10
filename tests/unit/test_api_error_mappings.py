@@ -31,6 +31,10 @@ def test_conversion_api_error_mapping_is_bounded_and_source_safe() -> None:
         error_code_from_conversion_decision(ConversionPersistenceDecision.CONFLICT)
         == "idempotency_conflict"
     )
+    assert (
+        error_code_from_conversion_decision(ConversionPersistenceDecision.OUTCOME_CONFLICT)
+        == "conversion_outcome_conflict"
+    )
     assert error_code_from_conversion_decision(ConversionPersistenceDecision.ACCEPTED) is None
 
 

@@ -113,6 +113,11 @@ def test_prepare_conversion_mutation_returns_product_safe_durable_write_problem(
     (
         (ConversionPersistenceDecision.NOT_FOUND, 404, "conversion_resource_not_found"),
         (ConversionPersistenceDecision.CONFLICT, 409, "idempotency_conflict"),
+        (
+            ConversionPersistenceDecision.OUTCOME_CONFLICT,
+            409,
+            "conversion_outcome_conflict",
+        ),
     ),
 )
 def test_problem_for_conversion_persistence_maps_product_safe_problem_details(
