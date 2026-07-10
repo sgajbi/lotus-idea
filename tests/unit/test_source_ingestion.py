@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -130,6 +130,7 @@ def test_ingests_core_high_cash_candidate_with_generated_source_key() -> None:
 
     assert result.decision is HighCashSourceIngestionDecision.ACCEPTED
     assert result.idempotency_key == default_high_cash_source_ingestion_key(
+        tenant_id="tenant-a",
         portfolio_id=PORTFOLIO_ID,
         as_of_date=AS_OF_DATE,
     )
@@ -144,8 +145,38 @@ def test_ingests_core_high_cash_candidate_with_generated_source_key() -> None:
     )
     assert source.seen_request is not None
     assert source.seen_request.portfolio_id == PORTFOLIO_ID
+    assert source.seen_request.tenant_id == "tenant-a"
     assert source.seen_request.correlation_id == "corr-source-ingestion"
     assert source.seen_request.trace_id == "trace-source-ingestion"
+    assert result.signal_result.persistence.record.candidate.access_scope is not None
+    assert result.signal_result.persistence.record.candidate.access_scope.tenant_id == "tenant-a"
+
+
+def test_generated_source_ingestion_identity_is_isolated_by_tenant() -> None:
+    repository = InMemoryIdeaRepository()
+    source = RecordingCoreSource(evidence=core_evidence())
+
+    tenant_a = ingest_high_cash_signal_from_core(
+        command(),
+        core_source=source,
+        repository=repository,
+    )
+    tenant_b = ingest_high_cash_signal_from_core(
+        replace(command(), tenant_id="tenant-b"),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert tenant_a.decision is HighCashSourceIngestionDecision.ACCEPTED
+    assert tenant_b.decision is HighCashSourceIngestionDecision.ACCEPTED
+    assert tenant_a.idempotency_key != tenant_b.idempotency_key
+    assert tenant_a.signal_result.evaluation.candidate is not None
+    assert tenant_b.signal_result.evaluation.candidate is not None
+    assert (
+        tenant_a.signal_result.evaluation.candidate.candidate_id
+        != tenant_b.signal_result.evaluation.candidate.candidate_id
+    )
+    assert len(repository.snapshot().candidate_records) == 2
 
 
 def test_source_ingestion_blocks_temporally_mismatched_adapter_evidence_without_persistence() -> (

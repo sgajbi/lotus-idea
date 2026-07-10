@@ -81,7 +81,11 @@ def test_evaluate_low_income_signal_from_core_uses_source_evidence() -> None:
 
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert result.reason_codes == (ReasonCode.INCOME_ATTENTION, ReasonCode.REVIEW_REQUIRED)
+    assert result.candidate is not None
+    assert result.candidate.access_scope is not None
+    assert result.candidate.access_scope.tenant_id == "tenant-a"
     assert core_source.requests[0].portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert core_source.requests[0].tenant_id == "tenant-a"
     assert core_source.requests[0].horizon_days == 30
     assert core_source.requests[0].correlation_id == "corr-core"
 

@@ -333,6 +333,62 @@ def test_high_cash_source_api_rejects_ambiguous_tenant_context(
     assert runtime_called is False
 
 
+def test_high_cash_source_api_rejects_untrusted_tenant_override_before_runtime(
+    monkeypatch: Any,
+) -> None:
+    runtime_called = False
+
+    def fail_if_called() -> CoreHighCashSourceRuntime:
+        nonlocal runtime_called
+        runtime_called = True
+        raise AssertionError("source runtime must not be built for untrusted caller context")
+
+    monkeypatch.setenv("LOTUS_IDEA_RUNTIME_PROFILE", "production")
+    monkeypatch.setenv(TRUSTED_CALLER_CONTEXT_TOKEN_ENV, "gateway-secret")
+    monkeypatch.setattr(
+        idea_signals_api,
+        "_build_core_high_cash_source_runtime_from_environment",
+        fail_if_called,
+    )
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json=high_cash_source_payload(),
+        headers=source_evaluation_headers(tenant_ids="tenant-attacker"),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["code"] == "permission_denied"
+    assert runtime_called is False
+    assert "tenant-attacker" not in response.text
+
+
+def test_high_cash_source_api_rejects_body_tenant_override_before_runtime(
+    monkeypatch: Any,
+) -> None:
+    runtime_called = False
+
+    def fail_if_called() -> CoreHighCashSourceRuntime:
+        nonlocal runtime_called
+        runtime_called = True
+        raise AssertionError("source runtime must not be built for a body tenant override")
+
+    monkeypatch.setattr(
+        idea_signals_api,
+        "_build_core_high_cash_source_runtime_from_environment",
+        fail_if_called,
+    )
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json={**high_cash_source_payload(), "tenantId": "tenant-attacker"},
+        headers=source_evaluation_headers(tenant_ids="tenant-a"),
+    )
+
+    assert response.status_code == 400
+    assert response.json()["code"] == "invalid_request"
+    assert runtime_called is False
+    assert "tenant-attacker" not in response.text
+
+
 def test_high_cash_source_api_blocks_when_core_runtime_is_not_configured(
     monkeypatch: Any,
 ) -> None:
@@ -398,7 +454,7 @@ def test_high_cash_source_api_returns_blocked_posture_for_core_unavailable(
     assert PORTFOLIO_ID not in response.text
 
 
-def test_high_cash_source_api_emits_bounded_operation_events(
+def test_high_cash_source_api_emits_bounded_tenant_scope_provenance(
     monkeypatch: Any,
 ) -> None:
     source = RecordingCoreSource()
@@ -408,7 +464,7 @@ def test_high_cash_source_api_emits_bounded_operation_events(
         core_query_base_url_configured=True,
         core_query_control_plane_base_url_configured=True,
     )
-    events: list[tuple[str, str, str, bool, str | None]] = []
+    events: list[tuple[str, str, str, bool, str | None, dict[str, str]]] = []
 
     def capture_event(*args: Any, **kwargs: Any) -> None:
         events.append(
@@ -418,6 +474,7 @@ def test_high_cash_source_api_emits_bounded_operation_events(
                 kwargs["source_authority"],
                 kwargs.get("durable_storage_backed", False),
                 kwargs.get("error_code"),
+                kwargs.get("attributes", {}),
             )
         )
 
@@ -436,7 +493,16 @@ def test_high_cash_source_api_emits_bounded_operation_events(
     )
 
     assert response.status_code == 200
-    assert events == [("signal_evaluation", "accepted", "lotus-core", False, None)]
+    assert events == [
+        (
+            "signal_evaluation",
+            "accepted",
+            "lotus-core",
+            False,
+            None,
+            {"tenant_scope_provenance": "trusted_single_tenant"},
+        )
+    ]
 
 
 def test_high_cash_source_api_suppresses_runtime_close_failure(

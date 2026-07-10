@@ -342,7 +342,9 @@ BOND_MATURITY_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "summary": "Evaluate a bond maturity idea signal from Core",
     "description": (
         "Fetches source-owned Core PortfolioMaturitySummary and HoldingsAsOf evidence "
-        "through the configured Core source adapter, then evaluates deterministic "
+        "through the configured Core source adapter after resolving exactly one tenant "
+        "from trusted caller context and retaining that tenant in candidate access scope. "
+        "Request-body tenant overrides are rejected. It then evaluates deterministic "
         "bond-maturity review posture. The endpoint does not persist candidates, own "
         "maturity schedules, recommend replacement products, calculate reinvestment "
         "advice, approve planning suitability, certify live source support, create "

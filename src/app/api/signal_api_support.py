@@ -49,6 +49,10 @@ CommandT = TypeVar("CommandT")
 ResponseT = TypeVar("ResponseT")
 RuntimeT = TypeVar("RuntimeT", bound=_RuntimeWithClose)
 
+TENANT_SCOPE_PROVENANCE_ATTRIBUTE = "tenant_scope_provenance"
+TRUSTED_SINGLE_TENANT_PROVENANCE = "trusted_single_tenant"
+MISSING_OR_AMBIGUOUS_TENANT_PROVENANCE = "missing_or_ambiguous"
+
 
 SignalRouteMetadata = RouteMetadata
 
@@ -241,6 +245,7 @@ def evaluate_source_signal(
         return permission_problem
 
     tenant_id: str | None = None
+    event_attributes: dict[str, str] | None = None
     if require_tenant_context:
         tenant_id, tenant_problem = required_tenant_context_or_problem(
             caller=caller,
@@ -249,6 +254,9 @@ def evaluate_source_signal(
         )
         if tenant_problem is not None:
             return tenant_problem
+        event_attributes = {
+            TENANT_SCOPE_PROVENANCE_ATTRIBUTE: TRUSTED_SINGLE_TENANT_PROVENANCE,
+        }
 
     runtime_or_blocker = runtime_factory()
     if is_runtime_blocked(runtime_or_blocker):
@@ -258,6 +266,7 @@ def evaluate_source_signal(
             OperationOutcome.BLOCKED,
             source_authority=source_authority,
             error_code=blocker.code,
+            attributes=event_attributes,
         )
         return problem_response(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -273,6 +282,7 @@ def evaluate_source_signal(
             result=result,
             source_authority=source_authority,
             emit_event=emit_event,
+            attributes=event_attributes,
         )
         return response_factory(result, source_authority=source_authority)
     finally:
@@ -360,6 +370,9 @@ def required_tenant_context_or_problem(
         OperationOutcome.PERMISSION_DENIED,
         source_authority=source_authority,
         error_code="tenant_context_required",
+        attributes={
+            TENANT_SCOPE_PROVENANCE_ATTRIBUTE: MISSING_OR_AMBIGUOUS_TENANT_PROVENANCE,
+        },
     )
     return None, problem_response(
         status_code=status.HTTP_403_FORBIDDEN,
@@ -402,11 +415,15 @@ def emit_signal_evaluation_event(
     result: SignalEvaluationResult,
     source_authority: str,
     emit_event: Callable[..., None],
+    attributes: dict[str, str] | None = None,
 ) -> None:
+    event_fields: dict[str, object] = {"source_authority": source_authority}
+    if attributes is not None:
+        event_fields["attributes"] = attributes
     emit_event(
         IdeaOperation.SIGNAL_EVALUATION,
         operation_outcome_from_signal_evaluation(result),
-        source_authority=source_authority,
+        **event_fields,
     )
 
 

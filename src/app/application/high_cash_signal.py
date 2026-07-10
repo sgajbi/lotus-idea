@@ -18,7 +18,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_high_cash_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import tenant_portfolio_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
     CoreHighCashEvidence,
@@ -133,7 +133,10 @@ def evaluate_high_cash_signal_from_core(
                 cashflow_projection_ref=None,
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=portfolio_only_scope(command.portfolio_id),
+                access_scope=tenant_portfolio_scope(
+                    tenant_id=command.tenant_id,
+                    portfolio_id=command.portfolio_id,
+                ),
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -203,7 +206,10 @@ def evaluate_and_persist_high_cash_signal_from_core(
                 cashflow_projection_ref=None,
                 evaluated_at_utc=command.evaluation.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=portfolio_only_scope(command.evaluation.portfolio_id),
+                access_scope=tenant_portfolio_scope(
+                    tenant_id=command.evaluation.tenant_id,
+                    portfolio_id=command.evaluation.portfolio_id,
+                ),
                 duplicate_of_candidate_id=command.evaluation.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -265,7 +271,10 @@ def _evaluate_high_cash_core_evidence(
             cashflow_projection_ref=evidence.cashflow_projection_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=tenant_portfolio_scope(
+                tenant_id=command.tenant_id,
+                portfolio_id=command.portfolio_id,
+            ),
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,
@@ -295,6 +304,7 @@ def _idempotency_payload_for_core_high_cash(
         "evaluated_at_utc": command.evaluated_at_utc.isoformat(),
         "family": OpportunityFamily.HIGH_CASH.value,
         "portfolio_id": command.portfolio_id,
+        "tenant_id": command.tenant_id,
         "policy_version": policy.policy_version,
         "source_signal_ids": (
             list(evaluation.candidate.source_signal_ids) if evaluation.candidate is not None else []

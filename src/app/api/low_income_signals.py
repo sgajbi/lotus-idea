@@ -341,7 +341,9 @@ LOW_INCOME_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "summary": "Evaluate a low-income liquidity shortfall idea signal from Core",
     "description": (
         "Fetches source-owned Core cash movement and cashflow projection evidence "
-        "through the configured Core source adapter, then evaluates deterministic "
+        "through the configured Core source adapter after resolving exactly one tenant "
+        "from trusted caller context and retaining that tenant in candidate access scope. "
+        "Request-body tenant overrides are rejected. It then evaluates deterministic "
         "low-income / liquidity-shortfall candidate posture. The endpoint does not "
         "persist candidates, infer client income needs, provide funding advice, issue "
         "treasury instructions, approve planning suitability, certify live source "

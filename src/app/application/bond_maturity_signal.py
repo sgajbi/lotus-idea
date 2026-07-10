@@ -15,7 +15,7 @@ from app.domain import (
     UnsupportedEvidenceReason,
     evaluate_bond_maturity_signal,
 )
-from app.application.access_scope import portfolio_only_scope
+from app.application.access_scope import tenant_portfolio_scope
 from app.domain.access_scope import ReviewAccessScope
 from app.ports.core_sources import (
     CoreBondMaturityEvidence,
@@ -109,7 +109,10 @@ def evaluate_bond_maturity_signal_from_core(
                 maturity_fact_ref=None,
                 evaluated_at_utc=command.evaluated_at_utc,
                 entitlement_allowed=False,
-                access_scope=portfolio_only_scope(command.portfolio_id),
+                access_scope=tenant_portfolio_scope(
+                    tenant_id=command.tenant_id,
+                    portfolio_id=command.portfolio_id,
+                ),
                 duplicate_of_candidate_id=command.duplicate_of_candidate_id,
             ),
             policy=policy,
@@ -142,7 +145,10 @@ def _evaluate_bond_maturity_core_evidence(
             maturity_fact_ref=evidence.maturity_fact_ref,
             evaluated_at_utc=command.evaluated_at_utc,
             entitlement_allowed=evidence.entitlement_allowed,
-            access_scope=portfolio_only_scope(command.portfolio_id),
+            access_scope=tenant_portfolio_scope(
+                tenant_id=command.tenant_id,
+                portfolio_id=command.portfolio_id,
+            ),
             duplicate_of_candidate_id=command.duplicate_of_candidate_id,
         ),
         policy=policy,

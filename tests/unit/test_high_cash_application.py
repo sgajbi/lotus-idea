@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from app.application.high_cash_signal import (
     EvaluateAndPersistHighCashFromCoreCommand,
@@ -141,8 +141,30 @@ def test_application_fetches_core_source_evidence_before_high_cash_evaluation() 
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert source.seen_request is not None
     assert source.seen_request.portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert source.seen_request.tenant_id == "tenant-a"
     assert source.seen_request.correlation_id == "corr-idea"
     assert source.seen_request.trace_id == "trace-idea"
+    assert result.candidate is not None
+    assert result.candidate.access_scope is not None
+    assert result.candidate.access_scope.tenant_id == "tenant-a"
+
+
+def test_core_backed_high_cash_candidate_identity_is_isolated_by_tenant() -> None:
+    source = RecordingCoreSource(evidence=current_core_evidence())
+
+    tenant_a = evaluate_high_cash_signal_from_core(from_core_command(), core_source=source)
+    tenant_b = evaluate_high_cash_signal_from_core(
+        replace(from_core_command(), tenant_id="tenant-b"),
+        core_source=source,
+    )
+
+    assert tenant_a.candidate is not None
+    assert tenant_b.candidate is not None
+    assert tenant_a.candidate.candidate_id != tenant_b.candidate.candidate_id
+    assert tenant_a.candidate.access_scope is not None
+    assert tenant_b.candidate.access_scope is not None
+    assert tenant_a.candidate.access_scope.tenant_id == "tenant-a"
+    assert tenant_b.candidate.access_scope.tenant_id == "tenant-b"
 
 
 def test_application_blocks_source_backed_flow_when_core_denies_entitlement() -> None:

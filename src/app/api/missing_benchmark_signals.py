@@ -341,7 +341,9 @@ MISSING_BENCHMARK_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "summary": "Evaluate a missing benchmark idea signal from Core",
     "description": (
         "Fetches source-owned Core benchmark-assignment evidence through the configured "
-        "Core source adapter, then evaluates deterministic missing-benchmark review "
+        "Core source adapter after resolving exactly one tenant from trusted caller context "
+        "and retaining that tenant in candidate access scope. Request-body tenant overrides "
+        "are rejected. It then evaluates deterministic missing-benchmark review "
         "posture. The endpoint does not persist candidates, assign benchmarks, calculate "
         "benchmark or portfolio performance, certify benchmark methodology, certify live "
         "source support, create Gateway/Workbench support, publish client communication, "

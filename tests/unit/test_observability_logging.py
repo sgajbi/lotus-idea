@@ -175,6 +175,12 @@ def test_operation_event_rejects_sensitive_attributes() -> None:
             outcome=OperationOutcome.PERMISSION_DENIED,
             attributes={"correlation_id": "corr-as-attribute"},
         )
+    with pytest.raises(ValueError, match="sensitive keys"):
+        OperationEvent(
+            operation=IdeaOperation.SIGNAL_EVALUATION,
+            outcome=OperationOutcome.ACCEPTED,
+            attributes={"tenant_id": "tenant-private-bank-sg"},
+        )
     with pytest.raises(ValueError, match="trace_id must be a product-safe"):
         OperationEvent(
             operation=IdeaOperation.CONVERSION_INTENT,

@@ -477,7 +477,10 @@ HIGH_CASH_EVALUATE_FROM_SOURCE_ROUTE: RouteMetadata = {
     "summary": "Evaluate a high-cash idea signal from Core",
     "description": (
         "Fetches source-owned high-cash evidence through the configured Core source "
-        "adapter, then applies the same exact-date, generated-not-after-evaluation, and "
+        "adapter after resolving exactly one tenant from trusted caller context. The resolved "
+        "tenant is propagated to Core and retained in candidate access scope; request-body "
+        "tenant overrides are rejected. The endpoint then applies the same exact-date, "
+        "generated-not-after-evaluation, and "
         "content-hash correction identity contract as caller-supplied evidence. The endpoint "
         "does not persist candidates, calculate cash weight locally, certify live source "
         "support, create Gateway/Workbench support, or promote a supported business feature."

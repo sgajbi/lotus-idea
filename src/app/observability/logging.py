@@ -41,6 +41,8 @@ FORBIDDEN_OPERATION_FIELD_KEYS = frozenset(
         "response_body",
         "trace_id",
         "transaction_id",
+        "tenant_id",
+        "tenant_ids",
     }
 )
 REQUEST_CORRELATION_LOG_FIELD_KEYS = frozenset({"correlation_id", "trace_id"})

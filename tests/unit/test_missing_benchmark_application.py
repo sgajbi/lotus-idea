@@ -83,8 +83,11 @@ def test_evaluate_missing_benchmark_signal_from_core_uses_assignment_evidence() 
 
     assert result.outcome is SignalEvaluationOutcome.CANDIDATE_CREATED
     assert result.candidate is not None
+    assert result.candidate.access_scope is not None
+    assert result.candidate.access_scope.tenant_id == "tenant-a"
     assert result.reason_codes == (ReasonCode.MISSING_BENCHMARK, ReasonCode.REVIEW_REQUIRED)
     assert core_source.requests[0].portfolio_id == "PB_SG_GLOBAL_BAL_001"
+    assert core_source.requests[0].tenant_id == "tenant-a"
     assert core_source.requests[0].reporting_currency == "SGD"
     assert core_source.requests[0].correlation_id == "corr-core"
 

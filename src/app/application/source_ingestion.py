@@ -141,6 +141,7 @@ def ingest_high_cash_signal_from_core(
         _require_text(command.idempotency_key, "idempotency_key")
 
     idempotency_key = command.idempotency_key or default_high_cash_source_ingestion_key(
+        tenant_id=command.tenant_id,
         portfolio_id=command.portfolio_id,
         as_of_date=command.as_of_date,
     )
@@ -198,9 +199,17 @@ def run_high_cash_source_ingestion_batch(
     return HighCashSourceIngestionBatchResult(item_results=item_results)
 
 
-def default_high_cash_source_ingestion_key(*, portfolio_id: str, as_of_date: date) -> str:
+def default_high_cash_source_ingestion_key(
+    *,
+    tenant_id: str,
+    portfolio_id: str,
+    as_of_date: date,
+) -> str:
+    _require_text(tenant_id, "tenant_id")
     _require_text(portfolio_id, "portfolio_id")
-    return f"signal-ingestion:high-cash:lotus-core:{portfolio_id}:{as_of_date.isoformat()}"
+    return (
+        f"signal-ingestion:high-cash:lotus-core:{tenant_id}:{portfolio_id}:{as_of_date.isoformat()}"
+    )
 
 
 def _source_ingestion_decision(
