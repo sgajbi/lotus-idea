@@ -128,6 +128,19 @@ from app.domain.outbox_delivery_state import (
     OutboxDeliveryDecision,
     OutboxDeliveryResult,
 )
+from app.domain.outbox_recovery import (
+    MAX_OUTBOX_RECOVERY_ATTEMPTS,
+    OUTBOX_RECOVERY_OWNER,
+    OutboxDeadLetterSummary,
+    OutboxRecoveryAuditRecord,
+    OutboxRecoveryClaimResult,
+    OutboxRecoveryDecision,
+    build_outbox_recovery_audit_record,
+    dead_letter_summary,
+    outbox_dead_letter_support_reference,
+    outbox_recovery_eligibility_blocker,
+    outbox_recovery_request_payload,
+)
 from app.domain.evidence_hashing import evidence_hash_for_candidate, evidence_hash_for_source_refs
 from app.domain.persistence import (
     CandidatePersistenceDecision,

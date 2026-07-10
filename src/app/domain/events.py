@@ -118,6 +118,11 @@ class OutboxEventRecord:
                 raise ValueError("leased outbox failure timing must include first and last failure")
             if self.next_attempt_at_utc is not None:
                 raise ValueError("leased outbox events cannot have next_attempt_at_utc")
+        elif self.status is OutboxEventStatus.PUBLISHED:
+            if (self.first_failed_at_utc is None) != (self.last_failed_at_utc is None):
+                raise ValueError("published outbox failure timing must include first and last failure")
+            if self.next_attempt_at_utc is not None:
+                raise ValueError("published outbox events cannot have next_attempt_at_utc")
         elif any(
             value is not None
             for value in (
@@ -205,9 +210,9 @@ def mark_outbox_event_published(
         event,
         status=OutboxEventStatus.PUBLISHED,
         published_at_utc=published_at_utc,
-        failure_reason=None,
-        first_failed_at_utc=None,
-        last_failed_at_utc=None,
+        failure_reason=event.failure_reason,
+        first_failed_at_utc=event.first_failed_at_utc,
+        last_failed_at_utc=event.last_failed_at_utc,
         next_attempt_at_utc=None,
         lease_owner=None,
         lease_attempt_id=None,
