@@ -981,6 +981,27 @@ This gate proves the internal invariant only. It does not promote review
 features, certify Gateway/Workbench behavior, validate the migration constraint
 against production data, or publish supported-feature truth.
 
+## Review Queue Snapshot Contract Gate
+
+`make review-queue-snapshot-contract-gate` protects the advisor queue temporal
+contract across application command, repository port, PostgreSQL adapter, SQL,
+API query, response metadata, and stable error codes. It requires candidate
+created-at filtering, opaque snapshot identity, continuation-token enforcement,
+and an adapter-side before/after fingerprint comparison.
+
+Behavioral proof is broader than the static gate:
+
+1. domain/application tests cover exact timestamp equality, future exclusion,
+   source-date non-reinterpretation, and stale continuation conflict,
+2. API tests cover missing, malformed, stale, and future-insert cases,
+3. fake PostgreSQL tests prove query parameter and fingerprint behavior,
+4. `make postgres-integration-gate` proves the same traversal semantics against
+   a real migrated PostgreSQL database.
+
+Passing this gate certifies the internal paging contract only. It does not
+certify Workbench behavior, data-product support, client publication, or a
+supported feature.
+
 CI warning policy:
 
 1. use current approved action versions,

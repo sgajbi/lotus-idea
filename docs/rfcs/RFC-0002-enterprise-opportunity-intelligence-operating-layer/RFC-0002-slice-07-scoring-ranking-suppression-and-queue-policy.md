@@ -106,24 +106,36 @@ Implemented on the Slice 07 foundation branch:
     count, and `LIMIT`/`OFFSET` bounds, and is guarded by migration contract
     and adapter tests.
 
+### Temporal Snapshot Contract
+
+GitHub issue `#332` closes the queue paging race without adding a queue service:
+
+| Concern | Governed behavior |
+| --- | --- |
+| Visibility boundary | `evaluatedAtUtc` includes candidates whose `createdAtUtc` is equal to or earlier than the evaluation instant and excludes later candidates. Source `asOfDate` and evidence `generatedAtUtc` remain source-authority facts; queue paging does not reinterpret them. |
+| Snapshot identity | Page metadata returns opaque `rqs1_*` identity bound to evaluation time, effective scope, scoring policy, snoozes, and the visible candidate-state fingerprint. It contains no database key, offset, portfolio id, or raw evidence. |
+| Continuation | `offset > 0` requires the page-1 `snapshotToken`. Missing and malformed tokens return stable `400` ProblemDetails. A valid token against changed visible state returns `409 review_queue_snapshot_conflict`. |
+| Concurrent change | PostgreSQL fingerprints before and after the bounded page query. Backdated inserts and lifecycle, suppression, score, or evidence mutations invalidate the snapshot; inserts created after the as-of boundary do not. |
+| Adapter parity | In-memory and PostgreSQL paths share token construction and conflict policy. Unit, API integration, and real PostgreSQL tests prove equality, future exclusion, stale conflict, and future-insert stability. |
+| Modularity | Snapshot policy is a pure domain module; PostgreSQL queue operations are a cohesive adapter mixin. No runtime split is justified by current workload, isolation, ownership, or operability evidence. |
+
 ## Remaining Gaps
 
 This slice is not complete as a supported product capability. The following
 work remains planned:
 
-1. persisted queue state and database-backed ranking projections,
-2. source-adapter input orchestration that creates and updates persisted
+1. source-adapter input orchestration that creates and updates persisted
    candidates before queue projection,
-3. broader Gateway contract beyond the first bounded read-only queue/detail
+2. broader Gateway contract beyond the first bounded read-only queue/detail
    routes,
-4. Workbench review queue UI proof and broader product-surface entitlement
+3. Workbench review queue UI proof and broader product-surface entitlement
    proof; the first bounded Gateway route now forwards platform caller-context
    scope headers and the internal queue API enforces them, but Workbench panel
    proof remains planned,
-5. data-product certification and trust telemetry for queue products,
-6. broader supportability metrics, dashboards, alerts, and runtime diagnostics
+4. data-product certification and trust telemetry for queue products,
+5. broader supportability metrics, dashboards, alerts, and runtime diagnostics
    for queue health beyond the certified aggregate readiness diagnostic,
-7. supported-feature promotion after live proof.
+6. supported-feature promotion after live proof.
 
 ## Validation
 

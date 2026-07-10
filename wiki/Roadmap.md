@@ -44,8 +44,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
 10. RFC-0002 Slice 07 partially implements internal deterministic scoring,
    priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, unscored-candidate exclusions,
-   repository-snapshot proof orchestration, and durable PostgreSQL
-   repository-side queue page projection,
+   candidate-created-at as-of visibility, opaque snapshot-bound continuation,
+   and durable PostgreSQL repository-side queue projection with before/after
+   conflict detection,
 11. RFC-0002 Slice 08 partially implements internal advisor review and feedback
    governance plus workflow persistence with fail-closed scope checks, review
     actions, safe audit events, source provenance, idempotency replay/conflict,
@@ -60,7 +61,9 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     `POST /api/v1/idea-signals/high-cash/evaluate-and-persist` API foundations
     over caller-supplied, source-owned Core evidence, plus certified internal
     lifecycle, AI explanation, advisor queue, review, feedback, conversion,
-    report evidence-pack, AI-explanation-readiness, and data-mesh-readiness endpoint foundations, with
+    report evidence-pack, AI-explanation-readiness, and data-mesh-readiness
+    endpoint foundations. Advisor queue OpenAPI now publishes required
+    continuation identity and stable snapshot conflict semantics, with
     bounded read-only Gateway publication for advisor queue and candidate
     detail,
 14. RFC-0002 Slice 12 partially implements internal conversion governance for

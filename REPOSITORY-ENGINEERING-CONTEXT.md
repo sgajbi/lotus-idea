@@ -345,6 +345,24 @@ PostgreSQL reads unless the provider is process-local, the request needs
 in-memory-only policy state such as snoozes, or the flow is still explicitly
 legacy.
 
+Advisor queue paging uses one temporal contract across both providers:
+
+1. `evaluatedAtUtc` is the inclusive candidate `createdAtUtc` boundary,
+2. source `asOfDate` and evidence `generatedAtUtc` retain source-authority
+   semantics and are not queue visibility fields,
+3. page zero issues opaque identity bound to evaluation time, effective scope,
+   ranking policy, snoozes, and visible candidate state,
+4. positive offsets require that identity and fail with a stable conflict when
+   visible state changes,
+5. PostgreSQL verifies the fingerprint around the bounded page query, while
+   later-created rows remain outside the historical snapshot,
+6. `make review-queue-snapshot-contract-gate` protects command/port/adapter/SQL/
+   API drift, and real PostgreSQL proof remains required for closure.
+
+Keep this as domain policy plus an internal adapter boundary. A separately
+deployed queue service requires measured scaling, failure-isolation, ownership,
+or operability evidence.
+
 For mutation workflows, preserve idempotency, audit, operation events, source
 authority, and supportability posture. Do not bypass repository mutation
 methods just to optimize a write path.

@@ -610,6 +610,26 @@ whole-store snapshot:
    certify Workbench support, data-product promotion, PM/compliance queue
    support, client-ready publication, or supported-feature promotion.
 
+GitHub issue `#332` further hardens that bounded read path with a real temporal
+snapshot contract:
+
+1. `evaluatedAtUtc` is an inclusive candidate-creation boundary in both
+   in-memory and PostgreSQL paths; readiness counts use the same boundary.
+2. Continuation pages require opaque identity bound to evaluation time, scope,
+   ranking policy, and visible candidate state. Stable 400/409 ProblemDetails
+   prevent consumers from silently skipping or duplicating work.
+3. PostgreSQL compares fingerprints around the page query, so an in-flight
+   state change fails closed. Later-created candidates are excluded and do not
+   invalidate a historical traversal.
+4. `make review-queue-snapshot-contract-gate` blocks future command, port,
+   adapter, SQL, API, response-model, or error-code drift.
+5. Focused in-memory/fake-adapter tests and a real PostgreSQL runtime test prove
+   exact-boundary inclusion, source-date non-reinterpretation, backdated insert
+   conflict, and future-insert stability.
+6. The change improves design modularity through a pure domain policy and
+   bounded PostgreSQL mixin. There is no separate queue process because no
+   scaling, isolation, ownership, or operability evidence justifies one.
+
 This slice also applies the same bounded durable-read pattern to the outbox
 delivery readiness path after issue review showed operator readiness was still
 counting outbox state through whole-store repository snapshots:

@@ -101,8 +101,11 @@ Current RFC-0002 implementation-start baseline:
 8. Slice 07 partially implements internal deterministic scoring, score reason
    codes, priority buckets, stable queue projection, snooze, suppression,
    deduplication, expiry, unsupported-evidence, and unscored-candidate
-   exclusions plus a certified internal advisor queue API foundation without
-   persisted queue state, Gateway, Workbench, or supported-feature promotion.
+   exclusions plus a certified internal advisor queue API foundation. Queue
+   traversal now uses candidate-created-at as-of visibility and opaque
+   snapshot-bound continuation tokens with real PostgreSQL conflict proof.
+   Gateway read-only publication exists, but Workbench product proof,
+   data-product certification, and supported-feature promotion remain blocked.
 9. Slice 08 partially implements internal advisor review and feedback
    governance with fail-closed scope checks, review actions, safe audit events,
    source provenance, queue projection interaction, repository-backed
@@ -123,7 +126,8 @@ Current RFC-0002 implementation-start baseline:
    high-cash evaluation, high-cash evaluate-and-persist, candidate lifecycle
    transitions, source-safe candidate detail, candidate evidence replay,
    AI explanation evaluation with `invalid_ai_workflow_pack` request guarding,
-   advisor queues, review actions, feedback,
+   advisor queues with truthful as-of/snapshot paging and stable 400/409
+   ProblemDetails, review actions, feedback,
    conversion intent, conversion outcome, report evidence-pack request,
    AI-explanation-readiness diagnostics, data-mesh-readiness diagnostics,
    runtime trust telemetry preview/snapshot diagnostics,

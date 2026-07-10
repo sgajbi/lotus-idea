@@ -447,7 +447,13 @@ filters, applies platform caller-context entitlement scope when provided, and
 returns ranked items plus exclusions through bounded `limit`/`offset` paging
 with default 25 and max 100. Durable PostgreSQL providers use a repository-side
 candidate projection with expression-index-backed tenant/book/portfolio/client
-scope predicates instead of whole-store snapshot hydration. This remains a
+scope predicates instead of whole-store snapshot hydration. `evaluatedAtUtc`
+is the inclusive candidate-created-at boundary, while source as-of and evidence
+generation dates retain their source-authority meaning. Page metadata carries
+opaque identity bound to evaluation time, scope, ranking policy, and visible
+candidate state; continuation offsets require it and changed state fails with
+a stable snapshot conflict. PostgreSQL verifies the fingerprint before and
+after each page query. This remains a
 bounded foundation API rather than a production queue-store claim.
 `lotus-gateway` publishes this as a
 bounded read-only route at `GET /api/v1/ideas/review-queues/advisor`, forwards

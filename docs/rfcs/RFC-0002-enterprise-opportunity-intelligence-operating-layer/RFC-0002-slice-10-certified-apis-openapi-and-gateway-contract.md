@@ -327,8 +327,13 @@ timezone-aware `evaluatedAtUtc` query parameter, accepts optional
 tenant/book/portfolio/client scope filters, applies platform caller-context
 entitlement scope headers automatically when present, rejects query scopes
 outside caller entitlements fail-closed, excludes persisted candidates outside
-the effective scope with `access_scope_mismatch`, and returns product-safe
-Problem Details for permission or validation failures.
+the effective scope with `access_scope_mismatch`, and uses candidate
+`createdAtUtc` as the inclusive as-of visibility boundary. Page metadata
+returns an opaque `snapshotToken`; continuation offsets require that token,
+while malformed tokens return `400 invalid_review_queue_snapshot_token` and
+changed visible queue state returns `409 review_queue_snapshot_conflict`.
+Source business dates and evidence generation timestamps remain governed by
+their source contracts rather than being reinterpreted as queue creation time.
 
 The candidate detail endpoint is permissioned by
 advisor/operator role plus `idea.candidate.detail.read` capability. It returns
