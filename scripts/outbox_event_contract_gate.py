@@ -111,6 +111,7 @@ def validate_outbox_event_contract(*, contract_path: Path = CONTRACT_PATH) -> li
     _validate_payload_safety(payload, errors)
     _validate_source_of_truth(payload, errors)
     _validate_source_code_alignment(errors)
+    _validate_lineage_implementation_alignment(errors)
     _validate_migration_alignment(errors)
     validate_forbidden_contract_text(payload, errors, FORBIDDEN_CONTRACT_TEXT)
     return errors
@@ -273,6 +274,90 @@ def _validate_migration_alignment(errors: list[str]) -> None:
         errors.append("migration outbox aggregate_type check missing")
     if f"schema_version = '{OUTBOX_EVENT_SCHEMA_VERSION}'" not in migration_text:
         errors.append("migration outbox schema_version check missing")
+
+
+def _validate_lineage_implementation_alignment(errors: list[str]) -> None:
+    source_requirements = {
+        "src/app/domain/events.py": (
+            "class EventLineageContext",
+            "class EventLineageOrigin",
+            "trace_id: str",
+            "lineage_origin: EventLineageOrigin",
+        ),
+        "src/app/domain/persistence.py": (
+            "event_lineage: EventLineageContext | None",
+            "lineage=event_lineage",
+        ),
+        "src/app/ports/idea_repository.py": ("EventLineageContext",),
+        "src/app/infrastructure/postgres_outbox_writes.py": (
+            "event.trace_id",
+            "event.lineage_origin.value",
+        ),
+        "src/app/infrastructure/postgres_outbox_delivery.py": (
+            'read_row_value(row, "trace_id")',
+            'read_row_value(row, "lineage_origin")',
+        ),
+        "migrations/007_outbox_event_lineage.sql": (
+            "ck_idea_outbox_event_lineage_identifiers",
+            "ck_idea_outbox_event_causation_origin",
+            "ALTER COLUMN trace_id SET NOT NULL",
+        ),
+    }
+    for relative_path, fragments in source_requirements.items():
+        _require_source_fragments(relative_path, fragments, errors)
+
+    publisher_path = "src/app/infrastructure/outbox_publisher.py"
+    publisher_text = _read_source_text(publisher_path, errors)
+    if publisher_text is not None:
+        if "trace_id=event.trace_id" not in publisher_text:
+            errors.append("outbox publisher must propagate event.trace_id as transport trace")
+        if "trace_id=event.causation_id" in publisher_text:
+            errors.append("outbox publisher must not substitute causation_id for trace_id")
+
+    api_mapper_counts = {
+        "src/app/api/idea_signals.py": 1,
+        "src/app/api/candidate_lifecycle.py": 1,
+        "src/app/api/review_workflow.py": 2,
+        "src/app/api/conversion_governance.py": 2,
+        "src/app/api/report_evidence.py": 1,
+    }
+    for relative_path, expected_count in api_mapper_counts.items():
+        source_text = _read_source_text(relative_path, errors)
+        if source_text is None:
+            continue
+        if source_text.count("event_lineage_from_request(") < expected_count:
+            errors.append(
+                f"{relative_path} must map lineage for {expected_count} mutation route(s)"
+            )
+        if "EventCausationHeader" not in source_text:
+            errors.append(f"{relative_path} must expose the governed causation header")
+
+    persistence_text = _read_source_text("src/app/domain/persistence.py", errors)
+    if persistence_text is not None and persistence_text.count(
+        "event_lineage=event_lineage"
+    ) < len(REQUIRED_EVENT_TYPES):
+        errors.append("domain persistence must pass lineage to every outbox event family")
+
+
+def _require_source_fragments(
+    relative_path: str,
+    fragments: Sequence[str],
+    errors: list[str],
+) -> None:
+    source_text = _read_source_text(relative_path, errors)
+    if source_text is None:
+        return
+    for fragment in fragments:
+        if fragment not in source_text:
+            errors.append(f"{relative_path} missing lineage contract fragment: {fragment}")
+
+
+def _read_source_text(relative_path: str, errors: list[str]) -> str | None:
+    try:
+        return (ROOT / relative_path).read_text(encoding="utf-8")
+    except OSError as exc:
+        errors.append(f"lineage source alignment read failed for {relative_path}: {exc}")
+        return None
 
 
 def main() -> int:

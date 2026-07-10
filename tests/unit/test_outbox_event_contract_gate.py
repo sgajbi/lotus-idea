@@ -58,6 +58,25 @@ def test_outbox_event_contract_gate_rejects_forbidden_contract_text(tmp_path: Pa
     )
 
 
+def test_outbox_event_contract_gate_rejects_trace_causation_substitution(
+    tmp_path: Path,
+) -> None:
+    module = _load_contract_gate_script()
+    publisher_path = tmp_path / "src" / "app" / "infrastructure" / "outbox_publisher.py"
+    publisher_path.parent.mkdir(parents=True)
+    publisher_path.write_text("trace_id=event.causation_id\n", encoding="utf-8")
+    original_root = module.ROOT
+    module.ROOT = tmp_path
+    try:
+        errors: list[str] = []
+        module._validate_lineage_implementation_alignment(errors)
+    finally:
+        module.ROOT = original_root
+
+    assert "outbox publisher must propagate event.trace_id as transport trace" in errors
+    assert "outbox publisher must not substitute causation_id for trace_id" in errors
+
+
 def _load_contract_gate_script() -> ModuleType:
     script_path = ROOT / "scripts" / "outbox_event_contract_gate.py"
     spec = importlib.util.spec_from_file_location("outbox_event_contract_gate", script_path)
