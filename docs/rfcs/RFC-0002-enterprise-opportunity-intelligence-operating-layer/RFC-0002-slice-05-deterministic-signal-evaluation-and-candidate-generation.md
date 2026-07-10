@@ -1003,6 +1003,21 @@ Current source-ingestion orchestration validation:
    blocked-source exit behavior. Live restart/recovery evidence is still a
    separate certification blocker.
 
+8. The clean-tree canonical runtime also passed
+   `make canonical-signal-api-proof` for high-cash, concentration,
+   underperformance, and missing-benchmark `evaluate-from-source` routes. The
+   proof exercised the route, DTO, application, domain, port, and adapter path;
+   high-cash and missing-benchmark returned deterministic `not_eligible`
+   outcomes while concentration and underperformance returned deterministic
+   `candidate_created` outcomes. No candidate was persisted by this proof and
+   no supported feature was promoted.
+
+9. `docker-compose.yml` now wires canonical Core, Risk, Performance, Advise,
+   and Manage source URLs through `host.docker.internal` defaults, while
+   preserving environment overrides for other deployments. The canonical
+   source-worker manifest is explicit and remains opt-in under the `worker`
+   Compose profile.
+
 Current Core cash-weight adapter validation:
 
 1. `.venv\Scripts\python.exe -m pytest tests\unit\test_lotus_core_sources.py -q`

@@ -60,6 +60,27 @@ It includes source revision, dirty-tree posture, correlation/trace IDs,
 bounded per-proof observations, and explicit non-proof boundaries. It does not
 copy child process stdout/stderr.
 
+## Layered API Proof
+
+Run the route-level proof after the Idea container has source-runtime URLs and
+the canonical stack is ready:
+
+```powershell
+make canonical-signal-api-proof `
+  CANONICAL_OPPORTUNITY_PORTFOLIO_ID=PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_AS_OF_DATE=2026-04-10 `
+  CANONICAL_OPPORTUNITY_GENERATED_AT_UTC=2026-07-10T00:00:00Z `
+  CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC=2026-07-10T00:00:00Z `
+  CANONICAL_OPPORTUNITY_CORRELATION_ID=corr-api-slice05-20260710 `
+  CANONICAL_OPPORTUNITY_TRACE_ID=trace-api-slice05-20260710
+```
+
+This exercises the external-consumer path through the FastAPI route, request
+DTO mapper, application use case, domain policy, source port, and configured
+infrastructure adapter for high-cash, concentration, underperformance, and
+missing-benchmark evaluation. A successful HTTP contract result is not a
+supported-feature claim.
+
 ## Current Boundary
 
 The runner currently certifies these source-owned proof families:

@@ -35,6 +35,26 @@ It records source revision, dirty-tree posture, correlation/trace IDs, bounded
 per-proof observations, and non-proof boundaries. Raw child stdout/stderr is
 not copied into the artifact.
 
+## Layered API Proof
+
+After the Idea container has source-runtime URLs and the canonical stack is
+ready, run:
+
+```powershell
+make canonical-signal-api-proof `
+  CANONICAL_OPPORTUNITY_PORTFOLIO_ID=PB_SG_GLOBAL_BAL_001 `
+  CANONICAL_OPPORTUNITY_AS_OF_DATE=2026-04-10 `
+  CANONICAL_OPPORTUNITY_GENERATED_AT_UTC=2026-07-10T00:00:00Z `
+  CANONICAL_OPPORTUNITY_EVALUATED_AT_UTC=2026-07-10T00:00:00Z `
+  CANONICAL_OPPORTUNITY_CORRELATION_ID=corr-api-slice05-20260710 `
+  CANONICAL_OPPORTUNITY_TRACE_ID=trace-api-slice05-20260710
+```
+
+This proves the route, DTO mapper, application use case, domain policy, source
+port, and infrastructure adapter path for high-cash, concentration,
+underperformance, and missing-benchmark evaluation. It records only bounded
+response observations and never persists raw responses.
+
 ## Exit Codes
 
 | Code | Meaning |
