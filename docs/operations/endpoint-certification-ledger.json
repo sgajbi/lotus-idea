@@ -1098,25 +1098,28 @@
       "path": "/api/v1/conversion-intents/{conversionIntentId}/outcomes",
       "certification_status": "certified",
       "owner": "lotus-idea owners",
-      "purpose": "Record an internal source-authorized downstream conversion outcome against a previously recorded idea conversion intent.",
-      "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 12 API foundation when an internal caller has idea.conversion.outcome.record capability, an Idempotency-Key, and source-system evidence that the downstream owner accepted, rejected, failed, or completed the requested realization.",
+      "purpose": "Record an internal source-authorized, source-versioned downstream conversion outcome against a previously recorded idea conversion intent and derive current posture only from a valid append-only history.",
+      "when_to_use": "Use as the RFC-0002 Slice 10 and Slice 12 API foundation when an internal caller has idea.conversion.outcome.record capability, an Idempotency-Key, and source-system evidence with a stable conversionOutcomeId and contiguous sourceEventVersion for an accepted, rejected, failed, requested, completed, or linked correction fact.",
       "when_not_to_use": "Do not use as durable database persistence proof, downstream workflow execution proof, suitability approval, execution authority, client-communication authority, Gateway contract, Workbench product proof, data-product certification proof, or supported-feature promotion.",
       "request_examples": [
-        "{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"downstreamReference\":\"report-evidence-pack-001\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\"}"
+        "{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"sourceEventVersion\":1,\"downstreamReference\":\"report-evidence-pack-001\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\"}"
       ],
       "response_examples": [
-        "{\"conversionOutcome\":{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"downstreamReference\":\"report-evidence-pack-001\",\"boundary\":\"downstream_realization_required\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\",\"grantsExecutionAuthority\":false,\"grantsClientCommunicationAuthority\":false,\"grantsSuitabilityAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
+        "{\"conversionOutcome\":{\"conversionOutcomeId\":\"conversion-report-outcome-001\",\"conversionIntentId\":\"conversion-report-001\",\"target\":\"report_evidence\",\"status\":\"accepted\",\"sourceSystem\":\"lotus-report\",\"sourceEventVersion\":1,\"downstreamReference\":\"report-evidence-pack-001\",\"supersedesConversionOutcomeId\":null,\"correctionReason\":null,\"boundary\":\"downstream_realization_required\",\"recordedAtUtc\":\"2026-06-21T10:20:00Z\",\"grantsExecutionAuthority\":false,\"grantsClientCommunicationAuthority\":false,\"grantsSuitabilityAuthority\":false},\"persistence\":{\"decision\":\"accepted\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}",
         "{\"conversionOutcome\":null,\"persistence\":{\"decision\":\"replayed\",\"candidateId\":\"idea_high_cash_8d57adbf52f7f5a7\",\"lifecycleStatus\":\"converted_to_report\",\"reviewPosture\":\"approved_for_conversion\",\"auditEventType\":\"idea.conversion.outcome_recorded\"},\"durableStorageBacked\":false,\"supportedFeaturePromoted\":false}"
       ],
       "error_examples": [
         "403 returns product-safe Problem Details when the caller lacks idea.conversion.outcome.record capability.",
         "404 returns product-safe Problem Details when the conversion intent is not found.",
-        "409 returns product-safe Problem Details for idempotency conflict or a source system that does not match the conversion target authority.",
+        "409 idempotency_conflict identifies transport-key reuse with a different payload; 409 conversion_outcome_conflict identifies changed source identity, competing version, invalid progression, or invalid correction without exposing stored source content.",
         "400 returns product-safe Problem Details when request validation fails or Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_records_source_authorized_result",
         "tests/integration/test_review_workflow_api.py::test_conversion_outcome_api_rejects_wrong_source_not_found_permission_and_replays",
+        "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_replays_identity_and_rejects_changed_source_fact",
+        "tests/integration/test_conversion_outcome_lifecycle_api.py::test_conversion_outcome_api_enforces_progression_and_append_only_correction",
+        "tests/integration/test_postgres_runtime_integration.py::test_postgres_runtime_serializes_conversion_outcome_identity_and_source_version",
         "tests/integration/test_api_operation_events.py::test_conversion_and_report_workflow_emit_operation_events"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."

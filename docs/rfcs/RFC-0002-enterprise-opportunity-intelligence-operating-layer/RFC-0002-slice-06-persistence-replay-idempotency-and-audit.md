@@ -552,3 +552,22 @@ state, producing deterministic replay or `review_identity_conflict` without a
 duplicate side effect or raw database error. Existing primary keys provide the
 schema authority, so no migration is required. The design remains an internal
 bounded module and does not promote Slice 6 or a supported feature.
+
+## Issue 326 Conversion Outcome Persistence Hardening
+
+Conversion outcomes now preserve `conversionOutcomeId` resource identity and a
+contiguous source-event version independently of `Idempotency-Key`. Equivalent
+content under a new transport key replays without outcome, audit, or outbox
+duplication. Changed identity, competing version, illegal transition, time
+regression, or invalid correction returns a typed conflict.
+
+Migration `006_conversion_outcome_lifecycle` adds source version, actor, and
+append-only correction fields plus a unique intent/version constraint. It
+copies every event in a contradictory legacy stream to
+`idea_conversion_outcome_quarantine` without deleting source history. Such a
+stream has no current posture and is excluded from readiness until reconciled.
+PostgreSQL claims outcome identity/version before side effects and retries one
+collision from fresh state. `make conversion-outcome-contract-gate` protects
+the layered policy, provider parity, migration, API examples, and architecture
+decision. The work remains internal design modularity and does not promote a
+supported feature or create a separately deployable service.

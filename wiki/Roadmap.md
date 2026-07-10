@@ -36,7 +36,8 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
    policy plus the first Core source-port and conservative HTTP adapter
    foundation,
 9. RFC-0002 Slice 06 partially implements internal persistence, replay,
-   transport idempotency, review/feedback resource identity, lifecycle audit
+   transport idempotency, review/feedback/conversion-outcome resource identity,
+   source-version lifecycle and legacy-history quarantine, lifecycle audit
    history, recovery primitives, and high-cash
    evaluate-and-persist orchestration plus the manifest-backed run-once
    source-ingestion worker CLI and check-only gate,
@@ -64,7 +65,8 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
     detail,
 14. RFC-0002 Slice 12 partially implements internal conversion governance for
     review-gated conversion intents, target source-authority mapping, downstream
-    outcome recording, no-authority conversion boundaries, and a certified
+    outcome history/current posture with append-only correction, no-authority
+    conversion boundaries, and a certified
     downstream realization readiness contract-plan diagnostic,
 15. RFC-0002 Slice 13 partially implements internal report evidence-pack
     request governance for reviewed report conversion intents, source summaries,

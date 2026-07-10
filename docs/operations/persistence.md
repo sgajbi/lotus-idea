@@ -68,6 +68,15 @@ candidate, evidence, actor, action/outcome, reason, lineage, or timestamp return
 `review_identity_conflict`. PostgreSQL claims the resource primary key before
 candidate mutation and retries one collision from fresh state; see
 `docs/architecture/review-feedback-identity-and-idempotency.md`.
+
+Conversion outcomes follow the same resource-versus-transport distinction but
+add a source-owned lifecycle. `conversionOutcomeId` and a contiguous
+`sourceEventVersion` identify one intent stream; equivalent new-key retries do
+not duplicate outcome, audit, or outbox rows. PostgreSQL atomically protects
+both outcome ID and intent/version. Migration 006 snapshots contradictory
+legacy streams to `idea_conversion_outcome_quarantine` without deleting their
+source rows, and readiness excludes those streams. See
+`docs/architecture/conversion-outcome-identity-and-lifecycle.md`.
 Review and feedback mutation governance now uses the persisted candidate access
 scope after bounded candidate lookup. Request `accessScope` remains request
 shape, but it is not the runtime authorization target; trusted caller

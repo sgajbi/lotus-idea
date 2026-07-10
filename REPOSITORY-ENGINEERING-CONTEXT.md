@@ -1127,6 +1127,17 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     collision from fresh state. `make review-identity-contract-gate` prevents
     ordering and API-contract regression. This remains internal design
     modularity; no runtime split is justified.
+28. Conversion outcome identity and lifecycle: GitHub issue `#326` is addressed
+    by `idea-conversion-outcome-v1`, application prechecks, repeated provider
+    enforcement, and migration `006`. `conversionOutcomeId` is independent of
+    `Idempotency-Key`; `sourceEventVersion` orders one intent stream; terminal
+    corrections are append-only and linked. PostgreSQL claims identity/version
+    before audit/outbox effects and retries a collision from fresh state.
+    Contradictory legacy streams are preserved in the source table, copied to
+    quarantine, denied a current posture, and excluded from readiness. `make
+    conversion-outcome-contract-gate` prevents layer, atomicity, migration, and
+    OpenAPI regression. This remains internal design modularity; downstream
+    services retain outcome authority and no runtime split is justified.
 
 Recently closed by PR `#273` and mainline validation:
 

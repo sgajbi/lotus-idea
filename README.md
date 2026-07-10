@@ -30,7 +30,7 @@ contracts, OpenAPI evidence, tests, documentation, wiki source, CI evidence on
 | --- | --- | --- |
 | Opportunity policies | Bounded foundations exist for high cash, concentration risk, underperformance, allocation drift, bond maturity, volatility, drawdown, suitability gaps, risk-profile gaps, mandate/restriction review, income gaps, and missing benchmark review. | Live source certification, data-mesh proof, Workbench proof, and supported-feature registration remain blocked. |
 | Lifecycle and review | Candidate persistence, replay, review actions, feedback, queues, scoring, and audit-oriented state transitions are implemented as internal foundations. Lifecycle and review posture use one versioned compatibility policy with terminal-state normalization and durable legacy quarantine. | Client publication and official advisory workflow ownership remain out of scope. |
-| Downstream intent | Conversion intent, report evidence-pack requests, outbox records, and Advise/Manage/Report route-proof consumption are bounded foundations. | Execution, report rendering, archive authority, and downstream materialization proof remain external. |
+| Downstream intent | Conversion intent, source-versioned append-only outcome history, policy-valid current posture, report evidence-pack requests, outbox records, and Advise/Manage/Report route-proof consumption are bounded foundations. | Execution, report rendering, archive authority, and downstream materialization proof remain external; quarantined outcome history does not count as ready. |
 | AI-adjacent support | Explanation readiness, lineage-store proof, workflow-pack registration/runtime proof consumption, and model-risk operations evidence are governed. | `lotus-idea` does not own AI infrastructure, provider calls, RAG runtime, or model operations. |
 | Data mesh | Proposed product and consumer contracts, mesh policy proof, platform onboarding proof consumption, and runtime trust telemetry exist. | Data-product certification and supported-feature promotion remain blocked. |
 
@@ -288,7 +288,7 @@ Local gates keep claims grounded:
 | --- | --- |
 | Support and certification truth | `make implementation-truth-gate`, `make supported-features-gate` |
 | Documentation and issue closure | `make documentation-contract-gate`, `make github-issue-closure-matrix-gate` |
-| API and review-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make openapi-gate` |
+| API, review, and conversion-contract truth | `make api-route-metadata-gate`, `make api-problem-details-boundary-gate`, `make api-idempotency-boundary-gate`, `make candidate-state-contract-gate`, `make review-identity-contract-gate`, `make conversion-outcome-contract-gate`, `make openapi-gate` |
 | Observability and AI-adjacent proof | `make source-observability-contract-gate`, `make operation-metric-contract-gate`, `make ai-model-risk-ops-contract-gate` |
 | Modularity and modern code posture | `make maintainability-gate`, `make duplicate-implementation-gate`, `make private-import-boundary-gate` |
 | Local evidence hygiene | `make no-sensitive-content-guard`, `make repository-hygiene-gate` |

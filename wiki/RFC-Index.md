@@ -86,10 +86,12 @@ Current RFC-0002 implementation-start baseline:
    high-cash persistence/replay plus first internal
    source-ingestion replay/conflict recovery, manifest-backed run-once
    ingestion worker CLI with check-only gate, and
-   review/feedback/conversion/report workflow proof. Review and feedback
-   resource IDs are governed independently of HTTP idempotency keys, with
+   review/feedback/conversion/report workflow proof. Review, feedback, and
+   conversion-outcome resource IDs are governed independently of HTTP idempotency keys, with
    equivalent new-key replay, changed-content conflict, and atomic PostgreSQL
-   collision handling before candidate/audit/outbox writes. A certified internal
+   collision handling before candidate/audit/outbox writes. Conversion outcome
+   streams also enforce contiguous source versions, append-only corrections,
+   valid current posture, and legacy contradiction quarantine. A certified internal
    outbox-delivery-readiness diagnostic and run-once operator action now
    report aggregate backlog/status posture, durable repository posture, broker
    configuration posture, certification blockers, and source-safe operator run
@@ -150,7 +152,8 @@ Current RFC-0002 implementation-start baseline:
    ref adapters for supplied source facts; live source fetching and
    portfolio-scoped canonical proof remain planned.
 12. Slice 12 partially implements internal conversion governance for
-    review-gated conversion intent and downstream outcome tracking, with
+    review-gated conversion intent and source-versioned downstream outcome
+    history/current posture, with
     target-to-source-authority mapping for `lotus-advise`, `lotus-manage`, and
     `lotus-report`, plus certified internal API foundations and an internal
     downstream realization readiness diagnostic with planned Advise, Manage,
@@ -158,8 +161,9 @@ Current RFC-0002 implementation-start baseline:
     `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
     source-safe downstream application orchestration and adapter foundations,
     certified internal downstream submission APIs for Advise/Manage conversion
-    intents and Report evidence-pack requests, and
-    `make downstream-realization-contract-gate`. It does not prove downstream
+    intents and Report evidence-pack requests, `make
+    conversion-outcome-contract-gate`, and `make
+    downstream-realization-contract-gate`. It does not prove downstream
     route existence, create downstream records, execute downstream materialization,
     or promote a supported feature.
 13. Slice 18 is partially implemented for API certification and

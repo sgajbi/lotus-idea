@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, certified API foundation, source-safe downstream submission API, application orchestration and adapter foundations, governed downstream contract-plan gate, and bounded Advise/Manage route-foundation proof consumption
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, certified API/current-posture foundation, atomic repository-provider parity, source-safe downstream submission API, application orchestration and adapter foundations, governed downstream contract-plan gate, and bounded Advise/Manage route-foundation proof consumption
 
 ## Outcome
 
@@ -173,6 +173,26 @@ Implemented in this slice:
     path bypasses `snapshot()` while preserving idempotency posture and direct
     PostgreSQL query shape for conversion intents and report evidence-pack
     requests.
+
+## Issue 326 Outcome Lifecycle Hardening
+
+`conversionOutcomeId` is now a source-event resource identity rather than an
+alias for the HTTP retry key. The versioned policy accepts legal requested,
+accepted, rejected, failed, and completed progressions; terminal corrections
+must append the next version, link the superseded current event, and state a
+reason. Accepted and completed facts require a downstream reference.
+
+The application use case performs bounded intent, identity, and history reads
+before domain evaluation. In-memory and PostgreSQL adapters repeat the policy
+at persistence. PostgreSQL atomically protects outcome identity and one version
+per intent, while migration 006 preserves but quarantines contradictory legacy
+streams. Candidate detail exposes full history plus one policy-valid current
+posture per intent; readiness excludes quarantined streams.
+
+This closes the issue's internal lifecycle and provider-parity gap only.
+Advise, Manage, and Report remain authoritative for their outcomes, and no
+suitability, execution, rebalance, reporting, archive, client-publication, or
+supported-feature authority moves into `lotus-idea`.
 
 ## Remaining Work
 

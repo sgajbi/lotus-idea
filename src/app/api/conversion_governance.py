@@ -330,7 +330,9 @@ CONVERSION_OUTCOME_ROUTE: RouteMetadata = {
     "summary": "Record an idea conversion outcome",
     "description": (
         "Records an internal downstream conversion outcome against a previously recorded "
-        "idea conversion intent. The route verifies that the reporting source system "
+        "idea conversion intent. Source-event identity and version are independent of the "
+        "transport idempotency key; legal progression and append-only corrections are "
+        "validated before persistence. The route verifies that the reporting source system "
         "matches the target source authority, writes audit evidence, and remains an "
         "internal foundation. Process-local writes are allowed only for local/test "
         "profiles; production-like profiles require LOTUS_IDEA_DATABASE_URL. "

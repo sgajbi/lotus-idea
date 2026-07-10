@@ -764,6 +764,19 @@ adapter enforcement, identity claims before PostgreSQL candidate mutation,
 typed collision retry, named OpenAPI conflict examples, and the architecture
 standard. Its mutation test fails if atomic review identity claiming is removed.
 
+The conversion outcome contract gate protects source-event identity and
+lifecycle independently of transport retries. It requires bounded application
+prechecks, repeated provider enforcement, atomic PostgreSQL ID/version claims,
+legacy-history quarantine, current-posture validation, named OpenAPI conflict
+examples, and the architecture standard. Its mutation test fails if atomic
+outcome claiming is removed.
+
+`make postgres-integration-gate` adds the behavioral proof: two connections
+race equivalent outcome identity and competing versions, and a migration test
+proves contradictory legacy rows remain intact while quarantine and readiness
+fail closed. These checks do not certify downstream route execution,
+Gateway/Workbench behavior, data-mesh promotion, or supported features.
+
 The operation-metric contract gate validates
 `contracts/observability/lotus-idea-operation-metrics.v1.json` against the
 code-owned operation, outcome, supportability, and metric-label vocabulary. It

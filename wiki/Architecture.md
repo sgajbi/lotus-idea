@@ -756,6 +756,26 @@ split has no workload, failure-isolation, ownership, or operability evidence.
 Gateway/Workbench functionality and supported review-product promotion remain
 planned.
 
+### Conversion Outcome Identity And Current Posture
+
+`conversionOutcomeId` is a source-event resource identity; `Idempotency-Key`
+is only the HTTP retry identity. Each intent stream has contiguous
+`sourceEventVersion` ordering and explicit legal transitions. A terminal source
+fact can change only through an append-only next-version event that links the
+superseded current outcome and states a correction reason.
+
+Candidate detail preserves full `conversionOutcomes` history and separately
+returns `currentConversionOutcomes` only for policy-valid streams. PostgreSQL
+atomically protects outcome ID and intent/version. Migration 006 preserves
+contradictory legacy rows, copies them to a quarantine ledger, and excludes
+those streams from readiness instead of inventing a current posture.
+
+This is an internal policy/application/port/adapter module set in the existing
+service. Advise, Manage, and Report retain outcome authority; no suitability,
+execution, rebalance, report, archive, client-publication, or supported-feature
+authority moves into `lotus-idea`. See the deep architecture decision in
+`docs/architecture/conversion-outcome-identity-and-lifecycle.md`.
+
 ## Architecture Decisions
 
 ADRs live in `docs/architecture/adr/`:
