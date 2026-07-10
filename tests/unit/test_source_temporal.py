@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 
-from app.domain.ideas import EvidenceFreshness, ReasonCode, SourceRef, SourceSystem, UnsupportedEvidenceReason
+from app.domain.ideas import (
+    EvidenceFreshness,
+    ReasonCode,
+    SourceRef,
+    SourceSystem,
+    UnsupportedEvidenceReason,
+)
 from app.domain.source_temporal import source_temporal_violation
 
 

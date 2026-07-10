@@ -434,7 +434,6 @@ def evaluate_mandate_health_signal(
         or source_input.evaluated_at_utc.utcoffset() is None
     ):
         raise ValueError("evaluated_at_utc must be timezone-aware")
-
     if not source_input.entitlement_allowed:
         return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
@@ -447,12 +446,7 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    temporal_block = temporal_blocked_signal_result(
-        family=OpportunityFamily.ALLOCATION_DRIFT,
-        as_of_date=source_input.as_of_date,
-        evaluated_at_utc=source_input.evaluated_at_utc,
-        source_refs=(source_input.action_register_ref,),
-    )
+    temporal_block = _mandate_health_temporal_block(source_input)
     if temporal_block is not None:
         return temporal_block
     if source_input.action_register_ref.freshness is not EvidenceFreshness.CURRENT:
@@ -560,6 +554,19 @@ def evaluate_mandate_health_signal(
         reason_codes=evidence_packet.reason_codes,
         signal=signal,
         candidate=candidate,
+    )
+
+
+def _mandate_health_temporal_block(
+    source_input: MandateHealthSignalInput,
+) -> SignalEvaluationResult | None:
+    if source_input.action_register_ref is None:
+        return None
+    return temporal_blocked_signal_result(
+        family=OpportunityFamily.ALLOCATION_DRIFT,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=(source_input.action_register_ref,),
     )
 
 

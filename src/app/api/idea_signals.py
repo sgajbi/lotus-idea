@@ -86,6 +86,7 @@ def _is_core_high_cash_runtime_blocked(
 def _is_advise_policy_runtime_blocked(runtime: object) -> bool:
     return isinstance(runtime, AdvisePolicyEvaluationSourceRuntimeBlocker)
 
+
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )

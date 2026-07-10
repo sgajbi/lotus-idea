@@ -39,8 +39,7 @@ def validate_source_temporal_contract(root: Path = ROOT) -> list[str]:
         ]
         if not helper_calls:
             errors.append(
-                f"{relative_path.as_posix()}: signal domain policy must call "
-                f"`{TEMPORAL_HELPER}`"
+                f"{relative_path.as_posix()}: signal domain policy must call `{TEMPORAL_HELPER}`"
             )
     return sorted(errors)
 

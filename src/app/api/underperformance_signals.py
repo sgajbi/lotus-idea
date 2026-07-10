@@ -255,8 +255,7 @@ async def evaluate_underperformance_signal_from_source(
         runtime_factory=_build_performance_underperformance_source_runtime_from_environment,
         is_runtime_blocked=_is_performance_underperformance_runtime_blocked,
         blocked_detail=(
-            "Performance source runtime is not configured for "
-            "underperformance source evaluation."
+            "Performance source runtime is not configured for underperformance source evaluation."
         ),
         command_factory=lambda runtime: signal_request.to_command(
             correlation_id=_request_correlation_id(request),
@@ -264,7 +263,9 @@ async def evaluate_underperformance_signal_from_source(
         ),
         evaluator=lambda command, runtime: evaluate_underperformance_signal_from_performance(
             command,
-            performance_source=cast(PerformanceUnderperformanceSourceRuntime, runtime).performance_source,
+            performance_source=cast(
+                PerformanceUnderperformanceSourceRuntime, runtime
+            ).performance_source,
         ),
         response_factory=EvaluateUnderperformanceSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
