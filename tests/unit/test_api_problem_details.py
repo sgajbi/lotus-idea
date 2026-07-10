@@ -134,10 +134,18 @@ def test_workflow_openapi_error_responses_have_problem_details_examples() -> Non
         for status_code in status_codes:
             response = responses[str(status_code)]
             for media_type in PROBLEM_DETAIL_MEDIA_TYPES:
-                assert response["content"][media_type]["example"]["status"] == status_code
-                assert response["content"][media_type]["example"]["type"] == "about:blank"
-                assert response["content"][media_type]["example"]["code"]
-                assert response["content"][media_type]["example"]["detail"]
+                media = response["content"][media_type]
+                examples = (
+                    [media["example"]]
+                    if "example" in media
+                    else [entry["value"] for entry in media["examples"].values()]
+                )
+                assert examples
+                for example in examples:
+                    assert example["status"] == status_code
+                    assert example["type"] == "about:blank"
+                    assert example["code"]
+                    assert example["detail"]
 
 
 def test_all_openapi_problem_details_responses_have_examples() -> None:

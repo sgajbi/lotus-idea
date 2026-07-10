@@ -8,6 +8,7 @@ from app.api.durable_write_guard import durable_repository_write_unavailable_met
 from app.api.problem_details import (
     conflict_metadata,
     invalid_request_metadata,
+    merged_problem_response_metadata,
     not_found_metadata,
     permission_denied_metadata,
 )
@@ -36,6 +37,7 @@ from app.application.review_workflow import (
     record_feedback_to_repository,
 )
 from app.domain import (
+    InvalidCandidateState,
     InvalidReviewAction,
     ReviewEntitlementDenied,
     ReviewPersistenceDecision,
@@ -46,6 +48,25 @@ from app.security.caller_context import PermissionDeniedError
 
 _REVIEW_ACTION_CAPABILITY = "idea.review.record"
 _FEEDBACK_CAPABILITY = "idea.feedback.record"
+
+_REVIEW_ACTION_CONFLICT = conflict_metadata(
+    code="review_action_conflict",
+    title="Review action conflict",
+    detail="The review action is not valid for the current idea candidate state.",
+    description="The requested action is incompatible with the governed candidate state.",
+)
+_CANDIDATE_STATE_CONFLICT = conflict_metadata(
+    code="candidate_state_conflict",
+    title="Candidate state conflict",
+    detail="The persisted candidate lifecycle and review posture are incompatible.",
+    description="A contradictory persisted candidate was rejected by the state policy.",
+)
+_REVIEW_IDEMPOTENCY_CONFLICT = conflict_metadata(
+    code="idempotency_conflict",
+    title="Idempotency conflict",
+    detail="The idempotency key was already used with a different request payload.",
+    description="The idempotency key conflicts with an earlier review request.",
+)
 
 __all__ = [
     "FeedbackEventResponse",
@@ -118,17 +139,35 @@ async def record_review_action(
             "permission_denied",
         )
         return _permission_denied("The caller is not permitted to review this idea candidate.")
-    except InvalidReviewAction:
+    except (InvalidCandidateState, InvalidReviewAction) as exc:
+        error_code = exc.code
         _emit_review_operation_event(
             IdeaOperation.REVIEW_ACTION,
             OperationOutcome.INVALID_STATE,
-            "review_action_conflict",
+            error_code,
+            attributes={
+                "candidate_id": exc.candidate_id
+                if isinstance(exc, InvalidCandidateState)
+                else candidate_id,
+                "lifecycle_status": exc.lifecycle_status.value,
+                "policy_version": exc.policy_version,
+                "requested_action": request.action.value,
+                "review_posture": exc.review_posture.value,
+            },
         )
         return problem_response(
             status_code=status.HTTP_409_CONFLICT,
-            code="review_action_conflict",
-            title="Review action conflict",
-            detail="The review action is not valid for the current idea candidate state.",
+            code=error_code,
+            title=(
+                "Candidate state conflict"
+                if isinstance(exc, InvalidCandidateState)
+                else "Review action conflict"
+            ),
+            detail=(
+                "The persisted candidate lifecycle and review posture are incompatible."
+                if isinstance(exc, InvalidCandidateState)
+                else "The review action is not valid for the current idea candidate state."
+            ),
         )
     except ValueError:
         _emit_review_operation_event(
@@ -331,11 +370,14 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
             detail="The idea candidate was not found.",
             description="Candidate was not found.",
         ),
-        **conflict_metadata(
-            code="review_action_conflict",
-            title="Review action conflict",
-            detail="The review action is not valid for the current idea candidate state.",
-            description="Idempotency conflict or invalid review state transition.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_409_CONFLICT,
+            description="Review mutation conflict.",
+            responses=(
+                _REVIEW_ACTION_CONFLICT,
+                _CANDIDATE_STATE_CONFLICT,
+                _REVIEW_IDEMPOTENCY_CONFLICT,
+            ),
         ),
         **durable_repository_write_unavailable_metadata(),
     },

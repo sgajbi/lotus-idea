@@ -239,6 +239,7 @@ def emit_foundation_operation_event(
     error_code: str | None = None,
     correlation_id: str | None = None,
     trace_id: str | None = None,
+    attributes: Mapping[str, str] | None = None,
 ) -> None:
     emit_operation_event(
         OperationEvent(
@@ -248,6 +249,7 @@ def emit_foundation_operation_event(
             error_code=error_code,
             correlation_id=correlation_id,
             trace_id=trace_id,
+            attributes=attributes or {},
             durable_storage_backed=durable_storage_backed,
             supported_feature_promoted=False,
         )

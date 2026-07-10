@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import json
+import logging
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.runtime.repository_state import get_idea_repository, reset_idea_repository_for_tests
@@ -551,16 +554,19 @@ def test_review_action_api_returns_conflict_for_changed_idempotency_payload() ->
     assert response.json()["code"] == "idempotency_conflict"
 
 
-def test_review_action_api_returns_state_conflict_for_generated_candidate_approval() -> None:
+def test_review_action_api_returns_state_conflict_for_generated_candidate_approval(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     reset_idea_repository_for_tests()
     client = TestClient(app)
     candidate_id = persisted_candidate_id(client, idempotency_key="seed-review-state-001")
 
-    response = client.post(
-        f"/api/v1/idea-candidates/{candidate_id}/review-actions",
-        json=approve_review_payload(),
-        headers=review_headers("review-action-api-state-conflict-001"),
-    )
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        response = client.post(
+            f"/api/v1/idea-candidates/{candidate_id}/review-actions",
+            json=approve_review_payload(),
+            headers=review_headers("review-action-api-state-conflict-001"),
+        )
 
     assert response.status_code == 409
     assert response.json() == {
@@ -570,6 +576,17 @@ def test_review_action_api_returns_state_conflict_for_generated_candidate_approv
         "title": "Review action conflict",
         "detail": "The review action is not valid for the current idea candidate state.",
     }
+    event = next(
+        json.loads(record.message)
+        for record in caplog.records
+        if '"event": "idea.operation.review_action"' in record.message
+        and '"error_code": "review_action_conflict"' in record.message
+    )
+    assert event["candidate_id"] == candidate_id
+    assert event["lifecycle_status"] == "generated"
+    assert event["review_posture"] == "advisor_review_required"
+    assert event["requested_action"] == "approve_for_conversion"
+    assert event["policy_version"] == "idea-candidate-state-v1"
 
 
 def test_feedback_api_persists_source_provenanced_feedback() -> None:
