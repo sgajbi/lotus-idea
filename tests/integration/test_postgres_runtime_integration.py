@@ -1036,9 +1036,7 @@ def _high_cash_payload(
         "evaluatedAtUtc": evaluated_at_utc,
         "sourceReportedCashWeight": "0.18",
         "sourceEvidence": {
-            "portfolioStateRef": _source_ref(
-                "lotus-core:PortfolioStateSnapshot:v1", suffix=suffix
-            ),
+            "portfolioStateRef": _source_ref("lotus-core:PortfolioStateSnapshot:v1", suffix=suffix),
             "holdingsRef": _source_ref("lotus-core:HoldingsAsOf:v1", suffix=suffix),
             "cashMovementRef": _source_ref(
                 "lotus-core:PortfolioCashMovementSummary:v1", suffix=suffix
