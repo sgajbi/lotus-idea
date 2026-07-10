@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from typing import TypedDict
+
+import pytest
 
 from app.application.outbox_recovery import (
     OutboxRecoveryRunStatus,
+    outbox_recovery_api_request_payload,
+    outbox_recovery_attempt_id,
     run_outbox_dead_letter_recovery,
 )
 from app.domain import (
@@ -12,6 +16,8 @@ from app.domain import (
     InMemoryIdeaRepository,
     OutboxEventRecord,
     OutboxEventStatus,
+    OutboxDeliveryDecision,
+    OutboxDeliveryResult,
     build_candidate_outbox_event,
     mark_outbox_event_failed,
     outbox_dead_letter_support_reference,
@@ -93,6 +99,82 @@ def test_recovery_idempotency_conflict_never_publishes_twice() -> None:
     assert conflict.run_status is OutboxRecoveryRunStatus.CONFLICT
     assert conflict.publication_attempted is False
     assert len(publisher.events) == 1
+
+
+def test_recovery_reports_lease_loss_after_external_publication() -> None:
+    event = _dead_lettered_event()
+    repository = LeaseLostRepository(_repository_with_event(event).snapshot())
+
+    result = run_outbox_dead_letter_recovery(
+        repository,
+        RecordingPublisher(accepted=True),
+        **_recovery_request(event.event_id, "recovery:application:lease-lost"),
+    )
+
+    assert result.run_status is OutboxRecoveryRunStatus.LEASE_LOST
+    assert result.blocker == "recovery_lease_lost"
+    assert result.publication_attempted is True
+
+
+def test_recovery_application_validates_operator_request_boundaries() -> None:
+    with pytest.raises(ValueError, match="idempotency_key is required"):
+        outbox_recovery_attempt_id(" ")
+    assert (
+        outbox_recovery_api_request_payload(
+            support_reference="outbox-dlq-000000000000000000000000",
+            reason="broker_route_corrected",
+            change_reference="CHG-BOUNDARY",
+            actor_subject="platform-operator",
+        )["changeReference"]
+        == "CHG-BOUNDARY"
+    )
+
+    repository = _repository_with_event(_dead_lettered_event())
+    request = _recovery_request(_dead_lettered_event().event_id, "recovery:invalid")
+    with pytest.raises(ValueError, match="lease_duration_seconds must be positive"):
+        run_outbox_dead_letter_recovery(
+            repository,
+            RecordingPublisher(accepted=True),
+            **request,
+            lease_duration_seconds=0,
+        )
+    with pytest.raises(ValueError, match="requested_at_utc must be timezone-aware"):
+        run_outbox_dead_letter_recovery(
+            repository,
+            RecordingPublisher(accepted=True),
+            support_reference=request["support_reference"],
+            idempotency_key=request["idempotency_key"],
+            reason=request["reason"],
+            change_reference=request["change_reference"],
+            actor_subject=request["actor_subject"],
+            requested_at_utc=datetime(2026, 7, 10, 8, 0),
+        )
+    with pytest.raises(ValueError, match="requested_at_utc must be UTC"):
+        run_outbox_dead_letter_recovery(
+            repository,
+            RecordingPublisher(accepted=True),
+            support_reference=request["support_reference"],
+            idempotency_key=request["idempotency_key"],
+            reason=request["reason"],
+            change_reference=request["change_reference"],
+            actor_subject=request["actor_subject"],
+            requested_at_utc=datetime(2026, 7, 10, 9, 0, tzinfo=timezone(timedelta(hours=1))),
+        )
+
+
+class LeaseLostRepository(InMemoryIdeaRepository):
+    def mark_outbox_event_published(
+        self,
+        event_id: str,
+        *,
+        lease_owner: str,
+        lease_attempt_id: str,
+        published_at_utc: datetime,
+    ) -> OutboxDeliveryResult:
+        return OutboxDeliveryResult(
+            decision=OutboxDeliveryDecision.LEASE_LOST,
+            event=None,
+        )
 
 
 class RecordingPublisher:

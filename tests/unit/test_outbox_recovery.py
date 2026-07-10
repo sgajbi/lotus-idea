@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Mapping, TypedDict
 
 import pytest
@@ -13,6 +13,7 @@ from app.domain import (
     OutboxRecoveryDecision,
     build_candidate_outbox_event,
     build_outbox_recovery_audit_record,
+    claim_dead_letter_for_recovery,
     dead_letter_summary,
     mark_outbox_event_failed,
     mark_outbox_event_published,
@@ -264,6 +265,99 @@ def test_in_memory_dead_letter_inspection_is_bounded_and_source_safe() -> None:
         repository.dead_letter_summaries(limit=0)
 
 
+def test_recovery_rejects_non_dead_letter_inputs_and_invalid_request_boundaries() -> None:
+    pending = build_candidate_outbox_event(
+        event_type="idea.candidate.persisted.v1",
+        aggregate_id="candidate-pending",
+        occurred_at_utc=EVENT_TIME,
+        payload={"candidate_family": "high_cash"},
+    )
+    with pytest.raises(ValueError, match="summary requires a dead-lettered event"):
+        dead_letter_summary(pending)
+    with pytest.raises(ValueError, match="recovery requires a dead-lettered event"):
+        build_outbox_recovery_audit_record(
+            pending,
+            idempotency_key="recovery:pending",
+            request_payload={"supportReference": "outbox-dlq-pending"},
+            actor_subject="platform-operator",
+            reason="broker_route_corrected",
+            change_reference="CHG-PENDING",
+            requested_at_utc=EVENT_TIME,
+            lease_owner="outbox-recovery",
+            lease_attempt_id="attempt-pending",
+            lease_expires_at_utc=EVENT_TIME + timedelta(minutes=5),
+        )
+    with pytest.raises(ValueError, match="max_recovery_attempts must be positive"):
+        claim_dead_letter_for_recovery(
+            {},
+            {},
+            **_direct_claim("outbox-dlq-000000000000000000000000"),
+            max_recovery_attempts=0,
+        )
+    with pytest.raises(ValueError, match="support_reference is required"):
+        claim_dead_letter_for_recovery({}, {}, **_direct_claim(" "))
+
+
+def test_recovery_claim_classifies_missing_non_dead_lettered_and_unsupported_events() -> None:
+    pending = build_candidate_outbox_event(
+        event_type="idea.candidate.persisted.v1",
+        aggregate_id="candidate-pending",
+        occurred_at_utc=EVENT_TIME,
+        payload={"candidate_family": "high_cash"},
+    )
+    unsupported = _dead_lettered_event()
+    # Simulate a legacy/corrupt row that bypassed current constructor validation.
+    object.__setattr__(unsupported, "event_type", "idea.unsupported.v1")
+
+    missing = claim_dead_letter_for_recovery(
+        {}, {}, **_direct_claim("outbox-dlq-000000000000000000000000")
+    )
+    not_dead_lettered = claim_dead_letter_for_recovery(
+        {pending.event_id: pending},
+        {},
+        **_direct_claim(outbox_dead_letter_support_reference(pending.event_id)),
+    )
+    ineligible = claim_dead_letter_for_recovery(
+        {unsupported.event_id: unsupported},
+        {},
+        **_direct_claim(outbox_dead_letter_support_reference(unsupported.event_id)),
+    )
+
+    assert missing.decision is OutboxRecoveryDecision.NOT_FOUND
+    assert not_dead_lettered.decision is OutboxRecoveryDecision.NOT_DEAD_LETTERED
+    assert ineligible.decision is OutboxRecoveryDecision.INELIGIBLE
+    assert ineligible.blocker == "unsupported_event_family"
+
+
+@pytest.mark.parametrize(
+    ("requested_at", "message"),
+    [
+        (datetime(2026, 7, 10, 8, 0), "must be timezone-aware"),
+        (
+            datetime(2026, 7, 10, 9, 0, tzinfo=timezone(timedelta(hours=1))),
+            "must be UTC",
+        ),
+    ],
+)
+def test_recovery_audit_requires_utc_request_time(
+    requested_at: datetime,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        build_outbox_recovery_audit_record(
+            _dead_lettered_event(),
+            idempotency_key="recovery:invalid-time",
+            request_payload={"supportReference": "outbox-dlq-invalid-time"},
+            actor_subject="platform-operator",
+            reason="broker_route_corrected",
+            change_reference="CHG-INVALID-TIME",
+            requested_at_utc=requested_at,
+            lease_owner="outbox-recovery",
+            lease_attempt_id="attempt-invalid-time",
+            lease_expires_at_utc=EVENT_TIME + timedelta(minutes=10),
+        )
+
+
 def _dead_lettered_event() -> OutboxEventRecord:
     event = build_candidate_outbox_event(
         event_type="idea.candidate.persisted.v1",
@@ -294,3 +388,18 @@ def _repository_with_event(event: OutboxEventRecord) -> InMemoryIdeaRepository:
             downstream_submission_records={},
         )
     )
+
+
+def _direct_claim(support_reference: str) -> dict[str, Any]:
+    return {
+        "support_reference": support_reference,
+        "idempotency_key": "recovery:direct-claim",
+        "request_payload": {"supportReference": support_reference},
+        "actor_subject": "platform-operator",
+        "reason": "broker_route_corrected",
+        "change_reference": "CHG-DIRECT-CLAIM",
+        "requested_at_utc": EVENT_TIME + timedelta(minutes=5),
+        "lease_owner": "outbox-recovery",
+        "lease_attempt_id": "attempt-direct-claim",
+        "lease_expires_at_utc": EVENT_TIME + timedelta(minutes=10),
+    }

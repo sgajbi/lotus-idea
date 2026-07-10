@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from fastapi.responses import JSONResponse
 
 import app.api.outbox_recovery as recovery_api
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_TOKEN_ENV
@@ -217,6 +218,98 @@ def test_outbox_recovery_api_emits_bounded_operation_events(
     assert all(not item.attributes for item in emitted)
 
 
+def test_redrive_reports_unconfigured_publisher_and_missing_dead_letter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = TestClient(app)
+    support_reference = "outbox-dlq-000000000000000000000000"
+    path = f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive"
+    headers = _headers(
+        capability="idea.outbox-recovery.redrive",
+        idempotency_key="outbox-redrive:api:missing",
+    )
+    body = {"reason": "broker_route_corrected", "changeReference": "CHG-MISSING"}
+    monkeypatch.setattr(
+        recovery_api,
+        "build_outbox_publisher_from_environment",
+        lambda: "outbox_publisher_not_configured",
+    )
+    unavailable = client.post(path, headers=headers, json=body)
+
+    monkeypatch.setattr(
+        recovery_api,
+        "build_outbox_publisher_from_environment",
+        lambda: RecordingPublisher(accepted=True),
+    )
+    missing = client.post(path, headers=headers, json=body)
+
+    assert unavailable.status_code == 503
+    assert unavailable.json()["code"] == "outbox_publisher_not_configured"
+    assert missing.status_code == 404
+    assert missing.json()["code"] == "dead_letter_not_found"
+
+
+def test_redrive_suppresses_publisher_cleanup_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    event = _dead_lettered_event()
+    reset_idea_repository_for_tests(repository=_repository_with_event(event))
+    publisher = CleanupFailingPublisher(accepted=True)
+    monkeypatch.setattr(recovery_api, "build_outbox_publisher_from_environment", lambda: publisher)
+    client = TestClient(app)
+    support_reference = _support_reference(client)
+
+    response = client.post(
+        f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive",
+        headers=_headers(
+            capability="idea.outbox-recovery.redrive",
+            idempotency_key="outbox-redrive:api:cleanup-failure",
+        ),
+        json={"reason": "broker_route_corrected", "changeReference": "CHG-CLEANUP"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["runStatus"] == "published"
+    assert publisher.close_count == 1
+
+
+def test_redrive_blocks_without_durable_storage_and_quarantines_unknown_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    event = _dead_lettered_event()
+    repository = _repository_with_event(event)
+    reset_idea_repository_for_tests(repository=repository)
+    client = TestClient(app)
+    support_reference = _support_reference(client)
+    path = f"/api/v1/outbox-delivery/dead-letters/{support_reference}/redrive"
+    headers = _headers(
+        capability="idea.outbox-recovery.redrive",
+        idempotency_key="outbox-redrive:api:durability",
+    )
+    body = {"reason": "broker_route_corrected", "changeReference": "CHG-DURABILITY"}
+    monkeypatch.setattr(
+        recovery_api,
+        "durable_write_problem",
+        lambda _repository: JSONResponse(
+            status_code=503,
+            content={"code": "durable_repository_not_configured"},
+        ),
+    )
+    blocked = client.post(path, headers=headers, json=body)
+
+    monkeypatch.setattr(recovery_api, "durable_write_problem", lambda _repository: None)
+    monkeypatch.setattr(
+        recovery_api,
+        "build_outbox_publisher_from_environment",
+        lambda: RecordingPublisher(accepted=True),
+    )
+    object.__setattr__(event, "event_type", "idea.unsupported.v1")
+    quarantined = client.post(path, headers=headers, json=body)
+
+    assert blocked.status_code == 503
+    assert blocked.json()["code"] == "durable_repository_not_configured"
+    assert quarantined.status_code == 409
+    assert quarantined.json()["code"] == "unsupported_event_family"
+
+
 class RecordingPublisher:
     def __init__(self, *, accepted: bool) -> None:
         self.accepted = accepted
@@ -231,6 +324,12 @@ class RecordingPublisher:
 
     def close(self) -> None:
         self.close_count += 1
+
+
+class CleanupFailingPublisher(RecordingPublisher):
+    def close(self) -> None:
+        self.close_count += 1
+        raise RuntimeError("cleanup failed")
 
 
 def _support_reference(client: TestClient) -> str:

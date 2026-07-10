@@ -5,6 +5,7 @@ from typing import Any, Mapping, TypedDict
 
 import pytest
 
+import app.infrastructure.postgres_outbox_recovery as postgres_recovery
 from app.domain import (
     OutboxDeliveryDecision,
     OutboxEventStatus,
@@ -36,6 +37,57 @@ class RecoveryClaim(TypedDict):
     lease_owner: str
     lease_attempt_id: str
     lease_expires_at_utc: datetime
+
+
+def _postgres_dead_letter(connection: FakePostgresConnection) -> Any:
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:outbox-recovery-helper",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+    repository.claim_outbox_events_for_delivery(
+        limit=1,
+        max_retry_count=1,
+        lease_owner="delivery-worker",
+        lease_attempt_id="delivery-attempt",
+        claimed_at_utc=EVALUATED_AT,
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=1),
+    )
+    repository.mark_outbox_event_failed(
+        event.event_id,
+        lease_owner="delivery-worker",
+        lease_attempt_id="delivery-attempt",
+        failure_reason="publisher_rejected",
+        failed_at_utc=EVALUATED_AT + timedelta(minutes=1),
+        max_retry_count=1,
+    )
+    return repository.snapshot().outbox_events[event.event_id]
+
+
+def _recovery_claim(event_id: str, idempotency_key: str) -> RecoveryClaim:
+    support_reference = outbox_dead_letter_support_reference(event_id)
+    return {
+        "support_reference": support_reference,
+        "idempotency_key": idempotency_key,
+        "request_payload": outbox_recovery_request_payload(
+            support_reference=support_reference,
+            reason="broker_route_corrected",
+            change_reference="CHG-POSTGRES-RECOVERY",
+            actor_subject="platform-operator",
+        ),
+        "actor_subject": "platform-operator",
+        "reason": "broker_route_corrected",
+        "change_reference": "CHG-POSTGRES-RECOVERY",
+        "requested_at_utc": EVALUATED_AT + timedelta(minutes=2),
+        "lease_owner": "outbox-recovery",
+        "lease_attempt_id": "recovery-attempt",
+        "lease_expires_at_utc": EVALUATED_AT + timedelta(minutes=7),
+    }
 
 
 class RaisingCursor:
@@ -248,6 +300,96 @@ def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> No
             lease_attempt_id="attempt-nonutc-publish",
             published_at_utc=datetime(2026, 6, 21, 11, 0, tzinfo=timezone(timedelta(hours=1))),
         )
+
+
+def test_postgres_outbox_recovery_classifies_terminal_and_policy_blockers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = FakePostgresConnection()
+    event = _postgres_dead_letter(connection)
+    claim = _recovery_claim(event.event_id, "outbox-redrive:postgres:policy")
+
+    missing = postgres_recovery._terminal_recovery_result(None)
+    assert missing is not None
+    assert missing.decision is OutboxRecoveryDecision.NOT_FOUND
+    pending_repository = PostgresIdeaRepository(FakePostgresConnection())
+    candidate = high_cash_candidate()
+    pending_repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:outbox-recovery-pending",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    pending_event = next(iter(pending_repository.snapshot().outbox_events.values()))
+    pending = postgres_recovery._terminal_recovery_result(pending_event)
+    assert pending is not None
+    assert pending.decision is OutboxRecoveryDecision.NOT_DEAD_LETTERED
+
+    object.__setattr__(event, "event_type", "idea.unsupported.v1")
+    monkeypatch.setattr(
+        postgres_recovery,
+        "_load_event_for_support_reference",
+        lambda *args, **kwargs: event,
+    )
+    ineligible = postgres_recovery.claim_dead_letter_for_recovery(connection, **claim)
+    assert ineligible.decision is OutboxRecoveryDecision.INELIGIBLE
+
+    object.__setattr__(event, "event_type", "idea.candidate.persisted.v1")
+    monkeypatch.setattr(postgres_recovery, "_recovery_count", lambda *args, **kwargs: 3)
+    exhausted = postgres_recovery.claim_dead_letter_for_recovery(connection, **claim)
+    assert exhausted.decision is OutboxRecoveryDecision.RECOVERY_LIMIT_REACHED
+
+    with pytest.raises(ValueError, match="max_recovery_attempts must be positive"):
+        postgres_recovery.claim_dead_letter_for_recovery(
+            connection,
+            **claim,
+            max_recovery_attempts=0,
+        )
+
+
+def test_postgres_outbox_recovery_rolls_back_lookup_failure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    connection = FakePostgresConnection()
+    event = _postgres_dead_letter(connection)
+
+    def fail_lookup(*args: object, **kwargs: object) -> None:
+        raise RuntimeError("lookup failed")
+
+    monkeypatch.setattr(postgres_recovery, "_load_recovery_by_idempotency", fail_lookup)
+    with pytest.raises(RuntimeError, match="lookup failed"):
+        postgres_recovery.claim_dead_letter_for_recovery(
+            connection,
+            **_recovery_claim(event.event_id, "outbox-redrive:postgres:rollback"),
+        )
+
+    assert connection.rollbacks == 1
+
+
+def test_postgres_outbox_recovery_claim_is_fenced_by_dead_letter_state() -> None:
+    connection = FakePostgresConnection()
+    event = _postgres_dead_letter(connection)
+    connection.rows["idea_outbox_event"].clear()
+    claim = _recovery_claim(event.event_id, "outbox-redrive:postgres:lease-race")
+
+    with connection.cursor() as cursor:
+        result = postgres_recovery._claim_eligible_dead_letter(
+            cursor,
+            event,
+            idempotency_key=claim["idempotency_key"],
+            request_payload=claim["request_payload"],
+            actor_subject=claim["actor_subject"],
+            reason=claim["reason"],
+            change_reference=claim["change_reference"],
+            requested_at_utc=claim["requested_at_utc"],
+            lease_owner=claim["lease_owner"],
+            lease_attempt_id=claim["lease_attempt_id"],
+            lease_expires_at_utc=claim["lease_expires_at_utc"],
+        )
+
+    assert result.decision is OutboxRecoveryDecision.LEASE_CONFLICT
+    assert result.event is None
 
 
 @pytest.mark.parametrize("operation", ["claim", "publish", "fail"])

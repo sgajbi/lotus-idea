@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any, Mapping, TypedDict
 
@@ -27,6 +28,73 @@ from app.ports.outbox_publisher import OutboxPublishOutcome
 
 EVENT_TIME = datetime(2026, 6, 21, 10, 0, tzinfo=UTC)
 DELIVERED_AT = datetime(2026, 6, 21, 10, 5, tzinfo=UTC)
+
+
+def test_outbox_event_rejects_ambiguous_delivery_state_shapes() -> None:
+    event = build_candidate_outbox_event(
+        event_type="idea.candidate.persisted.v1",
+        aggregate_id="candidate-delivery-state",
+        occurred_at_utc=EVENT_TIME,
+        payload={"candidate_family": "high_cash"},
+    )
+
+    invalid_states = (
+        (
+            replace,
+            {
+                "status": OutboxEventStatus.LEASED,
+                "lease_owner": "delivery-worker",
+                "lease_attempt_id": "attempt-1",
+            },
+            "lease_expires_at_utc is required",
+        ),
+        (
+            replace,
+            {
+                "status": OutboxEventStatus.PUBLISHED,
+                "published_at_utc": DELIVERED_AT,
+                "failure_reason": "prior_failure",
+                "retry_count": 1,
+                "first_failed_at_utc": EVENT_TIME,
+            },
+            "failure timing must include first and last",
+        ),
+        (
+            replace,
+            {
+                "status": OutboxEventStatus.PUBLISHED,
+                "published_at_utc": DELIVERED_AT,
+                "next_attempt_at_utc": DELIVERED_AT,
+            },
+            "published outbox events cannot have next_attempt_at_utc",
+        ),
+        (
+            replace,
+            {
+                "status": OutboxEventStatus.FAILED,
+                "failure_reason": "publisher_unavailable",
+                "retry_count": 1,
+                "first_failed_at_utc": DELIVERED_AT,
+                "last_failed_at_utc": DELIVERED_AT,
+            },
+            "next_attempt_at_utc is required",
+        ),
+        (
+            replace,
+            {
+                "status": OutboxEventStatus.DEAD_LETTER,
+                "failure_reason": "publisher_rejected",
+                "retry_count": 1,
+                "first_failed_at_utc": DELIVERED_AT,
+                "last_failed_at_utc": DELIVERED_AT,
+                "next_attempt_at_utc": DELIVERED_AT + timedelta(minutes=1),
+            },
+            "dead-lettered outbox events cannot have next_attempt_at_utc",
+        ),
+    )
+    for constructor, changes, message in invalid_states:
+        with pytest.raises(ValueError, match=message):
+            constructor(event, **changes)
 
 
 class OperatorRunKwargs(TypedDict):
