@@ -6,6 +6,7 @@ from enum import StrEnum
 
 from app.domain.audit import AuditEvent
 from app.domain.conversion_governance import GovernedConversionIntent
+from app.domain.data_lifecycle import resolve_external_retention_policy_ref
 from app.domain.ideas import (
     ConversionTarget,
     EvidenceSupportability,
@@ -64,6 +65,7 @@ class ReportEvidencePackCommand:
         _require_text(self.actor_subject, "actor_subject")
         _require_text(self.idempotency_key, "idempotency_key")
         _require_text(self.retention_policy_ref, "retention_policy_ref")
+        resolve_external_retention_policy_ref(self.retention_policy_ref)
         _require_aware_utc(self.requested_at_utc, "requested_at_utc")
         if not self.reason_codes:
             raise ValueError("reason_codes is required")
@@ -136,6 +138,7 @@ class GovernedReportEvidencePack:
         _require_text(self.actor_subject, "actor_subject")
         _require_text(self.idempotency_key, "idempotency_key")
         _require_text(self.retention_policy_ref, "retention_policy_ref")
+        resolve_external_retention_policy_ref(self.retention_policy_ref)
         _require_aware_utc(self.requested_at_utc, "requested_at_utc")
         if not self.source_signal_ids:
             raise ValueError("source_signal_ids is required")

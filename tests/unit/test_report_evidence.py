@@ -294,6 +294,9 @@ def test_governed_report_evidence_pack_requires_source_signal_summary_and_reason
 
 
 def test_report_evidence_pack_command_validates_identity_time_reason_and_retention() -> None:
+    with pytest.raises(ValueError, match="retention policy reference is not governed"):
+        replace(command(), retention_policy_ref="caller:chosen:retention:v1")
+
     with pytest.raises(ValueError, match="report_evidence_pack_id is required"):
         ReportEvidencePackCommand(
             report_evidence_pack_id=" ",

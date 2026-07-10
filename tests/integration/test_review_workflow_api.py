@@ -1157,6 +1157,15 @@ def test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publ
         json=blank_retention_payload,
         headers=report_evidence_pack_headers("report-evidence-pack-api-blank-retention-001"),
     )
+    unknown_retention_payload = report_evidence_pack_payload(
+        report_evidence_pack_id="report-pack-unknown-retention-001"
+    )
+    unknown_retention_payload["retentionPolicyRef"] = "caller:chosen:retention:v1"
+    unknown_retention = client.post(
+        "/api/v1/conversion-intents/conversion-report-pack-invalid-001/report-evidence-packs",
+        json=unknown_retention_payload,
+        headers=report_evidence_pack_headers("report-evidence-pack-api-unknown-retention-001"),
+    )
     naive_time_payload = report_evidence_pack_payload(
         report_evidence_pack_id="report-pack-naive-time-001"
     )
@@ -1185,5 +1194,6 @@ def test_report_evidence_pack_api_replays_conflicts_and_blocks_client_ready_publ
     assert blank_pack_id.status_code == 400
     assert no_reasons.status_code == 400
     assert blank_retention.status_code == 400
+    assert unknown_retention.status_code == 400
     assert naive_time.status_code == 400
     assert blank_idempotency.status_code == 400

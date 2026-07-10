@@ -46,6 +46,7 @@ from app.domain import (
     ReportEvidenceSourceSummary,
     SourceSystem,
 )
+from app.domain.data_lifecycle import resolve_external_retention_policy_ref
 from app.api.problem_details import problem_details_response as problem_response
 from app.observability import IdeaOperation, OperationEvent, OperationOutcome, emit_operation_event
 from app.security.caller_context import CallerContext, PermissionDeniedError
@@ -85,6 +86,7 @@ class ReportEvidencePackRequest(CamelModel):
     def _retention_policy_must_not_be_blank(cls, value: str) -> str:
         if not value.strip():
             raise ValueError("retentionPolicyRef is required")
+        resolve_external_retention_policy_ref(value)
         return value
 
     def to_command(

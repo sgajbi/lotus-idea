@@ -64,7 +64,7 @@ def test_mutating_workflow_requests_reject_empty_reason_codes() -> None:
                 "purpose": ReportEvidencePackPurpose.CLIENT_REVIEW_REPORT_SECTION,
                 "reasonCodes": [],
                 "requestedAtUtc": REQUESTED_AT,
-                "retentionPolicyRef": "retention:client-review:v1",
+                "retentionPolicyRef": "lotus-report:idea-evidence-retention:v1",
                 "clientReadyPublicationRequested": False,
             }
         ),
