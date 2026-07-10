@@ -20,6 +20,15 @@ from app.observability.correlation_context import (
     is_product_safe_context_id,
     sanitize_or_generate_context_id,
 )
+from app.observability.outbox_supportability import (
+    OUTBOX_DELIVERY_COLLECTION_SUCCESS_METRIC,
+    OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC,
+    OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC,
+    OUTBOX_DELIVERY_STATE_METRIC,
+    OUTBOX_DELIVERY_STATES,
+    OutboxDeliverySupportabilityCollector,
+    configure_outbox_supportability_metrics,
+)
 
 __all__ = [
     "FORBIDDEN_OPERATION_FIELD_KEYS",
@@ -40,4 +49,11 @@ __all__ = [
     "generated_trace_id",
     "is_product_safe_context_id",
     "sanitize_or_generate_context_id",
+    "OUTBOX_DELIVERY_COLLECTION_SUCCESS_METRIC",
+    "OUTBOX_DELIVERY_CONFIGURATION_READY_METRIC",
+    "OUTBOX_DELIVERY_OLDEST_READY_AGE_METRIC",
+    "OUTBOX_DELIVERY_STATE_METRIC",
+    "OUTBOX_DELIVERY_STATES",
+    "OutboxDeliverySupportabilityCollector",
+    "configure_outbox_supportability_metrics",
 ]

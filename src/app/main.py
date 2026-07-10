@@ -40,11 +40,23 @@ from app.api.problem_details import (
     ProblemDetailsHTTPException,
     problem_details_response as problem_response,
 )
-from app.api.runtime_dependencies import idea_repository_runtime_posture
+from app.api.runtime_dependencies import (
+    get_idea_repository,
+    idea_repository_durable_storage_backed,
+    idea_repository_runtime_posture,
+)
+from app.application.outbox_delivery_readiness import (
+    OutboxDeliveryReadinessSnapshot,
+    build_outbox_delivery_readiness_snapshot,
+)
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.middleware.http_boundary import configure_http_boundary
-from app.observability import configure_logging, emit_request_diagnostic_event
+from app.observability import (
+    configure_logging,
+    configure_outbox_supportability_metrics,
+    emit_request_diagnostic_event,
+)
 
 SERVICE_NAME = "lotus-idea"
 SERVICE_VERSION = os.getenv("LOTUS_SERVICE_VERSION", "0.1.0")
@@ -67,10 +79,18 @@ def create_app() -> FastAPI:
     _register_product_routes(application)
     _register_platform_routes(application)
     Instrumentator().instrument(application).expose(application, include_in_schema=False)
+    configure_outbox_supportability_metrics(_runtime_outbox_delivery_readiness)
     _configure_openapi_contract_overrides(application)
     application.router.add_event_handler("shutdown", close_downstream_realization_clients)
     configure_logging()
     return application
+
+
+def _runtime_outbox_delivery_readiness() -> OutboxDeliveryReadinessSnapshot:
+    return build_outbox_delivery_readiness_snapshot(
+        repository=get_idea_repository(),
+        durable_storage_backed=idea_repository_durable_storage_backed(),
+    )
 
 
 def _register_product_routes(application: FastAPI) -> None:
