@@ -22,6 +22,10 @@ public ProblemDetails responses that lack either media-type example.
 Caller-supplied signal routes remain governed by `app.api.signal_api_support`,
 which owns their permission, source-authority, operation-event, and 400/403
 OpenAPI metadata as one contract.
+The shared caller-context dependency preserves the same stable runtime
+vocabulary: malformed entitlement headers are `400 invalid_request`, and
+missing trusted provenance is `403 permission_denied`; raw header values never
+cross the ProblemDetails boundary.
 
 Protected business/operator endpoints publish caller-context requirements in
 generated OpenAPI through the `LotusCallerContext` security scheme and the

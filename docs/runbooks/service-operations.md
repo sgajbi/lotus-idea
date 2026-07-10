@@ -143,6 +143,13 @@ downstream propagation; if a caller sends a blank, overlong, portfolio-like,
 token-like, or malformed diagnostic header, use the generated response header
 value for support lookup.
 
+Caller-context dependency failures preserve the stable API vocabulary: blank
+entitlement-scope headers return `400 invalid_request`, while missing or
+invalid trusted caller-context provenance returns `403 permission_denied`.
+These details are product-safe and contain no raw header values; unrelated
+framework `HTTPException` failures retain the generic `request_rejected`
+fallback.
+
 These controls improve service boundary posture only. They do not certify
 Gateway/Workbench browser support, external API support, client publication,
 production recovery, data-mesh certification, or supported-feature promotion.

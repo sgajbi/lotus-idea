@@ -1082,6 +1082,14 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     adapter A/B propagation tests, and fail-closed missing/ambiguous tenant
     tests protect the boundary. This is design modularity within the existing
     process and does not justify a new runtime service.
+24. Caller-context ProblemDetails truth: GitHub issue `#336` is addressed by
+    using `ProblemDetailsHTTPException` for shared caller-context dependency
+    failures and preserving its approved code/title through the global HTTP
+    handler. Blank entitlement headers return `invalid_request`; missing
+    trusted provenance returns `permission_denied`; unrelated framework
+    exceptions retain the generic `request_rejected` fallback. The
+    caller-context contract gate blocks direct generic raises in this boundary,
+    and tests verify product-safe response bodies.
 
 Recently closed by PR `#273` and mainline validation:
 
