@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 from types import ModuleType
+from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -95,14 +96,20 @@ def test_disaster_recovery_contract_reports_malformed_json(tmp_path: Path) -> No
     assert errors[0].startswith("disaster recovery contract is unreadable:")
 
 
-def load_contract(module: ModuleType) -> dict[str, object]:
-    return json.loads((ROOT / module.CONTRACT_PATH).read_text(encoding="utf-8"))
+def load_contract(module: ModuleType) -> dict[str, Any]:
+    return cast(
+        dict[str, Any],
+        json.loads((ROOT / module.CONTRACT_PATH).read_text(encoding="utf-8")),
+    )
 
 
-def validate_payload(module: ModuleType, tmp_path: Path, payload: dict[str, object]) -> list[str]:
+def validate_payload(module: ModuleType, tmp_path: Path, payload: dict[str, Any]) -> list[str]:
     contract_path = tmp_path / "contract.json"
     contract_path.write_text(json.dumps(payload), encoding="utf-8")
-    return module.validate_disaster_recovery_contract(contract_path=contract_path)
+    return cast(
+        list[str],
+        module.validate_disaster_recovery_contract(contract_path=contract_path),
+    )
 
 
 def load_gate() -> ModuleType:

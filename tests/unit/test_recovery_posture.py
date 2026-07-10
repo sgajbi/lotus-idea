@@ -80,7 +80,8 @@ def test_durable_write_guard_blocks_non_normal_recovery_posture(
     response = durable_write_problem(InMemoryIdeaRepository())
 
     assert response is not None
-    payload = json.loads(response.body)
+    body = bytes(response.body)
+    payload = json.loads(body)
     assert response.status_code == 503
     assert payload["code"] == expected_code
-    assert "secret" not in response.body.decode().lower()
+    assert "secret" not in body.decode().lower()

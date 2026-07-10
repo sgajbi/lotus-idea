@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import sys
 from types import ModuleType
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -61,11 +62,11 @@ def write_valid_evidence(module: ModuleType, tmp_path: Path) -> tuple[Path, Path
     return restore_path, resume_path
 
 
-def valid_evidence(module: ModuleType) -> tuple[dict[str, object], dict[str, object]]:
+def valid_evidence(module: ModuleType) -> tuple[dict[str, Any], dict[str, Any]]:
     contract = json.loads(module.CONTRACT_PATH.read_text(encoding="utf-8"))
     tables = contract["restore_verification"]["owned_tables"]
     hashes = {table: "a" * 64 for table in tables}
-    restore: dict[str, object] = {
+    restore: dict[str, Any] = {
         "evidence_version": "1.0.0",
         "validation_mode": "real_restore_validation",
         "status": "passed",
@@ -91,7 +92,7 @@ def valid_evidence(module: ModuleType) -> tuple[dict[str, object], dict[str, obj
         "restored_table_row_counts": {table: 1 for table in tables},
         "restored_table_content_sha256": hashes,
     }
-    resume: dict[str, object] = {
+    resume: dict[str, Any] = {
         "evidence_version": "1.0.0",
         "status": "passed",
         "candidate_replay_decision": "replayed",
