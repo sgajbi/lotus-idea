@@ -18,6 +18,18 @@ class CoreSourceEntitlementDenied(Exception):
     pass
 
 
+def _validate_core_request_scope(*, portfolio_id: str, tenant_id: str) -> None:
+    if not portfolio_id.strip():
+        raise ValueError("portfolio_id is required")
+    if not tenant_id.strip():
+        raise ValueError("tenant_id is required")
+
+
+def _require_aware_evaluation_time(evaluated_at_utc: datetime) -> None:
+    if evaluated_at_utc.tzinfo is None or evaluated_at_utc.utcoffset() is None:
+        raise ValueError("evaluated_at_utc must be timezone-aware")
+
+
 @dataclass(frozen=True)
 class CoreHighCashEvidenceRequest:
     portfolio_id: str
@@ -28,12 +40,8 @@ class CoreHighCashEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.tenant_id.strip():
-            raise ValueError("tenant_id is required")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _validate_core_request_scope(portfolio_id=self.portfolio_id, tenant_id=self.tenant_id)
+        _require_aware_evaluation_time(self.evaluated_at_utc)
 
 
 @dataclass(frozen=True)
@@ -58,12 +66,8 @@ class CoreBenchmarkAssignmentEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.tenant_id.strip():
-            raise ValueError("tenant_id is required")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _validate_core_request_scope(portfolio_id=self.portfolio_id, tenant_id=self.tenant_id)
+        _require_aware_evaluation_time(self.evaluated_at_utc)
 
 
 @dataclass(frozen=True)
@@ -87,12 +91,8 @@ class CorePortfolioStateEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.tenant_id.strip():
-            raise ValueError("tenant_id is required")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _validate_core_request_scope(portfolio_id=self.portfolio_id, tenant_id=self.tenant_id)
+        _require_aware_evaluation_time(self.evaluated_at_utc)
 
 
 @dataclass(frozen=True)
@@ -114,14 +114,10 @@ class CoreLowIncomeEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.tenant_id.strip():
-            raise ValueError("tenant_id is required")
+        _validate_core_request_scope(portfolio_id=self.portfolio_id, tenant_id=self.tenant_id)
         if self.horizon_days < 1 or self.horizon_days > 366:
             raise ValueError("horizon_days must be between 1 and 366")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _require_aware_evaluation_time(self.evaluated_at_utc)
 
 
 @dataclass(frozen=True)
@@ -145,14 +141,10 @@ class CoreBondMaturityEvidenceRequest:
     trace_id: str | None = None
 
     def __post_init__(self) -> None:
-        if not self.portfolio_id.strip():
-            raise ValueError("portfolio_id is required")
-        if not self.tenant_id.strip():
-            raise ValueError("tenant_id is required")
+        _validate_core_request_scope(portfolio_id=self.portfolio_id, tenant_id=self.tenant_id)
         if self.maturity_window_days < 1 or self.maturity_window_days > 366:
             raise ValueError("maturity_window_days must be between 1 and 366")
-        if self.evaluated_at_utc.tzinfo is None or self.evaluated_at_utc.utcoffset() is None:
-            raise ValueError("evaluated_at_utc must be timezone-aware")
+        _require_aware_evaluation_time(self.evaluated_at_utc)
 
 
 @dataclass(frozen=True)
