@@ -198,8 +198,7 @@ def _downstream_realization_readiness_summary(
     return DownstreamRealizationReadinessRepositorySummary(
         conversion_intent_count=sum(len(record.conversion_intents) for record in records),
         conversion_outcome_count=sum(
-            _valid_conversion_outcome_stream_count(record.conversion_outcomes)
-            for record in records
+            _valid_conversion_outcome_stream_count(record.conversion_outcomes) for record in records
         ),
         report_evidence_pack_request_count=sum(
             len(record.report_evidence_packs) for record in records

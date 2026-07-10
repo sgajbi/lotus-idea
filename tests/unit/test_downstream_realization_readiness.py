@@ -68,8 +68,7 @@ def _outcome(
                 if status in {ConversionOutcomeStatus.ACCEPTED, ConversionOutcomeStatus.COMPLETED}
                 else None
             ),
-            recorded_at_utc=datetime(2026, 6, 21, 10, tzinfo=UTC)
-            + timedelta(minutes=minute),
+            recorded_at_utc=datetime(2026, 6, 21, 10, tzinfo=UTC) + timedelta(minutes=minute),
             actor_subject="lotus-report-worker",
         )
     )

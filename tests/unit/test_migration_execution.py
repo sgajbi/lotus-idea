@@ -98,9 +98,9 @@ def test_candidate_state_rollback_is_safe_when_the_foundation_table_is_absent() 
 
 
 def test_conversion_outcome_migration_quarantines_without_deleting_legacy_history() -> None:
-    apply_sql = (
-        ROOT / "migrations" / "006_conversion_outcome_lifecycle.sql"
-    ).read_text(encoding="utf-8")
+    apply_sql = (ROOT / "migrations" / "006_conversion_outcome_lifecycle.sql").read_text(
+        encoding="utf-8"
+    )
 
     assert "idea_conversion_outcome_quarantine" in apply_sql
     assert "invalid_legacy_conversion_outcome_history" in apply_sql

@@ -171,12 +171,10 @@ def test_conversion_outcome_api_enforces_progression_and_append_only_correction(
 
 def test_conversion_outcome_openapi_separates_conflicts_and_current_posture() -> None:
     schema = app.openapi()
-    operation = schema["paths"][
-        "/api/v1/conversion-intents/{conversionIntentId}/outcomes"
-    ]["post"]
-    problem_examples = operation["responses"]["409"]["content"][
-        "application/problem+json"
-    ]["examples"]
+    operation = schema["paths"]["/api/v1/conversion-intents/{conversionIntentId}/outcomes"]["post"]
+    problem_examples = operation["responses"]["409"]["content"]["application/problem+json"][
+        "examples"
+    ]
     candidate_detail = schema["components"]["schemas"]["CandidateDetailResponse"]
 
     assert set(problem_examples) == {
