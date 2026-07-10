@@ -16,6 +16,7 @@ REQUIRED_OPENAPI_IDEMPOTENCY_OPERATIONS = (
     ("post", "/api/v1/conversion-intents/{conversionIntentId}/report-evidence-packs"),
     ("post", "/api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"),
     ("post", "/api/v1/outbox-delivery/run-once"),
+    ("post", "/api/v1/outbox-delivery/dead-letters/{supportReference}/redrive"),
 )
 
 

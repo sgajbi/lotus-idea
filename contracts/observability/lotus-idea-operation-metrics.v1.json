@@ -158,6 +158,18 @@
           "supportability_status": "not_certified"
         },
         {
+          "operation": "outbox_dead_letter_read",
+          "scope": "Source-safe operator inspection of quarantined local outbox events",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "outbox_dead_letter_redrive",
+          "scope": "Fenced and audited operator re-drive of one eligible local outbox event",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
           "operation": "downstream_realization_readiness_read",
           "scope": "Internal downstream realization readiness diagnostic",
           "source_authority": "lotus-idea",

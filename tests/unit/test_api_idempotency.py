@@ -71,6 +71,8 @@ def test_api_idempotency_boundary_gate_blocks_optional_openapi_header() -> None:
         "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions: "
         "missing OpenAPI operation",
         "POST /api/v1/outbox-delivery/run-once: missing OpenAPI operation",
+        "POST /api/v1/outbox-delivery/dead-letters/{supportReference}/redrive: "
+        "missing OpenAPI operation",
     ]
 
 

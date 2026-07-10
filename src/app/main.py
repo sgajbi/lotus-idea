@@ -26,6 +26,7 @@ from app.api.missing_benchmark_signals import register_missing_benchmark_signal_
 from app.api.missing_risk_profile_signals import register_missing_risk_profile_signal_routes
 from app.api.missing_suitability_signals import register_missing_suitability_signal_routes
 from app.api.outbox_delivery_readiness import register_outbox_delivery_readiness_routes
+from app.api.outbox_recovery import register_outbox_recovery_routes
 from app.api.report_evidence import register_report_evidence_routes
 from app.api.review_queues import register_review_queue_routes
 from app.api.review_workflow import register_review_workflow_routes
@@ -98,6 +99,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_runtime_trust_telemetry_routes(application)
     register_source_ingestion_readiness_routes(application)
     register_outbox_delivery_readiness_routes(application)
+    register_outbox_recovery_routes(application)
     register_implementation_proof_readiness_routes(application)
 
 

@@ -76,6 +76,8 @@ class IdeaOperation(StrEnum):
     DOWNSTREAM_REALIZATION_SUBMISSION = "downstream_realization_submission"
     OUTBOX_DELIVERY_RUN_ONCE = "outbox_delivery_run_once"
     OUTBOX_DELIVERY_READINESS_READ = "outbox_delivery_readiness_read"
+    OUTBOX_DEAD_LETTER_READ = "outbox_dead_letter_read"
+    OUTBOX_DEAD_LETTER_REDRIVE = "outbox_dead_letter_redrive"
     DOWNSTREAM_REALIZATION_READINESS_READ = "downstream_realization_readiness_read"
     MESH_READINESS_READ = "mesh_readiness_read"
     MESH_TRUST_TELEMETRY_PREVIEW_READ = "mesh_trust_telemetry_preview_read"
