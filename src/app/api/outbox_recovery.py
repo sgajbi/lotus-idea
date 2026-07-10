@@ -268,10 +268,40 @@ OUTBOX_DEAD_LETTER_LIST_ROUTE: RouteMetadata = {
     "status_code": status.HTTP_200_OK,
     "response_model": OutboxDeadLetterListResponse,
     "tags": ["Operations"],
-    "responses": permission_denied_metadata(
-        detail="The caller is not permitted to inspect Idea outbox dead letters.",
-        description="Caller lacks dead-letter inspection permission.",
-    ),
+    "responses": {
+        200: {
+            "description": "Bounded source-safe dead-letter projection.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "repository": "lotus-idea",
+                        "supportabilityStatus": "not_certified",
+                        "items": [
+                            {
+                                "supportReference": "dlq_4bc849d4b6ebdd85",
+                                "eventFamily": "idea.lifecycle.transitioned.v1",
+                                "schemaVersion": "v1",
+                                "retryCount": 3,
+                                "firstFailedAtUtc": "2026-07-10T02:00:00Z",
+                                "lastFailedAtUtc": "2026-07-10T02:10:00Z",
+                                "failureReason": "broker_unavailable",
+                                "recoveryEligible": True,
+                                "recoveryBlocker": None,
+                                "disposition": "quarantined",
+                                "owner": "lotus-idea-operations",
+                            }
+                        ],
+                        "returnedCount": 1,
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
+        **permission_denied_metadata(
+            detail="The caller is not permitted to inspect Idea outbox dead letters.",
+            description="Caller lacks dead-letter inspection permission.",
+        ),
+    },
 }
 
 OUTBOX_DEAD_LETTER_REDRIVE_ROUTE: RouteMetadata = {
@@ -288,6 +318,24 @@ OUTBOX_DEAD_LETTER_REDRIVE_ROUTE: RouteMetadata = {
     "response_model": OutboxRecoveryResponse,
     "tags": ["Operations"],
     "responses": {
+        200: {
+            "description": "Recovery accepted, replayed, or safely blocked.",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "repository": "lotus-idea",
+                        "supportReference": "dlq_4bc849d4b6ebdd85",
+                        "runStatus": "accepted",
+                        "recoveryReference": "recovery_32c13dfdd6134b3f",
+                        "blocker": None,
+                        "publicationAttempted": True,
+                        "originalRetryCount": 3,
+                        "supportabilityStatus": "not_certified",
+                        "supportedFeaturePromoted": False,
+                    }
+                }
+            },
+        },
         **permission_denied_metadata(
             detail="The caller is not permitted to re-drive Idea outbox dead letters.",
             description="Caller lacks dead-letter re-drive permission.",
