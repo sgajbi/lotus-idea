@@ -260,6 +260,46 @@ The success response is intentionally aggregate and source-safe:
 | `sourceOfTruth` | Implementation and RFC paths that define current behavior |
 | `supportedFeaturePromoted` | Always `false` until supported-feature evidence exists |
 
+## Submission Recovery
+
+Every outbound submission is claimed durably before an adapter can run. The
+submission response is authoritative only for local posture:
+
+| HTTP/posture | Meaning | Operator action |
+| --- | --- | --- |
+| `200 accepted_by_downstream` | The adapter reported acceptance and the local terminal state committed. | Await source-owned conversion outcome; do not infer suitability or execution. |
+| `200 rejected_by_downstream` | The adapter reported a definitive rejection and the local terminal state committed. | Correct the source-owned request condition through the owning workflow. |
+| `202 reconciliation_required` | The downstream result or local finalization is uncertain. | Verify the downstream receipt, then reconcile by opaque support reference. |
+| `503 downstream_realization_not_configured` | The local adapter is absent and that posture is durable. | Configure the governed adapter; do not reuse the same key to force a call. |
+
+Inspect uncertain work:
+
+```powershell
+curl `
+  -H "X-Caller-Subject: platform-operator" `
+  -H "X-Caller-Roles: operator" `
+  -H "X-Caller-Capabilities: idea.downstream-reconciliation.read" `
+  http://localhost:8330/api/v1/downstream-submissions/reconciliation
+```
+
+Resolve only after checking the source-owned downstream receipt. The mutation
+identity and operational change reference are intentionally the same value:
+
+```powershell
+curl -X POST `
+  -H "Content-Type: application/json" `
+  -H "X-Caller-Subject: platform-operator" `
+  -H "X-Caller-Roles: operator" `
+  -H "X-Caller-Capabilities: idea.downstream-reconciliation.resolve" `
+  -H "Idempotency-Key: CHG-334-001" `
+  -d '{"resolution":"accepted_by_downstream","reason":"downstream_receipt_verified","changeReference":"CHG-334-001"}' `
+  http://localhost:8330/api/v1/downstream-submissions/reconciliation/downstream-submission-0123456789abcdef01234567
+```
+
+Exact repeats return `replayed`. Reusing a change reference for another
+resolution, reason, or actor returns `409`. The recovery route never calls the
+downstream service and never creates an authoritative conversion outcome.
+
 ## Adapter Configuration
 
 The submission routes require explicit adapter configuration. Missing or blank
@@ -296,48 +336,58 @@ Implementation-backed evidence:
    `src/app/ports/downstream_realization.py`,
 5. downstream adapter foundation:
    `src/app/infrastructure/downstream_realization.py`,
-6. governed contract plan:
+6. downstream submission state and PostgreSQL adapter:
+   `src/app/domain/downstream_submission.py` and
+   `src/app/infrastructure/postgres_downstream_submission.py`,
+7. reconciliation application/API:
+   `src/app/application/downstream_submission_reconciliation.py` and
+   `src/app/api/downstream_submission_reconciliation.py`,
+8. governed contract plan:
    `contracts/downstream-realization/lotus-idea-downstream-contracts.v1.json`,
-7. report-owned planned intake contract:
+9. report-owned planned intake contract:
    `lotus-report/contracts/idea-evidence-intake/lotus-report-idea-evidence-pack-intake.v1.json`,
-8. contract gate: `scripts/downstream_realization_contract_gate.py`,
-9. downstream route proof generator:
+10. contract gate: `scripts/downstream_realization_contract_gate.py`,
+11. downstream route proof generator:
    `src/app/application/downstream_route_contract_proof.py`,
-10. Advise route proof generator:
+12. Advise route proof generator:
     `scripts/generate_advise_proposal_route_proof.py`,
-11. Manage route proof generator:
+13. Manage route proof generator:
     `scripts/generate_manage_action_route_proof.py`,
-12. downstream route proof gate:
+14. downstream route proof gate:
     `scripts/downstream_route_contract_proof_gate.py`,
-13. report route proof generator:
+15. report route proof generator:
    `scripts/generate_report_intake_route_proof.py`,
-14. report route proof gate:
+16. report route proof gate:
     `scripts/report_intake_route_proof_contract_gate.py`,
-15. report materialization proof generator:
+17. report materialization proof generator:
    `scripts/generate_report_materialization_proof.py`,
-16. report materialization proof gate:
+18. report materialization proof gate:
     `scripts/report_materialization_proof_contract_gate.py`,
-17. readiness API route: `src/app/api/downstream_realization_readiness.py`,
-18. operation events:
+19. readiness API route: `src/app/api/downstream_realization_readiness.py`,
+20. operation events:
    `downstream_realization_readiness_read` and
-   `downstream_realization_submission`,
-19. endpoint ledger:
+   `downstream_realization_submission`, plus
+   `downstream_reconciliation_read` and `downstream_reconciliation_resolve`,
+21. endpoint ledger:
    `docs/operations/endpoint-certification-ledger.json`,
-20. unit tests:
+22. unit tests:
    `tests/unit/test_downstream_realization_readiness.py`,
-21. application orchestration tests:
+23. application orchestration tests:
    `tests/unit/test_downstream_realization_application.py`,
-22. adapter tests:
+24. adapter tests:
    `tests/unit/test_downstream_realization_adapters.py`,
-23. gate tests:
+25. gate tests:
    `tests/unit/test_downstream_realization_contract_gate.py`,
-24. route proof tests:
+26. route proof tests:
     `tests/unit/test_downstream_route_contract_proof.py`,
-25. report route proof tests:
+27. report route proof tests:
     `tests/unit/test_report_intake_route_proof.py`,
-26. report materialization proof tests:
+28. report materialization proof tests:
     `tests/unit/test_report_materialization_proof.py`,
-27. integration tests:
+29. submission reconciliation and real PostgreSQL tests:
+   `tests/integration/test_downstream_submission_reconciliation_api.py` and
+   `tests/integration/test_postgres_downstream_submission_runtime.py`,
+30. integration tests:
    `tests/integration/test_downstream_realization_readiness_api.py` and
    `tests/integration/test_downstream_realization_api.py`.
 

@@ -1,6 +1,6 @@
 # RFC-0002 Slice 06: Persistence, Replay, Idempotency, And Audit
 
-Status: Partially implemented - internal persistence, source-safe outbox retry/dead-letter delivery foundation with durable retry scheduling, certified outbox delivery readiness diagnostic and run-once operator action with PostgreSQL repository-side readiness projection, bounded outbox broker proof artifact, bounded downstream consumer runtime proof artifact, bounded outbox platform mesh event publication proof artifact, certified evidence replay API, schema/rollback contract, migration execution, PostgreSQL adapter, opt-in API repository wiring, first PostgreSQL runtime workflow proof, source-safe durable repository proof artifact, source-ingestion replay/conflict recovery proof, manifest-backed run-once ingestion worker CLI/check, scheduled-worker deploy-contract proof, and migration rollback/reapply recovery proof
+Status: Partially implemented - internal persistence, replay, audit, durable downstream submission claim/finalize/reconciliation, source-safe outbox retry/dead-letter delivery, certified operator diagnostics/actions, schema/rollback contracts, PostgreSQL adapters and real concurrency/restart proof, source-ingestion recovery, and bounded broker/consumer/mesh proof foundations are implemented; external publication, production recovery certification, downstream execution/materialization proof, and supported-feature promotion remain blocked
 
 ## Outcome
 
@@ -511,6 +511,82 @@ Prior Slice 06 validation:
 
 GitHub PR validation and wiki publication remain required before mainline
 closure.
+
+## Issue 334 Durable Downstream Submission Recovery
+
+Issue `#334` closes the external-call/local-commit ambiguity in the downstream
+submission foundation. The application now creates an atomic durable claim
+before invoking Advise, Manage, or Report. A request can reach the adapter only
+when that claim is newly accepted.
+
+### State And Failure Policy
+
+| Condition | Durable posture | Automatic downstream retry |
+| --- | --- | --- |
+| Claim accepted, call not yet finalized | `in_flight` | No |
+| Downstream returns a definitive 2xx acceptance | `accepted_by_downstream` after local finalization | No |
+| Downstream returns a definitive 4xx rejection | `rejected_by_downstream` | No |
+| Adapter is not configured | `not_configured` | No |
+| Timeout, transport failure, 5xx, malformed response, lease loss, or local finalization failure | `reconciliation_required` or retained `in_flight` claim | No |
+| Operator cannot establish source-owned truth | `quarantined` | No |
+
+Acceptance is returned only after the terminal local state commits. If the
+downstream service accepted work but the local finalization fails, the caller
+receives `202 reconciliation_required` with an opaque support reference. A
+same-key retry returns stored uncertain posture and never invokes the adapter
+again. Lotus Idea still does not record an authoritative conversion outcome;
+that fact must arrive through the owning downstream source-authority contract.
+
+### Recovery Controls
+
+The operator-only reconciliation API exposes a bounded source-safe projection:
+
+1. `GET /api/v1/downstream-submissions/reconciliation` requires the `operator`
+   role and `idea.downstream-reconciliation.read` capability.
+2. `POST /api/v1/downstream-submissions/reconciliation/{supportReference}`
+   requires the `operator` role and
+   `idea.downstream-reconciliation.resolve` capability.
+3. `Idempotency-Key` must equal `changeReference`; exact repeats replay, while
+   reuse for another resolution, reason, or actor conflicts.
+4. Accepted, rejected, and quarantined resolutions append actor, reason,
+   change reference, time, previous posture, and current posture to durable
+   audit history.
+5. Responses omit resource IDs, idempotency keys, downstream payloads, client
+   identifiers, and portfolio identifiers.
+
+### Modularity And Operability
+
+The state machine, in-memory provider, PostgreSQL provider, application use
+case, DTO models, and API route are separate bounded modules behind repository
+ports. They remain in the existing `lotus-idea` process. No workload,
+failure-isolation, ownership, or operability evidence justifies a new runtime
+service.
+
+Migration `008_downstream_submission_state_machine` adds deterministic opaque
+support references, attempt count, update time, lease identity/expiry,
+append-only JSON audit history, posture constraints, and a reconciliation
+index. PostgreSQL uses `ON CONFLICT DO NOTHING`, exact locked lookup, and
+lease-fenced state update. The real PostgreSQL lane proves concurrent claim
+serialization, migration apply/rollback, restart recovery, exact operator
+replay, and preservation of an in-flight claim after connection failure.
+
+`make downstream-realization-contract-gate` blocks reintroduction of
+call-before-claim ordering, legacy post-call writes, weak PostgreSQL conflict
+handling, ungoverned reconciliation, or fake-only runtime proof. Supported
+features remain unchanged because this is recovery and local submission
+posture, not downstream execution, materialization, Gateway/Workbench product
+proof, or production support promotion.
+
+Current branch validation:
+
+1. `make lint` passed all repository contract and governance gates.
+2. `make typecheck` passed across `563` source files.
+3. `make test-unit` passed with `2704 passed`.
+4. `make test-integration` passed with `385 passed` and `12` expected
+   PostgreSQL skips when no integration DSN is configured.
+5. `make test-e2e` passed with `4 passed`.
+6. The required disposable PostgreSQL gate passed with `12 passed`, including
+   the new concurrent submission recovery scenario.
 
 ## Issue 337 Dead-Letter Recovery Hardening
 

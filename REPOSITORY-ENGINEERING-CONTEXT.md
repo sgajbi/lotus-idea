@@ -1218,6 +1218,17 @@ repeated defect patterns are fixed once and pinned with tests or gates:
     and `make supported-feature-promotion-contract-gate` prevents independent
     status counters or hard-coded output from returning. This is internal
     design modularity with no runtime split or current feature promotion.
+32. Durable downstream handoff recovery: GitHub issue `#334` is addressed by
+    a claim-before-call state machine, lease-fenced finalization, deterministic
+    opaque support references, append-only audit history, and operator-only
+    reconciliation. Timeout, 5xx, malformed response, transport ambiguity,
+    lease loss, and local finalization failure never trigger an automatic
+    second external call. PostgreSQL serializes claims with conflict-tolerant
+    insert plus exact locked lookup; the required real-database lane proves
+    concurrency, restart, connection-failure recovery, and exact mutation
+    replay. Keep domain, provider, orchestration, transport, and API modules
+    separate inside the current runtime; no service split or downstream
+    authority claim is justified.
 
 Recently closed by PR `#273` and mainline validation:
 
@@ -1335,7 +1346,8 @@ Current gaps remain explicit:
     or Workbench entitlement-denied proof for caller-context authorization,
 12. no production multi-process PostgreSQL concurrency certification beyond
     adapter-level stale-write/idempotency proof and local real-PostgreSQL
-    two-connection review/feedback identity-collision proof,
+    two-connection review/feedback identity plus downstream-submission claim
+    collision proof,
 13. no full container-filesystem SBOM; release evidence includes
     runtime-dependency SBOM, Trivy image scan, registry digest capture, keyless
     image signature, and provenance/SBOM attestations,

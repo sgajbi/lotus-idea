@@ -238,7 +238,7 @@ Operator entrypoints:
 - `/api/v1/outbox-delivery/readiness`, run-once, dead-letter inspection, and governed re-drive
 - `/api/v1/review-queues/advisor/readiness`
 - `/api/v1/ai-explanations/readiness`
-- `/api/v1/downstream-realization/readiness`
+- `/api/v1/downstream-realization/readiness` and `/api/v1/downstream-submissions/reconciliation`
 - `/api/v1/implementation-proof/readiness`
 - `/api/v1/data-mesh/readiness`
 - `/api/v1/data-mesh/trust-telemetry/runtime-preview`
@@ -248,7 +248,7 @@ Operator details live in
 [docs/runbooks/service-operations.md](docs/runbooks/service-operations.md),
 [docs/operations/observability.md](docs/operations/observability.md),
 [persistence](docs/operations/persistence.md) and [outbox lineage](docs/architecture/outbox-event-lineage.md),
-[docs/operations/outbox-dead-letter-recovery.md](docs/operations/outbox-dead-letter-recovery.md), and
+[docs/operations/outbox-dead-letter-recovery.md](docs/operations/outbox-dead-letter-recovery.md), [downstream realization](docs/operations/downstream-realization-readiness.md), and
 [wiki/Operations-Runbook.md](wiki/Operations-Runbook.md).
 
 ## Ecosystem Boundaries

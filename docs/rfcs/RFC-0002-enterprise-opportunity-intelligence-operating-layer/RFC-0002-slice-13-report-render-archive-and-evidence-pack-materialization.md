@@ -1,6 +1,6 @@
 # RFC-0002 Slice 13: Report, Render, Archive, And Evidence-Pack Materialization
 
-Status: Partially implemented - internal report evidence-pack request foundation, source-safe downstream submission API, application orchestration and adapter foundation, governed downstream contract-plan gate, bounded `lotus-report` intake route proof consumption, and bounded `lotus-report` materialization proof consumption while client publication and supported-feature promotion remain blocked
+Status: Partially implemented - internal report evidence-pack request foundation, durable claim-before-call Report submission and uncertain-outcome reconciliation, source-safe API/adapter foundation, governed downstream contract-plan gate, bounded `lotus-report` intake/materialization proof consumption, and blocked client publication/supported-feature promotion
 
 ## Outcome
 
@@ -77,14 +77,15 @@ Implemented in the first Slice 13 foundation:
 10. `src/app/application/downstream_realization.py` now adds source-safe
     application orchestration for submitting existing report evidence-pack
     requests through the Report downstream realization port. It finds the
-    request from repository snapshot truth, prechecks the local downstream
-    submission idempotency ledger before adapter calls, propagates correlation
-    and trace identifiers, records accepted, rejected, and not-configured
-    submission posture without sensitive payloads, replays
-    same-key/same-fingerprint requests, rejects changed fingerprints with
-    `idempotency_conflict`, and deliberately does not claim or record Report
-    package creation, Render output creation, Archive record creation, or
-    client-ready publication.
+    request through bounded repository lookup, creates an atomic durable claim
+    before the adapter call, propagates correlation and trace identifiers, and
+    lease-fences local finalization. Timeout, 5xx, malformed response,
+    transport ambiguity, lease loss, or local finalization failure becomes
+    reconciliation posture; same-key retries never call Report again.
+    Operators can resolve uncertain local posture by opaque support reference,
+    but the flow deliberately does not claim or record Report package creation,
+    Render output creation, Archive record creation, or client-ready
+    publication.
 11. `tests/unit/test_downstream_realization_application.py` proves report
     evidence-pack submission behavior, not-found behavior, no downstream
     outcome recording, local idempotency replay/conflict/not-configured

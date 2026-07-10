@@ -1,6 +1,6 @@
 # RFC-0002 Slice 12: Advise And Manage Conversion Realization
 
-Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, certified API/current-posture foundation, atomic repository-provider parity, source-safe downstream submission API, application orchestration and adapter foundations, governed downstream contract-plan gate, and bounded Advise/Manage route-foundation proof consumption
+Status: Partially implemented - internal conversion governance, source-versioned outcome lifecycle and correction policy, atomic repository-provider parity, durable claim-before-call submission and operator reconciliation, certified API/current-posture foundation, source-safe adapter foundations, governed downstream contract-plan gate, and bounded Advise/Manage route-foundation proof consumption; live execution and supported product proof remain blocked
 
 ## Outcome
 
@@ -105,15 +105,17 @@ Implemented in this slice:
 19. `src/app/application/downstream_realization.py` now adds source-safe
     application orchestration for submitting existing Advise proposal and
     Manage action conversion intents through the downstream realization ports.
-    The orchestration selects the correct downstream client from the conversion
-    target, prechecks the local downstream submission idempotency ledger before
-    adapter calls, propagates correlation and trace identifiers, records
-    accepted, rejected, and not-configured submission posture without sensitive
-    payloads, replays same-key/same-fingerprint requests, rejects changed
-    fingerprints with `idempotency_conflict`, and deliberately does not record
-    authoritative downstream outcomes. Downstream acceptance, rejection,
+    The orchestration selects the correct downstream client, atomically claims
+    the submission before the adapter call, propagates correlation and trace
+    identifiers, and lease-fences local finalization. Definitive acceptance or
+    rejection is returned only after local state commits. Timeout, 5xx,
+    malformed response, transport ambiguity, lease loss, or local finalization
+    failure returns `reconciliation_required`; same-key retries never call the
+    downstream service again. Operators can inspect and explicitly resolve the
+    uncertain posture by opaque support reference with role, capability,
+    idempotency, audit, and source-safety controls. Authoritative acceptance,
     completion, suitability, action-register, materialization, and failure
-    truth remains owned by the downstream service and by the existing
+    truth remains owned by the downstream service and the existing
     conversion-outcome recording API.
 20. `tests/unit/test_downstream_realization_application.py` proves Advise
     routing, Manage failure mapping, report-target rejection through the
