@@ -4,7 +4,7 @@ import ast
 from dataclasses import dataclass
 import json
 import re
-from datetime import UTC, datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -188,9 +188,6 @@ def _validate_utc_timestamp(
         errors.append(f"{context} must be an explicit UTC timestamp like 2026-06-30T00:00:00Z")
         return
     parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) != timezone.utc.utcoffset(parsed):
-        errors.append(f"{context} must be timezone-aware UTC")
-        return
     if parsed > evaluated_at_utc:
         errors.append(f"{context} cannot be after the evaluation time")
     elif evaluated_at_utc - parsed > PROMOTION_REVIEW_MAX_AGE:
