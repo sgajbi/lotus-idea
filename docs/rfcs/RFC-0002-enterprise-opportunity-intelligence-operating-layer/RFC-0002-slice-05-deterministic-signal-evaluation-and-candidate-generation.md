@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied routes use a shared ordered API boundary for entitlement, source-contract validation, DTO mapping, application evaluation, event emission, and response projection. The repo-native canonical opportunity-source proof runner now binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. Live Risk concentration and Performance underperformance evidence are current for the governed canonical portfolio; Performance benchmark-readiness remains fail-closed while returns-series evidence is pending. Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
+Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied routes use a shared ordered API boundary for entitlement, source-contract validation, DTO mapping, application evaluation, event emission, and response projection. The repo-native canonical opportunity-source proof runner binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. A clean-tree canonical run now validates current Risk concentration, Performance underperformance, and Performance benchmark-readiness evidence for the governed portfolio. Merged release evidence, Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
 
 ## Outcome
 
@@ -880,9 +880,9 @@ Not implemented yet:
 1. merged release evidence for the current live Risk concentration proof,
 2. merged release evidence for the current live Performance returns-series
    proof,
-3. live Performance benchmark-readiness proof with current returns-series
-   evidence; the canonical run currently reports
-   `performance_returns_series_pending`,
+3. merged release evidence for the current live Performance benchmark-readiness
+   proof; the clean-tree canonical run now validates current returns-series
+   evidence,
 4. portfolio-scoped Manage, mandate performance-health, and mandate risk-health
    live proof beyond the source-safe Manage mandate proof contract and Core
    portfolio-state source-ref proof,
@@ -925,12 +925,13 @@ make canonical-opportunity-source-proofs `
   CANONICAL_OPPORTUNITY_TRACE_ID=trace-canonical-proof
 ```
 
-The 2026-07-10 canonical run proved current Risk concentration and
-Performance underperformance evidence. Performance benchmark-readiness was
-blocked by `performance_returns_series_pending`; the aggregate therefore
-remained `certificationReady=false`. The aggregate records `sourceRevision`,
-`sourceTreeDirty`, correlation, trace, per-proof observations, and explicit
-non-proof boundaries. Raw child process output is intentionally excluded.
+The clean-tree 2026-07-10 canonical run proved current Risk concentration,
+Performance underperformance, and Performance benchmark-readiness evidence;
+the aggregate returned `certificationReady=true`. The aggregate records
+`sourceRevision`, `sourceTreeDirty=false`, correlation, trace, per-proof
+observations, and explicit non-proof boundaries. Raw child process output is
+intentionally excluded. The result is branch evidence until the implementation
+slice is merged and the mainline release lane captures equivalent proof.
 
 This is implementation-proof automation, not Gateway/Workbench certification,
 data-product activation, client publication approval, official performance or

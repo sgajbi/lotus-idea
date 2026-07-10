@@ -79,7 +79,9 @@ supported-feature promotion.
 
 If Performance reports `performance_returns_series_pending`, wait for the
 canonical Performance/Core data path to reach the governed as-of date and rerun
-the command. Do not substitute caller-supplied values or relax the validator.
+the command. The clean-tree 2026-07-10 run reached current evidence and passed
+all three proof families. Do not substitute caller-supplied values or relax the
+validator.
 
 If the canonical stack fails before Idea proof execution, preserve the failing
 service name and readiness response as cross-repository evidence. Idea proof

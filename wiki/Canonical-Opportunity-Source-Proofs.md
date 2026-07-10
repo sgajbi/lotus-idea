@@ -56,8 +56,10 @@ supported-feature promotion.
 
 ## Current Runtime Result
 
-On 2026-07-10, canonical Risk concentration and Performance underperformance
-proofs were current and valid. Performance benchmark-readiness remained
-blocked by `performance_returns_series_pending`; the aggregate correctly
-remained not certification-ready. Do not replace that result with
-caller-supplied values or a relaxed validator.
+On 2026-07-10, the clean-tree canonical run proved current Risk concentration,
+Performance underperformance, and Performance benchmark-readiness evidence.
+The aggregate returned `certificationReady=true` with source revision
+`ffa9c35`, `sourceTreeDirty=false`, and explicit correlation/trace IDs. This is
+branch evidence until the implementation slice is merged and mainline release
+proof is captured. Do not replace it with caller-supplied values or a relaxed
+validator.
