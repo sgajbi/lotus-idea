@@ -7,6 +7,7 @@ from typing import Any
 
 from _pytest.logging import LogCaptureFixture
 from fastapi.testclient import TestClient
+from httpx2 import Response
 import pytest
 
 from app.api.caller_headers import TRUSTED_CALLER_CONTEXT_HEADER, TRUSTED_CALLER_CONTEXT_TOKEN_ENV
@@ -216,7 +217,7 @@ def _request(
     case: ProtectedRequest,
     *,
     headers: dict[str, str],
-):
+) -> Response:
     request_headers = dict(headers)
     if case.idempotency_key is not None:
         request_headers["Idempotency-Key"] = case.idempotency_key
