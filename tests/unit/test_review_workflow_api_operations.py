@@ -147,6 +147,7 @@ def test_prepare_review_workflow_mutation_returns_product_safe_durable_write_pro
     (
         (ReviewPersistenceDecision.NOT_FOUND, 404, "candidate_not_found"),
         (ReviewPersistenceDecision.CONFLICT, 409, "idempotency_conflict"),
+        (ReviewPersistenceDecision.IDENTITY_CONFLICT, 409, "review_identity_conflict"),
     ),
 )
 def test_problem_for_review_persistence_maps_product_safe_problem_details(

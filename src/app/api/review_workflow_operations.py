@@ -171,6 +171,13 @@ def problem_for_review_persistence(
             title="Idempotency conflict",
             detail="The idempotency key was already used with a different request payload.",
         )
+    if result.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT:
+        return problem_response(
+            status_code=status.HTTP_409_CONFLICT,
+            code="review_identity_conflict",
+            title="Review resource identity conflict",
+            detail="The review resource identifier was already used with different content.",
+        )
     return None
 
 
@@ -197,4 +204,6 @@ def error_code_from_review_decision(
         return "candidate_not_found"
     if decision is ReviewPersistenceDecision.CONFLICT:
         return "idempotency_conflict"
+    if decision is ReviewPersistenceDecision.IDENTITY_CONFLICT:
+        return "review_identity_conflict"
     return None

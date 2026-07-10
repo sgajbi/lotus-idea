@@ -15,6 +15,10 @@ def test_review_api_error_mapping_is_bounded_and_source_safe() -> None:
         error_code_from_review_decision(ReviewPersistenceDecision.CONFLICT)
         == "idempotency_conflict"
     )
+    assert (
+        error_code_from_review_decision(ReviewPersistenceDecision.IDENTITY_CONFLICT)
+        == "review_identity_conflict"
+    )
     assert error_code_from_review_decision(ReviewPersistenceDecision.ACCEPTED) is None
 
 

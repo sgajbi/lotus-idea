@@ -67,6 +67,12 @@ _REVIEW_IDEMPOTENCY_CONFLICT = conflict_metadata(
     detail="The idempotency key was already used with a different request payload.",
     description="The idempotency key conflicts with an earlier review request.",
 )
+_REVIEW_IDENTITY_CONFLICT = conflict_metadata(
+    code="review_identity_conflict",
+    title="Review resource identity conflict",
+    detail="The review resource identifier was already used with different content.",
+    description="A reviewId or feedbackId conflicts with an earlier resource.",
+)
 
 __all__ = [
     "FeedbackEventResponse",
@@ -377,6 +383,7 @@ REVIEW_ACTION_ROUTE: RouteMetadata = {
                 _REVIEW_ACTION_CONFLICT,
                 _CANDIDATE_STATE_CONFLICT,
                 _REVIEW_IDEMPOTENCY_CONFLICT,
+                _REVIEW_IDENTITY_CONFLICT,
             ),
         ),
         **durable_repository_write_unavailable_metadata(),
@@ -439,11 +446,13 @@ FEEDBACK_ROUTE: RouteMetadata = {
             detail="The idea candidate was not found.",
             description="Candidate was not found.",
         ),
-        **conflict_metadata(
-            code="idempotency_conflict",
-            title="Idempotency conflict",
-            detail="The idempotency key was already used with a different request payload.",
-            description="Idempotency conflict.",
+        **merged_problem_response_metadata(
+            status_code=status.HTTP_409_CONFLICT,
+            description="Feedback mutation conflict.",
+            responses=(
+                _REVIEW_IDEMPOTENCY_CONFLICT,
+                _REVIEW_IDENTITY_CONFLICT,
+            ),
         ),
         **durable_repository_write_unavailable_metadata(),
     },
