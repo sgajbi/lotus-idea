@@ -10,6 +10,7 @@ class ProblemDetails(BaseModel):
         description="Stable problem type URI or about:blank when no external type is assigned.",
         examples=["about:blank"],
     )
+
     status: int = Field(..., description="HTTP response status code.", examples=[400])
     code: str = Field(
         ..., description="Stable product-safe error code.", examples=["invalid_request"]

@@ -268,9 +268,9 @@ def test_concentration_risk_signal_api_rejects_blank_entitlement_scope_header() 
     assert response.json() == {
         "type": "about:blank",
         "status": 400,
-        "code": "request_rejected",
-        "title": "Request rejected",
-        "detail": "The service rejected the request. Correct the request or contact support with the correlation id.",
+        "code": "invalid_request",
+        "title": "Invalid request",
+        "detail": "caller entitlement scope headers cannot contain blank values",
     }
 
 

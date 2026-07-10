@@ -582,9 +582,9 @@ def test_production_profile_rejects_self_asserted_caller_context_headers(
     )
 
     assert read_response.status_code == 403
-    assert read_response.json()["code"] == "request_rejected"
+    assert read_response.json()["code"] == "permission_denied"
     assert mutation_response.status_code == 403
-    assert mutation_response.json()["code"] == "request_rejected"
+    assert mutation_response.json()["code"] == "permission_denied"
 
 
 def test_production_profile_accepts_trusted_caller_context_headers(

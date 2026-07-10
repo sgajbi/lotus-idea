@@ -35,7 +35,10 @@ from app.api.underperformance_signals import register_underperformance_signal_ro
 from app.api.caller_context_openapi import apply_caller_context_openapi_contract
 from app.api.durable_write_guard import durable_write_readiness_payload
 from app.api.idempotency import mark_required_idempotency_openapi_headers
-from app.api.problem_details import problem_details_response as problem_response
+from app.api.problem_details import (
+    ProblemDetailsHTTPException,
+    problem_details_response as problem_response,
+)
 from app.api.runtime_dependencies import idea_repository_runtime_posture
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
 from app.middleware.correlation import CorrelationIdMiddleware
@@ -287,6 +290,13 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> Respon
         correlation_id=_request_correlation_id(request),
         trace_id=_request_trace_id(request),
     )
+    if isinstance(exc, ProblemDetailsHTTPException):
+        return problem_response(
+            status_code=exc.status_code,
+            code=exc.code,
+            title=exc.title,
+            detail=str(exc.detail),
+        )
     return problem_response(
         status_code=exc.status_code,
         code="request_rejected",

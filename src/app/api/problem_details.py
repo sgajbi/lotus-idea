@@ -2,11 +2,20 @@ from __future__ import annotations
 
 from typing import Any
 
-from fastapi import status
+from fastapi import HTTPException, status
 from fastapi.responses import JSONResponse
 
 from app.errors import ProblemDetails as ProblemDetails
 from app.errors import problem_response as _problem_response
+
+
+class ProblemDetailsHTTPException(HTTPException):
+    """Product-safe boundary error whose stable code survives global handling."""
+
+    def __init__(self, *, status_code: int, code: str, title: str, detail: str) -> None:
+        self.code = code
+        self.title = title
+        super().__init__(status_code=status_code, detail=detail)
 
 
 def _problem_details_example(

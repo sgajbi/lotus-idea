@@ -4,10 +4,11 @@ import os
 import secrets
 from typing import Annotated
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, Header, status
 
 from app.api.runtime_dependencies import load_runtime_settings
 from app.domain.access_scope import QueueAccessScopeFilter
+from app.api.problem_details import ProblemDetailsHTTPException
 from app.security.caller_context import CallerContext, CallerEntitlementScope
 
 TRUSTED_CALLER_CONTEXT_TOKEN_ENV = "LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN"
@@ -81,8 +82,10 @@ def caller_context_from_standard_headers(
             trusted_caller_context=x_lotus_trusted_caller_context,
         )
     except ValueError as exc:
-        raise HTTPException(
+        raise ProblemDetailsHTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            code="invalid_request",
+            title="Invalid request",
             detail="caller entitlement scope headers cannot contain blank values",
         ) from exc
 
@@ -118,8 +121,10 @@ def _require_trusted_caller_context_provenance(
     supplied_token = (trusted_caller_context or "").strip()
     if expected_token and supplied_token and secrets.compare_digest(supplied_token, expected_token):
         return
-    raise HTTPException(
+    raise ProblemDetailsHTTPException(
         status_code=status.HTTP_403_FORBIDDEN,
+        code="permission_denied",
+        title="Permission denied",
         detail="trusted caller context provenance is required",
     )
 
