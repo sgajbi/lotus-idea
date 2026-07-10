@@ -103,6 +103,7 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "operator-workflows-ops-contract-gate": "scripts/operator_workflows_operations_contract_gate.py",
     "outbox-supportability-contract-gate": "scripts/outbox_supportability_contract_gate.py",
     "disaster-recovery-contract-gate": "scripts/disaster_recovery_contract_gate.py",
+    "data-lifecycle-contract-gate": "scripts/data_lifecycle_contract_gate.py",
     "disaster-recovery-proof-gate": "scripts/disaster_recovery_proof_contract_gate.py",
     "postgres-disaster-recovery-seed": ("scripts/seed_postgres_disaster_recovery_fixture.py"),
     "postgres-disaster-recovery-drill": ("scripts/run_postgres_disaster_recovery_drill.py"),

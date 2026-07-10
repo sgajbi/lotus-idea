@@ -1,0 +1,215 @@
+{
+  "contract_id": "lotus-idea-data-lifecycle",
+  "contract_version": "1.0.0",
+  "repository": "lotus-idea",
+  "data_owner": "lotus-idea",
+  "certification_status": "not_certified",
+  "supported_feature_promoted": false,
+  "source_of_truth": {
+    "migrations": "migrations",
+    "persistence": "docs/operations/persistence.md",
+    "slice": "docs/rfcs/RFC-0002-enterprise-opportunity-intelligence-operating-layer/RFC-0002-slice-06-persistence-replay-idempotency-and-audit.md"
+  },
+  "authority_boundaries": {
+    "local_enforcement_owner": "lotus-idea",
+    "retention_policy_approval_authority": "bank-records-and-privacy-governance",
+    "legal_hold_decision_authority": "bank-legal-and-records-governance",
+    "subject_erasure_decision_authority": "bank-privacy-governance",
+    "report_policy_source_authority": "lotus-report",
+    "archive_record_source_authority": "lotus-archive",
+    "ai_provider_retention_source_authority": "lotus-ai",
+    "idea_may_self_authorize_legal_hold_or_erasure": false
+  },
+  "retention_policies": [
+    {
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "duration": "P7Y",
+      "start_event": "candidate_terminal_or_last_regulated_event",
+      "expiry_behavior": "operator_review_then_redact",
+      "automatic_physical_delete": false
+    },
+    {
+      "policy_ref": "lotus-idea:operational-delivery:four-hundred-day:v1",
+      "duration": "P400D",
+      "start_event": "terminal_delivery_or_last_recovery_event",
+      "expiry_behavior": "operator_review_then_purge",
+      "automatic_physical_delete": false
+    },
+    {
+      "policy_ref": "lotus-idea:quarantine:ninety-day:v1",
+      "duration": "P90D",
+      "start_event": "approved_reconciliation_or_erasure",
+      "expiry_behavior": "operator_review_then_purge",
+      "automatic_physical_delete": false
+    }
+  ],
+  "accepted_external_policy_refs": {
+    "lotus-report:idea-evidence-retention:v1": "lotus-idea:regulated-advisory-evidence:seven-year:v1"
+  },
+  "record_inventory": [
+    {
+      "table": "idea_candidate_record",
+      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "purpose": "opportunity_candidate_and_deterministic_evidence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_payload_preserve_candidate_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_idempotency_record",
+      "data_classes": ["confidential_operational_metadata"],
+      "purpose": "duplicate_mutation_prevention",
+      "policy_ref": "lotus-idea:operational-delivery:four-hundred-day:v1",
+      "hold_behavior": "freeze_expiry_and_purge",
+      "erasure_policy": "preserve_hash_only_replay_fence",
+      "purge_policy": "purge_after_expiry_when_candidate_tombstone_blocks_recreation"
+    },
+    {
+      "table": "idea_lifecycle_history",
+      "data_classes": ["restricted_advisory_evidence", "restricted_audit_identity"],
+      "purpose": "immutable_candidate_lifecycle_evidence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "pseudonymize_actor_preserve_transition_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_audit_event",
+      "data_classes": ["restricted_security_audit", "restricted_audit_identity"],
+      "purpose": "immutable_decision_and_operator_audit",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "pseudonymize_actor_and_attributes_preserve_event_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_outbox_event",
+      "data_classes": ["confidential_operational_metadata", "restricted_advisory_evidence"],
+      "purpose": "durable_event_publication",
+      "policy_ref": "lotus-idea:operational-delivery:four-hundred-day:v1",
+      "hold_behavior": "freeze_expiry_and_purge",
+      "erasure_policy": "redact_terminal_payload_preserve_delivery_fence",
+      "purge_policy": "purge_after_expiry_when_terminal_and_unreferenced"
+    },
+    {
+      "table": "idea_review_decision",
+      "data_classes": ["restricted_advisory_evidence", "restricted_audit_identity"],
+      "purpose": "human_review_decision_evidence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "pseudonymize_actor_and_payload_preserve_decision_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_feedback_event",
+      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "purpose": "advisor_feedback_and_quality_learning",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_actor_and_payload_preserve_event_tombstone",
+      "purge_policy": "purge_payload_after_expiry_preserve_operation_audit"
+    },
+    {
+      "table": "idea_conversion_intent",
+      "data_classes": ["restricted_advisory_evidence", "restricted_audit_identity"],
+      "purpose": "non_executing_downstream_conversion_intent",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "pseudonymize_actor_and_payload_preserve_intent_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_conversion_outcome",
+      "data_classes": ["restricted_advisory_evidence"],
+      "purpose": "source_owned_downstream_outcome_evidence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_payload_preserve_outcome_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_report_evidence_pack_request",
+      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "purpose": "report_evidence_pack_request_and_lineage",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_payload_preserve_request_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_downstream_submission",
+      "data_classes": ["confidential_operational_metadata", "restricted_advisory_evidence"],
+      "purpose": "claim_before_call_delivery_and_reconciliation_fence",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_diagnostics_preserve_submission_fence",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_ai_explanation_lineage",
+      "data_classes": ["restricted_ai_governance", "restricted_advisory_evidence"],
+      "purpose": "governed_ai_prompt_output_and_evidence_lineage",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "redact_payload_preserve_model_risk_tombstone",
+      "purge_policy": "purge_payload_after_expiry_preserve_operation_audit"
+    },
+    {
+      "table": "idea_outbox_recovery_audit",
+      "data_classes": ["restricted_security_audit", "confidential_operational_metadata"],
+      "purpose": "operator_authorized_dead_letter_recovery_audit",
+      "policy_ref": "lotus-idea:regulated-advisory-evidence:seven-year:v1",
+      "hold_behavior": "freeze_expiry_erasure_and_purge",
+      "erasure_policy": "pseudonymize_operator_preserve_recovery_tombstone",
+      "purge_policy": "immutable_tombstone_only"
+    },
+    {
+      "table": "idea_candidate_state_quarantine",
+      "data_classes": ["restricted_client_data", "restricted_advisory_evidence"],
+      "purpose": "legacy_candidate_state_reconciliation",
+      "policy_ref": "lotus-idea:quarantine:ninety-day:v1",
+      "hold_behavior": "freeze_expiry_and_purge",
+      "erasure_policy": "redact_payload_preserve_quarantine_reason",
+      "purge_policy": "purge_after_resolution_and_expiry"
+    },
+    {
+      "table": "idea_conversion_outcome_quarantine",
+      "data_classes": ["restricted_advisory_evidence"],
+      "purpose": "legacy_conversion_outcome_reconciliation",
+      "policy_ref": "lotus-idea:quarantine:ninety-day:v1",
+      "hold_behavior": "freeze_expiry_and_purge",
+      "erasure_policy": "redact_payload_preserve_quarantine_reason",
+      "purge_policy": "purge_after_resolution_and_expiry"
+    }
+  ],
+  "enforcement_controls": {
+    "unknown_policy_fails_closed": true,
+    "missing_tenant_scope_fails_closed": true,
+    "missing_authority_fails_closed": true,
+    "legal_hold_precedes_expiry_erasure_and_purge": true,
+    "exact_tenant_entitlement_required": true,
+    "capability_and_role_required": true,
+    "dual_authorization_required_for_release_erasure_and_purge": true,
+    "idempotency_and_request_fingerprint_required": true,
+    "dry_run_preview_required": true,
+    "aggregate_lock_fences_concurrent_writes": true,
+    "active_outbox_or_downstream_work_blocks_erasure": true,
+    "bounded_batch_maximum": 100,
+    "raw_sensitive_values_in_logs_metrics_or_evidence_forbidden": true,
+    "cross_service_decision_reference_required": true
+  },
+  "research_basis": [
+    "Singapore PDPA retention limitation requires purpose-based disposal rather than indefinite retention.",
+    "Fixed durations remain deployment policy that requires jurisdiction-specific legal and records approval.",
+    "Erasure does not override legal obligations, legal claims, or approved holds; proportional redaction preserves regulated audit integrity."
+  ],
+  "certification_blockers": [
+    "jurisdiction-specific legal and records approval for each duration",
+    "signed legal-hold and erasure decision integration",
+    "lotus-report and lotus-archive policy-reference conformance proof",
+    "lotus-ai provider-retention and deletion confirmation proof",
+    "production PostgreSQL concurrent lifecycle and restart proof",
+    "scheduled expiry and purge evidence with privacy review"
+  ]
+}

@@ -7,6 +7,11 @@ import re
 import sys
 from typing import Any
 
+try:
+    from scripts.migration_table_inventory import migration_owned_tables
+except ModuleNotFoundError:  # pragma: no cover - direct script execution path
+    from migration_table_inventory import migration_owned_tables  # type: ignore[no-redef]
+
 ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = Path("contracts/operations/lotus-idea-postgres-disaster-recovery.v1.json")
 MIGRATIONS_PATH = Path("migrations")
@@ -89,9 +94,6 @@ EXPECTED_OPTIONAL_EMPTY_TABLES = {
     "idea_candidate_state_quarantine",
     "idea_conversion_outcome_quarantine",
 }
-CREATE_TABLE_PATTERN = re.compile(
-    r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(idea_[a-z0-9_]+)", re.IGNORECASE
-)
 SECRET_PATTERNS = (
     re.compile(r"postgres(?:ql)?://", re.IGNORECASE),
     re.compile(r"(?:password|passwd|secret|token)\s*[=:]\s*[^\s]+", re.IGNORECASE),
@@ -160,15 +162,6 @@ def _validate_sources(payload: dict[str, Any], repository_root: Path) -> list[st
     return errors
 
 
-def _migration_owned_tables(repository_root: Path) -> set[str]:
-    tables: set[str] = set()
-    for migration in sorted((repository_root / MIGRATIONS_PATH).glob("*.sql")):
-        if migration.name.endswith(".rollback.sql"):
-            continue
-        tables.update(CREATE_TABLE_PATTERN.findall(migration.read_text(encoding="utf-8")))
-    return tables
-
-
 def _validate_restore_inventory(payload: dict[str, Any], repository_root: Path) -> list[str]:
     restore = payload.get("restore_verification")
     errors = _validate_expected_values(restore, REQUIRED_RESTORE_FLAGS, "restore verification")
@@ -182,7 +175,7 @@ def _validate_restore_inventory(payload: dict[str, Any], repository_root: Path) 
         errors.append("disaster recovery owned_tables must be a list of table names")
     else:
         declared = set(owned_tables)
-        migrated = _migration_owned_tables(repository_root)
+        migrated = migration_owned_tables(repository_root, MIGRATIONS_PATH)
         if len(owned_tables) != len(declared):
             errors.append("disaster recovery owned_tables must not contain duplicates")
         if declared != migrated:
@@ -199,7 +192,7 @@ def _validate_restore_inventory(payload: dict[str, Any], repository_root: Path) 
     ):
         errors.append("disaster recovery unvalidated constraint exception inventory drifted")
     required_non_empty = restore.get("required_non_empty_tables")
-    expected_non_empty = _migration_owned_tables(repository_root).difference(
+    expected_non_empty = migration_owned_tables(repository_root, MIGRATIONS_PATH).difference(
         EXPECTED_OPTIONAL_EMPTY_TABLES
     )
     if not isinstance(required_non_empty, list) or set(required_non_empty) != expected_non_empty:
