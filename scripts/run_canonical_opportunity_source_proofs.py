@@ -235,7 +235,7 @@ def _aggregate_payload(
         "proofType": "canonical_opportunity_source_proofs",
         "generatedAtUtc": _format_instant(generated_at),
         "evaluatedAtUtc": _format_instant(evaluated_at),
-        "portfolioId": portfolio_id,
+        "portfolioScope": "governed_canonical",
         "asOfDate": as_of_date,
         "correlationId": correlation_id,
         "traceId": trace_id,

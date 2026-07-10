@@ -234,7 +234,7 @@ def _aggregate_payload(
         "proofType": "canonical_signal_api",
         "generatedAtUtc": _format_instant(generated_at),
         "evaluatedAtUtc": _format_instant(evaluated_at),
-        "portfolioId": portfolio_id,
+        "portfolioScope": "governed_canonical",
         "asOfDate": as_of_date,
         "ideaBaseUrl": idea_base_url,
         "correlationId": correlation_id,

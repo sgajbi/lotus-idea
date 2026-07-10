@@ -102,4 +102,6 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
     assert all("stderr" not in summary and "stdout" not in summary for summary in summaries)
     assert all(summary["processOutputSuppressed"] is True for summary in summaries)
     assert payload["certificationReady"] is False
+    assert payload["portfolioScope"] == "governed_canonical"
+    assert "portfolioId" not in payload
     assert payload["supportedFeaturePromoted"] is False

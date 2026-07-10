@@ -112,5 +112,7 @@ def test_api_proof_aggregate_preserves_non_promotion_boundary() -> None:
     )
 
     assert payload["certificationReady"] is True
+    assert payload["portfolioScope"] == "governed_canonical"
+    assert "portfolioId" not in payload
     assert payload["supportedFeaturePromoted"] is False
     assert "no_data_mesh_certification" in payload["nonProofBoundaries"]
