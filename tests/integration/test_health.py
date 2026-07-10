@@ -4,10 +4,12 @@ import logging
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 import psycopg
+import pytest
 from _pytest.logging import LogCaptureFixture
 from pytest import MonkeyPatch
 from app.main import app, create_app
 from app.runtime.repository_state import DATABASE_URL_ENV, reset_idea_repository_for_tests
+from app.runtime.recovery_posture import RECOVERY_POSTURE_ENV
 
 
 def test_create_app_returns_isolated_application_instance() -> None:
@@ -200,6 +202,7 @@ def test_readiness_reports_draining_state() -> None:
         response = client.get("/health/ready")
         assert response.status_code == 503
         assert response.json()["status"] == "draining"
+        assert response.json()["recoveryPosture"] == "draining"
     finally:
         app.state.is_draining = False
 
@@ -220,6 +223,7 @@ def test_readiness_degrades_when_production_profile_lacks_durable_repository(
     assert response.status_code == 503
     assert response.json() == {
         "status": "degraded",
+        "recoveryPosture": "normal",
         "runtimeProfile": "production",
         "durableRepositoryConfigured": False,
         "durableStorageBacked": False,
@@ -254,6 +258,7 @@ def test_readiness_degrades_when_configured_postgres_cannot_initialize(
     assert response.status_code == 503
     assert response.json() == {
         "status": "degraded",
+        "recoveryPosture": "normal",
         "runtimeProfile": "production",
         "durableRepositoryConfigured": True,
         "durableStorageBacked": False,
@@ -265,3 +270,30 @@ def test_readiness_degrades_when_configured_postgres_cannot_initialize(
     assert "secret" not in serialized
     assert "db.internal" not in serialized
     assert "could not connect" not in serialized
+
+
+@pytest.mark.parametrize(
+    ("configured", "expected_status", "expected_posture", "expected_blocker"),
+    [
+        ("restoring", "restoring", "restoring", "service_recovery_restoring"),
+        ("degraded", "degraded", "degraded", "service_recovery_degraded"),
+        ("draining", "draining", "draining", "service_recovery_draining"),
+        ("invalid-sensitive-value", "degraded", "degraded", "recovery_posture_invalid"),
+    ],
+)
+def test_readiness_fails_closed_for_recovery_posture(
+    monkeypatch: MonkeyPatch,
+    configured: str,
+    expected_status: str,
+    expected_posture: str,
+    expected_blocker: str,
+) -> None:
+    monkeypatch.setenv(RECOVERY_POSTURE_ENV, configured)
+
+    response = TestClient(create_app()).get("/health/ready")
+
+    assert response.status_code == 503
+    assert response.json()["status"] == expected_status
+    assert response.json()["recoveryPosture"] == expected_posture
+    assert expected_blocker in response.json()["configurationBlockers"]
+    assert configured not in response.text or configured == expected_posture

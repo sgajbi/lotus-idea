@@ -52,7 +52,9 @@ from app.application.outbox_delivery_readiness import (
     OutboxDeliveryReadinessSnapshot,
     build_outbox_delivery_readiness_snapshot,
 )
+from app.domain.recovery_posture import ServiceRecoveryPosture, evaluate_recovery_readiness
 from app.runtime.downstream_realization_state import close_downstream_realization_clients
+from app.runtime.recovery_posture import load_recovery_runtime_state
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.middleware.http_boundary import configure_http_boundary
 from app.observability import (
@@ -174,6 +176,7 @@ def _register_platform_routes(application: FastAPI) -> None:
                     "application/json": {
                         "example": {
                             "status": "ready",
+                            "recoveryPosture": "normal",
                             "runtimeProfile": "local",
                             "durableRepositoryConfigured": False,
                             "durableStorageBacked": False,
@@ -370,13 +373,27 @@ async def health_live() -> dict[str, str]:
 
 
 async def health_ready(request: Request, response: Response) -> dict[str, object]:
+    recovery_decision = load_recovery_runtime_state().decision
     if bool(getattr(request.app.state, "is_draining", False)):
-        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {"status": "draining"}
+        recovery_decision = evaluate_recovery_readiness(ServiceRecoveryPosture.DRAINING)
     posture = idea_repository_runtime_posture()
-    if not posture.write_ready:
+    payload = durable_write_readiness_payload(posture)
+    payload["recoveryPosture"] = recovery_decision.posture.value
+    if not recovery_decision.write_ready:
+        payload["status"] = recovery_decision.readiness_status
+        configured_blockers = payload.get("configurationBlockers")
+        blockers = (
+            list(configured_blockers)
+            if isinstance(configured_blockers, list)
+            and all(isinstance(blocker, str) for blocker in configured_blockers)
+            else []
+        )
+        if recovery_decision.blocker not in blockers:
+            blockers.append(recovery_decision.blocker)
+        payload["configurationBlockers"] = blockers
+    if not posture.write_ready or not recovery_decision.write_ready:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-    return durable_write_readiness_payload(posture)
+    return payload
 
 
 async def metadata() -> dict[str, object]:

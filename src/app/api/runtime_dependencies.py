@@ -11,6 +11,7 @@ from app.runtime.proof_artifacts import (
     ConfiguredImplementationProofArtifacts,
     configured_implementation_proof_artifacts,
 )
+from app.runtime.recovery_posture import RecoveryRuntimeState, load_recovery_runtime_state
 from app.runtime.repository_state import (
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -63,6 +64,7 @@ __all__ = [
     "DURABLE_REPOSITORY_NOT_CONFIGURED",
     "DURABLE_REPOSITORY_UNAVAILABLE",
     "RuntimeStoragePosture",
+    "RecoveryRuntimeState",
     "AdvisePolicyEvaluationSourceRuntime",
     "AdvisePolicyEvaluationSourceRuntimeBlocker",
     "CoreBenchmarkAssignmentSourceRuntime",
@@ -106,4 +108,5 @@ __all__ = [
     "idea_repository_durable_storage_backed",
     "idea_repository_runtime_posture",
     "load_runtime_settings",
+    "load_recovery_runtime_state",
 ]
