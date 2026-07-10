@@ -1080,7 +1080,10 @@
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
-        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_accepts_advise_intent_without_support_claim",
+        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_accepts_advise_intent_with_support_reference",
+        "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_returns_durable_uncertain_posture",
+        "tests/unit/test_downstream_realization_application.py::test_downstream_acceptance_with_failed_local_finalize_requires_reconciliation",
+        "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_replays_same_idempotency_key",
         "tests/integration/test_downstream_realization_api.py::test_conversion_downstream_submission_api_rejects_idempotency_conflict",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
@@ -1177,7 +1180,9 @@
         "400 returns product-safe Problem Details when Idempotency-Key is absent or blank."
       ],
       "test_evidence": [
-        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_accepts_pack_without_publication_claim",
+        "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_accepts_pack_with_support_reference",
+        "tests/unit/test_downstream_realization_application.py::test_unknown_downstream_outcome_is_durable_and_never_retried_automatically",
+        "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_replays_same_idempotency_key",
         "tests/integration/test_downstream_realization_api.py::test_report_downstream_submission_api_rejects_idempotency_conflict",
         "tests/integration/test_downstream_realization_api.py::test_downstream_submission_api_fails_closed_without_adapter_configuration",
@@ -1186,6 +1191,60 @@
         "tests/unit/test_downstream_realization_lookup.py::test_downstream_report_pack_submission_uses_lookup_without_snapshot",
         "tests/unit/test_postgres_downstream_lookup.py::test_postgres_report_pack_lookup_uses_direct_table_query",
         "tests/unit/test_api_problem_details.py::test_downstream_submission_openapi_problem_codes_match_runtime_contract"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/downstream-submissions/reconciliation",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Return a bounded operator queue of in-flight and uncertain downstream submissions using opaque support references.",
+      "when_to_use": "Use when an operator has the idea.downstream-reconciliation.read capability and must inspect submission posture before verifying the source-owned downstream receipt.",
+      "when_not_to_use": "Do not use as downstream payload inspection, idempotency-key disclosure, suitability or execution authority, a Gateway contract, Workbench product proof, client-ready publication, or supported-feature promotion.",
+      "request_examples": [
+        "GET /api/v1/downstream-submissions/reconciliation?limit=100 with operator role and X-Caller-Capabilities: idea.downstream-reconciliation.read"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"items\":[{\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"resourceType\":\"conversion_intent\",\"target\":\"advise_proposal\",\"sourceAuthority\":\"lotus-advise\",\"submissionPosture\":\"reconciliation_required\",\"attemptCount\":1,\"submittedAtUtc\":\"2026-07-10T08:00:00Z\",\"updatedAtUtc\":\"2026-07-10T08:00:02Z\",\"leaseExpiresAtUtc\":\"2026-07-10T08:05:00Z\",\"downstreamFailureReason\":\"downstream_timeout\",\"auditEntryCount\":2,\"reconciliationEligible\":true,\"owner\":\"lotus-idea-operations\"}],\"returnedCount\":1,\"supportabilityStatus\":\"not_certified\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks operator role, idea.downstream-reconciliation.read capability, or trusted caller-context provenance.",
+        "400 returns product-safe Problem Details when limit is outside the bounded range."
+      ],
+      "test_evidence": [
+        "tests/integration/test_downstream_submission_reconciliation_api.py::test_operator_inspection_denied_for_unauthorized_and_is_source_safe",
+        "tests/integration/test_downstream_submission_reconciliation_api.py::test_downstream_reconciliation_api_emits_bounded_operation_events",
+        "tests/unit/test_downstream_submission_reconciliation.py::test_reconciliation_projection_omits_submission_identity_and_payload"
+      ],
+      "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/downstream-submissions/reconciliation/{supportReference}",
+      "certification_status": "certified",
+      "owner": "lotus-idea owners",
+      "purpose": "Record one explicit, audited operator resolution for an uncertain downstream submission without retrying the external call.",
+      "when_to_use": "Use after an operator with idea.downstream-reconciliation.resolve capability verifies the source-owned receipt and supplies a reason plus changeReference matching Idempotency-Key.",
+      "when_not_to_use": "Do not use to call the downstream service, overwrite terminal history, grant suitability or execution authority, define a Gateway contract, claim Workbench product proof, authorize client-ready publication, or claim supported-feature promotion.",
+      "request_examples": [
+        "{\"resolution\":\"accepted_by_downstream\",\"reason\":\"downstream_receipt_verified\",\"changeReference\":\"CHG-334-API-001\"}"
+      ],
+      "response_examples": [
+        "{\"repository\":\"lotus-idea\",\"reconciliationStatus\":\"accepted\",\"submission\":{\"supportReference\":\"downstream-submission-0123456789abcdef01234567\",\"resourceType\":\"conversion_intent\",\"target\":\"advise_proposal\",\"sourceAuthority\":\"lotus-advise\",\"submissionPosture\":\"accepted_by_downstream\",\"attemptCount\":1,\"submittedAtUtc\":\"2026-07-10T08:00:00Z\",\"updatedAtUtc\":\"2026-07-10T08:10:00Z\",\"leaseExpiresAtUtc\":\"2026-07-10T08:05:00Z\",\"downstreamFailureReason\":null,\"auditEntryCount\":3,\"reconciliationEligible\":false,\"owner\":\"lotus-idea-operations\"},\"blocker\":null,\"supportabilityStatus\":\"not_certified\",\"supportedFeaturePromoted\":false}"
+      ],
+      "error_examples": [
+        "403 returns product-safe Problem Details when the caller lacks operator role, idea.downstream-reconciliation.resolve capability, or trusted caller-context provenance.",
+        "404 returns downstream_submission_not_found for an unknown opaque support reference.",
+        "409 returns a stable blocker when the submission is terminal or changeReference is reused for a different mutation.",
+        "400 returns invalid_request when Idempotency-Key is absent, invalid, or differs from changeReference."
+      ],
+      "test_evidence": [
+        "tests/integration/test_downstream_submission_reconciliation_api.py::test_operator_reconciliation_is_replay_safe_and_conflict_aware",
+        "tests/integration/test_downstream_submission_reconciliation_api.py::test_reconciliation_requires_matching_mutation_identity",
+        "tests/integration/test_downstream_submission_reconciliation_api.py::test_downstream_reconciliation_api_emits_bounded_operation_events",
+        "tests/unit/test_downstream_submission_reconciliation.py::test_reconciliation_is_audited_replay_safe_and_terminal",
+        "tests/integration/test_postgres_downstream_submission_runtime.py::test_postgres_downstream_submission_claim_recovery_and_restart_proof"
       ],
       "openapi_evidence": "scripts/openapi_quality_gate.py validates summary, description, tag, responses, and examples."
     },

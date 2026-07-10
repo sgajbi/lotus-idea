@@ -2,8 +2,11 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
+import json
+import logging
 
 import pytest
+from _pytest.logging import LogCaptureFixture
 from fastapi.testclient import TestClient
 
 from app.domain import (
@@ -25,7 +28,7 @@ def reset_repository_provider() -> Iterator[None]:
     reset_idea_repository_for_tests()
 
 
-def test_operator_can_inspect_source_safe_reconciliation_queue() -> None:
+def test_operator_inspection_denied_for_unauthorized_and_is_source_safe() -> None:
     repository = _repository_with_uncertain_submission()
     reset_idea_repository_for_tests(repository=repository)
     client = TestClient(app)
@@ -124,6 +127,50 @@ def test_reconciliation_requires_matching_mutation_identity() -> None:
     assert response.status_code == 400
     assert response.json()["code"] == "invalid_request"
     assert repository.downstream_submissions_requiring_reconciliation()
+
+
+def test_downstream_reconciliation_api_emits_bounded_operation_events(
+    caplog: LogCaptureFixture,
+) -> None:
+    repository = _repository_with_uncertain_submission()
+    support_reference = repository.downstream_submissions_requiring_reconciliation()[
+        0
+    ].support_reference
+    reset_idea_repository_for_tests(repository=repository)
+    client = TestClient(app)
+
+    with caplog.at_level(logging.INFO, logger="lotus-idea"):
+        read = client.get(
+            "/api/v1/downstream-submissions/reconciliation",
+            headers=_headers("idea.downstream-reconciliation.read"),
+        )
+        resolved = client.post(
+            f"/api/v1/downstream-submissions/reconciliation/{support_reference}",
+            headers=_headers(
+                "idea.downstream-reconciliation.resolve",
+                idempotency_key="CHG-334-API-EVENT",
+            ),
+            json={
+                "resolution": "quarantined",
+                "reason": "downstream_receipt_unverifiable",
+                "changeReference": "CHG-334-API-EVENT",
+            },
+        )
+
+    assert read.status_code == 200
+    assert resolved.status_code == 200
+    events = [
+        payload
+        for record in caplog.records
+        if record.message.startswith("{")
+        for payload in (json.loads(record.message),)
+        if str(payload.get("event", "")).startswith("idea.operation.")
+    ]
+    operations = {event["operation"] for event in events}
+    assert "downstream_reconciliation_read" in operations
+    assert "downstream_reconciliation_resolve" in operations
+    assert support_reference not in str(events)
+    assert "secret-idempotency-key" not in str(events)
 
 
 def _repository_with_uncertain_submission() -> InMemoryIdeaRepository:

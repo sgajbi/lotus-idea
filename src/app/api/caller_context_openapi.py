@@ -166,6 +166,16 @@ PROTECTED_OPERATION_REQUIREMENTS = (
         "/api/v1/outbox-delivery/dead-letters/{supportReference}/redrive",
         "idea.outbox-recovery.redrive",
     ),
+    _operator_requirement(
+        "GET",
+        "/api/v1/downstream-submissions/reconciliation",
+        "idea.downstream-reconciliation.read",
+    ),
+    _operator_requirement(
+        "POST",
+        "/api/v1/downstream-submissions/reconciliation/{supportReference}",
+        "idea.downstream-reconciliation.resolve",
+    ),
     _operator_requirement("GET", "/api/v1/data-mesh/readiness", "idea.mesh.readiness.read"),
     _operator_requirement(
         "GET",
