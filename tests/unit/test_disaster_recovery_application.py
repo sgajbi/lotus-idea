@@ -112,6 +112,39 @@ def test_restore_use_case_rejects_readiness_time_before_restore_started() -> Non
         use_case.execute(valid_request())
 
 
+def test_restore_use_case_rejects_readiness_before_restore_completed() -> None:
+    use_case = ValidateRestoredDatabase(
+        StubInspector(valid_snapshot()),
+        policy(),
+        now=lambda: NOW - timedelta(minutes=10),
+    )
+
+    with pytest.raises(ValueError, match="must not be before restore_completed_at_utc"):
+        use_case.execute(valid_request())
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"rpo_minutes": 0}, "rpo_minutes must be positive"),
+        (
+            {"required_non_empty_tables": frozenset({"idea_unowned_table"})},
+            "must be owned tables",
+        ),
+        ({"owned_tables": frozenset()}, "must contain idea-owned table names"),
+        (
+            {"allowed_unvalidated_constraints": frozenset({"unsafe constraint"})},
+            "source-safe identifier",
+        ),
+    ],
+)
+def test_restore_policy_rejects_invalid_recovery_scope(
+    changes: dict[str, Any], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        replace(policy(), **changes)
+
+
 @pytest.mark.parametrize(
     ("changes", "message"),
     [
@@ -127,6 +160,14 @@ def test_restore_use_case_rejects_readiness_time_before_restore_started() -> Non
             "must not be after incident_cutoff_utc",
         ),
         (
+            {"backup_created_at_utc": NOW - timedelta(minutes=24)},
+            "must not be after recovery_point_utc",
+        ),
+        (
+            {"incident_cutoff_utc": NOW - timedelta(minutes=10)},
+            "must not be after restore_started_at_utc",
+        ),
+        (
             {"restore_completed_at_utc": NOW - timedelta(minutes=16)},
             "must not be after restore_completed_at_utc",
         ),
@@ -137,6 +178,36 @@ def test_restore_request_rejects_unsafe_or_incoherent_metadata(
 ) -> None:
     with pytest.raises(ValueError, match=message):
         replace(valid_request(), **changes)
+
+
+@pytest.mark.parametrize(
+    ("changes", "message"),
+    [
+        ({"database_identity_sha256": "not-a-hash"}, "lowercase SHA-256"),
+        ({"postgres_version": "  "}, "postgres_version is required"),
+        (
+            {"table_content_sha256": {"idea_candidate_record": "a" * 64}},
+            "must cover the same tables",
+        ),
+        (
+            {"table_row_counts": {"foreign_table": 1}},
+            "must use idea-owned table names",
+        ),
+        (
+            {"table_row_counts": {table: -1 for table in TABLES}},
+            "must be non-negative integers",
+        ),
+        (
+            {"table_content_sha256": {table: "bad" for table in TABLES}},
+            "owned-table SHA-256 digests",
+        ),
+    ],
+)
+def test_restored_snapshot_rejects_untrustworthy_evidence(
+    changes: dict[str, Any], message: str
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        replace(valid_snapshot(), **changes)
 
 
 def valid_request() -> RestoreDrillRequest:
