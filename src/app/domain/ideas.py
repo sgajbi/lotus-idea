@@ -50,6 +50,7 @@ class EvidenceSupportability(StrEnum):
 class UnsupportedEvidenceReason(StrEnum):
     MISSING_SOURCE = "missing_source"
     STALE_SOURCE = "stale_source"
+    SOURCE_TEMPORAL_MISMATCH = "source_temporal_mismatch"
     SOURCE_UNAVAILABLE = "source_unavailable"
     SOURCE_UNCERTIFIED = "source_uncertified"
     ENTITLEMENT_DENIED = "entitlement_denied"
@@ -75,6 +76,8 @@ class ReasonCode(StrEnum):
     SUITABILITY_CONTEXT_MISSING = "suitability_context_missing"
     MANDATE_RESTRICTION_REVIEW = "mandate_restriction_review"
     SOURCE_STALE = "source_stale"
+    SOURCE_DATE_MISMATCH = "source_date_mismatch"
+    SOURCE_GENERATED_AFTER_EVALUATION = "source_generated_after_evaluation"
     SOURCE_PARTIAL = "source_partial"
     DUPLICATE_SUPPRESSED = "duplicate_suppressed"
     BELOW_MATERIALITY = "below_materiality"
