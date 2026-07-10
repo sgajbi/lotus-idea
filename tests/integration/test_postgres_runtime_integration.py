@@ -1,15 +1,18 @@
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 import os
 from pathlib import Path
-from typing import Any, Iterator, cast
+from threading import Barrier
+from typing import Any, Callable, Iterator, cast
 
 import psycopg
 import pytest
 from fastapi.testclient import TestClient
+from psycopg.rows import dict_row
 
 from app.application.source_ingestion import (
     HighCashSourceIngestionDecision,
@@ -17,7 +20,21 @@ from app.application.source_ingestion import (
     ingest_high_cash_signal_from_core,
 )
 from app.runtime.repository_state import reset_idea_repository_for_tests
-from app.domain import EvidenceFreshness, SourceRef, SourceSystem
+from app.domain import (
+    EvidenceFreshness,
+    FeedbackCommand,
+    FeedbackOutcome,
+    ReasonCode,
+    ReviewAction,
+    ReviewActorContext,
+    ReviewActorRole,
+    ReviewDecisionCommand,
+    ReviewPersistenceDecision,
+    SourceRef,
+    SourceSystem,
+    apply_review_action,
+    record_feedback,
+)
 from app.infrastructure.migrations import (
     MigrationConnection,
     MigrationDirection,
@@ -25,6 +42,7 @@ from app.infrastructure.migrations import (
     execute_migration_plan,
 )
 from app.main import app
+from app.infrastructure.postgres_repository import PostgresIdeaRepository
 from app.ports.core_sources import (
     CoreHighCashEvidence,
     CoreHighCashEvidenceRequest,
@@ -42,6 +60,7 @@ POSTGRES_SCHEMA_TABLES = (
     "idea_idempotency_record",
     "idea_lifecycle_history",
     "idea_audit_event",
+    "idea_outbox_event",
     "idea_review_decision",
     "idea_feedback_event",
     "idea_conversion_intent",
@@ -309,6 +328,103 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert _table_count(postgres_database_url, "idea_report_evidence_pack_request") == 1
 
 
+def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity(
+    postgres_database_url: str,
+) -> None:
+    client = TestClient(app)
+    persisted = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=_high_cash_payload(),
+        headers=_persistence_headers("postgres-runtime-identity-persist-001"),
+    )
+    candidate_id = str(persisted.json()["persistence"]["candidateId"])
+    _transition_candidate_to_review_ready(client, candidate_id)
+    reset_idea_repository_for_tests()
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        record = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(candidate_id)
+    assert record is not None
+    candidate = record.candidate
+    scope = candidate.access_scope
+    assert scope is not None
+    actor = ReviewActorContext(
+        actor_subject="advisor-001",
+        role=ReviewActorRole.ADVISOR,
+        tenant_ids=frozenset({scope.tenant_id}),
+        book_ids=frozenset({scope.book_id}),
+        portfolio_ids=frozenset({scope.portfolio_id}),
+        client_ids=frozenset({scope.client_id}),
+    )
+    review = apply_review_action(
+        candidate,
+        ReviewDecisionCommand(
+            review_id="postgres-concurrent-review-identity-001",
+            action=ReviewAction.APPROVE_FOR_CONVERSION,
+            actor=actor,
+            access_scope=scope,
+            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            decided_at_utc=datetime(2026, 6, 21, 10, 5, tzinfo=UTC),
+        ),
+    )
+    before_audit = _table_count(postgres_database_url, "idea_audit_event")
+    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+
+    review_decisions = _run_concurrent_repository_mutations(
+        postgres_database_url,
+        lambda repository, key: repository.record_review_action(
+            review,
+            idempotency_key=key,
+            payload={"reviewId": review.decision.review_id},
+        ).decision,
+        ("review:concurrent:first", "review:concurrent:second"),
+    )
+
+    assert set(review_decisions) == {
+        ReviewPersistenceDecision.ACCEPTED,
+        ReviewPersistenceDecision.REPLAYED,
+    }
+    assert _table_count(postgres_database_url, "idea_review_decision") == 1
+    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
+    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        approved = PostgresIdeaRepository(cast(Any, connection)).candidate_record_by_id(
+            candidate_id
+        )
+    assert approved is not None
+    feedback = record_feedback(
+        approved.candidate,
+        FeedbackCommand(
+            feedback_id="postgres-concurrent-feedback-identity-001",
+            actor=actor,
+            access_scope=scope,
+            outcome=FeedbackOutcome.USEFUL,
+            reason_codes=(ReasonCode.REVIEW_REQUIRED,),
+            recorded_at_utc=datetime(2026, 6, 21, 10, 6, tzinfo=UTC),
+        ),
+    )
+    before_audit = _table_count(postgres_database_url, "idea_audit_event")
+    before_outbox = _table_count(postgres_database_url, "idea_outbox_event")
+
+    feedback_decisions = _run_concurrent_repository_mutations(
+        postgres_database_url,
+        lambda repository, key: repository.record_feedback_event(
+            feedback,
+            idempotency_key=key,
+            payload={"feedbackId": feedback.feedback_event.feedback.feedback_id},
+        ).decision,
+        ("feedback:concurrent:first", "feedback:concurrent:second"),
+    )
+
+    assert set(feedback_decisions) == {
+        ReviewPersistenceDecision.ACCEPTED,
+        ReviewPersistenceDecision.REPLAYED,
+    }
+    assert _table_count(postgres_database_url, "idea_feedback_event") == 1
+    assert _table_count(postgres_database_url, "idea_audit_event") == before_audit + 1
+    assert _table_count(postgres_database_url, "idea_outbox_event") == before_outbox + 1
+
+
 def test_postgres_runtime_provider_persists_ai_explanation_lineage(
     postgres_database_url: str,
 ) -> None:
@@ -397,6 +513,27 @@ def _table_count(database_url: str, table_name: str) -> int:
     if row is None:
         raise AssertionError(f"No count returned for {table_name}")
     return int(row[0])
+
+
+def _run_concurrent_repository_mutations(
+    database_url: str,
+    mutation: Callable[[PostgresIdeaRepository, str], ReviewPersistenceDecision],
+    idempotency_keys: tuple[str, str],
+) -> tuple[ReviewPersistenceDecision, ReviewPersistenceDecision]:
+    barrier = Barrier(2)
+
+    def run(idempotency_key: str) -> ReviewPersistenceDecision:
+        with psycopg.connect(database_url, row_factory=dict_row) as connection:
+            repository = PostgresIdeaRepository(cast(Any, connection))
+            barrier.wait(timeout=10)
+            return mutation(repository, idempotency_key)
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = tuple(executor.submit(run, key) for key in idempotency_keys)
+        return cast(
+            tuple[ReviewPersistenceDecision, ReviewPersistenceDecision],
+            tuple(future.result(timeout=20) for future in futures),
+        )
 
 
 def _ai_lineage_row(database_url: str) -> dict[str, Any]:
