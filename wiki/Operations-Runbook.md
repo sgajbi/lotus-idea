@@ -117,6 +117,19 @@ artifact referenced through
 `LOTUS_IDEA_SOURCE_INGESTION_SCHEDULED_WORKER_PROOF` clears only the
 scheduled-worker blocker; it is not live Core, data-mesh, Gateway/Workbench,
 downstream, or supported-feature proof.
+The scheduled worker's image closure is separately verified: the Dockerfile
+packages the canonical manifest, entrypoint scripts, and imported proof I/O
+helper, while `.dockerignore` re-includes only the governed manifest path.
+After changing worker packaging, rebuild the worker image and run its actual
+bounded check-only command:
+
+```powershell
+docker compose build lotus-idea-source-ingestion-worker
+docker run --rm lotus-idea-lotus-idea-source-ingestion-worker python scripts/run_scheduled_source_ingestion_worker.py --check-only --manifest /app/docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json
+```
+
+Repository tests and the local Python CLI alone do not prove that the worker
+asset closure exists inside the image.
 The internal `GET /api/v1/data-mesh/readiness` diagnostic is available for
 operators to inspect the repo-authored `not_certified` data-mesh posture and
 blockers; it does not certify or promote a data product.
