@@ -67,6 +67,15 @@ Implemented in this slice:
     review-ready, recording approval, replaying the review decision from
     database idempotency state, recording feedback, and validating review and
     feedback tables.
+17. GitHub issue `#330` adds one versioned lifecycle/review-posture policy for
+    all review actions. Approve, reject, and no-action remain limited to
+    ready/reviewed candidates; suppression, snooze, and escalation fail closed
+    for approved or terminal candidates. Accepted audit and rejected operation
+    events carry candidate state, requested action, and policy version without
+    client or portfolio data.
+18. Review queue and PostgreSQL readiness projections classify contradictory
+    legacy snapshots as `invalid_state` and never count or decode them as normal
+    advisor work items.
 
 Validation evidence from the implementation slice:
 

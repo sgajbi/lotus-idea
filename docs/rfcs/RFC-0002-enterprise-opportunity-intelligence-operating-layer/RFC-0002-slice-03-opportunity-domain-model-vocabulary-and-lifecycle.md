@@ -50,6 +50,12 @@ Implemented scope:
    `make private-import-boundary-gate` blocks imports from private
    `app.domain.*` helpers so implementation slices do not create hidden domain
    coupling.
+8. `src/app/domain/candidate_state.py` defines the exhaustive, versioned
+   `idea-candidate-state-v1` lifecycle/review-posture matrix. Candidate
+   construction rejects contradictions, and lifecycle transitions normalize
+   reviewed, approved, rejected, expired, and closed posture deterministically.
+9. `tests/unit/test_candidate_state_policy.py` covers every lifecycle/posture
+   pair and proves terminal states cannot remain conversion-ready or reviewable.
 
 Out of scope for this slice:
 

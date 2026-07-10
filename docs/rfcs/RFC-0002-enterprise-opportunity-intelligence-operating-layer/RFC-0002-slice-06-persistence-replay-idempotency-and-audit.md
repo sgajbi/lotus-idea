@@ -525,3 +525,15 @@ quarantined with no next attempt. This is design modularity inside the existing
 `lotus-idea` runtime, not a new service boundary, and does not promote Slice 6
 or a supported feature while external publication and consumer proof remain
 open.
+
+## Issue 330 Candidate-State Persistence Hardening
+
+Migration `005_candidate_state_policy` snapshots contradictory legacy candidate
+rows into `idea_candidate_state_quarantine` and blocks contradictory new writes
+with a `NOT VALID` policy constraint. PostgreSQL codecs reject invalid JSON
+rehydration, while review queue and readiness SQL derive compatibility from the
+domain matrix and classify historical contradictions as `invalid_state`.
+
+The constraint remains `NOT VALID` until controlled legacy reconciliation is
+complete. This avoids deployment-time data loss and does not turn quarantine
+into a supported operator repair feature.
