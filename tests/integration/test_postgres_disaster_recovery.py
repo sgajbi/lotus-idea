@@ -3,6 +3,9 @@ from __future__ import annotations
 from app.infrastructure.postgres_disaster_recovery import (
     PostgresRestoredDatabaseInspector,
 )
+from scripts.seed_postgres_disaster_recovery_fixture import (
+    seed_disaster_recovery_fixture,
+)
 
 OWNED_TABLES = frozenset(
     {
@@ -43,3 +46,29 @@ def test_postgres_restore_inspector_certifies_current_migrated_schema(
     assert not any(snapshot.semantic_violation_counts.values())
     assert len(snapshot.database_identity_sha256) == 64
     assert "PostgreSQL" in snapshot.postgres_version
+
+
+def test_postgres_restore_inspector_validates_representative_linked_fixture(
+    postgres_database_url: str,
+) -> None:
+    counts = seed_disaster_recovery_fixture(
+        postgres_database_url,
+        confirm_disposable_database=True,
+    )
+
+    snapshot = PostgresRestoredDatabaseInspector(postgres_database_url).inspect(
+        expected_tables=OWNED_TABLES
+    )
+
+    assert counts == snapshot.table_row_counts
+    assert all(
+        count > 0
+        for table, count in counts.items()
+        if table
+        not in {
+            "idea_candidate_state_quarantine",
+            "idea_conversion_outcome_quarantine",
+        }
+    )
+    assert not any(snapshot.referential_violation_counts.values())
+    assert not any(snapshot.semantic_violation_counts.values())

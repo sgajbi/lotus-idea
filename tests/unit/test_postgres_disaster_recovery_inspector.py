@@ -32,3 +32,18 @@ def test_restore_inspector_queries_are_read_only() -> None:
         normalized = " ".join(query.lower().split())
         assert normalized.startswith("select count(*)")
         assert not any(keyword in normalized for keyword in forbidden)
+
+
+def test_restore_inspector_enforces_complete_outbox_failure_timing() -> None:
+    query = SEMANTIC_CHECKS["outbox_failure_state"][1]
+
+    assert "first_failed_at_utc IS NULL" in query
+    assert "last_failed_at_utc IS NULL" in query
+    assert "next_attempt_at_utc IS NOT NULL" in query
+
+
+def test_restore_inspector_preserves_complete_downstream_fencing_history() -> None:
+    query = SEMANTIC_CHECKS["submission_lease_state"][1]
+
+    assert "NOT IN (0, 3)" in query
+    assert "status <> 'in_flight'" not in query

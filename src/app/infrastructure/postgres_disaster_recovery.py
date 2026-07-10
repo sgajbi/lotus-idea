@@ -136,10 +136,24 @@ SEMANTIC_CHECKS: dict[str, tuple[frozenset[str], str]] = {
     "outbox_failure_state": (
         frozenset({"idea_outbox_event"}),
         """SELECT COUNT(*) FROM idea_outbox_event
-           WHERE (status IN ('failed', 'dead_letter') AND failure_reason IS NULL)
-              OR (status NOT IN ('failed', 'dead_letter') AND failure_reason IS NOT NULL)
+           WHERE (status IN ('failed', 'dead_letter') AND (
+                    failure_reason IS NULL
+                    OR first_failed_at_utc IS NULL
+                    OR last_failed_at_utc IS NULL
+                 ))
               OR (status = 'failed' AND next_attempt_at_utc IS NULL)
-              OR (status = 'dead_letter' AND next_attempt_at_utc IS NOT NULL)""",
+              OR (status = 'dead_letter' AND next_attempt_at_utc IS NOT NULL)
+              OR (status IN ('leased', 'published') AND (
+                    (failure_reason IS NULL) <> (first_failed_at_utc IS NULL)
+                    OR (first_failed_at_utc IS NULL) <> (last_failed_at_utc IS NULL)
+                    OR next_attempt_at_utc IS NOT NULL
+                 ))
+              OR (status = 'pending' AND (
+                    failure_reason IS NOT NULL
+                    OR first_failed_at_utc IS NOT NULL
+                    OR last_failed_at_utc IS NOT NULL
+                    OR next_attempt_at_utc IS NOT NULL
+                 ))""",
     ),
     "outbox_lease_state": (
         frozenset({"idea_outbox_event"}),
@@ -164,10 +178,9 @@ SEMANTIC_CHECKS: dict[str, tuple[frozenset[str], str]] = {
            WHERE (status = 'in_flight' AND (
                     lease_owner IS NULL OR lease_attempt_id IS NULL OR lease_expires_at_utc IS NULL
                  ))
-              OR (status <> 'in_flight' AND (
-                    lease_owner IS NOT NULL OR lease_attempt_id IS NOT NULL
-                    OR lease_expires_at_utc IS NOT NULL
-                 ))""",
+              OR ((lease_owner IS NULL)::int
+                  + (lease_attempt_id IS NULL)::int
+                  + (lease_expires_at_utc IS NULL)::int) NOT IN (0, 3)""",
     ),
     "submission_resource_type": (
         frozenset({"idea_downstream_submission"}),
