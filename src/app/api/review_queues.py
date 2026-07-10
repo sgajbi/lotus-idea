@@ -420,6 +420,7 @@ ADVISOR_REVIEW_QUEUE_READINESS_ROUTE: RouteMetadata = {
                         "reviewableItemCount": 1,
                         "excludedCandidateCount": 1,
                         "exclusionCounts": {
+                            "invalid_state": 0,
                             "access_scope_mismatch": 0,
                             "closed": 0,
                             "duplicate": 0,

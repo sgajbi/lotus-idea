@@ -63,7 +63,7 @@ class FailingConnection(RecordingConnection):
 def test_discover_migrations_requires_rollbacks() -> None:
     migrations = discover_migrations(ROOT / "migrations")
 
-    assert [migration.version for migration in migrations] == ["001", "002", "003", "004"]
+    assert [migration.version for migration in migrations] == ["001", "002", "003", "004", "005"]
     assert migrations[0].rollback_path.name == "001_idea_repository_foundation.rollback.sql"
     assert migrations[1].rollback_path.name == "002_ai_explanation_lineage.rollback.sql"
     assert migrations[2].rollback_path.name == "003_outbox_event_contract_constraints.rollback.sql"
@@ -88,7 +88,7 @@ def test_execute_migration_plan_commits_after_all_statements() -> None:
 
     records = execute_migration_plan(connection, plan)
 
-    assert [record.version for record in records] == ["001", "002", "003", "004"]
+    assert [record.version for record in records] == ["001", "002", "003", "004", "005"]
     assert sum(record.statement_count for record in records) == len(
         connection.cursor_instance.statements
     )

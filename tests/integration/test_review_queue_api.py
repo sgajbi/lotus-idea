@@ -500,6 +500,7 @@ def test_advisor_review_queue_readiness_api_returns_source_safe_operator_posture
         "reviewableItemCount": 2,
         "excludedCandidateCount": 0,
         "exclusionCounts": {
+            "invalid_state": 0,
             "suppressed": 0,
             "duplicate": 0,
             "expired": 0,

@@ -11,6 +11,7 @@ from app.infrastructure.postgres_codecs import (
     read_json_object,
     read_row_value,
 )
+from app.infrastructure.candidate_state_sql import candidate_record_state_compatibility_sql
 from app.infrastructure.postgres_protocols import PostgresConnection
 from app.ports.idea_repository import (
     ReviewQueueReadinessRepositorySummary,
@@ -138,6 +139,7 @@ def _review_queue_candidate_predicates(
     access_scope_filter: QueueAccessScopeFilter | None,
 ) -> tuple[str, tuple[Any, ...]]:
     predicates = [
+        candidate_record_state_compatibility_sql(),
         "lifecycle_status = ANY(%s)",
         "review_posture <> %s",
         "(candidate_json->>'suppression_reason') IS NULL",
@@ -243,6 +245,7 @@ def _review_queue_count_query(predicate_sql: str) -> str:
 
 
 def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str:
+    compatible_state_sql = candidate_record_state_compatibility_sql()
     return f"""
         /* lotus-idea review-queue-readiness-summary */
         WITH base AS (
@@ -263,10 +266,12 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
         ),
         classified AS (
             SELECT *,
-                   CASE
-                       WHEN {access_scope_mismatch_sql}
-                           THEN '{QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value}'
-                       WHEN review_posture = %s
+                    CASE
+                        WHEN {access_scope_mismatch_sql}
+                            THEN '{QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value}'
+                        WHEN NOT {compatible_state_sql}
+                            THEN '{QueueExclusionReason.INVALID_STATE.value}'
+                        WHEN review_posture = %s
                             OR (candidate_json->>'suppression_reason') IS NOT NULL
                            THEN '{QueueExclusionReason.SUPPRESSED.value}'
                        WHEN lifecycle_status = %s
@@ -312,6 +317,9 @@ def _review_queue_readiness_summary_query(access_scope_mismatch_sql: str) -> str
                 AS scored_candidate_count,
             (SELECT COUNT(*) FROM base WHERE (candidate_json->'score') IS NULL)::integer
                 AS unscored_candidate_count,
+            (SELECT COUNT(*) FROM classified
+                WHERE exclusion_reason = '{QueueExclusionReason.INVALID_STATE.value}')::integer
+                AS invalid_state,
             (SELECT COUNT(*) FROM classified
                 WHERE exclusion_reason = '{QueueExclusionReason.SUPPRESSED.value}')::integer
                 AS suppressed,

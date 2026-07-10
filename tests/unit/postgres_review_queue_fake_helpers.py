@@ -3,7 +3,12 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Protocol, Sequence
 
-from app.domain import QueueExclusionReason
+from app.domain import (
+    IdeaLifecycleStatus,
+    QueueExclusionReason,
+    ReviewPosture,
+    candidate_state_is_compatible,
+)
 
 
 class FakeReviewQueueConnection(Protocol):
@@ -153,6 +158,8 @@ def _review_queue_row_exclusion_reason(
     for field_name, expected_values in scope_values.items():
         if access_scope is None or access_scope.get(field_name) not in expected_values:
             return QueueExclusionReason.ACCESS_SCOPE_MISMATCH.value
+    if not _review_queue_row_has_compatible_state(row):
+        return QueueExclusionReason.INVALID_STATE.value
     if row["review_posture"] == suppressed_posture:
         return QueueExclusionReason.SUPPRESSED.value
     if candidate_json.get("suppression_reason") is not None:
@@ -181,6 +188,8 @@ def _review_queue_row_is_eligible(
     scope_values: dict[str, set[str]],
 ) -> bool:
     candidate_json = row["candidate_json"]
+    if not _review_queue_row_has_compatible_state(row):
+        return False
     if row["lifecycle_status"] not in lifecycle_statuses:
         return False
     if row["review_posture"] == suppressed_posture:
@@ -196,6 +205,15 @@ def _review_queue_row_is_eligible(
         if access_scope is None or access_scope.get(field_name) not in expected_values:
             return False
     return True
+
+
+def _review_queue_row_has_compatible_state(row: dict[str, Any]) -> bool:
+    try:
+        lifecycle_status = IdeaLifecycleStatus(row["lifecycle_status"])
+        review_posture = ReviewPosture(row["review_posture"])
+    except ValueError:
+        return False
+    return candidate_state_is_compatible(lifecycle_status, review_posture)
 
 
 def _review_queue_source_signal_sort_key(

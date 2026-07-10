@@ -12,6 +12,7 @@ from app.domain import (
     IdeaLifecycleStatus,
     QueueAccessScopeFilter,
     ReviewAccessScope,
+    ReviewPosture,
     UnsupportedEvidenceReason,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
@@ -76,6 +77,36 @@ def test_postgres_repository_review_queue_page_uses_bounded_candidate_projection
     assert "idea_downstream_submission" not in executed_sql
     assert "idea_report_evidence_pack_request" not in executed_sql
     assert "idea_ai_explanation_lineage" not in executed_sql
+
+
+def test_postgres_review_queue_quarantines_contradictory_raw_candidate_state() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    valid_candidate = queue_candidate(index=1, candidate_scope=access_scope())
+    repository.persist_candidate(
+        valid_candidate,
+        idempotency_key="signal-ingestion:high-cash:valid-state",
+        payload={"candidateId": valid_candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    raw_row = connection.rows["idea_candidate_record"][0]
+    raw_row["lifecycle_status"] = IdeaLifecycleStatus.CLOSED.value
+    raw_row["review_posture"] = ReviewPosture.PM_REVIEW_REQUIRED.value
+    raw_row["candidate_json"]["lifecycle_status"] = IdeaLifecycleStatus.CLOSED.value
+    raw_row["candidate_json"]["review_posture"] = ReviewPosture.PM_REVIEW_REQUIRED.value
+
+    page = repository.review_queue_candidate_page(
+        access_scope_filter=None,
+        limit=10,
+        offset=0,
+    )
+    readiness = repository.review_queue_readiness_summary(access_scope_filter=None)
+
+    assert page.candidate_records == ()
+    assert page.total_reviewable_item_count == 0
+    assert readiness.reviewable_item_count == 0
+    assert readiness.exclusion_counts["invalid_state"] == 1
 
 
 def test_postgres_review_queue_scope_filters_cover_all_indexed_fields_and_stable_bounds() -> None:
@@ -143,6 +174,7 @@ def test_postgres_review_queue_readiness_summary_uses_bounded_candidate_aggregat
     expired = replace(
         queue_candidate(index=3, candidate_scope=access_scope()),
         lifecycle_status=IdeaLifecycleStatus.EXPIRED,
+        review_posture=ReviewPosture.NO_ACTION,
     )
     blocked = queue_candidate(index=4, candidate_scope=access_scope())
     blocked = replace(
