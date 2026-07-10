@@ -110,10 +110,11 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
         headers=headers,
     )
     reset_idea_repository_for_tests(reload_from_environment=True)
+    replay_headers = {**headers, "X-Trace-Id": "trace-postgres-runtime-retry"}
     replayed = client.post(
         "/api/v1/idea-signals/high-cash/evaluate-and-persist",
         json=payload,
-        headers=headers,
+        headers=replay_headers,
     )
 
     assert accepted.status_code == 200
@@ -130,6 +131,77 @@ def test_postgres_runtime_provider_persists_api_state_across_reloaded_connection
     )
     assert _table_count(postgres_database_url, "idea_candidate_record") == 1
     assert _table_count(postgres_database_url, "idea_idempotency_record") == 1
+    outbox_events = tuple(get_idea_repository().snapshot().outbox_events.values())
+    assert len(outbox_events) == 1
+    assert outbox_events[0].correlation_id == "corr-postgres-runtime-proof"
+    assert outbox_events[0].trace_id == "trace-postgres-runtime-proof"
+    assert outbox_events[0].lineage_origin.value == "request"
+    with psycopg.connect(postgres_database_url) as connection:
+        with pytest.raises(psycopg.errors.CheckViolation):
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """
+                    UPDATE idea_outbox_event
+                    SET causation_id = 'event-parent-invalid-for-request'
+                    WHERE outbox_event_id = %s
+                    """,
+                    (outbox_events[0].event_id,),
+                )
+        connection.rollback()
+
+
+def test_outbox_lineage_migration_preserves_and_sanitizes_legacy_event(
+    postgres_database_url: str,
+) -> None:
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/idea-signals/high-cash/evaluate-and-persist",
+        json=_high_cash_payload(),
+        headers=_persistence_headers("postgres-lineage-legacy-event-001"),
+    )
+    assert response.status_code == 200
+    event_id = next(iter(get_idea_repository().snapshot().outbox_events))
+    reset_idea_repository_for_tests()
+    apply_plan = build_migration_plan(MIGRATIONS_DIR, MigrationDirection.APPLY)
+    migration = next(step for step in apply_plan.steps if step.version == "007")
+
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        execute_migration_plan(
+            cast(MigrationConnection, connection),
+            MigrationExecutionPlan(direction=MigrationDirection.ROLLBACK, steps=(migration,)),
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE idea_outbox_event
+                SET correlation_id = 'bearer-secret-token',
+                    causation_id = 'PB_SG_GLOBAL_BAL_001'
+                WHERE outbox_event_id = %s
+                """,
+                (event_id,),
+            )
+        connection.commit()
+        execute_migration_plan(
+            cast(MigrationConnection, connection),
+            MigrationExecutionPlan(direction=MigrationDirection.APPLY, steps=(migration,)),
+        )
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT correlation_id, trace_id, causation_id, lineage_origin
+                FROM idea_outbox_event
+                WHERE outbox_event_id = %s
+                """,
+                (event_id,),
+            )
+            row = cursor.fetchone()
+
+    assert row is not None
+    assert row["correlation_id"].startswith("corr-system-")
+    assert row["trace_id"].startswith("trace-system-")
+    assert row["causation_id"] is None
+    assert row["lineage_origin"] == "legacy_migrated"
+    assert _table_count(postgres_database_url, "idea_outbox_event") == 1
 
 
 def test_conversion_outcome_migration_quarantines_invalid_legacy_history(
@@ -407,6 +479,53 @@ def test_postgres_runtime_provider_persists_review_conversion_and_report_workflo
     assert _table_count(postgres_database_url, "idea_conversion_intent") == 1
     assert _table_count(postgres_database_url, "idea_conversion_outcome") == 1
     assert _table_count(postgres_database_url, "idea_report_evidence_pack_request") == 1
+    with psycopg.connect(postgres_database_url, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT event_type, correlation_id, trace_id, lineage_origin
+                FROM idea_outbox_event
+                ORDER BY occurred_at_utc, outbox_event_id
+                """
+            )
+            lineage_rows = cursor.fetchall()
+
+    expected_lineage = {
+        "idea.candidate.persisted.v1": (
+            "corr-postgres-runtime-proof",
+            "trace-postgres-runtime-proof",
+        ),
+        "idea.lifecycle.transitioned.v1": (
+            "corr-postgres-runtime-proof-lifecycle",
+            "trace-postgres-runtime-proof-lifecycle",
+        ),
+        "idea.review.decision_recorded.v1": (
+            "corr-postgres-runtime-proof-review",
+            "trace-postgres-runtime-proof-review",
+        ),
+        "idea.feedback.recorded.v1": (
+            "corr-postgres-runtime-proof-feedback",
+            "trace-postgres-runtime-proof-feedback",
+        ),
+        "idea.conversion.intent_requested.v1": (
+            "corr-postgres-runtime-proof-conversion-intent",
+            "trace-postgres-runtime-proof-conversion-intent",
+        ),
+        "idea.conversion.outcome_recorded.v1": (
+            "corr-postgres-runtime-proof-conversion-outcome",
+            "trace-postgres-runtime-proof-conversion-outcome",
+        ),
+        "idea.report_evidence_pack.requested.v1": (
+            "corr-postgres-runtime-proof-report-pack",
+            "trace-postgres-runtime-proof-report-pack",
+        ),
+    }
+    assert set(expected_lineage).issubset({row["event_type"] for row in lineage_rows})
+    for row in lineage_rows:
+        expected = expected_lineage.get(row["event_type"])
+        if expected is not None:
+            assert (row["correlation_id"], row["trace_id"]) == expected
+            assert row["lineage_origin"] == "request"
 
 
 def test_postgres_runtime_serializes_concurrent_review_and_feedback_resource_identity(
@@ -858,6 +977,7 @@ def _persistence_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "signal-ingestion-worker",
         "X-Caller-Capabilities": "idea.candidate.persist",
         "X-Correlation-Id": "corr-postgres-runtime-proof",
+        "X-Trace-Id": "trace-postgres-runtime-proof",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -876,6 +996,7 @@ def _lifecycle_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "idea-lifecycle-worker",
         "X-Caller-Capabilities": "idea.candidate.lifecycle.transition",
         "X-Correlation-Id": "corr-postgres-runtime-proof-lifecycle",
+        "X-Trace-Id": "trace-postgres-runtime-proof-lifecycle",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -890,6 +1011,7 @@ def _review_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-review",
+        "X-Trace-Id": "trace-postgres-runtime-proof-review",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -904,6 +1026,7 @@ def _feedback_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Portfolio-Ids": "PB_SG_GLOBAL_BAL_001",
         "X-Caller-Client-Ids": "client-001",
         "X-Correlation-Id": "corr-postgres-runtime-proof-feedback",
+        "X-Trace-Id": "trace-postgres-runtime-proof-feedback",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -913,6 +1036,7 @@ def _conversion_intent_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.conversion.intent.record",
         "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-intent",
+        "X-Trace-Id": "trace-postgres-runtime-proof-conversion-intent",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -922,6 +1046,7 @@ def _conversion_outcome_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "lotus-report-worker",
         "X-Caller-Capabilities": "idea.conversion.outcome.record",
         "X-Correlation-Id": "corr-postgres-runtime-proof-conversion-outcome",
+        "X-Trace-Id": "trace-postgres-runtime-proof-conversion-outcome",
         "Idempotency-Key": idempotency_key,
     }
 
@@ -931,6 +1056,7 @@ def _report_evidence_pack_headers(idempotency_key: str) -> dict[str, str]:
         "X-Caller-Subject": "advisor-001",
         "X-Caller-Capabilities": "idea.report-evidence-pack.request",
         "X-Correlation-Id": "corr-postgres-runtime-proof-report-pack",
+        "X-Trace-Id": "trace-postgres-runtime-proof-report-pack",
         "Idempotency-Key": idempotency_key,
     }
 
