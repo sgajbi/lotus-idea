@@ -148,7 +148,9 @@ def test_ingests_core_high_cash_candidate_with_generated_source_key() -> None:
     assert source.seen_request.trace_id == "trace-source-ingestion"
 
 
-def test_source_ingestion_blocks_temporally_mismatched_adapter_evidence_without_persistence() -> None:
+def test_source_ingestion_blocks_temporally_mismatched_adapter_evidence_without_persistence() -> (
+    None
+):
     repository = InMemoryIdeaRepository()
     evidence = core_evidence()
     source = RecordingCoreSource(
