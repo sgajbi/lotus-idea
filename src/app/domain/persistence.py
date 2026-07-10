@@ -1027,9 +1027,6 @@ class InMemoryIdeaRepository(InMemoryIdeaLookupMixin, InMemoryOutboxWriteMixin):
             self._downstream_submission_records[existing.idempotency_key] = result.record
         return result
 
-    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None:
-        self._downstream_submission_records[record.idempotency_key] = record
-
     def outbox_events_for_delivery(
         self,
         *,

@@ -58,7 +58,7 @@ from app.domain.persistence import (
     ReviewPersistenceDecision,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from tests.unit.downstream_submission_helpers import build_downstream_submission_record
+from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from app.infrastructure.postgres_mutation_metadata import idempotency_created_at
 from app.infrastructure.postgres_candidate_writes import StaleCandidateMutationError
 from app.infrastructure.postgres_codecs import (
@@ -782,17 +782,25 @@ def test_postgres_repository_rejects_sensitive_outbox_failure_reason() -> None:
 def test_postgres_repository_round_trips_downstream_submission_records() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    record = build_downstream_submission_record(
+    claim = build_downstream_submission_claim(
         idempotency_key="downstream-submit-postgres-001",
         request_fingerprint="sha256:downstream-submit-postgres",
         resource_id="conversion-postgres-001",
-        status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
         correlation_id="corr-postgres",
         trace_id="trace-postgres",
         submitted_at_utc=EVALUATED_AT,
     )
 
-    repository.record_downstream_submission(record)
+    repository.claim_downstream_submission(claim)
+    finalized = repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=EVALUATED_AT,
+    )
+    assert finalized.record is not None
+    record = finalized.record
     reloaded = PostgresIdeaRepository(connection).downstream_submission_by_idempotency_key(
         "downstream-submit-postgres-001"
     )

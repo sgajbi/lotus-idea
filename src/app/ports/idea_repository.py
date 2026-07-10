@@ -381,8 +381,6 @@ class DownstreamSubmissionRepository(Protocol):
         reconciled_at_utc: datetime,
     ) -> DownstreamSubmissionMutationResult: ...
 
-    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None: ...
-
 class OutboxDeliveryRepository(CandidateSnapshotRepository, Protocol):
     def record_outbox_delivery_run_request(
         self,

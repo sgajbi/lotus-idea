@@ -11,7 +11,7 @@ from app.domain import (
     request_report_evidence_pack,
 )
 from app.infrastructure.postgres_repository import PostgresIdeaRepository
-from tests.unit.downstream_submission_helpers import build_downstream_submission_record
+from tests.unit.downstream_submission_helpers import build_downstream_submission_claim
 from tests.unit.postgres_repository_fake import FakePostgresConnection
 from tests.unit.test_postgres_repository import (
     EVALUATED_AT,
@@ -106,16 +106,24 @@ def test_postgres_report_pack_lookup_uses_direct_table_query() -> None:
 def test_postgres_downstream_submission_idempotency_lookup_uses_direct_table_query() -> None:
     connection = FakePostgresConnection()
     repository = PostgresIdeaRepository(connection)
-    record = build_downstream_submission_record(
+    claim = build_downstream_submission_claim(
         idempotency_key="downstream-submit:bounded-lookup",
         request_fingerprint="sha256:downstream-submit-bounded",
         resource_id="conversion-bounded-lookup",
-        status=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
         submitted_at_utc=EVALUATED_AT,
         correlation_id="corr-downstream-bounded",
         trace_id="trace-downstream-bounded",
     )
-    repository.record_downstream_submission(record)
+    repository.claim_downstream_submission(claim)
+    finalized = repository.finalize_downstream_submission(
+        idempotency_key=claim.idempotency_key,
+        lease_owner=claim.lease_owner or "",
+        lease_attempt_id=claim.lease_attempt_id or "",
+        posture=DownstreamSubmissionPosture.ACCEPTED_BY_DOWNSTREAM,
+        finalized_at_utc=EVALUATED_AT,
+    )
+    assert finalized.record is not None
+    record = finalized.record
     connection.executed_sql.clear()
 
     loaded = repository.downstream_submission_by_idempotency_key("downstream-submit:bounded-lookup")

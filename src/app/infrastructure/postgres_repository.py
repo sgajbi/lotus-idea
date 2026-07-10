@@ -542,9 +542,6 @@ class PostgresIdeaRepository(
             reconciled_at_utc=reconciled_at_utc,
         )
 
-    def record_downstream_submission(self, record: DownstreamSubmissionRecord) -> None:
-        self._mutate(lambda repository: repository.record_downstream_submission(record))
-
     def snapshot(self) -> IdeaRepositorySnapshot:
         with self._connection.cursor() as cursor:
             candidate_records = self._load_candidate_records(cursor)
