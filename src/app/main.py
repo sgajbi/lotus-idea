@@ -15,6 +15,9 @@ from app.api.conversion_governance import register_conversion_governance_routes
 from app.api.data_mesh_readiness import register_data_mesh_readiness_routes
 from app.api.drawdown_review_signals import register_drawdown_review_signal_routes
 from app.api.downstream_realization import register_downstream_realization_routes
+from app.api.downstream_submission_reconciliation import (
+    register_downstream_submission_reconciliation_routes,
+)
 from app.api.downstream_realization_readiness import (
     register_downstream_realization_readiness_routes,
 )
@@ -114,6 +117,7 @@ def _register_product_routes(application: FastAPI) -> None:
     register_conversion_governance_routes(application)
     register_report_evidence_routes(application)
     register_downstream_realization_routes(application)
+    register_downstream_submission_reconciliation_routes(application)
     register_downstream_realization_readiness_routes(application)
     register_data_mesh_readiness_routes(application)
     register_runtime_trust_telemetry_routes(application)

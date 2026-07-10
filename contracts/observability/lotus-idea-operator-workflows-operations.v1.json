@@ -102,7 +102,9 @@
       "implemented_metric_family": "lotus_idea_operation_events_total",
       "required_operations": [
         "downstream_realization_readiness_read",
-        "downstream_realization_submission"
+        "downstream_realization_submission",
+        "downstream_reconciliation_read",
+        "downstream_reconciliation_resolve"
       ],
       "required_labels": [
         "operation",
@@ -114,8 +116,10 @@
       ],
       "required_endpoints": [
         "GET /api/v1/downstream-realization/readiness",
+        "GET /api/v1/downstream-submissions/reconciliation",
         "POST /api/v1/conversion-intents/{conversionIntentId}/downstream-submissions",
-        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions"
+        "POST /api/v1/report-evidence-packs/{reportEvidencePackId}/downstream-submissions",
+        "POST /api/v1/downstream-submissions/reconciliation/{supportReference}"
       ],
       "certification_status": "certified"
     },
@@ -180,14 +184,16 @@
       "implemented_metric_family": "lotus_idea_operation_events_total",
       "required_operations": [
         "downstream_realization_readiness_read",
-        "downstream_realization_submission"
+        "downstream_realization_submission",
+        "downstream_reconciliation_read",
+        "downstream_reconciliation_resolve"
       ],
       "required_outcomes": [
         "blocked",
         "invalid_state",
         "permission_denied"
       ],
-      "operator_response": "Use downstream realization readiness and local submission posture only; downstream execution, suitability, mandate, report rendering, and archive outcomes remain source-owned.",
+      "operator_response": "Inspect the source-safe reconciliation queue and resolve uncertain submissions by opaque support reference only after verifying the source-owned receipt; never retry the downstream call or infer execution, suitability, mandate, report rendering, or archive outcomes.",
       "certification_status": "certified"
     },
     {

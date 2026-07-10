@@ -146,6 +146,18 @@
           "supportability_status": "not_certified"
         },
         {
+          "operation": "downstream_reconciliation_read",
+          "scope": "Source-safe operator inspection of uncertain downstream submissions",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
+          "operation": "downstream_reconciliation_resolve",
+          "scope": "Audited operator resolution of one uncertain downstream submission",
+          "source_authority": "lotus-idea",
+          "supportability_status": "not_certified"
+        },
+        {
           "operation": "outbox_delivery_run_once",
           "scope": "Internal outbox delivery run-once operator action",
           "source_authority": "lotus-idea",
