@@ -20,6 +20,7 @@ BUILD_DIR_NAMES = frozenset(
         "build",
         "dist",
         "htmlcov",
+        "output",
     }
 )
 LOCAL_FILE_NAMES = frozenset(

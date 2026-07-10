@@ -60,3 +60,15 @@ def test_cleanup_removes_generated_artifacts_without_pruned_directories(
     assert not generated_directory.exists()
     assert not local_artifact.exists()
     assert venv_marker.exists()
+
+
+def test_cleanup_removes_ignored_output_evidence(tmp_path: Path) -> None:
+    module = _load_clean_generated_artifacts()
+    output_directory = tmp_path / "output"
+    output_directory.mkdir()
+    (output_directory / "canonical-proof.json").write_text("{}", encoding="utf-8")
+
+    plan = module.clean_generated_artifacts(tmp_path)
+
+    assert plan.directories == (output_directory,)
+    assert not output_directory.exists()
