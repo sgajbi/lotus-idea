@@ -32,6 +32,15 @@ SIGNAL_API_MODULES = (
     Path("src/app/api/underperformance_signals.py"),
 )
 
+CORE_SOURCE_SIGNAL_MODULES = frozenset(
+    {
+        Path("src/app/api/bond_maturity_signals.py"),
+        Path("src/app/api/idea_signals.py"),
+        Path("src/app/api/low_income_signals.py"),
+        Path("src/app/api/missing_benchmark_signals.py"),
+    }
+)
+
 REQUIRED_SHARED_HELPERS = (
     "CallerContextHeaders",
     "signal_permission_problem_or_none",
@@ -110,6 +119,16 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
             f"`{SOURCE_SIGNAL_SHARED_HELPER}` orchestration"
         )
 
+    if (
+        path in CORE_SOURCE_SIGNAL_MODULES
+        and "_from_source" in text
+        and SOURCE_SIGNAL_SHARED_HELPER in text
+        and not _requires_tenant_context(tree)
+    ):
+        errors.append(
+            f"{relative_path}: Core-backed source APIs must require one trusted tenant context"
+        )
+
     for node in ast.walk(tree):
         if (
             isinstance(node, ast.FunctionDef)
@@ -161,6 +180,20 @@ def _validate_signal_api_module(path: Path, root: Path) -> list[str]:
                 )
 
     return errors
+
+
+def _requires_tenant_context(tree: ast.AST) -> bool:
+    return any(
+        isinstance(node, ast.Call)
+        and call_name(node.func) == SOURCE_SIGNAL_SHARED_HELPER
+        and any(
+            keyword.arg == "require_tenant_context"
+            and isinstance(keyword.value, ast.Constant)
+            and keyword.value.value is True
+            for keyword in node.keywords
+        )
+        for node in ast.walk(tree)
+    )
 
 
 def _validate_signal_api_support(path: Path, root: Path) -> list[str]:
