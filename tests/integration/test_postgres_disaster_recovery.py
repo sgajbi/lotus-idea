@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 from app.infrastructure.postgres_disaster_recovery import (
     PostgresRestoredDatabaseInspector,
 )
 from scripts.seed_postgres_disaster_recovery_fixture import (
     seed_disaster_recovery_fixture,
+)
+from scripts.validate_postgres_disaster_recovery_resume import (
+    validate_restore_resume_safety,
 )
 
 OWNED_TABLES = frozenset(
@@ -72,3 +77,23 @@ def test_postgres_restore_inspector_validates_representative_linked_fixture(
     )
     assert not any(snapshot.referential_violation_counts.values())
     assert not any(snapshot.semantic_violation_counts.values())
+
+
+def test_postgres_restored_fixture_resumes_without_duplicate_mutation(
+    postgres_database_url: str,
+    tmp_path: Path,
+) -> None:
+    seed_disaster_recovery_fixture(
+        postgres_database_url,
+        confirm_disposable_database=True,
+    )
+
+    evidence = validate_restore_resume_safety(
+        postgres_database_url,
+        operator_id="integration-dr-operator",
+        correlation_id="integration-dr-resume-001",
+        output_path=tmp_path / "resume-evidence.json",
+    )
+
+    assert evidence.status == "passed"
+    assert evidence.no_duplicate_or_mutation is True
