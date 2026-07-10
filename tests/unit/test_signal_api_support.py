@@ -9,6 +9,7 @@ import pytest
 from app.api.signal_api_support import (
     SignalSourceRefContract,
     evaluate_caller_supplied_signal,
+    evaluate_source_signal,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
     signal_source_ref_one_of_contract_problem_or_none,
@@ -342,6 +343,83 @@ def test_caller_supplied_signal_boundary_does_not_call_use_case_after_scope_deni
     assert isinstance(response, JSONResponse)
     assert response.status_code == 403
     assert calls == []
+
+
+def test_source_signal_boundary_orders_runtime_evaluation_projection_and_cleanup() -> None:
+    calls: list[str] = []
+    expected = SignalEvaluationResult(
+        outcome=SignalEvaluationOutcome.NOT_ELIGIBLE,
+        family=OpportunityFamily.HIGH_CASH,
+        reason_codes=(ReasonCode.BELOW_MATERIALITY,),
+    )
+
+    class Runtime:
+        def close(self) -> None:
+            calls.append("closed")
+
+    runtime = Runtime()
+
+    def build_runtime() -> Runtime:
+        calls.append("runtime")
+        return runtime
+
+    def map_command(active_runtime: Runtime) -> object:
+        assert active_runtime is runtime
+        calls.append("dto-mapped")
+        return object()
+
+    def evaluate(command: object, active_runtime: Runtime) -> SignalEvaluationResult:
+        assert command is not None
+        assert active_runtime is runtime
+        calls.append("use-case")
+        return expected
+
+    def project(
+        result: SignalEvaluationResult,
+        *,
+        source_authority: str,
+    ) -> SignalEvaluationResult:
+        assert result is expected
+        calls.append(f"response:{source_authority}")
+        return result
+
+    response = evaluate_source_signal(
+        caller=_signal_caller(portfolio_ids=("PB_SG_GLOBAL_BAL_001",)),
+        source_authority="lotus-core",
+        requested_access_scope=_requested_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+        runtime_factory=build_runtime,
+        is_runtime_blocked=lambda value: False,
+        blocked_detail="Core source runtime is not configured.",
+        command_factory=map_command,
+        evaluator=evaluate,
+        response_factory=project,
+        emit_event=lambda *args, **kwargs: None,
+    )
+
+    assert response is expected
+    assert calls == ["runtime", "dto-mapped", "use-case", "response:lotus-core", "closed"]
+
+
+def test_source_signal_boundary_blocks_before_runtime_use_case_and_cleanup() -> None:
+    calls: list[str] = []
+    blocker = SimpleNamespace(code="core_base_url_missing")
+
+    response = evaluate_source_signal(
+        caller=_signal_caller(portfolio_ids=("PB_SG_GLOBAL_BAL_001",)),
+        source_authority="lotus-core",
+        requested_access_scope=_requested_scope(portfolio_id="PB_SG_GLOBAL_BAL_001"),
+        runtime_factory=lambda: blocker,
+        is_runtime_blocked=lambda value: value is blocker,
+        blocked_detail="Core source runtime is not configured.",
+        command_factory=lambda runtime: calls.append("dto-mapped"),
+        evaluator=lambda command, runtime: calls.append("use-case"),
+        response_factory=lambda result, **kwargs: result,
+        emit_event=lambda *args, **kwargs: calls.append(kwargs.get("error_code", "event")),
+    )
+
+    assert isinstance(response, JSONResponse)
+    assert response.status_code == 503
+    assert calls == ["core_base_url_missing"]
 
 
 def test_signal_outcome_maps_suppressed_to_operation_outcome() -> None:

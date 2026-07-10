@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 from fastapi import FastAPI, Header, Request, status
 from fastapi.responses import JSONResponse
 
@@ -20,6 +22,7 @@ from app.api.idea_signal_models import (
 )
 from app.api.runtime_dependencies import (
     AdvisePolicyEvaluationSourceRuntimeBlocker,
+    CoreHighCashSourceRuntime,
     CoreHighCashSourceRuntimeBlocker,
     get_idea_repository,
     idea_repository_durable_storage_backed,
@@ -35,6 +38,7 @@ from app.api.signal_api_support import (
     SignalSourceRefContract,
     close_signal_source_runtime,
     evaluate_caller_supplied_signal,
+    evaluate_source_signal,
     emit_signal_evaluation_event,
     operation_outcome_from_signal_evaluation,
     signal_permission_problem_or_none,
@@ -74,6 +78,12 @@ from app.security.caller_context import (
     require_capability,
 )
 
+
+def _is_core_high_cash_runtime_blocked(
+    runtime: object,
+) -> bool:
+    return isinstance(runtime, CoreHighCashSourceRuntimeBlocker)
+
 _PERSIST_HIGH_CASH_POLICY = CapabilityPolicy.for_roles(
     required_capability="idea.candidate.persist",
 )
@@ -112,53 +122,24 @@ async def evaluate_high_cash_signal_from_source(
     caller: CallerContextHeaders,
 ) -> EvaluateHighCashSignalResponse | JSONResponse:
     source_authority = SourceSystem.LOTUS_CORE.value
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_source_signal(
         caller=caller,
         source_authority=source_authority,
         requested_access_scope=portfolio_only_scope(signal_request.portfolio_id),
+        runtime_factory=_build_core_high_cash_source_runtime_from_environment,
+        is_runtime_blocked=_is_core_high_cash_runtime_blocked,
+        blocked_detail="Core source runtime is not configured for high-cash source evaluation.",
+        command_factory=lambda runtime: signal_request.to_command(
+            correlation_id=_request_correlation_id(request),
+            trace_id=_request_trace_id(request),
+        ),
+        evaluator=lambda command, runtime: evaluate_high_cash_signal_from_core(
+            command,
+            core_source=cast(CoreHighCashSourceRuntime, runtime).core_source,
+        ),
+        response_factory=EvaluateHighCashSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
     )
-    if permission_problem is not None:
-        return permission_problem
-
-    runtime = _build_core_high_cash_source_runtime_from_environment()
-    if isinstance(runtime, CoreHighCashSourceRuntimeBlocker):
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.BLOCKED,
-            source_authority=source_authority,
-            error_code=runtime.code,
-        )
-        return problem_response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            code="source_runtime_not_configured",
-            title="Source runtime not configured",
-            detail=("Core source runtime is not configured for high-cash source evaluation."),
-        )
-
-    try:
-        result = evaluate_high_cash_signal_from_core(
-            signal_request.to_command(
-                correlation_id=_request_correlation_id(request),
-                trace_id=_request_trace_id(request),
-            ),
-            core_source=runtime.core_source,
-        )
-        emit_signal_evaluation_event(
-            result=result,
-            source_authority=source_authority,
-            emit_event=emit_foundation_operation_event,
-        )
-        return EvaluateHighCashSignalResponse.from_domain(
-            result,
-            source_authority=source_authority,
-        )
-    finally:
-        close_signal_source_runtime(
-            runtime=runtime,
-            source_authority=SourceSystem.LOTUS_CORE.value,
-            emit_event=emit_foundation_operation_event,
-        )
 
 
 async def evaluate_mandate_restriction_signal(

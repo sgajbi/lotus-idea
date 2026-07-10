@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Literal, Protocol, TypeVar
+from typing import Any, Literal, Protocol, TypeVar, cast
 
 from fastapi import status
 from fastapi.responses import JSONResponse
@@ -34,6 +34,10 @@ class _RuntimeWithClose(Protocol):
         """Release route-owned runtime resources."""
 
 
+class _SourceRuntimeBlocker(Protocol):
+    code: str
+
+
 @dataclass(frozen=True)
 class SignalSourceRefContract:
     source_ref: _SourceRefLike | None
@@ -43,6 +47,7 @@ class SignalSourceRefContract:
 
 CommandT = TypeVar("CommandT")
 ResponseT = TypeVar("ResponseT")
+RuntimeT = TypeVar("RuntimeT", bound=_RuntimeWithClose)
 
 
 SignalRouteMetadata = RouteMetadata
@@ -168,8 +173,8 @@ def evaluate_caller_supplied_signal(
 
     The route owns transport details and DTO mapping; this helper owns the
     repeated boundary sequence before an application evaluator is called.
-    Source runtime construction remains in the route-specific path because it
-    has different lifecycle and failure semantics.
+    Source runtime construction remains supplied by each route because source
+    adapters have different configuration and port types.
     """
     permission_problem = signal_permission_problem_or_none(
         caller=caller,
@@ -203,6 +208,68 @@ def evaluate_caller_supplied_signal(
         emit_event=emit_event,
     )
     return response_factory(result, source_authority=source_authority)
+
+
+def evaluate_source_signal(
+    *,
+    caller: CallerContext,
+    source_authority: str,
+    requested_access_scope: ReviewAccessScope | None,
+    runtime_factory: Callable[[], object],
+    is_runtime_blocked: Callable[[object], bool],
+    blocked_detail: str,
+    command_factory: Callable[[RuntimeT], CommandT],
+    evaluator: Callable[[CommandT, RuntimeT], SignalEvaluationResult],
+    response_factory: Callable[..., ResponseT],
+    emit_event: Callable[..., None],
+) -> ResponseT | JSONResponse:
+    """Run the shared source-backed signal boundary in a fixed order.
+
+    Routes retain transport DTO mapping and source-specific runtime factories.
+    This helper centralizes the security, blocked-runtime, evaluation, event,
+    projection, and cleanup sequence so new source adapters cannot drift from
+    the governed API boundary.
+    """
+    permission_problem = signal_permission_problem_or_none(
+        caller=caller,
+        source_authority=source_authority,
+        requested_access_scope=requested_access_scope,
+        emit_event=emit_event,
+    )
+    if permission_problem is not None:
+        return permission_problem
+
+    runtime_or_blocker = runtime_factory()
+    if is_runtime_blocked(runtime_or_blocker):
+        blocker = cast(_SourceRuntimeBlocker, runtime_or_blocker)
+        emit_event(
+            IdeaOperation.SIGNAL_EVALUATION,
+            OperationOutcome.BLOCKED,
+            source_authority=source_authority,
+            error_code=blocker.code,
+        )
+        return problem_response(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            code="source_runtime_not_configured",
+            title="Source runtime not configured",
+            detail=blocked_detail,
+        )
+
+    runtime = cast(RuntimeT, runtime_or_blocker)
+    try:
+        result = evaluator(command_factory(runtime), runtime)
+        emit_signal_evaluation_event(
+            result=result,
+            source_authority=source_authority,
+            emit_event=emit_event,
+        )
+        return response_factory(result, source_authority=source_authority)
+    finally:
+        close_signal_source_runtime(
+            runtime=runtime,
+            source_authority=source_authority,
+            emit_event=emit_event,
+        )
 
 
 def signal_problem_responses() -> dict[int | str, dict[str, Any]]:
