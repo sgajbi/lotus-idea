@@ -1161,6 +1161,29 @@ Current source-fetching API validation:
    approval, sign-off approval, client publication, typed risk-profile or
    restriction data-product certification, or supported-feature promotion.
 
+Current trusted Core tenant validation:
+
+1. Core-backed APIs require exactly one tenant resolved from trusted caller
+   context before runtime construction. Missing, ambiguous, self-asserted
+   production, and request-body override paths return governed problems without
+   source I/O.
+2. High-cash, low-income, bond-maturity, and missing-benchmark application
+   paths retain tenant in candidate access scope and deterministic candidate
+   identity. Tenant A/B evaluations over otherwise identical source evidence
+   cannot produce the same candidate identity.
+3. Source ingestion requires explicit governed tenant configuration and binds
+   generated idempotency identity to tenant, portfolio, and business date, so
+   same-portfolio/date work remains isolated across tenants.
+4. The Core adapter passes tenant only to Core routes whose published contract
+   is tenant-aware. It does not use a production `default` or invent tenant
+   parameters on non-tenant-aware Core reads.
+5. Operation events expose bounded `tenant_scope_provenance` only. Raw tenant
+   identifiers are forbidden from operation attributes and metric labels.
+6. `.venv\Scripts\python.exe scripts\trusted_tenant_context_gate.py` and its
+   mutation tests enforce API, application, port, adapter, persistence,
+   ingestion, OpenAPI, test, and telemetry parity. This is internal design
+   modularity only; no runtime split is justified.
+
 Current mandate health source-product ref validation:
 
 1. `.venv\Scripts\python.exe -m pytest tests\unit\test_lotus_performance_sources.py tests\unit\test_lotus_risk_mandate_health_sources.py -q`

@@ -89,15 +89,22 @@ and cleanup sequence. The `signal-api-contract-gate` enforces this boundary.
 
 Core-backed routes additionally require exactly one trusted tenant from the
 caller context before building the source runtime. That tenant is carried
-through the application command and Core source port; the infrastructure
-adapter never substitutes a production `default` tenant. The run-once worker
-uses the same rule through a required `tenantId` in its versioned manifest.
+through the application command and Core source port, into each tenant-aware
+Core snapshot payload, and into the resulting candidate access scope and
+identity; the infrastructure adapter never substitutes a production `default`
+tenant. Core routes whose published contract is not tenant-aware are not given
+invented parameters. The run-once worker uses the same rule through a required
+`tenantId` in its versioned manifest, and generated ingestion identity includes
+tenant scope so identical portfolio/date work in two tenants cannot collide.
 Every Core live-proof generator also requires explicit `--tenant-id` and
 passes it through the typed Core request port. The `signal-api-contract-gate`
 checks both route opt-in and proof-script propagation so certification tooling
-cannot bypass the runtime tenant boundary.
+cannot bypass the runtime tenant boundary; `trusted-tenant-context-gate` checks
+application scope, adapter payload, ingestion identity, API rejection, OpenAPI,
+and source-safe operation-event posture across layers.
 The `unknown` value used by portfolio-only scope checks is an unconstrained
-scope dimension, not a tenant value that may be sent to Core.
+scope dimension for non-Core caller-supplied paths, not a tenant value that may
+be used for a Core-backed candidate or sent to Core.
 
 The domain layer also rejects source evidence whose business date differs from
 the requested `asOfDate`, or whose `generatedAtUtc` is later than

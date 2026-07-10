@@ -567,11 +567,15 @@ portfolio, suitability, risk, performance, execution, or report facts.
 
 Core-backed signal routes also require exactly one trusted tenant in the
 caller context before constructing a source runtime. The resolved tenant flows
-through the application command and `Core*EvidenceRequest` port into the Core
-adapter; the adapter does not fall back to `default`. Portfolio-only scope
-checks treat the internal `unknown` sentinel as unconstrained and never send
-it as a tenant. The source API contract gate protects this boundary for every
-Core-backed route.
+through the application command and `Core*EvidenceRequest` port into each
+tenant-aware Core snapshot payload. It is also retained in candidate access
+scope, deterministic candidate identity, and generated ingestion idempotency
+identity. The adapter does not fall back to `default`, and it does not invent
+tenant parameters for Core routes that do not publish them. Portfolio-only
+scope checks treat the internal `unknown` sentinel as unconstrained for
+non-Core paths; Core-backed candidates may not use it as their tenant. The
+source API and trusted-tenant context gates protect this boundary. Operation
+events publish only bounded scope-provenance posture, never raw tenant IDs.
 
 Conversion-intent and conversion-outcome request/response DTOs live in
 `src/app/api/conversion_governance_models.py`, while

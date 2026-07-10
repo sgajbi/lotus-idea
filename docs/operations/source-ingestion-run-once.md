@@ -17,9 +17,13 @@ manifest-backed worker foundation and is intended for controlled operator proof,
 not business-user execution.
 
 The run-once manifest must include one explicit `tenantId`. The worker carries
-that value through the application command and Core source port; missing or
-ambiguous caller tenant context is rejected before runtime construction, and
-the adapter has no production fallback tenant.
+that value through the application command and Core source port, tenant-aware
+Core snapshot payload, persisted candidate access scope, candidate identity,
+and generated ingestion idempotency key. This allows the same portfolio/date
+work to remain isolated across tenants. Missing or ambiguous tenant context is
+rejected before runtime construction, and the adapter has no production
+fallback tenant. Worker summaries and operation metrics do not expose raw
+tenant identifiers.
 
 ## What It Proves
 
@@ -32,6 +36,9 @@ The endpoint proves the service can:
 4. execute the existing domain batch runner when runtime state is configured,
 5. return aggregate decision counts only,
 6. emit bounded `source_ingestion_run_once` operation events.
+
+`make trusted-tenant-context-gate` prevents the API, application, port,
+adapter, persistence, worker, and telemetry contracts from drifting apart.
 
 `scripts/generate_source_ingestion_live_proof.py` wraps the same worker path
 and writes a source-safe proof artifact for release reviewers. When that

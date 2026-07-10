@@ -40,7 +40,9 @@ downstream submission contracts.
 ## DTO Base Models
 
 Use `app.api.base_model.CamelModel` for API request and response DTOs that need
-camel-case aliases. Route modules should not define local `CamelModel` or local
+camel-case aliases. The shared model rejects unknown fields so command DTOs fail
+closed instead of silently accepting unsupported or security-sensitive input.
+Route modules should not define local `CamelModel` or local
 `ConfigDict(populate_by_name=True)` clones; `make
 api-camel-model-boundary-gate` blocks duplicates so alias handling remains
 consistent without creating a runtime service split.

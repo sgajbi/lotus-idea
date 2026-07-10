@@ -22,6 +22,13 @@ separately gated.
 | Source ingestion and outbox operations | `GET /api/v1/source-ingestion/readiness`, `POST /api/v1/source-ingestion/run-once`, `GET /api/v1/outbox-delivery/readiness`, `POST /api/v1/outbox-delivery/run-once`, `GET /api/v1/outbox-delivery/dead-letters`, `POST /api/v1/outbox-delivery/dead-letters/{supportReference}/redrive` | Operator diagnostics and bounded actions over configured internal foundations. Dead-letter inspection exposes opaque support references and bounded failure posture only. Re-drive requires a dedicated capability, trusted production provenance, idempotency key, reason, change reference, eligibility checks, append-only audit evidence, and a fenced lease. Poison or unsupported events remain quarantined. | No long-running scheduler certification, live broker certification, downstream delivery proof, platform mesh proof, or supported ingestion/event product. |
 | Data mesh and implementation proof | `GET /api/v1/data-mesh/readiness`, `GET /api/v1/data-mesh/trust-telemetry/runtime-preview`, `GET /api/v1/data-mesh/trust-telemetry/runtime-snapshot`, `GET /api/v1/implementation-proof/readiness` | Source-safe readiness, telemetry, and aggregate proof-blocker diagnostics. | Diagnostics only; no mesh certification, Gateway/Workbench discovery, live implementation proof, or supported-feature promotion. |
 
+Core-backed source routes require exactly one tenant from trusted caller
+context. They reject missing, ambiguous, self-asserted production, and
+request-body tenant overrides before source I/O. The resolved tenant is carried
+through the application/port/adapter path where Core publishes tenant-aware
+input and is retained in candidate access scope and identity. Responses and
+operation telemetry never expose raw tenant IDs.
+
 ## Request And Error Model
 
 ### Advisor Queue Paging

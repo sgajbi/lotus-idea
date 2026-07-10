@@ -151,6 +151,16 @@ the existing runtime; they do not certify live source support, persist
 candidates, create a separate runtime service, prove Gateway/Workbench
 behavior, certify a data product, or promote a supported feature.
 
+Core-backed source evaluation requires exactly one tenant resolved from trusted
+caller context before runtime construction. That tenant flows through request
+DTO mapping, application commands, Core source ports, tenant-aware Core snapshot
+payloads, candidate access scope, candidate identity, and generated ingestion
+idempotency identity. Missing, ambiguous, self-asserted production, and
+request-body override attempts fail closed before source I/O. Operational events
+record only bounded `tenant_scope_provenance`; raw tenant identifiers remain
+forbidden in operation attributes and metric labels. Core reads whose published
+contract is not tenant-aware are not given invented query parameters.
+
 All signal families share the versioned
 `src/app/domain/source_temporal.py` contract:
 

@@ -846,11 +846,17 @@ shape from the wrong source authority or data product.
 
 Core-backed source routes additionally require exactly one trusted caller
 tenant before runtime construction. The tenant is carried through the
-application command and Core source port, while the source adapter rejects
-blank values and does not supply a production default. The blocking
-`signal-api-contract-gate` checks that each Core-backed route opts into this
-shared tenant boundary, and integration tests prove missing, ambiguous, and
-distinct tenant contexts without calling Core under the wrong scope.
+application command and Core source port, into tenant-aware Core snapshot
+payloads, and into candidate access scope, deterministic identity, and
+generated ingestion identity. The source adapter rejects blank values, does
+not supply a production default, and does not invent parameters for Core routes
+that are not tenant-aware. The blocking `signal-api-contract-gate` checks route
+opt-in; `trusted-tenant-context-gate` checks the full API-to-adapter and
+persistence contract. Integration tests prove tenant A/B isolation plus
+missing, ambiguous, untrusted-header, and request-body override rejection
+without calling Core under the wrong scope. Operation events expose only a
+bounded scope-provenance enum; raw tenant IDs are forbidden attributes and
+metric labels.
 The same gate requires every Core live-proof CLI to accept explicit
 `--tenant-id` and pass it into the typed source request. Worker manifests and
 proof fixtures carry `tenantId`, preventing local tests or certification
