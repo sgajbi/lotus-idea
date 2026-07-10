@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied routes use a shared ordered API boundary for entitlement, source-contract validation, DTO mapping, application evaluation, event emission, and response projection. The repo-native canonical opportunity-source proof runner binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. A clean-tree canonical run now validates current Risk concentration, Performance underperformance, and Performance benchmark-readiness evidence for the governed portfolio. Merged release evidence, Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
+Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied and source-backed routes use shared ordered API boundaries for entitlement, source-contract validation, DTO mapping, application evaluation, event emission, response projection, and runtime cleanup. The repo-native canonical opportunity-source proof runner binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. A clean-tree canonical run now validates current Risk concentration, Performance underperformance, and Performance benchmark-readiness evidence for the governed portfolio. Merged release evidence, Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
 
 ## Outcome
 
@@ -1017,6 +1017,14 @@ Current source-ingestion orchestration validation:
    preserving environment overrides for other deployments. The canonical
    source-worker manifest is explicit and remains opt-in under the `worker`
    Compose profile.
+
+10. `app.api.signal_api_support.evaluate_source_signal` now owns the shared
+    source-backed route sequence. Every `evaluate-from-source` API supplies
+    only its concrete runtime factory, request DTO mapper, application use
+    case, source port, and response model. The blocking signal API contract
+    gate verifies this shared boundary, reducing design-time duplication while
+    preserving one-process runtime topology and source-specific failure
+    semantics.
 
 Current Core cash-weight adapter validation:
 

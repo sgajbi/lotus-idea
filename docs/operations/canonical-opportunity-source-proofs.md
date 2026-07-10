@@ -81,6 +81,12 @@ infrastructure adapter for high-cash, concentration, underperformance, and
 missing-benchmark evaluation. A successful HTTP contract result is not a
 supported-feature claim.
 
+All source-backed signal routes use the same in-process API boundary helper,
+`app.api.signal_api_support.evaluate_source_signal`. The route owns its DTO,
+source runtime factory, application use case, and port-specific adapter; the
+helper owns the ordered entitlement, fail-closed runtime, event, projection,
+and cleanup sequence. The `signal-api-contract-gate` enforces this boundary.
+
 ## Current Boundary
 
 The runner currently certifies these source-owned proof families:

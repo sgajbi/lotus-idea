@@ -211,11 +211,17 @@ External consumer
 
 `app.api.signal_api_support.evaluate_caller_supplied_signal` centralizes the
 shared entitlement, source-contract, operation-event, and response-projection
-steps before the route-specific application evaluator runs. The helper does
-not construct source runtimes or own adapter cleanup; those remain explicit in
-each source-backed route so timeout, unavailable-source, and cleanup-failure
-behavior stays observable and testable. This reduces design-time duplication
-without changing runtime topology.
+steps before the route-specific application evaluator runs.
+
+`app.api.signal_api_support.evaluate_source_signal` centralizes the equivalent
+source-backed sequence: entitlement and scope checks, runtime construction,
+fail-closed dependency response, DTO-to-command callback, application
+evaluation, operation event, response projection, and runtime cleanup. Each
+route still supplies its concrete runtime factory, command mapper, application
+use case, and source port; the shared helper prevents lifecycle-order drift.
+The `signal-api-contract-gate` blocks source-backed routes that bypass this
+boundary. This is design modularity inside one process, not a new runtime
+service or process boundary.
 
 ### Canonical Source-Proof Runner
 
