@@ -44,6 +44,7 @@ RUN python -m pip install --no-cache-dir --no-deps .
 
 COPY contracts ./contracts
 COPY migrations ./migrations
+COPY docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json ./docs/examples/source-ingestion/canonical-high-cash-worker.manifest.json
 COPY scripts/run_source_ingestion_worker.py ./scripts/run_source_ingestion_worker.py
 COPY scripts/run_scheduled_source_ingestion_worker.py ./scripts/run_scheduled_source_ingestion_worker.py
 
