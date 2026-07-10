@@ -71,6 +71,8 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
         timeout_seconds="5.0",
         correlation_id="corr-canonical-proof",
         trace_id="trace-canonical-proof",
+        source_revision="test-revision",
+        source_tree_dirty=False,
     )
 
     summaries = _run_proofs(
@@ -89,6 +91,8 @@ def test_run_proofs_fails_closed_when_a_child_is_blocked_or_artifact_is_invalid(
         as_of_date=args.as_of_date,
         correlation_id=args.correlation_id,
         trace_id=args.trace_id,
+        source_revision=args.source_revision,
+        source_tree_dirty=args.source_tree_dirty,
         summaries=summaries,
     )
 

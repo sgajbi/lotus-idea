@@ -59,6 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         evaluated_at = _parse_instant(args.evaluated_at_utc, "evaluated-at-utc")
         output_directory = Path(args.output_directory)
         output_directory.mkdir(parents=True, exist_ok=True)
+        source_revision, source_tree_dirty = _source_provenance()
         summaries = _run_proofs(
             cases=PROOF_CASES,
             args=args,
@@ -75,6 +76,8 @@ def main(argv: list[str] | None = None) -> int:
             as_of_date=args.as_of_date,
             correlation_id=args.correlation_id,
             trace_id=args.trace_id,
+            source_revision=source_revision,
+            source_tree_dirty=source_tree_dirty,
             summaries=summaries,
         )
         aggregate_path = output_directory / "canonical-opportunity-source-proofs.json"
@@ -219,6 +222,8 @@ def _aggregate_payload(
     as_of_date: str,
     correlation_id: str,
     trace_id: str,
+    source_revision: str,
+    source_tree_dirty: bool,
     summaries: list[dict[str, Any]],
 ) -> dict[str, Any]:
     ready = all(
@@ -234,6 +239,8 @@ def _aggregate_payload(
         "asOfDate": as_of_date,
         "correlationId": correlation_id,
         "traceId": trace_id,
+        "sourceRevision": source_revision,
+        "sourceTreeDirty": source_tree_dirty,
         "certificationReady": ready,
         "supportedFeaturePromoted": False,
         "proofClosed": False,
@@ -275,6 +282,26 @@ def _parse_instant(value: str, field_name: str) -> datetime:
 
 def _format_instant(value: datetime) -> str:
     return value.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _source_provenance() -> tuple[str, bool]:
+    revision = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    status = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if not revision:
+        raise ValueError("source revision could not be resolved")
+    return revision, bool(status)
 
 
 if __name__ == "__main__":
