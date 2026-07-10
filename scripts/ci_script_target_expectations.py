@@ -92,6 +92,9 @@ SCRIPT_TARGET_EXPECTATIONS = {
     "signal-api-contract-gate": "scripts/signal_api_contract_gate.py",
     "source-temporal-contract-gate": "scripts/source_temporal_contract_gate.py",
     "operation-metric-contract-gate": "scripts/operation_metric_contract_gate.py",
+    "supported-feature-promotion-contract-gate": (
+        "scripts/supported_feature_promotion_contract_gate.py"
+    ),
     "ai-model-risk-ops-contract-gate": "scripts/ai_model_risk_operations_contract_gate.py",
     "ai-model-risk-operations-proof-contract-gate": (
         "scripts/ai_model_risk_operations_proof_contract_gate.py"

@@ -25,6 +25,7 @@ REQUIRED_LINT_TARGETS = (
     "signal-api-contract-gate",
     "source-temporal-contract-gate",
     "operation-metric-contract-gate",
+    "supported-feature-promotion-contract-gate",
     "ai-model-risk-ops-contract-gate",
     "ai-model-risk-operations-proof-contract-gate",
     "operator-workflows-ops-contract-gate",
