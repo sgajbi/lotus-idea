@@ -131,10 +131,7 @@ async def record_review_action(
                 caller=context.caller,
                 role=context.role,
                 idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(
-                    http_request,
-                    causation_id=x_causation_id,
-                ),
+                event_lineage=event_lineage_from_request(http_request, causation_id=x_causation_id),
             ),
             repository=context.repository,
         )
@@ -264,10 +261,7 @@ async def record_feedback(
                 caller=context.caller,
                 role=context.role,
                 idempotency_key=idempotency_key,
-                event_lineage=event_lineage_from_request(
-                    http_request,
-                    causation_id=x_causation_id,
-                ),
+                event_lineage=event_lineage_from_request(http_request, causation_id=x_causation_id),
             ),
             repository=context.repository,
         )
