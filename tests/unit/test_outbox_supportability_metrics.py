@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import NoReturn
+
 from prometheus_client import CollectorRegistry, generate_latest
 from fastapi.testclient import TestClient
+import pytest
 
 import app.main as main_module
 from app.application.outbox_delivery_readiness import build_outbox_delivery_readiness_snapshot
@@ -22,7 +25,7 @@ from tests.unit.test_outbox_delivery_readiness import (
 
 
 def test_outbox_supportability_collector_exposes_bounded_runtime_posture(
-    monkeypatch,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.delenv("LOTUS_IDEA_OUTBOX_BROKER_URL", raising=False)
     repository = repository_with_events(
@@ -82,7 +85,7 @@ def test_outbox_supportability_collector_exposes_bounded_runtime_posture(
 
 
 def test_outbox_supportability_collector_fails_closed_without_scrape_failure() -> None:
-    def unavailable_projection():
+    def unavailable_projection() -> NoReturn:
         raise RuntimeError("database unavailable")
 
     registry = CollectorRegistry()
@@ -95,7 +98,9 @@ def test_outbox_supportability_collector_fails_closed_without_scrape_failure() -
     assert "database unavailable" not in metrics
 
 
-def test_metrics_endpoint_collects_posture_without_readiness_api_call(monkeypatch) -> None:
+def test_metrics_endpoint_collects_posture_without_readiness_api_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     repository = repository_with_events(
         pending_event("idea.candidate.persisted.v1"),
         dead_letter_event("idea.report_evidence_pack.requested.v1"),

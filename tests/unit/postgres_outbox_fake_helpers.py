@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Protocol, Sequence
+from typing import Any, Protocol, Sequence, cast
 
 from app.domain import OutboxEventStatus
 
@@ -109,10 +109,10 @@ def outbox_readiness_summary_row(
 
 def _delivery_ready_at_utc(row: dict[str, Any]) -> datetime:
     if row["status"] == OutboxEventStatus.FAILED.value:
-        return row["next_attempt_at_utc"]
+        return cast(datetime, row["next_attempt_at_utc"])
     if row["status"] == OutboxEventStatus.LEASED.value:
-        return row["lease_expires_at_utc"]
-    return row["occurred_at_utc"]
+        return cast(datetime, row["lease_expires_at_utc"])
+    return cast(datetime, row["occurred_at_utc"])
 
 
 def publish_outbox_event_row(
