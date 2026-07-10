@@ -27,4 +27,8 @@ class ProblemDetails(BaseModel):
 
 def problem_response(status_code: int, code: str, title: str, detail: str) -> JSONResponse:
     problem = ProblemDetails(status=status_code, code=code, title=title, detail=detail)
-    return JSONResponse(status_code=status_code, content=problem.model_dump())
+    return JSONResponse(
+        status_code=status_code,
+        content=problem.model_dump(),
+        media_type="application/problem+json",
+    )

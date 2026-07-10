@@ -6,6 +6,7 @@ from fastapi import FastAPI, Header, Query, status
 from fastapi.responses import JSONResponse
 
 from app.api.caller_headers import (
+    INVALID_CALLER_SCOPE_DETAIL,
     TRUSTED_CALLER_CONTEXT_HEADER,
     caller_access_scope_filter,
     caller_context_from_headers,
@@ -127,7 +128,7 @@ async def get_advisor_review_queue(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
             title="Invalid request",
-            detail="Caller entitlement scope headers cannot contain blank values.",
+            detail=INVALID_CALLER_SCOPE_DETAIL,
         )
     try:
         require_role_and_capability(caller, _READ_ADVISOR_QUEUE_POLICY)

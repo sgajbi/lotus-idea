@@ -12,9 +12,20 @@ from app.errors import problem_response as _problem_response
 class ProblemDetailsHTTPException(HTTPException):
     """Product-safe boundary error whose stable code survives global handling."""
 
-    def __init__(self, *, status_code: int, code: str, title: str, detail: str) -> None:
+    def __init__(
+        self,
+        *,
+        status_code: int,
+        code: str,
+        title: str,
+        detail: str,
+        error_category: str = "governed_http_boundary",
+    ) -> None:
+        if not error_category.strip():
+            raise ValueError("error_category is required")
         self.code = code
         self.title = title
+        self.error_category = error_category
         super().__init__(status_code=status_code, detail=detail)
 
 

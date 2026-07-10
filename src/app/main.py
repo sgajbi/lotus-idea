@@ -304,11 +304,17 @@ async def validation_exception_handler_adapter(request: Request, exc: Exception)
 
 
 async def http_exception_handler(request: Request, exc: HTTPException) -> Response:
+    error_category = (
+        exc.error_category
+        if isinstance(exc, ProblemDetailsHTTPException)
+        else "generic_http_exception"
+    )
     emit_request_diagnostic_event(
         "request.http_error",
         route=_route_template(request),
         method=request.method,
         status_code=exc.status_code,
+        error_category=error_category,
         correlation_id=_request_correlation_id(request),
         trace_id=_request_trace_id(request),
     )

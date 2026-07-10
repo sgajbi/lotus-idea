@@ -101,6 +101,7 @@ def test_permission_denied_problem_response_is_product_safe() -> None:
     response = permission_denied_problem("The caller is not permitted to record idea reviews.")
 
     assert response.status_code == 403
+    assert response.media_type == "application/problem+json"
     assert b"permission_denied" in response.body
     assert b"The caller is not permitted to record idea reviews." in response.body
 
@@ -109,6 +110,7 @@ def test_invalid_request_problem_response_is_product_safe() -> None:
     response = invalid_request_problem("Correct the review workflow request and retry.")
 
     assert response.status_code == 400
+    assert response.media_type == "application/problem+json"
     assert b"invalid_request" in response.body
     assert b"Correct the review workflow request and retry." in response.body
 
@@ -122,6 +124,7 @@ def test_problem_details_response_is_product_safe() -> None:
     )
 
     assert response.status_code == 409
+    assert response.media_type == "application/problem+json"
     assert b"idempotency_conflict" in response.body
     assert b"different request payload" in response.body
 

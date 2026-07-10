@@ -13,6 +13,8 @@ from app.security.caller_context import CallerContext, CallerEntitlementScope
 
 TRUSTED_CALLER_CONTEXT_TOKEN_ENV = "LOTUS_IDEA_TRUSTED_CALLER_CONTEXT_TOKEN"
 TRUSTED_CALLER_CONTEXT_HEADER = "X-Lotus-Trusted-Caller-Context"
+INVALID_CALLER_SCOPE_DETAIL = "Caller entitlement scope headers cannot contain blank values."
+TRUSTED_CALLER_CONTEXT_REQUIRED_DETAIL = "Trusted caller context provenance is required."
 
 
 def _split_header_values(value: str | None) -> tuple[str, ...]:
@@ -20,7 +22,7 @@ def _split_header_values(value: str | None) -> tuple[str, ...]:
         return ()
     values = tuple(item.strip() for item in value.split(","))
     if any(not item for item in values):
-        raise ValueError("caller entitlement scope headers cannot contain blank values")
+        raise ValueError(INVALID_CALLER_SCOPE_DETAIL)
     return tuple(dict.fromkeys(values))
 
 
@@ -86,7 +88,8 @@ def caller_context_from_standard_headers(
             status_code=status.HTTP_400_BAD_REQUEST,
             code="invalid_request",
             title="Invalid request",
-            detail="caller entitlement scope headers cannot contain blank values",
+            detail=INVALID_CALLER_SCOPE_DETAIL,
+            error_category="caller_context_invalid_request",
         ) from exc
 
 
@@ -125,7 +128,8 @@ def _require_trusted_caller_context_provenance(
         status_code=status.HTTP_403_FORBIDDEN,
         code="permission_denied",
         title="Permission denied",
-        detail="trusted caller context provenance is required",
+        detail=TRUSTED_CALLER_CONTEXT_REQUIRED_DETAIL,
+        error_category="caller_context_permission_denied",
     )
 
 

@@ -126,7 +126,7 @@ def test_caller_context_from_headers_rejects_untrusted_production_headers(
         )
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "trusted caller context provenance is required"
+    assert exc_info.value.detail == "Trusted caller context provenance is required."
 
 
 def test_caller_context_from_headers_accepts_trusted_production_headers(
@@ -180,7 +180,7 @@ def test_caller_context_from_standard_headers_rejects_blank_entitlement_header()
         )
 
     assert exc_info.value.status_code == 400
-    assert exc_info.value.detail == "caller entitlement scope headers cannot contain blank values"
+    assert exc_info.value.detail == "Caller entitlement scope headers cannot contain blank values."
 
 
 def test_caller_context_from_standard_headers_rejects_untrusted_production_headers(
@@ -197,7 +197,7 @@ def test_caller_context_from_standard_headers_rejects_untrusted_production_heade
         )
 
     assert exc_info.value.status_code == 403
-    assert exc_info.value.detail == "trusted caller context provenance is required"
+    assert exc_info.value.detail == "Trusted caller context provenance is required."
 
 
 def test_caller_context_from_standard_headers_accepts_trusted_production_headers(
@@ -260,7 +260,7 @@ def test_caller_access_scope_filter_is_none_without_entitlement_scope() -> None:
 def test_caller_context_from_headers_rejects_blank_entitlement_scope_header_values() -> None:
     with pytest.raises(
         ValueError,
-        match="caller entitlement scope headers cannot contain blank values",
+        match=r"Caller entitlement scope headers cannot contain blank values\.",
     ):
         caller_context_from_headers(
             subject="advisor-001",
