@@ -196,11 +196,17 @@ def test_downstream_submission_openapi_problem_codes_match_runtime_contract() ->
             "downstream_realization_not_configured",
             "durable_repository_not_configured",
             "durable_repository_unavailable",
+            "service_recovery_degraded",
+            "service_draining",
+            "service_restoring",
         }
         assert _problem_codes(report_responses["503"], media_type) == {
             "downstream_realization_not_configured",
             "durable_repository_not_configured",
             "durable_repository_unavailable",
+            "service_recovery_degraded",
+            "service_draining",
+            "service_restoring",
         }
     stale_codes = {
         "conversion_intent_not_found",
