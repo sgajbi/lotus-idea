@@ -65,8 +65,8 @@ class PostgresLogicalBackupRestore:
         if source.identity == target.identity:
             raise ValueError("source and target PostgreSQL databases must differ")
         _assert_clean_restore_target(self._connect, target_database_url)
-        recovery_point = _source_checkpoint(self._connect, source_database_url)
         backup_created_at = self._utc_now()
+        recovery_point = _source_checkpoint(self._connect, source_database_url)
 
         with TemporaryDirectory(prefix="lotus-idea-postgres-restore-") as temp_dir:
             temp_path = Path(temp_dir)

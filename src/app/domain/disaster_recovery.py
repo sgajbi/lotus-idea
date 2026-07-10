@@ -49,6 +49,7 @@ class RestoreDrillRequest:
     incident_cutoff_utc: datetime
     recovery_point_utc: datetime
     restore_started_at_utc: datetime
+    restore_completed_at_utc: datetime
 
     def __post_init__(self) -> None:
         for field_name in (
@@ -69,6 +70,7 @@ class RestoreDrillRequest:
             "incident_cutoff_utc",
             "recovery_point_utc",
             "restore_started_at_utc",
+            "restore_completed_at_utc",
         ):
             _require_utc(getattr(self, field_name), field_name)
         if self.backup_created_at_utc > self.recovery_point_utc:
@@ -77,6 +79,8 @@ class RestoreDrillRequest:
             raise ValueError("recovery_point_utc must not be after incident_cutoff_utc")
         if self.incident_cutoff_utc > self.restore_started_at_utc:
             raise ValueError("incident_cutoff_utc must not be after restore_started_at_utc")
+        if self.restore_started_at_utc > self.restore_completed_at_utc:
+            raise ValueError("restore_started_at_utc must not be after restore_completed_at_utc")
 
 
 @dataclass(frozen=True)
@@ -131,6 +135,7 @@ class RestoreDrillEvidence:
     incident_cutoff_utc: str
     recovery_point_utc: str
     restore_started_at_utc: str
+    restore_completed_at_utc: str
     service_ready_at_utc: str
     actual_rpo_seconds: float
     target_rpo_seconds: int
@@ -158,6 +163,8 @@ def evaluate_restored_database(
     actual_rto_seconds = (generated_at_utc - request.restore_started_at_utc).total_seconds()
     if actual_rto_seconds < 0:
         raise ValueError("generated_at_utc must not be before restore_started_at_utc")
+    if generated_at_utc < request.restore_completed_at_utc:
+        raise ValueError("generated_at_utc must not be before restore_completed_at_utc")
     failed_checks: list[str] = []
     observed_tables = set(snapshot.table_row_counts)
     if observed_tables != policy.owned_tables:
@@ -206,6 +213,7 @@ def evaluate_restored_database(
         incident_cutoff_utc=request.incident_cutoff_utc.isoformat(),
         recovery_point_utc=request.recovery_point_utc.isoformat(),
         restore_started_at_utc=request.restore_started_at_utc.isoformat(),
+        restore_completed_at_utc=request.restore_completed_at_utc.isoformat(),
         service_ready_at_utc=generated_at_utc.isoformat(),
         actual_rpo_seconds=actual_rpo_seconds,
         target_rpo_seconds=policy.rpo_minutes * 60,

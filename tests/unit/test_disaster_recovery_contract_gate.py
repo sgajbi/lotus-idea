@@ -52,6 +52,24 @@ def test_disaster_recovery_contract_rejects_migration_inventory_drift(tmp_path: 
     )
 
 
+def test_disaster_recovery_contract_rejects_weakened_representative_state_policy(
+    tmp_path: Path,
+) -> None:
+    module = load_gate()
+    payload = load_contract(module)
+    payload["restore_verification"]["required_non_empty_tables"].remove(
+        "idea_outbox_recovery_audit"
+    )
+    payload["restore_verification"]["allowed_unvalidated_constraints"].append(
+        "unreviewed_exception"
+    )
+
+    errors = validate_payload(module, tmp_path, payload)
+
+    assert "disaster recovery representative-state table inventory drifted" in errors
+    assert "disaster recovery unvalidated constraint exception inventory drifted" in errors
+
+
 def test_disaster_recovery_contract_rejects_unsafe_sources_and_embedded_secrets(
     tmp_path: Path,
 ) -> None:

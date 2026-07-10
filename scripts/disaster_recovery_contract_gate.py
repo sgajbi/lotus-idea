@@ -65,6 +65,7 @@ REQUIRED_EVIDENCE_FLAGS = {
     "real_restored_backup_required": True,
     "synthetic_smoke_is_certification_proof": False,
     "backup_identifier_required": True,
+    "backup_artifact_sha256_required": True,
     "sanitized_source_identity_required": True,
     "schema_version_required": True,
     "backup_created_at_utc_required": True,
@@ -82,6 +83,11 @@ REQUIRED_RESTORE_FLAGS = {
     "clean_target_instance_required": True,
     "source_and_target_must_differ": True,
     "post_migration_restore_required": True,
+}
+EXPECTED_ALLOWED_UNVALIDATED_CONSTRAINTS = {"ck_idea_candidate_record_state_policy_v1"}
+EXPECTED_OPTIONAL_EMPTY_TABLES = {
+    "idea_candidate_state_quarantine",
+    "idea_conversion_outcome_quarantine",
 }
 CREATE_TABLE_PATTERN = re.compile(
     r"CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(idea_[a-z0-9_]+)", re.IGNORECASE
@@ -187,6 +193,17 @@ def _validate_restore_inventory(payload: dict[str, Any], repository_root: Path) 
     invariants = restore.get("required_invariants")
     if not isinstance(invariants, list) or set(invariants) != REQUIRED_INVARIANTS:
         errors.append("disaster recovery required invariant inventory drifted")
+    allowed_constraints = restore.get("allowed_unvalidated_constraints")
+    if not isinstance(allowed_constraints, list) or set(allowed_constraints) != (
+        EXPECTED_ALLOWED_UNVALIDATED_CONSTRAINTS
+    ):
+        errors.append("disaster recovery unvalidated constraint exception inventory drifted")
+    required_non_empty = restore.get("required_non_empty_tables")
+    expected_non_empty = _migration_owned_tables(repository_root).difference(
+        EXPECTED_OPTIONAL_EMPTY_TABLES
+    )
+    if not isinstance(required_non_empty, list) or set(required_non_empty) != expected_non_empty:
+        errors.append("disaster recovery representative-state table inventory drifted")
     return errors
 
 

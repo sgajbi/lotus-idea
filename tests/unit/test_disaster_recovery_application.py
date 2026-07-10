@@ -63,6 +63,7 @@ def test_restore_use_case_reports_every_independent_failure_without_short_circui
         recovery_point_utc=NOW - timedelta(hours=2),
         incident_cutoff_utc=NOW - timedelta(hours=1),
         restore_started_at_utc=NOW - timedelta(hours=1),
+        restore_completed_at_utc=NOW - timedelta(minutes=30),
     )
 
     evidence = ValidateRestoredDatabase(StubInspector(snapshot), policy(), now=lambda: NOW).execute(
@@ -125,6 +126,10 @@ def test_restore_use_case_rejects_readiness_time_before_restore_started() -> Non
             {"recovery_point_utc": NOW, "incident_cutoff_utc": NOW - timedelta(minutes=1)},
             "must not be after incident_cutoff_utc",
         ),
+        (
+            {"restore_completed_at_utc": NOW - timedelta(minutes=16)},
+            "must not be after restore_completed_at_utc",
+        ),
     ],
 )
 def test_restore_request_rejects_unsafe_or_incoherent_metadata(
@@ -149,6 +154,7 @@ def valid_request() -> RestoreDrillRequest:
         incident_cutoff_utc=NOW - timedelta(minutes=20),
         recovery_point_utc=NOW - timedelta(minutes=25),
         restore_started_at_utc=NOW - timedelta(minutes=15),
+        restore_completed_at_utc=NOW - timedelta(minutes=1),
     )
 
 

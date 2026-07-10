@@ -49,7 +49,7 @@ def test_logical_restore_uses_secret_safe_commands_and_ephemeral_credentials() -
     calls: list[tuple[list[str], dict[str, str]]] = []
     times = iter(
         (
-            CHECKPOINT + timedelta(seconds=1),
+            CHECKPOINT - timedelta(seconds=1),
             CHECKPOINT + timedelta(seconds=2),
             CHECKPOINT + timedelta(seconds=5),
         )
