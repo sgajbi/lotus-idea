@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+from typing import cast
 
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
@@ -8,11 +9,11 @@ from pydantic import Field, field_validator
 
 from app.api.base_model import CamelModel
 from app.api.caller_headers import CallerContextHeaders
-from app.api.problem_details import (
-    problem_details_response as problem_response,
-    service_unavailable_metadata,
+from app.api.problem_details import service_unavailable_metadata
+from app.api.runtime_dependencies import (
+    CoreBenchmarkAssignmentSourceRuntime,
+    CoreBenchmarkAssignmentSourceRuntimeBlocker,
 )
-from app.api.runtime_dependencies import CoreBenchmarkAssignmentSourceRuntimeBlocker
 from app.api.runtime_dependencies import (
     build_core_benchmark_assignment_source_runtime_from_environment as _build_core_benchmark_assignment_source_runtime_from_environment,
 )
@@ -25,10 +26,8 @@ from app.api.temporal_validation import require_timezone_aware
 from app.api.signal_api_support import (
     RouteMetadata,
     SignalSourceRefContract,
-    close_signal_source_runtime,
     evaluate_caller_supplied_signal,
-    emit_signal_evaluation_event,
-    signal_permission_problem_or_none,
+    evaluate_source_signal,
     signal_problem_responses,
     source_authority_from_contracts,
 )
@@ -40,7 +39,11 @@ from app.application.missing_benchmark_signal import (
     evaluate_missing_benchmark_signal_command,
 )
 from app.domain import SourceSystem
-from app.observability import IdeaOperation, OperationOutcome, emit_foundation_operation_event
+from app.observability import emit_foundation_operation_event
+
+
+def _is_core_benchmark_runtime_blocked(runtime: object) -> bool:
+    return isinstance(runtime, CoreBenchmarkAssignmentSourceRuntimeBlocker)
 
 
 class EvaluateMissingBenchmarkSignalRequest(CamelModel):
@@ -226,55 +229,26 @@ async def evaluate_missing_benchmark_signal_from_source(
     caller: CallerContextHeaders,
 ) -> EvaluateMissingBenchmarkSignalResponse | JSONResponse:
     source_authority = SourceSystem.LOTUS_CORE.value
-    permission_problem = signal_permission_problem_or_none(
+    return evaluate_source_signal(
         caller=caller,
         source_authority=source_authority,
         requested_access_scope=portfolio_only_scope(signal_request.portfolio_id),
+        runtime_factory=_build_core_benchmark_assignment_source_runtime_from_environment,
+        is_runtime_blocked=_is_core_benchmark_runtime_blocked,
+        blocked_detail=(
+            "Core source runtime is not configured for missing-benchmark source evaluation."
+        ),
+        command_factory=lambda runtime: signal_request.to_command(
+            correlation_id=_request_correlation_id(request),
+            trace_id=_request_trace_id(request),
+        ),
+        evaluator=lambda command, runtime: evaluate_missing_benchmark_signal_from_core(
+            command,
+            core_source=cast(CoreBenchmarkAssignmentSourceRuntime, runtime).core_source,
+        ),
+        response_factory=EvaluateMissingBenchmarkSignalResponse.from_domain,
         emit_event=emit_foundation_operation_event,
     )
-    if permission_problem is not None:
-        return permission_problem
-
-    runtime = _build_core_benchmark_assignment_source_runtime_from_environment()
-    if isinstance(runtime, CoreBenchmarkAssignmentSourceRuntimeBlocker):
-        emit_foundation_operation_event(
-            IdeaOperation.SIGNAL_EVALUATION,
-            OperationOutcome.BLOCKED,
-            source_authority=source_authority,
-            error_code=runtime.code,
-        )
-        return problem_response(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            code="source_runtime_not_configured",
-            title="Source runtime not configured",
-            detail=(
-                "Core source runtime is not configured for missing-benchmark source evaluation."
-            ),
-        )
-
-    try:
-        result = evaluate_missing_benchmark_signal_from_core(
-            signal_request.to_command(
-                correlation_id=_request_correlation_id(request),
-                trace_id=_request_trace_id(request),
-            ),
-            core_source=runtime.core_source,
-        )
-        emit_signal_evaluation_event(
-            result=result,
-            source_authority=source_authority,
-            emit_event=emit_foundation_operation_event,
-        )
-        return EvaluateMissingBenchmarkSignalResponse.from_domain(
-            result,
-            source_authority=source_authority,
-        )
-    finally:
-        close_signal_source_runtime(
-            runtime=runtime,
-            source_authority=SourceSystem.LOTUS_CORE.value,
-            emit_event=emit_foundation_operation_event,
-        )
 
 
 def _source_ref_contracts(
