@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Any
@@ -44,6 +44,7 @@ class RecordingCoreSource(CoreOpportunitySourcePort):
     error: Exception | None = None
     close_count: int = 0
     close_error: Exception | None = None
+    evidence: CoreHighCashEvidence | None = None
 
     def fetch_high_cash_evidence(
         self,
@@ -52,7 +53,7 @@ class RecordingCoreSource(CoreOpportunitySourcePort):
         self.seen_request = request
         if self.error is not None:
             raise self.error
-        return _core_evidence()
+        return self.evidence or _core_evidence()
 
     def close(self) -> None:
         self.close_count += 1
@@ -211,6 +212,44 @@ def test_high_cash_source_api_fetches_core_evidence_without_persistence(
     assert len(get_idea_repository().snapshot().candidate_records) == 0
     assert "route" not in response.text
     assert "contentHash" not in response.text
+
+
+def test_high_cash_source_api_blocks_temporally_mismatched_adapter_evidence(
+    monkeypatch: Any,
+) -> None:
+    reset_idea_repository_for_tests()
+    evidence = _core_evidence()
+    assert evidence.holdings_ref is not None
+    source = RecordingCoreSource(
+        evidence=replace(
+            evidence,
+            holdings_ref=replace(evidence.holdings_ref, as_of_date=date(2026, 6, 20)),
+        )
+    )
+    runtime = CoreHighCashSourceRuntime(
+        core_source=source,
+        core_base_url_configured=True,
+        core_query_base_url_configured=True,
+        core_query_control_plane_base_url_configured=True,
+    )
+    monkeypatch.setattr(
+        idea_signals_api,
+        "_build_core_high_cash_source_runtime_from_environment",
+        lambda: runtime,
+    )
+
+    response = TestClient(app).post(
+        "/api/v1/idea-signals/high-cash/evaluate-from-source",
+        json=high_cash_source_payload(),
+        headers=source_evaluation_headers(),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["outcome"] == "blocked"
+    assert response.json()["reasonCodes"] == ["source_date_mismatch"]
+    assert response.json()["unsupportedReasons"] == ["source_temporal_mismatch"]
+    assert len(get_idea_repository().snapshot().candidate_records) == 0
+    assert source.close_count == 1
 
 
 def test_high_cash_source_api_requires_portfolio_entitlement(

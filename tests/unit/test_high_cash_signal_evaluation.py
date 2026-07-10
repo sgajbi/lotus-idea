@@ -105,6 +105,30 @@ def test_high_cash_positive_case_creates_reproducible_candidate() -> None:
     )
 
 
+def test_high_cash_source_correction_creates_new_lineage_bound_candidate_identity() -> None:
+    source_input = high_cash_input()
+    assert source_input.holdings_ref is not None
+    corrected_input = replace(
+        source_input,
+        holdings_ref=replace(
+            source_input.holdings_ref,
+            content_hash="sha256:lotus-core:HoldingsAsOf:v1:correction-2",
+        ),
+    )
+
+    original = evaluate_high_cash_signal(source_input, policy())
+    corrected = evaluate_high_cash_signal(corrected_input, policy())
+
+    assert original.candidate is not None
+    assert corrected.candidate is not None
+    assert original.candidate.candidate_id != corrected.candidate.candidate_id
+    assert corrected.candidate.evidence_packet.source_refs[1].content_hash.endswith("correction-2")
+    assert (
+        corrected.candidate.evidence_packet.lineage_ref.source_refs
+        == corrected.candidate.evidence_packet.source_refs
+    )
+
+
 def test_high_cash_negative_case_does_not_create_candidate() -> None:
     result = evaluate_high_cash_signal(
         high_cash_input(cash_weight=Decimal("0.05")),

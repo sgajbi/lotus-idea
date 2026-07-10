@@ -177,6 +177,16 @@ from app.domain.review_queue_snapshot import (
     validate_review_queue_snapshot_token,
     visible_review_queue_candidate_records,
 )
+from app.domain.source_temporal import (
+    SOURCE_TEMPORAL_CONTRACTS,
+    SOURCE_TEMPORAL_CONTRACT_VERSION,
+    SourceBusinessDateRule,
+    SourceCorrectionIdentityRule,
+    SourceGeneratedTimeRule,
+    SourceTemporalContract,
+    source_temporal_contract_for,
+    source_temporal_violation,
+)
 from app.domain.persistence import (
     CandidatePersistenceDecision,
     CandidatePersistenceRecord,
@@ -439,6 +449,14 @@ __all__ = [
     "review_queue_candidate_fingerprint",
     "validate_review_queue_snapshot_token",
     "visible_review_queue_candidate_records",
+    "SOURCE_TEMPORAL_CONTRACTS",
+    "SOURCE_TEMPORAL_CONTRACT_VERSION",
+    "SourceBusinessDateRule",
+    "SourceCorrectionIdentityRule",
+    "SourceGeneratedTimeRule",
+    "SourceTemporalContract",
+    "source_temporal_contract_for",
+    "source_temporal_violation",
     "ai_explanation_lineage_record_from_result",
     "GovernedReportEvidencePack",
     "InvalidReportEvidencePack",

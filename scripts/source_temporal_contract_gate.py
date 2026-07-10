@@ -16,6 +16,11 @@ SIGNAL_DOMAIN_MODULES = (
     Path("src/app/domain/signal_evaluation.py"),
 )
 TEMPORAL_HELPER = "temporal_blocked_signal_result"
+SOURCE_TEMPORAL_CONTRACT_FRAGMENTS = (
+    "SOURCE_TEMPORAL_CONTRACT_VERSION",
+    "for family in OpportunityFamily",
+    "NEW_CONTENT_HASH_CREATES_NEW_CANDIDATE_IDENTITY",
+)
 
 
 def validate_source_temporal_contract(root: Path = ROOT) -> list[str]:
@@ -23,6 +28,13 @@ def validate_source_temporal_contract(root: Path = ROOT) -> list[str]:
     source_temporal_path = root / SOURCE_TEMPORAL_MODULE
     if not source_temporal_path.is_file():
         errors.append(f"{SOURCE_TEMPORAL_MODULE.as_posix()}: shared temporal policy is missing")
+    else:
+        source = source_temporal_path.read_text(encoding="utf-8")
+        for fragment in SOURCE_TEMPORAL_CONTRACT_FRAGMENTS:
+            if fragment not in source:
+                errors.append(
+                    f"{SOURCE_TEMPORAL_MODULE.as_posix()}: required contract `{fragment}` is missing"
+                )
 
     for relative_path in SIGNAL_DOMAIN_MODULES:
         path = root / relative_path

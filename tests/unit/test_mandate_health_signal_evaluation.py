@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from dataclasses import replace
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -131,6 +132,44 @@ def test_mandate_health_preserves_source_owned_performance_and_risk_refs() -> No
         "lotus-performance:MandatePerformanceHealthContext:v1",
         "lotus-risk:MandateRiskHealthContext:v1",
     }
+
+
+def test_mandate_health_blocks_mismatched_optional_source_business_date() -> None:
+    source_input = mandate_input(include_mandate_health_refs=True)
+    assert source_input.mandate_performance_health_ref is not None
+    source_input = replace(
+        source_input,
+        mandate_performance_health_ref=replace(
+            source_input.mandate_performance_health_ref,
+            as_of_date=AS_OF_DATE - timedelta(days=1),
+        ),
+    )
+
+    result = evaluate_mandate_health_signal(source_input, policy())
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.candidate is None
+    assert result.reason_codes == (ReasonCode.SOURCE_DATE_MISMATCH,)
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.SOURCE_TEMPORAL_MISMATCH,)
+
+
+def test_mandate_health_blocks_stale_optional_source_evidence() -> None:
+    source_input = mandate_input(include_mandate_health_refs=True)
+    assert source_input.mandate_risk_health_ref is not None
+    source_input = replace(
+        source_input,
+        mandate_risk_health_ref=replace(
+            source_input.mandate_risk_health_ref,
+            freshness=EvidenceFreshness.STALE,
+        ),
+    )
+
+    result = evaluate_mandate_health_signal(source_input, policy())
+
+    assert result.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.candidate is None
+    assert result.reason_codes == (ReasonCode.SOURCE_STALE,)
+    assert result.unsupported_reasons == (UnsupportedEvidenceReason.STALE_SOURCE,)
 
 
 def test_mandate_health_store_wide_manage_posture_blocks_portfolio_claim() -> None:

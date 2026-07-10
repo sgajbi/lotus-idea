@@ -45,5 +45,8 @@ def test_source_temporal_contract_gate_blocks_signal_without_shared_policy(
 
     errors = module.validate_source_temporal_contract(tmp_path)
 
-    assert len(errors) == len(module.SIGNAL_DOMAIN_MODULES)
-    assert all("must call `temporal_blocked_signal_result`" in error for error in errors)
+    helper_errors = [
+        error for error in errors if "must call `temporal_blocked_signal_result`" in error
+    ]
+    assert len(helper_errors) == len(module.SIGNAL_DOMAIN_MODULES)
+    assert any("SOURCE_TEMPORAL_CONTRACT_VERSION" in error for error in errors)

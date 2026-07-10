@@ -60,14 +60,16 @@ def source_ref(
     *,
     content_hash: str | None = None,
     freshness: EvidenceFreshness = EvidenceFreshness.CURRENT,
+    as_of_date: date = AS_OF_DATE,
+    generated_at_utc: datetime = EVALUATED_AT,
 ) -> SourceRef:
     return SourceRef(
         product_id=product_id,
         source_system=SourceSystem.LOTUS_CORE,
         product_version="v1",
         route=f"/source/{product_id}",
-        as_of_date=AS_OF_DATE,
-        generated_at_utc=EVALUATED_AT,
+        as_of_date=as_of_date,
+        generated_at_utc=generated_at_utc,
         content_hash=content_hash or f"sha256:{product_id}",
         data_quality_status="complete",
         freshness=freshness,
@@ -144,6 +146,38 @@ def test_ingests_core_high_cash_candidate_with_generated_source_key() -> None:
     assert source.seen_request.portfolio_id == PORTFOLIO_ID
     assert source.seen_request.correlation_id == "corr-source-ingestion"
     assert source.seen_request.trace_id == "trace-source-ingestion"
+
+
+def test_source_ingestion_blocks_temporally_mismatched_adapter_evidence_without_persistence() -> None:
+    repository = InMemoryIdeaRepository()
+    evidence = core_evidence()
+    source = RecordingCoreSource(
+        evidence=CoreHighCashEvidence(
+            source_reported_cash_weight=evidence.source_reported_cash_weight,
+            portfolio_state_ref=evidence.portfolio_state_ref,
+            holdings_ref=source_ref(
+                "lotus-core:HoldingsAsOf:v1",
+                as_of_date=date(2026, 6, 20),
+            ),
+            cash_movement_ref=evidence.cash_movement_ref,
+            cashflow_projection_ref=evidence.cashflow_projection_ref,
+            cash_weight_diagnostic=evidence.cash_weight_diagnostic,
+        )
+    )
+
+    result = ingest_high_cash_signal_from_core(
+        command(),
+        core_source=source,
+        repository=repository,
+    )
+
+    assert result.decision is HighCashSourceIngestionDecision.BLOCKED
+    assert result.signal_result.evaluation.outcome is SignalEvaluationOutcome.BLOCKED
+    assert result.signal_result.persistence is None
+    assert result.signal_result.evaluation.unsupported_reasons == (
+        UnsupportedEvidenceReason.SOURCE_TEMPORAL_MISMATCH,
+    )
+    assert repository.snapshot().candidate_records == {}
 
 
 def test_replays_same_source_ingestion_payload_without_duplicate_candidate() -> None:

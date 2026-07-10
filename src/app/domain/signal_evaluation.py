@@ -61,6 +61,7 @@ def temporal_blocked_signal_result(
     source_refs: tuple[SourceRef, ...],
 ) -> SignalEvaluationResult | None:
     violation = source_temporal_violation(
+        family=family,
         requested_as_of_date=as_of_date,
         evaluated_at_utc=evaluated_at_utc,
         source_refs=source_refs,
@@ -446,10 +447,16 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.SOURCE_PARTIAL,),
             unsupported_reasons=(UnsupportedEvidenceReason.MISSING_SOURCE,),
         )
-    temporal_block = _mandate_health_temporal_block(source_input)
+    source_refs = _mandate_health_source_refs(source_input)
+    temporal_block = temporal_blocked_signal_result(
+        family=OpportunityFamily.ALLOCATION_DRIFT,
+        as_of_date=source_input.as_of_date,
+        evaluated_at_utc=source_input.evaluated_at_utc,
+        source_refs=source_refs,
+    )
     if temporal_block is not None:
         return temporal_block
-    if source_input.action_register_ref.freshness is not EvidenceFreshness.CURRENT:
+    if any(source_ref.freshness is not EvidenceFreshness.CURRENT for source_ref in source_refs):
         return blocked_signal_result(
             family=OpportunityFamily.ALLOCATION_DRIFT,
             reason_codes=(ReasonCode.SOURCE_STALE,),
@@ -499,15 +506,6 @@ def evaluate_mandate_health_signal(
             reason_codes=(ReasonCode.BELOW_MATERIALITY,),
         )
 
-    source_refs = tuple(
-        source_ref
-        for source_ref in (
-            source_input.action_register_ref,
-            source_input.mandate_performance_health_ref,
-            source_input.mandate_risk_health_ref,
-        )
-        if source_ref is not None
-    )
     identity = _stable_mandate_health_identity(source_input, policy, source_refs)
     signal = OpportunitySignal(
         signal_id=f"signal_allocation_drift_{identity}",
@@ -557,16 +555,17 @@ def evaluate_mandate_health_signal(
     )
 
 
-def _mandate_health_temporal_block(
+def _mandate_health_source_refs(
     source_input: MandateHealthSignalInput,
-) -> SignalEvaluationResult | None:
-    if source_input.action_register_ref is None:
-        return None
-    return temporal_blocked_signal_result(
-        family=OpportunityFamily.ALLOCATION_DRIFT,
-        as_of_date=source_input.as_of_date,
-        evaluated_at_utc=source_input.evaluated_at_utc,
-        source_refs=(source_input.action_register_ref,),
+) -> tuple[SourceRef, ...]:
+    return tuple(
+        source_ref
+        for source_ref in (
+            source_input.action_register_ref,
+            source_input.mandate_performance_health_ref,
+            source_input.mandate_risk_health_ref,
+        )
+        if source_ref is not None
     )
 
 
