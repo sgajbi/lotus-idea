@@ -137,6 +137,7 @@ def apply_postgres_snapshot_delta(
             writer._insert_record_details(cursor, after_record)
             continue
 
+        _insert_review_identity_delta(writer, cursor, before_record, after_record)
         if after_record.candidate != before_record.candidate:
             writer._update_candidate_record(cursor, before_record, after_record)
         _insert_record_detail_delta(writer, cursor, before_record, after_record)
@@ -168,16 +169,6 @@ def _insert_record_detail_delta(
     ):
         writer._insert_audit_event(cursor, candidate_id, event, offset)
 
-    review_ids = {decision.review_id for decision in before.review_decisions}
-    for decision in after.review_decisions:
-        if decision.review_id not in review_ids:
-            writer._insert_review_decision(cursor, candidate_id, decision)
-
-    feedback_ids = {event.feedback.feedback_id for event in before.feedback_events}
-    for feedback in after.feedback_events:
-        if feedback.feedback.feedback_id not in feedback_ids:
-            writer._insert_feedback_event(cursor, candidate_id, feedback)
-
     conversion_intent_ids = {
         intent.intent.conversion_intent_id for intent in before.conversion_intents
     }
@@ -205,3 +196,21 @@ def _insert_record_detail_delta(
                 candidate_id,
                 lineage_record,
             )
+
+
+def _insert_review_identity_delta(
+    writer: PostgresSnapshotDeltaWriter,
+    cursor: Any,
+    before: CandidatePersistenceRecord,
+    after: CandidatePersistenceRecord,
+) -> None:
+    candidate_id = after.candidate.candidate_id
+    review_ids = {decision.review_id for decision in before.review_decisions}
+    for decision in after.review_decisions:
+        if decision.review_id not in review_ids:
+            writer._insert_review_decision(cursor, candidate_id, decision)
+
+    feedback_ids = {event.feedback.feedback_id for event in before.feedback_events}
+    for feedback in after.feedback_events:
+        if feedback.feedback.feedback_id not in feedback_ids:
+            writer._insert_feedback_event(cursor, candidate_id, feedback)

@@ -46,6 +46,7 @@ from app.domain.review_governance import (
     GovernedFeedbackEvent,
     GovernedReviewDecision,
     ReviewActionResult,
+    ReviewMutationIdentity,
 )
 from app.infrastructure.postgres_candidate_writes import (
     ConcurrentIdempotencyMutationError,
@@ -99,6 +100,7 @@ from app.infrastructure.postgres_review_queue import (
     load_review_queue_candidate_page,
     load_review_queue_readiness_summary,
 )
+from app.infrastructure.postgres_review_identity import ConcurrentReviewIdentityMutationError
 from app.infrastructure.postgres_runtime_trust_telemetry import (
     load_runtime_trust_telemetry_summary,
 )
@@ -228,11 +230,13 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
         *,
         idempotency_key: str,
         payload: Mapping[str, Any],
+        identity: ReviewMutationIdentity,
     ) -> ReviewPersistenceResult | None:
         return precheck_postgres_review_mutation(
             self._connection,
             idempotency_key=idempotency_key,
             payload=payload,
+            identity=identity,
         )
 
     def record_review_action(
@@ -1015,6 +1019,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 review_decision_id, candidate_id, action, actor_subject,
                 decision_json, decided_at_utc
             ) VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (review_decision_id) DO NOTHING
+            RETURNING review_decision_id
             """,
             (
                 decision.review_id,
@@ -1025,6 +1031,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 decision.decided_at_utc,
             ),
         )
+        if not cursor.fetchall():
+            raise ConcurrentReviewIdentityMutationError(decision.mutation_identity)
 
     def _insert_feedback_events(
         self,
@@ -1047,6 +1055,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 feedback_event_id, candidate_id, actor_subject, feedback_json,
                 recorded_at_utc
             ) VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (feedback_event_id) DO NOTHING
+            RETURNING feedback_event_id
             """,
             (
                 feedback.feedback.feedback_id,
@@ -1056,6 +1066,8 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin, PostgresOutboxRecove
                 feedback.feedback.recorded_at_utc,
             ),
         )
+        if not cursor.fetchall():
+            raise ConcurrentReviewIdentityMutationError(feedback.mutation_identity)
 
     def _insert_conversion_intents(
         self,

@@ -113,6 +113,22 @@ class FakePostgresCursor:
             assert params is not None
             self._rows = idempotency_lookup_rows(self.connection, normalized, params)
             return
+        if normalized.startswith("/* lotus-idea review-identity-decision */"):
+            assert params is not None
+            self._rows = [
+                {"decision_json": row["decision_json"]}
+                for row in self.connection.rows["idea_review_decision"]
+                if row["review_decision_id"] == params[0]
+            ]
+            return
+        if normalized.startswith("/* lotus-idea review-identity-feedback */"):
+            assert params is not None
+            self._rows = [
+                {"feedback_json": row["feedback_json"]}
+                for row in self.connection.rows["idea_feedback_event"]
+                if row["feedback_event_id"] == params[0]
+            ]
+            return
         if normalized.startswith("with selected"):
             assert params is not None
             self.connection.begin_write()
@@ -169,6 +185,23 @@ class FakePostgresCursor:
                 row = row_for_insert(table_name, params)
                 self.connection.rows[table_name].append(row)
                 self._rows = [{"idempotency_key": idempotency_key}]
+                return
+            identity_columns = {
+                "idea_review_decision": "review_decision_id",
+                "idea_feedback_event": "feedback_event_id",
+            }
+            if table_name in identity_columns and "on conflict" in normalized:
+                identity_column = identity_columns[table_name]
+                resource_id = params[0]
+                if any(
+                    row[identity_column] == resource_id
+                    for row in self.connection.rows[table_name]
+                ):
+                    self._rows = []
+                    return
+                row = row_for_insert(table_name, params)
+                self.connection.rows[table_name].append(row)
+                self._rows = [{identity_column: resource_id}]
                 return
             self.connection.rows[table_name].append(row_for_insert(table_name, params))
             return

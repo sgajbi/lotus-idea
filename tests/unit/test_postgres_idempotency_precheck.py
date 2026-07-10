@@ -64,12 +64,14 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     review_replay = repository.precheck_review_mutation(
         idempotency_key="review:bounded-precheck",
         payload={"reviewId": review_result.decision.review_id},
+        identity=review_result.decision.mutation_identity,
     )
     review_replay_sql = tuple(connection.executed_sql)
     connection.executed_sql.clear()
     review_conflict = repository.precheck_review_mutation(
         idempotency_key="review:bounded-precheck",
         payload={"reviewId": "different-review-payload"},
+        identity=review_result.decision.mutation_identity,
     )
     review_conflict_sql = tuple(connection.executed_sql)
     connection.executed_sql.clear()
@@ -107,6 +109,62 @@ def test_postgres_review_and_conversion_idempotency_prechecks_are_bounded() -> N
     assert conversion_conflict.record is not None
     assert conversion_conflict.record.candidate.candidate_id == approved.candidate_id
     assert_bounded_idempotency_precheck_sql(conversion_conflict_sql)
+
+
+def test_postgres_review_identity_precheck_replays_and_reserves_a_new_transport_key() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = replace(
+        high_cash_candidate(),
+        candidate_id="idea_high_cash_resource_identity_precheck",
+        lifecycle_status=IdeaLifecycleStatus.READY_FOR_REVIEW,
+    )
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:resource-identity-precheck",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    review_result = apply_review_action(
+        candidate,
+        review_command(review_id="review-resource-identity-precheck"),
+    )
+    repository.record_review_action(
+        review_result,
+        idempotency_key="review:resource-precheck:first",
+        payload={"reviewId": review_result.decision.review_id},
+    )
+
+    connection.executed_sql.clear()
+    replayed = repository.precheck_review_mutation(
+        idempotency_key="review:resource-precheck:retry",
+        payload={"reviewId": review_result.decision.review_id},
+        identity=review_result.decision.mutation_identity,
+    )
+    replay_sql = tuple(connection.executed_sql)
+    conflict = repository.precheck_review_mutation(
+        idempotency_key="review:resource-precheck:changed",
+        payload={"reviewId": review_result.decision.review_id, "action": "reject"},
+        identity=replace(
+            review_result.decision.mutation_identity,
+            event_name="reject",
+        ),
+    )
+
+    assert replayed is not None
+    assert replayed.decision is ReviewPersistenceDecision.REPLAYED
+    assert any(sql.startswith("/* lotus-idea review-identity-decision */") for sql in replay_sql)
+    assert any(
+        row["idempotency_key"] == "review:resource-precheck:retry"
+        for row in connection.rows["idea_idempotency_record"]
+    )
+    assert conflict is not None
+    assert conflict.decision is ReviewPersistenceDecision.IDENTITY_CONFLICT
+    assert not any(
+        row["idempotency_key"] == "review:resource-precheck:changed"
+        for row in connection.rows["idea_idempotency_record"]
+    )
 
 
 def assert_bounded_idempotency_precheck_sql(executed_sql: tuple[str, ...]) -> None:
