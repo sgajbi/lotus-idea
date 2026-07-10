@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -195,6 +196,12 @@ def test_reconciliation_change_reference_is_replay_safe_and_conflict_aware() -> 
 def test_claim_rejects_partial_or_invalid_lease() -> None:
     with pytest.raises(ValueError, match="lease_expires_at_utc must be after"):
         _claim(lease_expires_at_utc=CLAIMED_AT)
+
+    with pytest.raises(ValueError, match="support_reference must match"):
+        replace(
+            _claim(),
+            support_reference="downstream-submission-000000000000000000000000",
+        )
 
 
 def _claim(

@@ -53,7 +53,7 @@ def claim_postgres_downstream_submission(
                     %s, %s, %s, %s, %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s, %s, %s, %s
                 )
-                ON CONFLICT (idempotency_key) DO NOTHING
+                ON CONFLICT DO NOTHING
                 RETURNING {DOWNSTREAM_SUBMISSION_COLUMNS}
                 """,
                 downstream_submission_values(record),
@@ -66,7 +66,15 @@ def claim_postgres_downstream_submission(
                     record=downstream_submission_from_row(inserted[0]),
                 )
             existing = _load_by_idempotency_key(cursor, record.idempotency_key, for_update=True)
-            assert existing is not None
+            if existing is None:
+                support_collision = _load_by_support_reference(
+                    cursor,
+                    record.support_reference,
+                    for_update=True,
+                )
+                if support_collision is not None:
+                    raise RuntimeError("downstream submission support reference collision")
+                raise RuntimeError("downstream submission claim conflict was not recoverable")
             decision = evaluate_downstream_submission_claim(
                 existing,
                 request_fingerprint=record.request_fingerprint,

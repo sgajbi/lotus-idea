@@ -101,6 +101,8 @@ class DownstreamSubmissionRecord:
         _require_text(self.request_fingerprint, "request_fingerprint")
         _require_text(self.resource_id, "resource_id")
         _require_text(self.support_reference, "support_reference")
+        if self.support_reference != downstream_submission_support_reference(self.idempotency_key):
+            raise ValueError("support_reference must match idempotency_key")
         _require_aware_utc(self.submitted_at_utc, "submitted_at_utc")
         _require_aware_utc(self.updated_at_utc, "updated_at_utc")
         if self.attempt_count <= 0:
