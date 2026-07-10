@@ -1,6 +1,6 @@
 # RFC-0002 Slice 05: Deterministic Signal Evaluation And Candidate Generation
 
-Status: Partially implemented - deterministic signal policies and source-backed foundations are present across Core, Risk, Performance, Advise, and Manage; caller-supplied and source-backed routes use shared ordered API boundaries for entitlement, source-contract validation, trusted tenant resolution where Core is involved, DTO mapping, application evaluation, event emission, response projection, and runtime cleanup. The repo-native canonical opportunity-source proof runner binds Risk/Performance proof artifacts to source revision, correlation, and trace metadata. A clean-tree canonical run now validates current Risk concentration, Performance underperformance, and Performance benchmark-readiness evidence for the governed portfolio. Merged release evidence, Gateway/Workbench realization, data-mesh certification, supported-feature promotion, and full Slice 5 closure remain open.
+Status: Implemented on branch, pending mainline closure - the Slice 05 outcome and acceptance gate are satisfied by deterministic, policy-versioned candidate generation; fail-closed source freshness and entitlement behavior; reason-path unit and integration tests; source-authority preservation; and governed caller-supplied/source-backed API boundaries across Core, Risk, Performance, Advise, and Manage. Trusted Core tenant scope, temporal reconciliation, stable caller-boundary ProblemDetails, and clean-tree canonical Risk/Performance proof are implementation-backed. Merge/CI evidence and later-slice Gateway/Workbench, data-mesh certification, and supported-feature promotion remain open and are not reclassified as Slice 05 implementation work.
 
 ## Outcome
 
@@ -882,7 +882,7 @@ Additional implemented mandate health source-product ref foundation:
    proof, data-product certification, client-publication readiness, or
    supported-feature promotion.
 
-Not implemented yet:
+Deferred mainline and later-slice evidence:
 
 1. merged release evidence for the current live Risk concentration proof,
 2. merged release evidence for the current live Performance returns-series
@@ -901,9 +901,13 @@ Not implemented yet:
    underperformance, allocation-drift, missing-suitability,
    missing-risk-profile, and mandate/restriction
    `evaluate-from-source` evaluation,
-8. Gateway/Workbench proof,
-9. supported-feature promotion,
-10. data-product certification.
+8. Gateway/Workbench proof, owned by Slices 10, 11, and 17,
+9. supported-feature promotion, owned by Slice 14 and final closure,
+10. data-product certification, owned by Slice 14.
+
+Items 1-6 require mainline or live operational evidence. Items 8-10 belong to
+later RFC slices. They remain explicit product-readiness blockers but do not
+invalidate the implemented Slice 05 deterministic evaluation acceptance gate.
 
 Upstream Risk consumer approval for
 `lotus-risk:ConcentrationRiskReport:v1` is source-approved. That clears only the

@@ -74,8 +74,14 @@ Current RFC-0002 implementation-start baseline:
    freshness, quality, lineage, access, deprecation semantics, and consumer
    dependency freshness/provenance metadata. Platform mesh certification
    remains planned.
-6. Slice 05 partially implements the high-cash / idle-liquidity deterministic
-   domain policy without source adapters, API, or supported-feature promotion.
+6. Slice 05 is implemented on the branch pending mainline closure. It began
+   with high-cash / idle-liquidity and now provides deterministic,
+   policy-versioned evaluation plus governed caller-supplied and source-backed
+   APIs across Core, Risk, Performance, Advise, and Manage. Missing, stale,
+   unauthorized, temporally inconsistent, or unsupported evidence fails closed;
+   official source calculations remain with their owning services. Later-slice
+   Gateway/Workbench, mesh certification, and supported-feature promotion stay
+   blocked.
 7. Slice 06 partially implements internal candidate persistence records,
    evidence replay posture, certified evidence replay API foundation,
    idempotency conflict handling, idempotent lifecycle transition recording,
@@ -153,8 +159,10 @@ Current RFC-0002 implementation-start baseline:
    certification, full Workbench proof, data-product certification, and
    supported-feature promotion remain planned.
    Slice 05 also includes direct Performance/Risk mandate-health source-product
-   ref adapters for supplied source facts; live source fetching and
-   portfolio-scoped canonical proof remain planned.
+   ref adapters, governed `evaluate-from-source` routes across the supported
+   signal families, and clean-tree canonical Risk/Performance proof for the
+   governed portfolio. Full source-worker operational certification and
+   mainline proof remain open.
 12. Slice 12 partially implements internal conversion governance for
     review-gated conversion intent and source-versioned downstream outcome
     history/current posture, with

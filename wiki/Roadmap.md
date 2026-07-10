@@ -32,9 +32,10 @@ proof, downstream proof, supported-feature evidence, and mainline CI all agree.
 7. RFC-0002 Slice 04 implements the pre-certification source-authority and
    data-mesh baseline contracts plus a repo-native data-mesh contract gate
    while keeping mesh certification planned,
-8. RFC-0002 Slice 05 partially implements the high-cash deterministic domain
-   policy plus the first Core source-port and conservative HTTP adapter
-   foundation,
+8. RFC-0002 Slice 05 is implemented on the branch pending mainline closure:
+   deterministic signal policies, conservative source adapters, and governed
+   source-backed APIs span Core, Risk, Performance, Advise, and Manage without
+   duplicating source-owned calculations,
 9. RFC-0002 Slice 06 partially implements internal persistence, replay,
    transport idempotency, review/feedback/conversion-outcome resource identity,
    source-version lifecycle and legacy-history quarantine, lifecycle audit

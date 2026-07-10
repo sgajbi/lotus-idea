@@ -177,9 +177,10 @@ port, and `src/app/infrastructure/lotus_core_sources.py` provides a
 conservative HTTP adapter over Core source-data product routes. The adapter
 preserves Core source refs, consumes `totals.source_reported_cash_weight` only
 when Core reports supported cash-weight posture, and does not infer cash weight
-from cash totals or portfolio market values. Positive high-cash generation from
-live Core remains blocked until a valid live-proof artifact is captured and
-referenced through readiness.
+from cash totals or portfolio market values. Live Core proof is captured
+through the governed source-ingestion proof path; it clears only the matching
+source blocker and does not imply mesh, Gateway/Workbench, or supported-feature
+certification.
 
 Slice 05 also includes direct source-product ref adapters for mandate health.
 `lotus-idea` can preserve
@@ -188,9 +189,12 @@ Slice 05 also includes direct source-product ref adapters for mandate health.
 or return-observation facts are supplied. The adapters validate the upstream
 source product identity and preserve request-fingerprint lineage; they do not
 calculate active return, tracking error, performance health, risk health,
-mandate approval, rebalance action, or execution posture. Live source fetching,
-portfolio-scoped canonical proof, Gateway/Workbench support, data-product
-certification, and supported-feature promotion remain blocked.
+mandate approval, rebalance action, or execution posture. Governed
+source-backed routes now cover the supported Core, Risk, Performance, Manage,
+and Advise signal families, and clean-tree canonical Risk/Performance proof
+exists for the governed portfolio. Full source-worker operational proof,
+Gateway/Workbench support, data-product certification, and supported-feature
+promotion remain blocked.
 
 ## Certified API Foundation
 
