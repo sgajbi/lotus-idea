@@ -76,6 +76,11 @@ from app.infrastructure.postgres_outbox_delivery import (
 )
 from app.infrastructure.postgres_outbox_repository import PostgresOutboxRepositoryMixin
 from app.infrastructure.postgres_outbox_writes import insert_outbox_event
+from app.infrastructure.postgres_outbox_recovery import (
+    claim_dead_letter_for_recovery as claim_postgres_dead_letter_for_recovery,
+    load_dead_letter_summaries,
+    load_outbox_recovery_audit_records,
+)
 from app.infrastructure.postgres_protocols import PostgresConnection as PostgresConnection
 from app.infrastructure.postgres_protocols import PostgresCursor
 from app.infrastructure.postgres_downstream_lookup import (
@@ -106,6 +111,12 @@ from app.ports.idea_repository import ReviewQueueRepositoryPage
 from app.ports.idea_repository import ReviewQueueReadinessRepositorySummary
 from app.ports.idea_repository import DownstreamRealizationReadinessRepositorySummary
 from app.ports.idea_repository import RuntimeTrustTelemetryRepositorySummary
+from app.domain.outbox_recovery import (
+    MAX_OUTBOX_RECOVERY_ATTEMPTS,
+    OutboxDeadLetterSummary,
+    OutboxRecoveryAuditRecord,
+    OutboxRecoveryClaimResult,
+)
 
 
 _T = TypeVar("_T")
@@ -408,6 +419,46 @@ class PostgresIdeaRepository(PostgresOutboxRepositoryMixin):
             max_retry_count=max_retry_count,
             next_attempt_at_utc=next_attempt_at_utc,
         )
+
+    def dead_letter_summaries(
+        self,
+        *,
+        limit: int = 100,
+    ) -> tuple[OutboxDeadLetterSummary, ...]:
+        return load_dead_letter_summaries(self._connection, limit=limit)
+
+    def claim_dead_letter_for_recovery(
+        self,
+        *,
+        support_reference: str,
+        idempotency_key: str,
+        request_payload: Mapping[str, Any],
+        actor_subject: str,
+        reason: str,
+        change_reference: str,
+        requested_at_utc: datetime,
+        lease_owner: str,
+        lease_attempt_id: str,
+        lease_expires_at_utc: datetime,
+        max_recovery_attempts: int = MAX_OUTBOX_RECOVERY_ATTEMPTS,
+    ) -> OutboxRecoveryClaimResult:
+        return claim_postgres_dead_letter_for_recovery(
+            self._connection,
+            support_reference=support_reference,
+            idempotency_key=idempotency_key,
+            request_payload=request_payload,
+            actor_subject=actor_subject,
+            reason=reason,
+            change_reference=change_reference,
+            requested_at_utc=requested_at_utc,
+            lease_owner=lease_owner,
+            lease_attempt_id=lease_attempt_id,
+            lease_expires_at_utc=lease_expires_at_utc,
+            max_recovery_attempts=max_recovery_attempts,
+        )
+
+    def outbox_recovery_audit_records(self) -> tuple[OutboxRecoveryAuditRecord, ...]:
+        return load_outbox_recovery_audit_records(self._connection)
 
     def record_ai_explanation_lineage(
         self,

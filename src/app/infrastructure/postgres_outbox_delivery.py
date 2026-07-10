@@ -74,7 +74,6 @@ def claim_outbox_events_for_delivery(
                 )
                 UPDATE idea_outbox_event AS event
                 SET status = %s,
-                    failure_reason = NULL,
                     next_attempt_at_utc = NULL,
                     lease_owner = %s,
                     lease_attempt_id = %s,
@@ -237,9 +236,6 @@ def mark_outbox_event_published(
                 UPDATE idea_outbox_event
                 SET status = %s,
                     published_at_utc = %s,
-                    failure_reason = NULL,
-                    first_failed_at_utc = NULL,
-                    last_failed_at_utc = NULL,
                     next_attempt_at_utc = NULL,
                     lease_owner = NULL,
                     lease_attempt_id = NULL,

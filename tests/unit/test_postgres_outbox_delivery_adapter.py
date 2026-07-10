@@ -4,7 +4,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.domain import OutboxDeliveryDecision, OutboxEventStatus
+from app.domain import (
+    OutboxDeliveryDecision,
+    OutboxEventStatus,
+    OutboxRecoveryDecision,
+    outbox_dead_letter_support_reference,
+    outbox_recovery_request_payload,
+)
 from app.infrastructure.postgres_outbox_delivery import (
     claim_outbox_events_for_delivery,
     mark_outbox_event_failed,
@@ -99,6 +105,80 @@ def test_postgres_outbox_adapter_validates_delivery_lease_inputs() -> None:
             claimed_at_utc=EVALUATED_AT,
             lease_expires_at_utc=EVALUATED_AT,
         )
+
+
+def test_postgres_outbox_recovery_is_durable_idempotent_and_lease_fenced() -> None:
+    connection = FakePostgresConnection()
+    repository = PostgresIdeaRepository(connection)
+    candidate = high_cash_candidate()
+    repository.persist_candidate(
+        candidate,
+        idempotency_key="candidate:outbox-recovery",
+        payload={"candidateId": candidate.candidate_id},
+        actor_subject="signal-ingestion-worker",
+        occurred_at_utc=EVALUATED_AT,
+    )
+    event = next(iter(repository.snapshot().outbox_events.values()))
+    repository.claim_outbox_events_for_delivery(
+        limit=1,
+        max_retry_count=1,
+        lease_owner="delivery-worker",
+        lease_attempt_id="delivery-attempt",
+        claimed_at_utc=EVALUATED_AT,
+        lease_expires_at_utc=EVALUATED_AT + timedelta(minutes=1),
+    )
+    repository.mark_outbox_event_failed(
+        event.event_id,
+        lease_owner="delivery-worker",
+        lease_attempt_id="delivery-attempt",
+        failure_reason="publisher_rejected",
+        failed_at_utc=EVALUATED_AT + timedelta(minutes=1),
+        max_retry_count=1,
+    )
+    support_reference = outbox_dead_letter_support_reference(event.event_id)
+    request_payload = outbox_recovery_request_payload(
+        support_reference=support_reference,
+        reason="broker_route_corrected",
+        change_reference="CHG-2026-0710",
+        actor_subject="platform-operator",
+    )
+    claim = {
+        "support_reference": support_reference,
+        "idempotency_key": "outbox-redrive:postgres:001",
+        "request_payload": request_payload,
+        "actor_subject": "platform-operator",
+        "reason": "broker_route_corrected",
+        "change_reference": "CHG-2026-0710",
+        "requested_at_utc": EVALUATED_AT + timedelta(minutes=2),
+        "lease_owner": "outbox-recovery",
+        "lease_attempt_id": "recovery-attempt-1",
+        "lease_expires_at_utc": EVALUATED_AT + timedelta(minutes=7),
+    }
+
+    summaries = repository.dead_letter_summaries(limit=10)
+    accepted = repository.claim_dead_letter_for_recovery(**claim)
+    restarted_repository = PostgresIdeaRepository(connection)
+    replay = restarted_repository.claim_dead_letter_for_recovery(**claim)
+    competing = restarted_repository.claim_dead_letter_for_recovery(
+        **{
+            **claim,
+            "idempotency_key": "outbox-redrive:postgres:002",
+            "lease_attempt_id": "recovery-attempt-2",
+        }
+    )
+
+    assert [summary.support_reference for summary in summaries] == [support_reference]
+    assert accepted.decision is OutboxRecoveryDecision.ACCEPTED
+    assert accepted.event is not None
+    assert accepted.event.status is OutboxEventStatus.LEASED
+    assert accepted.event.failure_reason == "publisher_rejected"
+    assert replay.decision is OutboxRecoveryDecision.REPLAYED
+    assert competing.decision is OutboxRecoveryDecision.LEASE_CONFLICT
+    records = restarted_repository.outbox_recovery_audit_records()
+    assert len(records) == 1
+    assert records[0].original_failure_reason == "publisher_rejected"
+    assert records[0].original_retry_count == 1
+    assert "outbox-redrive:postgres:001" not in str(connection.rows)
     with pytest.raises(ValueError, match="event_id is required"):
         repository.mark_outbox_event_published(
             " ",

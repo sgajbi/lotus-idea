@@ -29,7 +29,6 @@ def claim_outbox_event_rows(
     claimed = candidates[:limit]
     for row in claimed:
         row["status"] = OutboxEventStatus.LEASED.value
-        row["failure_reason"] = None
         row["next_attempt_at_utc"] = None
         row["lease_owner"] = lease_owner
         row["lease_attempt_id"] = lease_attempt_id
@@ -105,9 +104,6 @@ def publish_outbox_event_row(
     ):
         row["status"] = status
         row["published_at_utc"] = published_at_utc
-        row["failure_reason"] = None
-        row["first_failed_at_utc"] = None
-        row["last_failed_at_utc"] = None
         row["next_attempt_at_utc"] = None
         _clear_lease(row)
         return [dict(row)]
@@ -139,6 +135,23 @@ def fail_outbox_event_row(
         )
         _clear_lease(row)
         return [dict(row)]
+    return []
+
+
+def recover_dead_letter_row(
+    connection: FakeOutboxConnection,
+    params: Sequence[Any],
+) -> list[dict[str, Any]]:
+    status, lease_owner, lease_attempt_id, lease_expires_at_utc, event_id, dead_status = params
+    for row in connection.rows["idea_outbox_event"]:
+        if row["outbox_event_id"] == event_id and row["status"] == dead_status:
+            row["status"] = status
+            row["published_at_utc"] = None
+            row["next_attempt_at_utc"] = None
+            row["lease_owner"] = lease_owner
+            row["lease_attempt_id"] = lease_attempt_id
+            row["lease_expires_at_utc"] = lease_expires_at_utc
+            return [dict(row)]
     return []
 
 

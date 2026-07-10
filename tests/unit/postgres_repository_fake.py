@@ -9,6 +9,7 @@ from tests.unit.postgres_outbox_fake_helpers import (
     outbox_delivery_ready_rows,
     outbox_readiness_summary_row,
     publish_outbox_event_row,
+    recover_dead_letter_row,
 )
 from tests.unit.postgres_repository_lookup_fake_helpers import (
     candidate_detail_rows,
@@ -59,6 +60,26 @@ class FakePostgresCursor:
         if normalized.startswith("/* lotus-idea outbox-readiness-summary */"):
             assert params is not None
             self._rows = outbox_readiness_summary_row(self.connection, params)
+            return
+        if normalized.startswith("/* lotus-idea outbox-dead-letter-summaries */"):
+            assert params is not None
+            status, limit = params
+            rows = [
+                dict(row)
+                for row in self.connection.rows["idea_outbox_event"]
+                if row["status"] == status
+            ]
+            rows.sort(
+                key=lambda row: (row["last_failed_at_utc"], row["outbox_event_id"]),
+                reverse=True,
+            )
+            self._rows = rows[:limit]
+            return
+        if normalized.startswith("/* lotus-idea outbox-recovery-audit-records */"):
+            self._rows = sorted(
+                self.connection.rows["idea_outbox_recovery_audit"],
+                key=lambda row: (row["requested_at_utc"], row["recovery_id"]),
+            )
             return
         if normalized.startswith("/* lotus-idea downstream-realization-readiness-summary */"):
             self._rows = [
@@ -125,10 +146,50 @@ class FakePostgresCursor:
             self.connection.begin_write()
             if "set status = %s, published_at_utc = %s" in normalized:
                 self._rows = publish_outbox_event_row(self.connection, params)
+            elif "set status = %s, published_at_utc = null" in normalized:
+                self._rows = recover_dead_letter_row(self.connection, params)
             else:
                 self._rows = fail_outbox_event_row(self.connection, params)
             return
         if normalized.startswith("select"):
+            if (
+                "from idea_outbox_recovery_audit" in normalized
+                and "where idempotency_fingerprint = %s" in normalized
+            ):
+                assert params is not None
+                self._rows = [
+                    row
+                    for row in self.connection.rows["idea_outbox_recovery_audit"]
+                    if row["idempotency_fingerprint"] == params[0]
+                ]
+                return
+            if (
+                "count(*) as recovery_count" in normalized
+                and "from idea_outbox_recovery_audit" in normalized
+            ):
+                assert params is not None
+                self._rows = [
+                    {
+                        "recovery_count": sum(
+                            1
+                            for row in self.connection.rows["idea_outbox_recovery_audit"]
+                            if row["outbox_event_id"] == params[0]
+                        )
+                    }
+                ]
+                return
+            if (
+                "from idea_outbox_event" in normalized
+                and "order by occurred_at_utc desc" in normalized
+            ):
+                assert params is not None
+                rows = sorted(
+                    self.connection.rows["idea_outbox_event"],
+                    key=lambda row: (row["occurred_at_utc"], row["outbox_event_id"]),
+                    reverse=True,
+                )
+                self._rows = rows[: params[0]]
+                return
             if (
                 "from idea_outbox_event" in normalized
                 and "where outbox_event_id = %s" in normalized
@@ -165,6 +226,27 @@ class FakePostgresCursor:
                 self.connection.rows[table_name].append(row)
                 self._rows = [{"idempotency_key": idempotency_key}]
                 return
+            if table_name == "idea_outbox_recovery_audit":
+                recovery_columns = (
+                    "recovery_id",
+                    "outbox_event_id",
+                    "support_reference",
+                    "idempotency_fingerprint",
+                    "request_fingerprint",
+                    "actor_subject",
+                    "recovery_reason",
+                    "change_reference",
+                    "requested_at_utc",
+                    "lease_owner",
+                    "lease_attempt_id",
+                    "lease_expires_at_utc",
+                    "original_retry_count",
+                    "original_failure_reason",
+                    "original_first_failed_at_utc",
+                    "original_last_failed_at_utc",
+                )
+                self.connection.rows[table_name].append(dict(zip(recovery_columns, params)))
+                return
             self.connection.rows[table_name].append(row_for_insert(table_name, params))
             return
         raise AssertionError(f"unexpected SQL: {query}")
@@ -194,6 +276,7 @@ class FakePostgresConnection:
             "idea_report_evidence_pack_request": [],
             "idea_downstream_submission": [],
             "idea_ai_explanation_lineage": [],
+            "idea_outbox_recovery_audit": [],
         }
         self.fail_on_insert = fail_on_insert
         self.commits = 0
@@ -234,6 +317,7 @@ def _table_from_select(query: str) -> str:
         "idea_report_evidence_pack_request",
         "idea_downstream_submission",
         "idea_ai_explanation_lineage",
+        "idea_outbox_recovery_audit",
     ):
         if f" from {table_name}" in query:
             return table_name

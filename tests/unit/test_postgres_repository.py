@@ -775,9 +775,9 @@ def test_postgres_repository_persists_outbox_delivery_status_updates() -> None:
     assert missing_failure.decision is OutboxDeliveryDecision.NOT_FOUND
     assert reloaded.status is OutboxEventStatus.PUBLISHED
     assert reloaded.published_at_utc == EVALUATED_AT + timedelta(minutes=1)
-    assert reloaded.failure_reason is None
-    assert reloaded.first_failed_at_utc is None
-    assert reloaded.last_failed_at_utc is None
+    assert reloaded.failure_reason == "publisher_unavailable"
+    assert reloaded.first_failed_at_utc == EVALUATED_AT
+    assert reloaded.last_failed_at_utc == EVALUATED_AT
     assert reloaded.next_attempt_at_utc is None
 
 
