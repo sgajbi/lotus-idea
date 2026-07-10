@@ -129,7 +129,7 @@ def run_outbox_delivery_once(
         if event.status is not OutboxEventStatus.LEASED:
             skipped += 1
             continue
-        outcome = _publish_safely(publisher, event)
+        outcome = publish_outbox_event_safely(publisher, event)
         if outcome.accepted:
             result = repository.mark_outbox_event_published(
                 event.event_id,
@@ -202,7 +202,7 @@ def _outbox_delivery_no_mutation_summary(
     )
 
 
-def _publish_safely(
+def publish_outbox_event_safely(
     publisher: OutboxEventPublisher,
     event: OutboxEventRecord,
 ) -> OutboxPublishOutcome:
